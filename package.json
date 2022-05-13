@@ -1,8 +1,8 @@
 {
-  "name": "forgerock-login-app",
+  "name": "forgerock-web-login-framework",
   "version": "0.0.1",
   "scripts": {
-    "dev": "svelte-kit dev",
+    "dev": "svelte-kit dev --https",
     "dev:widget": "rollup -c -w | tailwindcss -c ./tailwind.config.cjs -i ./src/lib/widget.css -o ./package/widget.css --watch",
     "build": "svelte-kit build",
     "build:widget": "rollup -c",
@@ -34,9 +34,9 @@
     "prettier-plugin-svelte": "^2.5.0",
     "rollup": "^2.3.4",
     "rollup-plugin-css-only": "^3.1.0",
-    "rollup-plugin-livereload": "^2.0.0",
     "rollup-plugin-svelte": "^7.0.0",
     "rollup-plugin-terser": "^7.0.0",
+    "@rollup/plugin-typescript": "^8.3.2",
     "svelte": "^3.44.0",
     "svelte-check": "^2.2.6",
     "svelte-preprocess": "^4.10.1",
@@ -47,6 +47,7 @@
   },
   "type": "module",
   "dependencies": {
-    "@forgerock/javascript-sdk": "^3.2.2"
+    "@forgerock/javascript-sdk": "^3.2.2",
+    "uuid": "^8.3.2"
   }
 }

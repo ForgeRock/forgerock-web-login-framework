@@ -4,24 +4,26 @@
     import KeyIcon from '../lib/components/icons/key-icon.svelte';
 
     Config.set({
-      clientId: 'WebOAuthClient', // e.g. 'ForgeRockSDKClient'
-      redirectUri: 'https://login-app.ngrok.io/callback', // e.g. 'https://sdkapp.example.com:8443/_callback'
-      scope: 'openid profile me.read', // e.g. 'openid profile me.read'
+      clientId: 'WebOAuthClient',
+      // redirectUri: 'https://crbrl.ngrok.io/callback',
+      redirectUri: 'https://localhost:3000/callback',
+      scope: 'openid profile me.read',
       serverConfig: {
-        baseUrl: 'https://login-app.ngrok.io/proxy/', // e.g. 'https://openam.example.com:9443/openam/'
+        baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+        // baseUrl: 'https://crbrl.ngrok.io/proxy/',
         timeout: 3000, // 90000 or less
-        paths: {
-          authenticate: 'authenticate',
-          authorize: 'authorize',
-          accessToken: 'access-token',
-          endSession: 'end-session',
-          userInfo: 'userinfo',
-          revoke: 'revoke',
-          sessions: 'sessions',
-        },
+        // paths: {
+        //   authenticate: 'authenticate',
+        //   authorize: 'authorize',
+        //   accessToken: 'access-token',
+        //   endSession: 'end-session',
+        //   userInfo: 'userinfo',
+        //   revoke: 'revoke',
+        //   sessions: 'sessions',
+        // },
       },
-      realmPath: 'alpha', // e.g. 'root'
-      tree: 'Login', // e.g. 'Login'
+      realmPath: 'alpha',
+      tree: 'Login',
     });
 </script>
 

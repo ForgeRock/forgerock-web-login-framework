@@ -13,10 +13,8 @@
 </script>
 
 <div>
-  <label
-    class="flex pt-4 w-full"
-    for={inputName}>
-      {textInputLabel}
+  <label class="flex pt-4 w-full" for={inputName}>
+    {textInputLabel}
   </label>
   <input
     class="rounded w-full"
@@ -24,5 +22,5 @@
     on:change={setValue}
     type={stringAttributeName == 'mail' ? 'email' : 'text'}
     value={existingValue}
-    />
+  />
 </div>
