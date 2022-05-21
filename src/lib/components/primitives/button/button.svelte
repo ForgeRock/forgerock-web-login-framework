@@ -1,15 +1,14 @@
 <script lang="ts">
-  export let fullWidth: boolean;
-  export let onClick: (event: Event) => void;
-  export let type: string;
+  export let fullWidth = false;
+  export let onClick = (event: Event) => {};
+  export let style = '';
+  export let type: string | null = null;
 </script>
 
 <button
   class={(() => {
     let color;
-    console.log(`Button type: ${type}`);
-
-    switch (type) {
+    switch (style) {
       case 'primary':
         color = 'bg-blue text-white';
         break;
@@ -23,6 +22,8 @@
 
     return `${color} ${width} leading-6 text-base py-3 px-6 rounded`;
   })()}
-  on:click={onClick}>
+  data-test="button-primitive"
+  on:click={onClick}
+  {type}>
     <slot />
 </button>

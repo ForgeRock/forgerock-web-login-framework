@@ -18,6 +18,9 @@ const config = {
           // Use if SvelteKit server needs to support external apps
           // origin: 'https://react.crbrl.ngrok.io',
           // credentials: true
+        },
+        fs: {
+          allow: ['package']
         }
       }
     }

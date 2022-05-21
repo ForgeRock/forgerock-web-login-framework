@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import { Meta, Template, Story } from '@storybook/addon-svelte-csf';
   import Button from './button.svelte';
 </script>
@@ -14,6 +14,6 @@
   args={{
     fullWidth: true,
     onClick: (event) => console.log(event.target),
-    type: 'primary',
+    style: 'primary',
   }}
 />

@@ -4,11 +4,12 @@ import resolve from '@rollup/plugin-node-resolve';
 import { terser } from 'rollup-plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import css from 'rollup-plugin-css-only';
+import preprocess from 'svelte-preprocess';
 
 const production = !process.env.ROLLUP_WATCH;
 
 export default {
-  input: 'src/lib/main.ts',
+  input: 'src/lib/widget/widget.svelte',
   output: {
     sourcemap: true,
     format: 'es',
@@ -20,7 +21,13 @@ export default {
       compilerOptions: {
         // enable run-time checks when not in production
         dev: !production
-      }
+      },
+      emitCss: true,
+      preprocess: preprocess({
+        typescript: {
+          tsconfigFile: './tsconfig.json'
+        }
+      }),
     }),
     // we'll extract any component CSS out into
     // a separate file - better for performance

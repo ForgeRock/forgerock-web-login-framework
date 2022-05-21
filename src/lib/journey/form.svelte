@@ -1,10 +1,12 @@
 <script>
   import { FRAuth, TokenManager, UserManager } from '@forgerock/javascript-sdk';
+
+  import Button from '../components/primitives/button/button.svelte';
   import Password from './password.svelte';
   import Text from './text.svelte';
 
   export let closeModal;
-  export let authCallback;
+  export let returnUser;
   let step;
   let submitForm = () => {};
 
@@ -18,7 +20,7 @@
         const user = await UserManager.getCurrentUser();
         console.log(tokens);
         closeModal && closeModal();
-        authCallback && authCallback(user);
+        returnUser && returnUser(user);
       }
     })();
 
@@ -31,7 +33,7 @@
         const user = await UserManager.getCurrentUser();
         console.log(tokens);
         closeModal && closeModal();
-        authCallback && authCallback(user);
+        returnUser && returnUser(user);
       }
     };
   }
@@ -49,11 +51,9 @@
         <Password {callback} inputName={callback?.payload?.input?.[0].name} />
       {/if}
     {/each}
-    <button
-      class="flex bg-blue-600 justify-center my-5 p-2 rounded text-white w-full"
-      type="submit">
-        Submit
-    </button>
+    <Button fullWidth={true} style="primary" type="submit">
+      Submit
+    </Button>
   </form>
 {:else if step.type === 'LoginSuccess'}
   <p>Login Success!</p>
