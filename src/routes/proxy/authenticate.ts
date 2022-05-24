@@ -1,5 +1,5 @@
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
-import { get, set } from '$lib/sessions';
+import { get, set } from '$lib/server/sessions';
 
 export async function post(event) {
   const body = event.request.body.read();

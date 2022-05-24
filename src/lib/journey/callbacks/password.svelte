@@ -1,5 +1,5 @@
-<script lang="ts">
-  import Input from "../components/primitives/input/input.svelte";
+<script>
+  import Input from "$components/primitives/input/input.svelte";
 
   export let callback;
   export let inputName;
@@ -13,4 +13,5 @@
   }
 </script>
 
-<Input key="Username" label={textInputLabel} onChange={setValue} type="text" />
+<Input key="Password" label={textInputLabel} onChange={setValue} type="password" />
+

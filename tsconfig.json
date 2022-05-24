@@ -28,8 +28,14 @@
     "allowJs": true,
     "checkJs": true,
     "paths": {
+      "$components": ["src/lib/components"],
+      "$components/*": ["src/lib/components/*"],
+      "$journey": ["src/lib/journey"],
+      "$journey/*": ["src/lib/journey/*"],
       "$lib": ["src/lib"],
-      "$lib/*": ["src/lib/*"]
+      "$lib/*": ["src/lib/*"],
+      "$widget": ["src/lib/widget"],
+      "$widget/*": ["src/lib/widget/*"]
     }
   },
   "include": ["src/**/*.d.ts", "src/**/*.js", "src/**/*.ts", "src/**/*.svelte"]

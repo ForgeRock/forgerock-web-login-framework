@@ -1,5 +1,5 @@
 import { AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
-import { get as getCookie, remove as removeCookie } from '$lib/sessions';
+import { get as getCookie, remove as removeCookie } from '$lib/server/sessions';
 
 export async function post(event) {
   const cookie = event.request.headers.get('cookie');

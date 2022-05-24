@@ -15,14 +15,17 @@
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
     "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. .",
     "storybook": "start-storybook --no-open -p 6006",
-    "build-storybook": "build-storybook"
+    "build-storybook": "build-storybook",
+    "chromatic": "npx chromatic --project-token=e10acf0c74f9 --force-rebuild"
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",
     "@playwright/test": "^1.19.1",
+    "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^17.0.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-typescript": "^8.3.2",
+    "@storybook/addon-a11y": "^6.5.5",
     "@storybook/addon-actions": "^6.5.3",
     "@storybook/addon-essentials": "^6.5.3",
     "@storybook/addon-interactions": "^6.5.3",
@@ -42,6 +45,7 @@
     "@vitest/ui": "^0.12.6",
     "autoprefixer": "^10.4.4",
     "babel-loader": "^8.2.5",
+    "chromatic": "^6.5.4",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-storybook": "^0.5.12",

@@ -1,14 +1,16 @@
 <script>
-  import { onMount } from 'svelte';
+  import { onMount as s_onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
-  import Widget, { showModal, onSuccess } from '../../../package/widget';
+  import Widget, { modal, journey } from '../../../package/widget';
 
   let target;
 
-  onSuccess((user) => console.log(user));
+  modal.onMount((component) => console.log(component));
+  journey.onSuccess((user) => console.log(user));
+  journey.onFailure((error) => console.log(error));
 
-  onMount(() => {
+  s_onMount(() => {
     new Widget({
       target,
       props: {
@@ -22,15 +24,12 @@
           realmPath: 'alpha',
           tree: 'Login',
         },
-        mounted: () => {
-          console.log('ForgeRock Login Widget is mounted');
-        }
       }
     });
   });
 </script>
 
-<div class="m-6">
-  <Button onClick={() => showModal()} style="primary">Login</Button>
+<div class="tw_p-6">
+  <Button onClick={() => modal.open()} style="primary">Login</Button>
 </div>
 <div bind:this={target}></div>

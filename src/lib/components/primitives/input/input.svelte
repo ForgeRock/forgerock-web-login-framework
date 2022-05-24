@@ -2,20 +2,23 @@
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
-  export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text';
+  export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value: string | null = null;
+  export let width: 'full' | 'half' = 'full';
 </script>
 
-<div>
+<div class="tw_relative">
   <input
     id={key}
     {type}
     on:change={onChange}
-    class="border-gray-light bg-white block leading-6 mb-4 p-3 rounded text-base text-gray-dark w-full"
+    class="width-{width} tw_border tw_border-gray tw_bg-white tw_block tw_leading-6 tw_mb-4 tw_p-3 tw_rounded tw_text-base tw_text-gray-dark tw_w-full"
     {value}
     placeholder={label}
   />
-  <label for={key} class="absolute border border-transparent inset-0 leading-6 p-3 text-gray">{label}</label>
+  <label for={key} class="tw_absolute tw_border tw_border-transparent tw_inset-0 tw_leading-6 tw_p-3 tw_text-gray-dark"
+    >{label}</label
+  >
 </div>
 
 <style>
@@ -24,10 +27,10 @@
    * https://getbootstrap.com/docs/5.0/forms/floating-labels/
    *
    * TODO: See if the new CSS pseudo-selector `has()` can replace below technique
+   * when it gets full browser support
+   *
+   * TODO: Move more of this into Tailwind classes
    */
-  div {
-    position: relative;
-  }
   input {
     height: calc(1.5em + 1.5rem + 2px);
     background-clip: padding-box;
@@ -55,5 +58,11 @@
   input:not(:placeholder-shown) ~ label {
     opacity: 0.65;
     transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+  }
+  .width-full {
+    @apply tw_w-full;
+  }
+  .width-half {
+    @apply tw_w-1/2;
   }
 </style>

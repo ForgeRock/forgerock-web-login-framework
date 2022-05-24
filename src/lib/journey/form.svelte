@@ -1,60 +1,125 @@
-<script>
-  import { FRAuth, TokenManager, UserManager } from '@forgerock/javascript-sdk';
+<script context="module" lang="ts">
+  // TODO: Is this a bad pattern?
+  export let initForm;
+</script>
 
-  import Button from '../components/primitives/button/button.svelte';
-  import Password from './password.svelte';
-  import Text from './text.svelte';
+<script lang="ts">
+  import { CallbackType } from '@forgerock/javascript-sdk';
+  import type { Writable } from 'svelte/store';
+
+  // Stores handling business logic and/or network orchestration
+  import { initTree, type StepTypes } from '$journey/journey.store';
+  import { email, fullName, isAuthenticated } from '$lib/user/user.store';
+
+  // Import primitives
+  import Button from '$components/primitives/button/button.svelte';
+
+  // Callback handler components
+  import Boolean from '$journey/callbacks/boolean.svelte';
+  import Choice from './callbacks/choice.svelte';
+  import Password from '$journey/callbacks/password.svelte';
+  import Name from '$journey/callbacks/name.svelte';
 
   export let closeModal;
+  export let returnError;
   export let returnUser;
-  let step;
-  let submitForm = () => {};
 
-  if (typeof window === 'object') {
-    (async () => {
-      step = await FRAuth.next();
-      console.log(step);
+  let failureMessage: Writable<string | null>;
+  let getStep: (prevStep?: StepTypes) => Promise<void>;
+  let step: Writable<StepTypes>;
+  let submittingForm: Writable<boolean>;
 
-      if (step.type === 'LoginSuccess') {
-        const tokens = await TokenManager.getTokens();
-        const user = await UserManager.getCurrentUser();
-        console.log(tokens);
-        closeModal && closeModal();
-        returnUser && returnUser(user);
-      }
-    })();
+  // Assign function to variable initialized in module context above
+  initForm = async function () {
+    let initObj = await initTree('Login');
 
-    submitForm = async (event) => {
-      step = await FRAuth.next(step);
-      console.log(step);
+    failureMessage = initObj.failureMessage;
+    getStep = initObj.getStep;
+    step = initObj.step;
+    submittingForm = initObj.submittingForm;
+  };
 
-      if (step.type === 'LoginSuccess') {
-        const tokens = await TokenManager.getTokens();
-        const user = await UserManager.getCurrentUser();
-        console.log(tokens);
-        closeModal && closeModal();
-        returnUser && returnUser(user);
-      }
-    };
+  /**
+   * Iterate through callbacks received from AM and map the callback to the
+   * appropriate callback component, pushing that component
+   * the StepComponent's array.
+   */
+   function mapCallbackToComponent(cb: any) {
+    /** *********************************************************************
+     * SDK INTEGRATION POINT
+     * Summary:SDK callback method for getting the callback type
+     * ----------------------------------------------------------------------
+     * Details: This method is helpful in quickly identifying the callback
+     * when iterating through an unknown list of AM callbacks
+     ********************************************************************* */
+    switch (cb.getType()) {
+      case CallbackType.BooleanAttributeInputCallback:
+        return Boolean;
+      case CallbackType.ChoiceCallback:
+        return Choice;
+      // case CallbackType.KbaCreateCallback:
+      //   return Kba;
+      case CallbackType.NameCallback:
+        return Name;
+      case CallbackType.PasswordCallback:
+        return Password;
+      // case CallbackType.StringAttributeInputCallback:
+      //   return CreateTextAttribute;
+      // case CallbackType.ValidatedCreatePasswordCallback:
+      //   return CreatePassword;
+      // case CallbackType.ValidatedCreateUsernameCallback:
+      //   return CreateUsername;
+      // case CallbackType.TermsAndConditionsCallback:
+      //   return TermsConditions;
+      // default:
+      //   return Unknown;
+    }
+  }
+
+  $: {
+    /**
+     * Detect when user completes authentication and close modal
+     */
+    if ($isAuthenticated) {
+      console.log('Form component recognises the user as authenticated');
+      step.set(null);
+
+
+      closeModal && closeModal();
+      returnUser && returnUser({
+        email: $email,
+        fullName: $fullName,
+        isAuthenticated: $isAuthenticated,
+      });
+    }
   }
 </script>
 
-{#if !step}
+{#if !$step}
   <p>Loading ...</p>
-{:else if step.type === 'Step'}
-  <form on:submit|preventDefault={submitForm}>
-    {#each step?.callbacks as callback}
-      {#if callback.getType() === 'NameCallback'}
-        <Text {callback} inputName={callback?.payload?.input?.[0].name} />
-      {/if}
-      {#if callback.getType() === 'PasswordCallback'}
-        <Password {callback} inputName={callback?.payload?.input?.[0].name} />
-      {/if}
+{:else if $step.type === 'Step'}
+  <form
+    on:submit|preventDefault={() => {
+      // Get next step, passing previous step with new data
+      getStep($step);
+      // Set to true to indicate form is processing
+      submittingForm.set(true);
+    }}
+  >
+    {#each $step?.callbacks as callback}
+      <!--
+        /**
+         * Using @const to save off the inputName for easier readability.
+         * Then, using the dynamic svelte component syntax to pull logic out of the
+         * template and into the JS above for assigning the right component to the
+         * callback.
+         */
+       -->
+       {@const inputName = callback?.payload?.input?.[0].name}
+       <svelte:component this={mapCallbackToComponent(callback)} {callback} {inputName} />
     {/each}
-    <Button fullWidth={true} style="primary" type="submit">
-      Submit
-    </Button>
+    <Button width="full" style="primary" type="submit">Submit</Button>
   </form>
-{:else if step.type === 'LoginSuccess'}
+{:else if $step.type === 'LoginSuccess'}
   <p>Login Success!</p>
 {/if}

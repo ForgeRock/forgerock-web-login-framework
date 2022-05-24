@@ -1,5 +1,5 @@
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
-import { get as getCookie } from '$lib/sessions';
+import { get as getCookie } from '$lib/server/sessions';
 
 export async function get(event) {
   console.log('Start authorization call');
