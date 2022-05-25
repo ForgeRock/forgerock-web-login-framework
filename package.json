@@ -9,7 +9,7 @@
     "package": "svelte-kit package",
     "preview": "svelte-kit preview --https",
     "test": "vitest",
-    "test:e2e": "playwright test tests/*.test.js --headed",
+    "test:e2e": "playwright test tests/*.test.js",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",

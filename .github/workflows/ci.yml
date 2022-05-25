@@ -1,0 +1,41 @@
+name: 'CI Pipeline'
+on:
+  pull_request:
+    branches-ignore:
+      - dependabot/**
+jobs:
+  pr:
+    strategy:
+      matrix:
+        node: [14.x, 16.x] # tests both npm 7 & 8
+        os: [macos-latest, ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Node ${{ matrix.node }} Run
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+          cache: 'npm'
+      - name: npm install
+        run: npm ci
+
+      - name: Build Widget
+        run: npm run build:widget
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm run test
+      - run: npx playwright install  --with-deps
+      - name: E2E 
+        run: npm run test:e2e
+      - name: Publish to Chromatic
+        uses: chromaui/action@v1
+        with:
+          # 👇 Chromatic projectToken, refer to the manage page to obtain it.
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          # https://www.chromatic.com/docs/github-actions#ui-test-and-ui-review 
+          exitOnZeroChanges: true  # 👈 Option to prevent the workflow from failing
