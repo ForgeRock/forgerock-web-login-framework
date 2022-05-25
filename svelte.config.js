@@ -29,6 +29,7 @@ const config = {
           // Use if tunneling through Ngrok
           // port: 443
         },
+        https: true,
         cors: {
           // Use if SvelteKit server needs to support external apps
           // origin: 'https://react.crbrl.ngrok.io',

@@ -2,6 +2,7 @@
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
   import Form, { initForm } from '../journey/form.svelte';
+  import { email, isAuthenticated, fullName } from '../user/user.store';
 
   let dialog;
   let callMounted;
@@ -18,7 +19,7 @@
   };
   export const modal = {
     close() {
-      dialog.close();
+      dialog?.close();
     },
     onMount(fn) {
       callMounted = (component) => fn(component);
@@ -43,6 +44,9 @@
     },
     async logout() {
       await FRUser.logout();
+      email.set('');
+      fullName.set('');
+      isAuthenticated.set(false);
     },
     async tokens(renew = false) {
       // TODO: decide what options to provide to client

@@ -82,7 +82,7 @@
      */
     if ($isAuthenticated) {
       console.log('Form component recognises the user as authenticated');
-      step.set(null);
+      step?.set(null);
 
 
       closeModal && closeModal();
