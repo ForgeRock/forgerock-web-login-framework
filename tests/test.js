@@ -1,8 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test('index page has expected h1', async ({ page }) => {
-	await page.goto('widget');
-	const loginButton = page.locator('text=Login');
+  await page.goto('widget');
+  const loginButton = page.locator('text=Login');
   const dialog = page.locator('dialog');
   expect(await loginButton.innerText()).toBe('Login');
   expect(await dialog.isVisible()).toBeFalsy();
