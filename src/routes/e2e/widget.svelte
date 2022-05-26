@@ -11,7 +11,6 @@
     userInfo = {};
   }
 
-
   modal.onMount((component) => console.log(component));
   journey.onSuccess((response) => (userInfo = response));
   journey.onFailure((error) => console.log(error));

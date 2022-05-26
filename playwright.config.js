@@ -1,5 +1,5 @@
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
-import { devices } from '@playwright/test';
+import { devices  } from '@playwright/test';
 
 const url = 'https://localhost:3000';
 const config = {
@@ -15,6 +15,7 @@ const config = {
   },
   forbidOnly: !!process.env.CI,
   workers: process.env.CI ? 2 : 4,
+  testDir: 'tests',
   projects: [
     {
       name: 'chromium',
@@ -28,7 +29,7 @@ const config = {
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'], ...devices['Desktop Firefox HiDPI'] },
-    }
+    },
     // {
     //   name: 'webkit',
     //   use: { ...devices['Desktop Safari'], ...devices['iPad (gen 7)'] },
