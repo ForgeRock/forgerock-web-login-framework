@@ -28,12 +28,13 @@ const config = {
     {
       name: 'firefox',
       use: { ...devices['Desktop Firefox'], ...devices['Desktop Firefox HiDPI'] },
-    }
+    },
     // {
     //   name: 'webkit',
     //   use: { ...devices['Desktop Safari'], ...devices['iPad (gen 7)'] },
     // },
-  ]
+  ],
+  testDir: 'tests',
 };
 
 export default config;

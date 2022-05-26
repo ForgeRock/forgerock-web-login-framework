@@ -2,14 +2,16 @@
   "name": "forgerock-web-login-framework",
   "version": "0.0.1",
   "scripts": {
-    "dev": "svelte-kit dev --https",
+    "dev": "npm run build:widget && npm run dev:widget | npm run dev:app",
+    "dev:app": "svelte-kit dev --https",
     "dev:widget": "rollup -c -w | tailwindcss -c ./tailwind.config.cjs -i ./src/lib/widget.css -o ./package/widget.css --watch",
-    "build": "svelte-kit build",
+    "build": "npm run build:widget && npm run build:app",
+    "build:app": "svelte-kit build",
     "build:widget": "rollup -c",
     "package": "svelte-kit package",
-    "preview": "svelte-kit preview --https",
-    "test": "vitest",
-    "test:e2e": "playwright test tests/*.test.js",
+    "preview": "npm run build:widget && svelte-kit preview --https",
+    "test": "vitest --dir src",
+    "test:e2e": "playwright test",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
     "lint": "prettier --ignore-path .gitignore --check --plugin-search-dir=. . && eslint --ignore-path .gitignore .",
@@ -17,6 +19,10 @@
     "storybook": "start-storybook --no-open -p 6006",
     "build-storybook": "build-storybook",
     "chromatic": "npx chromatic --project-token=e10acf0c74f9 --force-rebuild"
+  },
+  "dependencies": {
+    "@forgerock/javascript-sdk": "^3.2.2",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",
@@ -70,8 +76,8 @@
     "vitest": "^0.12.6"
   },
   "type": "module",
-  "dependencies": {
-    "@forgerock/javascript-sdk": "^3.2.2",
-    "uuid": "^8.3.2"
+  "engines": {
+    "node": ">= 16.0.0 <17.0.0",
+    "npm": ">=8.0.0"
   }
 }
