@@ -1,8 +1,8 @@
-import Input from './input.svelte';
+import Input from './standard-label.svelte';
 
 export default {
   component: Input,
-  title: 'Primitives/Input',
+  title: 'Primitives/Input: Standard Label',
   argTypes: {
     key: { control: 'text' },
     label: { control: 'text' },
@@ -16,6 +16,7 @@ export const Simple = {
     key: 'simpleInput',
     label: 'Username',
     onChange: (e) => console.log(e.target.value),
+    placeholder: 'E.g. my-username',
     value: '',
   },
 };

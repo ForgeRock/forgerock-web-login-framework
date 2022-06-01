@@ -1,8 +1,11 @@
 <script lang="ts">
-  export let width: 'auto' | 'full' | 'half' = 'auto';
+  import Spinner from "$components/primitives/spinner/spinner.svelte";
+
+  export let busy = false;
   export let onClick = (event: Event) => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
   export let type: 'button' | 'submit' = null;
+  export let width: 'auto' | 'full' | 'half' | 'third' = 'auto';
 </script>
 
 <button
@@ -10,7 +13,11 @@
   data-test="button-primitive"
   on:click={onClick}
   {type}>
-    <slot>Submit</slot>
+  {#if busy}
+    <!-- Render a small spinner during form submission -->
+    <Spinner colorClass="white" layoutClasses="tw_h-4 tw_w-4 tw_mr-2" />
+  {/if}
+  <slot>Submit</slot>
 </button>
 
 <style>
@@ -31,5 +38,8 @@
   }
   .width-half {
     @apply tw_w-1/2;
+  }
+  .width-third {
+    @apply tw_w-1/3;
   }
 </style>

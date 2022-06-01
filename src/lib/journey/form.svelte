@@ -15,10 +15,11 @@
   import Button from '$components/primitives/button/button.svelte';
 
   // Callback handler components
-  import Boolean from '$journey/callbacks/boolean.svelte';
-  import Choice from './callbacks/choice.svelte';
-  import Password from '$journey/callbacks/password.svelte';
-  import Name from '$journey/callbacks/name.svelte';
+  import Boolean from '$journey/callbacks/boolean/boolean.svelte';
+  import Choice from './callbacks/choice/choice.svelte';
+  import Password from '$journey/callbacks/password/password.svelte';
+  import CreatePassword from '$journey/callbacks/password/create-password.svelte';
+  import Name from '$journey/callbacks/username/name.svelte';
 
   export let closeModal;
   export let returnError;
@@ -65,8 +66,8 @@
         return Password;
       // case CallbackType.StringAttributeInputCallback:
       //   return CreateTextAttribute;
-      // case CallbackType.ValidatedCreatePasswordCallback:
-      //   return CreatePassword;
+      case CallbackType.ValidatedCreatePasswordCallback:
+        return CreatePassword;
       // case CallbackType.ValidatedCreateUsernameCallback:
       //   return CreateUsername;
       // case CallbackType.TermsAndConditionsCallback:

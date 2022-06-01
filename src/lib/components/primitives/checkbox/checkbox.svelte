@@ -1,6 +1,5 @@
 <script lang="ts">
   export let key;
-  export let label;
   export let onChange;
   export let value;
 </script>
@@ -14,6 +13,6 @@
     type="checkbox"
   />
   <label for={key} class="tw_inline-block">
-    {label}
+    <slot />
   </label>
 </div>
