@@ -1,17 +1,15 @@
-<script>
-  import Input from "$components/primitives/input/input.svelte";
+<script lang="ts">
+  import Input from "$components/primitives/input/floating-label.svelte";
 
   export let callback;
   export let inputName;
 
   const existingValue = callback?.getInputValue();
   const textInputLabel = callback.getPrompt();
-  const stringAttributeName = callback.getName && callback.getName();
 
   function setValue(event) {
     callback.setInputValue(event.target.value);
   }
 </script>
 
-<Input key="Password" label={textInputLabel} onChange={setValue} type="password" />
-
+<Input key="Username" label={textInputLabel} onChange={setValue} type="text" value={existingValue} />

@@ -9,7 +9,7 @@ import {
 } from '@forgerock/javascript-sdk';
 import { get, writable, type Writable } from 'svelte/store';
 
-import { htmlDecode } from '$lib/utilities/decode';
+import { htmlDecode } from '$lib/journey/utilities/decode.utilities';
 import { email, isAuthenticated, fullName } from '$lib/user/user.store';
 
 interface User {

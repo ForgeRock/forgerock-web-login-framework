@@ -1,9 +1,9 @@
-<script lang='ts'>
-  import type { ChoiceCallback } from '@forgerock/javascript-sdk';
+<script lang="ts">
+  import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
-  import Select from '$components/primitives/select/select.svelte';
+  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
 
-  export let callback: ChoiceCallback;
+  export let callback: AttributeInputCallback<boolean>;
   export let inputName = '';
 
   /** *************************************************************************
@@ -14,13 +14,8 @@
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
   const prompt = callback.getPrompt();
-  const choiceOptions = callback.getChoices();
-  const defaultChoice = callback.getDefaultChoice();
+  const value = callback.getInputValue() as boolean;
 
-  /**
-   * @function setValue - Sets the value on the callback on element blur (lose focus)
-   * @param {Object} event
-   */
   function setValue(event: Event) {
     /** ***********************************************************************
      * SDK INTEGRATION POINT
@@ -29,8 +24,8 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setChoiceIndex(Number((event.target as HTMLSelectElement).value));
+    callback.setInputValue((event.target as HTMLInputElement).checked);
   }
 </script>
 
-<Select defaultOption={defaultChoice} key={inputName} label={prompt} onChange={setValue} options={choiceOptions} />
+<Checkbox key={inputName} onChange={setValue} {value}>{prompt}</Checkbox>

@@ -25,6 +25,8 @@ This will install all the necessary dependencies, build the project and run it i
 
 ## Quick Start: Using the Widget in Your App
 
+Note: This project is currently in Alpha, so this is not available via npm.
+
 1. `npm run install` (if not already)
 2. `npm run build:widget`
 3. `cd package`
@@ -32,10 +34,14 @@ This will install all the necessary dependencies, build the project and run it i
 5. `cd` into the project you want to install the Widget
 6. `npm link forgerock-web-login-widget`
 
-Now, you can import the Widget into your app, and instantiate the component:
+Now, you can import the Widget into your app as a modal dialog (aka "lightbox"), or as an embedded component. Once the Widget is imported, you will need to instantiate it.
 
 ```js
-import Widget from 'forgerock-web-login-widget';
+// As modal dialog
+import Widget from 'forgerock-web-login-widget/modal';
+
+// OR, as embedded
+import Widget from 'forgerock-web-login-widget/embed';
 
 // ...
 
@@ -47,12 +53,16 @@ new Widget({
 });
 ```
 
-[See additional documentation about configuring the JS SDK](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/).
+This mounts your Widget into the DOM. If you choose the modal version, it will be hidden at first.
 
-This mounts your Widget into the DOM, but it will be hidden. To show the Widget, you will need to import the `modal` object, and use the `modal.open` function within an event handler:
+Note: [See additional documentation about configuring the JS SDK](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/).
+
+### Controlling the modal dialog
+
+To show the modal, you will need to import the `modal` object, and use the `modal.open` method. It's common to execute this within a button's click handler.
 
 ```js
-import Widget, { modal } from 'forgerock-web-login-widget';
+import Widget, { modal } from 'forgerock-web-login-widget/modal';
 
 // ...
 
@@ -60,32 +70,40 @@ const loginButton = document.getElementById('loginButton');
 loginButton.addEventListener('click', () => { modal.open() });
 ```
 
-Opening the modal will display the Widget in a "Lightbox" or modal dialog and make a request to your ID Cloud (or AM) instance. When the Widget gets the response, it will display the required fields for authenticating the user. When the user successfully authenticates, the modal will close itself.
+Opening the modal will display the Widget in a "Lightbox" or modal dialog and make a request to your ID Cloud (or AM) instance. When the Widget gets the response, it will display the required fields for authenticating the user. When the user successfully authenticates, the modal will close itself. If you'd like to close the widget programmatically, you can call the `modal.close` method.
 
-To be notified of this success, you'll need to import one more object and use a function to listen for the success:
+## Widget Events
+
+To be notified of a successful authentication, you'll need to import another object and use a function to listen for the success and failure event:
 
 ```js
-import Widget { modal, journey } from 'forgerock-web-login-widget';
+import Widget { modal, journey } from 'forgerock-web-login-widget/modal';
 
 // ...
 
-journey.onSuccess((userInfo) => { console.log(userInfo) });
+journey.onSuccess((userData) => { console.log(userData) });
+journey.onFailure((error) => { console.log(error) });
 ```
 
 And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation.
 
-## Complete Widget API
+## Complete Widget API: Modal
+
+### Recommended: "singleton" methods to modal controls and form events
+
+This is the recommended method for controlling your widget. If you have multiple instances of the Widget within your DOM, you'll need to use the "instance" methods listed below.
 
 ```js
-import Widget, { journey, modal, user } from 'forgerock-web-login-widget';
+// Import Widget and additional "singletons" for modal and user management
+import Widget, { journey, modal, user } from 'forgerock-web-login-widget/modal';
 
 // ...
 
 // Mount the widget to the DOM
-new Widget({ target, config });
+const loginWidget = new Widget({ target, config });
 
 // Listeners for journey events
-journey.onSuccess((userInfoObject) => { /* Run anything you want */ });
+journey.onSuccess((userDataObject) => { /* Run anything you want */ });
 journey.onFailure((errorObject) => { /* Run anything you want */ });
 
 // Programmatically control the modal
@@ -100,6 +118,151 @@ const isAuthorizedBoolean = await user.authorized();
 const userInfoObject = await user.info();
 await user.logout();
 const userTokensObject = await user.tokens();
+
+// Destroy widget when no longer needed
+loginWidget.$destroy();
+```
+
+### Using the alternative, modal "instance" methods
+
+If you have more than one instance of the Widget within your DOM, you'll need to use the instance methods in order to control the right one.
+
+```js
+// Import Widget and one user "singleton" for managing user
+import Widget, { user } from 'forgerock-web-login-widget';
+
+// ...
+
+// Mount the widget to the DOM
+const loginWidget = new Widget({ target, config });
+
+// Listeners for journey events
+loginWidget.$on('journey-success', (userDataObject) => { /* Run anything you want */ };
+loginWidget.$on('journey-failure', (errorObject) => { /* Run anything you want */ };
+
+// Programmatically control the modal
+loginWidget.$set({ open: true });
+loginWidget.$set({ open: false });
+
+// Listen for modal on mount event
+loginWidget.$on('modal-mount', (modalDomElement) => { /* Run anything you want */ };
+
+// Methods for user management
+const isAuthorizedBoolean = await user.authorized();
+const userInfoObject = await user.info();
+await user.logout();
+const userTokensObject = await user.tokens();
+
+// Destroy widget when no longer needed
+loginWidget.$destroy();
+```
+
+### User Data Object
+
+```ts
+interface UserData {
+  info: {
+    email: string;
+    fullName: string;
+    firstName: string;
+    lastName: string;
+    sub: string;
+  };
+  tokens: {
+    accessToken: string;
+    idToken: string;
+    refreshToken: string;
+  };
+}
+```
+
+## Complete Widget API: Embedded
+
+### Recommended: "singleton" methods to form events and controls
+
+This is the recommended method for controlling your widget. If you have multiple instances of the Widget within your DOM, you'll need to use the "instance" methods listed below.
+
+```js
+// Import Widget and additional "singletons" for modal and user management
+import Widget, { form, journey, user } from 'forgerock-web-login-widget/embed';
+
+// ...
+
+// Mount the widget to the DOM
+const loginWidget = new Widget({ target, config });
+
+// Listeners for journey events
+journey.onSuccess((userDataObject) => { /* Run anything you want */ });
+journey.onFailure((errorObject) => { /* Run anything you want */ });
+
+// Listen for modal on mount event
+form.onMount((modalDomElement) => { /* Run anything you want */ });
+
+// Methods for user management
+const isAuthorizedBoolean = await user.authorized();
+const userInfoObject = await user.info();
+await user.logout();
+const userTokensObject = await user.tokens();
+
+// Destroy widget when no longer needed
+loginWidget.$destroy();
+```
+
+### Using the alternative, form "instance" methods
+
+If you have more than one instance of the Widget within your DOM, you'll need to use the instance methods in order to control the right one.
+
+```js
+// Import Widget and one user "singleton" for managing user
+import Widget, { user } from 'forgerock-web-login-widget';
+
+// ...
+
+// Mount the widget to the DOM
+const loginWidget = new Widget({ target, config });
+
+// Listeners for journey events
+loginWidget.$on('journey-success', (userDataObject) => { /* Run anything you want */ };
+loginWidget.$on('journey-failure', (errorObject) => { /* Run anything you want */ };
+
+// Listen for form on mount event
+loginWidget.$on('form-mount', (modalDomElement) => { /* Run anything you want */ };
+
+// Methods for user management
+const isAuthorizedBoolean = await user.authorized();
+const userInfoObject = await user.info();
+await user.logout();
+const userTokensObject = await user.tokens();
+
+// Destroy widget when no longer needed
+loginWidget.$destroy();
+```
+
+### User Data Object
+
+```ts
+interface UserData {
+  info: {
+    email: string;
+    fullName: string;
+    firstName: string;
+    lastName: string;
+    sub: string;
+  };
+  tokens: {
+    accessToken: string;
+    idToken: string;
+    refreshToken: string;
+  };
+}
+```
+
+## Accessing the Underlying SDK
+
+If you need access to the JavaScript SDK for lower-level functionality, you can import it like this:
+
+```js
+import SDK from `forgerock-web-login-widget/sdk`;
 ```
 
 ## Disclaimer

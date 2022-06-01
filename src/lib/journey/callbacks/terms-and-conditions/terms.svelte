@@ -1,9 +1,9 @@
 <script lang="ts">
-  import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
+  import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
 
-  export let callback: AttributeInputCallback<boolean>;
+  export let callback: TermsAndConditionsCallback;
   export let inputName = '';
 
   /** *************************************************************************
@@ -13,9 +13,13 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
-  const prompt = callback.getPrompt();
-  const value = callback.getInputValue() as boolean;
+  const terms = callback.getTerms();
+  const termsStart = terms.substring(0, 35) + ' ...';
 
+  /**
+   * @function setValue - Sets the value on the callback on element blur (lose focus)
+   * @param {Object} event
+   */
   function setValue(event: Event) {
     /** ***********************************************************************
      * SDK INTEGRATION POINT
@@ -24,8 +28,15 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setInputValue((event.target as HTMLInputElement).checked);
+    callback.setAccepted((event.target as HTMLInputElement).checked);
   }
 </script>
 
-<Checkbox key={inputName} label={prompt} onChange={setValue} {value} />
+<Checkbox key={inputName} onChange={setValue} value={false}>
+  <!-- TODO: Remove hardcoded text below -->
+  Please accept our below Terms and Conditions
+  <details>
+    <summary class="fw-bold ps-1">{termsStart}</summary>
+    {terms}
+  </details>
+</Checkbox>

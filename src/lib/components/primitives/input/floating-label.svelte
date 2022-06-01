@@ -1,24 +1,34 @@
 <script lang="ts">
+  export let hasRightIcon = false;
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
+  export let isRequired = false;
+  // TODO: Placeholders don't reliably work with floating labels
+  // export let placeholder: string;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value: string | null = null;
   export let width: 'full' | 'half' = 'full';
 </script>
 
-<div class="tw_relative">
+<div class={`width-${width} tw_justify-items-stretch tw_flex tw_mb-4 tw_relative tw_flex-wrap`}>
+  <!--
+    TODO: Improve layout of floating label. Maybe use grid instead of Twitter's CSS?
+    NOTE: `placeholder` for the input is required for Twitter Bootstrap's floating label
+  -->
   <input
+    class={`tw_border tw_border-gray ${hasRightIcon ? 'tw_border-r-0': ''} tw_bg-white tw_block tw_flex-1 tw_leading-6 tw_p-3 tw_rounded ${hasRightIcon ? 'tw_rounded-r-none' : ''} tw_text-base tw_text-gray-dark`}
     id={key}
-    {type}
     on:change={onChange}
-    class="width-{width} tw_border tw_border-gray tw_bg-white tw_block tw_leading-6 tw_mb-4 tw_p-3 tw_rounded tw_text-base tw_text-gray-dark tw_w-full"
-    {value}
     placeholder={label}
+    {type}
+    required={isRequired}
+    {value}
   />
-  <label for={key} class="tw_absolute tw_border tw_border-transparent tw_inset-0 tw_leading-6 tw_p-3 tw_text-gray-dark"
+  <label for={key} class="tw_absolute tw_border tw_border-transparent tw_leading-6 tw_p-3 tw_text-gray-dark"
     >{label}</label
   >
+  <slot />
 </div>
 
 <style>
@@ -32,7 +42,7 @@
    * TODO: Move more of this into Tailwind classes
    */
   input {
-    height: calc(1.5em + 1.5rem + 2px);
+    height: calc(3rem + 2px);
     background-clip: padding-box;
     -webkit-appearance: none;
     -moz-appearance: none;
@@ -42,8 +52,11 @@
   input::placeholder {
     color: transparent;
   }
+  ::-ms-reveal {
+    display: none
+  }
   label {
-    height: calc(100% - 2px);
+    height: calc(3rem + 2px);
     pointer-events: none;
     transform-origin: 0 0;
     transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;

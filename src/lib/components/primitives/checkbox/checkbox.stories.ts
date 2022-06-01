@@ -1,4 +1,4 @@
-import Checkbox from './checkbox.svelte';
+import Checkbox from './checkbox.story.svelte';
 
 export default {
   component: Checkbox,
