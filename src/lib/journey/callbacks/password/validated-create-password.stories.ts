@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
-import Input from './create-password.svelte';
+import Input from './validated-create-password.svelte';
 
 const step = new FRStep({
   authId:

@@ -52,9 +52,9 @@
   }
 </script>
 
-<fieldset class=" tw_border-gray tw_border-y tw_pb-6 tw_pt-14">
+<fieldset class="tw_relative tw_border-gray tw_border-y tw_mb-4 tw_pb-6 tw_pt-14">
   <!-- TODO: Remove hardcoded legend below -->
-  <legend class="tw_absolute tw_top-12 tw_font-bold">Provide security question(s) & answer(s) below</legend>
+  <legend class="tw_absolute tw_top-6 tw_font-bold">Provide security question(s) & answer(s) below</legend>
   <Select defaultOption={0} key={inputNameQuestion} label={prompt} onChange={setQuestion} options={questions} />
 
   <Input key={inputNameAnswer || 'ka-answer-label'} label="Security Answer" onChange={setAnswer} isRequired={true} type="text" />

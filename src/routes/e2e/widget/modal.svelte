@@ -5,19 +5,30 @@
   import Widget, { modal, journey, user } from '../../../../package/modal';
 
   let userInfo = {};
+  let widget;
+  let widgetEl;
 
   async function logout() {
     await user.logout();
     userInfo = {};
   }
 
-  modal.onMount((component) => console.log(component));
-  journey.onSuccess((response) => (userInfo = response));
-  journey.onFailure((error) => console.log(error));
+  modal.onMount((widgetEl) => {
+    console.log('Singleton onMount event fired');
+    console.log(widgetEl)
+  });
+  journey.onSuccess((response) => {
+    console.log('Singleton onSuccess event fired');
+    (userInfo = response)
+  });
+  journey.onFailure((error) => {
+    console.log('Singleton onFailure event fired');
+    console.log(error)
+  });
 
   s_onMount(() => {
-    new Widget({
-      target: document.getElementById('login-widget'),
+    widget = new Widget({
+      target: widgetEl,
       props: {
         config: {
           clientId: 'WebOAuthClient',
@@ -47,3 +58,4 @@
     <Button onClick={() => modal.open()} style="primary">Login</Button>
   {/if}
 </div>
+<div bind:this={widgetEl}></div>

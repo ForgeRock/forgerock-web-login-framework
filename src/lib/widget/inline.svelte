@@ -46,24 +46,37 @@
       // TODO: decide what options to provide to client
       return await TokenManager.getTokens();
     },
-  }
+  };
 </script>
 
 <script lang="ts">
   import { Config } from '@forgerock/javascript-sdk';
-  import { onMount as s_onMount } from 'svelte';
+  import { createEventDispatcher, onMount as s_onMount } from 'svelte';
 
   export let config;
 
-  let componentEl;
+  const dispatch = createEventDispatcher();
+
+  let formEl;
 
   s_onMount(() => {
-    component = componentEl;
+    component = formEl;
     initForm();
-    callMounted && callMounted(componentEl);
+    /**
+     * Call mounted event for Singleton users
+     */
+    callMounted && callMounted(formEl);
+    /**
+     * Call mounted event for Instance users
+     * NOTE: needs to be wrapped in setTimeout. Asked in Svelte Discord
+     * if this is an issue or expected.
+     */
+    setTimeout(() => {
+      dispatch('form-mount', formEl);
+    }, 0);
   });
 
   Config.set(config);
 </script>
 
-<Form {returnError} {returnUser} />
+<Form widgetDispatch={dispatch} {returnError} {returnUser} />

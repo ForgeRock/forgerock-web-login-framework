@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
-import Input from './terms.svelte';
+import Input from './terms-conditions.svelte';
 
 const step = new FRStep({
   authId:

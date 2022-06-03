@@ -29,18 +29,11 @@ export default {
       },
     }),
     {
-      name: 'watch-change-plugin',
-      watchChange(id) {
+      name: 'generate-bundle-plugin',
+      generateBundle() {
+        // NOTE: Returning a promise is required to ensure this completes before writing bundle
         return new Promise((resolve, reject) => {
-          if (id.includes('src/lib/widget/modal.svelte')) {
-            rimraf(path.resolve('./package/modal.js'), () => resolve());
-          } else if (id.includes('src/lib/widget/inline.svelte')) {
-            rimraf(path.resolve('./package/inline.js'), () => resolve());
-          } else {
-            this.warn('Watch change plugin detected a non-entry point file change.');
-            this.warn('Will remove the old shared output `form-<hash>.js` file.');
-            rimraf(path.resolve('./package/form-*.js'), () => resolve());
-          }
+          rimraf(path.resolve('./package/*.js'), () => resolve());
         });
       },
     },
