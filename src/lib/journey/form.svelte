@@ -36,6 +36,10 @@
     getStep = initObj.getStep;
     step = initObj.step;
     submittingForm = initObj.submittingForm;
+
+    if (failureMessage) {
+      returnError && returnError(failureMessage);
+    }
   };
 
   $: {

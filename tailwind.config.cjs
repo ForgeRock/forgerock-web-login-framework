@@ -3,6 +3,7 @@ module.exports = {
   theme: {
     extend: {
       colors: {
+        // Color pallette
         cyan: '#17a2b8',
         blue: '#0B7BC1',
         'gray-dark': '#324054',
@@ -18,6 +19,8 @@ module.exports = {
         red: '#f7685b',
         teal: '#20c997',
         yellow: '#ffb946',
+
+        //
       },
       fontFamily: {
         /**
@@ -55,9 +58,5 @@ module.exports = {
   prefix: 'tw_',
   // Forms plugin _could_ be useful, but don't use the "base" strategy as it will collide
   // with customer styling on third-party apps
-  // plugins: [
-  //   require('@tailwindcss/forms')({
-  //     strategy: 'class', // only generate classes
-  //   })
-  // ],
+  plugins: [],
 };

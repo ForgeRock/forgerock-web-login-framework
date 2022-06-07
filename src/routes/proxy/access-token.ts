@@ -12,7 +12,7 @@ export async function post(event) {
   });
 
   const resBody = await response.json();
-  console.log(resBody);
+  // console.log(resBody);
 
   return {
     status: 200,

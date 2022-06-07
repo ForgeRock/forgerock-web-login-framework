@@ -1,18 +1,30 @@
+import autoprefixer from 'autoprefixer';
 import path from 'path';
+import postcssImport from 'postcss-import';
 import rimraf from 'rimraf';
-import svelte from 'rollup-plugin-svelte';
 import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
+import postcss from 'rollup-plugin-postcss';
 import resolve from '@rollup/plugin-node-resolve';
+import svelte from 'rollup-plugin-svelte';
 import { terser } from 'rollup-plugin-terser';
 import typescript from '@rollup/plugin-typescript';
-import css from 'rollup-plugin-css-only';
 import preprocess from 'svelte-preprocess';
+import tailwindcss from 'tailwindcss';
 
 const production = !process.env.ROLLUP_WATCH;
 
 export default {
   input: ['src/lib/widget/modal.svelte', 'src/lib/widget/inline.svelte'],
+  onwarn: function (warning) {
+    // TODO: Revisit once the JS SDK is updated to pure ES Modules
+    if (warning.code === 'THIS_IS_UNDEFINED') {
+      return;
+    }
+
+    // console.warn everything else
+    console.warn(warning.message);
+  },
   output: {
     sourcemap: true,
     format: 'es',
@@ -22,21 +34,39 @@ export default {
   },
   plugins: [
     alias({
+      /**
+       * Reminder to ensure aliases are added to the following:
+       *
+       * 1. svelte.config.js
+       * 2. rollup.config.js
+       * 3. .storybook/main.js.
+       * 4. vitest.config.ts
+       *
+       * TODO: Share alias object with other configs listed above
+       */
       entries: {
         $components: path.resolve('./src/lib/components'),
         $journey: path.resolve('./src/lib/journey'),
         $widget: path.resolve('./src/lib/widget'),
       },
     }),
+    // Clear target directory
     {
       name: 'generate-bundle-plugin',
       generateBundle() {
+        // Clears out `/package` directory when the new bundle is generated
         // NOTE: Returning a promise is required to ensure this completes before writing bundle
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
           rimraf(path.resolve('./package/*.js'), () => resolve());
         });
       },
     },
+    // Generate CSS output from `import 'thing.css';` imports and component <style>
+    postcss({
+      extract: path.resolve('./package/widget.css'),
+      plugins: [postcssImport, tailwindcss, autoprefixer],
+    }),
+    // Compile Svelte
     svelte({
       compilerOptions: {
         // enable run-time checks when not in production
@@ -49,9 +79,6 @@ export default {
         },
       }),
     }),
-    // we'll extract any component CSS out into
-    // a separate file - better for performance
-    css({ output: 'bundle.css' }),
 
     // If you have external dependencies installed from
     // npm, you'll most likely need these plugins. In

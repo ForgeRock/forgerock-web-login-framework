@@ -4,6 +4,8 @@
   import Form, { initForm } from '../journey/form.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
 
+  import './main.css';
+
   let component;
   let callMounted;
   let returnError;
@@ -79,4 +81,6 @@
   Config.set(config);
 </script>
 
-<Form widgetDispatch={dispatch} {returnError} {returnUser} />
+<div class="fr_widget-root">
+  <Form widgetDispatch={dispatch} {returnError} {returnUser} />
+</div>

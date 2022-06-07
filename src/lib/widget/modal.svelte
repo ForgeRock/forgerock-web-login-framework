@@ -4,6 +4,8 @@
   import Form, { initForm } from '../journey/form.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
 
+  import './main.css'
+
   let dialog;
   let callMounted;
   let returnError;
@@ -106,10 +108,12 @@
   }
 </script>
 
-<Dialog bind:dialogEl>
-  <div class="tw_flex w-full tw_justify-center">
-    <KeyIcon classes="tw_text-gray-light tw_fill-current tw_mb-4" size="72px">Key Icon</KeyIcon>
-  </div>
-  <h2 class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray">Sign In</h2>
-  <Form widgetDispatch={dispatch} closeModal={modal.close} {returnError} {returnUser} />
-</Dialog>
+<div class="fr_widget-root">
+  <Dialog bind:dialogEl>
+    <div class="tw_flex w-full tw_justify-center">
+      <KeyIcon classes="tw_text-gray-light tw_fill-current tw_mb-4" size="72px">Key Icon</KeyIcon>
+    </div>
+    <h2 class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray">Sign In</h2>
+    <Form widgetDispatch={dispatch} closeModal={modal.close} {returnError} {returnUser} />
+  </Dialog>
+</div>

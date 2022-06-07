@@ -1,0 +1,17 @@
+/**
+ * Write all your CSS imports here
+ *
+ * @layer is used here to control the cascade of CSS and to also give the user of the widget
+ * more control over how this CSS behaves in their own app.
+ *
+ * Ref: https://developer.mozilla.org/en-US/docs/Web/CSS/@layer
+ *
+ * Choose your type of "base CSS":
+ * 1. `custom.base.css` – (safer) use this if you don't want globally affecting CSS resets
+ * 2. `tailwind.base.css` – use this if you want Tailwind's default globally affecting CSS reset
+ */
+@import './custom.base.css' layer(fr-widget.base);
+/* @import './tailwind.base.css' layer(fr-widget.base); */
+@import './tailwind.utilities.css' layer(fr-widget.utilities);
+@import './tailwind.components.css' layer(fr-widget.components);
+@import './tailwind.variants.css' layer(fr-widget.variants);

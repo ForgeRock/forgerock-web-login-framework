@@ -1,4 +1,4 @@
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { FRStep } from '@forgerock/javascript-sdk';
 import { writable } from 'svelte/store';
 
 import Step from './step.svelte';

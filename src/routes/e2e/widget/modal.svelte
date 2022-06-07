@@ -38,13 +38,13 @@
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
           },
           realmPath: 'alpha',
-          tree: 'Login',
+          tree: 'Registration',
         },
       }
     });
   });
 
-  $: console.log(userInfo);
+  $: if (userInfo) console.log(userInfo);
 </script>
 
 <div class="tw_p-6">

@@ -1,17 +1,17 @@
-import type { Step } from '@forgerock/javascript-sdk';
+import { type Step, CallbackType } from '@forgerock/javascript-sdk';
 
 export const loginStep: Step = {
   authId:
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IkxvZ2luIiwib3RrIjoiNmwxb2RmdWFzbjBxMXNrZXBjZTUzZmMyNCIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaW9uSWQiOiIqQUFKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTVrTVhnMlptVkJNVmhZU0ZnNFR6VlNTMmRTUTFKQkxsQTBVV0p4Um10Tk5tMDRSblpNV1Y5eVZ6UnBZM0IzVlRneGIxUkxUa3c0YUVweE9UZFNOSGhHYzBGRVpIUjVRVlpMVVhab2Vtd3hjRkl6VVdsMGNIaENVV1pPVVhSbmFWODJlUzFmVGxCR1UwMVJkRGhNT0VSMGFVUk1UMkpHYUZsck1XSnNYMUUxU1ROQlRHd3dRbXRGVjI5TWNUaExTR001V21SbVpWTkZRVXBOTjBFMVEzQTBaRzQxVEc5cExTMVFUWGRoWnpaM2FrUkxORWxmVldKWllXbFRTak5FZGxkclQwZFpSVTV6V0hsSWFuY3RjV0o1WlV0emR6RTBZVWR6Ym5CdVVIVnNWbTFXWkZOc01XMUViSFUyTmxsNFZXOUhUMlZ3UVRKU09VSnVVRE5rYjBOWFMyTXpkREJqWXpVMWFqRm5lUzFYYzJabmVGTmlWekZZTlhkcVRtZFBVR1ozWW5SNVRISktjMHRwYzA0eWMyTTJWbFJ1T1RnMFZpMUVWVzVzVjJRMVN6QlZVVXBPY2w5MllVMURUMUZtU1hSM2NFc3lYMnhZWVhCdE9VVjNWRW8zY0VwVmQwVnJabHBKTkRWM1IyVlBVMGRDVlVaWlp5MVVhV05IVEdwT2NrcGZXazlxTkdKZmVXMWphWE5SU0U1WFdGOUtZeTFRZFZJNGIyWm9RbkE1U1RaRGMyWmZVbGcwWHpKUGJteDNVbDk0Y0d4dFUySlVSVlIxWTA5UVNHTnBkSGx1VjFsQ05VaDJObnB4WjFaNmJ5MDRNMkZCUVVzdFQydGpZWHBNWm1NeU1XYzNNbW94ZWxCU05HWnBhbUZaYVhGRFZGOUVhWE5IT0c0eVV6RkZUazF5T1ZOV2N6QmFjSE5WYkRKWlYzUkplSGhqT0MxMmMxQTBiaTEzWnpsUk5XcExkbkozWlV0c2EyOU9WazVETm5wT1dDMUNhbll6WVV0dFVUTjRVbVJxYUc5eU4zQnJSSFI2TUZKU1RHcHJXaTFYWkdwb05UaFliVFJtYTFKVFJFOTJWMHBLUlZJNVFUUmtXbEZHZEU1elQxcHBTR3BWWjFOdFgzVnpNSE4xZFVwR09EZE5hQzA0WldGd1YybDFMWGgzZFZaeGNuVk5SV0pQVmpGR1J6ZFJUbmRNU1RBdGJWWmlja3gyZVVsS04wNUJiamhxVEZZdFlsZHFMVVp1Wm1vd0xqWlBjemhUU2taUFNUaDRPVzgyTkV4NVdrNXVMVkUuRGpTUGdQck5VdFQ0U2JKWm9fZ2NiUlZCbWVQcGRHcUZzb1UyM250dVNCdyIsImV4cCI6MTY1NDIxNDQxMywiaWF0IjoxNjU0MjE0MTEzfQ.ZGwMWJb5crNXiAvvfvnwciOTyXaAKHjSk-aExg7QdnQ',
   callbacks: [
     {
-      type: 'NameCallback',
+      type: CallbackType.NameCallback,
       output: [{ name: 'prompt', value: 'User Name' }],
       input: [{ name: 'IDToken1', value: '' }],
       _id: 0,
     },
     {
-      type: 'PasswordCallback',
+      type: CallbackType.PasswordCallback,
       output: [{ name: 'prompt', value: 'Password' }],
       input: [{ name: 'IDToken2', value: '' }],
       _id: 1,
@@ -28,7 +28,7 @@ export const registrationStep: Step = {
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlJlZ2lzdHJhdGlvbiIsIm90ayI6ImlnOXFqMWNrbjFkYnVjajE2dXBtYmlsYjZtIiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNWpPRlJEUTJWRFkyaG9iR1l5ZVRkZmJDMDFSVXhSTGt3eUxWQlRSSFJzUldkVmIzUkZZV3RrZWpNMGQwSXlNekJDTTFGbVNGbGhhV2xZZGpFelV6RmxVWEl0UkcwNVRWY3dTR2htU3pKWk5WcGlPVlo2Yld0b2NFSjRiVGx5UXpFMVUyTmZaRTFSTm1oUk1rMTFOSFpsVm0xTlJUUTNTV3R1Y0djeU1sbE9lVUZRUzJKaGVucGpSMnRMVmxoVmJuWmpjVkpCU25KbGVGQkNRWGxLTURWZlNFdHdNMUIyWTBkaVlVOTRZMVJxVDFCWFQyRTRTbTF6UkRCbGFITk1XV1p3YzFOalIwMVdaVEZyYUU4dFJUZDZPR1YyVGxaVmNqUjNNRTgyVHpoS05GSTRkMHhwU3pseWJsTkpkVlpOZUU5RFFVbDZOVjh5UlhrdE5qazNabVUyTmtKek9UTm5ka3hUU1ZsWVYyVkZkVlF0Um1GRFJ6VTFWWGx5UWxSRGNUZzFTRE14TlZCSU5HMUVTRXhqU25GTWVIbElYM0pIV1RkcFpXRnhORUowV2xVM2RIbHJaVWhZYTBwUU5GVXhTRVJXUWs1M2MwMVhRME5QVUcxSVNGcHpRUzB0WkdkU1Jtb3pabkF3ZEZoWlgxSjRlR3hpUkdONU9WZHlZMG81VkROVWRrRlhSM2N3TTJoUlJISmZTMXBxY1d4bE1YRk5hWFp3TWpoemNHTnRURU5zWmtkYVZVdDZSRlIwTW5wamVqVlZkMVpEYnpsSU4zSmFhRVprZDJkM1lqQm5Ta2xsYTFKTWNXY3pRa3MzUzFCaFYwTnpNbTkxWVdrNExWUlBkM1J6VW14eGR6VTFRMjE0TVZGbFgzVnROVTFyY0dGUU9FSkJNRFUzTUVGNVpYQjNaVTFzVkRsd2FHTlJVSGhTY0Y5NU1FeHNRMkZIUWtOYWNqUmFYMVpqWlhGelIwMUlNbGR1YUdob1VXOTRhM2hNWkRkcFFWcEJNMjFqVlhWMFRtTnhRVlpOZFVwTFdsbHZPVkUxYm5oSk5IWnhWMEpKWkZWNk9IaFljR3BOVGpoR2EwSjVOVmMyY0V4M1lWQkVRaTF5V0dJNVlXeHljQzB0WWt0a2REVjZjRWxXWnpFelRFTjBhV1YzY1haSldFeFFZVEk1V2t0T2FVRjVTblJYWHpkV1gzTjRhbkpXWWxKMk5tMXdUM1ZRYW05dk4xWmZRbWRTWDFCaFZFbFBhR1ZxU0VwbVdtWlVPVjl3ZWw5T1kybFJTbFpFY0ZGTlRrMW9NRnBPZHpKT1dHdEVZMDh4VWtwb1pHNTFaRmRsVGxCc1psWk1NRGhHWm5CYWJFWlFZa3g1YVhsTU5USkZlVjl1ZVV0clIySnRTekEwWTFSaUxXRjNMVko0TVhCb2JqZEROMWhwYzA4elJWOVhYMmN1TTFZeldHNUNNbUZtZEV4NWRWUlVNME5aYldvemR3LmRKWUJVTk5Hb3h6WmZDNDZpQmp2c2VPcVNYVmJLcmNhcC11eko2cGl2ZmMiLCJleHAiOjE2NTQyMTM4ODgsImlhdCI6MTY1NDIxMzU4OH0.2TyyM5dBQYMfuOX24kIzwSy5GSGT8glabII8QN7Gl7A',
   callbacks: [
     {
-      type: 'ValidatedCreateUsernameCallback',
+      type: CallbackType.ValidatedCreateUsernameCallback,
       output: [
         {
           name: 'policies',
@@ -87,7 +87,7 @@ export const registrationStep: Step = {
       _id: 0,
     },
     {
-      type: 'StringAttributeInputCallback',
+      type: CallbackType.StringAttributeInputCallback,
       output: [
         { name: 'name', value: 'givenName' },
         { name: 'prompt', value: 'First Name' },
@@ -120,7 +120,7 @@ export const registrationStep: Step = {
       _id: 1,
     },
     {
-      type: 'StringAttributeInputCallback',
+      type: CallbackType.StringAttributeInputCallback,
       output: [
         { name: 'name', value: 'sn' },
         { name: 'prompt', value: 'Last Name' },
@@ -153,7 +153,7 @@ export const registrationStep: Step = {
       _id: 2,
     },
     {
-      type: 'StringAttributeInputCallback',
+      type: CallbackType.StringAttributeInputCallback,
       output: [
         { name: 'name', value: 'mail' },
         { name: 'prompt', value: 'Email Address' },
@@ -190,7 +190,7 @@ export const registrationStep: Step = {
       _id: 3,
     },
     {
-      type: 'BooleanAttributeInputCallback',
+      type: CallbackType.BooleanAttributeInputCallback,
       output: [
         { name: 'name', value: 'preferences/marketing' },
         { name: 'prompt', value: 'Send me special offers and services' },
@@ -207,7 +207,7 @@ export const registrationStep: Step = {
       _id: 4,
     },
     {
-      type: 'BooleanAttributeInputCallback',
+      type: CallbackType.BooleanAttributeInputCallback,
       output: [
         { name: 'name', value: 'preferences/updates' },
         { name: 'prompt', value: 'Send me news and updates' },
@@ -224,7 +224,7 @@ export const registrationStep: Step = {
       _id: 5,
     },
     {
-      type: 'ValidatedCreatePasswordCallback',
+      type: CallbackType.ValidatedCreatePasswordCallback,
       output: [
         { name: 'echoOn', value: false },
         {
@@ -254,7 +254,7 @@ export const registrationStep: Step = {
       _id: 6,
     },
     {
-      type: 'KbaCreateCallback',
+      type: CallbackType.KbaCreateCallback,
       output: [
         { name: 'prompt', value: 'Select a security question' },
         { name: 'predefinedQuestions', value: ["What's your favorite color?"] },
@@ -266,7 +266,7 @@ export const registrationStep: Step = {
       _id: 7,
     },
     {
-      type: 'TermsAndConditionsCallback',
+      type: CallbackType.TermsAndConditionsCallback,
       output: [
         { name: 'version', value: '0.0' },
         {

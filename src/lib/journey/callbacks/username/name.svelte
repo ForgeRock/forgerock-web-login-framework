@@ -12,4 +12,4 @@
   }
 </script>
 
-<Input key="Username" label={textInputLabel} onChange={setValue} type="text" value={existingValue} />
+<Input key={inputName} label={textInputLabel} onChange={setValue} type="text" value={existingValue} />

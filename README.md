@@ -110,9 +110,6 @@ journey.onFailure((errorObject) => { /* Run anything you want */ });
 modal.open();
 modal.close();
 
-// Listen for modal on mount event
-modal.onMount((modalDomElement) => { /* Run anything you want */ });
-
 // Methods for user management
 const isAuthorizedBoolean = await user.authorized();
 const userInfoObject = await user.info();
@@ -195,9 +192,6 @@ const loginWidget = new Widget({ target, config });
 journey.onSuccess((userDataObject) => { /* Run anything you want */ });
 journey.onFailure((errorObject) => { /* Run anything you want */ });
 
-// Listen for modal on mount event
-form.onMount((formDomElement) => { /* Run anything you want */ });
-
 // Methods for user management
 const isAuthorizedBoolean = await user.authorized();
 const userInfoObject = await user.info();
@@ -224,9 +218,6 @@ const loginWidget = new Widget({ target, config });
 // Listeners for journey events
 loginWidget.$on('journey-success', (userDataObject) => { /* Run anything you want */ };
 loginWidget.$on('journey-failure', (errorObject) => { /* Run anything you want */ };
-
-// Listen for form on mount event
-loginWidget.$on('form-mount', (modalDomElement) => { /* Run anything you want */ };
 
 // Methods for user management
 const isAuthorizedBoolean = await user.authorized();

@@ -1,28 +1,29 @@
 import adapter from '@sveltejs/adapter-auto';
 import preprocess from 'svelte-preprocess';
-import { resolve } from 'path';
+import path from 'path';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-  build: {
-    sourcemap: 'inline',
-  },
   kit: {
     adapter: adapter(),
     vite: {
       resolve: {
         alias: {
           /**
-           * Reminder to ensure aliases are added to tsconfig.json,
-           * rollup.config.js and .storybook/main.js.
+           * Reminder to ensure aliases are added to the following:
+           *
+           * 1. svelte.config.js
+           * 2. rollup.config.js
+           * 3. .storybook/main.js.
+           * 4. vitest.config.ts
            *
            * TODO: Share alias object with other configs listed above
            */
 
-          $components: resolve('./src/lib/components'),
-          $journey: resolve('./src/lib/journey'),
-          $widget: resolve('./src/lib/widget'),
-        }
+          $components: path.resolve('./src/lib/components'),
+          $journey: path.resolve('./src/lib/journey'),
+          $widget: path.resolve('./src/lib/widget'),
+        },
       },
       server: {
         hmr: {
@@ -36,14 +37,14 @@ const config = {
           // credentials: true
         },
         fs: {
-          allow: ['package']
-        }
-      }
-    }
+          allow: ['package'],
+        },
+      },
+    },
   },
   // Consult https://github.com/sveltejs/svelte-preprocess
   // for more information about preprocessors
-  preprocess: preprocess()
+  preprocess: preprocess(),
 };
 
 export default config;
