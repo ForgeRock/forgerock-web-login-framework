@@ -1,8 +1,8 @@
-import Select from './standard-label.svelte';
+import Select from './stacked-label.svelte';
 
 export default {
   component: Select,
-  title: 'Primitives/Select: Standard Label',
+  title: 'Primitives/Select: Stacked Label',
   argTypes: {},
 };
 

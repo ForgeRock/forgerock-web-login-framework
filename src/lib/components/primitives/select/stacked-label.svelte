@@ -1,18 +1,19 @@
+
 <script lang="ts">
   export let defaultOption;
   export let key;
   export let label;
   export let onChange;
   export let options;
-  export let width: 'full' | 'half' = 'full';
-</script>
+  export let width: 'full' | 'half' = 'full';</script>
 
-<div class={`tw_mb-3 tw_relative width-${width}`}>
+<div class="tw_mb-3">
+  <label class="tw_input-stacked-label" for={key}>{label}</label>
   <select
     on:change={onChange}
     id={key}
     name="selected"
-    class="tw_input-base tw_focusable-element tw_select-base tw_select-floating tw_w-full"
+    class={`tw_input-base tw_focusable-element tw_select-base width-${width} tw_p-3`}
   >
     {#each options as option, idx}
       <option value={idx} selected={idx === defaultOption}>
@@ -20,10 +21,6 @@
       </option>
     {/each}
   </select>
-  <label
-    class="tw_absolute tw_h-full tw_input-floating-label tw_select-floating-label tw_left-0 tw_origin-top-left tw_p-3 tw_scale-90 tw_translate-x-0.5 tw_-translate-y-2.5 tw_top-1"
-    for={key}>{label}</label
-  >
 </div>
 
 <style>

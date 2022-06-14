@@ -39,11 +39,11 @@
 
 <Input hasRightIcon={true} key={inputName} label={textInputLabel} onChange={setValue} {isRequired} {type}>
   <button
-    class={`tw_align-middle tw_bg-white tw_border-gray tw_border-r tw_rounded-r tw_border-y tw_items-center tw_flex tw_leading-6 tw_py-1 tw_px-3 tw_text-center`}
+    class={`tw_align-middle !tw_border-l-0 tw_focusable-element !tw_rounded-l-none tw_input-base tw_items-center tw_flex tw_leading-6 tw_py-1 tw_px-3 tw_text-center`}
     on:click={toggleVisibility}
     type="button"
   >
-    <EyeIcon classes="tw_text-gray tw_fill-current" visible={isVisible}>Show Password</EyeIcon>
+    <EyeIcon classes="tw_text-primary-dark tw_fill-current" visible={isVisible}>Show Password</EyeIcon>
   </button>
   {#if validationFailure}
     <div class="tw_w-full">{validationFailure}</div>

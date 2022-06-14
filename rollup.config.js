@@ -16,7 +16,7 @@ const production = !process.env.ROLLUP_WATCH;
 
 export default {
   input: ['src/lib/widget/modal.svelte', 'src/lib/widget/inline.svelte'],
-  onwarn: function (warning) {
+  onwarn: (warning) => {
     // TODO: Revisit once the JS SDK is updated to pure ES Modules
     if (warning.code === 'THIS_IS_UNDEFINED') {
       return;

@@ -3,6 +3,7 @@
 
   import Form, { initForm } from '../journey/form.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
+  import { initStyles } from './styles.store';
 
   import './main.css'
 
@@ -64,8 +65,9 @@
   import Dialog from '../components/compositions/dialog/dialog.svelte';
   import KeyIcon from '../components/icons/key-icon.svelte';
 
-  export let config;
+  export let config: any;
   export let open = false;
+  export let customStyles: any;
 
   const dispatch = createEventDispatcher();
 
@@ -91,6 +93,7 @@
 
   // TODO: Rethink setting root config at component level to fix instances
   Config.set(config);
+  initStyles(customStyles);
 
   $: {
     /**
@@ -111,9 +114,9 @@
 <div class="fr_widget-root">
   <Dialog bind:dialogEl>
     <div class="tw_flex w-full tw_justify-center">
-      <KeyIcon classes="tw_text-gray-light tw_fill-current tw_mb-4" size="72px">Key Icon</KeyIcon>
+      <KeyIcon classes="tw_text-gray-400 tw_fill-current tw_mb-3" size="72px">Key Icon</KeyIcon>
     </div>
-    <h2 class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray">Sign In</h2>
+    <h2 class="tw_flex tw_font-light tw_justify-center tw_mb-6 tw_text-4xl tw_text-primary">Sign In</h2>
     <Form widgetDispatch={dispatch} closeModal={modal.close} {returnError} {returnUser} />
   </Dialog>
 </div>

@@ -10,20 +10,14 @@
 </script>
 
 <div class="tw_mb-4">
-  <label
-    for={key}
-    class="tw_border tw_border-transparent tw_font-bold tw_inset-0 tw_leading-6 tw_text-gray-dark"
-    >{label}</label
-  >
+  <label for={key} class="tw_input-stacked-label">{label}</label>
   <input
     id={key}
     {type}
     on:change={onChange}
-    class={`width-{width} tw_border tw_border-gray ${
-      hasRightIcon ? 'tw_border-r-0' : ''
-    } tw_bg-white tw_block tw_leading-6 tw_p-3 tw_rounded ${
+    class={`tw_input-base tw_focusable-element ${hasRightIcon ? 'tw_border-r-0' : ''} ${
       hasRightIcon ? 'tw_rounded-r-none' : ''
-    } tw_text-base tw_text-gray-dark tw_w-full`}
+    } width-${width}`}
     {placeholder}
     {value}
   />

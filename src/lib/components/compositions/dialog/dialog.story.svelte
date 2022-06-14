@@ -14,7 +14,7 @@
 </script>
 
 <Button style="primary" width="auto" onClick={openDialog}>Open Dialog</Button>
-<Dialog bind:dialogEl>
+<Dialog bind:dialogEl dialogId="myDialog">
   <div class="tw_flex w-full tw_justify-center">
     <KeyIcon classes="tw_text-gray-light tw_fill-current tw_mb-4" size="72px" />
   </div>

@@ -1,8 +1,8 @@
-import Input from './standard-label.svelte';
+import Input from './stacked-label.svelte';
 
 export default {
   component: Input,
-  title: 'Primitives/Input: Standard Label',
+  title: 'Primitives/Input: Stacked Label',
   argTypes: {
     key: { control: 'text' },
     label: { control: 'text' },

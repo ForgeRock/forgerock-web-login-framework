@@ -36,7 +36,7 @@
   <!-- TODO: Remove hardcoded text below -->
   Please accept our below Terms and Conditions
   <details>
-    <summary class="fw-bold ps-1">{termsStart}</summary>
+    <summary class="tw_cursor-pointer tw_focusable-element tw_font-bold tw_mt-1 tw_rounded">{termsStart}</summary>
     {terms}
   </details>
 </Checkbox>

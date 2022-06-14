@@ -11,7 +11,7 @@ export default {
 
 export const Simple = {
   args: {
-    colorClass: 'tw_text-blue',
+    colorClass: 'tw_text-primary-light',
     layoutClasses: "tw_h-8 tw_w-8",
   },
 };

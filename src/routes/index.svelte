@@ -1,7 +1,8 @@
 <script>
   import { Config } from '@forgerock/javascript-sdk';
-  import Form from '../lib/journey/form.svelte';
+  import Form, { initForm } from '../lib/journey/form.svelte';
   import KeyIcon from '../lib/components/icons/key-icon.svelte';
+  import { onMount } from 'svelte';
 
   Config.set({
     clientId: 'WebOAuthClient',
@@ -23,17 +24,20 @@
       // },
     },
     realmPath: 'alpha',
-    tree: 'Login',
+    tree: 'Registration',
+  });
+
+  onMount(() => {
+    initForm();
   });
 </script>
 
-<div class="flex items-center justify-center my-5 min-h-full">
-  <div class="max-w-lg w-full bg-white p-10 rounded shadow-md">
-    <div class="flex w-full justify-center">
-      <KeyIcon classes="text-gray-400 fill-current" size="72px" />
+<div class="tw_bg-body tw_flex tw_justify-center tw_min-h-full">
+  <div class="tw_containing-box">
+    <div class="tw_flex tw_justify-center">
+      <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
-    <h1 class="flex justify-center text-4xl text-gray-600 font-family-">Sign In</h1>
+    <h1 class="tw_primary-header">Sign In</h1>
     <Form />
   </div>
 </div>
-

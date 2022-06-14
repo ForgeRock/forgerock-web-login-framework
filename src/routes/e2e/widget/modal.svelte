@@ -1,7 +1,6 @@
 <script lang="ts">
   import { onMount as s_onMount } from 'svelte';
 
-  import Button from '$lib/components/primitives/button/button.svelte';
   import Widget, { modal, journey, user } from '../../../../package/modal';
 
   let userInfo = {};
@@ -38,9 +37,16 @@
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
           },
           realmPath: 'alpha',
-          tree: 'Registration',
+          tree: 'Login',
         },
-      }
+        customStyles: {
+          button: [
+            { key: 'color', value: '#000000' },
+            { key: 'background-color', value: '#bada55' },
+            { key: 'border-color', value: '#bada55'},
+          ],
+        },
+      },
     });
   });
 
@@ -53,9 +59,9 @@
       <li id="fullName"><strong>Full name</strong>: {userInfo.fullName}</li>
       <li id="email"><strong>Email</strong>: {userInfo.email}</li>
     </ul>
-    <Button onClick={logout} style="primary">Logout</Button>
+    <button on:click={logout}>Logout</button>
   {:else}
-    <Button onClick={() => modal.open()} style="primary">Login</Button>
+    <button on:click={() => modal.open()}>Login</button>
   {/if}
 </div>
 <div bind:this={widgetEl}></div>

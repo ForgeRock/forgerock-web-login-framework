@@ -1,18 +1,25 @@
 <script lang="ts">
-  import Spinner from "$components/primitives/spinner/spinner.svelte";
+  import Spinner from '$components/primitives/spinner/spinner.svelte';
+  import { styles } from '$widget/styles.store';
+  import { generateStyleString } from '$lib/utilities/style.utilities';
 
   export let busy = false;
+  // export let customCss: { key: string; value: string }[] = [];
   export let onClick = (event: Event) => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
   export let type: 'button' | 'submit' = null;
   export let width: 'auto' | 'full' | 'half' | 'third' = 'auto';
+
+  const inlineStyles = generateStyleString($styles?.button);
 </script>
 
 <button
-  class={`style-${style} width-${width} tw_leading-6 tw_text-base tw_py-3 tw_px-6 tw_rounded`}
+  class={`style-${style} tw_button-base tw_focusable-element width-${width}`}
   data-test="button-primitive"
   on:click={onClick}
-  {type}>
+  style={inlineStyles}
+  {type}
+>
   {#if busy}
     <!-- Render a small spinner during form submission -->
     <Spinner colorClass="white" layoutClasses="tw_h-4 tw_w-4 tw_mr-2" />
@@ -22,13 +29,13 @@
 
 <style>
   .style-primary {
-    @apply tw_bg-blue tw_text-white;
+    @apply tw_button-primary;
   }
   .style-secondary {
-    @apply tw_bg-gray tw_text-white;
+    @apply tw_button-secondary;
   }
   .style-outline {
-    @apply tw_border;
+    @apply tw_button-outline;
   }
   .width-auto {
     @apply tw_w-auto;

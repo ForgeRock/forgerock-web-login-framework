@@ -51,6 +51,7 @@
     "autoprefixer": "^10.4.4",
     "babel-loader": "^8.2.5",
     "chromatic": "^6.5.4",
+    "color": "^4.2.3",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-storybook": "^0.5.12",

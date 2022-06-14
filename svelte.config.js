@@ -19,7 +19,6 @@ const config = {
            *
            * TODO: Share alias object with other configs listed above
            */
-
           $components: path.resolve('./src/lib/components'),
           $journey: path.resolve('./src/lib/journey'),
           $widget: path.resolve('./src/lib/widget'),
