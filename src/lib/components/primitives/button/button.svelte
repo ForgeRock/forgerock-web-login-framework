@@ -8,16 +8,33 @@
   export let onClick = (event: Event) => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
   export let type: 'button' | 'submit' = null;
-  export let width: 'auto' | 'full' | 'half' | 'third' = 'auto';
+  export let width: 'auto' | 'full' = 'auto';
 
-  const inlineStyles = generateStyleString($styles?.button);
+  const generateClassString = (...args) => {
+    return args.reduce((prev, curr) => {
+      switch(curr) {
+        // Button style cases
+        case 'primary':
+          return `${prev} tw_button-primary dark:tw_button-primary_dark`;
+        case 'secondary':
+          return `${prev} tw_button-secondary dark:tw_button-secondary_dark`;
+        case 'outline':
+          return `${prev} tw_button-outline dark:tw_button-outline_dark`;
+        // Button width cases
+        case 'auto':
+          return `${prev} tw_w-auto`;
+        case 'full':
+          return `${prev} tw_w-full`;
+      }
+    }, '');
+  }
 </script>
 
 <button
-  class={`style-${style} tw_button-base tw_focusable-element width-${width}`}
+  class={`${generateClassString(style, width)} tw_button-base tw_focusable-element width-${width}`}
   data-test="button-primitive"
   on:click={onClick}
-  style={inlineStyles}
+  style={generateStyleString($styles?.button)}
   {type}
 >
   {#if busy}
@@ -26,27 +43,3 @@
   {/if}
   <slot>Submit</slot>
 </button>
-
-<style>
-  .style-primary {
-    @apply tw_button-primary;
-  }
-  .style-secondary {
-    @apply tw_button-secondary;
-  }
-  .style-outline {
-    @apply tw_button-outline;
-  }
-  .width-auto {
-    @apply tw_w-auto;
-  }
-  .width-full {
-    @apply tw_w-full;
-  }
-  .width-half {
-    @apply tw_w-1/2;
-  }
-  .width-third {
-    @apply tw_w-1/3;
-  }
-</style>

@@ -32,12 +32,12 @@
   });
 </script>
 
-<div class="tw_bg-body tw_flex tw_justify-center tw_min-h-full">
-  <div class="tw_containing-box">
+<div class="tw_bg-body-light dark:tw_bg-body-dark tw_flex tw_justify-center tw_min-h-full">
+  <div class="tw_containing-box dark:tw_containing-box_dark">
     <div class="tw_flex tw_justify-center">
       <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
-    <h1 class="tw_primary-header">Sign In</h1>
+    <h1 class="tw_primary-header dark:tw_text-secondary-light">Sign In</h1>
     <Form />
   </div>
 </div>

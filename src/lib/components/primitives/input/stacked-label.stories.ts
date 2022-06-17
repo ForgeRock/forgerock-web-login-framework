@@ -1,4 +1,4 @@
-import Input from './stacked-label.svelte';
+import Input from './stacked-label.story.svelte';
 
 export default {
   component: Input,
@@ -11,8 +11,20 @@ export default {
   },
 };
 
-export const Simple = {
+export const Base = {
   args: {
+    isRequired: false,
+    key: 'simpleInput',
+    label: 'Username',
+    onChange: (e) => console.log(e.target.value),
+    placeholder: 'E.g. my-username',
+    value: '',
+  },
+};
+
+export const Error = {
+  args: {
+    isRequired: true,
     key: 'simpleInput',
     label: 'Username',
     onChange: (e) => console.log(e.target.value),

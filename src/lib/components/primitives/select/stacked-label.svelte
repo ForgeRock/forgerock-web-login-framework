@@ -1,33 +1,25 @@
-
 <script lang="ts">
-  export let defaultOption;
-  export let key;
-  export let label;
-  export let onChange;
-  export let options;
-  export let width: 'full' | 'half' = 'full';</script>
+  export let defaultOption: number = null;
+  export let isRequired: boolean;
+  export let key: string;
+  export let label: string;
+  export let onChange: () => void;
+  export let options: { value: number | null; text: string }[];
+</script>
 
 <div class="tw_mb-3">
-  <label class="tw_input-stacked-label" for={key}>{label}</label>
+  <label class="tw_input-label dark:tw_input-label_dark tw_input-stacked-label" for={key}>{label}</label>
   <select
-    on:change={onChange}
+    class={`tw_input-base dark:tw_input-base_dark tw_focusable-element tw_select-base dark:tw_select-base_dark tw_p-3 tw_w-full`}
     id={key}
+    on:change={onChange}
     name="selected"
-    class={`tw_input-base tw_focusable-element tw_select-base width-${width} tw_p-3`}
+    required={isRequired}
   >
-    {#each options as option, idx}
-      <option value={idx} selected={idx === defaultOption}>
-        {option}
-      </option>
-    {/each}
+  {#each options as option, idx}
+    <option value={option.value ? option.value : ''} selected={idx === defaultOption}>
+      {option.text}
+    </option>
+  {/each}
   </select>
 </div>
-
-<style>
-  .width-full {
-    @apply tw_w-full;
-  }
-  .width-half {
-    @apply tw_w-1/2;
-  }
-</style>

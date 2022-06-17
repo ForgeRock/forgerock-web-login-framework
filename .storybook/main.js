@@ -14,10 +14,11 @@ module.exports = {
       name: '@storybook/addon-postcss',
       options: {
         postcssLoaderOptions: {
-          implementation: require('postcss')
-        }
-      }
-    }
+          implementation: require('postcss'),
+        },
+      },
+    },
+    'storybook-dark-mode',
   ],
   framework: '@storybook/svelte',
   core: {

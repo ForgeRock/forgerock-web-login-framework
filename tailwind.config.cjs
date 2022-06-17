@@ -6,7 +6,7 @@ const plugin = require('tailwindcss/plugin');
 module.exports = {
   content: ['./src/**/*.{html,js,svelte,ts}'],
   presets: [
-    require('./themes/default.config.cjs'),
+    require('./themes/default/config.cjs'),
   ],
   theme: {
     extend: {

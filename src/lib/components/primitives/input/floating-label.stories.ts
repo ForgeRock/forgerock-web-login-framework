@@ -1,4 +1,4 @@
-import Input from './floating-label.svelte';
+import Input from './floating-label.story.svelte';
 
 export default {
   component: Input,
@@ -11,11 +11,22 @@ export default {
   },
 };
 
-export const Simple = {
+export const Base = {
   args: {
+    isRequired: false,
     key: 'simpleInput',
     label: 'Username',
     onChange: (e) => console.log(e.target.value),
     value: '',
   },
 };
+
+export const Error = {
+  args: {
+    isRequired: true,
+    key: 'simpleInput',
+    label: 'Username',
+    onChange: (e) => console.log(e.target.value),
+    value: '',
+  },
+}
