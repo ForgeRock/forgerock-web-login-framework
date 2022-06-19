@@ -1,0 +1,34 @@
+<script lang="ts">
+  import Label from '$components/primitives/label/label.svelte';
+
+  export let selectClasses = '';
+  export let defaultOption: number = null;
+  export let isRequired: boolean;
+  export let key: string;
+  export let label: string;
+  export let labelClasses = '';
+  export let labelOrder: 'first' | 'last' = 'first';
+  export let onChange: (event: Event) => void;
+  export let options: { value: number | null; text: string }[];
+</script>
+
+{#if labelOrder === 'first'}
+  <Label {key} classes={`${labelClasses}`}>{label}</Label>
+{/if}
+
+<select
+  class={`${selectClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_select-base dark:tw_select-base_dark tw_w-full`}
+  id={key}
+  on:change={onChange}
+  required={isRequired}
+>
+  {#each options as option}
+    <option value={option.value ? option.value : ''} selected={option.value === defaultOption}>
+      {option.text}
+    </option>
+  {/each}
+</select>
+
+{#if labelOrder === 'last'}
+  <Label {key} classes={`${labelClasses}`}>{label}</Label>
+{/if}

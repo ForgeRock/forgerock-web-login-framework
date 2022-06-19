@@ -1,8 +1,9 @@
 <script lang="ts">
   import Button from '$components/primitives/button/button.svelte';
-  import Select from "./stacked-label.svelte";
+  import Select from "./floating-label.svelte";
 
   export let defaultOption: number;
+  export let errorMessage: string;
   export let isRequired: boolean;
   export let key: string;
   export let label: string;
@@ -22,6 +23,6 @@ function submitForm(event: SubmitEvent) {
   on:submit|preventDefault={submitForm}
   novalidate
 >
-  <Select {defaultOption} {isRequired} {key} {label} {onChange} {options} />
+  <Select {defaultOption} {errorMessage} {isRequired} {key} {label} {onChange} {options} />
   <Button style="primary">Trigger Error</Button>
 </form>

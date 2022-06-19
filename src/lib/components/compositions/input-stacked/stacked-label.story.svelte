@@ -2,6 +2,7 @@
   import Button from '$components/primitives/button/button.svelte';
   import Input from './stacked-label.svelte';
 
+  export let errorMessage: string;
   export let isRequired: boolean;
   export let key: string;
   export let label: string;
@@ -21,6 +22,6 @@
   on:submit|preventDefault={submitForm}
   novalidate
 >
-  <Input {isRequired} {key} {label} {onChange} {placeholder} />
+  <Input {errorMessage} {isRequired} {key} {label} {onChange} {placeholder} />
   <Button style="primary">Trigger Error</Button>
 </form>

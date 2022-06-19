@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getUsernameValidationFailureText, isInputRequired } from '$journey/utilities/callback.utilities';
-  import Input from "$components/primitives/input/floating-label.svelte";
+  import Input from "$components/compositions/input-floating/floating-label.svelte";
 
   export let callback: any;
   export let inputName: string;

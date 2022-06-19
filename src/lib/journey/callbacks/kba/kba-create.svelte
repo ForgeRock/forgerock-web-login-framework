@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { KbaCreateCallback } from '@forgerock/javascript-sdk';
 
-  import Input from '$components/primitives/input/floating-label.svelte';
-  import Select from '$components/primitives/select/floating-label.svelte';
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import Select from '$components/compositions/select-floating/floating-label.svelte';
 
 
   export let callback: KbaCreateCallback;
@@ -52,9 +52,9 @@
   }
 </script>
 
-<fieldset class="tw_relative tw_border-gray tw_border-y tw_mb-4 tw_pb-6 tw_pt-14">
+<fieldset class="tw_kba-fieldset dark:tw_kba-fieldset_dark">
   <!-- TODO: Remove hardcoded legend below -->
-  <legend class="tw_absolute tw_top-6 tw_font-bold">Provide security question(s) & answer(s) below</legend>
+  <legend class="tw_kba-legend dark:tw_kba-legend_dark">Provide security question(s) & answer(s) below</legend>
   <Select defaultOption={0} key={inputNameQuestion} label={prompt} onChange={setQuestion} options={questions} />
 
   <Input key={inputNameAnswer || 'ka-answer-label'} label="Security Answer" onChange={setAnswer} isRequired={true} type="text" />

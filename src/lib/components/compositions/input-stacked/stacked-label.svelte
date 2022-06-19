@@ -1,5 +1,8 @@
 <script lang="ts">
+  import Input from '$components/primitives/input/input.svelte';
+
   export let hasRightIcon = false;
+  export let errorMessage = '';
   export let isRequired = false;
   export let key: string;
   export let label: string;
@@ -11,17 +14,18 @@
 </script>
 
 <div class="tw_mb-4">
-  <label for={key} class="tw_input-label dark:tw_input-label_dark tw_input-stacked-label">{label}</label>
-  <input
-    class={`tw_input-base dark:tw_input-base_dark tw_focusable-element ${hasRightIcon ? 'tw_border-r-0' : ''} ${
-      hasRightIcon ? 'tw_rounded-r-none' : ''
-    } tw_w-full`}
-    id={key}
-    on:change={onChange}
+  <Input
+    inputClasses={`${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}
+    {key}
+    {onChange}
+    {label}
+    labelClasses="tw_input-stacked-label"
+    labelOrder="first"
     {placeholder}
-    required={isRequired}
+    {isRequired}
     {type}
     {value}
   />
   <slot />
+  <p class="tw_input-error-message dark:tw_input-error-message_dark">{errorMessage}</p>
 </div>

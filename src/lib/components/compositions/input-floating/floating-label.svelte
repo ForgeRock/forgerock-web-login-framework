@@ -1,4 +1,7 @@
 <script lang="ts">
+  import Input from '$components/primitives/input/input.svelte';
+
+  export let errorMessage = '';
   export let hasRightIcon = false;
   export let isRequired = false;
   export let key: string;
@@ -15,19 +18,17 @@
     TODO: Improve layout of floating label. Maybe use grid instead of Twitter's CSS?
     NOTE: `placeholder` for the input is required for Twitter Bootstrap's floating label
   -->
-  <input
-    class={`tw_input-base dark:tw_input-base_dark tw_focusable-element tw_input-floating ${hasRightIcon ? '!tw_border-r-0' : ''} tw_flex-1 ${
-      hasRightIcon ? '!tw_rounded-r-none' : ''
-    } tw_w-full`}
-    id={key}
-    on:change={onChange}
-    placeholder={label}
-    required={isRequired}
+  <Input
+    inputClasses={`tw_input-floating ${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}
+    {key}
+    {onChange}
+    {label}
+    labelClasses="tw_absolute tw_border tw_border-transparent tw_input-floating-label"
+    labelOrder="last"
+    {isRequired}
     {type}
     {value}
   />
-  <label for={key} class="tw_absolute tw_border tw_border-transparent tw_input-floating-label tw_input-label dark:tw_input-label_dark"
-    >{label}</label
-  >
   <slot />
+  <p class="tw_input-error-message dark:tw_input-error-message_dark">{errorMessage}</p>
 </div>

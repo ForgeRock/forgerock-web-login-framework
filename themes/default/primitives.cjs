@@ -1,7 +1,79 @@
 const colorLib = require('color');
 
-module.exports = function (theme) {
+module.exports = function(theme) {
   return {
+    /**
+     * Button primitive theme settings
+     */
+    '.button-base': {
+      // NOTE: Ensure all button have borders for consistent height between regular and outline buttons
+      border: `${theme('borderWidth.DEFAULT')} solid`,
+      borderRadius: theme('borderRadius.DEFAULT'),
+      outlineOffset: '0',
+      position: 'relative',
+      fontSize: theme('fontSize.base'),
+      lineHeight: 1.5,
+      padding: `${theme('spacing.3')} ${theme('spacing.6')}`,
+      zIndex: '0',
+      '&:focus': {
+        outlineOffset: '2px',
+      },
+      '&:active': {
+        outlineOffset: '3px',
+      },
+      '&::before': {
+        background: `black`,
+        outline: `${theme('borderWidth.DEFAULT')} solid black`,
+        borderRadius: theme('borderRadius.DEFAULT'),
+        content: '""',
+        display: 'block',
+        height: '100%',
+        left: '0',
+        position: 'absolute',
+        opacity: '0',
+        top: '0',
+        transition: `opacity 0.25s`,
+        width: '100%',
+        zIndex: '-1',
+      },
+      '&:hover::before, &:focus::before': {
+        opacity: `0.05`,
+      },
+    },
+    '.button-primary': {
+      borderColor: theme('colors.primary.dark'),
+      backgroundColor: theme('colors.primary.dark'),
+      color: theme('colors.white'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.2`,
+      },
+    },
+    '.button-primary_dark': {
+      borderColor: theme('colors.primary.light'),
+      backgroundColor: theme('colors.primary.light'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.2`,
+      },
+    },
+    '.button-outline': {
+      borderColor: theme('colors.secondary.dark'),
+    },
+    '.button-outline_dark': {
+      borderColor: theme('colors.secondary.light'),
+      color: theme('colors.white'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.3`,
+      },
+    },
+    '.button-secondary': {
+      borderColor: theme('colors.secondary.light'),
+      backgroundColor: theme('colors.secondary.light'),
+      color: theme('colors.black'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-secondary_dark': {},
     /**
      * Checkbox primitive theme settings
      */
@@ -141,52 +213,6 @@ module.exports = function (theme) {
       '&:invalid:hover': {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
-    },
-    /**
-     * Essentially the same technique as Twitter Bootstrap's v5 "floating label"
-     * https://getbootstrap.com/docs/5.0/forms/floating-labels/
-     *
-     * TODO: See if the new CSS pseudo-selector `has()` can replace below technique
-     * when it gets full browser support
-     */
-    '.input-floating': {
-      '&:focus, &:not(:placeholder-shown)': {
-        paddingBottom: theme('spacing.1'),
-        paddingTop: theme('spacing.5'),
-      },
-      '&::-ms-reveal': {
-        display: 'none',
-      },
-      '&::placeholder': {
-        color: 'transparent',
-      },
-      '&:focus ~ label, &:not(:placeholder-shown) ~ label': {
-        fontWeight: theme('fontWeight.medium'),
-        transform: 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)',
-      },
-    },
-    '.input-floating-label': {
-      height: 'calc(3rem + 2px)',
-      lineHeight: theme('spacing.6'),
-      padding: theme('spacing.3'),
-      pointerEvents: 'none',
-      transformOrigin: '0 0',
-      transition: 'opacity 0.1s ease-in-out, transform 0.1s ease-in-out',
-    },
-    '.input-stacked-label': {
-      display: 'block',
-      fontWeight: 'bold',
-      lineHeight: theme('spacing.6'),
-      marginBottom: theme('spacing.1'),
-    },
-    '.select-floating': {
-      lineHeight: theme('spacing.4'),
-      padding: `${theme('spacing.6')} ${theme('spacing.9')} ${theme('spacing.1')} ${theme(
-        'spacing.3',
-      )}`,
-    },
-    '.select-floating-label': {
-      fontWeight: theme('fontWeight.medium'),
     },
   };
 };

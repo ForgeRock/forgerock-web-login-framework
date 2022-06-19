@@ -1,7 +1,7 @@
 <script lang="ts">
   import Button from '$components/primitives/button/button.svelte';
   import Dialog from './dialog.svelte';
-  import Input from '$components/primitives/input/floating-label.svelte';
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
 
   // TODO: Export controls for changing dialog context

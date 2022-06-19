@@ -1,8 +1,8 @@
-import Input from './stacked-label.story.svelte';
+import Input from './floating-label.story.svelte';
 
 export default {
   component: Input,
-  title: 'Primitives/Input: Stacked Label',
+  title: 'Compositions/Input: Floating',
   argTypes: {
     key: { control: 'text' },
     label: { control: 'text' },
@@ -17,18 +17,17 @@ export const Base = {
     key: 'simpleInput',
     label: 'Username',
     onChange: (e) => console.log(e.target.value),
-    placeholder: 'E.g. my-username',
     value: '',
   },
 };
 
 export const Error = {
   args: {
+    errorMessage: 'This field must have a value.',
     isRequired: true,
     key: 'simpleInput',
     label: 'Username',
     onChange: (e) => console.log(e.target.value),
-    placeholder: 'E.g. my-username',
     value: '',
   },
-};
+}

@@ -1,3 +1,15 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json"
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "$components": ["src/lib/components"],
+      "$components/*": ["src/lib/components/*"],
+      "$journey": ["src/lib/journey"],
+      "$journey/*": ["src/lib/journey/*"],
+      "$lib": ["src/lib"],
+      "$lib/*": ["src/lib/*"],
+      "$widget": ["src/lib/widget"],
+      "$widget/*": ["src/lib/widget/*"]
+    }
+  }
 }

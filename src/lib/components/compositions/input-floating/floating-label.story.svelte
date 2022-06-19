@@ -2,6 +2,7 @@
   import Button from '$components/primitives/button/button.svelte';
   import FloatingLabel from './floating-label.svelte';
 
+  export let errorMessage: string;
   export let isRequired: boolean;
   export let key: string;
   export let label: string;
@@ -20,6 +21,6 @@
   on:submit|preventDefault={submitForm}
   novalidate
 >
-  <FloatingLabel {key} {label} {onChange} {isRequired} />
+  <FloatingLabel {errorMessage} {key} {label} {onChange} {isRequired} />
   <Button style="primary">Trigger Error</Button>
 </form>

@@ -1,8 +1,8 @@
-import Select from './stacked-label.story.svelte';
+import Select from './floating-label.story.svelte';
 
 export default {
   component: Select,
-  title: 'Primitives/Select: Stacked Label',
+  title: 'Compositions/Select: Floating',
   argTypes: {},
 };
 
@@ -22,6 +22,7 @@ export const Base = {
 
 export const Error = {
   args: {
+    errorMessage: 'Please select an option',
     isRequired: true,
     key: 'uniqueId',
     label: 'Select your option',
