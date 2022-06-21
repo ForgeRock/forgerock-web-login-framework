@@ -4,7 +4,7 @@
    *
    * TODO: If there's a better way to do this, change to it
    */
-  import('../app.css');
+  import '../app.css';
 </script>
 
 <slot />
