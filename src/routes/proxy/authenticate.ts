@@ -7,9 +7,13 @@ export async function post(event) {
 
   // console.log(body.toString());
 
+  // STATEFUL COOKIES
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
   const reqCookie = Array.isArray(reqCookieUuid) && get(reqCookieUuid[1]);
+
+  // STATELESS COOKIES
+  // TODO: Implement stateless cookie management
   // console.log(`Cookie sent to AM: ${reqCookie}`);
 
   const response = await fetch(

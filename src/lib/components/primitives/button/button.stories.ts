@@ -1,3 +1,5 @@
+import { screen, userEvent } from '@storybook/testing-library';
+
 import Button from './button.story.svelte';
 
 export default {
@@ -6,7 +8,7 @@ export default {
   argTypes: {
     busy: {
       options: [true, false],
-      control: { type: 'radio' },
+      control: { type: 'boolean' },
     },
     style: {
       options: ['outline', 'primary', 'secondary'],
@@ -17,7 +19,7 @@ export default {
       control: { type: 'radio' },
     },
     width: {
-      options: ['auto', 'full', 'half', 'third'],
+      options: ['auto', 'full'],
       control: { type: 'radio' },
     },
   },
@@ -32,6 +34,7 @@ export const Primary = {
     width: 'auto',
   },
 };
+
 export const Secondary = {
   args: {
     busy: false,
@@ -41,6 +44,7 @@ export const Secondary = {
     width: 'auto',
   },
 };
+
 export const Outline = {
   args: {
     busy: false,
@@ -50,6 +54,7 @@ export const Outline = {
     width: 'auto',
   },
 };
+
 export const Custom = {
   args: {
     busy: false,
@@ -64,6 +69,7 @@ export const Custom = {
     width: 'auto',
   },
 };
+
 export const FullWidthPrimary = {
   args: {
     busy: false,
@@ -72,4 +78,27 @@ export const FullWidthPrimary = {
     type: 'button',
     width: 'full',
   },
+};
+
+const Template = (args) => ({
+  Component: Button,
+  props: args,
+});
+
+export const Interaction = Template.bind({});
+
+Interaction.args = Primary.args;
+
+Interaction.play = async () => {
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const buttonEl = screen.getByText('Click Me', {
+    selector: 'button',
+  });
+  await userEvent.click(buttonEl);
 };

@@ -17,6 +17,7 @@ export default defineConfig({
        */
       $components: resolve('./src/lib/components'),
       $journey: resolve('./src/lib/journey'),
+      $lib: resolve('./src/lib'),
       $widget: resolve('./src/lib/widget'),
     }
   },

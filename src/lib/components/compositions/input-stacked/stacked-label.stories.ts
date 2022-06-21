@@ -1,3 +1,6 @@
+import { screen, userEvent } from '@storybook/testing-library';
+// import { expect } from '@storybook/jest';
+
 import Input from './stacked-label.story.svelte';
 
 export default {
@@ -32,4 +35,35 @@ export const Error = {
     placeholder: 'E.g. my-username',
     value: '',
   },
+};
+
+const Template = (args) => ({
+  Component: Input,
+  props: args,
+});
+
+export const Interaction = Template.bind({});
+
+Interaction.args = Error.args;
+
+Interaction.play = async () => {
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const inputEl = screen.getByLabelText('Username', {
+    selector: 'input',
+  });
+  await userEvent.click(inputEl);
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.type(inputEl, 'my-username', {
+    delay: 200,
+  });
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.clear(inputEl);
+
+  await userEvent.tab();
 };
