@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Input from "$components/primitives/input/floating-label.svelte";
+  import Input from "$components/compositions/input-floating/floating-label.svelte";
 
   export let callback;
   export let inputName;
@@ -12,4 +12,4 @@
   }
 </script>
 
-<Input key="Username" label={textInputLabel} onChange={setValue} type="text" value={existingValue} />
+<Input key={inputName} label={textInputLabel} onChange={setValue} type="text" value={existingValue} />

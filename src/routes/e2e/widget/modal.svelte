@@ -1,23 +1,33 @@
 <script lang="ts">
   import { onMount as s_onMount } from 'svelte';
 
-  import Button from '$lib/components/primitives/button/button.svelte';
   import Widget, { modal, journey, user } from '../../../../package/modal';
 
   let userInfo = {};
+  let widget;
+  let widgetEl;
 
   async function logout() {
     await user.logout();
     userInfo = {};
   }
 
-  modal.onMount((component) => console.log(component));
-  journey.onSuccess((response) => (userInfo = response));
-  journey.onFailure((error) => console.log(error));
+  modal.onMount((widgetEl) => {
+    console.log('Singleton onMount event fired');
+    console.log(widgetEl)
+  });
+  journey.onSuccess((response) => {
+    console.log('Singleton onSuccess event fired');
+    (userInfo = response)
+  });
+  journey.onFailure((error) => {
+    console.log('Singleton onFailure event fired');
+    console.log(error)
+  });
 
   s_onMount(() => {
-    new Widget({
-      target: document.getElementById('login-widget'),
+    widget = new Widget({
+      target: widgetEl,
       props: {
         config: {
           clientId: 'WebOAuthClient',
@@ -29,11 +39,18 @@
           realmPath: 'alpha',
           tree: 'Login',
         },
-      }
+        customStyles: {
+          button: [
+            { key: 'color', value: '#000000' },
+            { key: 'background-color', value: '#bada55' },
+            { key: 'border-color', value: '#bada55'},
+          ],
+        },
+      },
     });
   });
 
-  $: console.log(userInfo);
+  $: if (userInfo) console.log(userInfo);
 </script>
 
 <div class="tw_p-6">
@@ -42,8 +59,9 @@
       <li id="fullName"><strong>Full name</strong>: {userInfo.fullName}</li>
       <li id="email"><strong>Email</strong>: {userInfo.email}</li>
     </ul>
-    <Button onClick={logout} style="primary">Logout</Button>
+    <button on:click={logout}>Logout</button>
   {:else}
-    <Button onClick={() => modal.open()} style="primary">Login</Button>
+    <button on:click={() => modal.open()}>Login</button>
   {/if}
 </div>
+<div bind:this={widgetEl}></div>

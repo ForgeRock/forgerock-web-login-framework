@@ -2,13 +2,13 @@ import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 import { get as getCookie } from '$lib/server/sessions';
 
 export async function get(event) {
-  console.log('Start authorization call');
+  // console.log('Start authorization call');
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
   const reqCookie = Array.isArray(reqCookieUuid) && getCookie(reqCookieUuid[1]);
 
-  console.log('Authorize request: AM cookie sent');
-  console.log(reqCookie);
+  // console.log('Authorize request: AM cookie sent');
+  // console.log(reqCookie);
 
   const response = await fetch(
     `${AM_DOMAIN_PATH}${OAUTH_REALM_PATH}/authorize${event.url.search}`,

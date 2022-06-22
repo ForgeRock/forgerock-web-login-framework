@@ -1,7 +1,7 @@
 <script lang='ts'>
   import type { ChoiceCallback } from '@forgerock/javascript-sdk';
 
-  import Select from '$components/primitives/select/floating-label.svelte';
+  import Select from '$components/compositions/select-floating/floating-label.svelte';
 
   export let callback: ChoiceCallback;
   export let inputName = '';

@@ -25,7 +25,12 @@ export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 export async function initTree(tree: string) {
   const step: Writable<StepTypes> = writable(null);
   const failureMessage: Writable<string | null> = writable(null);
+  const options: any = {};
   const submittingForm: Writable<boolean> = writable(false);
+
+  if (tree) {
+    options.tree = tree;
+  }
 
   async function getOAuth() {
     try {
@@ -69,7 +74,7 @@ export async function initTree(tree: string) {
       /**
        * Initial attempt to retrieve next step
        */
-      nextStep = await FRAuth.next(get(step as Writable<FRStep>), { tree });
+      nextStep = await FRAuth.next(get(step as Writable<FRStep>), options);
     } catch (err) {
       console.error(`Next step request | ${err}`);
 
@@ -101,7 +106,7 @@ export async function initTree(tree: string) {
         /**
          * Restart tree to get fresh step
          */
-        restartStep = await FRAuth.next(undefined, { tree });
+        restartStep = await FRAuth.next(undefined, options);
       } catch (err) {
         console.error(`Restart failed step request | ${err}`);
 

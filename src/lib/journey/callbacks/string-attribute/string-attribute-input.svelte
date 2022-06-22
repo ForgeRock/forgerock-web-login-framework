@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getStringAttributeValidationFailureText, isInputRequired } from '$journey/utilities/callback.utilities';
-  import Input from "$components/primitives/input/floating-label.svelte";
+  import Input from "$components/compositions/input-floating/floating-label.svelte";
 
   export let callback: any;
   export let inputName: string;
@@ -9,7 +9,7 @@
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
   const textInputLabel = callback.getPrompt();
-  const validationFailure = getStringAttributeValidationFailureText(callback, label);
+  const validationFailure = 'This field requires an input'; // getStringAttributeValidationFailureText(callback, label);
 
   let type = 'text';
 
@@ -29,8 +29,4 @@
   }
 </script>
 
-<Input key={inputName} label={textInputLabel} onChange={setValue} {isRequired} {type} value={existingValue}>
-  {#if validationFailure}
-    <div class="invalid-feedback">{validationFailure}</div>
-  {/if}
-</Input>
+<Input errorMessage={validationFailure} key={inputName} label={textInputLabel} onChange={setValue} {isRequired} {type} value={existingValue} />

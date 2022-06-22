@@ -41,7 +41,7 @@ Now, you can import the Widget into your app as a modal dialog (aka "lightbox"),
 import Widget from 'forgerock-web-login-widget/modal';
 
 // OR, as embedded
-import Widget from 'forgerock-web-login-widget/embed';
+import Widget from 'forgerock-web-login-widget/inline';
 
 // ...
 
@@ -110,9 +110,6 @@ journey.onFailure((errorObject) => { /* Run anything you want */ });
 modal.open();
 modal.close();
 
-// Listen for modal on mount event
-modal.onMount((modalDomElement) => { /* Run anything you want */ });
-
 // Methods for user management
 const isAuthorizedBoolean = await user.authorized();
 const userInfoObject = await user.info();
@@ -129,7 +126,7 @@ If you have more than one instance of the Widget within your DOM, you'll need to
 
 ```js
 // Import Widget and one user "singleton" for managing user
-import Widget, { user } from 'forgerock-web-login-widget';
+import Widget, { user } from 'forgerock-web-login-widget/modal';
 
 // ...
 
@@ -176,7 +173,7 @@ interface UserData {
 }
 ```
 
-## Complete Widget API: Embedded
+## Complete Widget API: Inline
 
 ### Recommended: "singleton" methods to form events and controls
 
@@ -184,7 +181,7 @@ This is the recommended method for controlling your widget. If you have multiple
 
 ```js
 // Import Widget and additional "singletons" for modal and user management
-import Widget, { form, journey, user } from 'forgerock-web-login-widget/embed';
+import Widget, { form, journey, user } from 'forgerock-web-login-widget/inline';
 
 // ...
 
@@ -194,9 +191,6 @@ const loginWidget = new Widget({ target, config });
 // Listeners for journey events
 journey.onSuccess((userDataObject) => { /* Run anything you want */ });
 journey.onFailure((errorObject) => { /* Run anything you want */ });
-
-// Listen for modal on mount event
-form.onMount((modalDomElement) => { /* Run anything you want */ });
 
 // Methods for user management
 const isAuthorizedBoolean = await user.authorized();
@@ -214,7 +208,7 @@ If you have more than one instance of the Widget within your DOM, you'll need to
 
 ```js
 // Import Widget and one user "singleton" for managing user
-import Widget, { user } from 'forgerock-web-login-widget';
+import Widget, { user } from 'forgerock-web-login-widget/inline';
 
 // ...
 
@@ -224,9 +218,6 @@ const loginWidget = new Widget({ target, config });
 // Listeners for journey events
 loginWidget.$on('journey-success', (userDataObject) => { /* Run anything you want */ };
 loginWidget.$on('journey-failure', (errorObject) => { /* Run anything you want */ };
-
-// Listen for form on mount event
-loginWidget.$on('form-mount', (modalDomElement) => { /* Run anything you want */ };
 
 // Methods for user management
 const isAuthorizedBoolean = await user.authorized();

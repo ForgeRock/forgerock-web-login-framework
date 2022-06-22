@@ -10,16 +10,15 @@ module.exports = {
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
-    // Using the Svelte CSF is quite limiting
-    // '@storybook/addon-svelte-csf',
     {
       name: '@storybook/addon-postcss',
       options: {
         postcssLoaderOptions: {
-          implementation: require('postcss')
-        }
-      }
-    }
+          implementation: require('postcss'),
+        },
+      },
+    },
+    'storybook-dark-mode',
   ],
   framework: '@storybook/svelte',
   core: {
@@ -38,8 +37,19 @@ module.exports = {
       // customize the Vite config here
       resolve: {
         alias: {
+          /**
+           * Reminder to ensure aliases are added to the following:
+           *
+           * 1. svelte.config.js
+           * 2. rollup.config.js
+           * 3. .storybook/main.js.
+           * 4. vitest.config.ts
+           *
+           * TODO: Share alias object with other configs listed above
+           */
           $components: resolve('./src/lib/components'),
           $journey: resolve('./src/lib/journey'),
+          $lib: resolve('./src/lib'),
           $widget: resolve('./src/lib/widget'),
         }
       }

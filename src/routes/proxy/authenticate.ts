@@ -7,10 +7,14 @@ export async function post(event) {
 
   // console.log(body.toString());
 
+  // STATEFUL COOKIES
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
   const reqCookie = Array.isArray(reqCookieUuid) && get(reqCookieUuid[1]);
-  console.log(`Cookie sent to AM: ${reqCookie}`);
+
+  // STATELESS COOKIES
+  // TODO: Implement stateless cookie management
+  // console.log(`Cookie sent to AM: ${reqCookie}`);
 
   const response = await fetch(
     `${AM_DOMAIN_PATH}${JSON_REALM_PATH}/authenticate?authIndexType=service&authIndexValue=Login`,
@@ -32,7 +36,7 @@ export async function post(event) {
   // console.log(resBody);
 
   const resCookie = response.headers.get('set-cookie');
-  console.log(`AM response write cookie header: ${resCookie}`);
+  // console.log(`AM response write cookie header: ${resCookie}`);
 
   if (resCookie.includes(AM_COOKIE_NAME)) {
     if (resCookie !== reqCookie) {

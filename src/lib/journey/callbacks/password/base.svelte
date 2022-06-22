@@ -2,7 +2,7 @@
   import type { PasswordCallback, ValidatedCreatePasswordCallback } from "@forgerock/javascript-sdk";
 
   import EyeIcon from "$components/icons/eye-icon.svelte";
-  import Input from "$components/primitives/input/floating-label.svelte";
+  import Input from "$components/compositions/input-floating/floating-label.svelte";
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let inputName: string;
@@ -39,11 +39,11 @@
 
 <Input hasRightIcon={true} key={inputName} label={textInputLabel} onChange={setValue} {isRequired} {type}>
   <button
-    class={`tw_align-middle tw_bg-white tw_border-gray tw_border-r tw_rounded-r tw_border-y tw_items-center tw_flex tw_leading-6 tw_py-1 tw_px-3 tw_text-center`}
+    class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
     on:click={toggleVisibility}
     type="button"
   >
-    <EyeIcon classes="tw_text-gray tw_fill-current" visible={isVisible}>Show Password</EyeIcon>
+    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>Show Password</EyeIcon>
   </button>
   {#if validationFailure}
     <div class="tw_w-full">{validationFailure}</div>

@@ -7,7 +7,7 @@ jobs:
   pr:
     strategy:
       matrix:
-        node: [14.x, 16.x] # tests both npm 7 & 8
+        node: [16.x] # tests both npm 7 & 8
         os: [macos-latest, ubuntu-latest, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
