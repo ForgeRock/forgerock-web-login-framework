@@ -1,0 +1,20 @@
+<script lang="ts">
+  export let num: number = 2;
+
+  function generateClassString(...args) {
+    return args.reduce((prev, curr) => {
+      switch(curr) {
+        case 4:
+          return `${prev} tw_grid-cols-4`;
+        case 3:
+          return `${prev} tw_grid-cols-3`;
+        case 2:
+          return `${prev} tw_grid-cols-2`;
+      }
+    }, '');
+  }
+</script>
+
+<div class={`tw_grid ${generateClassString(num)} tw_gap-4`}>
+  <slot />
+</div>

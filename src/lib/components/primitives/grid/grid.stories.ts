@@ -1,10 +1,10 @@
-import { screen, userEvent } from '@storybook/testing-library';
+import { userEvent } from '@storybook/testing-library';
 
-import Buttons from './button-group.story.svelte';
+import Buttons from './grid.story.svelte';
 
 export default {
   component: Buttons,
-  title: 'Primitives/Button Group',
+  title: 'Primitives/Grid',
   argTypes: {},
 };
 

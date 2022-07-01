@@ -146,12 +146,15 @@ const step = new FRStep({
 });
 
 export default {
-  component: Input,
-  title: 'Callbacks/StringAttributeInput',
   argTypes: {
-    callback: { control: 'text' },
-    inputName: { control: 'text' },
+    callback: { control: false },
+    inputName: { control:false },
   },
+  component: Input,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  title: 'Callbacks/StringAttributeInput',
 };
 
 export const Base = {
@@ -172,6 +175,5 @@ export const Error = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[2],
     inputName: 'email',
-    showError: true,
   },
 };

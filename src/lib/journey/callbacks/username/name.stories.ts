@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
-import Input from './name.svelte';
+import Input from './name.story.svelte';
 
 const step = new FRStep({
   authId:
@@ -20,12 +20,15 @@ const step = new FRStep({
 });
 
 export default {
-  component: Input,
-  title: 'Callbacks/Name',
   argTypes: {
-    callback: { control: 'text' },
-    inputName: { control: 'text' },
+    callback: { control: false },
+    inputName: { control: false },
   },
+  component: Input,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  title: 'Callbacks/Name',
 };
 
 export const Base = {

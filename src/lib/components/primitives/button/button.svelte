@@ -10,7 +10,7 @@
   export let type: 'button' | 'submit' = null;
   export let width: 'auto' | 'full' = 'auto';
 
-  const generateClassString = (...args) => {
+  function generateClassString(...args) {
     return args.reduce((prev, curr) => {
       switch(curr) {
         // Button style cases

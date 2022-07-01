@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
-import Input from './kba-create.svelte';
+import Input from './kba-create.story.svelte';
 
 const step = new FRStep({
   authId:
@@ -34,12 +34,15 @@ const step = new FRStep({
 });
 
 export default {
-  component: Input,
-  title: 'Callbacks/KbaCreate',
   argTypes: {
-    callback: { control: 'text' },
-    inputName: { control: 'text' },
+    callback: { control: false },
+    inputName: { control: false },
   },
+  component: Input,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  title: 'Callbacks/KbaCreate',
 };
 
 export const Base = {

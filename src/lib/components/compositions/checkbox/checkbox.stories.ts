@@ -3,8 +3,6 @@ import { screen, userEvent } from '@storybook/testing-library';
 import Checkbox from './checkbox.story.svelte';
 
 export default {
-  component: Checkbox,
-  title: 'Compositions/Checkbox',
   argTypes: {
     label: {
       control: { type: 'text' },
@@ -16,6 +14,8 @@ export default {
       control: { type: 'boolean' },
     },
   },
+  component: Checkbox,
+  title: 'Compositions/Checkbox',
 };
 
 export const Base = {

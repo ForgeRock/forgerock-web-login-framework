@@ -1,16 +1,22 @@
 import { FRStep } from '@forgerock/javascript-sdk';
 import { writable } from 'svelte/store';
 
-import Step from './step.svelte';
+import Step from './step.story.svelte';
 import { loginStep, registrationStep } from './step.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
 
 export default {
+  argTypes: {
+    step: { control: false },
+    submitForm: { control: false },
+  },
   component: Step,
+  parameters: {
+    layout: 'fullscreen',
+  },
   title: 'Journey/Step',
-  argTypes: {},
 };
 
 export const Login = {

@@ -1,3 +1,38 @@
 <script>
   window.global = window;
+
+  window.onload = () => {
+    console.log('Loaded!!!!!!!');
+    const body = document.body.root
+    root.classList.add('tw_bg-background-light');
+    root.classList.add('dark:tw_bg-background-dark');
+  };
 </script>
+
+<style>
+  html, body, #root {
+    height: 100%;
+    min-height: 100%;
+  }
+
+  .sb-main-padded {
+    padding: 0 !important;
+  }
+
+  .sb-main-centered #root {
+    width: 100%;
+  }
+
+  .sb-main-centered #root > * {
+    margin: auto;
+    width: fit-content;
+  }
+
+  .sb-main-padded #root {
+    padding: 1rem;
+  }
+
+  .sb-main-fullscreen #root {
+    padding: 0;
+  }
+</style>

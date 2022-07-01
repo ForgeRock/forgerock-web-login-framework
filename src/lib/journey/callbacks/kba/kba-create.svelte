@@ -56,9 +56,13 @@
 
 <fieldset class="tw_kba-fieldset tw_input-spacing dark:tw_kba-fieldset_dark">
   <!-- TODO: Remove hardcoded legend below -->
-  <legend class="tw_kba-legend dark:tw_kba-legend_dark">
-    Provide security question(s) & answer(s) below
+  <legend class="tw_sr-only">
+    Security question(s)
   </legend>
+
+  <h2 class="tw_kba-header dark:tw_kba-header_dark">
+    Provide security question(s) & answer(s) below
+  </h2>
 
   <span class="tw_kba-lock-icon dark:tw_kba-lock-icon_dark">
     <LockIcon size="18" />

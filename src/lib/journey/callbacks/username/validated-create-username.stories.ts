@@ -161,12 +161,16 @@ const step = new FRStep({
 });
 
 export default {
-  component: Input,
-  title: 'Callbacks/ValidatedCreateUsername',
   argTypes: {
-    callback: { control: 'text' },
-    inputName: { control: 'text' },
+    callback: { control: false },
+    inputName: { control: false },
+    showError: { control: 'boolean' },
   },
+  component: Input,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  title: 'Callbacks/ValidatedCreateUsername',
 };
 
 export const Base = {
@@ -180,6 +184,5 @@ export const Error = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreateUsernameCallback)[1],
     inputName: 'usernameCallback',
-    showError: true,
   },
 };

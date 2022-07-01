@@ -132,15 +132,18 @@ module.exports = function(theme) {
      * String input and select primitive theme settings
      */
      '.input-base': {
-      backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+      backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
       border: `${theme('borderWidth.DEFAULT')} solid ${theme('colors.secondary.DEFAULT')}`,
       borderRadius: theme('borderRadius.DEFAULT'),
       color: theme('colors.black'),
       fontSize: theme('fontSize.base'),
       lineHeight: theme('spacing.6'),
       padding: theme('spacing.3'),
-      '&:hover, &:focus': {
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+      '&:hover,': {
+        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
+      },
+      '&:focus': {
+        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
       },
       '& ~ .input-error-message': {
         display: 'none',
@@ -177,13 +180,14 @@ module.exports = function(theme) {
       // },
     },
     '.input-base_dark': {
-      backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
+      backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
+      borderColor: colorLib(theme('colors.body.dark')).fade(0.1).toString(),
       color: theme('colors.white'),
       '&:focus': {
-        backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
       '&:hover': {
-        backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
       '&[aria-invalid="true"]': {
         borderColor: theme('colors.error.light'),
@@ -219,15 +223,15 @@ module.exports = function(theme) {
       )} center url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
         theme('colors.secondary.dark'),
       ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-      backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+      backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
       backgroundSize: '16px 12px',
       // TODO: Use design tokens, not absolute values
       height: 'calc(3rem + 2px)',
       '&:hover': {
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
       },
       '&:focus': {
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
       },
       '&[aria-invalid="true"]:invalid': {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
@@ -252,9 +256,12 @@ module.exports = function(theme) {
       )} center / 16px 12px url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
         theme('colors.secondary.light'),
       ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-      backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
-      '&:hover, &:focus': {
-        backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
+      backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
+      '&:hover,': {
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
+      },
+      '&:focus': {
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
       '&[aria-invalid="true"]:invalid': {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(

@@ -6,7 +6,6 @@
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/compositions/checkbox/checkbox.svelte';
-  import Error from '$components/primitives/message/error.svelte';
 
   export let callback: AttributeInputCallback<boolean>;
   export let inputName = '';

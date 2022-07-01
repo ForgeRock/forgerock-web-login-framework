@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
-import Input from './boolean.svelte';
+import Checkbox from './boolean.story.svelte';
 
 const step = new FRStep({
   authId:
@@ -44,12 +44,15 @@ const step = new FRStep({
 });
 
 export default {
-  component: Input,
-  title: 'Callbacks/BooleanAttributeInput',
   argTypes: {
-    callback: { control: 'text' },
-    inputName: { control: 'text' },
+    callback: { control: false },
+    inputName: { control: false },
   },
+  component: Checkbox,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  title: 'Callbacks/BooleanAttributeInput',
 };
 
 export const Base = {

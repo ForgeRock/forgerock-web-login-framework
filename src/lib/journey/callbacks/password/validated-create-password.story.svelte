@@ -3,6 +3,7 @@
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
 
 
+  import Centered from '$components/primitives/box/centered.svelte';
   import Input from './validated-create-password.svelte';
 
   export let callback: ValidatedCreatePasswordCallback;
@@ -22,4 +23,6 @@
   });
 </script>
 
-<Input bind:this={el} {callback} {inputName} />
+<Centered>
+  <Input bind:this={el} {callback} {inputName} />
+</Centered>
