@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
-  import Form, { initForm } from '../journey/form.svelte';
+  import Journey, { initJourney } from '../journey/journey.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
 
   import './main.css';
@@ -42,7 +42,7 @@
       email.set('');
       fullName.set('');
       isAuthenticated.set(false);
-      initForm();
+      initJourney();
     },
     async tokens(renew = false) {
       // TODO: decide what options to provide to client
@@ -63,7 +63,7 @@
 
   s_onMount(() => {
     component = formEl;
-    initForm();
+    initJourney();
     /**
      * Call mounted event for Singleton users
      */
@@ -82,5 +82,5 @@
 </script>
 
 <div class="fr_widget-root">
-  <Form widgetDispatch={dispatch} {returnError} {returnUser} />
+  <Journey widgetDispatch={dispatch} {returnError} {returnUser} />
 </div>

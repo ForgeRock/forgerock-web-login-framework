@@ -1,4 +1,4 @@
-<script lang='ts'>
+<script lang="ts">
   import type { ChoiceCallback } from '@forgerock/javascript-sdk';
 
   import Select from '$components/compositions/select-floating/floating-label.svelte';
@@ -14,7 +14,7 @@
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
   const prompt = callback.getPrompt();
-  const choiceOptions = callback.getChoices();
+  const choiceOptions = callback.getChoices()?.map((label, idx) => ({ text: label, value: idx }));
   const defaultChoice = callback.getDefaultChoice();
 
   /**
@@ -33,4 +33,11 @@
   }
 </script>
 
-<Select defaultOption={defaultChoice} key={inputName} label={prompt} onChange={setValue} options={choiceOptions} />
+<Select
+  defaultOption={defaultChoice}
+  isRequired={false}
+  key={inputName}
+  label={prompt}
+  onChange={setValue}
+  options={choiceOptions}
+/>

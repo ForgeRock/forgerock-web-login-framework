@@ -23,6 +23,23 @@ const step = new FRStep({
       ],
       _id: 5,
     },
+    {
+      type: CallbackType.BooleanAttributeInputCallback,
+      output: [
+        { name: 'name', value: 'acceptance' },
+        { name: 'prompt', value: 'Please accept this' },
+        { name: 'required', value: true },
+        { name: 'policies', value: {} },
+        { name: 'failedPolicies', value:  ['{ policyRequirement: "MUST_BE_ACCEPTED" }'] },
+        { name: 'validateOnly', value: false },
+        { name: 'value', value: false },
+      ],
+      input: [
+        { name: 'IDToken6', value: false },
+        { name: 'IDToken6validateOnly', value: false },
+      ],
+      _id: 5,
+    },
   ],
 });
 
@@ -35,9 +52,16 @@ export default {
   },
 };
 
-export const Simple = {
+export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.BooleanAttributeInputCallback),
+    callback: step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[0],
+    inputName: 'passwordCallback',
+  },
+};
+
+export const Error = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[1],
     inputName: 'passwordCallback',
   },
 };

@@ -38,5 +38,8 @@ module.exports = function  (theme) {
     '.primary-header_dark': {
       color: theme('colors.secondary.light'),
     },
+    '.input-spacing': {
+      marginBottom: theme('spacing.4'),
+    }
   }
 }

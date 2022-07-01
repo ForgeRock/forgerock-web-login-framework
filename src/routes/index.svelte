@@ -1,6 +1,6 @@
 <script>
   import { Config } from '@forgerock/javascript-sdk';
-  import Form, { initForm } from '../lib/journey/form.svelte';
+  import Form, { initJourney } from '../lib/journey/journey.svelte';
   import KeyIcon from '../lib/components/icons/key-icon.svelte';
   import { onMount } from 'svelte';
 
@@ -28,7 +28,7 @@
   });
 
   onMount(() => {
-    initForm();
+    initJourney();
   });
 </script>
 

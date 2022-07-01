@@ -7,12 +7,12 @@ module.exports = function (theme) {
       borderColor: theme('colors.secondary.light'),
       borderBottom: '1px solid',
       borderTop: '1px solid',
-      marginBottom: theme('spacing.4'),
+      marginTop: theme('spacing.8'),
       paddingBottom: theme('spacing.6'),
       paddingTop: theme('spacing.14'),
     },
     '.kba-fieldset_dark': {
-      borderColor: theme('colors.body.dark'),
+      borderColor: colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString(),
     },
     '.kba-legend': {
       position: 'absolute',
@@ -21,6 +21,25 @@ module.exports = function (theme) {
     },
     '.kba-legend_dark': {
       color: theme('colors.secondary.light'),
+    },
+    '.kba-lock-icon': {
+      display: 'flex',
+      justifyContent: 'center',
+      position: 'absolute',
+      top: `-${theme('spacing.3')}`,
+      width: '100%',
+      '& > svg': {
+        backgroundColor: theme('colors.background.light'),
+        color: theme('colors.secondary.light'),
+        fill: 'currentcolor',
+        top: `-${theme('spacing.3')}`,
+        width: '2em',
+      },
+    },
+    '.kba-lock-icon_dark': {
+      '& > svg': {
+        backgroundColor: theme('colors.background.dark'),
+      },
     },
     '.password-button': {
       alignItems: 'center',

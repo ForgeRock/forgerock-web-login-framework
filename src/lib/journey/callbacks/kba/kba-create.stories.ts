@@ -9,14 +9,26 @@ const step = new FRStep({
     {
       type: CallbackType.KbaCreateCallback,
       output: [
-        { name: 'prompt', value: 'Select a security question' },
-        { name: 'predefinedQuestions', value: ["What's your favorite color?"] },
+        {
+          name: 'prompt',
+          value: 'Select a security question',
+        },
+        {
+          name: 'predefinedQuestions',
+          value: ["What's your favorite color?", 'Who was your first employer?'],
+        },
       ],
       input: [
-        { name: 'IDToken8question', value: '0' },
-        { name: 'IDToken8answer', value: 'red' },
+        {
+          name: 'IDToken8question',
+          value: '',
+        },
+        {
+          name: 'IDToken8answer',
+          value: '',
+        },
       ],
-      _id: 7,
+      _id: 26,
     },
   ],
 });
@@ -30,7 +42,7 @@ export default {
   },
 };
 
-export const Simple = {
+export const Base = {
   args: {
     callback: step.getCallbackOfType(CallbackType.KbaCreateCallback),
     inputName: 'passwordCallback',

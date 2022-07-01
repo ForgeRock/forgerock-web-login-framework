@@ -1,17 +1,22 @@
 <script lang="ts">
-  import { getUsernameValidationFailureText, isInputRequired } from '$journey/utilities/callback.utilities';
-  import Input from "$components/compositions/input-floating/floating-label.svelte";
+  import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
 
-  export let callback: any;
+  import {
+    getUsernameValidationFailureText,
+    isInputRequired,
+  } from '$journey/utilities/callback.utilities';
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
+
+  export let callback: ValidatedCreateUsernameCallback;
   export let inputName: string;
 
-  const existingValue = callback?.getInputValue();
+  const existingValue = callback?.getInputValue() as string;
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
   const textInputLabel = callback.getPrompt();
   const validationFailure = getUsernameValidationFailureText(callback, label);
 
-  let type = 'text';
+  let type: 'text' = 'text';
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -29,8 +34,12 @@
   }
 </script>
 
-<Input key={inputName} label={textInputLabel} onChange={setValue} {isRequired} {type} value={existingValue}>
-  {#if validationFailure}
-    <div class="invalid-feedback">{validationFailure}</div>
-  {/if}
-</Input>
+<Input
+  errorMessage={validationFailure}
+  {isRequired}
+  key={inputName}
+  label={textInputLabel}
+  onChange={setValue}
+  {type}
+  value={existingValue}
+/>

@@ -16,7 +16,10 @@ export default {
 
 export const Base = {
   args: {
-    isRequired: false,
+    checkValidity: (e: Event) => {
+      const el = e.target as HTMLInputElement;
+      return !!el.value
+    },
     key: 'simpleInput',
     label: 'Username',
     onChange: (e) => console.log(e.target.value),
@@ -27,13 +30,9 @@ export const Base = {
 
 export const Error = {
   args: {
-    errorMessage: 'This field requires a value',
+    ...Base.args,
+    errorMessage: 'This field must have a value.',
     isRequired: true,
-    key: 'simpleInput',
-    label: 'Username',
-    onChange: (e) => console.log(e.target.value),
-    placeholder: 'E.g. my-username',
-    value: '',
   },
 };
 
@@ -44,9 +43,22 @@ const Template = (args) => ({
 
 export const Interaction = Template.bind({});
 
-Interaction.args = Error.args;
+Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
 Interaction.play = async () => {
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const submitButton = screen.getByText('Trigger Error');
+  await userEvent.click(submitButton);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -62,8 +74,6 @@ Interaction.play = async () => {
   });
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  await userEvent.clear(inputEl);
 
   await userEvent.tab();
 };

@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
-  import Form, { initForm } from '../journey/form.svelte';
+  import Journey, { initJourney } from '../journey/journey.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
   import { initStyles } from './styles.store';
 
@@ -28,7 +28,7 @@
       callMounted = (component) => fn(component);
     },
     open() {
-      initForm();
+      initJourney();
       dialog.showModal();
     },
   };
@@ -103,7 +103,7 @@
      * TODO: currently broken as state isn't completely managed internally
     */
     if (mounted && open) {
-      initForm();
+      initJourney();
       dialogEl.showModal();
     } else if (mounted && !open) {
       dialogEl.close();
@@ -112,11 +112,11 @@
 </script>
 
 <div class="fr_widget-root">
-  <Dialog bind:dialogEl>
+  <Dialog bind:dialogEl dialogId="sampleDialog">
     <div class="tw_flex w-full tw_justify-center">
       <KeyIcon classes="tw_text-gray-400 tw_fill-current tw_mb-3" size="72px">Key Icon</KeyIcon>
     </div>
     <h2 class="tw_flex tw_font-light tw_justify-center tw_mb-6 tw_text-4xl tw_text-primary">Sign In</h2>
-    <Form widgetDispatch={dispatch} closeModal={modal.close} {returnError} {returnUser} />
+    <Journey widgetDispatch={dispatch} closeModal={modal.close} {returnError} {returnUser} />
   </Dialog>
 </div>

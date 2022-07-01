@@ -3,7 +3,7 @@
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
-
+  import LockIcon from '$components/icons/lock-icon.svelte';
 
   export let callback: KbaCreateCallback;
   export let inputName = '';
@@ -16,7 +16,9 @@
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
   const prompt = callback.getPrompt();
-  const questions = callback.getPredefinedQuestions();
+  const questions = callback
+    .getPredefinedQuestions()
+    ?.map((label, idx) => ({ text: label, value: idx }));
   const inputNameQuestion = inputName;
   const inputArr = callback?.payload?.input;
   const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
@@ -52,10 +54,30 @@
   }
 </script>
 
-<fieldset class="tw_kba-fieldset dark:tw_kba-fieldset_dark">
+<fieldset class="tw_kba-fieldset tw_input-spacing dark:tw_kba-fieldset_dark">
   <!-- TODO: Remove hardcoded legend below -->
-  <legend class="tw_kba-legend dark:tw_kba-legend_dark">Provide security question(s) & answer(s) below</legend>
-  <Select defaultOption={0} key={inputNameQuestion} label={prompt} onChange={setQuestion} options={questions} />
+  <legend class="tw_kba-legend dark:tw_kba-legend_dark">
+    Provide security question(s) & answer(s) below
+  </legend>
 
-  <Input key={inputNameAnswer || 'ka-answer-label'} label="Security Answer" onChange={setAnswer} isRequired={true} type="text" />
+  <span class="tw_kba-lock-icon dark:tw_kba-lock-icon_dark">
+    <LockIcon size="18" />
+  </span>
+
+  <Select
+    defaultOption={0}
+    isRequired={true}
+    key={inputNameQuestion}
+    label={prompt}
+    onChange={setQuestion}
+    options={questions}
+  />
+
+  <Input
+    key={inputNameAnswer || 'ka-answer-label'}
+    label="Security Answer"
+    onChange={setAnswer}
+    isRequired={true}
+    type="text"
+  />
 </fieldset>

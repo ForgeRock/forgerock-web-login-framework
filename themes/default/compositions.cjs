@@ -3,6 +3,34 @@ const colorLib = require('color');
 module.exports = function(theme) {
   return {
     /**
+     * Dialog box theme settings
+     */
+    '.dialog-box': {
+      backgroundColor: theme('colors.background.light'),
+      borderRadius: theme('borderRadius.DEFAULT'),
+      boxShadow: theme('boxShadow.DEFAULT'),
+      height: '100%',
+      margin: `${theme('spacing.2')} 0 0 0`,
+      maxHeight: '100%',
+      maxWidth: '100%',
+      padding: theme('spacing.6'),
+      paddingBottom: theme('spacing.16'),
+      width: '100%',
+    },
+    '.dialog-box_dark': {
+      backgroundColor: theme('colors.background.dark'),
+    },
+    '.dialog-box_medium': {
+      height: 'fit-content',
+      margin: 'auto',
+      maxWidth: theme('maxWidth.lg'),
+      padding: theme('spacing.12'),
+      width: theme('width["3/4"]'),
+    },
+    '.dialog-x': {
+      borderRadius: theme('borderRadius.DEFAULT'),
+    },
+    /**
      * Essentially the same technique as Twitter Bootstrap's v5 "floating label"
      * https://getbootstrap.com/docs/5.0/forms/floating-labels/
      *
@@ -47,6 +75,10 @@ module.exports = function(theme) {
     },
     '.select-floating-label': {
       fontWeight: theme('fontWeight.medium'),
+      left: theme('spacing.0'),
+      top: theme('spacing.0'),
+      transform: 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)',
+      transformOrigin: 'top left',
     },
     /**
      * Input error message

@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   // TODO: Is this a bad pattern?
-  export let initForm;
+  export let initJourney;
 </script>
 
 <script lang="ts">
@@ -12,7 +12,7 @@
 
   import Step from '$journey/step.svelte';
 
-  export let closeModal;
+  export let closeModal = () => {};
   export let returnError;
   export let returnUser;
   export let widgetDispatch;
@@ -29,7 +29,7 @@
   let submittingForm: Writable<boolean>;
 
   // Assign function to variable initialized in module context above
-  initForm = async (tree) => {
+  initJourney = async (tree) => {
     let initObj = await initTree(tree);
 
     failureMessage = initObj.failureMessage;

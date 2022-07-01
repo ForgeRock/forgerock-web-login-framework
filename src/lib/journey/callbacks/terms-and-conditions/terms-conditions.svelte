@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
-  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
+  import Checkbox from '$components/compositions/checkbox/checkbox.svelte';
 
   export let callback: TermsAndConditionsCallback;
   export let inputName = '';

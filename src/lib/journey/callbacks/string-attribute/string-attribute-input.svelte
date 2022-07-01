@@ -1,17 +1,23 @@
 <script lang="ts">
-  import { getStringAttributeValidationFailureText, isInputRequired } from '$journey/utilities/callback.utilities';
-  import Input from "$components/compositions/input-floating/floating-label.svelte";
+  import {
+    getAttributeValidationFailureText,
+    getInputTypeFromPolicies,
+    isInputRequired,
+  } from '$journey/utilities/callback.utilities';
+  import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
-  export let callback: any;
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
+
+  export let callback: AttributeInputCallback<string>;
   export let inputName: string;
 
-  const existingValue = callback?.getInputValue();
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
+  const policies = callback.getPolicies();
+  const type = getInputTypeFromPolicies(policies);
+  const previousValue = callback?.getInputValue() as string;
   const textInputLabel = callback.getPrompt();
-  const validationFailure = 'This field requires an input'; // getStringAttributeValidationFailureText(callback, label);
-
-  let type = 'text';
+  const validationFailure = getAttributeValidationFailureText(callback, label);
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -29,4 +35,12 @@
   }
 </script>
 
-<Input errorMessage={validationFailure} key={inputName} label={textInputLabel} onChange={setValue} {isRequired} {type} value={existingValue} />
+<Input
+  errorMessage={validationFailure}
+  key={inputName}
+  label={textInputLabel}
+  onChange={setValue}
+  {isRequired}
+  {type}
+  value={previousValue}
+/>

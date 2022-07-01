@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
-import Input from './validated-create-password.svelte';
+import Input from './validated-create-password.story.svelte';
 
 const step = new FRStep({
   authId:
@@ -88,7 +88,7 @@ export default {
   },
 };
 
-export const Simple = {
+export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0],
     inputName: 'passwordCallback',
@@ -97,6 +97,7 @@ export const Simple = {
 
 export const Error = {
   args: {
+    showError: true,
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[1],
     inputName: 'passwordCallbackWithError',
   },

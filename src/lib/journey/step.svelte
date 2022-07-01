@@ -4,6 +4,7 @@
 
   // Import primitives
   import Button from '$components/primitives/button/button.svelte';
+  import Form from '$components/primitives/form/form.svelte';
 
   // Callback handler components
   import Boolean from '$journey/callbacks/boolean/boolean.svelte';
@@ -62,9 +63,7 @@
 {#if !$step}
   <p>Loading ...</p>
 {:else if $step.type === 'Step'}
-  <form
-    on:submit|preventDefault={submitForm}
-  >
+  <Form onSubmitWhenValid={submitForm}>
     {#each $step?.callbacks as callback}
       <!--
         /**
@@ -78,7 +77,7 @@
        <svelte:component this={mapCallbackToComponent(callback)} {callback} {inputName} />
     {/each}
     <Button width="full" style="primary" type="submit">Submit</Button>
-  </form>
+  </Form>
 {:else if $step.type === 'LoginSuccess'}
   <p>Login Success!</p>
 {/if}

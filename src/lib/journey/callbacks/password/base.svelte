@@ -1,8 +1,11 @@
 <script lang="ts">
-  import type { PasswordCallback, ValidatedCreatePasswordCallback } from "@forgerock/javascript-sdk";
+  import type {
+    PasswordCallback,
+    ValidatedCreatePasswordCallback,
+  } from '@forgerock/javascript-sdk';
 
-  import EyeIcon from "$components/icons/eye-icon.svelte";
-  import Input from "$components/compositions/input-floating/floating-label.svelte";
+  import EyeIcon from '$components/icons/eye-icon.svelte';
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let inputName: string;
@@ -37,15 +40,22 @@
   }
 </script>
 
-<Input hasRightIcon={true} key={inputName} label={textInputLabel} onChange={setValue} {isRequired} {type}>
+<Input
+  errorMessage={validationFailure}
+  hasRightIcon={true}
+  key={inputName}
+  label={textInputLabel}
+  onChange={setValue}
+  {isRequired}
+  {type}
+>
   <button
     class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
     on:click={toggleVisibility}
     type="button"
   >
-    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>Show Password</EyeIcon>
+    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}
+      >Show Password</EyeIcon
+    >
   </button>
-  {#if validationFailure}
-    <div class="tw_w-full">{validationFailure}</div>
-  {/if}
 </Input>

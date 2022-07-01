@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
-import Input from './string-attribute-input.svelte';
+import Input from './string-attribute-input.story.svelte';
 
 const step = new FRStep({
   authId:
@@ -76,6 +76,72 @@ const step = new FRStep({
       ],
       _id: 3,
     },
+    {
+      type: CallbackType.StringAttributeInputCallback,
+      output: [
+        {
+          name: 'name',
+          value: 'mail',
+        },
+        {
+          name: 'prompt',
+          value: 'Email Address',
+        },
+        {
+          name: 'required',
+          value: true,
+        },
+        {
+          name: 'policies',
+          value: {
+            policyRequirements: ['REQUIRED', 'VALID_TYPE', 'VALID_EMAIL_ADDRESS_FORMAT'],
+            fallbackPolicies: null,
+            name: 'mail',
+            policies: [
+              {
+                policyRequirements: ['REQUIRED'],
+                policyId: 'required',
+              },
+              {
+                policyRequirements: ['VALID_TYPE'],
+                policyId: 'valid-type',
+                params: {
+                  types: ['string'],
+                },
+              },
+              {
+                policyId: 'valid-email-address-format',
+                policyRequirements: ['VALID_EMAIL_ADDRESS_FORMAT'],
+              },
+            ],
+            conditionalPolicies: null,
+          },
+        },
+        {
+          name: 'failedPolicies',
+          value: ['{ "policyRequirement": "VALID_EMAIL_ADDRESS_FORMAT" }'],
+        },
+        {
+          name: 'validateOnly',
+          value: false,
+        },
+        {
+          name: 'value',
+          value: 'me@me',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken4',
+          value: 'me@com',
+        },
+        {
+          name: 'IDToken4validateOnly',
+          value: false,
+        },
+      ],
+      _id: 11,
+    },
   ],
 });
 
@@ -88,7 +154,7 @@ export default {
   },
 };
 
-export const Simple = {
+export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[0],
     inputName: 'firstName',
@@ -99,5 +165,13 @@ export const Email = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[1],
     inputName: 'email',
+  },
+};
+
+export const Error = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[2],
+    inputName: 'email',
+    showError: true,
   },
 };

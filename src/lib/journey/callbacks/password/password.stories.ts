@@ -28,7 +28,7 @@ export default {
   },
 };
 
-export const Simple = {
+export const Base = {
   args: {
     callback: step.getCallbackOfType(CallbackType.PasswordCallback),
     inputName: 'passwordCallback',

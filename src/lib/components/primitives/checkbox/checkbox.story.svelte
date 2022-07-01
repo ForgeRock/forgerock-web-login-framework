@@ -3,7 +3,7 @@
 
   export let key: string;
   export let label: string;
-  export let onChange: string;
+  export let onChange: (event: Event) => void;
   export let value: boolean;
 </script>
 

@@ -77,9 +77,8 @@ module.exports = function(theme) {
     /**
      * Checkbox primitive theme settings
      */
-     '.checkbox-label': {
+    '.checkbox-label': {
       color: theme('colors.secondary.dark'),
-      marginBottom: theme('spacing.4'),
     },
     '.checkbox-label_dark': {
       color: theme('colors.secondary.light'),
@@ -93,10 +92,42 @@ module.exports = function(theme) {
       position: 'relative',
       width: theme('spacing.4'),
       top: theme('spacing.1'),
+      '& ~ span > .input-error-message': {
+        display: 'none',
+      },
+      '&[aria-invalid="true"]': {
+        background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
+          theme('colors.error.dark'),
+        ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
+        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+        backgroundPosition: `right ${theme('spacing.3')} center`,
+        backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
+      },
+      '&[aria-invalid="true"] ~ span > .input-error-message': {
+        display: 'block',
+      },
+      '&[aria-invalid="true"] ~ button': {
+        borderColor:  theme('colors.error.dark'),
+      },
+      // Double class to increase specificity by 1 level
+      '&&[aria-invalid="true"]': {
+        outlineColor: colorLib(theme('colors.error.light')).fade(0.8).toString(),
+      },
+      // Double class to increase specificity by 1 level
+      '&&[aria-invalid="true"]:focus': {
+        outlineColor: colorLib(theme('colors.error.light')).fade(0.5).toString(),
+      },
+      '&[aria-invalid="true"]:focus': {
+        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+      },
     },
     '.checkbox-input_dark': {
       accentColor: theme('colors.primary.light'),
     },
+    /**
+     * Form primitive theme settings
+     */
+    '.form-base': {},
     /**
      * String input and select primitive theme settings
      */
@@ -111,23 +142,39 @@ module.exports = function(theme) {
       '&:hover, &:focus': {
         backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
       },
-      '&:invalid': {
+      '& ~ .input-error-message': {
+        display: 'none',
+      },
+      '&[aria-invalid="true"]': {
         borderColor: theme('colors.error.dark'),
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
         backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
-        // TODO: Use design tokens, not absolute values
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
+      },
+      '&[aria-invalid="true"] ~ .input-error-message': {
+        display: 'block',
+      },
+      '&[aria-invalid="true"] ~ button': {
+        borderColor:  theme('colors.error.dark'),
+      },
+      // Double class to increase specificity by 1 level
+      '&&[aria-invalid="true"]': {
         outlineColor: colorLib(theme('colors.error.light')).fade(0.8).toString(),
       },
-      '&:invalid:focus': {
-        outlineColor: colorLib(theme('colors.error.light')).fade(0.1).toString(),
+      // Double class to increase specificity by 1 level
+      '&&[aria-invalid="true"]:focus': {
+        outlineColor: colorLib(theme('colors.error.light')).fade(0.5).toString(),
       },
-      '&:invalid:focus, &:invalid:hover': {
+      '&[aria-invalid="true"]:focus': {
         backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
       },
+      // TODO: is this needed? I don't think so.
+      // '&:invalid:hover': {
+      //   backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+      // },
     },
     '.input-base_dark': {
       backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
@@ -138,19 +185,26 @@ module.exports = function(theme) {
       '&:hover': {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
-      '&:invalid': {
+      '&[aria-invalid="true"]': {
         borderColor: theme('colors.error.light'),
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.light'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
         backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
       },
-      '&:invalid:focus': {
+      '&[aria-invalid="true"]:focus': {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
-      '&:invalid:hover': {
+      '&[aria-invalid="true"]:hover': {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
+      '&[aria-invalid="true"] ~ button': {
+        borderColor:  theme('colors.error.light'),
+      },
+      // TODO: is this needed? I don't think so.
+      // '&:invalid:hover': {
+      //   backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
+      // },
     },
     '.input-label': {
       color: theme('colors.secondary.dark'),
@@ -169,10 +223,13 @@ module.exports = function(theme) {
       backgroundSize: '16px 12px',
       // TODO: Use design tokens, not absolute values
       height: 'calc(3rem + 2px)',
-      '&:hover, &:focus': {
+      '&:hover': {
         backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
       },
-      '&:invalid': {
+      '&:focus': {
+        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+      },
+      '&[aria-invalid="true"]:invalid': {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.dark'),
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
@@ -182,10 +239,10 @@ module.exports = function(theme) {
         backgroundPosition: 'right 0.75rem center, center right 2.25rem',
         backgroundSize: `16px 12px, ${theme('spacing.4')} ${theme('spacing.4')}`,
       },
-      '&:invalid:focus': {
+      '&[aria-invalid="true"]:invalid:focus': {
         backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
       },
-      '&:invalid:hover': {
+      '&[aria-invalid="true"]:invalid:hover': {
         backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
       },
     },
@@ -199,7 +256,7 @@ module.exports = function(theme) {
       '&:hover, &:focus': {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
-      '&:invalid': {
+      '&[aria-invalid="true"]:invalid': {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.light'),
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
@@ -207,10 +264,10 @@ module.exports = function(theme) {
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
         backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
       },
-      '&:invalid:focus': {
+      '&[aria-invalid="true"]:invalid:focus': {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
-      '&:invalid:hover': {
+      '&[aria-invalid="true"]:invalid:hover': {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
     },
