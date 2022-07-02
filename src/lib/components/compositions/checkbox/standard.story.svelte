@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
 
   import Button from '$components/primitives/button/button.svelte';
-  import Checkbox from './checkbox.svelte';
+  import Checkbox from './standard.svelte';
   import Form from '$components/primitives/form/form.svelte';
 
   export let checkValidity: (event: Event) => boolean = null;

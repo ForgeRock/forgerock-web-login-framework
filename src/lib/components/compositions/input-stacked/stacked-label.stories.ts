@@ -4,14 +4,17 @@ import { screen, userEvent } from '@storybook/testing-library';
 import Input from './stacked-label.story.svelte';
 
 export default {
-  component: Input,
-  title: 'Compositions/Input: Stacked',
   argTypes: {
     key: { control: 'text' },
     label: { control: 'text' },
     type: { control: 'select', options: ['date', 'email', 'number', 'password', 'phone', 'text'] },
     value: { control: 'text' },
   },
+  component: Input,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Compositions/Input: Stacked',
 };
 
 export const Base = {

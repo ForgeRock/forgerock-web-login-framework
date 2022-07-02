@@ -3,9 +3,12 @@ import { screen, userEvent } from '@storybook/testing-library';
 import Select from './stacked-label.story.svelte';
 
 export default {
-  component: Select,
-  title: 'Compositions/Select: Stacked',
   argTypes: {},
+  component: Select,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Compositions/Select: Stacked',
 };
 
 export const Base = {

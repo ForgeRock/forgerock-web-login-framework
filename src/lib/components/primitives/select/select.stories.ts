@@ -1,8 +1,6 @@
-import Select from './select.svelte';
+import Select from './select.story.svelte';
 
 export default {
-  component: Select,
-  title: 'Primitives/Select',
   argTypes: {
     isRequired: {
       control: { type: 'boolean' },
@@ -17,6 +15,11 @@ export default {
       control: { type: 'text' },
     },
   },
+  component: Select,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Primitives/Select',
 };
 
 export const LabelFirst = {
@@ -27,9 +30,9 @@ export const LabelFirst = {
     onChange: () => console.log('Checkbox value updated'),
     options: [
       { value: null, text: 'Choose Color' },
-      { value: 0, text: 'Red' },
-      { value: 1, text: 'Green' },
-      { value: 2, text: 'Blue' },
+      { text: 'Red', value: 0 },
+      { text: 'Green', value: 1 },
+      { text: 'Blue', value: 2 },
     ],
     defaultOption: 0,
   }
@@ -43,10 +46,10 @@ export const LabelLast = {
     labelOrder: 'last',
     onChange: () => console.log('Checkbox value updated'),
     options: [
-      { value: null, text: 'Choose Color' },
-      { value: 0, text: 'Red' },
-      { value: 1, text: 'Green' },
-      { value: 2, text: 'Blue' },
+      { text: 'Choose Color', value: null },
+      { text: 'Red', value: 0 },
+      { text: 'Green', value: 1 },
+      { text: 'Blue', value: 2 },
     ],
     defaultOption: null,
   }

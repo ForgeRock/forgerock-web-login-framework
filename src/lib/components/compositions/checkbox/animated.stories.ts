@@ -1,4 +1,4 @@
-import Checkbox from './checkbox.story.svelte';
+import Checkbox from '../../compositions/checkbox/animated.story.svelte';
 
 export default {
   argTypes: {
@@ -16,7 +16,7 @@ export default {
   parameters: {
     layout: 'centered',
   },
-  title: 'Primitives/Checkbox',
+  title: 'Compositions/Checkbox: Animated',
 };
 
 export const Simple = {

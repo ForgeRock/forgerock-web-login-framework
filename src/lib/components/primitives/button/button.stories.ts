@@ -3,8 +3,6 @@ import { screen, userEvent } from '@storybook/testing-library';
 import Button from './button.story.svelte';
 
 export default {
-  component: Button,
-  title: 'Primitives/Button',
   argTypes: {
     busy: {
       options: [true, false],
@@ -23,6 +21,11 @@ export default {
       control: { type: 'radio' },
     },
   },
+  component: Button,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Primitives/Button',
 };
 
 export const Primary = {

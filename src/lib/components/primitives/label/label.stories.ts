@@ -1,9 +1,12 @@
 import Label from './label.story.svelte';
 
 export default {
-  component: Label,
-  title: 'Primitives/Label',
   argTypes: {},
+  component: Label,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Primitives/Label',
 };
 
 export const Basic = {

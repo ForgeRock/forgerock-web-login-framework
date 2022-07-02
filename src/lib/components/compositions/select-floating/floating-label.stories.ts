@@ -3,9 +3,12 @@ import { screen, userEvent } from '@storybook/testing-library';
 import Select from './floating-label.story.svelte';
 
 export default {
-  component: Select,
-  title: 'Compositions/Select: Floating',
   argTypes: {},
+  component: Select,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Compositions/Select: Floating',
 };
 
 export const Base = {

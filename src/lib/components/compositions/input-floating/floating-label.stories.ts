@@ -4,14 +4,17 @@ import { screen, userEvent } from '@storybook/testing-library';
 import Input from './floating-label.story.svelte';
 
 export default {
-  component: Input,
-  title: 'Compositions/Input: Floating',
   argTypes: {
     key: { control: 'text' },
     label: { control: 'text' },
     type: { control: 'select', options: ['date', 'email', 'number', 'password', 'phone', 'text'] },
     value: { control: 'text' },
   },
+  component: Input,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Compositions/Input: Floating',
 };
 
 export const Base = {

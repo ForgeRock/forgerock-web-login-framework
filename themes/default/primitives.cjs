@@ -278,5 +278,10 @@ module.exports = function(theme) {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
     },
+    '.spinner': {
+      verticalAlign: '-0.125em',
+      border: '0.25em solid',
+      borderRightColor: 'transparent',
+    },
   };
 };

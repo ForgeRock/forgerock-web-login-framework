@@ -1,7 +1,53 @@
 const colorLib = require('color');
 
-module.exports = function(theme) {
+module.exports = function(config, theme) {
   return {
+    /**
+     * Checkbox Animated Composition
+     */
+    '.animated-check': {
+      borderColor: theme('colors.primary.dark'),
+      borderRadius: theme('borderRadius.DEFAULT'),
+      borderWidth: '2px',
+      cursor: 'pointer',
+      fontSize: '1.5em',
+      height: '1em',
+      position: 'relative',
+      transition: 'border-width 250ms cubic-bezier(.4,.0,.23,1)',
+      width: '1em',
+    },
+    '.animated-check_dark': {
+      borderColor: theme('colors.secondary.light'),
+    },
+    '.checkbox-animated': {
+      '&:checked + label > span': {
+        animation: `${config('prefix')}${theme('animation.squish')}`,
+        borderColor: theme('colors.primary.dark'),
+        borderWidth: '0.5em',
+      },
+      '& + label > span:before': {
+        borderRight: '3px solid transparent',
+        borderBottom: '3px solid transparent',
+        bottom: '-0.1em',
+        left: '-0.4em',
+        overflow: 'hidden',
+        position: 'absolute',
+        transform: 'rotate(45deg)',
+        transformOrigin: '0 100%',
+        willChange: 'transform',
+      },
+      '&:checked + label > span:before': {
+        // TODO: Adding the prefix feels a bit weird, but necessary atm
+        // TODO: Animation is a bit shaky, but can't find right combination
+        animation: `${config('prefix')}${theme('animation.check')}`,
+        content: '""',
+      },
+    },
+    '.checkbox-animated_dark': {
+      '&:checked + label > span': {
+        borderColor: theme('colors.primary.light'),
+      },
+    },
     /**
      * Dialog box theme settings
      */
@@ -60,6 +106,7 @@ module.exports = function(theme) {
       pointerEvents: 'none',
       transformOrigin: '0 0',
       transition: 'opacity 0.1s ease-in-out, transform 0.1s ease-in-out',
+      whiteSpace: 'nowrap',
     },
     '.input-stacked-label': {
       display: 'block',
@@ -79,6 +126,7 @@ module.exports = function(theme) {
       top: theme('spacing.0'),
       transform: 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)',
       transformOrigin: 'top left',
+      whiteSpace: 'nowrap',
     },
     /**
      * Input error message

@@ -5,7 +5,7 @@
   } from '$journey/utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
-  import Checkbox from '$components/compositions/checkbox/checkbox.svelte';
+  import Checkbox from '$components/compositions/checkbox/standard.svelte';
 
   export let callback: AttributeInputCallback<boolean>;
   export let inputName = '';

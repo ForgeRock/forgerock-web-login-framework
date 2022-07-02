@@ -1,12 +1,15 @@
-import Spinner from './spinner.svelte';
+import Spinner from './spinner.story.svelte';
 
 export default {
-  component: Spinner,
-  title: 'Primitives/Spinner',
   argTypes: {
     colorClass: { control: 'text' },
     layoutClasses: { control: 'text' },
   },
+  component: Spinner,
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Primitives/Spinner',
 };
 
 export const Simple = {

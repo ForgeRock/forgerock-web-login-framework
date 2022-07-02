@@ -1,6 +1,6 @@
 import { screen, userEvent } from '@storybook/testing-library';
 
-import Checkbox from './checkbox.story.svelte';
+import Checkbox from './standard.story.svelte';
 
 export default {
   argTypes: {
@@ -15,7 +15,10 @@ export default {
     },
   },
   component: Checkbox,
-  title: 'Compositions/Checkbox',
+  parameters: {
+    layout: 'centered',
+  },
+  title: 'Compositions/Checkbox: Standard',
 };
 
 export const Base = {
