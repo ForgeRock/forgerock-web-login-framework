@@ -12,7 +12,7 @@
   <!-- TODO: Currently NOT using the primitive checkbox, but re-evaluate later -->
   <input
     aria-invalid={isInvalid}
-    class=" tw_checkbox-animated dark:tw_checkbox-animated_dark tw_sr-only"
+    class="tw_checkbox-animated dark:tw_checkbox-animated_dark tw_sr-only"
     checked={value}
     id={key}
     on:change={onChange}

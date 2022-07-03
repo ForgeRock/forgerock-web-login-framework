@@ -4,6 +4,7 @@ module.exports = function(config, theme) {
   return {
     /**
      * Checkbox Animated Composition
+     * Rework of this example: https://codepen.io/dylanraga/pen/Qwqbab
      */
     '.animated-check': {
       borderColor: theme('colors.primary.dark'),
@@ -26,8 +27,8 @@ module.exports = function(config, theme) {
         borderWidth: '0.5em',
       },
       '& + label > span:before': {
-        borderRight: '3px solid transparent',
         borderBottom: '3px solid transparent',
+        borderRight: '3px solid transparent',
         bottom: '-0.1em',
         left: '-0.4em',
         overflow: 'hidden',
@@ -38,7 +39,7 @@ module.exports = function(config, theme) {
       },
       '&:checked + label > span:before': {
         // TODO: Adding the prefix feels a bit weird, but necessary atm
-        // TODO: Animation is a bit shaky, but can't find right combination
+        // TODO: Animation is a bit janky at slow speeds, but can't find right combination
         animation: `${config('prefix')}${theme('animation.check')}`,
         content: '""',
       },
@@ -137,6 +138,58 @@ module.exports = function(config, theme) {
     },
     '.input-error-message_dark': {
       color: theme('colors.error.light'),
+    },
+    /**
+     * Radio animated composition
+     * Rework of this example: https://codepen.io/dylanraga/pen/Qwqbab
+     */
+    '.animated-radio': {
+      borderColor: theme('colors.white'),
+      borderRadius: theme('borderRadius.full'),
+      borderWidth: '2px',
+      boxShadow: `0 0 0 2px ${theme('colors.primary.dark')}`,
+      display: 'block',
+      cursor: 'pointer',
+      height: '100%',
+      transition: 'border-width 250ms cubic-bezier(.4,.0,.23,1)',
+      width: '100%',
+    },
+    '.animated-radio_dark': {
+      borderColor: theme('colors.secondary.light'),
+      boxShadow: `none`,
+    },
+    '.radio-animated': {
+      '&:checked + label > span > span': {
+        animation: `${config('prefix')}${theme('animation.squish')}`,
+        // borderColor: theme('colors.primary.dark'),
+        borderWidth: '0.5em',
+      },
+      '& + label > span > span:before': {
+        backgroundColor: theme('colors.primary.dark'),
+        borderRadius: theme('borderRadius.full'),
+        height: '100%',
+        left: '0',
+        overflow: 'hidden',
+        position: 'absolute',
+        top: '0',
+        transform: 'scale(0)',
+        transformOrigin: 'center',
+        width: '100%',
+        willChange: 'transform',
+      },
+      '&:checked + label > span > span:before': {
+        // TODO: Adding the prefix feels a bit weird, but necessary atm
+        animation: `${config('prefix')}${theme('animation.radio')}`,
+        content: '""',
+      },
+    },
+    '.radio-animated_dark': {
+      '&:checked + label > span > span': {
+        borderColor: theme('colors.secondary.light'),
+      },
+      '& + label > span > span:before': {
+        backgroundColor: theme('colors.primary.light'),
+      },
     },
   };
 };

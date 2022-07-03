@@ -10,6 +10,8 @@
           return `${prev} tw_grid-cols-3`;
         case 2:
           return `${prev} tw_grid-cols-2`;
+        default:
+          return `${prev} tw_grid-cols-1`;
       }
     }, '');
   }

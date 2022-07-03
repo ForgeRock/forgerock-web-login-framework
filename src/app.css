@@ -6,5 +6,6 @@
 /* Including this here to ensure the animation and keyframes get included from config */
 .do-not-use {
   @apply tw_animate-check;
+  @apply tw_animate-radio;
   @apply tw_animate-squish;
 }
