@@ -5,6 +5,7 @@
   export let dialogId;
 </script>
 
+<!-- Inspired by https://github.com/mvolkmann/svelte-dialog -->
 <!-- TODO: Animate modal from bottom and fade in -->
 <dialog
   id={dialogId}

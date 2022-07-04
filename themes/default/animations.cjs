@@ -1,6 +1,6 @@
 module.exports = {
   /**
-   * Checkbox animations: Don't touch unless you know what you're doing :)
+   * Checkbox animations
    */
   animation: {
     check: `check 125ms 250ms cubic-bezier(.4,.0,.23,1) forwards`,
