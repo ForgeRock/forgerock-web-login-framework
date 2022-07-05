@@ -1,15 +1,23 @@
 <script lang="ts">
-  import Input from "$components/compositions/input-floating/floating-label.svelte";
+  import type { NameCallback } from '@forgerock/javascript-sdk';
 
-  export let callback;
-  export let inputName;
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
 
-  const existingValue = callback?.getInputValue();
+  export let callback: NameCallback;
+  export let inputName: string;
+
+  const unknownValue = callback?.getInputValue();
   const textInputLabel = callback.getPrompt();
 
-  function setValue(event) {
-    callback.setInputValue(event.target.value);
+  function setValue(event: Event) {
+    callback.setInputValue((event.target as HTMLInputElement).value);
   }
 </script>
 
-<Input key={inputName} label={textInputLabel} onChange={setValue} type="text" value={existingValue} />
+<Input
+  key={inputName}
+  label={textInputLabel}
+  onChange={setValue}
+  type="text"
+  value={typeof unknownValue === 'string' ? unknownValue : ''}
+/>

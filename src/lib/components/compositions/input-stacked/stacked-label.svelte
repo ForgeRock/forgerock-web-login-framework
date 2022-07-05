@@ -2,18 +2,17 @@
   import Input from '$components/primitives/input/input.svelte';
   import Error from '$components/primitives/message/error.svelte';
 
-  export let checkValidity: (event: Event) => boolean = null;
+  export let checkValidity: ((event: Event) => boolean) | null= null;
   export let hasRightIcon = false;
   export let errorMessage = '';
   export let isRequired = false;
-  export let isInvalid: boolean = null;
+  export let isInvalid: boolean | null = null;
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
   export let placeholder: string;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
-  export let value: string | null = null;
-  export let width: 'full' | 'half' = 'full';
+  export let value: string = '';
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {

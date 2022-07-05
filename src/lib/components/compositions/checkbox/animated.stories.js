@@ -1,4 +1,4 @@
-import Checkbox from '../../compositions/checkbox/animated.story.svelte';
+import Checkbox from './animated.story.svelte';
 
 export default {
   argTypes: {

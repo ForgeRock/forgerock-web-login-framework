@@ -1,7 +1,7 @@
 <script lang="ts">
-  export let errorMessage = '';
+  export let errorMessage: string = '';
   export let key: string;
-  export let showError: boolean = true;
+  export let showError: boolean | null = true;
 </script>
 
 {#if errorMessage && showError}

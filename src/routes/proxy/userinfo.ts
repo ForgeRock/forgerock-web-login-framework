@@ -1,10 +1,12 @@
+import type { RequestEvent } from '@sveltejs/kit';
+
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 
-export async function get(event) {
+export async function get(event: RequestEvent) {
   const response = await fetch(`${AM_DOMAIN_PATH}${OAUTH_REALM_PATH}/userinfo`, {
     method: 'POST',
     headers: {
-      authorization: event.request.headers.get('authorization')
+      authorization: event.request.headers.get('authorization') || '',
     }
   });
 

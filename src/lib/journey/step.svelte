@@ -19,6 +19,7 @@
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
+  export let formEl: HTMLFormElement | null = null;
   export let step: Writable<StepTypes>;
   export let submitForm: () => void;
 
@@ -63,7 +64,7 @@
 {#if !$step}
   <p>Loading ...</p>
 {:else if $step.type === 'Step'}
-  <Form onSubmitWhenValid={submitForm}>
+  <Form bind:formEl onSubmitWhenValid={submitForm}>
     {#each $step?.callbacks as callback}
       <!--
         /**

@@ -1,31 +1,33 @@
 <script context="module" lang="ts">
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
+  import type { User } from '$journey/interfaces';
   import Journey, { initJourney } from '../journey/journey.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
   import { initStyles } from './styles.store';
 
+
   import './main.css'
 
-  let dialog;
-  let callMounted;
-  let returnError;
-  let returnUser;
+  let dialog: HTMLDialogElement;
+  let callMounted: (component: HTMLDialogElement) => void;
+  let returnError: (error: string | null) => void;
+  let returnUser: (user: User) => void;
 
   export const journey = {
-    onFailure(fn) {
-      returnError = (error) => fn(error);
+    onFailure(fn: (error: string | null) => void) {
+      returnError = (error: string | null) => fn(error);
     },
-    onSuccess(fn) {
-      returnUser = (user) => fn(user);
+    onSuccess(fn: (user: User) => void) {
+      returnUser = (user: User) => fn(user);
     },
   };
   export const modal = {
     close() {
       dialog?.close();
     },
-    onMount(fn) {
-      callMounted = (component) => fn(component);
+    onMount(fn: (component: HTMLDialogElement) => void) {
+      callMounted = (component: HTMLDialogElement) => fn(component);
     },
     open() {
       initJourney();
@@ -71,7 +73,7 @@
 
   const dispatch = createEventDispatcher();
 
-  let dialogEl;
+  let dialogEl: HTMLDialogElement;
   let mounted = false;
 
   s_onMount(() => {
@@ -103,7 +105,7 @@
      * TODO: currently broken as state isn't completely managed internally
     */
     if (mounted && open) {
-      initJourney();
+      initJourney(null);
       dialogEl.showModal();
     } else if (mounted && !open) {
       dialogEl.close();

@@ -2,18 +2,18 @@
   import Input from '$components/primitives/input/input.svelte';
   import Error from '$components/primitives/message/error.svelte';
 
-  export let checkValidity: (event: Event) => boolean = null;
+  export let checkValidity: ((event: Event) => boolean) | null = null;
   export let errorMessage: string = '';
   export let hasRightIcon = false;
   export let isRequired = false;
-  export let isInvalid: boolean = null;
+  export let isInvalid: boolean | null = null;
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
   // TODO: Placeholders don't reliably work with floating labels
   // export let placeholder: string;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
-  export let value: string | null = null;
+  export let value: string = '';
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {

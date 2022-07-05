@@ -2,11 +2,11 @@
   import Label from '$components/primitives/label/label.svelte';
 
 
-  export let checkValidity: (event: Event) => boolean = null;
+  export let checkValidity: ((event: Event) => boolean) | null = null;
   export let selectClasses = '';
-  export let defaultOption: number = null;
+  export let defaultOption: number | null = null;
   export let isRequired: boolean;
-  export let isInvalid: boolean = null;
+  export let isInvalid: boolean | null = null;
   export let key: string;
   export let label: string;
   export let labelClasses = '';

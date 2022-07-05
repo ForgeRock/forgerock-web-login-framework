@@ -1,7 +1,9 @@
+import type { RequestEvent } from '@sveltejs/kit';
+
 import { AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get as getCookie, remove as removeCookie } from '$lib/server/sessions';
 
-export async function post(event) {
+export async function post(event: RequestEvent) {
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
   const reqCookie = Array.isArray(reqCookieUuid) && getCookie(reqCookieUuid[1]);
@@ -10,7 +12,7 @@ export async function post(event) {
   const response = await fetch(`${AM_DOMAIN_PATH}${JSON_REALM_PATH}/sessions/${event.url.search}`, {
     method: 'POST',
     headers: {
-      cookie: reqCookie
+      cookie: reqCookie ? reqCookie : '',
     }
   });
 

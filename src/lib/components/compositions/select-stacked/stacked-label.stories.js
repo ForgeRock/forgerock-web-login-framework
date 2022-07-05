@@ -13,8 +13,8 @@ export default {
 
 export const Base = {
   args: {
-    checkValidity: (e: Event) => {
-      const el = e.target as HTMLSelectElement;
+    checkValidity: (e) => {
+      const el = e.target;
       console.log(el.value);
       return !!el.value
     },

@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 
-const amSessions = {};
+const amSessions: Record<string, string> = {};
 
 export function set(cookie: string): string {
   console.log('Cookie being set:');

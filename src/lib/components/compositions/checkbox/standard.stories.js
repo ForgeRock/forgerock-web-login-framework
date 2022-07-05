@@ -41,8 +41,8 @@ export const LongLabel = {
 export const Error = {
   args: {
     ...Base.args,
-    checkValidity: (event: Event) => {
-      const el = event.target as HTMLInputElement;
+    checkValidity: (event) => {
+      const el = event.target;
       return el.checked;
     },
     errorMessage: 'Please accept this',

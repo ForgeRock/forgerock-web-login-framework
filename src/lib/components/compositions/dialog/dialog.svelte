@@ -1,8 +1,8 @@
 <script lang="ts">
   import XIcon from '../../icons/x-icon.svelte';
 
-  export let dialogEl = null;
-  export let dialogId;
+  export let dialogEl: HTMLDialogElement | null = null;
+  export let dialogId: string;
 </script>
 
 <!-- Inspired by https://github.com/mvolkmann/svelte-dialog -->
@@ -15,7 +15,7 @@
   <div class="tw_w-full tw_-mt-4 tw_relative tw_text-right">
     <button
       class="tw_dialog-x tw_focusable-element dark:tw_focusable-element_dark"
-      on:click={() => dialogEl.close()}
+      on:click={() => dialogEl?.close()}
       aria-controls={dialogId}
     >
       <XIcon

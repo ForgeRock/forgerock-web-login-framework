@@ -4,7 +4,7 @@
 
   export let errorMessage: string = '';
   export let isRequired = false;
-  export let isInvalid: boolean = null;
+  export let isInvalid: boolean | null = null;
   export let key: string;
   export let onChange: (event: Event) => void;
   export let value: boolean;

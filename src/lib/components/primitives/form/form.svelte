@@ -1,4 +1,5 @@
 <script lang="ts">
+  export let formEl: HTMLFormElement | null = null;
   export let onSubmitWhenValid: (event: Event, isFormValid: boolean) => void;
 
   let isFormValid = false;
@@ -14,7 +15,7 @@
      */
     const form = event.target as HTMLFormElement;
 
-    let firstInvalidInput = null;
+    let firstInvalidInput: number | null = null;
 
     isFormValid = false; // Restart with `false`
 
@@ -26,9 +27,9 @@
     }
 
     // Iterate over all children of the form, and pluck out the the inputs
-    Array.from(form.children).forEach((el: HTMLElement, idx) => {
+    Array.from(form.children).forEach((el, idx) => {
       // First child will be a `div`, so query the actual form elements
-      const input: HTMLInputElement = el.querySelector('input, select, textarea');
+      const input: HTMLInputElement | null = el.querySelector('input, select, textarea');
 
       // If element has no form input, return early
       if (!input) {
@@ -45,7 +46,7 @@
       if (!isValid) {
         input.setAttribute('aria-invalid', 'true');
         let messageKey = input.getAttribute('data-message');
-        input.setAttribute('aria-describedby', messageKey);
+        input.setAttribute('aria-describedby', messageKey || '');
 
         // If there is no "first" invalid input, this input is first and receives focus
         if (!firstInvalidInput) {
@@ -64,6 +65,7 @@
 </script>
 
 <form
+  bind:this={formEl}
   class={`tw_form-base ${isFormValid ? 'tw_form-valid' : 'tw_form-invalid'}`}
   novalidate
   on:submit|preventDefault={formSubmit}

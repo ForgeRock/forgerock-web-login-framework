@@ -1,9 +1,12 @@
+import type { RequestEvent } from '@sveltejs/kit';
+
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get, set } from '$lib/server/sessions';
 
-export async function post(event) {
-  const body = event.request.body.read();
-  let cookieUuid: string;
+export async function post(event: RequestEvent) {
+  const bodyStream = event?.request?.body;
+  const body = bodyStream?.getReader().read();
+  let cookieUuid = '';
 
   // console.log(body.toString());
 
@@ -24,9 +27,9 @@ export async function post(event) {
         accept: 'application/json',
         'accept-api-version': 'protocol=1.0,resource=2.1',
         'content-type': 'application/json',
-        cookie: reqCookie
+        cookie: reqCookie ? reqCookie : '',
       },
-      body: body.toString()
+      body: body?.toString()
     }
   );
 
@@ -38,7 +41,7 @@ export async function post(event) {
   const resCookie = response.headers.get('set-cookie');
   // console.log(`AM response write cookie header: ${resCookie}`);
 
-  if (resCookie.includes(AM_COOKIE_NAME)) {
+  if (resCookie?.includes(AM_COOKIE_NAME)) {
     if (resCookie !== reqCookie) {
       cookieUuid = set(resCookie);
     }

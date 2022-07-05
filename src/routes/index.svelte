@@ -1,7 +1,7 @@
 <script context="module" lang="ts">
   import Box from '$components/primitives/box/centered.svelte';
   import configure from '$lib/config/config';
-  import { initTree, type StepTypes } from '$journey/journey.store';
+  import { initTree, type InitObject } from '$journey/journey.store';
 
   configure({
     clientId: 'WebOAuthClient',
@@ -17,7 +17,7 @@
   });
 
   export async function load() {
-    let initObj = await initTree(undefined);
+    let initObj = await initTree(null);
 
     return {
       props: { initObj },
@@ -29,7 +29,7 @@
   import Journey from '../lib/journey/journey.svelte';
   import KeyIcon from '../lib/components/icons/key-icon.svelte';
 
-  export let initObj;
+  export let initObj: InitObject;
 </script>
 
 <Box>

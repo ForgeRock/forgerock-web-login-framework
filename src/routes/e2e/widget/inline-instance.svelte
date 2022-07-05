@@ -7,17 +7,16 @@
   import { onMount as s_onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
+  import type { User } from '$journey/interfaces';
   import Widget, { form, journey, user } from '../../../../package/inline';
 
-  let formEl;
-  let userInfo = {};
+  let formEl: HTMLDivElement;
+  let userInfo: User | null;
   let widget;
 
   async function logout() {
     await user.logout();
-    userInfo = {
-      isAuthenticated: false,
-    };
+    userInfo = null;
   }
 
   s_onMount(() => {
@@ -38,15 +37,15 @@
       }
     });
 
-    widget.$on('form-mount', (widgetEl) => {
+    widget.$on('form-mount', (widgetEl: HTMLElement) => {
       console.log('Instance mount event fired');
       console.log(widgetEl)
     });
-    widget.$on('journey-success', (response) => {
+    widget.$on('journey-success', (response: User) => {
       console.log('Instance success event fired');
       (userInfo = response)
     });
-    widget.$on('journey-failure', (error) => {
+    widget.$on('journey-failure', (error: string) => {
       console.log('Instance failure event fired');
       console.log(error)
     });

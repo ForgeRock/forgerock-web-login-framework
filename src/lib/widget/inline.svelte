@@ -1,27 +1,28 @@
 <script context="module" lang="ts">
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
+  import type { User } from '$journey/interfaces';
   import Journey, { initJourney } from '../journey/journey.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
 
   import './main.css';
 
-  let component;
-  let callMounted;
-  let returnError;
-  let returnUser;
+  let component: HTMLFormElement;
+  let callMounted: (component: HTMLFormElement) => void;
+  let returnError: (error: string | null) => void;
+  let returnUser: (user: User) => void;
 
   export const journey = {
-    onFailure(fn) {
-      returnError = (error) => fn(error);
+    onFailure(fn: (error: string | null) => void) {
+      returnError = (error: string | null) => fn(error);
     },
-    onSuccess(fn) {
-      returnUser = (user) => fn(user);
+    onSuccess(fn: (user: User) => void) {
+      returnUser = (user: User) => fn(user);
     },
   };
   export const form = {
-    onMount(fn) {
-      callMounted = (component) => fn(component);
+    onMount(fn: (component: HTMLFormElement) => void) {
+      callMounted = (component: HTMLFormElement) => fn(component);
     },
   };
   export const user = {
@@ -59,7 +60,7 @@
 
   const dispatch = createEventDispatcher();
 
-  let formEl;
+  let formEl: HTMLFormElement;
 
   s_onMount(() => {
     component = formEl;
@@ -82,5 +83,5 @@
 </script>
 
 <div class="fr_widget-root">
-  <Journey widgetDispatch={dispatch} {returnError} {returnUser} />
+  <Journey bind:formEl widgetDispatch={dispatch} {returnError} {returnUser} />
 </div>

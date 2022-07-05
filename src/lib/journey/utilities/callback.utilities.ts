@@ -1,6 +1,15 @@
-import type { AttributeInputCallback, PolicyRequirement, ValidatedCreateUsernameCallback, ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
+import type {
+  AttributeInputCallback,
+  PolicyRequirement,
+  ValidatedCreateUsernameCallback,
+  ValidatedCreatePasswordCallback,
+} from '@forgerock/javascript-sdk';
 
-export function getAttributeValidationFailureText(callback: AttributeInputCallback<boolean | number | string>, label: string): string {
+type RequiredCallbacks = AttributeInputCallback<boolean | string> | ValidatedCreatePasswordCallback | ValidatedCreateUsernameCallback;
+
+export function getAttributeValidationFailureText(
+  callback: AttributeInputCallback<boolean | number | string>,
+): string {
   // TODO: Mature this utility for more better parsing and display
   const failedPolicies = callback.getFailedPolicies && callback.getFailedPolicies();
   return failedPolicies.reduce((prev, curr) => {
@@ -10,7 +19,7 @@ export function getAttributeValidationFailureText(callback: AttributeInputCallba
     }
     return prev;
   }, '');
-};
+}
 
 interface StringDict<T> {
   [name: string]: T;
@@ -18,7 +27,7 @@ interface StringDict<T> {
 
 export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email' | 'text' {
   const reqs = policies?.policyRequirements;
-  let hasEmailReq: boolean;
+  let hasEmailReq = false;
   if (Array.isArray(reqs)) {
     hasEmailReq = reqs.includes('VALID_EMAIL_ADDRESS_FORMAT');
   }
@@ -26,14 +35,17 @@ export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email'
   return hasEmailReq ? 'email' : 'text';
 }
 
-export function getPasswordValidationFailureText(callback: ValidatedCreatePasswordCallback, label: string): string {
+export function getPasswordValidationFailureText(
+  callback: ValidatedCreatePasswordCallback,
+  label: string,
+): string {
   // TODO: Mature this utility for more better parsing and display
   const failedPolicies = callback.getFailedPolicies && callback.getFailedPolicies();
   const parsedPolicies = parseFailedPolicies(failedPolicies, label);
   return parsedPolicies.reduce((prev, curr) => {
-    switch (curr.policyRequirement) {
+    switch (curr?.policyRequirement) {
       case 'LENGTH_BASED':
-        prev = `${prev}Ensure password contains more than ${curr.params['min-password-length']} characters. `;
+        prev = `${prev}Ensure password contains more than ${curr.params && curr.params['min-password-length']} characters. `;
         break;
       case 'CHARACTER_SET':
         prev = `${prev}Ensure password contains 1 of each: capital letter, number and special character. `;
@@ -43,14 +55,17 @@ export function getPasswordValidationFailureText(callback: ValidatedCreatePasswo
     }
     return prev;
   }, '');
-};
+}
 
-export function getUsernameValidationFailureText(callback: ValidatedCreateUsernameCallback, label: string): string {
+export function getUsernameValidationFailureText(
+  callback: ValidatedCreateUsernameCallback,
+  label: string,
+): string {
   // TODO: Mature this utility for more better parsing and display
   const failedPolicies = callback.getFailedPolicies && callback.getFailedPolicies();
   const parsedPolicies = parseFailedPolicies(failedPolicies, label);
   return parsedPolicies.reduce((prev, curr) => {
-    switch (curr.policyRequirement) {
+    switch (curr?.policyRequirement) {
       case 'VALID_USERNAME':
         prev = `${prev}Please choose a different username. `;
         break;
@@ -62,9 +77,9 @@ export function getUsernameValidationFailureText(callback: ValidatedCreateUserna
     }
     return prev;
   }, '');
-};
+}
 
-export function isInputRequired(callback): boolean {
+export function isInputRequired(callback: RequiredCallbacks): boolean {
   const policies = callback.getPolicies && callback.getPolicies();
 
   let isRequired = false;
@@ -76,13 +91,13 @@ export function isInputRequired(callback): boolean {
   }
 
   return isRequired;
-};
+}
 
-export function parseFailedPolicies(policies: unknown[], label): PolicyRequirement[] {
+export function parseFailedPolicies(policies: unknown[], label: string): (PolicyRequirement | undefined)[] {
   return policies.map((policy) => {
     if (typeof policy === 'string') {
       try {
-       return JSON.parse(policy) as PolicyRequirement;
+        return JSON.parse(policy) as PolicyRequirement;
       } catch (err) {
         console.log(`Parsing failure for ${label}`);
       }

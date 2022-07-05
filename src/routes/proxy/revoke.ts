@@ -1,8 +1,11 @@
+import type { RequestEvent } from '@sveltejs/kit';
+
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 
-export async function post(event) {
-  const body = event.request.body.read();
-  const bodyString = body.toString();
+export async function post(event: RequestEvent) {
+  const bodyStream = event?.request?.body;
+  const body = bodyStream?.getReader().read();
+  const bodyString = body?.toString();
 
   // console.log('Revoke request body:');
   // console.log(bodyString);

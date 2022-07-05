@@ -1,6 +1,6 @@
 <script context="module" lang="ts">
   // TODO: Is this a bad pattern?
-  export let initJourney;
+  export let initJourney: (tree?: string | null) => void;
 </script>
 
 <script lang="ts">
@@ -8,26 +8,21 @@
   import type { Writable } from 'svelte/store';
 
   // Stores handling business logic and/or network orchestration
+  import type { User } from '$journey/interfaces';
   import { initTree, type StepTypes } from '$journey/journey.store';
   import { email, fullName, isAuthenticated } from '$lib/user/user.store';
-
   import Step from '$journey/step.svelte';
 
-  interface User {
-    email: unknown;
-    fullName: unknown;
-    isAuthenticated: unknown;
-  }
-
-  export let closeModal: () => void = null;
+  export let closeModal: (() => void) | null = null;
   export let initObj: any = null;
-  export let returnError: (failureMessage: string) => void = null;
-  export let returnUser: (user: User) => void = null;
-  export let widgetDispatch: <EventKey extends string>(
+  export let formEl: HTMLFormElement | null = null;
+  export let returnError: ((failureMessage: string | null) => void) | null = null;
+  export let returnUser: ((user: User) => void) | null = null;
+  export let widgetDispatch: (<EventKey extends string>(
     type: EventKey,
     detail?: any,
     options?: DispatchOptions,
-  ) => boolean = null;
+  ) => boolean) | null = null;
 
   let failureMessage: Writable<string | null> = initObj.failureMessage;
   let getStep: (prevStep?: StepTypes) => Promise<void> = initObj.getStep;
@@ -43,7 +38,7 @@
 
   if (!initObj) {
     // Assign function to variable initialized in module context above
-    initJourney = async (tree) => {
+    initJourney = async (tree: string | null = null) => {
       let initObj = await initTree(tree);
 
       failureMessage = initObj.failureMessage;
@@ -73,9 +68,9 @@
 
       closeModal && closeModal();
       returnUser && returnUser(user);
-      widgetDispatch('journey-success', user);
+      widgetDispatch && widgetDispatch('journey-success', user);
     }
   }
 </script>
 
-<Step {submitForm} {step} />
+<Step bind:formEl {submitForm} {step} />

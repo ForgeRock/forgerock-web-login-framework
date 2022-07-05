@@ -7,7 +7,7 @@
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let value: number;
+  export let value: number | null;
 </script>
 
 <input

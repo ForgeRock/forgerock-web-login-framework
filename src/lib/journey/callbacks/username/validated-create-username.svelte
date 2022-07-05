@@ -10,7 +10,7 @@
   export let callback: ValidatedCreateUsernameCallback;
   export let inputName: string;
 
-  const existingValue = callback?.getInputValue() as string;
+  const unknownValue = callback?.getInputValue();
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
   const textInputLabel = callback.getPrompt();
@@ -22,7 +22,7 @@
    * @function setValue - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
    */
-  function setValue(event) {
+  function setValue(event: Event) {
     /** ***********************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for setting values
@@ -30,7 +30,7 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setInputValue(event.target.value);
+    callback.setInputValue((event.target as HTMLInputElement).value);
   }
 </script>
 
@@ -41,5 +41,5 @@
   label={textInputLabel}
   onChange={setValue}
   {type}
-  value={existingValue}
+  value={typeof unknownValue === 'string' ? unknownValue : ''}
 />

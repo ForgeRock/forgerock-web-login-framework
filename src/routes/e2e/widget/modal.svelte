@@ -1,26 +1,27 @@
 <script lang="ts">
   import { onMount as s_onMount } from 'svelte';
 
+  import type { User } from '$journey/interfaces';
   import Widget, { modal, journey, user } from '../../../../package/modal';
 
-  let userInfo = {};
+  let userInfo: User | null;
   let widget;
-  let widgetEl;
+  let widgetEl: HTMLDivElement;
 
   async function logout() {
     await user.logout();
-    userInfo = {};
+    userInfo = null;
   }
 
-  modal.onMount((widgetEl) => {
+  modal.onMount((dialog: HTMLDialogElement) => {
     console.log('Singleton onMount event fired');
-    console.log(widgetEl)
+    console.log(dialog)
   });
-  journey.onSuccess((response) => {
+  journey.onSuccess((response: User) => {
     console.log('Singleton onSuccess event fired');
     (userInfo = response)
   });
-  journey.onFailure((error) => {
+  journey.onFailure((error: string | null) => {
     console.log('Singleton onFailure event fired');
     console.log(error)
   });

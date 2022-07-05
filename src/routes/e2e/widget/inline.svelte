@@ -2,21 +2,20 @@
   import { onMount as s_onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
+  import type { User } from '$journey/interfaces';
   import Widget, { form, journey, user } from '../../../../package/inline';
 
-  let formEl;
-  let userInfo = {};
+  let formEl: HTMLDivElement;
+  let userInfo: User | null;
 
   async function logout() {
     await user.logout();
-    userInfo = {
-      isAuthenticated: false,
-    };
+    userInfo = null;
   }
 
-  form.onMount((component) => console.log(component));
-  journey.onSuccess((response) => (userInfo = response));
-  journey.onFailure((error) => console.log(error));
+  form.onMount((component: HTMLElement) => console.log(component));
+  journey.onSuccess((response: User) => (userInfo = response));
+  journey.onFailure((error: string) => console.log(error));
 
   s_onMount(() => {
     // TODO: Add method to refresh form

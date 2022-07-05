@@ -5,13 +5,24 @@ import {
   FRLoginSuccess,
   StepType,
   TokenManager,
-  UserManager
+  UserManager,
 } from '@forgerock/javascript-sdk';
 import { get, writable, type Writable } from 'svelte/store';
 
+import type { StringDict } from '$lib/interfaces';
 import { htmlDecode } from '$lib/journey/utilities/decode.utilities';
 import { email, isAuthenticated, fullName } from '$lib/user/user.store';
 
+export interface InitObject {
+  step: Writable<StepTypes>;
+  getStep: (prevStep?: StepTypes) => Promise<void>;
+  failureMessage: Writable<string | null>;
+  submittingForm: Writable<boolean>;
+}
+interface Options {
+  tree?: string;
+  query?: StringDict<string>;
+}
 interface User {
   family_name: string;
   given_name: string;
@@ -22,10 +33,10 @@ interface User {
 }
 export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
-export async function initTree(tree: string) {
+export async function initTree(tree: string | null): Promise<InitObject> {
   const step: Writable<StepTypes> = writable(null);
   const failureMessage: Writable<string | null> = writable(null);
-  const options: any = {};
+  const options: Options = {};
   const submittingForm: Writable<boolean> = writable(false);
 
   if (tree) {
@@ -35,9 +46,11 @@ export async function initTree(tree: string) {
   async function getOAuth() {
     try {
       await TokenManager.getTokens({ forceRenew: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(`Get tokens | ${err}`);
-      step.set(new FRLoginFailure({ message: err.message }));
+      if (err instanceof Error) {
+        step.set(new FRLoginFailure({ message: err.message }));
+      }
       submittingForm.set(false);
       return;
     }
@@ -47,9 +60,11 @@ export async function initTree(tree: string) {
       email.set(user.email);
       isAuthenticated.set(true);
       fullName.set(user.name);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(`Get current user | ${err}`);
-      step.set(new FRLoginFailure({ message: err.message }));
+       if (err instanceof Error) {
+        step.set(new FRLoginFailure({ message: err.message }));
+      }
       submittingForm.set(false);
     }
   }

@@ -7,9 +7,9 @@
   export let labelClasses = '';
   export let labelOrder: 'first' | 'last' = 'first';
   export let onChange: (event: Event) => void;
-  export let placeholder: string = null;
+  export let placeholder: string | null = null;
   export let isRequired: boolean = false;
-  export let isInvalid: boolean = null;
+  export let isInvalid: boolean | null = null;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value: string = '';
 </script>

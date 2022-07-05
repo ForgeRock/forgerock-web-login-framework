@@ -14,6 +14,10 @@
  * @returns {string} - decoded string
  */
 export function htmlDecode(input: string) {
+  // Check if running in server before using the document object
+  if (typeof document !== 'object') {
+    return null;
+  }
   const e = document.createElement('div');
   e.innerHTML = input;
   return e.childNodes.length === 0 ? '' : e.childNodes[0].nodeValue;

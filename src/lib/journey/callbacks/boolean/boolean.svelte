@@ -20,7 +20,7 @@
   const isRequired = isInputRequired(callback);
   const previousValue = callback.getInputValue() as boolean;
   const prompt = callback.getPrompt();
-  const validationFailure = getAttributeValidationFailureText(callback, prompt);
+  const validationFailure = getAttributeValidationFailureText(callback);
 
   function setValue(event: Event) {
     /** ***********************************************************************

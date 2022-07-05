@@ -11,5 +11,6 @@
       "$widget": ["src/lib/widget"],
       "$widget/*": ["src/lib/widget/*"]
     },
+    "strict": true,
   }
 }
