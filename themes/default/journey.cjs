@@ -44,7 +44,7 @@ module.exports = function (theme) {
     },
     '.password-button': {
       alignItems: 'center',
-      backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+      backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
       borderLeft: '0 !important',
       borderTopLeftRadius: '0px !important',
       borderBottomLeftRadius: '0px !important',

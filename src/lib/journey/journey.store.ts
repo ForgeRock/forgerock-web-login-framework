@@ -144,7 +144,7 @@ export async function initTree(tree: string) {
   /**
    * Start tree and get first step
    */
-  getStep();
+  await getStep();
 
   return {
     step,
