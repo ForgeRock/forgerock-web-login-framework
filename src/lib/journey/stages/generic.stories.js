@@ -1,7 +1,7 @@
 import { FRStep } from '@forgerock/javascript-sdk';
 import { writable } from 'svelte/store';
 
-import Step from './step.story.svelte';
+import Step from './generic.story.svelte';
 import { loginStep, registrationStep } from './step.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);

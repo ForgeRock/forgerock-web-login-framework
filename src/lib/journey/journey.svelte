@@ -4,6 +4,7 @@
 </script>
 
 <script lang="ts">
+  import { StepType } from '@forgerock/javascript-sdk';
   import type { DispatchOptions } from 'svelte/internal';
   import type { Writable } from 'svelte/store';
 
@@ -11,7 +12,8 @@
   import type { User } from '$journey/interfaces';
   import { initTree, type StepTypes } from '$journey/journey.store';
   import { email, fullName, isAuthenticated } from '$lib/user/user.store';
-  import Step from '$journey/step.svelte';
+  import Generic from '$journey/stages/generic.svelte';
+  import UsernamePassword from '$journey/stages/username-password.svelte';
 
   export let closeModal: (() => void) | null = null;
   export let initObj: any = null;
@@ -24,6 +26,7 @@
     options?: DispatchOptions,
   ) => boolean) | null = null;
 
+  let isUsernamePassword: boolean;
   let failureMessage: Writable<string | null> = initObj.failureMessage;
   let getStep: (prevStep?: StepTypes) => Promise<void> = initObj.getStep;
   let step: Writable<StepTypes> = initObj.step;
@@ -52,6 +55,10 @@
     };
   }
 
+  if ($step?.type === StepType.Step) {
+    isUsernamePassword = $step.getStage() === 'UsernamePassword';
+  }
+
   $: {
     /**
      * Detect when user completes authentication and close modal
@@ -73,4 +80,8 @@
   }
 </script>
 
-<Step bind:formEl {submitForm} {step} />
+{#if isUsernamePassword}
+  <UsernamePassword bind:formEl {submitForm} {step} />
+{:else}
+  <Generic bind:formEl {submitForm} {step} />
+{/if}

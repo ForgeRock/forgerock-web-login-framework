@@ -3,7 +3,7 @@
   import type { Writable } from 'svelte/store';
 
   import Centered from '$components/primitives/box/centered.svelte';
-  import Step from './step.svelte';
+  import Step from './generic.svelte';
 
   type StepTypes = FRStep | FRLoginFailure | FRLoginSuccess | null;
 

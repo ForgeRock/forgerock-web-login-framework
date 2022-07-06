@@ -15,7 +15,7 @@
   import Name from '$journey/callbacks/username/name.svelte';
   import Password from '$journey/callbacks/password/password.svelte';
   import StringAttributeInput from '$journey/callbacks/string-attribute/string-attribute-input.svelte';
-  import TermsConditions from './callbacks/terms-and-conditions/terms-conditions.svelte';
+  import TermsConditions from '$journey/callbacks/terms-and-conditions/terms-conditions.svelte';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 

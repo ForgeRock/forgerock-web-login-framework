@@ -31,7 +31,7 @@ module.exports = (theme) => ({
     color: theme('colors.primary.dark'),
     fontSize: theme('fontSize.2xl'),
     fontWeight: theme('fontWeight.light'),
-    marginBottom: theme('spacing.2'),
+    marginBottom: theme('spacing.4'),
     textAlign: 'center',
   },
   '.primary-header_dark': {
