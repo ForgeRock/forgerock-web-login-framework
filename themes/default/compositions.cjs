@@ -44,7 +44,7 @@ module.exports = (config, theme) => ({
       position: 'absolute',
       transform: 'rotate(45deg)',
       transformOrigin: '0 100%',
-      willChange: 'transform',
+      willChange: 'height, transform, width',
     },
     '&:checked + label > span:before': {
       // TODO: Adding the prefix feels a bit weird, but necessary atm
@@ -70,12 +70,27 @@ module.exports = (config, theme) => ({
     margin: `${theme('spacing.2')} 0 0 0`,
     maxHeight: '100%',
     maxWidth: '100%',
+    opacity: 0,
     padding: theme('spacing.6'),
     paddingBottom: theme('spacing.16'),
+    top: '75%',
     width: '100%',
+    willChange: 'top, opacity',
+
+    '&[open]': {
+      animation: `${config('prefix')}${theme('animation.slideUp')}`,
+    },
+    '&::backdrop': {
+      animation: `${config('prefix')}${theme('animation.fadeIn')}`,
+      backgroundColor: colorLib(theme('colors.body.light')).fade(0.2).toString(),
+    },
   },
   '.dialog-box_dark': {
     backgroundColor: theme('colors.background.dark'),
+
+    '&::backdrop': {
+      backgroundColor: colorLib(theme('colors.body.dark')).fade(0.2).toString(),
+    },
   },
   '.dialog-box_medium': {
     height: 'fit-content',
@@ -83,6 +98,17 @@ module.exports = (config, theme) => ({
     maxWidth: theme('maxWidth.lg'),
     padding: theme('spacing.12'),
     width: theme('width["3/4"]'),
+  },
+  '.dialog-closing': {
+
+    '&[open]': {
+      animation: `${config('prefix')}${theme('animation.slideDown')}`,
+      display: 'block',
+    },
+    '&::backdrop': {
+      animation: `${config('prefix')}${theme('animation.fadeOut')}`,
+      backgroundColor: colorLib(theme('colors.body.light')).fade(0.2).toString(),
+    },
   },
   '.dialog-x': {
     borderRadius: theme('borderRadius.DEFAULT'),
@@ -95,6 +121,7 @@ module.exports = (config, theme) => ({
    * when it gets full browser support
    */
   '.input-floating': {
+
     '&:focus, &:not(:placeholder-shown)': {
       paddingBottom: theme('spacing.1'),
       paddingTop: theme('spacing.5'),
@@ -169,6 +196,7 @@ module.exports = (config, theme) => ({
     boxShadow: `none`,
   },
   '.radio-input_animated': {
+
     '&:focus + label > span > span': {
       boxShadow: `0 0 0 4px ${colorLib(theme('ringColor.DEFAULT'))
         .fade(0.1)
@@ -199,6 +227,7 @@ module.exports = (config, theme) => ({
     },
   },
   '.radio-input_animated_dark': {
+
     '&:checked + label > span > span': {
       borderColor: theme('colors.secondary.light'),
     },

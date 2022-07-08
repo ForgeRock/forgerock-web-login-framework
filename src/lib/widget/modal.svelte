@@ -24,7 +24,8 @@
   };
   export const modal = {
     close() {
-      dialog?.close();
+      dialog.addEventListener('animationend', () => console.log('CLOSING!!!!'));
+      dialog.classList.add('tw_dialog-close');
     },
     onMount(fn: (component: HTMLDialogElement) => void) {
       callMounted = (component: HTMLDialogElement) => fn(component);
@@ -65,7 +66,6 @@
   import { createEventDispatcher, onMount as s_onMount } from 'svelte';
 
   import Dialog from '../components/compositions/dialog/dialog.svelte';
-  import KeyIcon from '../components/icons/key-icon.svelte';
 
   export let config: any;
   export let open = false;
@@ -115,10 +115,6 @@
 
 <div class="fr_widget-root">
   <Dialog bind:dialogEl dialogId="sampleDialog">
-    <div class="tw_flex w-full tw_justify-center">
-      <KeyIcon classes="tw_text-gray-400 tw_fill-current tw_mb-3" size="72px">Key Icon</KeyIcon>
-    </div>
-    <h2 class="tw_flex tw_font-light tw_justify-center tw_mb-6 tw_text-4xl tw_text-primary">Sign In</h2>
     <Journey widgetDispatch={dispatch} closeModal={modal.close} {returnError} {returnUser} />
   </Dialog>
 </div>

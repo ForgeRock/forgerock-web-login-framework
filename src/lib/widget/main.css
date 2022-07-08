@@ -15,3 +15,14 @@
 @import './tailwind.utilities.css' layer(fr-widget.utilities);
 @import './tailwind.components.css' layer(fr-widget.components);
 @import './tailwind.variants.css' layer(fr-widget.variants);
+
+/* Including this here to ensure the animation and keyframes get included from config */
+.do-not-modify {
+  @apply tw_animate-check;
+  @apply tw_animate-fadeIn;
+  @apply tw_animate-fadeOut;
+  @apply tw_animate-slideDown;
+  @apply tw_animate-slideUp;
+  @apply tw_animate-radio;
+  @apply tw_animate-squish;
+}

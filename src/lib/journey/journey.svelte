@@ -4,20 +4,18 @@
 </script>
 
 <script lang="ts">
-  import { StepType } from '@forgerock/javascript-sdk';
   import type { DispatchOptions } from 'svelte/internal';
   import type { Writable } from 'svelte/store';
 
-  // Stores handling business logic and/or network orchestration
   import type { User } from '$journey/interfaces';
   import { initTree, type StepTypes } from '$journey/journey.store';
   import { email, fullName, isAuthenticated } from '$lib/user/user.store';
-  import Generic from '$journey/stages/generic.svelte';
-  import UsernamePassword from '$journey/stages/username-password.svelte';
+  import { mapStepToStage } from '$journey/utilities/map-stage.utilities';
+
+  export const formEl: HTMLFormElement | null = null;
 
   export let closeModal: (() => void) | null = null;
   export let initObj: any = null;
-  export let formEl: HTMLFormElement | null = null;
   export let returnError: ((failureMessage: string | null) => void) | null = null;
   export let returnUser: ((user: User) => void) | null = null;
   export let widgetDispatch: (<EventKey extends string>(
@@ -26,11 +24,10 @@
     options?: DispatchOptions,
   ) => boolean) | null = null;
 
-  let isUsernamePassword: boolean;
-  let failureMessage: Writable<string | null> = initObj.failureMessage;
-  let getStep: (prevStep?: StepTypes) => Promise<void> = initObj.getStep;
-  let step: Writable<StepTypes> = initObj.step;
-  let submittingForm: Writable<boolean> = initObj.submittingForm;
+  let failureMessage: Writable<string | null>;
+  let getStep: (prevStep?: StepTypes) => Promise<void>;
+  let step: Writable<StepTypes>;
+  let submittingForm: Writable<boolean>;
 
   function submitForm() {
     // Get next step, passing previous step with new data
@@ -55,13 +52,10 @@
     };
   }
 
-  if ($step?.type === StepType.Step) {
-    isUsernamePassword = $step.getStage() === 'UsernamePassword';
-  }
-
   $: {
     /**
-     * Detect when user completes authentication and close modal
+     * Detect when user completes authentication,
+     * return user information and close modal.
      */
     if ($isAuthenticated) {
       console.log('Form component recognises the user as authenticated');
@@ -80,8 +74,4 @@
   }
 </script>
 
-{#if isUsernamePassword}
-  <UsernamePassword bind:formEl {submitForm} {step} />
-{:else}
-  <Generic bind:formEl {submitForm} {step} />
-{/if}
+<svelte:component this={mapStepToStage($step)} {submitForm} {step} />

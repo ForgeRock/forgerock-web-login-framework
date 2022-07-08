@@ -5,7 +5,8 @@
   // Import primitives
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
-  import KeyIcon from '$components/icons/key-icon.svelte';
+  import Link from '$components/primitives/link/link.svelte';
+  import NewUserIcon from '$components/icons/new-user-icon.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
@@ -16,9 +17,14 @@
 </script>
 
 <div class="tw_flex tw_justify-center">
-  <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+  <NewUserIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
 </div>
-<h1 class="tw_primary-header dark:tw_primary-header_dark">Sign In</h1>
+<h1 class="tw_primary-header dark:tw_primary-header_dark">Sign Up</h1>
+<p
+  class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+>
+  Already have an account? <Link href="/">Sign in here!</Link>
+</p>
 
 {#if !$step}
   <p>Loading ...</p>
@@ -31,8 +37,8 @@
          template and into the JS above for assigning the right component to the
          callback.
        -->
-       {@const inputName = callback?.payload?.input?.[0].name}
-       <svelte:component this={mapCallbackToComponent(callback)} {callback} {inputName} />
+      {@const inputName = callback?.payload?.input?.[0].name}
+      <svelte:component this={mapCallbackToComponent(callback)} {callback} {inputName} />
     {/each}
     <Button width="full" style="primary" type="submit">Submit</Button>
   </Form>

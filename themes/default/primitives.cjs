@@ -139,6 +139,7 @@ module.exports = function(theme) {
       fontSize: theme('fontSize.base'),
       lineHeight: theme('spacing.6'),
       padding: theme('spacing.3'),
+
       '&:hover,': {
         backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
       },
@@ -181,8 +182,9 @@ module.exports = function(theme) {
     },
     '.input-base_dark': {
       backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
-      borderColor: colorLib(theme('colors.body.dark')).fade(0.1).toString(),
+      borderColor: colorLib(theme('colors.black')).fade(0.1).toString(),
       color: theme('colors.white'),
+
       '&:focus': {
         backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
@@ -227,6 +229,7 @@ module.exports = function(theme) {
       backgroundSize: '16px 12px',
       // TODO: Use design tokens, not absolute values
       height: 'calc(3rem + 2px)',
+
       '&:hover': {
         backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
       },
@@ -257,6 +260,7 @@ module.exports = function(theme) {
         theme('colors.secondary.light'),
       ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
       backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
+
       '&:hover,': {
         backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },

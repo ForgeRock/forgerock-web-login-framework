@@ -9,7 +9,7 @@ module.exports = function (theme) {
       borderTopWidth: '1px',
       marginTop: theme('spacing.8'),
       paddingBottom: theme('spacing.4'),
-      paddingTop: theme('spacing.4'),
+      paddingTop: theme('spacing.6'),
     },
     '.kba-fieldset_dark': {
       borderColor: colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString(),
@@ -27,6 +27,7 @@ module.exports = function (theme) {
       position: 'absolute',
       top: `-${theme('spacing.3')}`,
       width: '100%',
+
       '& > svg': {
         backgroundColor: theme('colors.background.light'),
         color: theme('colors.secondary.DEFAULT'),
@@ -36,6 +37,7 @@ module.exports = function (theme) {
       },
     },
     '.kba-lock-icon_dark': {
+
       '& > svg': {
         backgroundColor: theme('colors.background.dark'),
         color: theme('colors.secondary.light'),
@@ -55,7 +57,7 @@ module.exports = function (theme) {
       verticalAlign: 'middle',
     },
     '.password-button_dark': {
-      backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
+      backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
     },
     '.password-icon': {
       color: theme('colors.primary.dark'),

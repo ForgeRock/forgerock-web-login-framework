@@ -2,6 +2,8 @@
   import Box from '$components/primitives/box/centered.svelte';
   import { initTree, type InitObject } from '$journey/journey.store';
 
+  import '../app.css';
+
   export async function load() {
     let initObj = await initTree(null);
 
@@ -13,15 +15,10 @@
 
 <script lang="ts">
   import Journey from '../lib/journey/journey.svelte';
-  import KeyIcon from '../lib/components/icons/key-icon.svelte';
 
   export let initObj: InitObject;
 </script>
 
 <Box>
-  <div class="tw_flex tw_justify-center">
-    <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
-  </div>
-  <h1 class="tw_primary-header dark:tw_primary-header_dark">Sign In</h1>
   <Journey {initObj} />
 </Box>
