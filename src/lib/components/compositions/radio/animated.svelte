@@ -14,7 +14,7 @@
 
 <div>
   {#each options as option}
-    <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
+    <div class="tw_input-spacing">
       <input
         aria-invalid={isInvalid}
         class="tw_radio-input_animated dark:tw_radio-input_animated_dark tw_sr-only"
@@ -28,8 +28,8 @@
       />
       <Label key={`${key}-${option.value}`} classes="tw_input-spacing tw_grid tw_grid-cols-[2em_1fr] tw_relative">
         <!--
-          TODO: Not a fan of the double span, but it's needed for centering
-          the before psuedoelement. Try using a before and after
+          TODO: Not a fan of the double span (he he), but it's needed for centering
+          the `::before` psuedoelement. Try using a before and after
           psuedoelement may prevent this, maybe?
         -->
         <span class="tw_h-6 tw_relative tw_w-6">

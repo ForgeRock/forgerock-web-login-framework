@@ -11,7 +11,7 @@ module.exports = {
     fadeOut: `fadeOut 500ms ease forwards`,
     slideDown: `slideDown 100ms ease-out forwards`,
     slideUp: `slideUp 100ms ease-out forwards`,
-    radio: `radio 125ms 250ms cubic-bezier(.4,.0,.23,1) forwards`,
+    radio: `radio 125ms 150ms cubic-bezier(.4,.0,.23,1) forwards`,
     squish: `squish 200ms cubic-bezier(.4,.0,.23,1)`,
   },
   keyframes: ({ theme }) => ({

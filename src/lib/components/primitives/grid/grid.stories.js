@@ -8,7 +8,7 @@ export default {
   argTypes: {},
 };
 
-export const TwoUp = {
+export const ThreeTwo = {
   args: {},
 };
 
@@ -19,7 +19,7 @@ const Template = (args) => ({
 
 export const Interaction = Template.bind({});
 
-Interaction.args = TwoUp.args;
+Interaction.args = ThreeTwo.args;
 
 Interaction.play = async () => {
 

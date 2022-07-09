@@ -19,7 +19,7 @@ export default {
   title: 'Compositions/Radio: Animated',
 };
 
-export const Simple = {
+export const Base = {
   args: {
     key: 'uniqueId',
     name: 'color-selection',
@@ -33,14 +33,14 @@ export const Simple = {
   },
 };
 
-export const VeryLongText = {
+export const LongLabel = {
   args: {
     key: 'uniqueId',
     name: 'color-selection',
     onChange: () => console.log('Checkbox value updated'),
     options: [
-      { text: 'This is a very long label that needs to be gracefully handled by the UI', value: 0 },
-      { text: 'This is another long label that will need to not break the layout', value: 1 },
+      { text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit', value: 0 },
+      { text: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.', value: 1 },
     ],
     value: false,
   },

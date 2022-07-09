@@ -2,22 +2,36 @@
   import Error from "$components/primitives/message/error.svelte";
   import Label from "$components/primitives/label/label.svelte";
 
+  export let checkValidity: ((event: Event) => boolean) | null = null;
   export let errorMessage: string = '';
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let onChange: (event: Event) => void;
   export let value: boolean;
+
+  function onChangeWrapper(event: Event) {
+    if (checkValidity) {
+      isInvalid = !checkValidity(event);
+    }
+    onChange(event);
+  }
+
+  $: {
+    isInvalid = !!errorMessage;
+  }
 </script>
 
 <div>
-  <!-- TODO: Currently NOT using the primitive checkbox, but re-evaluate later -->
+  <!--
+    TODO: Currently NOT using the primitive checkbox component, but re-evaluate later
+   -->
   <input
     aria-invalid={isInvalid}
     class="tw_checkbox-input_animated dark:tw_checkbox-input_animated_dark tw_sr-only"
     checked={value}
     id={key}
-    on:change={onChange}
+    on:change={onChangeWrapper}
     required={isRequired}
     type="checkbox"
     />

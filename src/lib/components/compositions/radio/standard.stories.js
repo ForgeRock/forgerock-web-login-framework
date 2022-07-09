@@ -19,7 +19,7 @@ export default {
   title: 'Compositions/Radio: Standard',
 };
 
-export const Simple = {
+export const Base = {
   args: {
     key: 'uniqueId',
     name: 'color-selection',
@@ -33,7 +33,7 @@ export const Simple = {
   },
 };
 
-export const VeryLongText = {
+export const LongLabel = {
   args: {
     key: 'uniqueId',
     name: 'color-selection',

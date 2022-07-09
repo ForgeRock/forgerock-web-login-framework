@@ -1,5 +1,5 @@
 <script lang="ts">
-  export let errorMessage: string = '';
+  export let errorMessage: string;
   export let key: string;
   export let showError: boolean | null = true;
 </script>

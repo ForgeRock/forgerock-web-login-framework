@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
-  import Checkbox from '$components/compositions/checkbox/standard.svelte';
+  import Checkbox from '$components/compositions/checkbox/animated.svelte';
 
   export let callback: TermsAndConditionsCallback;
   export let inputName = '';
@@ -35,8 +35,4 @@
 <Checkbox key={inputName} onChange={setValue} value={false}>
   <!-- TODO: Remove hardcoded text below -->
   Please accept our below Terms and Conditions
-  <details>
-    <summary class="tw_cursor-pointer tw_focusable-element tw_font-bold tw_mt-1 tw_rounded">{termsStart}</summary>
-    {terms}
-  </details>
 </Checkbox>

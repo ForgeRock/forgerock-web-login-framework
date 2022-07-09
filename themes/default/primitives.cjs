@@ -131,7 +131,7 @@ module.exports = function(theme) {
     /**
      * String input and select primitive theme settings
      */
-     '.input-base': {
+    '.input-base': {
       backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
       border: `${theme('borderWidth.DEFAULT')} solid ${theme('colors.secondary.DEFAULT')}`,
       borderRadius: theme('borderRadius.DEFAULT'),
@@ -141,10 +141,10 @@ module.exports = function(theme) {
       padding: theme('spacing.3'),
 
       '&:hover,': {
-        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
+        backgroundColor: theme('colors.background.light'),
       },
       '&:focus': {
-        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
+        backgroundColor: theme('colors.background.light'),
       },
       '& ~ .input-error-message': {
         display: 'none',

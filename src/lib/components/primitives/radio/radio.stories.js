@@ -32,3 +32,17 @@ export const Simple = {
     value: false,
   },
 };
+
+export const LongLabels = {
+  args: {
+    key: 'uniqueId',
+    name: 'color-selection',
+    onChange: () => console.log('Checkbox value updated'),
+    options: [
+      { text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit', value: 0 },
+      { text: 'Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', value: 1 },
+      { text: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.', value: 2 },
+    ],
+    value: false,
+  },
+};

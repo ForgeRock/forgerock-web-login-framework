@@ -9,7 +9,7 @@ export default {
   title: 'Primitives/Label',
 };
 
-export const Basic = {
+export const Base = {
   args: {
     key: 'uniqueId',
     label: 'Username',

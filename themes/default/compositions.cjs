@@ -6,9 +6,9 @@ module.exports = (config, theme) => ({
    * Rework of this example: https://codepen.io/dylanraga/pen/Qwqbab
    */
   '.animated-check': {
-    borderColor: theme('colors.primary.dark'),
+    borderColor: theme('colors.secondary.DEFAULT'),
     borderRadius: theme('borderRadius.DEFAULT'),
-    borderWidth: '2px',
+    borderWidth: '1px',
     cursor: 'pointer',
     fontSize: '1.5em',
     height: '1em',
@@ -22,7 +22,8 @@ module.exports = (config, theme) => ({
     width: '1em',
   },
   '.animated-check_dark': {
-    borderColor: theme('colors.secondary.light'),
+    borderColor: theme('colors.secondary.DEFAULT'),
+    backgroundColor: theme('colors.secondary.DEFAULT'),
   },
   '.checkbox-input_animated': {
     '&:checked + label > span': {
@@ -184,7 +185,7 @@ module.exports = (config, theme) => ({
     borderColor: theme('colors.white'),
     borderRadius: theme('borderRadius.full'),
     borderWidth: '2px',
-    boxShadow: `0 0 0 2px ${theme('colors.primary.dark')}`,
+    boxShadow: `0 0 0 1px ${theme('colors.secondary.DEFAULT')}`,
     display: 'block',
     cursor: 'pointer',
     height: '100%',
