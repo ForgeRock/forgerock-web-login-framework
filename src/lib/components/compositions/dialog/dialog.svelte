@@ -4,7 +4,7 @@
   export let dialogEl: HTMLDialogElement | null = null;
   export let dialogId: string;
 
-  function closeDialog(event: Event) {
+  export function closeDialog() {
     dialogEl?.addEventListener('animationend', () => {
       dialogEl?.close();
       dialogEl?.classList.remove('tw_dialog-closing');

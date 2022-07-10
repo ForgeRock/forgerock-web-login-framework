@@ -5,7 +5,7 @@
   import Widget, { modal, journey, user } from '../../../../package/modal';
 
   let userInfo: User | null;
-  let widget;
+  let widget: Widget;
   let widgetEl: HTMLDivElement;
 
   async function logout() {
@@ -15,15 +15,17 @@
 
   modal.onMount((dialog: HTMLDialogElement) => {
     console.log('Singleton onMount event fired');
-    console.log(dialog)
+    console.log(dialog);
+
+    journey.initialize({ journey: 'Login' });
   });
   journey.onSuccess((response: User) => {
     console.log('Singleton onSuccess event fired');
-    (userInfo = response)
+    userInfo = response;
   });
   journey.onFailure((error: string | null) => {
     console.log('Singleton onFailure event fired');
-    console.log(error)
+    console.log(error);
   });
 
   s_onMount(() => {
@@ -35,7 +37,7 @@
           redirectUri: 'https://localhost:3000/callback',
           scope: 'openid profile email me.read',
           serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
+            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
           },
           realmPath: 'alpha',
           tree: 'Login',
@@ -44,11 +46,13 @@
           button: [
             { key: 'color', value: '#000000' },
             { key: 'background-color', value: '#bada55' },
-            { key: 'border-color', value: '#bada55'},
+            { key: 'border-color', value: '#bada55' },
           ],
         },
       },
     });
+
+    console.log(widget);
   });
 
   $: if (userInfo) console.log(userInfo);
@@ -62,7 +66,7 @@
     </ul>
     <button on:click={logout}>Logout</button>
   {:else}
-    <button on:click={() => modal.open()}>Login</button>
+    <button on:click={() => modal.open({ initialized: true })}>Login</button>
   {/if}
 </div>
-<div bind:this={widgetEl}></div>
+<div bind:this={widgetEl} />

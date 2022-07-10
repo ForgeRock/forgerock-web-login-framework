@@ -9,8 +9,9 @@
   import Input from '$components/compositions/input-floating/floating-label.svelte';
 
   export let callback: AttributeInputCallback<string>;
-  export let inputName: string;
+  export let idx: number;
 
+  const inputName = callback?.payload?.input?.[0].name || `string-attr-${idx}`;
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
   const policies = callback.getPolicies();

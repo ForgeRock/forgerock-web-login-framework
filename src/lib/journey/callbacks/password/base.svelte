@@ -8,10 +8,11 @@
   import Input from '$components/compositions/input-floating/floating-label.svelte';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
-  export let inputName: string;
+  export let idx: number;
   export let isRequired = false;
   export let validationFailure = '';
 
+  const inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
   const textInputLabel = callback.getPrompt();
 
   let isVisible = false;

@@ -8,12 +8,13 @@
   import Input from '$components/compositions/input-floating/floating-label.svelte';
 
   export let callback: ValidatedCreateUsernameCallback;
-  export let inputName: string;
+  export let idx: number;
 
-  const unknownValue = callback?.getInputValue();
+  const inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
   const textInputLabel = callback.getPrompt();
+  const unknownValue = callback?.getInputValue();
   const validationFailure = getUsernameValidationFailureText(callback, label);
 
   let type: 'text' = 'text';

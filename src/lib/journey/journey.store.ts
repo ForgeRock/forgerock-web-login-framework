@@ -33,14 +33,14 @@ interface User {
 }
 export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
-export async function initTree(tree: string | null): Promise<InitObject> {
+export async function initialize(journey: string | null): Promise<InitObject> {
   const step: Writable<StepTypes> = writable(null);
   const failureMessage: Writable<string | null> = writable(null);
   const options: Options = {};
   const submittingForm: Writable<boolean> = writable(false);
 
-  if (tree) {
-    options.tree = tree;
+  if (journey) {
+    options.tree = journey;
   }
 
   async function getOAuth() {

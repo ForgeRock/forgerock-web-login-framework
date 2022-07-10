@@ -6,7 +6,7 @@
   import LockIcon from '$components/icons/lock-icon.svelte';
 
   export let callback: KbaCreateCallback;
-  export let inputName = '';
+  export let idx: number;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -19,9 +19,11 @@
   const questions = callback
     .getPredefinedQuestions()
     ?.map((label, idx) => ({ text: label, value: idx }));
+  const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
   const inputNameQuestion = inputName;
   const inputArr = callback?.payload?.input;
   const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
+
 
   /**
    * @function setAnswer - Sets the value on the callback on element blur (lose focus)

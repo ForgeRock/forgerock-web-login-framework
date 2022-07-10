@@ -1,11 +1,11 @@
 <script context="module" lang="ts">
   import Box from '$components/primitives/box/centered.svelte';
-  import { initTree, type InitObject } from '$journey/journey.store';
+  import { initialize, type InitObject } from '$journey/journey.store';
 
   import '../app.css';
 
   export async function load() {
-    let initObj = await initTree(null);
+    let initObj = await initialize(null);
 
     return {
       props: { initObj },

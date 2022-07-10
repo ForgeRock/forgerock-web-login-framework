@@ -4,7 +4,7 @@
   import Checkbox from '$components/compositions/checkbox/animated.svelte';
 
   export let callback: TermsAndConditionsCallback;
-  export let inputName = '';
+  export let idx: number;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -13,6 +13,7 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
+  const inputName = callback?.payload?.input?.[0].name || `terms-${idx}`;
   const terms = callback.getTerms();
   const termsStart = terms.substring(0, 35) + ' ...';
 

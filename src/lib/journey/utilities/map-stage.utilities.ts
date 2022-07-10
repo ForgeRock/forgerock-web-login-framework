@@ -10,7 +10,7 @@ export function mapStepToStage(currentStep: any) {
    * Details: This method is helpful in quickly identifying the stage
    * when you want to provide special layout or handling of the form
    ********************************************************************* */
-  switch (currentStep?.getStage()) {
+  switch (currentStep?.getStage && currentStep.getStage()) {
     case 'Registration':
       return Registration;
     case'UsernamePassword':

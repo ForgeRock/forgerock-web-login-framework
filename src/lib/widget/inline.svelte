@@ -2,12 +2,13 @@
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
   import type { User } from '$journey/interfaces';
-  import Journey, { initJourney } from '../journey/journey.svelte';
+  import Journey from '../journey/journey.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
 
   import './main.css';
 
-  let component: HTMLFormElement;
+  let formComp: SvelteComponent;
+  let formEl: HTMLFormElement;
   let callMounted: (component: HTMLFormElement) => void;
   let returnError: (error: string | null) => void;
   let returnUser: (user: User) => void;
@@ -43,7 +44,7 @@
       email.set('');
       fullName.set('');
       isAuthenticated.set(false);
-      initJourney();
+      formComp.initJourney();
     },
     async tokens(renew = false) {
       // TODO: decide what options to provide to client
@@ -54,17 +55,19 @@
 
 <script lang="ts">
   import { Config } from '@forgerock/javascript-sdk';
-  import { createEventDispatcher, onMount as s_onMount } from 'svelte';
+  import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
 
   export let config;
 
   const dispatch = createEventDispatcher();
 
-  let formEl: HTMLFormElement;
+  let _formComp: SvelteComponent;
+  let _formEl: HTMLFormElement;
 
   s_onMount(() => {
-    component = formEl;
-    initJourney();
+    formComp = _formComp;
+    formEl = _formEl;
+    _formComp.initJourney();
     /**
      * Call mounted event for Singleton users
      */
@@ -83,5 +86,5 @@
 </script>
 
 <div class="fr_widget-root">
-  <Journey bind:formEl widgetDispatch={dispatch} {returnError} {returnUser} />
+  <Journey bind:formEl bind:this={_formComp} widgetDispatch={dispatch} {returnError} {returnUser} />
 </div>
