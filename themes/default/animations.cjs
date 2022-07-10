@@ -6,9 +6,9 @@ module.exports = {
     /**
      * Make sure to add these animations to app.css and widget/main.css
      */
-    check: `check 125ms 250ms cubic-bezier(.4,.0,.23,1) forwards`,
+    check: `check 100ms 250ms cubic-bezier(.4,.0,.23,1) forwards`,
     fadeIn: `fadeIn 500ms ease forwards`,
-    fadeOut: `fadeOut 500ms ease forwards`,
+    fadeOut: `fadeOut 500ms ease-out forwards`,
     slideDown: `slideDown 100ms ease-out forwards`,
     slideUp: `slideUp 100ms ease-out forwards`,
     radio: `radio 125ms 150ms cubic-bezier(.4,.0,.23,1) forwards`,
@@ -19,20 +19,10 @@ module.exports = {
       '0%': {
         borderColor: theme('colors.white'),
         height: '0',
-        transform: 'translate3d(0,0,0) rotate(45deg)',
-        width: '0',
-      },
-      '33%': {
-        borderColor: theme('colors.white'),
-        height: '0',
-        transform: 'translate3d(0,0,0) rotate(45deg)',
-        width: '0.35em',
       },
       '100%': {
         borderColor: theme('colors.white'),
-        height: '0.8em',
-        transform: 'translate3d(0,0,0) rotate(45deg)',
-        width: '0.35em',
+        height: '0.7em',
       },
     },
     fadeIn: {

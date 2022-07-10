@@ -35,7 +35,7 @@
     required={isRequired}
     type="checkbox"
     />
-  <Label {key} classes="tw_input-spacing tw_grid tw_grid-cols-[2em_1fr] tw_relative">
+  <Label {key} classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative">
     <span class="tw_animated-check dark:tw_animated-check_dark"></span>
     <slot />
   </Label>

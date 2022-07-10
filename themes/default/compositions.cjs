@@ -6,57 +6,82 @@ module.exports = (config, theme) => ({
    * Rework of this example: https://codepen.io/dylanraga/pen/Qwqbab
    */
   '.animated-check': {
-    borderColor: theme('colors.secondary.DEFAULT'),
-    borderRadius: theme('borderRadius.DEFAULT'),
-    borderWidth: '1px',
     cursor: 'pointer',
     fontSize: '1.5em',
     height: '1em',
-    outlineColor: colorLib(theme('ringColor.DEFAULT')).fade(0.7).toString(),
-    outlineOffset: '0',
-    outlineStyle: 'solid',
-    outlineWidth: '0',
     position: 'relative',
-    transition:
-      'border-color ease-in-out 0.15s, border-width 250ms cubic-bezier(.4,.0,.23,1), box-shadow ease-in-out 0.15s, outline-color ease-in-out 0.2s, outline-offset ease-in-out 0.1s',
     width: '1em',
-  },
-  '.animated-check_dark': {
-    borderColor: theme('colors.secondary.DEFAULT'),
-    backgroundColor: theme('colors.secondary.DEFAULT'),
-  },
-  '.checkbox-input_animated': {
-    '&:checked + label > span': {
-      animation: `${config('prefix')}${theme('animation.squish')}`,
-      borderColor: theme('colors.primary.dark'),
-      borderWidth: '0.5em',
-    },
-    '&:focus + label > span': {
-      outlineColor: colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString(),
-      outlineOffset: '1px',
-      outlineWidth: '3px',
-    },
-    '& + label > span:before': {
-      borderBottom: '3px solid transparent',
-      borderRight: '3px solid transparent',
-      bottom: '-0.1em',
-      left: '-0.4em',
+
+    /**
+     * This is the rounded box with the inward-growing borders on click
+     */
+    '&:after': {
+      border: '3px solid transparent',
+      borderLeft: 'none',
+      borderTop: 'none',
+      bottom: '0.45em',
+      content: '""',
+      left: '0.15em',
       overflow: 'hidden',
       position: 'absolute',
       transform: 'rotate(45deg)',
-      transformOrigin: '0 100%',
-      willChange: 'height, transform, width',
+      transformOrigin: 'left bottom',
+      width: '0.35em',
+      willChange: 'height',
     },
-    '&:checked + label > span:before': {
-      // TODO: Adding the prefix feels a bit weird, but necessary atm
-      // TODO: Animation is a bit janky at slow speeds, but can't find right combination
+    /**
+     * This is the "checkmark", a rotated rectangle that grows in height
+     */
+    '&:before': {
+      borderColor: theme('colors.secondary.DEFAULT'),
+      borderRadius: theme('borderRadius.DEFAULT'),
+      borderWidth: '1px',
+      content: '""',
+      display: 'block',
+      height: '100%',
+      outlineColor: colorLib(theme('ringColor.DEFAULT')).fade(0.7).toString(),
+      outlineOffset: '0',
+      outlineStyle: 'solid',
+      outlineWidth: '0',
+      position: 'absolute',
+      transition:
+        'border-color ease-in-out 0.15s, border-width 250ms cubic-bezier(.4,.0,.23,1), box-shadow ease-in-out 0.15s, outline-color ease-in-out 0.2s, outline-offset ease-in-out 0.1s',
+      width: '100%',
+    },
+  },
+  '.checkbox-input_animated': {
+
+    /**
+     * All of the below are targeting `.animated-check` from above:
+     *
+     * `.checkbox-input_animated + label > span` is equal to `.animated-check`
+     *
+     * We need these styles to be linked to the state of the input, hence the selectors
+     */
+    '&:checked + label > span:after': {
+      /**
+       * TODO: Adding the prefix feels a bit weird, but necessary atm
+       *
+       * TODO: Animation is a touch janky in certain situations, but I believe it's just
+       * pixel-grid alignment. The check jumps from one pixel to another finding alignment
+       */
       animation: `${config('prefix')}${theme('animation.check')}`,
       // Nested quotes is necessary
       content: '""',
     },
+    '&:checked + label > span:before': {
+      animation: `${config('prefix')}${theme('animation.squish')}`,
+      borderColor: theme('colors.primary.dark'),
+      borderWidth: '0.5em',
+    },
+    '&:focus + label > span:before': {
+      outlineColor: colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString(),
+      outlineOffset: '1px',
+      outlineWidth: '3px',
+    },
   },
   '.checkbox-input_animated_dark': {
-    '&:checked + label > span': {
+    '&:checked + label > span:before': {
       borderColor: theme('colors.primary.light'),
     },
   },
@@ -182,33 +207,16 @@ module.exports = (config, theme) => ({
    * Rework of this example: https://codepen.io/dylanraga/pen/Qwqbab
    */
   '.animated-radio': {
-    borderColor: theme('colors.white'),
-    borderRadius: theme('borderRadius.full'),
-    borderWidth: '2px',
-    boxShadow: `0 0 0 1px ${theme('colors.secondary.DEFAULT')}`,
-    display: 'block',
+    position: 'relative',
     cursor: 'pointer',
-    height: '100%',
-    transition: 'border-width 250ms cubic-bezier(.4,.0,.23,1), box-shadow ease-in-out 0.15s',
-    width: '100%',
-  },
-  '.animated-radio_dark': {
-    borderColor: theme('colors.secondary.light'),
-    boxShadow: `none`,
-  },
-  '.radio-input_animated': {
+    fontSize: '1.5em',
+    height: '1em',
+    width: '1em',
 
-    '&:focus + label > span > span': {
-      boxShadow: `0 0 0 4px ${colorLib(theme('ringColor.DEFAULT'))
-        .fade(0.1)
-        .toString()} !important`,
-    },
-    '&:checked + label > span > span': {
-      animation: `${config('prefix')}${theme('animation.squish')}`,
-      // borderColor: theme('colors.primary.dark'),
-      borderWidth: '0.5em',
-    },
-    '& + label > span > span:before': {
+    /**
+     * Larger circle that grows inward
+     */
+    '&:after': {
       backgroundColor: theme('colors.primary.dark'),
       borderRadius: theme('borderRadius.full'),
       height: '100%',
@@ -221,19 +229,62 @@ module.exports = (config, theme) => ({
       width: '100%',
       willChange: 'transform',
     },
-    '&:checked + label > span > span:before': {
+    /**
+     * Smaller circle that grows outward
+     */
+    '&:before': {
+      borderColor: theme('colors.white'),
+      borderRadius: theme('borderRadius.full'),
+      borderWidth: '2px',
+      boxShadow: `0 0 0 1px ${theme('colors.secondary.DEFAULT')}`,
+      content: '""',
+      cursor: 'pointer',
+      display: 'block',
+      height: '100%',
+      position: 'absolute',
+      transition: 'border-width 250ms cubic-bezier(.4,.0,.23,1), box-shadow ease-in-out 0.15s',
+      width: '100%',
+    },
+  },
+  '.animated-radio_dark': {
+
+    '&:before': {
+      borderColor: theme('colors.secondary.light'),
+      boxShadow: `none`,
+    },
+    '&:after': {
+      backgroundColor: theme('colors.primary.light'),
+    },
+  },
+  '.radio-input_animated': {
+
+    /**
+     * All of the below are targeting `.animated-radio` from above:
+     *
+     * `.radio-input_animated + label > span` is equal to `.animated-radio`
+     *
+     * We need these styles to be linked to the state of the input, hence the selectors
+     */
+    '&:focus + label > span:before': {
+      boxShadow: `0 0 0 4px ${colorLib(theme('ringColor.DEFAULT'))
+        .fade(0.1)
+        .toString()} !important`,
+    },
+    '&:checked + label > span:after': {
       // TODO: Adding the prefix feels a bit weird, but necessary atm
       animation: `${config('prefix')}${theme('animation.radio')}`,
       content: '""',
     },
+    '&:checked + label > span:before': {
+      animation: `${config('prefix')}${theme('animation.squish')}`,
+      // borderColor: theme('colors.primary.dark'),
+      borderWidth: '0.5em',
+    },
   },
   '.radio-input_animated_dark': {
 
-    '&:checked + label > span > span': {
+    '&:checked + label > span:before': {
       borderColor: theme('colors.secondary.light'),
-    },
-    '& + label > span > span:before': {
-      backgroundColor: theme('colors.primary.light'),
     },
   },
 });

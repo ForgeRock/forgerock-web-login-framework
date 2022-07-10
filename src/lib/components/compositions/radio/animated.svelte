@@ -26,15 +26,8 @@
         type="radio"
         value={option.value}
       />
-      <Label key={`${key}-${option.value}`} classes="tw_input-spacing tw_grid tw_grid-cols-[2em_1fr] tw_relative">
-        <!--
-          TODO: Not a fan of the double span (he he), but it's needed for centering
-          the `::before` psuedoelement. Try using a before and after
-          psuedoelement may prevent this, maybe?
-        -->
-        <span class="tw_h-6 tw_relative tw_w-6">
-          <span class='tw_animated-radio dark:tw_animated-radio_dark'></span>
-        </span>
+      <Label key={`${key}-${option.value}`} classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative">
+        <span class='tw_animated-radio dark:tw_animated-radio_dark'></span>
         {option.text}
       </Label>
     </div>
