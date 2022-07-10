@@ -182,7 +182,8 @@ module.exports = function(theme) {
     },
     '.input-base_dark': {
       backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
-      borderColor: colorLib(theme('colors.black')).fade(0.1).toString(),
+      // borderColor: colorLib(theme('colors.black')).fade(0.1).toString(),
+      borderColor: theme('colors.secondary.dark'),
       color: theme('colors.white'),
 
       '&:focus': {
@@ -220,6 +221,10 @@ module.exports = function(theme) {
     },
     '.select-base': {
       appearance: 'none',
+      /**
+       * The below `background` property prevents Storybook a11y from determining contrast.
+       * This is likely due to the presence of the image.
+       */
       background: `no-repeat right ${theme(
         'spacing.3',
       )} center url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(

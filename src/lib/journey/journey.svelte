@@ -14,8 +14,18 @@
 
   export const formEl: HTMLFormElement | null = null;
 
+  interface InitObj {
+    failureMessage: Writable<string | null>;
+    getStep: (prevStep?: StepTypes) => Promise<void>;
+    step: Writable<StepTypes>;
+    submittingForm: Writable<boolean>;
+  }
+
   export let closeModal: (() => void) | null = null;
-  export let initObj: any = null;
+  /**
+   * TODO: Revisit this initJourney and initObj pattern
+   */
+  export let initObj: InitObj | null = null;
   export let returnError: ((failureMessage: string | null) => void) | null = null;
   export let returnUser: ((user: User) => void) | null = null;
   export let widgetDispatch: (<EventKey extends string>(
@@ -24,16 +34,16 @@
     options?: DispatchOptions,
   ) => boolean) | null = null;
 
-  let failureMessage: Writable<string | null>;
-  let getStep: (prevStep?: StepTypes) => Promise<void>;
-  let step: Writable<StepTypes>;
-  let submittingForm: Writable<boolean>;
+  let failureMessage = initObj?.failureMessage;
+  let getStep = initObj?.getStep;
+  let step = initObj?.step;
+  let submittingForm = initObj?.submittingForm;
 
   function submitForm() {
     // Get next step, passing previous step with new data
-    getStep($step);
+    getStep && getStep($step);
     // Set to true to indicate form is processing
-    submittingForm.set(true);
+    submittingForm && submittingForm.set(true);
   }
 
   if (!initObj) {
@@ -46,7 +56,7 @@
       step = initObj.step;
       submittingForm = initObj.submittingForm;
 
-      if (failureMessage) {
+      if ($failureMessage) {
         returnError && returnError($failureMessage);
       }
     };
