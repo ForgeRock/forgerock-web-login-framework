@@ -27,22 +27,30 @@
   ) => boolean) | null = null;
 
   export async function initJourney(journey: string | null = null) {
-      let initObj = await initialize(journey);
+    let initObj = await initialize(journey);
 
-      failureMessage = initObj.failureMessage;
-      getStep = initObj.getStep;
-      step = initObj.step;
-      submittingForm = initObj.submittingForm;
+    failureMessage = initObj.failureMessage;
+    getStep = initObj.getStep;
+    step = initObj.step;
+    submittingForm = initObj.submittingForm;
 
-      if ($failureMessage) {
-        returnError && returnError($failureMessage);
-      }
-    };
+    if ($failureMessage) {
+      returnError && returnError($failureMessage);
+    }
+  };
 
-  let failureMessage = initObj?.failureMessage;
-  let getStep = initObj?.getStep;
-  let step = initObj?.step;
-  let submittingForm = initObj?.submittingForm;
+  let failureMessage: Writable<string | null> | undefined;
+  let getStep: ((prevStep?: StepTypes) => Promise<void>) | undefined;
+  let step: Writable<StepTypes> | undefined;
+  let submittingForm: Writable<boolean> | undefined;
+
+  $: {
+    // Wrap in reactive block in order to listen for changes from parent's `initObj`
+    failureMessage = initObj?.failureMessage;
+    getStep = initObj?.getStep;
+    step = initObj?.step;
+    submittingForm = initObj?.submittingForm;
+  }
 
   function submitForm() {
     // Get next step, passing previous step with new data

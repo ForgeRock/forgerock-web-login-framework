@@ -16,6 +16,7 @@ const config = {
   forbidOnly: !!process.env.CI,
   workers: process.env.CI ? 2 : 4,
   testDir: 'tests',
+  timeout: 120 * 1000,
   projects: [
     {
       name: 'chromium',
