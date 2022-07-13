@@ -57,12 +57,16 @@
   import { Config } from '@forgerock/javascript-sdk';
   import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
 
+  import { initializeContent } from '$lib/locale.store';
+
   export let config;
 
   const dispatch = createEventDispatcher();
 
   let _formComp: SvelteComponent;
   let _formEl: HTMLFormElement;
+
+  initializeContent(config.content, true);
 
   s_onMount(() => {
     formComp = _formComp;

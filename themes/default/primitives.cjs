@@ -219,6 +219,18 @@ module.exports = function(theme) {
     '.input-label_dark': {
       color: theme('colors.secondary.light'),
     },
+
+    '.link': {
+      color: theme('colors.blue.600'),
+      textDecoration: 'underline',
+
+      '&:hover': {
+        textDecoration: 'none',
+      },
+    },
+    '.link_dark': {
+      color: theme('colors.blue.400'),
+    },
     '.select-base': {
       appearance: 'none',
       /**

@@ -7,13 +7,14 @@
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: AttributeInputCallback<string>;
   export let idx: number;
 
   const inputName = callback?.payload?.input?.[0].name || `string-attr-${idx}`;
   const isRequired = isInputRequired(callback);
-  const label = callback.getPrompt();
+  const outputName = callback.getOutputByName('name', '');
   const policies = callback.getPolicies();
   const type = getInputTypeFromPolicies(policies);
   const previousValue = callback?.getInputValue() as string;
@@ -39,7 +40,7 @@
 <Input
   errorMessage={validationFailure}
   key={inputName}
-  label={textInputLabel}
+  label={interpolate(outputName, null, textInputLabel)}
   onChange={setValue}
   {isRequired}
   {type}

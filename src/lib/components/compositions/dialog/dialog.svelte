@@ -1,14 +1,19 @@
 <script lang="ts">
+  import T from '$components/i18n/index.svelte';
   import XIcon from '../../icons/x-icon.svelte';
 
   export let dialogEl: HTMLDialogElement | null = null;
   export let dialogId: string;
 
   export function closeDialog() {
-    dialogEl?.addEventListener('animationend', () => {
-      dialogEl?.close();
-      dialogEl?.classList.remove('tw_dialog-closing');
-    }, { once: true });
+    dialogEl?.addEventListener(
+      'animationend',
+      () => {
+        dialogEl?.close();
+        dialogEl?.classList.remove('tw_dialog-closing');
+      },
+      { once: true },
+    );
     dialogEl?.classList.add('tw_dialog-closing');
   }
 </script>
@@ -28,7 +33,7 @@
     >
       <XIcon
         classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"
-        >Close Modal</XIcon
+        ><T key="closeModal" /></XIcon
       >
     </button>
   </div>

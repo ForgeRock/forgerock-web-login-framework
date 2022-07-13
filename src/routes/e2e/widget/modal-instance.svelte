@@ -27,7 +27,7 @@
       props: {
         config: {
           clientId: 'WebOAuthClient',
-          redirectUri: 'https://localhost:3000/callback',
+          redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'

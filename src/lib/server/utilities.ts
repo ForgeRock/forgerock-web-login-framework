@@ -6,7 +6,7 @@ export function extractDomainFromUrl(url: string) {
   /**
    * Good old Stack Overflow answer: https://stackoverflow.com/a/25703406
    *
-   * Regex 101 interactive demo: https://regex101.com/r/wN6cZ7/365
+   * Demo: https://regex101.com/r/wN6cZ7/365
    */
   const arr = url.match(/^(?:https?:\/\/)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)/);
   if (!Array.isArray(arr) && !arr || !arr[1]) {

@@ -1,5 +1,9 @@
 <script context="module" lang="ts">
+  import type { LoadEvent } from '@sveltejs/kit';
+
   import configure from '$lib/config/config';
+  import { getLocaleDir } from '$lib/utilities/i18n.utilities';
+  import { locale, initializeContent } from '$lib/locale.store';
 
   configure({
     clientId: 'WebOAuthClient',
@@ -14,6 +18,33 @@
     realmPath: 'alpha',
     tree: 'Login',
   });
+
+  /** @type {import('./__types/[slug]').Load} */
+  export async function load(event: LoadEvent) {
+    const userLocale = event.session.locale;
+
+    locale.set(userLocale);
+
+    const localDir = getLocaleDir(userLocale);
+
+
+    try {
+      if (localDir !== 'us/en') {
+        /**
+         * en-US is loaded by default, so only import other locales
+         */
+        let content = await import(`../../locales/${localDir}/index.json`);
+        initializeContent(content);
+      } else {
+        initializeContent();
+      }
+    } catch (err) {
+      // If there's a failure or unsupported locale, fallback to en-US
+      initializeContent();
+    }
+
+    return {};
+  }
 </script>
 
 <svelte:head>

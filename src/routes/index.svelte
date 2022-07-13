@@ -25,7 +25,7 @@
 
   // Use if not initializing journey in above "context module"
   onMount(async () => {
-    initObj = await initialize(null);
+    initObj = await initialize();
   });
 
 </script>

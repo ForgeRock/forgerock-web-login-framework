@@ -28,6 +28,18 @@ export const Base = {
   }
 };
 
+export const Error = {
+  args: {
+    ...Base.args,
+    checkValidity: (event) => {
+      const el = event.target;
+      return el.checked;
+    },
+    errorMessage: 'Please accept this',
+    label: 'Check to accept this agreement',
+  },
+};
+
 export const LongLabel = {
   args: {
     label: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',

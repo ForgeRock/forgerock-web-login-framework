@@ -2,6 +2,7 @@
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/compositions/checkbox/animated.svelte';
+  import T from '$components/i18n/index.svelte';
 
   export let callback: TermsAndConditionsCallback;
   export let idx: number;
@@ -15,7 +16,6 @@
    ************************************************************************* */
   const inputName = callback?.payload?.input?.[0].name || `terms-${idx}`;
   const terms = callback.getTerms();
-  const termsStart = terms.substring(0, 35) + ' ...';
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -34,6 +34,5 @@
 </script>
 
 <Checkbox key={inputName} onChange={setValue} value={false}>
-  <!-- TODO: Remove hardcoded text below -->
-  Please accept our below Terms and Conditions
+  <T key="termsAndConditions" />
 </Checkbox>

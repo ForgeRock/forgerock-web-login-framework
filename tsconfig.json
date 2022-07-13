@@ -8,9 +8,12 @@
       "$journey/*": ["src/lib/journey/*"],
       "$lib": ["src/lib"],
       "$lib/*": ["src/lib/*"],
+      "$locales": ["locales"],
+      "$locales/*": ["locales/*"],
       "$widget": ["src/lib/widget"],
       "$widget/*": ["src/lib/widget/*"]
     },
+    "resolveJsonModule": true,
     "strict": true,
   }
 }

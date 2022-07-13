@@ -5,7 +5,12 @@ import type {
   ValidatedCreatePasswordCallback,
 } from '@forgerock/javascript-sdk';
 
-type RequiredCallbacks = AttributeInputCallback<boolean | string> | ValidatedCreatePasswordCallback | ValidatedCreateUsernameCallback;
+import { interpolate } from '$lib/utilities/i18n.utilities';
+
+type RequiredCallbacks =
+  | AttributeInputCallback<boolean | string>
+  | ValidatedCreatePasswordCallback
+  | ValidatedCreateUsernameCallback;
 
 export function getAttributeValidationFailureText(
   callback: AttributeInputCallback<boolean | number | string>,
@@ -15,7 +20,7 @@ export function getAttributeValidationFailureText(
   return failedPolicies.reduce((prev, curr) => {
     switch (curr.policyRequirement) {
       default:
-        prev = `${prev}Please review this.`;
+        prev = `${prev}${interpolate('pleaseCheckValue')}`;
     }
     return prev;
   }, '');
@@ -45,13 +50,15 @@ export function getPasswordValidationFailureText(
   return parsedPolicies.reduce((prev, curr) => {
     switch (curr?.policyRequirement) {
       case 'LENGTH_BASED':
-        prev = `${prev}Ensure password contains more than ${curr.params && curr.params['min-password-length']} characters. `;
+        prev = `${prev}${interpolate('ensurePasswordIsMoreThan', {
+          minPasswordLength: `${curr.params && curr.params['min-password-length']}`,
+        })} `;
         break;
       case 'CHARACTER_SET':
-        prev = `${prev}Ensure password contains 1 of each: capital letter, number and special character. `;
+        prev = `${prev}${interpolate('ensurePasswordHasOne')} `;
         break;
       default:
-        prev = `${prev}Please check this value.`;
+        prev = `${prev}${interpolate('pleaseCheckValue')} `;
     }
     return prev;
   }, '');
@@ -67,13 +74,13 @@ export function getUsernameValidationFailureText(
   return parsedPolicies.reduce((prev, curr) => {
     switch (curr?.policyRequirement) {
       case 'VALID_USERNAME':
-        prev = `${prev}Please choose a different username. `;
+        prev = `${prev}${interpolate('chooseDifferentUsername')} `;
         break;
       case 'VALID_EMAIL_ADDRESS_FORMAT':
-        prev = `${prev}Please use a valid email address. `;
+        prev = `${prev}${interpolate('useValidEmail')} `;
         break;
       default:
-        prev = `${prev}Please check this value.`;
+        prev = `${prev}${interpolate('pleaseCheckValue')}`;
     }
     return prev;
   }, '');
@@ -93,7 +100,10 @@ export function isInputRequired(callback: RequiredCallbacks): boolean {
   return isRequired;
 }
 
-export function parseFailedPolicies(policies: unknown[], label: string): (PolicyRequirement | undefined)[] {
+export function parseFailedPolicies(
+  policies: unknown[],
+  label: string,
+): (PolicyRequirement | undefined)[] {
   return policies.map((policy) => {
     if (typeof policy === 'string') {
       try {

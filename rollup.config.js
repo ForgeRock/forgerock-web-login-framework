@@ -4,6 +4,7 @@ import postcssImport from 'postcss-import';
 import rimraf from 'rimraf';
 import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
 import resolve from '@rollup/plugin-node-resolve';
 import svelte from 'rollup-plugin-svelte';
@@ -47,6 +48,7 @@ export default {
       entries: {
         $components: path.resolve('./src/lib/components'),
         $journey: path.resolve('./src/lib/journey'),
+        $locales: path.resolve('./locales'),
         $widget: path.resolve('./src/lib/widget'),
       },
     }),
@@ -61,6 +63,7 @@ export default {
         });
       },
     },
+    json(),
     // Generate CSS output from `import 'thing.css';` imports and component <style>
     postcss({
       extract: path.resolve('./package/widget.css'),

@@ -21,6 +21,7 @@ const config = {
            */
           $components: path.resolve('./src/lib/components'),
           $journey: path.resolve('./src/lib/journey'),
+          $locales: path.resolve('./locales'),
           $widget: path.resolve('./src/lib/widget'),
         },
       },
@@ -36,7 +37,7 @@ const config = {
           // credentials: true
         },
         fs: {
-          allow: ['package'],
+          allow: ['locales', 'package'],
         },
       },
     },
