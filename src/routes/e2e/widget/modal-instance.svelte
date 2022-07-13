@@ -4,20 +4,21 @@
    *
    * This was just a test to prove out the idea.
    */
-  import { onMount as s_onMount } from 'svelte';
+  import { onMount as s_onMount, SvelteComponent } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
+  import type { User } from '$journey/interfaces';
   import Widget, { user } from '../../../../package/modal';
 
-  let userInfo = {};
-  let widget1;
-  let widget2;
-  let widgetEl1;
-  let widgetEl2;
+  let userInfo: User | null;
+  let widget1: Widget;
+  let widget2: Widget;
+  let widgetEl1: HTMLDivElement;
+  let widgetEl2: HTMLDivElement;
 
   async function logout() {
     await user.logout();
-    userInfo = {};
+    userInfo = null;
   }
 
   s_onMount(() => {
@@ -53,28 +54,28 @@
       }
     });
 
-    widget1.$on('modal-mount', (widgetEl) => {
+    widget1.$on('modal-mount', (dialog: HTMLDialogElement) => {
       console.log('Instance 1 mount event fired');
-      console.log(widgetEl)
+      console.log(dialog)
     });
-    widget1.$on('journey-success', (response) => {
+    widget1.$on('journey-success', (response: User) => {
       console.log('Instance 1 success event fired');
       (userInfo = response)
     });
-    widget1.$on('journey-failure', (error) => {
+    widget1.$on('journey-failure', (error: string | null) => {
       console.log('Instance 1 failure event fired');
       console.log(error)
     });
 
-    widget1.$on('modal-mount', (widgetEl) => {
+    widget1.$on('modal-mount', (dialog: HTMLDialogElement) => {
       console.log('Instance 2 mount event fired');
-      console.log(widgetEl)
+      console.log(dialog)
     });
-    widget1.$on('journey-success', (response) => {
+    widget1.$on('journey-success', (response: User) => {
       console.log('Instance 2 success event fired');
       (userInfo = response)
     });
-    widget1.$on('journey-failure', (error) => {
+    widget1.$on('journey-failure', (error: string | null) => {
       console.log('Instance 2 failure event fired');
       console.log(error)
     });

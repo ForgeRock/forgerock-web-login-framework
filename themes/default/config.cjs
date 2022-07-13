@@ -1,5 +1,6 @@
 const plugin = require('tailwindcss/plugin');
 
+const animations = require('./animations.cjs');
 const boxes = require('./boxes.cjs');
 const compositions = require('./compositions.cjs');
 const journey = require('./journey.cjs');
@@ -24,6 +25,7 @@ module.exports = {
   theme: {
     extend: {
       ...designTokens,
+      ...animations,
     },
   },
   /**
@@ -36,14 +38,14 @@ module.exports = {
    * more complex component classes that control more than just one style attribute.
    */
   plugins: [
-    plugin(({ addComponents, addUtilities, theme }) => {
+    plugin(({ addComponents, addUtilities, config, theme }) => {
       addComponents({
         /**
          * Non-alpha order is intentional
          */
         ...primitives(theme),
         ...boxes(theme),
-        ...compositions(theme),
+        ...compositions(config, theme),
         ...journey(theme),
       });
       addUtilities(utilities(theme));

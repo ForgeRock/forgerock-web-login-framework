@@ -1,9 +1,12 @@
 <script lang="ts">
   import Label from '$components/primitives/label/label.svelte';
 
+
+  export let checkValidity: ((event: Event) => boolean) | null = null;
   export let selectClasses = '';
-  export let defaultOption: number = null;
+  export let defaultOption: number | null = null;
   export let isRequired: boolean;
+  export let isInvalid: boolean | null = null;
   export let key: string;
   export let label: string;
   export let labelClasses = '';
@@ -17,7 +20,9 @@
 {/if}
 
 <select
+  aria-invalid={isInvalid}
   class={`${selectClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_select-base dark:tw_select-base_dark tw_w-full`}
+  data-message={`${key}-message`}
   id={key}
   on:change={onChange}
   required={isRequired}

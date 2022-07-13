@@ -15,9 +15,13 @@ import { writable } from 'svelte/store';
 //   storedFullName = window.sessionStorage.getItem('sdk_username');
 // }
 
-export const email = writable(/* storedEmail */);
-export const fullName = writable(/* storedFullName */);
-export const isAuthenticated = writable(/* storedAuthentication */);
+// export const email = writable(/* storedEmail */);
+// export const fullName = writable(/* storedFullName */);
+// export const isAuthenticated = writable(/* storedAuthentication */);
+
+export const email = writable('');
+export const fullName = writable('');
+export const isAuthenticated = writable(false);
 
 // isAuthenticated.subscribe((authentication) => {
 //   if (browser) window.sessionStorage.setItem('sdk_authentication', `${authentication}`);

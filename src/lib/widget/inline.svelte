@@ -1,27 +1,29 @@
 <script context="module" lang="ts">
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
-  import Form, { initForm } from '../journey/form.svelte';
+  import type { User } from '$journey/interfaces';
+  import Journey from '../journey/journey.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
 
   import './main.css';
 
-  let component;
-  let callMounted;
-  let returnError;
-  let returnUser;
+  let formComp: SvelteComponent;
+  let formEl: HTMLFormElement;
+  let callMounted: (component: HTMLFormElement) => void;
+  let returnError: (error: string | null) => void;
+  let returnUser: (user: User) => void;
 
   export const journey = {
-    onFailure(fn) {
-      returnError = (error) => fn(error);
+    onFailure(fn: (error: string | null) => void) {
+      returnError = (error: string | null) => fn(error);
     },
-    onSuccess(fn) {
-      returnUser = (user) => fn(user);
+    onSuccess(fn: (user: User) => void) {
+      returnUser = (user: User) => fn(user);
     },
   };
   export const form = {
-    onMount(fn) {
-      callMounted = (component) => fn(component);
+    onMount(fn: (component: HTMLFormElement) => void) {
+      callMounted = (component: HTMLFormElement) => fn(component);
     },
   };
   export const user = {
@@ -42,7 +44,7 @@
       email.set('');
       fullName.set('');
       isAuthenticated.set(false);
-      initForm();
+      formComp.initJourney();
     },
     async tokens(renew = false) {
       // TODO: decide what options to provide to client
@@ -53,17 +55,19 @@
 
 <script lang="ts">
   import { Config } from '@forgerock/javascript-sdk';
-  import { createEventDispatcher, onMount as s_onMount } from 'svelte';
+  import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
 
   export let config;
 
   const dispatch = createEventDispatcher();
 
-  let formEl;
+  let _formComp: SvelteComponent;
+  let _formEl: HTMLFormElement;
 
   s_onMount(() => {
-    component = formEl;
-    initForm();
+    formComp = _formComp;
+    formEl = _formEl;
+    _formComp.initJourney();
     /**
      * Call mounted event for Singleton users
      */
@@ -82,5 +86,5 @@
 </script>
 
 <div class="fr_widget-root">
-  <Form widgetDispatch={dispatch} {returnError} {returnUser} />
+  <Journey bind:formEl bind:this={_formComp} widgetDispatch={dispatch} {returnError} {returnUser} />
 </div>

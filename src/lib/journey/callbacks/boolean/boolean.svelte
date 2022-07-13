@@ -1,10 +1,14 @@
 <script lang="ts">
+  import {
+    getAttributeValidationFailureText,
+    isInputRequired,
+  } from '$journey/utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
-  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
+  import Checkbox from '$components/compositions/checkbox/animated.svelte';
 
   export let callback: AttributeInputCallback<boolean>;
-  export let inputName = '';
+  export let idx: number;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -13,8 +17,11 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
+  const inputName = callback?.payload?.input?.[0].name || `boolean-attr-${idx}`;
+  const isRequired = isInputRequired(callback);
+  const previousValue = callback.getInputValue() as boolean;
   const prompt = callback.getPrompt();
-  const value = callback.getInputValue() as boolean;
+  const validationFailure = getAttributeValidationFailureText(callback);
 
   function setValue(event: Event) {
     /** ***********************************************************************
@@ -28,4 +35,13 @@
   }
 </script>
 
-<Checkbox key={inputName} onChange={setValue} {value}>{prompt}</Checkbox>
+<Checkbox
+  errorMessage={validationFailure}
+  {isRequired}
+  isInvalid={!!validationFailure}
+  key={inputName}
+  onChange={setValue}
+  value={previousValue}
+>
+  {prompt}
+</Checkbox>

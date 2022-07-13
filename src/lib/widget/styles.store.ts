@@ -1,8 +1,8 @@
-import { readable } from "svelte/store";
+import { readable, type Readable } from "svelte/store";
 
-export let styles;
+export let styles: Readable<{ key: string, value: string }>;
 
-// TODO: Implement AJS (JSON Schema) for better usability
-export function initStyles(customStyles) {
+// TODO: Implement Zod for better usability
+export function initStyles(customStyles: { key: string, value: string }) {
   styles = readable(customStyles);
 }

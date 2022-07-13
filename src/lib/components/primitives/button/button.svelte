@@ -7,10 +7,10 @@
   // export let customCss: { key: string; value: string }[] = [];
   export let onClick = (event: Event) => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
-  export let type: 'button' | 'submit' = null;
+  export let type: 'button' | 'submit' | null = null;
   export let width: 'auto' | 'full' = 'auto';
 
-  const generateClassString = (...args) => {
+  function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
       switch(curr) {
         // Button style cases
@@ -25,6 +25,8 @@
           return `${prev} tw_w-auto`;
         case 'full':
           return `${prev} tw_w-full`;
+        default:
+          return prev;
       }
     }, '');
   }

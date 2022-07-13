@@ -19,6 +19,8 @@ module.exports = {
       },
     },
     'storybook-dark-mode',
+    // https://storybook.js.org/addons/storybook-addon-code-editor
+    // 'storybook-addon-code-editor',
   ],
   framework: '@storybook/svelte',
   core: {

@@ -4,27 +4,49 @@ module.exports = function (theme) {
   return {
     '.kba-fieldset': {
       position: 'relative',
-      borderColor: theme('colors.secondary.light'),
-      borderBottom: '1px solid',
-      borderTop: '1px solid',
-      marginBottom: theme('spacing.4'),
-      paddingBottom: theme('spacing.6'),
-      paddingTop: theme('spacing.14'),
+      borderColor: theme('colors.secondary.DEFAULT'),
+      borderBottomWidth: '1px',
+      borderTopWidth: '1px',
+      marginTop: theme('spacing.8'),
+      paddingBottom: theme('spacing.4'),
+      paddingTop: theme('spacing.6'),
     },
     '.kba-fieldset_dark': {
-      borderColor: theme('colors.body.dark'),
+      borderColor: colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString(),
     },
-    '.kba-legend': {
-      position: 'absolute',
-      top: theme('spacing.6'),
+    '.kba-header': {
       fontWeight: theme('fontWeight.medium'),
+      marginBottom: theme('spacing.4'),
     },
-    '.kba-legend_dark': {
+    '.kba-header_dark': {
       color: theme('colors.secondary.light'),
+    },
+    '.kba-lock-icon': {
+      display: 'flex',
+      justifyContent: 'center',
+      position: 'absolute',
+      top: `-${theme('spacing.3')}`,
+      width: '100%',
+
+      '& > svg': {
+        backgroundColor: theme('colors.background.light'),
+        color: theme('colors.secondary.DEFAULT'),
+        fill: 'currentcolor',
+        top: `-${theme('spacing.3')}`,
+        width: '3em',
+      },
+    },
+    '.kba-lock-icon_dark': {
+
+      '& > svg': {
+        backgroundColor: theme('colors.background.dark'),
+        color: theme('colors.secondary.light'),
+        fill: 'currentcolor',
+      },
     },
     '.password-button': {
       alignItems: 'center',
-      backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+      backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
       borderLeft: '0 !important',
       borderTopLeftRadius: '0px !important',
       borderBottomLeftRadius: '0px !important',
@@ -35,7 +57,7 @@ module.exports = function (theme) {
       verticalAlign: 'middle',
     },
     '.password-button_dark': {
-      backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
+      backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
     },
     '.password-icon': {
       color: theme('colors.primary.dark'),

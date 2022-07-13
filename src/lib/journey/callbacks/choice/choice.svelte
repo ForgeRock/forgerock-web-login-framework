@@ -1,10 +1,10 @@
-<script lang='ts'>
+<script lang="ts">
   import type { ChoiceCallback } from '@forgerock/javascript-sdk';
 
   import Select from '$components/compositions/select-floating/floating-label.svelte';
 
   export let callback: ChoiceCallback;
-  export let inputName = '';
+  export let idx: number;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -13,9 +13,12 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
-  const prompt = callback.getPrompt();
-  const choiceOptions = callback.getChoices();
+  const choiceOptions = callback
+    .getChoices()
+    ?.map((label, index) => ({ text: label, value: index }));
   const defaultChoice = callback.getDefaultChoice();
+  const inputName = callback?.payload?.input?.[0].name || `choice-${idx}`;
+  const prompt = callback.getPrompt();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -33,4 +36,11 @@
   }
 </script>
 
-<Select defaultOption={defaultChoice} key={inputName} label={prompt} onChange={setValue} options={choiceOptions} />
+<Select
+  defaultOption={defaultChoice}
+  isRequired={false}
+  key={inputName}
+  label={prompt}
+  onChange={setValue}
+  options={choiceOptions}
+/>

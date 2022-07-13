@@ -7,10 +7,11 @@
   export let labelClasses = '';
   export let labelOrder: 'first' | 'last' = 'first';
   export let onChange: (event: Event) => void;
-  export let placeholder: string = null;
-  export let isRequired: boolean;
+  export let placeholder: string | null = null;
+  export let isRequired: boolean = false;
+  export let isInvalid: boolean | null = null;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
-  export let value: string;
+  export let value: string = '';
 </script>
 
 {#if labelOrder === 'first'}
@@ -18,7 +19,9 @@
 {/if}
 
 <input
+  aria-invalid={isInvalid}
   class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+  data-message={`${key}-message`}
   id={key}
   on:change={onChange}
   placeholder={placeholder || label}

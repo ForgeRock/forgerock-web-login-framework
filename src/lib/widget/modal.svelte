@@ -1,39 +1,46 @@
 <script context="module" lang="ts">
   import { FRUser, TokenManager, UserManager } from '@forgerock/javascript-sdk';
 
-  import Form, { initForm } from '../journey/form.svelte';
+  import type { User } from '$journey/interfaces';
+  import Journey from '../journey/journey.svelte';
   import { email, isAuthenticated, fullName } from '../user/user.store';
   import { initStyles } from './styles.store';
 
-  import './main.css'
+  import './main.css';
 
-  let dialog;
-  let callMounted;
-  let returnError;
-  let returnUser;
+  let dialogComp: SvelteComponent;
+  let dialogEl: HTMLDialogElement;
+  let callMounted: (component: HTMLDialogElement) => void;
+  let journeyComp: SvelteComponent;
+  let returnError: (error: string | null) => void;
+  let returnUser: (user: User) => void;
 
   export const journey = {
-    onFailure(fn) {
-      returnError = (error) => fn(error);
+    initialize(options?: { journey?: string }): void {
+      journeyComp.initJourney(options?.journey);
     },
-    onSuccess(fn) {
-      returnUser = (user) => fn(user);
+    onFailure(fn: (error: string | null) => void) {
+      returnError = (error: string | null) => fn(error);
+    },
+    onSuccess(fn: (user: User) => void) {
+      returnUser = (user: User) => fn(user);
     },
   };
   export const modal = {
     close() {
-      dialog?.close();
+      dialogComp.closeDialog();
     },
-    onMount(fn) {
-      callMounted = (component) => fn(component);
+    onMount(fn: (component: HTMLDialogElement) => void) {
+      callMounted = (component: HTMLDialogElement) => fn(component);
     },
-    open() {
-      initForm();
-      dialog.showModal();
+    open(options?: { initialized?: boolean; journey?: string }): void {
+      let { initialized } = options || {};
+      !initialized && journeyComp.initJourney(journey);
+      dialogEl.showModal();
     },
   };
   export const user = {
-    async authorized(remote = false) {
+    async authorized(remote = false): Promise<boolean> {
       if (remote) {
         return !!(await UserManager.getCurrentUser());
       }
@@ -45,7 +52,7 @@
       }
       // TODO: return user info from local store
     },
-    async logout() {
+    async logout(): Promise<void> {
       await FRUser.logout();
       email.set('');
       fullName.set('');
@@ -55,68 +62,62 @@
       // TODO: decide what options to provide to client
       return await TokenManager.getTokens();
     },
-  }
+  };
 </script>
 
 <script lang="ts">
   import { Config } from '@forgerock/javascript-sdk';
-  import { createEventDispatcher, onMount as s_onMount } from 'svelte';
+  import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
 
   import Dialog from '../components/compositions/dialog/dialog.svelte';
-  import KeyIcon from '../components/icons/key-icon.svelte';
 
   export let config: any;
   export let open = false;
   export let customStyles: any;
 
+  export function initializeJourney(tree: string) {
+    _journeyComp.initializeJourney(tree);
+  }
+
   const dispatch = createEventDispatcher();
 
-  let dialogEl;
-  let mounted = false;
+  let _dialogComp: SvelteComponent;
+  let _dialogEl: HTMLDialogElement;
+  let _journeyComp: SvelteComponent;
 
   s_onMount(() => {
-    dialog = dialogEl;
+    dialogComp = _dialogComp;
+    dialogEl = _dialogEl;
+    journeyComp = _journeyComp;
+
     /**
      * Call mounted event for Singleton users
      */
-    callMounted && callMounted(dialogEl);
+    callMounted && callMounted(_dialogEl);
     /**
      * Call mounted event for Instance users
      * NOTE: needs to be wrapped in setTimeout. Asked in Svelte Discord
-     * if this is an issue or expected.
+     * if this is an issue or expected. Answer: Object instantiation seems
+     * to be synchronous, so this doesn't get called without `setTimeout`.
      */
     setTimeout(() => {
       dispatch('modal-mount', 'Modal mounted');
     }, 0);
-    mounted = true;
   });
 
   // TODO: Rethink setting root config at component level to fix instances
   Config.set(config);
   initStyles(customStyles);
-
-  $: {
-    /**
-     * This is a reactive block for Widget Instance users.
-     * Setting `open` to `true` is their control.
-     *
-     * TODO: currently broken as state isn't completely managed internally
-    */
-    if (mounted && open) {
-      initForm();
-      dialogEl.showModal();
-    } else if (mounted && !open) {
-      dialogEl.close();
-    }
-  }
 </script>
 
 <div class="fr_widget-root">
-  <Dialog bind:dialogEl>
-    <div class="tw_flex w-full tw_justify-center">
-      <KeyIcon classes="tw_text-gray-400 tw_fill-current tw_mb-3" size="72px">Key Icon</KeyIcon>
-    </div>
-    <h2 class="tw_flex tw_font-light tw_justify-center tw_mb-6 tw_text-4xl tw_text-primary">Sign In</h2>
-    <Form widgetDispatch={dispatch} closeModal={modal.close} {returnError} {returnUser} />
+  <Dialog bind:dialogEl={_dialogEl} bind:this={_dialogComp} dialogId="sampleDialog">
+    <Journey
+      bind:this={_journeyComp}
+      widgetDispatch={dispatch}
+      closeModal={modal.close}
+      {returnError}
+      {returnUser}
+    />
   </Dialog>
 </div>

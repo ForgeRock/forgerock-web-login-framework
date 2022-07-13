@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
-  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
+  import Checkbox from '$components/compositions/checkbox/animated.svelte';
 
   export let callback: TermsAndConditionsCallback;
-  export let inputName = '';
+  export let idx: number;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -13,6 +13,7 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
+  const inputName = callback?.payload?.input?.[0].name || `terms-${idx}`;
   const terms = callback.getTerms();
   const termsStart = terms.substring(0, 35) + ' ...';
 
@@ -35,8 +36,4 @@
 <Checkbox key={inputName} onChange={setValue} value={false}>
   <!-- TODO: Remove hardcoded text below -->
   Please accept our below Terms and Conditions
-  <details>
-    <summary class="tw_cursor-pointer tw_focusable-element tw_font-bold tw_mt-1 tw_rounded">{termsStart}</summary>
-    {terms}
-  </details>
 </Checkbox>

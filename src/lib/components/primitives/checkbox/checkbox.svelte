@@ -1,16 +1,22 @@
 <script lang="ts">
+  import Label from "$components/primitives/label/label.svelte";
+
+  export let isRequired = false;
+  export let isInvalid: boolean | null = null;
   export let key: string;
   export let onChange: (event: Event) => void;
-  export let value: string;
+  export let value: boolean;
 </script>
 
-<!--
-  NOTE: The below wrapper is creating a grid, setting the first column to 1.5em
-  and the second column as one flexible unit (1fr).
--->
-<div class="tw_grid tw_grid-cols-[1.5em_1fr]">
-  <input class="tw_checkbox-input dark:tw_checkbox-input_dark tw_focusable-element dark:tw_focusable-element_dark" checked={value} id={key} on:change={onChange} type="checkbox" />
-  <label for={key} class="tw_checkbox-label dark:tw_checkbox-label_dark">
-    <slot />
-  </label>
-</div>
+<input
+  aria-invalid={isInvalid}
+  class="tw_checkbox-input dark:tw_checkbox-input_dark tw_focusable-element dark:tw_focusable-element_dark"
+  checked={value}
+  id={key}
+  on:change={onChange}
+  required={isRequired}
+  type="checkbox"
+/>
+<Label {key}>
+  <slot />
+</Label>

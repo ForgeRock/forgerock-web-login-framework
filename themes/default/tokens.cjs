@@ -9,11 +9,11 @@ module.exports = {
   }),
   colors: {
     background: {
-      dark: colors.slate[700],
+      dark: colors.slate[800],
       light: colors.slate[100],
     },
     body: {
-      dark: colors.slate[800],
+      dark: colors.slate[900],
       light: colors.slate[700],
     },
     error: {
