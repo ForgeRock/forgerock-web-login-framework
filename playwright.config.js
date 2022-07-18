@@ -4,7 +4,7 @@ import { devices  } from '@playwright/test';
 const url = 'https://localhost:3000';
 const config = {
   webServer: {
-    command: 'npm run build && npm run preview',
+    command: 'npm run preview',
     ignoreHTTPSErrors: true,
     url,
   },

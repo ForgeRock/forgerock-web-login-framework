@@ -13,7 +13,9 @@ const valueSchema = z.record(z.string().regex(/^[^<>]*$/)).optional();
 
 export function getLocaleDir(acceptLanguageHeader: string): string {
   if (typeof acceptLanguageHeader !== 'string') {
-    throw new Error('AM_DOMAIN_PATH is not a string');
+    console.warn('Accept Language Header is not a string');
+    console.warn('Falling back to "en-US"');
+    acceptLanguageHeader = 'en-US';
   }
 
   /**

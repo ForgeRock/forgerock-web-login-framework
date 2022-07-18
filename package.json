@@ -10,7 +10,7 @@
     "build:app": "svelte-kit build",
     "build:widget": "rollup -c",
     "package": "svelte-kit package",
-    "preview": "npm run build:widget && svelte-kit preview --https",
+    "preview": "svelte-kit preview --https",
     "test": "vitest --dir src",
     "test:e2e": "playwright test",
     "test:storybook": "test-storybook",

@@ -59,7 +59,11 @@ export default {
         // Clears out `/package` directory when the new bundle is generated
         // NOTE: Returning a promise is required to ensure this completes before writing bundle
         return new Promise((resolve) => {
-          rimraf(path.resolve('./package/*.js'), () => resolve());
+          rimraf(path.resolve('./package/*.js'), () => {
+            // TODO: Improve this so it's not a nested function
+            // Can't do './package/*.js*' above or it removes the package.json file
+            rimraf(path.resolve('./package/*.js.map'), resolve);
+          });
         });
       },
     },

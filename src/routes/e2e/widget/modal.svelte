@@ -66,7 +66,7 @@
     </ul>
     <button on:click={logout}>Logout</button>
   {:else}
-    <button on:click={() => modal.open({ initialized: true })}>Login</button>
+    <button on:click={() => modal.open({ initialized: true })}>Open Login Modal</button>
   {/if}
 </div>
 <div bind:this={widgetEl} />

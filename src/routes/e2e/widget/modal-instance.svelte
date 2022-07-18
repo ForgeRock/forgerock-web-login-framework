@@ -92,8 +92,8 @@
     </ul>
     <Button onClick={logout} style="primary">Logout</Button>
   {:else}
-    <Button onClick={() => widget1.$set({ open: true })} style="primary">Login</Button>
-    <Button onClick={() => widget2.$set({ open: true })} style="primary">Register</Button>
+    <Button onClick={() => widget1.$set({ open: true })} style="primary">Open Login Modal</Button>
+    <Button onClick={() => widget2.$set({ open: true })} style="primary">Open Registration Modal</Button>
   {/if}
 </div>
 <div bind:this={widgetEl1}></div>

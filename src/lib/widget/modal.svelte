@@ -74,7 +74,6 @@
 
   export let config: any;
   export let content: any;
-  export let open = false;
   export let customStyles: any;
 
   export function initializeJourney(tree: string) {
