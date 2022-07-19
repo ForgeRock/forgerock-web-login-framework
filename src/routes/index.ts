@@ -21,7 +21,8 @@ export async function get(event: RequestEvent) {
   const locale = getLocale(userLocale, '_');
 
   return {
-    body: locales[locale],
+    body: {
+      content: locales[locale],
+    },
   };
 }
-

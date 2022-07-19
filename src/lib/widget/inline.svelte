@@ -59,14 +59,15 @@
 
   import { initializeContent } from '$lib/locale.store';
 
-  export let config;
+  export let config: any;
+  export let content: any;
 
   const dispatch = createEventDispatcher();
 
   let _formComp: SvelteComponent;
   let _formEl: HTMLFormElement;
 
-  initializeContent(config.content, true);
+  initializeContent(content, true);
 
   s_onMount(() => {
     formComp = _formComp;

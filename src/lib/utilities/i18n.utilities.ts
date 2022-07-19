@@ -2,7 +2,7 @@ import xss from 'xss';
 import { get } from 'svelte/store';
 import { z } from 'zod';
 
-import { locale, strings } from '$lib/locale.store';
+import { strings } from '$lib/locale.store';
 
 /**
  * Do not allow strings with angle brackets, just to be extra safe
@@ -11,7 +11,7 @@ import { locale, strings } from '$lib/locale.store';
  */
 const valueSchema = z.record(z.string().regex(/^[^<>]*$/)).optional();
 
-export function getLocaleDir(acceptLanguageHeader: string): string {
+export function getLocale(acceptLanguageHeader: string, delimiter: '/' | '_'): string {
   if (typeof acceptLanguageHeader !== 'string') {
     console.warn('Accept Language Header is not a string');
     console.warn('Falling back to "en-US"');
@@ -31,16 +31,20 @@ export function getLocaleDir(acceptLanguageHeader: string): string {
   const matchResult = acceptLanguageHeader.match(/^(\w{1,4}-{0,1}\w{0,4})/);
   if ((!Array.isArray(matchResult) && !matchResult) || !matchResult[0]) {
     console.warn('No Accept-Language header was found');
-    return 'us/en';
+    return `us${delimiter}en`;
   }
 
   const splitResult = matchResult[1].split('-');
-  if ((!Array.isArray(splitResult) && !splitResult) || !splitResult[0]) {
+  if (
+    (!Array.isArray(splitResult) && !splitResult) ||
+    !splitResult[0] ||
+    splitResult[0].length > 4
+  ) {
     console.warn('Locale from Accept-Language header not recognized');
-    return 'us/en';
+    return `us${delimiter}en`;
   }
 
-  return `${splitResult[1] || 'us'}/${splitResult[0]}`.toLowerCase();
+  return `${splitResult[1] || 'us'}${delimiter}${splitResult[0]}`.toLowerCase();
 }
 
 export function interpolate(

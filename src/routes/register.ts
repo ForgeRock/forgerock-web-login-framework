@@ -13,7 +13,7 @@ const locales = {
   ca_fr,
   us_en,
   us_es,
-}
+};
 
 export async function get(event: RequestEvent) {
   const userLocale = event.request.headers.get('accept-language') || 'en-US';
@@ -21,7 +21,8 @@ export async function get(event: RequestEvent) {
   const locale = getLocale(userLocale, '_');
 
   return {
-    body: locales[locale],
+    body: {
+      content: locales[locale],
+    },
   };
 }
-

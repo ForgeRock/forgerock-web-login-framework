@@ -48,7 +48,7 @@ export default {
       entries: {
         $components: path.resolve('./src/lib/components'),
         $journey: path.resolve('./src/lib/journey'),
-        $locales: path.resolve('./locales'),
+        $locales: path.resolve('./src/locales'),
         $widget: path.resolve('./src/lib/widget'),
       },
     }),

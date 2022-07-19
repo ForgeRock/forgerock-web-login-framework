@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount as s_onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   import type { User } from '$journey/interfaces';
   import Widget, { modal, journey, user } from '../../../../package/modal';
@@ -28,7 +28,16 @@
     console.log(error);
   });
 
-  s_onMount(() => {
+  onMount(async () => {
+    let content;
+    /**
+     * Reuse translated content from locale api if not en-US
+     */
+    if (navigator.language !== 'en-US') {
+      const response = await fetch(`${window.location.origin}/api/locale`);
+      content = response.ok && (await response.json());
+    }
+
     widget = new Widget({
       target: widgetEl,
       props: {
@@ -42,6 +51,7 @@
           realmPath: 'alpha',
           tree: 'Login',
         },
+        content,
         customStyles: {
           buttons: {
             // primary: [
