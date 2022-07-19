@@ -5,6 +5,16 @@
   import { getLocaleDir } from '$lib/utilities/i18n.utilities';
   import { locale, initializeContent } from '$lib/locale.store';
 
+  /**
+   * This `locale` property is added to the session object via
+   * `../hooks.ts`, which acts a little like middleware.
+   */
+  interface LoadEventWithSession extends LoadEvent {
+    session: {
+      locale: string;
+    };
+  }
+
   configure({
     clientId: 'WebOAuthClient',
     // redirectUri: 'https://crbrl.ngrok.io/callback',
@@ -20,7 +30,7 @@
   });
 
   /** @type {import('./__types/[slug]').Load} */
-  export async function load(event: LoadEvent) {
+  export async function load(event: LoadEventWithSession) {
     const userLocale = event.session.locale;
 
     locale.set(userLocale);

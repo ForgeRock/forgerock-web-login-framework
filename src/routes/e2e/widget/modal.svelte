@@ -43,11 +43,13 @@
           tree: 'Login',
         },
         customStyles: {
-          button: [
-            { key: 'color', value: '#000000' },
-            { key: 'background-color', value: '#bada55' },
-            { key: 'border-color', value: '#bada55' },
-          ],
+          buttons: {
+            // primary: [
+            //   { key: 'color', value: '#000000' },
+            //   { key: 'background-color', value: '#bada55' },
+            //   { key: 'border-color', value: '#bada55' },
+            // ],
+          },
         },
       },
     });
