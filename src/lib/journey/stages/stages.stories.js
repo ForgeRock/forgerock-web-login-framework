@@ -1,7 +1,6 @@
 import { FRStep } from '@forgerock/javascript-sdk';
-import { writable } from 'svelte/store';
 
-import Step from './generic.story.svelte';
+import Step from './stages.story.svelte';
 import { loginStep, registrationStep } from './step.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);
@@ -21,7 +20,8 @@ export default {
 
 export const Login = {
   args: {
-    step: writable(frLoginStep),
+    stage: 'UsernamePassword',
+    step: frLoginStep,
     submitForm: () => {
       console.log('Form submitted.');
     },
@@ -29,7 +29,8 @@ export const Login = {
 };
 export const Registration = {
   args: {
-    step: writable(frRegistrationStep),
+    stage: 'Registration',
+    step: frRegistrationStep,
     submitForm: () => {
       console.log('Form submitted.');
     },

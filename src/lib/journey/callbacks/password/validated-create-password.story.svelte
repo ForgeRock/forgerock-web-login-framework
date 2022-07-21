@@ -4,6 +4,7 @@
 
 
   import Centered from '$components/primitives/box/centered.svelte';
+  import { initializeContent } from '$lib/locale.store';
   import Input from './validated-create-password.svelte';
 
   export let callback: ValidatedCreatePasswordCallback;
@@ -11,6 +12,8 @@
   export let showError: boolean;
 
   let el;
+
+  initializeContent();
 
   onMount(() => {
     if (showError) {
