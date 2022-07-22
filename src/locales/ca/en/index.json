@@ -8,6 +8,7 @@
   "givenName": "First Name",
   "loading": "Loading ...",
   "loginButton": "Login In",
+  "loginFailure": "Login failure",
   "loginHeader": "Login In",
   "loginSuccess": "Login Success!",
   "mail": "Email Address",

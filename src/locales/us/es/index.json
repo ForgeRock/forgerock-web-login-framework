@@ -8,6 +8,7 @@
   "givenName": "Primer Nombre",
   "loading": "Cargando...",
   "loginButton": "Iniciar sesion",
+  "loginFailure": "Fallo de inicio de sesión",
   "loginHeader": "Iniciar sesion",
   "loginSuccess": "Iniciar de sesion exitoso",
   "mail": "Correo electrónico",

@@ -163,6 +163,13 @@ module.exports = (config, theme) => ({
       transform: 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)',
     },
   },
+  '.input-floating_dark': {
+
+    ':where(&:autofill) + label': {
+      // Needed to ensure the label is readable with browser autofill's light background
+      color: `${theme('colors.secondary.dark')} !important`,
+    },
+  },
   '.input-floating-label': {
     height: 'calc(3rem + 2px)',
     lineHeight: theme('spacing.6'),

@@ -33,7 +33,7 @@
     NOTE: `placeholder` for the input is required for Twitter Bootstrap's floating label
   -->
   <Input
-    inputClasses={`tw_input-floating ${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}
+    inputClasses={`tw_input-floating dark:tw_input-floating_dark ${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}
     {key}
     onChange={onChangeWrapper}
     {label}

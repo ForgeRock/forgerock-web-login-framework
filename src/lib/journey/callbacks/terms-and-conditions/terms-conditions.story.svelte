@@ -12,5 +12,5 @@
 </script>
 
 <Centered>
-  <Terms {callback} {inputName} />
+  <Terms {callback} idx={1} />
 </Centered>

@@ -1,22 +1,31 @@
 <script lang="ts">
   import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
-  import type { Writable } from 'svelte/store';
 
   // i18n
   import T from '$components/i18n/index.svelte';
 
   // Import primitives
+  import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
+import { convertStringToKey } from '$journey/utilities/callback.utilities';
+import { interpolate } from '$lib/utilities/i18n.utilities';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
+  export let failureMessage: string;
   export let formEl: HTMLFormElement | null = null;
   export let step: StepTypes;
   export let submitForm: () => void;
+
+  let failureMessageKey = '';
+
+  $: {
+    failureMessageKey = convertStringToKey(failureMessage);
+  }
 </script>
 
 <div class="tw_flex tw_justify-center">
@@ -32,6 +41,9 @@
   </div>
 {:else if step.type === 'Step'}
   <Form bind:formEl onSubmitWhenValid={submitForm}>
+    {#if failureMessage}
+      <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
+    {/if}
     {#each step?.callbacks as callback, idx}
       <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} />
     {/each}

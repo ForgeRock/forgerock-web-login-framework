@@ -9,7 +9,16 @@
 
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
-  const validationFailure = getPasswordValidationFailureText(callback, label);
+
+  let validationFailure = getPasswordValidationFailureText(callback, label);
+
+  $: {
+    /**
+     * We need to wrap this in a reactive block, so it reruns the function
+     * on value changes within `callback`
+    */
+    validationFailure = getPasswordValidationFailureText(callback, label);
+  }
 </script>
 
 <Base {callback} {idx} {isRequired} {validationFailure} />

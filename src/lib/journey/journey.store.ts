@@ -33,6 +33,32 @@ interface User {
 }
 export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
+async function getOAuth(step: Writable<StepTypes>, submittingForm: Writable<boolean>) {
+  try {
+    await TokenManager.getTokens({ forceRenew: true });
+  } catch (err: unknown) {
+    console.error(`Get tokens | ${err}`);
+    if (err instanceof Error) {
+      step.set(new FRLoginFailure({ message: err.message }));
+    }
+    submittingForm.set(false);
+    return;
+  }
+
+  try {
+    const user = (await UserManager.getCurrentUser()) as User;
+    email.set(user.email);
+    isAuthenticated.set(true);
+    fullName.set(user.name);
+  } catch (err: unknown) {
+    console.error(`Get current user | ${err}`);
+     if (err instanceof Error) {
+      step.set(new FRLoginFailure({ message: err.message }));
+    }
+    submittingForm.set(false);
+  }
+}
+
 export async function initialize(journey?: string): Promise<InitObject> {
   const step: Writable<StepTypes> = writable(null);
   const failureMessage: Writable<string | null> = writable(null);
@@ -41,32 +67,6 @@ export async function initialize(journey?: string): Promise<InitObject> {
 
   if (journey) {
     options.tree = journey;
-  }
-
-  async function getOAuth() {
-    try {
-      await TokenManager.getTokens({ forceRenew: true });
-    } catch (err: unknown) {
-      console.error(`Get tokens | ${err}`);
-      if (err instanceof Error) {
-        step.set(new FRLoginFailure({ message: err.message }));
-      }
-      submittingForm.set(false);
-      return;
-    }
-
-    try {
-      const user = (await UserManager.getCurrentUser()) as User;
-      email.set(user.email);
-      isAuthenticated.set(true);
-      fullName.set(user.name);
-    } catch (err: unknown) {
-      console.error(`Get current user | ${err}`);
-       if (err instanceof Error) {
-        step.set(new FRLoginFailure({ message: err.message }));
-      }
-      submittingForm.set(false);
-    }
   }
 
   async function getStep(prevStep: StepTypes = null) {
@@ -107,7 +107,7 @@ export async function initialize(journey?: string): Promise<InitObject> {
     } else if (nextStep.type === StepType.LoginSuccess) {
       // User is authenticated, now call for OAuth tokens
       console.log('Calling OAuth flow.');
-      getOAuth();
+      getOAuth(step, submittingForm);
       step.set(nextStep);
       submittingForm.set(false);
     } else if (nextStep.type === StepType.LoginFailure) {
@@ -115,20 +115,21 @@ export async function initialize(journey?: string): Promise<InitObject> {
        * Grab failure message, which may contain encoded HTML
        */
       const failureMessageStr = htmlDecode(nextStep.payload.message || '');
-      let restartStep: StepTypes;
+      let restartedStep: StepTypes | null = null;
+      let resubmittedStep: StepTypes | null = null;
 
       try {
         /**
          * Restart tree to get fresh step
          */
-        restartStep = await FRAuth.next(undefined, options);
+        restartedStep = await FRAuth.next(undefined, options);
       } catch (err) {
         console.error(`Restart failed step request | ${err}`);
 
         /**
          * Setup an object to display failure message
          */
-        restartStep = new FRLoginFailure({
+        restartedStep = new FRLoginFailure({
           message: 'Unknown request failure'
         });
       }
@@ -144,15 +145,34 @@ export async function initialize(journey?: string): Promise<InitObject> {
        * restart the flow, and provide better UX with the previous form data,
        * so the user doesn't have to refill the form.
        ******************************************************************* */
-      if (restartStep.type === StepType.Step && restartStep.getStage() === previousStage) {
-        if (previousCallbacks) restartStep.callbacks = previousCallbacks;
-        restartStep.payload = {
-          ...previousPayload,
-          authId: restartStep.payload.authId
-        };
+      if (restartedStep.type === StepType.Step) {
+        if (restartedStep.getStage() === previousStage) {
+          if (previousCallbacks) restartedStep.callbacks = previousCallbacks;
+          restartedStep.payload = {
+            ...previousPayload,
+            authId: restartedStep.payload.authId
+          };
+        }
+
+        /**
+         * If error code is 110, then the issue is just the authId expiring.
+         * So, replace the callbacks with existing callbacks to resubmit
+         * with fresh authId.
+         */
+        if (nextStep.payload?.detail) {
+          const details = nextStep.payload?.detail as { errorCode: string };
+          if (details.errorCode === '110' ) {
+            /**
+             * Resubmit with new authId, but old callbacks to prevent failing
+             * solely due to stale form.
+             */
+            resubmittedStep = await FRAuth.next(restartedStep, options);
+          }
+        }
       }
+
       failureMessage.set(failureMessageStr);
-      step.set(restartStep);
+      step.set(resubmittedStep || restartedStep);
       submittingForm.set(false);
     }
   }
@@ -162,9 +182,9 @@ export async function initialize(journey?: string): Promise<InitObject> {
   await getStep();
 
   return {
-    step,
-    getStep,
     failureMessage,
+    getStep,
+    step,
     submittingForm,
   };
 }

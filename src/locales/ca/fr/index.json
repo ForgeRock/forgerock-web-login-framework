@@ -8,6 +8,7 @@
   "givenName": "Prénom",
   "loading": "Chargement...",
   "loginButton": "Se connecter",
+  "loginFailure": "Erreur d'authentification",
   "loginHeader": "Se connecter",
   "loginSuccess": "Connexion réussie!",
   "NameCallback": "Nom d'utilisateur",

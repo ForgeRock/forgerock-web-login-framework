@@ -30,7 +30,7 @@
 
   // Use if not initializing journey in above "context module"
   onMount(async () => {
-    initObj = await initialize('Registration');
+    initObj = await initialize('TestRegistration');
   });
 </script>
 

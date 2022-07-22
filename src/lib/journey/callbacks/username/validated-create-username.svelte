@@ -17,7 +17,8 @@
   const label = callback.getPrompt();
   const textInputLabel = callback.getPrompt();
   const unknownValue = callback?.getInputValue();
-  const validationFailure = getUsernameValidationFailureText(callback, label);
+
+  let validationFailure = getUsernameValidationFailureText(callback, label);
 
   let type: 'text' = 'text';
 
@@ -37,7 +38,7 @@
   }
 
   $: {
-    console.log(callback);
+    validationFailure = getUsernameValidationFailureText(callback, label);
   }
 </script>
 

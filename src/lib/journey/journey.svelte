@@ -51,7 +51,7 @@
     // Get next step, passing previous step with new data
     getStep && getStep($step);
     // Empty current step to ensure it rerenders when it gets back the same step but with errors
-    step?.set(null);
+    // step?.set(null);
     // Set to true to indicate form is processing
     submittingForm && submittingForm.set(true);
   }
@@ -91,7 +91,12 @@
 </script>
 
 {#if !$isAuthenticated}
-  <svelte:component this={mapStepToStage($step)} {submitForm} step={$step} />
+  <svelte:component
+    this={mapStepToStage($step)}
+    failureMessage={$failureMessage}
+    {submitForm}
+    step={$step}
+  />
 {:else}
   <T key="successMessage" />
 {/if}
