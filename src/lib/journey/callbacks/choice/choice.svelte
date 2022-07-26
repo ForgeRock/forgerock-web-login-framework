@@ -2,6 +2,7 @@
   import type { ChoiceCallback } from '@forgerock/javascript-sdk';
 
   import Select from '$components/compositions/select-floating/floating-label.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: ChoiceCallback;
   export let idx: number;
@@ -36,6 +37,7 @@
   }
 </script>
 
+<!-- TODO: Needs a localization strategy -->
 <Select
   defaultOption={defaultChoice}
   isRequired={false}

@@ -6,10 +6,12 @@
     isInputRequired,
   } from '$journey/utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: ValidatedCreateUsernameCallback;
   export let idx: number;
 
+  const callbackType = callback.getType();
   const inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
   const isRequired = isInputRequired(callback);
   const label = callback.getPrompt();
@@ -33,13 +35,17 @@
      *********************************************************************** */
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
+
+  $: {
+    console.log(callback);
+  }
 </script>
 
 <Input
   errorMessage={validationFailure}
   {isRequired}
   key={inputName}
-  label={textInputLabel}
+  label={interpolate(callbackType, null, textInputLabel)}
   onChange={setValue}
   {type}
   value={typeof unknownValue === 'string' ? unknownValue : ''}

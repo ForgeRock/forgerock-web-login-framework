@@ -61,11 +61,13 @@ export const Outline = {
 export const Custom = {
   args: {
     busy: false,
-    customCss: [
-      { key: 'color', value: '#000000' },
-      { key: 'background-color', value: '#bada55' },
-      { key: 'border-color', value: '#bada55'},
-    ],
+    customCss: {
+      primary: [
+        { key: 'color', value: '#000000' },
+        { key: 'background-color', value: '#bada55' },
+        { key: 'border-color', value: '#bada55' },
+      ],
+    },
     style: 'outline',
     text: 'Click Me',
     type: 'button',
@@ -93,7 +95,6 @@ export const Interaction = Template.bind({});
 Interaction.args = Primary.args;
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();

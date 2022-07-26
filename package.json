@@ -10,7 +10,7 @@
     "build:app": "svelte-kit build",
     "build:widget": "rollup -c",
     "package": "svelte-kit package",
-    "preview": "npm run build:widget && svelte-kit preview --https",
+    "preview": "svelte-kit preview --https",
     "test": "vitest --dir src",
     "test:e2e": "playwright test",
     "test:storybook": "test-storybook",
@@ -25,6 +25,7 @@
   "dependencies": {
     "@forgerock/javascript-sdk": "^3.2.2",
     "uuid": "^8.3.2",
+    "xss": "^1.0.13",
     "zod": "^3.17.3"
   },
   "devDependencies": {
@@ -32,6 +33,7 @@
     "@playwright/test": "^1.22.2",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^17.0.0",
+    "@rollup/plugin-json": "^4.1.0",
     "@rollup/plugin-node-resolve": "^11.0.0",
     "@rollup/plugin-typescript": "^8.3.2",
     "@storybook/addon-a11y": "^6.5.5",

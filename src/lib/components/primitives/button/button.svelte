@@ -34,9 +34,8 @@
 
 <button
   class={`${generateClassString(style, width)} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width}`}
-  data-test="button-primitive"
   on:click={onClick}
-  style={generateStyleString($styles?.button)}
+  style={generateStyleString($styles?.buttons?.primary)}
   {type}
 >
   {#if busy}

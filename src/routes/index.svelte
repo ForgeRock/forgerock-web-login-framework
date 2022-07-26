@@ -20,12 +20,17 @@
 
   import Journey from '../lib/journey/journey.svelte';
   import { initialize, type InitObject } from '$journey/journey.store';
+  import { initializeContent } from '$lib/locale.store';
+
+  export let content;
 
   let initObj: InitObject;
 
+  initializeContent(content);
+
   // Use if not initializing journey in above "context module"
   onMount(async () => {
-    initObj = await initialize(null);
+    initObj = await initialize();
   });
 
 </script>

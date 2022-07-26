@@ -6,12 +6,15 @@
 
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import T from '$components/i18n/index.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let idx: number;
   export let isRequired = false;
   export let validationFailure = '';
 
+  const callbackType = callback.getType();
   const inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
   const textInputLabel = callback.getPrompt();
 
@@ -45,7 +48,7 @@
   errorMessage={validationFailure}
   hasRightIcon={true}
   key={inputName}
-  label={textInputLabel}
+  label={interpolate(callbackType, null, textInputLabel)}
   onChange={setValue}
   {isRequired}
   {type}
@@ -56,7 +59,7 @@
     type="button"
   >
     <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}
-      >Show Password</EyeIcon
+      ><T key="showPassword" /></EyeIcon
     >
   </button>
 </Input>

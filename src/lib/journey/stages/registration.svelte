@@ -2,39 +2,48 @@
   import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
   import type { Writable } from 'svelte/store';
 
+  // i18n
+  import T from '$components/i18n/index.svelte';
+
   // Import primitives
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
-  import Link from '$components/primitives/link/link.svelte';
   import NewUserIcon from '$components/icons/new-user-icon.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
+  import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
   export let formEl: HTMLFormElement | null = null;
-  export let step: Writable<StepTypes>;
+  export let step: StepTypes;
   export let submitForm: () => void;
 </script>
 
 <div class="tw_flex tw_justify-center">
   <NewUserIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
 </div>
-<h1 class="tw_primary-header dark:tw_primary-header_dark">Sign Up</h1>
+<h1 class="tw_primary-header dark:tw_primary-header_dark">
+  <T key="registerHeader" />
+</h1>
 <p
   class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
 >
-  Already have an account? <Link href="/">Sign in here!</Link>
+  <T key="alreadyHaveAnAccount" html={true} />
 </p>
 
-{#if !$step}
-  <p>Loading ...</p>
-{:else if $step.type === 'Step'}
+{#if !step}
+  <div class="tw_text-center tw_w-full tw_py-4">
+    <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+  </div>
+{:else if step.type === 'Step'}
   <Form bind:formEl onSubmitWhenValid={submitForm}>
-    {#each $step?.callbacks as callback, idx}
+    {#each step?.callbacks as callback, idx}
       <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} />
     {/each}
-    <Button width="full" style="primary" type="submit">Submit</Button>
+    <Button width="full" style="primary" type="submit">
+      <T key="registerButton" />
+    </Button>
   </Form>
-{:else if $step.type === 'LoginSuccess'}
-  <p>Login Success!</p>
+{:else if step.type === 'LoginSuccess'}
+  <T key="registerSuccess" />
 {/if}

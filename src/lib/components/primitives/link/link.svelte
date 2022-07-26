@@ -3,9 +3,6 @@
   export let href: string;
 </script>
 
-<a
-  class={`${classes} tw_text-blue-600 dark:tw_text-blue-400 tw_underline hover:tw_no-underline`}
-  {href}
->
+<a class={`${classes} tw_link dark:tw_link_dark`} {href}>
   <slot />
 </a>

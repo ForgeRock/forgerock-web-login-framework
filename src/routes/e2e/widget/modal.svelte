@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount as s_onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   import type { User } from '$journey/interfaces';
   import Widget, { modal, journey, user } from '../../../../package/modal';
@@ -17,7 +17,7 @@
     console.log('Singleton onMount event fired');
     console.log(dialog);
 
-    journey.initialize({ journey: 'Login' });
+    journey.initialize();
   });
   journey.onSuccess((response: User) => {
     console.log('Singleton onSuccess event fired');
@@ -28,13 +28,22 @@
     console.log(error);
   });
 
-  s_onMount(() => {
+  onMount(async () => {
+    let content;
+    /**
+     * Reuse translated content from locale api if not en-US
+     */
+    if (navigator.language !== 'en-US') {
+      const response = await fetch(`${window.location.origin}/api/locale`);
+      content = response.ok && (await response.json());
+    }
+
     widget = new Widget({
       target: widgetEl,
       props: {
         config: {
           clientId: 'WebOAuthClient',
-          redirectUri: 'https://localhost:3000/callback',
+          redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
@@ -42,12 +51,15 @@
           realmPath: 'alpha',
           tree: 'Login',
         },
+        content,
         customStyles: {
-          button: [
-            { key: 'color', value: '#000000' },
-            { key: 'background-color', value: '#bada55' },
-            { key: 'border-color', value: '#bada55' },
-          ],
+          buttons: {
+            // primary: [
+            //   { key: 'color', value: '#000000' },
+            //   { key: 'background-color', value: '#bada55' },
+            //   { key: 'border-color', value: '#bada55' },
+            // ],
+          },
         },
       },
     });
@@ -66,7 +78,7 @@
     </ul>
     <button on:click={logout}>Logout</button>
   {:else}
-    <button on:click={() => modal.open({ initialized: true })}>Login</button>
+    <button on:click={() => modal.open({ initialized: true })}>Open Login Modal</button>
   {/if}
 </div>
 <div bind:this={widgetEl} />

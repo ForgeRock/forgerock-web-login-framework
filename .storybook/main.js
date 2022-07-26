@@ -52,6 +52,7 @@ module.exports = {
           $components: resolve('./src/lib/components'),
           $journey: resolve('./src/lib/journey'),
           $lib: resolve('./src/lib'),
+          $locales: resolve('./src/locales'),
           $widget: resolve('./src/lib/widget'),
         }
       }

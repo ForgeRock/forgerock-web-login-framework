@@ -16,7 +16,7 @@ export default {
   parameters: {
     layout: 'centered',
   },
-  title: 'Primitives/Radio: Standard',
+  title: 'Primitives/Radio',
 };
 
 export const Simple = {

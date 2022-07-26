@@ -6,6 +6,7 @@
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/compositions/checkbox/animated.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: AttributeInputCallback<boolean>;
   export let idx: number;
@@ -18,7 +19,9 @@
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
   const inputName = callback?.payload?.input?.[0].name || `boolean-attr-${idx}`;
-  const isRequired = isInputRequired(callback);
+  // A boolean being required doesn't make much sense, so commenting it out for now
+  // const isRequired = isInputRequired(callback);
+  const outputName = callback.getOutputByName('name', '');
   const previousValue = callback.getInputValue() as boolean;
   const prompt = callback.getPrompt();
   const validationFailure = getAttributeValidationFailureText(callback);
@@ -37,11 +40,10 @@
 
 <Checkbox
   errorMessage={validationFailure}
-  {isRequired}
   isInvalid={!!validationFailure}
   key={inputName}
   onChange={setValue}
   value={previousValue}
 >
-  {prompt}
+  {interpolate(outputName.replace('/', ''), null, prompt)}
 </Checkbox>

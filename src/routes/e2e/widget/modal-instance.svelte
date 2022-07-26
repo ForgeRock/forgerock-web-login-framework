@@ -4,7 +4,7 @@
    *
    * This was just a test to prove out the idea.
    */
-  import { onMount as s_onMount, SvelteComponent } from 'svelte';
+  import { onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
   import type { User } from '$journey/interfaces';
@@ -21,13 +21,13 @@
     userInfo = null;
   }
 
-  s_onMount(() => {
+  onMount(() => {
     widget1 = new Widget({
       target: widgetEl1,
       props: {
         config: {
           clientId: 'WebOAuthClient',
-          redirectUri: 'https://localhost:3000/callback',
+          redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
@@ -92,8 +92,8 @@
     </ul>
     <Button onClick={logout} style="primary">Logout</Button>
   {:else}
-    <Button onClick={() => widget1.$set({ open: true })} style="primary">Login</Button>
-    <Button onClick={() => widget2.$set({ open: true })} style="primary">Register</Button>
+    <Button onClick={() => widget1.$set({ open: true })} style="primary">Open Login Modal</Button>
+    <Button onClick={() => widget2.$set({ open: true })} style="primary">Open Registration Modal</Button>
   {/if}
 </div>
 <div bind:this={widgetEl1}></div>

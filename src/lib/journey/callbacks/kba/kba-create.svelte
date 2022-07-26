@@ -3,6 +3,8 @@
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
+  import T from '$components/i18n/index.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
 
   export let callback: KbaCreateCallback;
@@ -18,12 +20,13 @@
   const prompt = callback.getPrompt();
   const questions = callback
     .getPredefinedQuestions()
-    ?.map((label, idx) => ({ text: label, value: idx }));
+    ?.map((label, idx) => ({ text: label, value: `${idx}` }));
   const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
   const inputNameQuestion = inputName;
   const inputArr = callback?.payload?.input;
   const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
 
+  callback.setQuestion(questions[0].text);
 
   /**
    * @function setAnswer - Sets the value on the callback on element blur (lose focus)
@@ -59,11 +62,11 @@
 <fieldset class="tw_kba-fieldset tw_input-spacing dark:tw_kba-fieldset_dark">
   <!-- TODO: Remove hardcoded legend below -->
   <legend class="tw_sr-only">
-    Security question(s)
+    <T key="securityQuestions" />
   </legend>
 
   <h2 class="tw_kba-header dark:tw_kba-header_dark">
-    Provide security question(s) & answer(s) below
+    <T key="securityQuestionsPrompt" />
   </h2>
 
   <span class="tw_kba-lock-icon dark:tw_kba-lock-icon_dark">
@@ -81,7 +84,7 @@
 
   <Input
     key={inputNameAnswer || 'ka-answer-label'}
-    label="Security Answer"
+    label={interpolate("securityAnswer")}
     onChange={setAnswer}
     isRequired={true}
     type="text"

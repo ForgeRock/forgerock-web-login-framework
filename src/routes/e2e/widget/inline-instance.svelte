@@ -4,7 +4,7 @@
    *
    * This was just a test to prove out the idea.
    */
-  import { onMount as s_onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
   import type { User } from '$journey/interfaces';
@@ -19,14 +19,14 @@
     userInfo = null;
   }
 
-  s_onMount(() => {
+  onMount(() => {
     // TODO: Add method to refresh form
     widget = new Widget({
       target: formEl,
       props: {
         config: {
           clientId: 'WebOAuthClient',
-          redirectUri: 'https://localhost:3000/callback',
+          redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'

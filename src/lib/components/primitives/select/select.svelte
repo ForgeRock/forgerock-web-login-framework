@@ -1,8 +1,6 @@
 <script lang="ts">
   import Label from '$components/primitives/label/label.svelte';
 
-
-  export let checkValidity: ((event: Event) => boolean) | null = null;
   export let selectClasses = '';
   export let defaultOption: number | null = null;
   export let isRequired: boolean;

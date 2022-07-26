@@ -1,8 +1,21 @@
 import { readable, type Readable } from "svelte/store";
 
-export let styles: Readable<{ key: string, value: string }>;
+interface Layout {
+  labels: 'floating' | 'stacked';
+  checkboxAndRadios: 'animated' | 'standard';
+}
+
+interface Styles {
+  buttons: {
+    primary: Record<string, string>[];
+    secondary: Record<string, string>[];
+    outline: Record<string, string>[];
+  }
+}
+
+export let styles: Readable<Styles>;
 
 // TODO: Implement Zod for better usability
-export function initStyles(customStyles: { key: string, value: string }) {
+export function initStyles(customStyles: Styles) {
   styles = readable(customStyles);
 }

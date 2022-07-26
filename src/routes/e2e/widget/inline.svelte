@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount as s_onMount } from 'svelte';
+  import { onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
   import type { User } from '$journey/interfaces';
@@ -17,14 +17,22 @@
   journey.onSuccess((response: User) => (userInfo = response));
   journey.onFailure((error: string) => console.log(error));
 
-  s_onMount(() => {
+  onMount(async () => {
+    let content;
+    /**
+     * Reuse translated content from locale api if not en-US
+     */
+    if (navigator.language !== 'en-US') {
+      const response = await fetch(`${window.location.origin}/api/locale`);
+      content = response.ok && (await response.json());
+    }
     // TODO: Add method to refresh form
     new Widget({
       target: formEl,
       props: {
         config: {
           clientId: 'WebOAuthClient',
-          redirectUri: 'https://localhost:3000/callback',
+          redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
@@ -32,6 +40,7 @@
           realmPath: 'alpha',
           tree: 'Login',
         },
+        content,
       }
     });
   });

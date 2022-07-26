@@ -22,7 +22,7 @@
   }
 </script>
 
-<div>
+<div class="tw_input-spacing">
   <!--
     TODO: Currently NOT using the primitive checkbox component, but re-evaluate later
    -->
@@ -35,7 +35,7 @@
     required={isRequired}
     type="checkbox"
     />
-  <Label {key} classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative">
+  <Label {key} classes="tw_grid tw_grid-cols-[2.5em_1fr] tw_relative">
     <span class="tw_animated-check dark:tw_animated-check_dark"></span>
     <slot />
   </Label>
@@ -43,7 +43,7 @@
     NOTE: The below places the error message on the second row and in second
     column to match the label's layout.
    -->
-  <span class="tw_col-start-2 tw_row-start-2">
+  <div class="tw_ml-10">
     <Error {errorMessage} {key} showError={isInvalid} />
-  </span>
+  </div>
 </div>

@@ -70,9 +70,10 @@
   import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
 
   import Dialog from '../components/compositions/dialog/dialog.svelte';
+  import { initializeContent } from '$lib/locale.store';
 
   export let config: any;
-  export let open = false;
+  export let content: any;
   export let customStyles: any;
 
   export function initializeJourney(tree: string) {
@@ -84,6 +85,8 @@
   let _dialogComp: SvelteComponent;
   let _dialogEl: HTMLDialogElement;
   let _journeyComp: SvelteComponent;
+
+  initializeContent(content, true);
 
   s_onMount(() => {
     dialogComp = _dialogComp;

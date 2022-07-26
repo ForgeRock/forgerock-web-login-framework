@@ -4,6 +4,7 @@ import postcssImport from 'postcss-import';
 import rimraf from 'rimraf';
 import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
+import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
 import resolve from '@rollup/plugin-node-resolve';
 import svelte from 'rollup-plugin-svelte';
@@ -47,6 +48,7 @@ export default {
       entries: {
         $components: path.resolve('./src/lib/components'),
         $journey: path.resolve('./src/lib/journey'),
+        $locales: path.resolve('./src/locales'),
         $widget: path.resolve('./src/lib/widget'),
       },
     }),
@@ -57,10 +59,15 @@ export default {
         // Clears out `/package` directory when the new bundle is generated
         // NOTE: Returning a promise is required to ensure this completes before writing bundle
         return new Promise((resolve) => {
-          rimraf(path.resolve('./package/*.js'), () => resolve());
+          rimraf(path.resolve('./package/*.js'), () => {
+            // TODO: Improve this so it's not a nested function
+            // Can't do './package/*.js*' above or it removes the package.json file
+            rimraf(path.resolve('./package/*.js.map'), resolve);
+          });
         });
       },
     },
+    json(),
     // Generate CSS output from `import 'thing.css';` imports and component <style>
     postcss({
       extract: path.resolve('./package/widget.css'),
