@@ -16,6 +16,6 @@ interface Styles {
 export let styles: Readable<Styles>;
 
 // TODO: Implement Zod for better usability
-export function initStyles(customStyles: Styles) {
+export function initialize(customStyles: Styles) {
   styles = readable(customStyles);
 }

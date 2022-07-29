@@ -26,6 +26,8 @@
   const inputArr = callback?.payload?.input;
   const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
 
+  let value = '';
+
   callback.setQuestion(questions[0].text);
 
   /**
@@ -56,6 +58,12 @@
      * for writing values to the callbacks received from AM
      *********************************************************************** */
     callback.setQuestion((event.target as HTMLSelectElement).value);
+  }
+
+  $: {
+    if (callback) {
+      value = '';
+    }
   }
 </script>
 
@@ -88,5 +96,6 @@
     onChange={setAnswer}
     isRequired={true}
     type="text"
+    {value}
   />
 </fieldset>

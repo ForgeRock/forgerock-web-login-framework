@@ -7,9 +7,13 @@
   export let callback: ValidatedCreatePasswordCallback;
   export let idx: number;
 
+  /**
+   * This callback does not indicate that the input is required.
+   * TODO: Can we just assume a password is always required?
+   */
   const isRequired = isInputRequired(callback);
-  const label = callback.getPrompt();
 
+  let label = callback.getPrompt();
   let validationFailure = getPasswordValidationFailureText(callback, label);
 
   $: {
@@ -17,6 +21,7 @@
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
     */
+    label = callback.getPrompt();
     validationFailure = getPasswordValidationFailureText(callback, label);
   }
 </script>

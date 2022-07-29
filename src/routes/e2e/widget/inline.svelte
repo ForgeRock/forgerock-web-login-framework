@@ -1,20 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import Button from '$lib/components/primitives/button/button.svelte';
-  import type { User } from '$journey/interfaces';
   import Widget, { form, journey, user } from '../../../../package/inline';
 
   let formEl: HTMLDivElement;
-  let userInfo: User | null;
+  let userResponse: any | null;
 
   async function logout() {
     await user.logout();
-    userInfo = null;
+    userResponse = null;
   }
 
   form.onMount((component: HTMLElement) => console.log(component));
-  journey.onSuccess((response: User) => (userInfo = response));
+  journey.onSuccess((response: any) => (userResponse = response?.user));
   journey.onFailure((error: string) => console.log(error));
 
   onMount(async () => {
@@ -35,22 +33,26 @@
           redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
+            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
           },
           realmPath: 'alpha',
           tree: 'Login',
         },
         content,
-      }
+      },
     });
+    // Start the  journey after initialization or within the form.onMount event
+    journey.start();
   });
 </script>
 
-{#if userInfo?.isAuthenticated}
+{#if userResponse?.successful}
   <ul>
-    <li id="fullName"><strong>Full name</strong>: {userInfo.fullName}</li>
-    <li id="email"><strong>Email</strong>: {userInfo.email}</li>
+    <li id="fullName">
+      <strong>Full name</strong>: {`${userResponse.info?.given_name} ${userResponse.info?.family_name}`}
+    </li>
+    <li id="email"><strong>Email</strong>: {userResponse.info?.email}</li>
   </ul>
-  <Button onClick={logout} style="primary">Logout</Button>
+  <button on:click={logout}>Logout</button>
 {/if}
-<div bind:this={formEl} class={`${userInfo?.isAuthenticated ? 'tw_hidden' : ''} tw_p-6`}></div>
+<div bind:this={formEl} class={`${userResponse?.successful ? 'tw_hidden' : ''} tw_p-6`} />

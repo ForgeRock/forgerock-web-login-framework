@@ -4,72 +4,49 @@ import {
   FRLoginFailure,
   FRLoginSuccess,
   StepType,
-  TokenManager,
-  UserManager,
 } from '@forgerock/javascript-sdk';
-import { get, writable, type Writable } from 'svelte/store';
+import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import { writable, type Writable } from 'svelte/store';
 
-import type { StringDict } from '$lib/interfaces';
 import { htmlDecode } from '$lib/journey/utilities/decode.utilities';
-import { email, isAuthenticated, fullName } from '$lib/user/user.store';
 
-export interface InitObject {
-  step: Writable<StepTypes>;
-  getStep: (prevStep?: StepTypes) => Promise<void>;
-  failureMessage: Writable<string | null>;
-  submittingForm: Writable<boolean>;
+export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
+  next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
+  reset: () => void;
 }
-interface Options {
-  tree?: string;
-  query?: StringDict<string>;
-}
-interface User {
-  family_name: string;
-  given_name: string;
-  email: string;
-  name: string;
-  updated_at: number;
-  sub: string;
+export interface JourneyStoreValue {
+  completed: boolean;
+  // TODO: Think about turning this into an object with code, message and step
+  error: string | null;
+  loading: boolean;
+  step: StepTypes;
+  successful: boolean;
+  token: string | null | undefined;
 }
 export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
-async function getOAuth(step: Writable<StepTypes>, submittingForm: Writable<boolean>) {
-  try {
-    await TokenManager.getTokens({ forceRenew: true });
-  } catch (err: unknown) {
-    console.error(`Get tokens | ${err}`);
-    if (err instanceof Error) {
-      step.set(new FRLoginFailure({ message: err.message }));
-    }
-    submittingForm.set(false);
-    return;
-  }
+export function initialize(initOptions?: StepOptions): JourneyStore {
+  const { set, subscribe }: Writable<JourneyStoreValue> = writable({
+    completed: false,
+    error: '',
+    loading: false,
+    step: null,
+    successful: false,
+    token: null,
+  });
 
-  try {
-    const user = (await UserManager.getCurrentUser()) as User;
-    email.set(user.email);
-    isAuthenticated.set(true);
-    fullName.set(user.name);
-  } catch (err: unknown) {
-    console.error(`Get current user | ${err}`);
-     if (err instanceof Error) {
-      step.set(new FRLoginFailure({ message: err.message }));
-    }
-    submittingForm.set(false);
-  }
-}
+  let stepNumber = 0;
 
-export async function initialize(journey?: string): Promise<InitObject> {
-  const step: Writable<StepTypes> = writable(null);
-  const failureMessage: Writable<string | null> = writable(null);
-  const options: Options = {};
-  const submittingForm: Writable<boolean> = writable(false);
+  async function next(prevStep: StepTypes = null, nextOptions?: StepOptions) {
 
-  if (journey) {
-    options.tree = journey;
-  }
+    /**
+     * Create an options object with nextOptions overriding anything from initOptions
+     */
+    const options = {
+      ...initOptions,
+      ...nextOptions,
+    };
 
-  async function getStep(prevStep: StepTypes = null) {
     /**
      * Save previous step information just in case we have a total
      * form failure due to 400 response from ForgeRock.
@@ -84,12 +61,20 @@ export async function initialize(journey?: string): Promise<InitObject> {
     const previousPayload = prevStep?.payload;
     let nextStep: StepTypes;
 
-    step.set(prevStep);
+    set({
+      completed: false,
+      error: '',
+      loading: true,
+      step: prevStep,
+      successful: false,
+      token: null,
+    });
+
     try {
       /**
        * Initial attempt to retrieve next step
        */
-      nextStep = await FRAuth.next(get(step as Writable<FRStep>), options);
+      nextStep = await FRAuth.next(prevStep as FRStep, options);
     } catch (err) {
       console.error(`Next step request | ${err}`);
 
@@ -97,26 +82,37 @@ export async function initialize(journey?: string): Promise<InitObject> {
        * Setup an object to display failure message
        */
       nextStep = new FRLoginFailure({
-        message: 'Unknown request failure'
+        message: 'Unknown request failure',
       });
     }
 
     if (nextStep.type === StepType.Step) {
-      step.set(nextStep);
-      submittingForm.set(false);
+      // Iterate on a successful progression
+      stepNumber = stepNumber + 1;
+
+      set({
+        completed: false,
+        error: '',
+        loading: false,
+        step: nextStep,
+        successful: false,
+        token: null,
+      });
     } else if (nextStep.type === StepType.LoginSuccess) {
-      // User is authenticated, now call for OAuth tokens
-      console.log('Calling OAuth flow.');
-      getOAuth(step, submittingForm);
-      step.set(nextStep);
-      submittingForm.set(false);
+      set({
+        completed: true,
+        error: '',
+        loading: false,
+        step: null,
+        successful: true,
+        token: nextStep.getSessionToken(),
+      });
     } else if (nextStep.type === StepType.LoginFailure) {
       /**
        * Grab failure message, which may contain encoded HTML
        */
       const failureMessageStr = htmlDecode(nextStep.payload.message || '');
       let restartedStep: StepTypes | null = null;
-      let resubmittedStep: StepTypes | null = null;
 
       try {
         /**
@@ -130,7 +126,7 @@ export async function initialize(journey?: string): Promise<InitObject> {
          * Setup an object to display failure message
          */
         restartedStep = new FRLoginFailure({
-          message: 'Unknown request failure'
+          message: 'Unknown request failure',
         });
       }
 
@@ -140,51 +136,103 @@ export async function initialize(journey?: string): Promise<InitObject> {
        * --------------------------------------------------------------------
        * Details: Now that we have a new authId (the identification of the
        * fresh step) let's populate this new step with old callback data if
-       * the stage is the same. If not, the user will have to refill form. We
+       * allowed with this stage. If not, the user will have to refill form. We
        * will display the error we collected from the previous submission,
        * restart the flow, and provide better UX with the previous form data,
        * so the user doesn't have to refill the form.
        ******************************************************************* */
       if (restartedStep.type === StepType.Step) {
-        if (restartedStep.getStage() === previousStage) {
-          if (previousCallbacks) restartedStep.callbacks = previousCallbacks;
-          restartedStep.payload = {
-            ...previousPayload,
-            authId: restartedStep.payload.authId
-          };
+        const currentStage = restartedStep.getStage() || '';
+        // TODO: Convert hardcoded stage of 'registration' to a configurable allowlist
+        if (currentStage === previousStage && currentStage.toLowerCase().includes('registration')) {
+          if (previousCallbacks) {
+            // Iterate over the callbacks to find any password and reset to empty value
+            restartedStep.callbacks = previousCallbacks.map(
+              (callback) => {
+                callback.setInputValue('');
+                return callback;
+              },
+            );
+            restartedStep.payload = {
+              ...previousPayload,
+              authId: restartedStep.payload.authId,
+            };
+          }
         }
 
         /**
          * If error code is 110, then the issue is just the authId expiring.
-         * So, replace the callbacks with existing callbacks to resubmit
-         * with fresh authId.
+         * If this is the first step in the journey, replace the callbacks
+         * with existing callbacks to resubmit with a fresh authId.
          */
-        if (nextStep.payload?.detail) {
+        if (nextStep.payload?.detail && stepNumber === 1) {
           const details = nextStep.payload?.detail as { errorCode: string };
-          if (details.errorCode === '110' ) {
+          if (details?.errorCode === '110') {
             /**
              * Resubmit with new authId, but old callbacks to prevent failing
              * solely due to stale form.
              */
-            resubmittedStep = await FRAuth.next(restartedStep, options);
+            if (previousCallbacks) {
+              restartedStep.callbacks = previousCallbacks;
+              restartedStep.payload = {
+                ...previousPayload,
+                authId: restartedStep.payload.authId,
+              };
+            }
+            restartedStep = await FRAuth.next(restartedStep, options);
           }
         }
       }
 
-      failureMessage.set(failureMessageStr);
-      step.set(resubmittedStep || restartedStep);
-      submittingForm.set(false);
+      /**
+       * After the above attempts to salvage the form submission, let's return
+       * the final result to the user.
+       */
+      if (restartedStep.type === StepType.Step) {
+        set({
+          completed: false,
+          error: failureMessageStr,
+          loading: false,
+          step: restartedStep,
+          successful: false,
+          token: null,
+        });
+      } else if (restartedStep.type === StepType.LoginSuccess) {
+        set({
+          completed: true,
+          error: '',
+          loading: false,
+          step: restartedStep,
+          successful: true,
+          token: null,
+        });
+      } else {
+        set({
+          completed: true,
+          error: failureMessageStr,
+          loading: false,
+          step: restartedStep,
+          successful: false,
+          token: null,
+        });
+      }
     }
   }
-  /**
-   * Start tree and get first step
-   */
-  await getStep();
+
+  function reset() {
+    set({
+      completed: false,
+      error: '',
+      loading: false,
+      step: null,
+      successful: false,
+      token: null,
+    });
+  }
 
   return {
-    failureMessage,
-    getStep,
-    step,
-    submittingForm,
+    next,
+    reset,
+    subscribe,
   };
 }

@@ -29,38 +29,47 @@
     // Iterate over all children of the form, and pluck out the the inputs
     Array.from(form.children).forEach((el, idx) => {
       // First child will be a `div`, so query the actual form elements
-      const input: HTMLInputElement | null = el.querySelector('input, select, textarea');
+      const inputs: NodeListOf<HTMLInputElement> | null = el.querySelectorAll('input, select, textarea');
 
       // If element has no form input, return early
-      if (!input) {
+      if (!inputs?.length) {
         return;
       }
 
       // Reports input's value validity and triggers native error handling
       // const isValid = input.reportValidity();
 
-      // Just check validity, but don't "report" it
-      const isValid = input.checkValidity();
+      /**
+       * Not the most efficient thing to do, but fieldsets contain more than one input
+       * The vast majority of these will be a list of one
+       */
+      Array.from(inputs).forEach((input) => {
+        // Just check validity, but don't "report" it
+        const isValid = input.checkValidity();
 
-      // If input is invalid, mark it with error and message
-      if (!isValid) {
-        input.setAttribute('aria-invalid', 'true');
-        let messageKey = input.getAttribute('data-message');
-        input.setAttribute('aria-describedby', messageKey || '');
+        // If input is invalid, mark it with error and message
+        if (!isValid) {
+          input.setAttribute('aria-invalid', 'true');
+          let messageKey = input.getAttribute('data-message');
+          input.setAttribute('aria-describedby', messageKey || '');
 
-        // If there is no "first" invalid input, this input is first and receives focus
-        if (!firstInvalidInput) {
-          input.focus();
-          firstInvalidInput = idx;
+          // If there is no previous invalid input, this input is first and receives focus
+          if (firstInvalidInput === null) {
+            input.focus();
+            firstInvalidInput = idx;
+          }
+        } else {
+          input.setAttribute('aria-invalid', 'false');
+          input.setAttribute('aria-describedby', '');
         }
-      } else {
-        input.setAttribute('aria-invalid', 'false');
-        input.setAttribute('aria-describedby', '');
-      }
-      console.log(`Is element at index ${idx} valid ${isValid}`);
+        console.log(`Is element at index ${idx} valid ${isValid}`);
+      });
     });
 
-    onSubmitWhenValid(event, isFormValid);
+    // If there's no invalid input, submit form.
+    if (firstInvalidInput === null) {
+      onSubmitWhenValid(event, isFormValid);
+    }
   }
 </script>
 

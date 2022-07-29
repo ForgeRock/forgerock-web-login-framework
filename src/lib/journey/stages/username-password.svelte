@@ -7,12 +7,12 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
+  import { convertStringToKey } from '$journey/utilities/callback.utilities';
   import Form from '$components/primitives/form/form.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
   import KeyIcon from '$components/icons/key-icon.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-import { convertStringToKey } from '$journey/utilities/callback.utilities';
-import { interpolate } from '$lib/utilities/i18n.utilities';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
@@ -35,12 +35,12 @@ import { interpolate } from '$lib/utilities/i18n.utilities';
   <T key="loginHeader" />
 </h1>
 
-{#if !step}
-  <div class="tw_text-center tw_w-full tw_py-4">
-    <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
-  </div>
-{:else if step.type === 'Step'}
-  <Form bind:formEl onSubmitWhenValid={submitForm}>
+<Form bind:formEl onSubmitWhenValid={submitForm}>
+  {#if !step}
+    <div class="tw_text-center tw_w-full tw_py-4">
+      <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+    </div>
+  {:else if step.type === 'Step'}
     {#if failureMessage}
       <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
     {/if}
@@ -50,10 +50,10 @@ import { interpolate } from '$lib/utilities/i18n.utilities';
     <Button width="full" style="primary" type="submit">
       <T key="loginButton" />
     </Button>
-  </Form>
-  <p class="tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
-    <T key="dontHaveAnAccount" html={true} />
-  </p>
-{:else if step.type === 'LoginSuccess'}
-  <T key="loginSucess" />
-{/if}
+    <p class="tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+      <T key="dontHaveAnAccount" html={true} />
+    </p>
+  {:else if step.type === 'LoginSuccess'}
+    <T key="loginSucess" />
+  {/if}
+</Form>

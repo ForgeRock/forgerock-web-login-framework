@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { getLocale, interpolate } from './i18n.utilities';
-import { initializeContent } from '$lib/locale.store';
+import { initialize } from '$lib/locale.store';
 
 describe('Test getLocale utility function', () => {
   it('should convert es-US locale to appropriate directory', () => {
@@ -47,7 +47,7 @@ describe('Test getLocale utility function', () => {
 });
 
 describe('Test interpolate utility function', () => {
-  initializeContent({
+  initialize({
     closeModal: 'Close Modal',
     ensurePasswordIsMoreThan: 'Password requires more than {minLength} characters.',
     termsAndConditions: '<script>alert("pwned");<script>',

@@ -189,6 +189,10 @@ module.exports = function(theme) {
       '& ~ span > .input-error-message': {
         display: 'none',
       },
+
+      '& ~ * > p': {
+        display: 'none',
+      },
       '&[aria-invalid="true"]': {
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
@@ -197,7 +201,7 @@ module.exports = function(theme) {
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
-      '&[aria-invalid="true"] ~ span > .input-error-message': {
+      '&[aria-invalid="true"] ~ * > p': {
         display: 'block',
       },
       '&[aria-invalid="true"] ~ button': {

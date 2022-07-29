@@ -11,4 +11,4 @@
   export let idx: number;
 </script>
 
-<Base {callback} {idx} />
+<Base {callback} {idx} isRequired={true} />

@@ -52,6 +52,15 @@ module.exports = (config, theme) => ({
   '.checkbox-input_animated': {
 
     /**
+     * Below two target error messages
+     */
+    '& ~ div > p': {
+      display: 'none',
+    },
+    '&[aria-invalid="true"] ~ div > p': {
+      display: 'block',
+    },
+    /**
      * All of the below are targeting `.animated-check` from above:
      *
      * `.checkbox-input_animated + label > span` is equal to `.animated-check`

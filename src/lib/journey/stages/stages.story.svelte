@@ -2,7 +2,7 @@
   import type { FRStep, FRLoginFailure, FRLoginSuccess } from '@forgerock/javascript-sdk';
   import Centered from '$components/primitives/box/centered.svelte';
   import Generic from './generic.svelte';
-  import { initializeContent } from '$lib/locale.store';
+  import { initialize } from '$lib/locale.store';
   import Registration from './registration.svelte';
   import UsernamePassword from './username-password.svelte';
 
@@ -13,7 +13,7 @@
   export let stage: string;
 
   // Initialize localized content
-  initializeContent();
+  initialize();
 </script>
 
 <Centered>

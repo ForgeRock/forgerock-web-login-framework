@@ -4,12 +4,12 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
+  import { convertStringToKey } from '$journey/utilities/callback.utilities';
   import Form from '$components/primitives/form/form.svelte';
+  import { interpolate } from '$lib/utilities/i18n.utilities';
   import T from '$components/i18n/index.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-import { interpolate } from '$lib/utilities/i18n.utilities';
-import { convertStringToKey } from '$journey/utilities/callback.utilities';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
@@ -25,16 +25,16 @@ import { convertStringToKey } from '$journey/utilities/callback.utilities';
   }
 </script>
 
-{#if !step}
-  <div class="tw_text-center tw_w-full tw_py-4">
-    <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
-  </div>
-{:else if step.type === 'Step'}
-  <h1 class="tw_primary-header dark:tw_primary-header_dark">
-    <!-- TODO: Needs localization strategy -->
-    {step.getHeader() || ''}
-  </h1>
-  <Form bind:formEl onSubmitWhenValid={submitForm}>
+<Form bind:formEl onSubmitWhenValid={submitForm}>
+  {#if !step}
+    <div class="tw_text-center tw_w-full tw_py-4">
+      <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+    </div>
+  {:else if step.type === 'Step'}
+    <h1 class="tw_primary-header dark:tw_primary-header_dark">
+      <!-- TODO: Needs localization strategy -->
+      {step.getHeader() || ''}
+    </h1>
     {#if failureMessage}
       <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
     {/if}
@@ -44,7 +44,7 @@ import { convertStringToKey } from '$journey/utilities/callback.utilities';
     <Button width="full" style="primary" type="submit">
       <T key="nextButton" />
     </Button>
-  </Form>
-{:else if step.type === 'LoginSuccess'}
-  <T key="successMessage" />
-{/if}
+  {:else if step.type === 'LoginSuccess'}
+    <T key="successMessage" />
+  {/if}
+</Form>

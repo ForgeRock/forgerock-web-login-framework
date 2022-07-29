@@ -96,6 +96,15 @@ export function getUsernameValidationFailureText(
   const parsedPolicies = parseFailedPolicies(failedPolicies, label);
   return parsedPolicies.reduce((prev, curr) => {
     switch (curr?.policyRequirement) {
+      case 'MAX_LENGTH':
+        prev = `${prev}`;
+        break;
+      case 'MIN_LENGTH':
+        prev = `${prev}`;
+        break;
+      case 'REQUIRED':
+        prev = `${prev}${interpolate('requiredField')}`;
+        break;
       case 'VALID_USERNAME':
         prev = `${prev}${interpolate('chooseDifferentUsername')} `;
         break;

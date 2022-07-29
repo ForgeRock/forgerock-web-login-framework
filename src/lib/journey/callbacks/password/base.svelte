@@ -14,12 +14,13 @@
   export let isRequired = false;
   export let validationFailure = '';
 
-  const callbackType = callback.getType();
-  const inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
-  const textInputLabel = callback.getPrompt();
+  let callbackType = callback.getType();
+  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+  let textInputLabel = callback.getPrompt();
 
   let isVisible = false;
   let type: 'password' | 'text' = 'password';
+  let value = callback?.getInputValue();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -42,6 +43,13 @@
     isVisible = !isVisible;
     type = isVisible ? 'text' : 'password';
   }
+
+  $: {
+    callbackType = callback.getType();
+    inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+    textInputLabel = callback.getPrompt();
+    value = callback?.getInputValue();
+  }
 </script>
 
 <Input
@@ -52,6 +60,7 @@
   onChange={setValue}
   {isRequired}
   {type}
+  value={typeof value === 'string' ? value : ''}
 >
   <button
     class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}

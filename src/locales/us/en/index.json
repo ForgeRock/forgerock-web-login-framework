@@ -6,6 +6,7 @@
   "ensurePasswordIsMoreThan": "Ensure password contains more than {minPasswordLength} characters.",
   "ensurePasswordHasOne": "Ensure password contains 1 of each: capital letter, number and special character.",
   "givenName": "First Name",
+  "inputRequiredError": "This input is required",
   "loading": "Loading ...",
   "loginButton": "Sign In",
   "loginFailure": "Login failure",
@@ -21,6 +22,7 @@
   "registerButton": "Register",
   "registerHeader": "Sign Up",
   "registerSuccess": "Registration success!",
+  "requiredField": "This field is required",
   "securityAnswer": "Security Answer",
   "securityQuestions": "Security question(s)",
   "securityQuestionsPrompt": "Provide security question(s) & answer(s) below",
@@ -29,7 +31,9 @@
   "submitButton": "Submit",
   "successMessage": "Success!",
   "termsAndConditions": "Please accept our Terms and Conditions",
+  "tryAgain": "Please try again",
   "useValidEmail": "Please use a valid email address.",
+  "unrecoverableError": "There was an error in the form submission.",
   "ValidatedCreatePasswordCallback": "Password",
   "ValidatedCreateUsernameCallback": "Username"
 }

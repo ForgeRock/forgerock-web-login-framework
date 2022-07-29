@@ -10,7 +10,7 @@
   export let labelClasses = '';
   export let labelOrder: 'first' | 'last' = 'first';
   export let onChange: (event: Event) => void;
-  export let options: { value: number | null; text: string }[];
+  export let options: { value: string | null; text: string }[];
 </script>
 
 {#if labelOrder === 'first'}

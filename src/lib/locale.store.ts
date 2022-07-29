@@ -45,7 +45,7 @@ stringsSchema.parse(fallback);
 export const locale: Writable<string | null> = writable('en-US');
 export let strings: Readable<Record<string, string> | null>;
 
-export function initializeContent(userLocale?: z.infer<typeof partialStringsSchema>, partial?: boolean) {
+export function initialize(userLocale?: z.infer<typeof partialStringsSchema>, partial?: boolean) {
   if (userLocale) {
     /**
      * Only parse userLocal if NOT using partial option
