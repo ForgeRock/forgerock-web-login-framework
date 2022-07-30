@@ -120,9 +120,9 @@
       if (remote) {
         return await UserManager.getCurrentUser();
       }
-      return get(userStore).info
+      return get(userStore).response
     },
-    logout() {
+    async logout() {
       const { clientId } = Config.get();
 
       /**
@@ -131,9 +131,9 @@
       */
       if (clientId) {
         // Call SDK logout
-        FRUser.logout();
+        await FRUser.logout();
       } else {
-        SessionManager.logout();
+        await SessionManager.logout();
       }
 
       // Reset stores
@@ -151,6 +151,7 @@
 </script>
 
 <script lang="ts">
+  import { browser } from '$app/env';
   import { createEventDispatcher, onMount as s_onMount } from 'svelte';
 
   import Journey from '$journey/journey.svelte';
@@ -160,15 +161,38 @@
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
-  import { initialize as initializeStyles } from './styles.store';
+  // import { initialize as initializeStyles } from './styles.store';
 
   export let config: any;
   export let content: any;
-  export let customStyles: any;
+  // TODO: Runtime customization needs further development
+  // export let customStyles: any;
 
   const dispatch = createEventDispatcher();
 
+  // A refernce to the `form` DOM element
   let formEl: HTMLFormElement;
+
+  // Set base config to SDK
+  // TODO: Move to a shared utility
+  Config.set({
+    // Set some basics by default
+    ...{
+      // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
+      clientId: 'WebLoginWidgetClient',
+      // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
+      // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
+      realmPath: 'alpha',
+      // TODO: Once we move to SSR, this default should be more intelligent
+      redirectUri: browser ? window.location.href : 'https://localhost:3000/callback',
+      scope: 'openid, email',
+      tree: 'Login',
+    },
+    // Let user provided config override defaults
+    ...config,
+    // Force 'legacy' to remove confusion
+    ...{ support: 'legacy' },
+  });
 
   /**
    * Initialize the stores and ensure both variables point to the same reference.
@@ -179,9 +203,8 @@
   let _userStore = (userStore = initializeUser(config));
 
   initializeContent(content, true);
-  initializeStyles(customStyles);
-
-  Config.set(config);
+  // TODO: Runtime customization needs further development
+  // initializeStyles(customStyles);
 
   s_onMount(() => {
     /**

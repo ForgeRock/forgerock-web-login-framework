@@ -5,7 +5,10 @@
   import T from '$components/i18n/index.svelte';
 
   export let callback: TermsAndConditionsCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
+
+  // TODO: Component needs a UX story to be complete
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -33,6 +36,6 @@
   }
 </script>
 
-<Checkbox key={inputName} onChange={setValue} value={false}>
+<Checkbox {firstInvalidInput} key={inputName} onChange={setValue} value={false}>
   <T key="termsAndConditions" />
 </Checkbox>

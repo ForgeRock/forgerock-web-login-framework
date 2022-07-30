@@ -5,6 +5,7 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: NameCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
   let callbackType = callback.getType();
@@ -26,6 +27,7 @@
 </script>
 
 <Input
+  {firstInvalidInput}
   key={inputName}
   label={interpolate(callbackType, null, textInputLabel)}
   onChange={setValue}

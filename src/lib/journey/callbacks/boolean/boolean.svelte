@@ -9,6 +9,7 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: AttributeInputCallback<boolean>;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
   /** *************************************************************************
@@ -40,6 +41,7 @@
 
 <Checkbox
   errorMessage={validationFailure}
+  {firstInvalidInput}
   isInvalid={!!validationFailure}
   key={inputName}
   onChange={setValue}

@@ -5,7 +5,7 @@ import {
   FRLoginSuccess,
   StepType,
 } from '@forgerock/javascript-sdk';
-import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import type { Step, StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
 import { writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$lib/journey/utilities/decode.utilities';
@@ -17,22 +17,29 @@ export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscri
 export interface JourneyStoreValue {
   completed: boolean;
   // TODO: Think about turning this into an object with code, message and step
-  error: string | null;
+  error: {
+    code: number | null;
+    message: string | null;
+    step: Step | undefined;
+  } | null;
   loading: boolean;
   step: StepTypes;
   successful: boolean;
-  token: string | null | undefined;
+  response: Step | null | undefined;
+}
+export interface Response {
+  tokenId: string;
 }
 export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const { set, subscribe }: Writable<JourneyStoreValue> = writable({
     completed: false,
-    error: '',
+    error: null,
     loading: false,
     step: null,
     successful: false,
-    token: null,
+    response: null,
   });
 
   let stepNumber = 0;
@@ -41,6 +48,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
     /**
      * Create an options object with nextOptions overriding anything from initOptions
+     * TODO: Does this object merge need to be more granular?
      */
     const options = {
       ...initOptions,
@@ -63,11 +71,11 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
     set({
       completed: false,
-      error: '',
+      error: null,
       loading: true,
       step: prevStep,
       successful: false,
-      token: null,
+      response: null,
     });
 
     try {
@@ -92,20 +100,20 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
       set({
         completed: false,
-        error: '',
+        error: null,
         loading: false,
         step: nextStep,
         successful: false,
-        token: null,
+        response: null,
       });
     } else if (nextStep.type === StepType.LoginSuccess) {
       set({
         completed: true,
-        error: '',
+        error: null,
         loading: false,
         step: null,
         successful: true,
-        token: nextStep.getSessionToken(),
+        response: nextStep.payload,
       });
     } else if (nextStep.type === StepType.LoginFailure) {
       /**
@@ -191,29 +199,39 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       if (restartedStep.type === StepType.Step) {
         set({
           completed: false,
-          error: failureMessageStr,
+          error: {
+            code: nextStep.getCode(),
+            message: failureMessageStr,
+            // TODO: Should we remove the callbacks for PII info?
+            step: prevStep?.payload,
+          },
           loading: false,
           step: restartedStep,
           successful: false,
-          token: null,
+          response: null,
         });
       } else if (restartedStep.type === StepType.LoginSuccess) {
         set({
           completed: true,
-          error: '',
+          error: null,
           loading: false,
-          step: restartedStep,
+          step: null,
           successful: true,
-          token: null,
+          response: restartedStep.payload,
         });
       } else {
         set({
           completed: true,
-          error: failureMessageStr,
+          error: {
+            code: nextStep.getCode(),
+            message: failureMessageStr,
+            // TODO: Should we remove the callbacks for PII info?
+            step: prevStep?.payload,
+          },
           loading: false,
-          step: restartedStep,
+          step: null,
           successful: false,
-          token: null,
+          response: restartedStep.payload,
         });
       }
     }
@@ -222,11 +240,11 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
   function reset() {
     set({
       completed: false,
-      error: '',
+      error: null,
       loading: false,
       step: null,
       successful: false,
-      token: null,
+      response: null,
     });
   }
 

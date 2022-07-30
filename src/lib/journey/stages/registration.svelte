@@ -2,6 +2,7 @@
   import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
 
   // i18n
+  import { interpolate } from '$lib/utilities/i18n.utilities';
   import T from '$components/i18n/index.svelte';
 
   // Import primitives
@@ -9,7 +10,6 @@
   import Button from '$components/primitives/button/button.svelte';
   import { convertStringToKey } from '$journey/utilities/callback.utilities';
   import Form from '$components/primitives/form/form.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
   import NewUserIcon from '$components/icons/new-user-icon.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
@@ -21,11 +21,23 @@
   export let step: StepTypes;
   export let submitForm: () => void;
 
-let failureMessageKey = '';
+  let failureMessageKey = '';
+  let hasPrevError = false;
 
-$: {
-  failureMessageKey = convertStringToKey(failureMessage);
-}
+  // TODO: Pull out and rework into a utility or helper
+  function checkValidation(callback: any) {
+    let failedPolices = callback.getOutputByName('failedPolicies', []);
+    if (failedPolices.length && !hasPrevError) {
+      console.log(callback);
+      hasPrevError = true;
+      return true;
+    }
+    return false;
+  }
+
+  $: {
+    failureMessageKey = convertStringToKey(failureMessage);
+  }
 </script>
 
 <div class="tw_flex tw_justify-center">
@@ -50,7 +62,9 @@ $: {
       <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
     {/if}
     {#each step?.callbacks as callback, idx}
-      <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} />
+    <!-- TODO: Trying to minimize looping, but having it within template is a bit clunky -->
+      {@const firstInvalidInput = checkValidation(callback)}
+      <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} {firstInvalidInput} />
     {/each}
     <Button width="full" style="primary" type="submit">
       <T key="registerButton" />

@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import * as fallback from '$locales/us/en/index.json';
 
-const stringsSchema = z.object({
+export const stringsSchema = z.object({
   alreadyHaveAnAccount: z.string(),
   dontHaveAnAccount: z.string(),
   closeModal: z.string(),
@@ -37,7 +37,7 @@ const stringsSchema = z.object({
   ValidatedCreatePasswordCallback: z.string(),
   ValidatedCreateUsernameCallback: z.string(),
 });
-const partialStringsSchema = stringsSchema.partial();
+export const partialStringsSchema = stringsSchema.partial();
 
 // Ensure fallback follows schema
 stringsSchema.parse(fallback);

@@ -3,6 +3,7 @@
   import Error from '$components/primitives/message/error.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null= null;
+  export let firstInvalidInput: boolean;
   export let hasRightIcon = false;
   export let errorMessage = '';
   export let isRequired = false;
@@ -28,6 +29,7 @@
 
 <div class="tw_input-spacing">
   <Input
+    {firstInvalidInput}
     inputClasses={`${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}
     {key}
     onChange={onChangeWrapper}

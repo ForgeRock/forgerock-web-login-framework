@@ -4,6 +4,7 @@
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let errorMessage: string = '';
+  export let firstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let key: string;
@@ -28,6 +29,7 @@
 -->
 <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
   <Checkbox
+    {firstInvalidInput}
     {isRequired}
     isInvalid={isInvalid}
     {key}

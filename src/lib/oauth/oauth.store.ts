@@ -11,24 +11,28 @@ export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscr
 }
 export interface OAuthTokenStoreValue {
   completed: boolean;
-  error: string;
+  error: {
+    code?: number | null;
+    message: string | null;
+  } | null;
   loading: boolean;
   successful: boolean;
-  tokens: OAuth2Tokens | null | void;
+  response: OAuth2Tokens | null | void;
 }
 
 export function initialize(initOptions?: GetTokensOptions) {
   const { set, subscribe }: Writable<OAuthTokenStoreValue> = writable({
     completed: false,
-    error: '',
+    error: null,
     loading: false,
     successful: false,
-    tokens: null,
+    response: null,
   });
 
   async function get(getOptions?: GetTokensOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions
+     * TODO: Does this object merge need to be more granular?
      */
     const options = {
       ...initOptions,
@@ -44,10 +48,12 @@ export function initialize(initOptions?: GetTokensOptions) {
       if (err instanceof Error) {
         set({
           completed: true,
-          error: err.message,
+          error: {
+            message: err.message,
+          },
           loading: false,
           successful: false,
-          tokens: null,
+          response: null,
         });
       }
       return;
@@ -55,20 +61,20 @@ export function initialize(initOptions?: GetTokensOptions) {
 
     set({
       completed: true,
-      error: '',
+      error: null,
       loading: false,
       successful: true,
-      tokens: tokens,
+      response: tokens,
     });
   }
 
   function reset() {
     set({
       completed: false,
-      error: '',
+      error: null,
       loading: false,
       successful: false,
-      tokens: null,
+      response: null,
     })
   }
 

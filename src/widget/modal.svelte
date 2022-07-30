@@ -6,6 +6,8 @@
     SessionManager,
     TokenManager,
     UserManager,
+    HttpClient,
+    type ConfigOptions,
   } from '@forgerock/javascript-sdk';
   import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
   import { get } from 'svelte/store';
@@ -142,6 +144,7 @@
       dialogEl.showModal();
     },
   };
+  export const request = HttpClient.request;
   export const user = {
     async authorized(remote = false) {
       if (remote) {
@@ -153,7 +156,7 @@
       if (remote) {
         return await UserManager.getCurrentUser();
       }
-      return get(userStore).info;
+      return get(userStore).response;
     },
     async logout() {
       const { clientId } = Config.get();
@@ -184,35 +187,68 @@
 </script>
 
 <script lang="ts">
+  import { browser } from '$app/env';
+  import type { z } from 'zod';
+
   import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import Journey from '$journey/journey.svelte';
+  import type { partialStringsSchema } from '$lib/locale.store';
 
   // Import the stores for initialization
   import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
-  import { initialize as initializeStyles } from './styles.store';
+  // import { initialize as initializeStyles } from './styles.store';
 
-  export let config: any;
-  export let content: any;
-  export let customStyles: any;
+  export let config: ConfigOptions;
+  export let content: z.infer<typeof partialStringsSchema>;
+  // TODO: Runtime customization needs further development
+  // export let customStyles: any;
 
   const dispatch = createEventDispatcher();
 
+  // Variables that reference the Svelte component and the DOM element
+  // Variables with `_` reference points to the same variables from the `context="module"`
   let _dialogComp: SvelteComponent;
   let _dialogEl: HTMLDialogElement;
+  // The single refernce to the `form` DOM element
+  let formEl: HTMLFormElement;
+
+  // Set base config to SDK
+  // TODO: Move to a shared utility
+  Config.set({
+    // Set some basics by default
+    ...{
+      // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
+      clientId: 'WebLoginWidgetClient',
+      // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
+      // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
+      realmPath: 'alpha',
+      // TODO: Once we move to SSR, this default should be more intelligent
+      redirectUri: browser ? window.location.href : 'https://localhost:3000/callback',
+      scope: 'openid, email',
+      tree: 'Login',
+    },
+    // Let user provided config override defaults
+    ...config,
+    // Force 'legacy' to remove confusion
+    ...{ support: 'legacy' },
+  });
+
+  /**
+   * Initialize the stores and ensure both variables point to the same reference.
+   * Variables with _ are the reactive version of the original variable from above.
+   */
   let _journeyStore = (journeyStore = initializeJourney(config));
   let _oauthStore = (oauthStore = initializeOauth(config));
   let _userStore = (userStore = initializeUser(config));
-  let formEl: HTMLFormElement;
 
   initializeContent(content, true);
-  initializeStyles(customStyles);
-
-  Config.set(config);
+  // TODO: Runtime customization needs further development
+  // initializeStyles(customStyles);
 
   s_onMount(() => {
     dialogComp = _dialogComp;

@@ -1,13 +1,15 @@
 <script lang="ts">
   import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
 
+  // i18n
+  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import T from '$components/i18n/index.svelte';
+
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import { convertStringToKey } from '$journey/utilities/callback.utilities';
   import Form from '$components/primitives/form/form.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
-  import T from '$components/i18n/index.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
@@ -19,6 +21,18 @@
   export let submitForm: () => void;
 
   let failureMessageKey = '';
+  let hasPrevError = false;
+
+  // TODO: Pull out and rework into a utility or helper
+  function checkValidation(callback: any) {
+    let failedPolices = callback.getOutputByName('failedPolicies', []);
+    if (failedPolices.length && !hasPrevError) {
+      console.log(callback);
+      hasPrevError = true;
+      return true;
+    }
+    return false;
+  }
 
   $: {
     failureMessageKey = convertStringToKey(failureMessage);
@@ -35,11 +49,16 @@
       <!-- TODO: Needs localization strategy -->
       {step.getHeader() || ''}
     </h1>
+    <p class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+      <!-- TODO: Needs localization strategy -->
+      {step.getDescription() || ''}
+    </p>
     {#if failureMessage}
       <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
     {/if}
     {#each step?.callbacks as callback, idx}
-       <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} />
+    {@const firstInvalidInput = checkValidation(callback)}
+      <svelte:component this={mapCallbackToComponent(callback)} {callback} {firstInvalidInput} {idx} />
     {/each}
     <Button width="full" style="primary" type="submit">
       <T key="nextButton" />

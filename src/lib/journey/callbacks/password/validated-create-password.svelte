@@ -5,6 +5,7 @@
   import { getPasswordValidationFailureText, isInputRequired } from '$journey/utilities/callback.utilities';
 
   export let callback: ValidatedCreatePasswordCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
   /**
@@ -26,4 +27,4 @@
   }
 </script>
 
-<Base {callback} {idx} {isRequired} {validationFailure} />
+<Base {callback} {firstInvalidInput} {idx} {isRequired} {validationFailure} />

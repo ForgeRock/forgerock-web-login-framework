@@ -49,9 +49,9 @@
 {#if userResponse?.successful}
   <ul>
     <li id="fullName">
-      <strong>Full name</strong>: {`${userResponse.info?.given_name} ${userResponse.info?.family_name}`}
+      <strong>Full name</strong>: {`${userResponse.response?.given_name} ${userResponse.response?.family_name}`}
     </li>
-    <li id="email"><strong>Email</strong>: {userResponse.info?.email}</li>
+    <li id="email"><strong>Email</strong>: {userResponse.response?.email}</li>
   </ul>
   <button on:click={logout}>Logout</button>
 {/if}

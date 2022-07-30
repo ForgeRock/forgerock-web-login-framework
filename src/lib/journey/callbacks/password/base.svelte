@@ -10,6 +10,7 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
   export let isRequired = false;
   export let validationFailure = '';
@@ -54,6 +55,7 @@
 
 <Input
   errorMessage={validationFailure}
+  {firstInvalidInput}
   hasRightIcon={true}
   key={inputName}
   label={interpolate(callbackType, null, textInputLabel)}

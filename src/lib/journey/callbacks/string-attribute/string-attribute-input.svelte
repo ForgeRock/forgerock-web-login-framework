@@ -10,6 +10,7 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: AttributeInputCallback<string>;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
   let inputName = callback?.payload?.input?.[0].name || `string-attr-${idx}`;
@@ -49,6 +50,7 @@
 
 <Input
   errorMessage={validationFailure}
+  {firstInvalidInput}
   key={inputName}
   label={interpolate(outputName, null, textInputLabel)}
   onChange={setValue}

@@ -8,6 +8,7 @@
   import LockIcon from '$components/icons/lock-icon.svelte';
 
   export let callback: KbaCreateCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
   /** *************************************************************************
@@ -84,6 +85,7 @@
   <Select
     defaultOption={0}
     isRequired={true}
+    firstInvalidInput={false}
     key={inputNameQuestion}
     label={prompt}
     onChange={setQuestion}
@@ -91,6 +93,7 @@
   />
 
   <Input
+    {firstInvalidInput}
     key={inputNameAnswer || 'ka-answer-label'}
     label={interpolate("securityAnswer")}
     onChange={setAnswer}

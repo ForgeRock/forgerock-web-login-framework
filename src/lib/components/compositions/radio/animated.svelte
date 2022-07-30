@@ -1,15 +1,26 @@
 <script lang="ts">
+  import { afterUpdate } from 'svelte';
+
   import Error from "$components/primitives/message/error.svelte";
   import Label from '$components/primitives/label/label.svelte';
 
   export let defaultOption: number;
   export let errorMessage: string = '';
+  export let firstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
   export let options: { value: number | null; text: string }[];
+
+  let inputEl: HTMLInputElement;
+
+  afterUpdate(() => {
+    if (firstInvalidInput) {
+      inputEl.focus();
+    }
+  });
 </script>
 
 <div>
@@ -17,6 +28,7 @@
     <div class="tw_input-spacing">
       <input
         aria-invalid={isInvalid}
+        bind:this={inputEl}
         class="tw_radio-input_animated dark:tw_radio-input_animated_dark tw_sr-only"
         checked={defaultOption === option.value}
         id={`${key}-${option.value}`}

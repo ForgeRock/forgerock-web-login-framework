@@ -8,6 +8,7 @@
 
   type StepTypes = FRStep | FRLoginFailure | FRLoginSuccess | null;
 
+  export let failureMessage: string;
   export let step: StepTypes;
   export let submitForm: () => void;
   export let stage: string;
@@ -18,10 +19,10 @@
 
 <Centered>
   {#if stage === 'UsernamePassword'}
-    <UsernamePassword {step} {submitForm} />
+    <UsernamePassword {failureMessage} {step} {submitForm} />
   {:else if stage === 'Registration'}
-    <Registration {step} {submitForm} />
+    <Registration {failureMessage} {step} {submitForm} />
   {:else}
-    <Generic {step} {submitForm} />
+    <Generic {failureMessage} {step} {submitForm} />
   {/if}
 </Centered>

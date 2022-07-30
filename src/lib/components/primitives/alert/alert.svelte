@@ -3,7 +3,10 @@
   import InfoIcon from '$components/icons/info-icon.svelte';
   import WarningIcon from '$components/icons/warning-icon.svelte';
 
+  export let needsFocus = false;
   export let type: 'error' | 'info' | 'success' | 'warning' | '' = '';
+
+  let divEl: HTMLParagraphElement;
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -22,9 +25,15 @@
       }
     }, '');
   }
+
+  $: {
+    if (needsFocus) {
+      divEl && divEl.focus();
+    }
+  }
 </script>
 
-<div class={`${generateClassString(type)} tw_alert dark:tw_alert_dark tw_input-spacing`}>
+<div bind:this={divEl} class={`${generateClassString(type)} tw_alert dark:tw_alert_dark tw_input-spacing`} tabindex="-1">
   <p class="tw_grid tw_grid-cols-[2em_1fr]">
     {#if type === 'error'}
       <AlertIcon />

@@ -22,7 +22,7 @@
 {#if !$journeyStore.completed}
   <svelte:component
     this={mapStepToStage($journeyStore?.step)}
-    failureMessage={$journeyStore?.error}
+    failureMessage={$journeyStore?.error?.message}
     bind:formEl
     {submitForm}
     step={$journeyStore?.step}

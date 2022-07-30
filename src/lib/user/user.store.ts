@@ -9,24 +9,28 @@ export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
 }
 export interface UserStoreValue {
   completed: boolean;
-  error: string;
+  error: {
+    code?: number | null;
+    message: string | null;
+  } | null;
   loading: boolean;
   successful: boolean;
-  info: unknown;
+  response: unknown;
 }
 
 export function initialize(initOptions?: ConfigOptions) {
   const { set, subscribe }: Writable<UserStoreValue> = writable({
     completed: false,
-    error: '',
+    error: null,
     loading: false,
     successful: false,
-    info: null,
+    response: null,
   });
 
   async function get(getOptions?: ConfigOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions
+     * TODO: Does this object merge need to be more granular?
      */
     const options = {
       ...initOptions,
@@ -38,20 +42,22 @@ export function initialize(initOptions?: ConfigOptions) {
 
       set({
         completed: true,
-        error: '',
+        error: null,
         loading: false,
         successful: true,
-        info: user,
+        response: user,
       });
     } catch (err: unknown) {
       console.error(`Get current user | ${err}`);
       if (err instanceof Error) {
         set({
           completed: true,
-          error: '',
+          error: {
+            message: err.message
+          },
           loading: false,
           successful: false,
-          info: null,
+          response: null,
         });
       }
     }
@@ -60,10 +66,10 @@ export function initialize(initOptions?: ConfigOptions) {
   function reset() {
     set({
       completed: false,
-      error: '',
+      error: null,
       loading: false,
       successful: false,
-      info: null,
+      response: null,
     });
   }
 

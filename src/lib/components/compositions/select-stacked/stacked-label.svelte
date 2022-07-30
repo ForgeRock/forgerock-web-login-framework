@@ -5,6 +5,7 @@
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let defaultOption: number | null = null;
   export let errorMessage = '';
+  export let firstInvalidInput: boolean;
   export let isRequired: boolean;
   export let isInvalid: boolean | null = null;
   export let key: string;
@@ -27,6 +28,7 @@ $: {
 <div class="tw_input-spacing">
   <Select
     {defaultOption}
+    {firstInvalidInput}
     {isRequired}
     {isInvalid}
     {key}

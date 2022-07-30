@@ -13,12 +13,23 @@ module.exports = function(theme) {
       color: theme('colors.black'),
       marginBottom: theme('spacing.6'),
       padding: theme('spacing.4'),
+
+      '&:focus': {
+        borderRadius: theme('borderRadius.DEFAULT'),
+        outlineColor: colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString(),
+        outlineOffset: '2px',
+        outlineStyle: 'solid',
+        outlineWidth: '3px',
+      },
     },
     '.alert_dark': {
       backgroundColor: theme('colors.background.dark'),
       borderColor: theme('colors.black'),
       color: theme('colors.white'),
 
+      '&:focus': {
+        outlineColor: colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.1).toString(),
+      },
       '& svg': {
         color: theme('colors.white'),
         fill: 'currentColor',

@@ -9,6 +9,7 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: ValidatedCreateUsernameCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
   let callbackType = callback.getType();
@@ -18,7 +19,6 @@
   let textInputLabel = callback.getPrompt();
   let value = callback?.getInputValue();
   let validationFailure = getUsernameValidationFailureText(callback, label);
-
 
   let type: 'text' = 'text';
 
@@ -50,6 +50,7 @@
 
 <Input
   errorMessage={validationFailure}
+  {firstInvalidInput}
   {isRequired}
   key={inputName}
   label={interpolate(callbackType, null, textInputLabel)}
