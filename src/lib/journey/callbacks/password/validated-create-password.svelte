@@ -10,7 +10,6 @@
 
   /**
    * This callback does not indicate that the input is required.
-   * TODO: Can we just assume a password is always required?
    */
   const isRequired = isInputRequired(callback);
 

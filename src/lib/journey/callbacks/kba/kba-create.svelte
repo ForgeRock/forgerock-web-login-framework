@@ -60,12 +60,6 @@
      *********************************************************************** */
     callback.setQuestion((event.target as HTMLSelectElement).value);
   }
-
-  $: {
-    if (callback) {
-      value = '';
-    }
-  }
 </script>
 
 <fieldset class="tw_kba-fieldset tw_input-spacing dark:tw_kba-fieldset_dark">

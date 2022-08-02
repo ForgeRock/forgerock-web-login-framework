@@ -33,6 +33,7 @@
   "tryAgain": "Please try again",
   "useValidEmail": "Please use a valid email address.",
   "unrecoverableError": "There was an error in the form submission.",
+  "unknownNetworkError": "Unknown network request failure has occurred.",
   "ValidatedCreatePasswordCallback": "Mot de passe",
   "ValidatedCreateUsernameCallback": "Nom d'utilisateur"
 }

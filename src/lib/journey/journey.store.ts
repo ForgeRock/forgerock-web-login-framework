@@ -9,6 +9,7 @@ import type { Step, StepOptions } from '@forgerock/javascript-sdk/lib/auth/inter
 import { writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$lib/journey/utilities/decode.utilities';
+import { interpolate } from '$lib/utilities/i18n.utilities';
 
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
   next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
@@ -31,6 +32,8 @@ export interface Response {
   tokenId: string;
 }
 export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
+
+const authIdTimeoutError = '110';
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const { set, subscribe }: Writable<JourneyStoreValue> = writable({
@@ -90,7 +93,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        * Setup an object to display failure message
        */
       nextStep = new FRLoginFailure({
-        message: 'Unknown request failure',
+        message: interpolate('unknownNetworkError'),
       });
     }
 
@@ -134,7 +137,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
          * Setup an object to display failure message
          */
         restartedStep = new FRLoginFailure({
-          message: 'Unknown request failure',
+          message: interpolate('unknownNetworkError'),
         });
       }
 
@@ -150,24 +153,6 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        * so the user doesn't have to refill the form.
        ******************************************************************* */
       if (restartedStep.type === StepType.Step) {
-        const currentStage = restartedStep.getStage() || '';
-        // TODO: Convert hardcoded stage of 'registration' to a configurable allowlist
-        if (currentStage === previousStage && currentStage.toLowerCase().includes('registration')) {
-          if (previousCallbacks) {
-            // Iterate over the callbacks to find any password and reset to empty value
-            restartedStep.callbacks = previousCallbacks.map(
-              (callback) => {
-                callback.setInputValue('');
-                return callback;
-              },
-            );
-            restartedStep.payload = {
-              ...previousPayload,
-              authId: restartedStep.payload.authId,
-            };
-          }
-        }
-
         /**
          * If error code is 110, then the issue is just the authId expiring.
          * If this is the first step in the journey, replace the callbacks
@@ -175,7 +160,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
          */
         if (nextStep.payload?.detail && stepNumber === 1) {
           const details = nextStep.payload?.detail as { errorCode: string };
-          if (details?.errorCode === '110') {
+          if (details?.errorCode === authIdTimeoutError) {
             /**
              * Resubmit with new authId, but old callbacks to prevent failing
              * solely due to stale form.
