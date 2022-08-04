@@ -9,15 +9,16 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: ValidatedCreateUsernameCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
-  const callbackType = callback.getType();
-  const inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
-  const isRequired = isInputRequired(callback);
-  const label = callback.getPrompt();
-  const textInputLabel = callback.getPrompt();
-  const unknownValue = callback?.getInputValue();
-  const validationFailure = getUsernameValidationFailureText(callback, label);
+  let callbackType = callback.getType();
+  let inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
+  let isRequired = isInputRequired(callback);
+  let label = callback.getPrompt();
+  let textInputLabel = callback.getPrompt();
+  let value = callback?.getInputValue();
+  let validationFailure = getUsernameValidationFailureText(callback, label);
 
   let type: 'text' = 'text';
 
@@ -37,16 +38,23 @@
   }
 
   $: {
-    console.log(callback);
+    callbackType = callback.getType();
+    inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
+    isRequired = isInputRequired(callback);
+    label = callback.getPrompt();
+    textInputLabel = callback.getPrompt();
+    value = callback?.getInputValue();
+    validationFailure = getUsernameValidationFailureText(callback, label);
   }
 </script>
 
 <Input
   errorMessage={validationFailure}
+  {firstInvalidInput}
   {isRequired}
   key={inputName}
   label={interpolate(callbackType, null, textInputLabel)}
   onChange={setValue}
   {type}
-  value={typeof unknownValue === 'string' ? unknownValue : ''}
+  value={typeof value === 'string' ? value : ''}
 />

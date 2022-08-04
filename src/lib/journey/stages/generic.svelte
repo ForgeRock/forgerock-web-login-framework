@@ -1,37 +1,69 @@
 <script lang="ts">
   import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
 
-  // Import primitives
-  import Button from '$components/primitives/button/button.svelte';
-  import Form from '$components/primitives/form/form.svelte';
+  // i18n
+  import { interpolate } from '$lib/utilities/i18n.utilities';
   import T from '$components/i18n/index.svelte';
+
+  // Import primitives
+  import Alert from '$components/primitives/alert/alert.svelte';
+  import Button from '$components/primitives/button/button.svelte';
+  import { convertStringToKey } from '$journey/utilities/callback.utilities';
+  import Form from '$components/primitives/form/form.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
+  export let failureMessage: string;
   export let formEl: HTMLFormElement | null = null;
   export let step: StepTypes;
   export let submitForm: () => void;
+
+  let failureMessageKey = '';
+  let hasPrevError = false;
+
+  // TODO: Pull out and rework into a utility or helper
+  function checkValidation(callback: any) {
+    let failedPolices = callback.getOutputByName('failedPolicies', []);
+    if (failedPolices.length && !hasPrevError) {
+      console.log(callback);
+      hasPrevError = true;
+      return true;
+    }
+    return false;
+  }
+
+  $: {
+    failureMessageKey = convertStringToKey(failureMessage);
+  }
 </script>
 
-{#if !step}
-  <div class="tw_text-center tw_w-full tw_py-4">
-    <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
-  </div>
-{:else if step.type === 'Step'}
-  <h1 class="tw_primary-header dark:tw_primary-header_dark">
-    <!-- TODO: Needs localization strategy -->
-    {step.getHeader() || ''}
-  </h1>
-  <Form bind:formEl onSubmitWhenValid={submitForm}>
+<Form bind:formEl onSubmitWhenValid={submitForm}>
+  {#if !step}
+    <div class="tw_text-center tw_w-full tw_py-4">
+      <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+    </div>
+  {:else if step.type === 'Step'}
+    <h1 class="tw_primary-header dark:tw_primary-header_dark">
+      <!-- TODO: Needs localization strategy -->
+      {step.getHeader() || ''}
+    </h1>
+    <p class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+      <!-- TODO: Needs localization strategy -->
+      {step.getDescription() || ''}
+    </p>
+    {#if failureMessage}
+      <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
+    {/if}
     {#each step?.callbacks as callback, idx}
-       <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} />
+    {@const firstInvalidInput = checkValidation(callback)}
+      <svelte:component this={mapCallbackToComponent(callback)} {callback} {firstInvalidInput} {idx} />
     {/each}
     <Button width="full" style="primary" type="submit">
       <T key="nextButton" />
     </Button>
-  </Form>
-{:else if step.type === 'LoginSuccess'}
-  <T key="successMessage" />
-{/if}
+  {:else if step.type === 'LoginSuccess'}
+    <T key="successMessage" />
+  {/if}
+</Form>

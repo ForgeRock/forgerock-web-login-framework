@@ -6,8 +6,10 @@
   "ensurePasswordIsMoreThan": "Ensure password contains more than {minPasswordLength} characters.",
   "ensurePasswordHasOne": "Ensure password contains 1 of each: capital letter, number and special character.",
   "givenName": "Prénom",
+  "inputRequiredError": "This input is required",
   "loading": "Chargement...",
   "loginButton": "Se connecter",
+  "loginFailure": "Erreur d'authentification",
   "loginHeader": "Se connecter",
   "loginSuccess": "Connexion réussie!",
   "NameCallback": "Nom d'utilisateur",
@@ -28,7 +30,10 @@
   "submitButton": "Soumettre",
   "successMessage": "Succès!",
   "termsAndConditions": "Veuillez accepter nos termes et conditions",
+  "tryAgain": "Please try again",
   "useValidEmail": "Please use a valid email address.",
+  "unrecoverableError": "There was an error in the form submission.",
+  "unknownNetworkError": "Unknown network request failure has occurred.",
   "ValidatedCreatePasswordCallback": "Mot de passe",
   "ValidatedCreateUsernameCallback": "Nom d'utilisateur"
 }

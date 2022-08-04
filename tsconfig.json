@@ -2,6 +2,8 @@
   "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationDir": "./package",
     "paths": {
       "$components": ["src/lib/components"],
       "$components/*": ["src/lib/components/*"],
@@ -11,8 +13,8 @@
       "$lib/*": ["src/lib/*"],
       "$locales": ["src/locales"],
       "$locales/*": ["src/locales/*"],
-      "$widget": ["src/lib/widget"],
-      "$widget/*": ["src/lib/widget/*"]
+      "$widget": ["src/widget"],
+      "$widget/*": ["src/widget/*"]
     },
     "resolveJsonModule": true,
     "strict": true,

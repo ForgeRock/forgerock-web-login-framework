@@ -16,7 +16,7 @@ import tailwindcss from 'tailwindcss';
 const production = !process.env.ROLLUP_WATCH;
 
 export default {
-  input: ['src/lib/widget/modal.svelte', 'src/lib/widget/inline.svelte'],
+  input: ['src/widget/modal.svelte', 'src/widget/inline.svelte'],
   onwarn: (warning) => {
     // TODO: Revisit once the JS SDK is updated to pure ES Modules
     if (warning.code === 'THIS_IS_UNDEFINED') {
@@ -49,7 +49,7 @@ export default {
         $components: path.resolve('./src/lib/components'),
         $journey: path.resolve('./src/lib/journey'),
         $locales: path.resolve('./src/locales'),
-        $widget: path.resolve('./src/lib/widget'),
+        $widget: path.resolve('./src/widget'),
       },
     }),
     // Clear target directory

@@ -5,6 +5,7 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: ChoiceCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
   /** *************************************************************************
@@ -16,7 +17,7 @@
    ************************************************************************* */
   const choiceOptions = callback
     .getChoices()
-    ?.map((label, index) => ({ text: label, value: index }));
+    ?.map((label, idx) => ({ text: label, value: `${idx}` }));
   const defaultChoice = callback.getDefaultChoice();
   const inputName = callback?.payload?.input?.[0].name || `choice-${idx}`;
   const prompt = callback.getPrompt();
@@ -39,6 +40,7 @@
 
 <!-- TODO: Needs a localization strategy -->
 <Select
+  {firstInvalidInput}
   defaultOption={defaultChoice}
   isRequired={false}
   key={inputName}

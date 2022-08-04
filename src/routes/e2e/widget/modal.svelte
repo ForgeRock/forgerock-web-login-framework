@@ -1,27 +1,26 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import type { User } from '$journey/interfaces';
   import Widget, { modal, journey, user } from '../../../../package/modal';
 
-  let userInfo: User | null;
+  let userResponse: any | null;
   let widget: Widget;
   let widgetEl: HTMLDivElement;
 
   async function logout() {
     await user.logout();
-    userInfo = null;
+    userResponse = null;
   }
 
-  modal.onMount((dialog: HTMLDialogElement) => {
-    console.log('Singleton onMount event fired');
+  modal.onMount((dialog: HTMLDialogElement, form: HTMLFormElement) => {
     console.log(dialog);
+    console.log(form);
 
-    journey.initialize();
+    journey.start();
   });
-  journey.onSuccess((response: User) => {
-    console.log('Singleton onSuccess event fired');
-    userInfo = response;
+  journey.onSuccess((response: any) => {
+    console.log(response);
+    userResponse = response?.user;
   });
   journey.onFailure((error: string | null) => {
     console.log('Singleton onFailure event fired');
@@ -66,19 +65,19 @@
 
     console.log(widget);
   });
-
-  $: if (userInfo) console.log(userInfo);
 </script>
 
 <div class="tw_p-6">
-  {#if userInfo?.isAuthenticated}
+  {#if userResponse?.successful}
     <ul>
-      <li id="fullName"><strong>Full name</strong>: {userInfo.fullName}</li>
-      <li id="email"><strong>Email</strong>: {userInfo.email}</li>
+      <li id="fullName">
+        <strong>Full name</strong>: {`${userResponse.response?.given_name} ${userResponse.response?.family_name}`}
+      </li>
+      <li id="email"><strong>Email</strong>: {userResponse.response?.email}</li>
     </ul>
     <button on:click={logout}>Logout</button>
   {:else}
-    <button on:click={() => modal.open({ initialized: true })}>Open Login Modal</button>
+    <button on:click={() => modal.open()}>Open Login Modal</button>
   {/if}
 </div>
 <div bind:this={widgetEl} />

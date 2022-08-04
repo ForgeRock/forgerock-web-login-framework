@@ -1,6 +1,9 @@
 <script lang="ts">
+  import { afterUpdate } from 'svelte';
+
   import Label from '$components/primitives/label/label.svelte';
 
+  export let firstInvalidInput: boolean;
   export let inputClasses = '';
   export let key: string;
   export let label: string;
@@ -12,6 +15,14 @@
   export let isInvalid: boolean | null = null;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value: string = '';
+
+  let inputEl: HTMLInputElement;
+
+  afterUpdate(() => {
+    if (firstInvalidInput) {
+      inputEl.focus();
+    }
+  });
 </script>
 
 {#if labelOrder === 'first'}
@@ -20,6 +31,7 @@
 
 <input
   aria-invalid={isInvalid}
+  bind:this={inputEl}
   class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
   data-message={`${key}-message`}
   id={key}

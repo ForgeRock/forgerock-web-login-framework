@@ -1,14 +1,19 @@
 <script lang="ts">
+  import { afterUpdate } from 'svelte';
+
   import Error from "$components/primitives/message/error.svelte";
   import Label from "$components/primitives/label/label.svelte";
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let errorMessage: string = '';
+  export let firstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let onChange: (event: Event) => void;
   export let value: boolean;
+
+  let inputEl: HTMLInputElement;
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {
@@ -16,6 +21,12 @@
     }
     onChange(event);
   }
+
+  afterUpdate(() => {
+    if (firstInvalidInput) {
+      inputEl.focus();
+    }
+  });
 
   $: {
     isInvalid = !!errorMessage;
@@ -28,6 +39,7 @@
    -->
   <input
     aria-invalid={isInvalid}
+    bind:this={inputEl}
     class="tw_checkbox-input_animated dark:tw_checkbox-input_animated_dark tw_sr-only"
     checked={value}
     id={key}

@@ -8,7 +8,8 @@
   import Base from './base.svelte';
 
   export let callback: PasswordCallback;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 </script>
 
-<Base {callback} {idx} />
+<Base {callback} {firstInvalidInput} {idx} />

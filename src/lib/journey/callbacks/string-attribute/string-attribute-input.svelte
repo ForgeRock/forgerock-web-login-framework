@@ -10,16 +10,17 @@
   import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: AttributeInputCallback<string>;
+  export let firstInvalidInput: boolean;
   export let idx: number;
 
-  const inputName = callback?.payload?.input?.[0].name || `string-attr-${idx}`;
-  const isRequired = isInputRequired(callback);
-  const outputName = callback.getOutputByName('name', '');
-  const policies = callback.getPolicies();
-  const type = getInputTypeFromPolicies(policies);
-  const previousValue = callback?.getInputValue() as string;
-  const textInputLabel = callback.getPrompt();
-  const validationFailure = getAttributeValidationFailureText(callback);
+  let inputName = callback?.payload?.input?.[0].name || `string-attr-${idx}`;
+  let isRequired = isInputRequired(callback);
+  let outputName = callback.getOutputByName('name', '');
+  let policies = callback.getPolicies();
+  let type = getInputTypeFromPolicies(policies);
+  let previousValue = callback?.getInputValue() as string;
+  let textInputLabel = callback.getPrompt();
+  let validationFailure = getAttributeValidationFailureText(callback);
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -35,10 +36,21 @@
      *********************************************************************** */
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
+
+  $: {
+    isRequired = isInputRequired(callback);
+    outputName = callback.getOutputByName('name', '');
+    policies = callback.getPolicies();
+    type = getInputTypeFromPolicies(policies);
+    previousValue = callback?.getInputValue() as string;
+    textInputLabel = callback.getPrompt();
+    validationFailure = getAttributeValidationFailureText(callback);
+  }
 </script>
 
 <Input
   errorMessage={validationFailure}
+  {firstInvalidInput}
   key={inputName}
   label={interpolate(outputName, null, textInputLabel)}
   onChange={setValue}

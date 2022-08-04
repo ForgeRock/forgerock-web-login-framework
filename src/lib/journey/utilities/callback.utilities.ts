@@ -12,10 +12,23 @@ type RequiredCallbacks =
   | ValidatedCreatePasswordCallback
   | ValidatedCreateUsernameCallback;
 
+export function convertStringToKey(string?: string | null): string {
+  if (!string) {
+    return '';
+  }
+
+  const replaceFunction = (_: string, char: string): string => `${char.toLowerCase()}`;
+  const normalizedString = string
+    .replace(/^([A-Z])/g, replaceFunction)
+    .replace(/\s([a-z])/g, (_, char) => `${char.toUpperCase()}`);
+  const key = normalizedString.replace(/\W/g, '');
+  return key;
+}
+
 export function getAttributeValidationFailureText(
   callback: AttributeInputCallback<boolean | number | string>,
 ): string {
-  // TODO: Mature this utility for more better parsing and display
+  // TODO: Mature this utility for better parsing and display
   const failedPolicies = callback.getFailedPolicies && callback.getFailedPolicies();
   return failedPolicies.reduce((prev, curr) => {
     switch (curr.policyRequirement) {
@@ -30,8 +43,18 @@ interface StringDict<T> {
   [name: string]: T;
 }
 
+interface Policies {
+  policyRequirements: string[];
+}
 export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email' | 'text' {
-  const reqs = policies?.policyRequirements;
+  const value = policies?.value as Policies;
+
+  if (typeof value !== 'object') {
+    return 'text';
+  }
+
+  const reqs = value?.policyRequirements;
+
   let hasEmailReq = false;
   if (Array.isArray(reqs)) {
     hasEmailReq = reqs.includes('VALID_EMAIL_ADDRESS_FORMAT');
@@ -73,6 +96,15 @@ export function getUsernameValidationFailureText(
   const parsedPolicies = parseFailedPolicies(failedPolicies, label);
   return parsedPolicies.reduce((prev, curr) => {
     switch (curr?.policyRequirement) {
+      case 'MAX_LENGTH':
+        prev = `${prev}`;
+        break;
+      case 'MIN_LENGTH':
+        prev = `${prev}`;
+        break;
+      case 'REQUIRED':
+        prev = `${prev}${interpolate('requiredField')}`;
+        break;
       case 'VALID_USERNAME':
         prev = `${prev}${interpolate('chooseDifferentUsername')} `;
         break;

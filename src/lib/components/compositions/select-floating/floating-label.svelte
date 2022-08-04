@@ -5,12 +5,13 @@
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let defaultOption: number | null = null;
   export let errorMessage = '';
+  export let firstInvalidInput: boolean;
   export let isRequired: boolean;
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
-  export let options: { value: number | null; text: string }[];
+  export let options: { value: string | null; text: string }[];
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {
@@ -27,6 +28,7 @@
 <div class={`tw_input-spacing tw_relative`}>
   <Select
     {defaultOption}
+    {firstInvalidInput}
     {isRequired}
     {isInvalid}
     {key}

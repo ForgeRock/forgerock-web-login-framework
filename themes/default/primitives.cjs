@@ -3,6 +3,111 @@ const colorLib = require('color');
 module.exports = function(theme) {
   return {
     /**
+     * Alert
+     */
+    '.alert': {
+      backgroundColor: theme('colors.background.light'),
+      borderColor: colorLib(theme('colors.background.light')).darken(0.1).toString(),
+      borderRadius: theme('borderRadius.DEFAULT'),
+      borderWidth: '1px',
+      color: theme('colors.black'),
+      marginBottom: theme('spacing.6'),
+      padding: theme('spacing.4'),
+
+      '&:focus': {
+        borderRadius: theme('borderRadius.DEFAULT'),
+        outlineColor: colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString(),
+        outlineOffset: '2px',
+        outlineStyle: 'solid',
+        outlineWidth: '3px',
+      },
+    },
+    '.alert_dark': {
+      backgroundColor: theme('colors.background.dark'),
+      borderColor: theme('colors.black'),
+      color: theme('colors.white'),
+
+      '&:focus': {
+        outlineColor: colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.1).toString(),
+      },
+      '& svg': {
+        color: theme('colors.white'),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-error': {
+      backgroundColor: theme('colors.error.light'),
+      borderColor: theme('colors.error.dark'),
+
+      '& svg': {
+        color: theme('colors.error.dark'),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-error_dark': {
+      backgroundColor: theme('colors.error.dark'),
+      borderColor: colorLib(theme('colors.error.dark')).darken(0.2).toString(),
+
+      '& svg': {
+        color: theme('colors.error.light'),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-info': {
+      backgroundColor: colorLib(theme('colors.primary.light')).lighten(0.9).toString(),
+      borderColor: theme('colors.primary.light'),
+
+      '& svg': {
+        color: theme('colors.primary.dark'),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-info_dark': {
+      backgroundColor: colorLib(theme('colors.primary.light')).darken(0.4).toString(),
+      borderColor: colorLib(theme('colors.primary.dark')).darken(0.2).toString(),
+
+      '& svg': {
+        color: colorLib(theme('colors.primary.light')).lighten(0.9).toString(),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-success': {
+      backgroundColor: theme('colors.success.light'),
+      borderColor: theme('colors.success.dark'),
+
+      '& svg': {
+        color: theme('colors.success.dark'),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-success_dark': {
+      backgroundColor: theme('colors.success.dark'),
+      borderColor: colorLib(theme('colors.success.dark')).darken(0.2).toString(),
+
+      '& svg': {
+        color: theme('colors.success.light'),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-warning': {
+      backgroundColor: theme('colors.warning.light'),
+      borderColor: theme('colors.warning.dark'),
+
+      '& svg': {
+        color: theme('colors.warning.dark'),
+        fill: 'currentColor',
+      }
+    },
+    '.alert-warning_dark': {
+      backgroundColor: theme('colors.warning.dark'),
+      borderColor: colorLib(theme('colors.warning.dark')).darken(0.2).toString(),
+
+      '& svg': {
+        color: theme('colors.warning.light'),
+        fill: 'currentColor',
+      }
+    },
+    /**
      * Button primitive theme settings
      */
     '.button-base': {
@@ -95,6 +200,10 @@ module.exports = function(theme) {
       '& ~ span > .input-error-message': {
         display: 'none',
       },
+
+      '& ~ * > p': {
+        display: 'none',
+      },
       '&[aria-invalid="true"]': {
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
@@ -103,7 +212,7 @@ module.exports = function(theme) {
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
-      '&[aria-invalid="true"] ~ span > .input-error-message': {
+      '&[aria-invalid="true"] ~ * > p': {
         display: 'block',
       },
       '&[aria-invalid="true"] ~ button': {
@@ -140,7 +249,7 @@ module.exports = function(theme) {
       lineHeight: theme('spacing.6'),
       padding: theme('spacing.3'),
 
-      '&:hover,': {
+      '&:hover': {
         backgroundColor: theme('colors.background.light'),
       },
       '&:focus': {
@@ -218,6 +327,13 @@ module.exports = function(theme) {
     },
     '.input-label_dark': {
       color: theme('colors.secondary.light'),
+
+      ':where(input:autofill) + &': {
+        color: theme('colors.secondary.dark'),
+      },
+      ':where(input:autofill) + &': {
+        color: theme('colors.secondary.dark'),
+      },
     },
 
     '.link': {

@@ -17,8 +17,8 @@ module.exports = {
       light: colors.slate[700],
     },
     error: {
-      dark: colors.red[600],
-      light: colors.red[400],
+      dark: colors.red[800],
+      light: colors.red[200],
     },
     primary: {
       dark: colors.slate[700],
@@ -38,12 +38,12 @@ module.exports = {
       light: colors.gray[300],
     },
     success: {
-      dark: colors.green[700],
-      light: colors.green[400],
+      dark: colors.green[800],
+      light: colors.green[200],
     },
     warning: {
-      dark: colors.yellow[700],
-      light: colors.yellow[400],
+      dark: colors.yellow[800],
+      light: colors.yellow[200],
     },
   },
   fontFamily: {

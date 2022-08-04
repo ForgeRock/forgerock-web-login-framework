@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 import * as fallback from '$locales/us/en/index.json';
 
-const stringsSchema = z.object({
+export const stringsSchema = z.object({
   alreadyHaveAnAccount: z.string(),
   dontHaveAnAccount: z.string(),
   closeModal: z.string(),
@@ -37,7 +37,7 @@ const stringsSchema = z.object({
   ValidatedCreatePasswordCallback: z.string(),
   ValidatedCreateUsernameCallback: z.string(),
 });
-const partialStringsSchema = stringsSchema.partial();
+export const partialStringsSchema = stringsSchema.partial();
 
 // Ensure fallback follows schema
 stringsSchema.parse(fallback);
@@ -45,7 +45,7 @@ stringsSchema.parse(fallback);
 export const locale: Writable<string | null> = writable('en-US');
 export let strings: Readable<Record<string, string> | null>;
 
-export function initializeContent(userLocale?: z.infer<typeof partialStringsSchema>, partial?: boolean) {
+export function initialize(userLocale?: z.infer<typeof partialStringsSchema>, partial?: boolean) {
   if (userLocale) {
     /**
      * Only parse userLocal if NOT using partial option

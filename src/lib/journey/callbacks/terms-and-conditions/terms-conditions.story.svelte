@@ -2,15 +2,15 @@
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
   import Centered from '$components/primitives/box/centered.svelte';
-  import { initializeContent } from '$lib/locale.store';
+  import { initialize } from '$lib/locale.store';
   import Terms from './terms-conditions.svelte';
 
   export let callback: TermsAndConditionsCallback;
   export let inputName: string;
 
-  initializeContent();
+  initialize();
 </script>
 
 <Centered>
-  <Terms {callback} {inputName} />
+  <Terms {callback} idx={1} />
 </Centered>

@@ -1,13 +1,15 @@
 import {
-  UserManager, type ConfigOptions,
+  TokenManager,
+  type GetTokensOptions,
+  type OAuth2Tokens,
 } from '@forgerock/javascript-sdk';
 import { writable, type Writable } from 'svelte/store';
 
-export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
-  get: (getOptions?: ConfigOptions) => void;
+export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
+  get: (getOptions?: GetTokensOptions) => void;
   reset: () => void;
 }
-export interface UserStoreValue {
+export interface OAuthTokenStoreValue {
   completed: boolean;
   error: {
     code?: number | null;
@@ -15,11 +17,11 @@ export interface UserStoreValue {
   } | null;
   loading: boolean;
   successful: boolean;
-  response: unknown;
+  response: OAuth2Tokens | null | void;
 }
 
-export function initialize(initOptions?: ConfigOptions) {
-  const { set, subscribe }: Writable<UserStoreValue> = writable({
+export function initialize(initOptions?: GetTokensOptions) {
+  const { set, subscribe }: Writable<OAuthTokenStoreValue> = writable({
     completed: false,
     error: null,
     loading: false,
@@ -27,7 +29,7 @@ export function initialize(initOptions?: ConfigOptions) {
     response: null,
   });
 
-  async function get(getOptions?: ConfigOptions) {
+  async function get(getOptions?: GetTokensOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions
      * TODO: Does this object merge need to be more granular?
@@ -37,30 +39,33 @@ export function initialize(initOptions?: ConfigOptions) {
       ...getOptions,
     };
 
-    try {
-      const user = await UserManager.getCurrentUser(options);
+    let tokens: OAuth2Tokens | void;
 
-      set({
-        completed: true,
-        error: null,
-        loading: false,
-        successful: true,
-        response: user,
-      });
+    try {
+      tokens = await TokenManager.getTokens(options);
     } catch (err: unknown) {
-      console.error(`Get current user | ${err}`);
+      console.error(`Get tokens | ${err}`);
       if (err instanceof Error) {
         set({
           completed: true,
           error: {
-            message: err.message
+            message: err.message,
           },
           loading: false,
           successful: false,
           response: null,
         });
       }
+      return;
     }
+
+    set({
+      completed: true,
+      error: null,
+      loading: false,
+      successful: true,
+      response: tokens,
+    });
   }
 
   function reset() {
@@ -70,7 +75,7 @@ export function initialize(initOptions?: ConfigOptions) {
       loading: false,
       successful: false,
       response: null,
-    });
+    })
   }
 
   return {

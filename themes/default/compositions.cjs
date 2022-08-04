@@ -52,6 +52,15 @@ module.exports = (config, theme) => ({
   '.checkbox-input_animated': {
 
     /**
+     * Below two target error messages
+     */
+    '& ~ div > p': {
+      display: 'none',
+    },
+    '&[aria-invalid="true"] ~ div > p': {
+      display: 'block',
+    },
+    /**
      * All of the below are targeting `.animated-check` from above:
      *
      * `.checkbox-input_animated + label > span` is equal to `.animated-check`
@@ -161,6 +170,13 @@ module.exports = (config, theme) => ({
     '&:focus ~ label, &:not(:placeholder-shown) ~ label': {
       fontWeight: theme('fontWeight.medium'),
       transform: 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)',
+    },
+  },
+  '.input-floating_dark': {
+
+    ':where(&:autofill) + label': {
+      // Needed to ensure the label is readable with browser autofill's light background
+      color: `${theme('colors.secondary.dark')} !important`,
     },
   },
   '.input-floating-label': {
