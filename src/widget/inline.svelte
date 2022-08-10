@@ -151,7 +151,6 @@
 </script>
 
 <script lang="ts">
-  import { browser } from '$app/env';
   import { createEventDispatcher, onMount as s_onMount } from 'svelte';
 
   import Journey from '$journey/journey.svelte';
@@ -184,8 +183,8 @@
       // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
       realmPath: 'alpha',
       // TODO: Once we move to SSR, this default should be more intelligent
-      redirectUri: browser ? window.location.href : 'https://localhost:3000/callback',
-      scope: 'openid, email',
+      redirectUri: (typeof window === 'object') ? window.location.href : 'https://localhost:3000/callback',
+      scope: 'openid email',
       tree: 'Login',
     },
     // Let user provided config override defaults

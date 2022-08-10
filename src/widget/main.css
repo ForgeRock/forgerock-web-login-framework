@@ -26,10 +26,3 @@
   @apply tw_animate-radio;
   @apply tw_animate-squish;
 }
-
-a {
-  @apply tw_link;
-}
-:where(.tw_dark) a {
-  @apply tw_link_dark;
-}

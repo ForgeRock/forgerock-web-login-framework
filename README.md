@@ -4,6 +4,19 @@
 
 **This is a prototype of a development framework for integrating a ForgeRock Login Widget into an existing app, or running as a standalone Login App. This project is not officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with unsupported software.**
 
+## Overview
+
+This Login Widget is intended to be an all-inclusive, UI component that can be used within any modern JavaScript app for handling the default login, registration and related user flows. It can be used within a React, Vue, Angular or any other modern JavaScript framework (does not support Node.js or SSR). Although it's developed with Svelte and Tailwind, it has no runtime dependencies and is library and framework agnostic.
+
+This Widget can be used in two different ways (or "form factors"):
+
+1. Modal component: this renders the form elements inside a modal dialog that can be opened and closed. This component is mounted outside of your app's controlled DOM.
+2. Inline component: this is just the form elements themselves, no container. This component is intended to be rendered inside your app's controlled DOM.
+
+Both components provides the same authentication, token and user features. The only difference is how the component is rendered.
+
+The Modal component is recommended as it provides the quickest development experience for providing login and registration flows into your app with the least disruption to your codebase. The Inline component allows you to render the resulting form inside your app in whatever way is best for you, but there are some caveats to understand. These will be discussed below in the [Inline section](#using-the-inline-component).
+
 ## Technical Requirements
 
 1. Node.js v16 or higher
@@ -25,28 +38,53 @@ This will install all the necessary dependencies, build the project and run it i
 
 ## Quick Start: Using the Widget in Your App
 
-Note: This project is currently in Alpha, so this is not available via npm.
+Note: This project is currently in Alpha, so this is not available via public npm.
 
-1. `npm run install` (if not already)
-2. `npm run build:widget`
-3. `cd package`
-4. `npm link` ([See here for more on `npm link`](https://docs.npmjs.com/cli/v8/commands/npm-link))
-5. `cd` into the project you want to install the Widget
-6. `npm link forgerock-web-login-widget`
+1. `git clone https://github.com/cerebrl/forgerock-web-login-framework`
+2. `cd forgerock-web-login-framework`
+3. `npm run install`
+4. `npm run build:widget`
+5. `cd package` (this is the directory that contains the built components)
+6. `npm link` ([See here for more on `npm link`](https://docs.npmjs.com/cli/v8/commands/npm-link))
+7. `cd <your project>` (`cd` into the project you want to install the Widget)
+8. `npm link forgerock-web-login-widget`
 
-Now, you can import the Widget into your app as a modal dialog (aka "lightbox"), or as an embedded component. Once the Widget is imported, you will need to instantiate it.
+### Using the Modal component
+
+#### Add element to your HTML file
+
+We recommend you add a new element on which you will mount the Widget to your static HTML file. For most SPAs (Single Page Applications), this will be your `index.html`. This new element should be a direct child element of the body, and not without the element you mount your SPA.
+
+Example:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- ... -->
+  </head>
+  <body>
+    <!-- Root element for main app -->
+    <div id="login-widget"></div>
+    <!-- Scripts -->
+  </body>
+</html>
+```
+
+NOTE: We do not recommend injecting the element on which you will mount the widget within your main application. This can cause Virtual DOM issues, so manually adding it within your static HTML file is best.
+
+#### Instantiate the Widget (Modal)
+
+Now, you can import the Widget into your app wherever you would like as a modal dialog (aka "lightbox"), or as an embedded component. Once the Widget is imported, you will need to instantiate it.
 
 ```js
 // As modal dialog
 import Widget from 'forgerock-web-login-widget/modal';
 
-// OR, as embedded
-import Widget from 'forgerock-web-login-widget/inline';
-
 // ...
 
 new Widget({
-  target: document.getElementById('login-widget'), // Any existing element in the DOM
+  target: document.getElementById('login-widget'), // Any existing element from static HTML file
   props: {
     config: {}, // Your JS SDK configuration; see below
   },
@@ -57,203 +95,340 @@ This mounts your Widget into the DOM. If you choose the modal version, it will b
 
 Note: [See additional documentation about configuring the JS SDK](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/).
 
-### Controlling the modal dialog
+#### Starting a journey (Modal)
+
+The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
+
+```js
+import { journey } from 'forgerock-web-login-widget/modal';
+
+// Call after instantiating the Widget
+new Widget({
+  target: document.getElementById('login-widget'), // Any existing element in the DOM
+  props: {
+    config: {}, // Your JS SDK configuration; see below
+  },
+});
+journey.start();
+
+// OR, call on button click
+buttonElement.addEventListener('click', (event) => {
+  journey.start();
+});
+```
+
+This `journey.start` method can be called anywhere in your application, or anytime as long as it's _after_ the Widget being mounted to the DOM.
+
+#### Listening for journey completion (Modal)
+
+Use the `journey.onSuccess` method to know when a user has completed their journey. Pass a callback function into this method to run when the journey successfully completes.
+
+```js
+journey.onSuccess((response) => {
+  console.log(response);
+});
+```
+
+And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation. For more about Widget events, [see the Widget Events section](#widget-events).
+
+#### Controlling the modal dialog
 
 To show the modal, you will need to import the `modal` object, and use the `modal.open` method. It's common to execute this within a button's click handler.
 
 ```js
-import Widget, { modal } from 'forgerock-web-login-widget/modal';
+import { modal } from 'forgerock-web-login-widget/modal';
 
 // ...
 
 const loginButton = document.getElementById('loginButton');
-loginButton.addEventListener('click', () => { modal.open() });
+loginButton.addEventListener('click', () => {
+  modal.open();
+});
 ```
 
 Opening the modal will display the Widget in a "Lightbox" or modal dialog and make a request to your ID Cloud (or AM) instance. When the Widget gets the response, it will display the required fields for authenticating the user. When the user successfully authenticates, the modal will close itself. If you'd like to close the widget programmatically, you can call the `modal.close` method.
 
-## Widget Events
+### Using the Inline component
 
-To be notified of a successful authentication, you'll need to import another object and use a function to listen for the success and failure event:
+#### Element for mounting
+
+The Widget requires a real DOM element to mount, and since the Inline component will be mounted within your application's controlled DOM, it's important to understand the lifecycle of how your framework mounts elements to the DOM.  React, for example, uses the Virtual DOM, and the Inline component cannot mount to a Virtual DOM element. So, you will need to wait until the element has been property mounted to the real DOM before instantiating the Widget.
+
+#### Instantiate the Widget (Inline)
+
+Now, import the Widget where you'd like to mount it. In whatever way your framework requires, provide a reference to the element mounted in the actual DOM as the target of the Widget instantiation.
 
 ```js
-import Widget { modal, journey } from 'forgerock-web-login-widget/modal';
+// As modal dialog
+import Widget from 'forgerock-web-login-widget/inline';
 
 // ...
 
-journey.onSuccess((userData) => { console.log(userData) });
-journey.onFailure((error) => { console.log(error) });
+new Widget({
+  target: actualDomElement, // ensure this is a reference to a real DOM element
+  props: {
+    config: {}, // Your JS SDK configuration; see below
+  },
+});
 ```
 
-And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation.
+This mounts your Widget into the DOM. If you choose the modal version, it will be hidden at first.
 
-## Complete Widget API: Modal
+Note: [See additional documentation about configuring the JS SDK](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/).
 
-### Recommended: "singleton" methods to modal controls and form events
+#### Starting a journey (Inline)
 
-This is the recommended method for controlling your widget. If you have multiple instances of the Widget within your DOM, you'll need to use the "instance" methods listed below.
+The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
 
 ```js
-// Import Widget and additional "singletons" for modal and user management
-import Widget, { journey, modal, user } from 'forgerock-web-login-widget/modal';
+import { journey } from 'forgerock-web-login-widget/inline';
 
-// ...
+// Call after instantiating the Widget
+new Widget({
+  target: actualDomElement, // ensure this is a reference to a real DOM element
+  props: {
+    config: {}, // Your JS SDK configuration; see below
+  },
+});
+journey.start();
 
-// Mount the widget to the DOM
-const loginWidget = new Widget({ target, config });
+// OR, call on button click
+buttonElement.addEventListener('click', (event) => {
+  journey.start();
+});
+```
+
+This `journey.start` method can be called anywhere in your application, or anytime as long as it's _after_ the Widget being mounted to the DOM.
+
+#### Listening for journey completion (Inline)
+
+Use the `journey.onSuccess` method to know when a user has completed their journey. Pass a callback function into this method to run when the journey successfully completes.
+
+```js
+journey.onSuccess((response) => {
+  console.log(response);
+});
+```
+
+And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation. For more about Widget events, [see the Widget Events section](#widget-events).
+
+## Complete Widget API
+
+The Widget comes with methods and event handlers used to control the lifecycle of user journeys/authentication.
+
+### Widget
+
+```js
+// As modal dialog
+import Widget from 'forgerock-web-login-widget/modal';
+
+// OR, as embedded
+import Widget from 'forgerock-web-login-widget/inline';
+
+// Instantiate Widget
+const widget = new Widget({
+  target: document.getElementById('widget-mount'), // REQUIRED; Element available in DOM
+  props: {
+    /**
+     * REQUIRED; SDK configuration object
+     */
+    config: {
+      serverConfig: {
+        baseUrl: 'https://customer.forgeblocks.com/am', // REQUIRED; URL to ForgeRock AM
+      },
+
+      /**
+       * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+       * Remaining config is optional with fallback values shown
+       */
+      clientId: 'WebLoginWidgetClient', // OPTIONAL; Uses 'WebLoginWidgetClient', if not provided
+      realmPath: 'alpha', // OPTIONAL; Uses 'alpha', if not provided
+      redirectUri: window.location.href, // OPTIONAL; falls back to `window.location.href`
+      scope: 'openid email', // OPTIONAL; falls back to minimal 'openid email'
+      tree: 'Login', // OPTIONAL; falls back to default Login journey provided in ForgeRock
+    },
+
+    /**
+     * OPTIONAL; See below for the content object schema
+     */
+    content: {},
+  },
+});
+
+// OPTIONAL; Remove widget from DOM and destroy all listeners
+widget.$destroy();
+```
+
+NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/), or you can [see our API docs for more developer detail](https://sdks.forgerock.com/javascript/api-reference-core/interfaces/configoptions.html).
+
+NOTE: For content schema, please [use the example en-US locale file](/src/locales/us/en/index.json).
+
+### Journey
+
+The `journey` object:
+
+```js
+import { journey } from 'forgerock-web-login-widget/modal';
+// OR, import { journey } from 'forgerock-web-login-widget/inline';
+
+// Call to start the journey
+// Optional config can be passed in, see below for more details
+journey.start();
 
 // Listeners for journey events
-journey.onSuccess((userDataObject) => { /* Run anything you want */ });
-journey.onFailure((errorObject) => { /* Run anything you want */ });
+// See below for more details on `response`
+journey.onSuccess((response) => {
+  /* Run anything you want */
+});
+journey.onFailure((error) => {
+  /* Run anything you want */
+});
+```
 
-// Programmatically control the modal
+NOTE: Optional `start` config:
+
+```js
+journey.start({
+  config: undefined, // OPTIONAL; defaults to undefined, mechanism to override base SDK config object
+  oauth: true, // OPTIONAL; defaults to true and returns OAuth tokens
+  user: true, // OPTIONAL; default to true and returns user information
+});
+```
+
+NOTE: Schema for `response`
+
+```js
+// response
+{
+  journey: {
+    completed: false, // boolean
+    error: null, // null or object with `code`, `message` and `step` that failed
+    loading: false, // boolean
+    step: null, // null or object with the last step object from ForgeRock AM
+    successful: false, // boolean
+    response: null, // null or object, if successful, it will contain the success response from AM
+  },
+  oauth: {
+    completed: false, // boolean
+    error: null, // null or object with `code` and `message` properties
+    loading: false, // boolean
+    successful: false, // boolean
+    response: null, // null or object with OAuth/OIDC tokens
+  },
+  user: {
+    completed: false, // boolean
+    error: null, // null or object with `code` and `message` properties
+    loading: false, // boolean
+    successful: false, // boolean
+    response: null, // null or object with user information driven by OAuth scope config
+  },
+}
+```
+
+### User
+
+The `user` object:
+
+```js
+import { user } from 'forgerock-web-login-widget/modal';
+// OR, import { user } from 'forgerock-web-login-widget/inline';
+
+// Is user currently authorized
+await user.authorized(); // do they have OAuth tokens (local)?
+await user.authorized({ remote: true }); // do we have valid tokens (remote)?
+
+// Get user information
+await user.info(); // what we have locally in-memory
+await user.info({ remote: true }); // request user info from server
+
+// Log user out
+await user.logout();
+```
+
+### Request
+
+The Widget has an alias to the JavaScript SDK's `HttpClient.request`, which is a convenience wrapper around the native `fetch`. All this does is auto-inject the Access Token into the `Authorization` header and manage some of the lifecycle around the token.
+
+```js
+import { request } from 'forgerock-web-login-widget/modal';
+// OR, import { request } from 'forgerock-web-login-widget/inline';
+
+// See below for more details on the options
+request({ init: { method: 'GET' }, url: 'https://protected.resource.com' });
+```
+
+The full `options` object:
+
+```js
+{
+  bypassAuthentication: false, // Boolean; if true, Access Token is not injected into Authorization header
+  init: {
+    // Options object for `fetch` API: https://developer.mozilla.org/en-US/docs/Web/API/fetch
+  },
+  timeout: 3000, // Fetch timeout in milliseconds
+  url: 'https://protected.resource.com', // String; the URL of the resource
+
+  // Unsupported properties
+  authorization: {},
+  requiresNewToken: () => {},
+}
+```
+
+For the full type definition of this, please [view our SDK documentation](https://sdks.forgerock.com/javascript/api-reference-core/interfaces/httpclientrequestoptions.html).
+
+### Modal
+
+The named `modal` import provides controls of the modal component.
+
+```js
+import { modal } from 'forgerock-web-login-widget/modal';
+
+// Know when the modal has mounted
+modal.onMount((dialogElement, formElement) => {
+  /* Run anything you want */
+});
+
+// "Open" the modal (this implicitly calls `journey.start()`)
 modal.open();
+
+// "Close" the modal
 modal.close();
-
-// Methods for user management
-const isAuthorizedBoolean = await user.authorized();
-const userInfoObject = await user.info();
-await user.logout();
-const userTokensObject = await user.tokens();
-
-// Destroy widget when no longer needed
-loginWidget.$destroy();
 ```
 
-### Using the alternative, modal "instance" methods
+### Inline
 
-If you have more than one instance of the Widget within your DOM, you'll need to use the instance methods in order to control the right one.
+The named `form` import provides a simple `onMount` event.
 
 ```js
-// Import Widget and one user "singleton" for managing user
-import Widget, { user } from 'forgerock-web-login-widget/modal';
+import { form } from 'forgerock-web-login-widget/inline';
 
-// ...
-
-// Mount the widget to the DOM
-const loginWidget = new Widget({ target, config });
-
-// Listeners for journey events
-loginWidget.$on('journey-success', (userDataObject) => { /* Run anything you want */ };
-loginWidget.$on('journey-failure', (errorObject) => { /* Run anything you want */ };
-
-// Programmatically control the modal
-loginWidget.$set({ open: true });
-loginWidget.$set({ open: false });
-
-// Listen for modal on mount event
-loginWidget.$on('modal-mount', (modalDomElement) => { /* Run anything you want */ };
-
-// Methods for user management
-const isAuthorizedBoolean = await user.authorized();
-const userInfoObject = await user.info();
-await user.logout();
-const userTokensObject = await user.tokens();
-
-// Destroy widget when no longer needed
-loginWidget.$destroy();
+// Know when the inline form has mounted
+form.onMount((formElement) => {
+  /* Run anything you want */
+});
 ```
 
-### User Data Object
+## Future APIs (not implemented)
 
-```ts
-interface UserData {
-  info: {
-    email: string;
-    fullName: string;
-    firstName: string;
-    lastName: string;
-    sub: string;
-  };
-  tokens: {
-    accessToken: string;
-    idToken: string;
-    refreshToken: string;
-  };
-}
-```
-
-## Complete Widget API: Inline
-
-### Recommended: "singleton" methods to form events and controls
-
-This is the recommended method for controlling your widget. If you have multiple instances of the Widget within your DOM, you'll need to use the "instance" methods listed below.
+### Widget customization (future)
 
 ```js
-// Import Widget and additional "singletons" for modal and user management
-import Widget, { form, journey, user } from 'forgerock-web-login-widget/inline';
+new Widget({
+  // ... previous config properties ...
 
-// ...
-
-// Mount the widget to the DOM
-const loginWidget = new Widget({ target, config });
-
-// Listeners for journey events
-journey.onSuccess((userDataObject) => { /* Run anything you want */ });
-journey.onFailure((errorObject) => { /* Run anything you want */ });
-
-// Methods for user management
-const isAuthorizedBoolean = await user.authorized();
-const userInfoObject = await user.info();
-await user.logout();
-const userTokensObject = await user.tokens();
-
-// Destroy widget when no longer needed
-loginWidget.$destroy();
+  // All optional; default value is assigned below
+  customization: {
+    labels: 'floating', // "floating" or "stacked"
+    modalBackdrop: true, // boolean; display modal backdrop
+    modalAutoClose: true, // boolean; automatically close modal on success
+  },
+});
 ```
 
-### Using the alternative, form "instance" methods
-
-If you have more than one instance of the Widget within your DOM, you'll need to use the instance methods in order to control the right one.
+### Additional modal events (future)
 
 ```js
-// Import Widget and one user "singleton" for managing user
-import Widget, { user } from 'forgerock-web-login-widget/inline';
-
-// ...
-
-// Mount the widget to the DOM
-const loginWidget = new Widget({ target, config });
-
-// Listeners for journey events
-loginWidget.$on('journey-success', (userDataObject) => { /* Run anything you want */ };
-loginWidget.$on('journey-failure', (errorObject) => { /* Run anything you want */ };
-
-// Methods for user management
-const isAuthorizedBoolean = await user.authorized();
-const userInfoObject = await user.info();
-await user.logout();
-const userTokensObject = await user.tokens();
-
-// Destroy widget when no longer needed
-loginWidget.$destroy();
-```
-
-### User Data Object
-
-```ts
-interface UserData {
-  info: {
-    email: string;
-    fullName: string;
-    firstName: string;
-    lastName: string;
-    sub: string;
-  };
-  tokens: {
-    accessToken: string;
-    idToken: string;
-    refreshToken: string;
-  };
-}
-```
-
-## Accessing the Underlying SDK
-
-If you need access to the JavaScript SDK for lower-level functionality, you can import it like this:
-
-```js
-import SDK from `forgerock-web-login-widget/sdk`;
+modal.onClose((event) => { /* anything you want */ });
 ```
 
 ## Disclaimer

@@ -10,6 +10,7 @@
     type ConfigOptions,
   } from '@forgerock/javascript-sdk';
   import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+  import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';
   import { get } from 'svelte/store';
 
   // Import store types
@@ -139,12 +140,14 @@
     },
     open(): void {
       if (!get(journeyStore).step) {
-        journeyStore.next();
+        journey.start();
       }
       dialogEl.showModal();
     },
   };
-  export const request = HttpClient.request;
+  export const request = async (options: HttpClientRequestOptions) => {
+    return await HttpClient.request(options);
+  }
   export const user = {
     async authorized(remote = false) {
       if (remote) {
@@ -187,7 +190,6 @@
 </script>
 
 <script lang="ts">
-  import { browser } from '$app/env';
   import type { z } from 'zod';
 
   import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
@@ -228,8 +230,8 @@
       // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
       realmPath: 'alpha',
       // TODO: Once we move to SSR, this default should be more intelligent
-      redirectUri: browser ? window.location.href : 'https://localhost:3000/callback',
-      scope: 'openid, email',
+      redirectUri: (typeof window === 'object') ? window.location.href : 'https://localhost:3000/callback',
+      scope: 'openid email',
       tree: 'Login',
     },
     // Let user provided config override defaults
