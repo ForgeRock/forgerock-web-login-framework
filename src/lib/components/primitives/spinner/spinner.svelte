@@ -1,5 +1,5 @@
 <script lang="ts">
-  import T from '$components/i18n/index.svelte';
+  import T from '$components/i18n/locale-strings.svelte';
 
   export let colorClass: string;
   export let layoutClasses: string;

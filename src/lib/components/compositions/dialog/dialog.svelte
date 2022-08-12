@@ -1,5 +1,5 @@
 <script lang="ts">
-  import T from '$components/i18n/index.svelte';
+  import T from '$components/i18n/locale-strings.svelte';
   import XIcon from '../../icons/x-icon.svelte';
 
   export let dialogEl: HTMLDialogElement | null = null;

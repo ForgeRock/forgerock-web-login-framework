@@ -1,34 +1,65 @@
 # ForgeRock Web Login Framework
 
-## Warning: Vaporware
+## WARNING: VAPORWARE
 
 **This is a prototype of a development framework for integrating a ForgeRock Login Widget into an existing app, or running as a standalone Login App. This project is not officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with unsupported software.**
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Quick Start: Local Development](#quick-start-local-development)
+  - [Technical requirements](#technical-requirements)
+  - [Knowledge requirements](#knowledge-requirements)
+  - [Instal, build & run](#instal-build--run)
+- [Quick Start: Using the Widget in Your App](#quick-start-using-the-widget-in-your-app)
+  - [Using the Modal component](#using-the-modal-component)
+  - [Using the Inline component](#using-the-inline-component)
+- [Complete Widget API](#complete-widget-api)
+  - [Widget](#widget)
+  - [Journey](#journey)
+  - [User](#user)
+  - [Request](#request)
+  - [Modal](#modal)
+  - [Inline](#inline)
+- [Future APIs (not implemented)](#future-apis-not-implemented)
+  - [Currently unsupported](#currently-unsupported)
+  - [Widget customization (future)](#widget-customization-future)
+  - [Additional modal events (future)](#additional-modal-events-future)
+- [Disclaimer](#disclaimer)
+- [License](#license)
+
 ## Overview
 
-This Login Widget is intended to be an all-inclusive, UI component that can be used within any modern JavaScript app for handling the default login, registration and related user flows. It can be used within a React, Vue, Angular or any other modern JavaScript framework (does not support Node.js or SSR). Although it's developed with Svelte and Tailwind, it has no runtime dependencies and is library and framework agnostic.
+This Login Widget is intended to be an all-inclusive, UI component that can be used within any modern JavaScript app for handling the default login, registration and related user flows. It can be used within a React, Vue, Angular or any other modern JavaScript framework (does not currently support Node.js or server-rendering (SSR)).
+
+This Widget uses the ForgeRock JavaScript SDK internally. It adds a UI rendering layer on top of the SDK to help eliminate the need to develop and maintain the UI components necessary for providing complex authentication flows. Although this rendering layer is developed with Svelte and Tailwind, it is "compiled away" and has no runtime dependencies. It is library and framework agnostic.
 
 This Widget can be used in two different ways (or "form factors"):
 
 1. Modal component: this renders the form elements inside a modal dialog that can be opened and closed. This component is mounted outside of your app's controlled DOM.
 2. Inline component: this is just the form elements themselves, no container. This component is intended to be rendered inside your app's controlled DOM.
 
-Both components provides the same authentication, token and user features. The only difference is how the component is rendered.
+Both components provide the same authentication, token and user features. The only difference is how the component is rendered within your app.
 
-The Modal component is recommended as it provides the quickest development experience for providing login and registration flows into your app with the least disruption to your codebase. The Inline component allows you to render the resulting form inside your app in whatever way is best for you, but there are some caveats to understand. These will be discussed below in the [Inline section](#using-the-inline-component).
+The Modal component is recommended as it provides the quickest development experience for providing login and registration flows into your app with the least disruption to your codebase. The Modal will be controlled within your app, but rendered in its own DOM and visual layer.
 
-## Technical Requirements
+The Inline component, on the other hand, allows you to render the resulting form within your app's controlled DOM and visual layer (rather than on top of it) in whatever way is best for you, but there are some caveats to understand. These will be discussed below in the [Inline section](#using-the-inline-component).
+
+## Quick Start: Local Development
+
+### Technical requirements
 
 1. Node.js v16 or higher
 2. npm v8 or higher
 
-## Knowledge Requirements
+### Knowledge requirements
 
 1. JavaScript & TypeScript
 2. Svelte
-3. ES Modules
+3. Tailwind
+4. ES Modules
 
-## Quick Start: Local Development
+### Instal, build & run
 
 1. `npm run install` (or simply `npm i`)
 2. `npm run build`
@@ -152,7 +183,7 @@ Opening the modal will display the Widget in a "Lightbox" or modal dialog and ma
 
 #### Element for mounting
 
-The Widget requires a real DOM element to mount, and since the Inline component will be mounted within your application's controlled DOM, it's important to understand the lifecycle of how your framework mounts elements to the DOM.  React, for example, uses the Virtual DOM, and the Inline component cannot mount to a Virtual DOM element. So, you will need to wait until the element has been property mounted to the real DOM before instantiating the Widget.
+The Widget requires a real DOM element to mount, and since the Inline component will be mounted within your application's controlled DOM, it's important to understand the lifecycle of how your framework mounts elements to the DOM. React, for example, uses the Virtual DOM, and the Inline component cannot mount to a Virtual DOM element. So, you will need to wait until the element has been property mounted to the real DOM before instantiating the Widget.
 
 #### Instantiate the Widget (Inline)
 
@@ -395,6 +426,8 @@ modal.open();
 modal.close();
 ```
 
+It's worth noting that if the Widget has already mounted before the `onMount` statement, it will never run. It won't retroactively run the callback function.
+
 ### Inline
 
 The named `form` import provides a simple `onMount` event.
@@ -408,7 +441,22 @@ form.onMount((formElement) => {
 });
 ```
 
+It's worth noting that if the Widget has already mounted before the `onMount` statement, it will never run. It won't retroactively run the callback function.
+
 ## Future APIs (not implemented)
+
+### Currently unsupported
+
+1. WebAuthn
+2. Push Authentication
+3. Recaptcha
+4. QR Codes
+5. TextOutputCallback with scripts
+6. Device Profile
+7. Email Suspend (Forgot Password/Username flows)
+8. Social Login
+9. Central Login
+10. SAML
 
 ### Widget customization (future)
 
@@ -428,7 +476,9 @@ new Widget({
 ### Additional modal events (future)
 
 ```js
-modal.onClose((event) => { /* anything you want */ });
+modal.onClose((event) => {
+  /* anything you want */
+});
 ```
 
 ## Disclaimer

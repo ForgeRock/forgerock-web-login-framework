@@ -1,7 +1,7 @@
 <script lang="ts">
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import T from '$components/i18n/index.svelte';
+  import T from '$components/i18n/locale-strings.svelte';
   import type { JourneyStore } from '$journey/journey.store';
   import { mapStepToStage } from '$journey/utilities/map-stage.utilities';
 

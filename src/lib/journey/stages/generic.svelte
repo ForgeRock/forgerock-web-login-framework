@@ -3,7 +3,7 @@
 
   // i18n
   import { interpolate } from '$lib/utilities/i18n.utilities';
-  import T from '$components/i18n/index.svelte';
+  import T from '$components/i18n/locale-strings.svelte';
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
@@ -12,6 +12,7 @@
   import Form from '$components/primitives/form/form.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
+  import Sanitize from '$components/i18n/server-strings.svelte';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
@@ -47,11 +48,11 @@
   {:else if step.type === 'Step'}
     <h1 class="tw_primary-header dark:tw_primary-header_dark">
       <!-- TODO: Needs localization strategy -->
-      {step.getHeader() || ''}
+      <Sanitize html={true} string={step.getHeader() || ''} />
     </h1>
     <p class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
       <!-- TODO: Needs localization strategy -->
-      {step.getDescription() || ''}
+      <Sanitize html={true} string={step.getDescription() || ''} />
     </p>
     {#if failureMessage}
       <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>

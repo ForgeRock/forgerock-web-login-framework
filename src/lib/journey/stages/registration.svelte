@@ -3,7 +3,7 @@
 
   // i18n
   import { interpolate } from '$lib/utilities/i18n.utilities';
-  import T from '$components/i18n/index.svelte';
+  import T from '$components/i18n/locale-strings.svelte';
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
