@@ -36,7 +36,7 @@
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
           },
           realmPath: 'alpha',
-          tree: 'Login',
+          tree: 'Registration',
         },
         content,
       },

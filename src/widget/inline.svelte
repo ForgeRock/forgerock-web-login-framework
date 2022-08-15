@@ -37,7 +37,7 @@
       let oauth: OAuthTokenStoreValue;
       let journeyStoreUnsub = journeyStore.subscribe((response) => {
         if (!requestsOauth && response.successful) {
-          returnResponse({
+          returnResponse && returnResponse({
             journey: response,
           });
         } else if (requestsOauth && response.successful) {
@@ -45,7 +45,7 @@
           oauthStore.get({ forceRenew: true });
         } else if (response.error) {
           journey = response;
-          returnError({
+          returnError && returnError({
             journey: response,
           });
         }
@@ -56,7 +56,7 @@
       });
       let oauthStoreUnsub = oauthStore.subscribe((response) => {
         if (!requestsUser && response.successful) {
-          returnResponse({
+          returnResponse && returnResponse({
             journey,
             oauth: response,
           });
@@ -65,7 +65,7 @@
           userStore.get();
         } else if (response.error) {
           oauth = response;
-          returnError({
+          returnError && returnError({
             journey,
             oauth: response,
           });
@@ -77,13 +77,13 @@
       });
       let userStoreUnsub = userStore.subscribe((response) => {
         if (response.successful) {
-          returnResponse({
+          returnResponse && returnResponse({
             journey,
             oauth,
             user: response,
           });
         } else if (response.error) {
-          returnError({
+          returnError && returnError({
             journey,
             oauth,
             user: response,

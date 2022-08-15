@@ -34,6 +34,7 @@
   let dialogComp: SvelteComponent;
   let dialogEl: HTMLDialogElement;
   let callMounted: (dialog: HTMLDialogElement, form: HTMLFormElement) => void;
+  let closeCallback: (arg: { reason: 'auto' | 'external' | 'user' }) => void;
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let returnError: (response: Response) => void;
@@ -49,18 +50,20 @@
       let oauth: OAuthTokenStoreValue;
       let journeyStoreUnsub = journeyStore.subscribe((response) => {
         if (!requestsOauth && response.successful) {
-          returnResponse({
-            journey: response,
-          });
-          modal.close();
+          returnResponse &&
+            returnResponse({
+              journey: response,
+            });
+          modal.close({ reason: 'auto' });
         } else if (requestsOauth && response.successful) {
           journey = response;
           oauthStore.get({ forceRenew: true });
         } else if (response.error) {
           journey = response;
-          returnError({
-            journey: response,
-          });
+          returnError &&
+            returnError({
+              journey: response,
+            });
         }
         /**
          * Clean up unneeded subscription, but only when it's successful
@@ -73,20 +76,22 @@
       });
       let oauthStoreUnsub = oauthStore.subscribe((response) => {
         if (!requestsUser && response.successful) {
-          returnResponse({
-            journey,
-            oauth: response,
-          });
-          modal.close();
+          returnResponse &&
+            returnResponse({
+              journey,
+              oauth: response,
+            });
+          modal.close({ reason: 'auto' });
         } else if (requestsUser && response.successful) {
           oauth = response;
           userStore.get();
         } else if (response.error) {
           oauth = response;
-          returnError({
-            journey,
-            oauth: response,
-          });
+          returnError &&
+            returnError({
+              journey,
+              oauth: response,
+            });
         }
         /**
          * Clean up unneeded subscription, but only when it's successful
@@ -99,18 +104,20 @@
       });
       let userStoreUnsub = userStore.subscribe((response) => {
         if (response.successful) {
-          returnResponse({
-            journey,
-            oauth,
-            user: response,
-          });
-          modal.close();
+          returnResponse &&
+            returnResponse({
+              journey,
+              oauth,
+              user: response,
+            });
+          modal.close({ reason: 'auto' });
         } else if (response.error) {
-          returnError({
-            journey,
-            oauth,
-            user: response,
-          });
+          returnError &&
+            returnError({
+              journey,
+              oauth,
+              user: response,
+            });
         }
         /**
          * Clean up unneeded subscription, but only when it's successful
@@ -125,18 +132,21 @@
       journeyStore.next();
     },
     onFailure(fn: (response: Response) => void) {
-      returnError = (response: Response) => fn(response);
+      returnError = (response) => fn(response);
     },
     onSuccess(fn: (response: Response) => void) {
-      returnResponse = (response: Response) => fn(response);
+      returnResponse = (response) => fn(response);
     },
   };
   export const modal = {
-    close() {
-      dialogComp.closeDialog();
+    close(args?: { reason: 'auto' | 'external' | 'user' }) {
+      dialogComp.closeDialog(args);
+    },
+    onClose(fn: (args: { reason: 'auto' | 'external' | 'user' }) => void) {
+      closeCallback = (args) => fn(args);
     },
     onMount(fn: (dialog: HTMLDialogElement, form: HTMLFormElement) => void) {
-      callMounted = (dialog: HTMLDialogElement, form: HTMLFormElement) => fn(dialog, form);
+      callMounted = (dialog, form) => fn(dialog, form);
     },
     open(): void {
       if (!get(journeyStore).step) {
@@ -147,7 +157,7 @@
   };
   export const request = async (options: HttpClientRequestOptions) => {
     return await HttpClient.request(options);
-  }
+  };
   export const user = {
     async authorized(remote = false) {
       if (remote) {
@@ -212,6 +222,9 @@
 
   const dispatch = createEventDispatcher();
 
+  // Refernce to the closeCallback from the above module context
+  let _closeCallback = closeCallback;
+
   // Variables that reference the Svelte component and the DOM element
   // Variables with `_` reference points to the same variables from the `context="module"`
   let _dialogComp: SvelteComponent;
@@ -230,7 +243,8 @@
       // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
       realmPath: 'alpha',
       // TODO: Once we move to SSR, this default should be more intelligent
-      redirectUri: (typeof window === 'object') ? window.location.href : 'https://localhost:3000/callback',
+      redirectUri:
+        typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
       scope: 'openid email',
       tree: 'Login',
     },
@@ -273,7 +287,12 @@
 </script>
 
 <div class="fr_widget-root">
-  <Dialog bind:dialogEl={_dialogEl} bind:this={_dialogComp} dialogId="sampleDialog">
+  <Dialog
+    bind:dialogEl={_dialogEl}
+    bind:this={_dialogComp}
+    closeCallback={_closeCallback}
+    dialogId="sampleDialog"
+  >
     <Journey bind:formEl journeyStore={_journeyStore} />
   </Dialog>
 </div>

@@ -2,15 +2,24 @@
   import T from '$components/i18n/locale-strings.svelte';
   import XIcon from '../../icons/x-icon.svelte';
 
+  export let closeCallback: (args: { reason: 'auto' | 'external' | 'user' }) => void;
   export let dialogEl: HTMLDialogElement | null = null;
   export let dialogId: string;
 
-  export function closeDialog() {
+  interface CloseOptions {
+    reason: 'auto' | 'external' | 'user';
+  }
+
+  export function closeDialog(args?: CloseOptions) {
+    const { reason } = args || { reason: 'external' };
     dialogEl?.addEventListener(
       'animationend',
       () => {
         dialogEl?.close();
         dialogEl?.classList.remove('tw_dialog-closing');
+
+        // Call dev provided callback function
+        closeCallback && closeCallback({ reason });
       },
       { once: true },
     );
@@ -28,7 +37,7 @@
   <div class="tw_w-full tw_-mt-4 tw_relative tw_text-right">
     <button
       class="tw_dialog-x tw_focusable-element dark:tw_focusable-element_dark"
-      on:click={closeDialog}
+      on:click={() => closeDialog({ reason: 'user' })}
       aria-controls={dialogId}
     >
       <XIcon

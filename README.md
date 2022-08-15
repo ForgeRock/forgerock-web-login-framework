@@ -414,6 +414,9 @@ The named `modal` import provides controls of the modal component.
 ```js
 import { modal } from 'forgerock-web-login-widget/modal';
 
+// Know when the modal auto-closes, not when the modal is
+// The property `reason` will be either "auto", "external", or "user" (see below)
+modal.onClose(({ reason }) => { /* Run anything you want */ });
 // Know when the modal has mounted
 modal.onMount((dialogElement, formElement) => {
   /* Run anything you want */
@@ -427,6 +430,12 @@ modal.close();
 ```
 
 It's worth noting that if the Widget has already mounted before the `onMount` statement, it will never run. It won't retroactively run the callback function.
+
+`onClose` and the `reason` value:
+
+1. `"user"`: user closed the dialog via UI
+2. `"auto"`: the modal was closed because user successfully authenticated
+3. `"external"`: the application itself called the `modal.close` function
 
 ### Inline
 

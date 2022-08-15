@@ -39,6 +39,10 @@ const config = {
         fs: {
           allow: ['locales', 'package'],
         },
+        watch: {
+          // Very important or HMR will go nuts on all the package/* file changes
+          ignored: ['**/package/**'],
+        }
       },
     },
   },

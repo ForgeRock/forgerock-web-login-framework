@@ -27,6 +27,10 @@
     console.log(error);
   });
 
+  modal.onClose((args: { reason: string }) =>
+    console.log(`Modal closed due to ${args && args.reason}`),
+  );
+
   onMount(async () => {
     let content;
     /**
