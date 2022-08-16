@@ -262,7 +262,7 @@
   let _oauthStore = (oauthStore = initializeOauth(config));
   let _userStore = (userStore = initializeUser(config));
 
-  initializeContent(content, true);
+  initializeContent(content);
   // TODO: Runtime customization needs further development
   // initializeStyles(customStyles);
 

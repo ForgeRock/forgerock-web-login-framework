@@ -51,7 +51,7 @@ describe('Test interpolate utility function', () => {
     closeModal: 'Close Modal',
     ensurePasswordIsMoreThan: 'Password requires more than {minLength} characters.',
     termsAndConditions: '<script>alert("pwned");<script>',
-  }, true);
+  });
 
   it('should basic string back', () => {
     const string = interpolate('closeModal');

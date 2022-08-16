@@ -3,7 +3,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get as getCookie, remove as removeCookie } from '$lib/server/sessions';
 
-export async function post(event: RequestEvent) {
+export async function POST(event: RequestEvent) {
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
   const reqCookie = Array.isArray(reqCookieUuid) && getCookie(reqCookieUuid[1]);

@@ -3,7 +3,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 import { get as getCookie } from '$lib/server/sessions';
 
-export async function get(event: RequestEvent) {
+export async function GET(event: RequestEvent) {
   // console.log('Start authorization call');
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);

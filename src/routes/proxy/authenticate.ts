@@ -3,7 +3,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get, set } from '$lib/server/sessions';
 
-export async function post(event: RequestEvent) {
+export async function POST(event: RequestEvent) {
   const bodyStream = event?.request?.body;
   const body = bodyStream?.getReader().read();
   let cookieUuid = '';

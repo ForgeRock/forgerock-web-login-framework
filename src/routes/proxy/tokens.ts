@@ -2,7 +2,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 
-export async function post(event: RequestEvent) {
+export async function POST(event: RequestEvent) {
   const bodyStream = event?.request?.body;
   const body = bodyStream?.getReader().read();
 
