@@ -18,8 +18,8 @@ export async function GET(event: RequestEvent) {
       method: 'GET',
       headers: {
         cookie: reqCookie ? reqCookie : '',
-      }
-    }
+      },
+    },
   );
 
   // console.log(response.url);
@@ -28,7 +28,7 @@ export async function GET(event: RequestEvent) {
   return {
     status: 302,
     headers: {
-      location: response.url
-    }
+      location: response.url,
+    },
   };
 }

@@ -1,5 +1,12 @@
 <script context="module" lang="ts">
-  import { Config, FRUser, type GetTokensOptions, SessionManager, TokenManager, UserManager } from '@forgerock/javascript-sdk';
+  import {
+    Config,
+    FRUser,
+    type GetTokensOptions,
+    SessionManager,
+    TokenManager,
+    UserManager,
+  } from '@forgerock/javascript-sdk';
   import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
   import { get } from 'svelte/store';
 
@@ -120,7 +127,7 @@
       if (remote) {
         return await UserManager.getCurrentUser();
       }
-      return get(userStore).response
+      return get(userStore).response;
     },
     async logout() {
       const { clientId } = Config.get();
@@ -128,7 +135,7 @@
       /**
        * If configuration has a clientId, then use FRUser to logout to ensure
        * token revoking and removal; else, just end the session.
-      */
+       */
       if (clientId) {
         // Call SDK logout
         await FRUser.logout();
@@ -152,18 +159,20 @@
 
 <script lang="ts">
   import { createEventDispatcher, onMount as s_onMount } from 'svelte';
+  import type { z } from 'zod';
 
   import Journey from '$journey/journey.svelte';
 
   // Import the stores for initialization
+  import configure, { type partialConfigSchema } from '$lib/config/config';
   import { initialize as initializeJourney } from '$journey/journey.store';
-  import { initialize as initializeContent } from '$lib/locale.store';
+  import { initialize as initializeContent, partialStringsSchema } from '$lib/locale.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
   // import { initialize as initializeStyles } from './styles.store';
 
-  export let config: any;
-  export let content: any;
+  export let config: z.infer<typeof partialConfigSchema>;
+  export let content: z.infer<typeof partialStringsSchema>;
   // TODO: Runtime customization needs further development
   // export let customStyles: any;
 
@@ -174,7 +183,7 @@
 
   // Set base config to SDK
   // TODO: Move to a shared utility
-  Config.set({
+  configure({
     // Set some basics by default
     ...{
       // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
@@ -222,8 +231,5 @@
 </script>
 
 <div class="fr_widget-root">
-  <Journey
-    bind:formEl
-    journeyStore={_journeyStore}
-  />
+  <Journey bind:formEl journeyStore={_journeyStore} />
 </div>

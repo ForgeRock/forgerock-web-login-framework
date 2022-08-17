@@ -13,9 +13,9 @@ export async function POST(event: RequestEvent) {
   const response = await fetch(`${AM_DOMAIN_PATH}${OAUTH_REALM_PATH}/token/revoke`, {
     method: 'POST',
     headers: {
-      'content-type': 'application/x-www-form-urlencoded'
+      'content-type': 'application/x-www-form-urlencoded',
     },
-    body: bodyString
+    body: bodyString,
   });
 
   // const resBody = await response.json();
@@ -23,6 +23,6 @@ export async function POST(event: RequestEvent) {
 
   return {
     status: 200,
-    body: response.body
+    body: response.body,
   };
 }

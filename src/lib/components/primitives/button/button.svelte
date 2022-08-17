@@ -5,14 +5,14 @@
 
   export let busy = false;
   // export let customCss: { key: string; value: string }[] = [];
-  export let onClick = (event: Event) => {};
+  export let onClick: (event: Event) => void;
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
   export let type: 'button' | 'submit' | null = null;
   export let width: 'auto' | 'full' = 'auto';
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
-      switch(curr) {
+      switch (curr) {
         // Button style cases
         case 'primary':
           return `${prev} tw_button-primary dark:tw_button-primary_dark`;
@@ -33,7 +33,10 @@
 </script>
 
 <button
-  class={`${generateClassString(style, width)} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width}`}
+  class={`${generateClassString(
+    style,
+    width,
+  )} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width}`}
   on:click={onClick}
   style={generateStyleString($styles?.buttons?.primary)}
   {type}

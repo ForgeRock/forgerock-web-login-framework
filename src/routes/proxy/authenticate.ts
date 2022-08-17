@@ -29,8 +29,8 @@ export async function POST(event: RequestEvent) {
         'content-type': 'application/json',
         cookie: reqCookie ? reqCookie : '',
       },
-      body: body?.toString()
-    }
+      body: body?.toString(),
+    },
   );
 
   const resBody = await response.json();
@@ -53,7 +53,7 @@ export async function POST(event: RequestEvent) {
     headers: {
       'set-cookie': cookieUuid
         ? `cookie=${cookieUuid}; domain=.crbrl.ngrok.io; SameSite=None; HTTPOnly; Secure;`
-        : ''
-    }
+        : '',
+    },
   };
 }

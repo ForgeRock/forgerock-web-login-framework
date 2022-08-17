@@ -63,7 +63,6 @@ module.exports = function (theme) {
       },
     },
     '.kba-lock-icon_dark': {
-
       '& > svg': {
         color: theme('colors.secondary.light'),
         fill: 'currentcolor',

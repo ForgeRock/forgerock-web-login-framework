@@ -50,7 +50,6 @@ module.exports = (config, theme) => ({
     },
   },
   '.checkbox-input_animated': {
-
     /**
      * Below two target error messages
      */
@@ -135,7 +134,6 @@ module.exports = (config, theme) => ({
     width: theme('width["3/4"]'),
   },
   '.dialog-closing': {
-
     '&[open]': {
       animation: `${config('prefix')}${theme('animation.slideDown')}`,
       display: 'block',
@@ -156,7 +154,6 @@ module.exports = (config, theme) => ({
    * when it gets full browser support
    */
   '.input-floating': {
-
     '&:focus, &:not(:placeholder-shown)': {
       paddingBottom: theme('spacing.1'),
       paddingTop: theme('spacing.5'),
@@ -173,7 +170,6 @@ module.exports = (config, theme) => ({
     },
   },
   '.input-floating_dark': {
-
     ':where(&:autofill) + label': {
       // Needed to ensure the label is readable with browser autofill's light background
       color: `${theme('colors.secondary.dark')} !important`,
@@ -263,7 +259,6 @@ module.exports = (config, theme) => ({
     },
   },
   '.animated-radio_dark': {
-
     '&:before': {
       borderColor: theme('colors.secondary.light'),
       boxShadow: `none`,
@@ -273,7 +268,6 @@ module.exports = (config, theme) => ({
     },
   },
   '.radio-input_animated': {
-
     /**
      * All of the below are targeting `.animated-radio` from above:
      *
@@ -298,7 +292,6 @@ module.exports = (config, theme) => ({
     },
   },
   '.radio-input_animated_dark': {
-
     '&:checked + label > span:before': {
       borderColor: theme('colors.secondary.light'),
     },

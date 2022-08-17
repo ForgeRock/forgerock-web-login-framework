@@ -1,4 +1,4 @@
-<script lang='ts'>
+<script lang="ts">
   export let classes = '';
   export let size = '24px';
 </script>

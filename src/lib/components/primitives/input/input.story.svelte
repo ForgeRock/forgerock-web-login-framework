@@ -4,11 +4,19 @@
   export let isRequired: boolean;
   export let key: string;
   export let label: string;
-  export let labelOrder: 'first' | 'last' | null;
+  export let labelOrder: 'first' | 'last' | undefined;
   export let onChange: (event: Event) => void;
   export let placeholder: string;
 </script>
 
 <div>
-  <Input {isRequired} {key} {label} {labelOrder} {onChange} {placeholder} />
+  <Input
+    {isRequired}
+    firstInvalidInput={false}
+    {key}
+    {label}
+    {labelOrder}
+    {onChange}
+    {placeholder}
+  />
 </div>

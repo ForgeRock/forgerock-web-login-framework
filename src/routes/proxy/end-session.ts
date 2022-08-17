@@ -9,8 +9,8 @@ export async function GET(event: RequestEvent) {
       method: 'GET',
       headers: {
         authorization: event.request.headers.get('authorization') || '',
-      }
-    }
+      },
+    },
   );
 
   // const resBody = await response.json();
@@ -18,6 +18,6 @@ export async function GET(event: RequestEvent) {
 
   return {
     status: 200,
-    body: response.body
+    body: response.body,
   };
 }

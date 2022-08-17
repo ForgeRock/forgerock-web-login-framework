@@ -5,9 +5,8 @@
   import Password from './password.svelte';
 
   export let callback: PasswordCallback;
-  export let inputName: string;
 </script>
 
 <Centered>
-  <Password {callback} {inputName} />
+  <Password {callback} firstInvalidInput={false} idx={0} />
 </Centered>

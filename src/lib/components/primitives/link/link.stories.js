@@ -7,7 +7,7 @@ export default {
   parameters: {
     layout: 'centered',
   },
-  title: 'Primitives/Link'
+  title: 'Primitives/Link',
 };
 
 export const Base = {

@@ -43,6 +43,6 @@ export const parameters = {
     // Override the default light theme
     // light: { ...themes.normal, appBg: '#f5f5f5', appContentBg: '#e5e5e5', barBg: '#f5f5f5' },
     lightClass: 'tw_light',
-    stylePreview: true
+    stylePreview: true,
   },
 };

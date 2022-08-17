@@ -25,7 +25,7 @@ export const Base = {
     key: 'uniqueId',
     onChange: () => console.log('Checkbox value updated'),
     value: false,
-  }
+  },
 };
 
 export const Error = {
@@ -42,9 +42,10 @@ export const Error = {
 
 export const LongLabel = {
   args: {
-    label: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
+    label:
+      'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
     key: 'uniqueId',
     onChange: () => console.log('Checkbox value updated'),
     value: false,
-  }
+  },
 };

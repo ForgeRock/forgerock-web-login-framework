@@ -1,6 +1,6 @@
 const colorLib = require('color');
 
-module.exports = function(theme) {
+module.exports = function (theme) {
   return {
     /**
      * Alert
@@ -33,7 +33,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.white'),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-error': {
       backgroundColor: theme('colors.error.light'),
@@ -42,7 +42,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.error.dark'),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-error_dark': {
       backgroundColor: theme('colors.error.dark'),
@@ -51,7 +51,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.error.light'),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-info': {
       backgroundColor: colorLib(theme('colors.primary.light')).lighten(0.9).toString(),
@@ -60,7 +60,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.primary.dark'),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-info_dark': {
       backgroundColor: colorLib(theme('colors.primary.light')).darken(0.4).toString(),
@@ -69,7 +69,7 @@ module.exports = function(theme) {
       '& svg': {
         color: colorLib(theme('colors.primary.light')).lighten(0.9).toString(),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-success': {
       backgroundColor: theme('colors.success.light'),
@@ -78,7 +78,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.success.dark'),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-success_dark': {
       backgroundColor: theme('colors.success.dark'),
@@ -87,7 +87,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.success.light'),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-warning': {
       backgroundColor: theme('colors.warning.light'),
@@ -96,7 +96,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.warning.dark'),
         fill: 'currentColor',
-      }
+      },
     },
     '.alert-warning_dark': {
       backgroundColor: theme('colors.warning.dark'),
@@ -105,7 +105,7 @@ module.exports = function(theme) {
       '& svg': {
         color: theme('colors.warning.light'),
         fill: 'currentColor',
-      }
+      },
     },
     /**
      * Button primitive theme settings
@@ -216,7 +216,7 @@ module.exports = function(theme) {
         display: 'block',
       },
       '&[aria-invalid="true"] ~ button': {
-        borderColor:  theme('colors.error.dark'),
+        borderColor: theme('colors.error.dark'),
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]': {
@@ -271,7 +271,7 @@ module.exports = function(theme) {
         display: 'block',
       },
       '&[aria-invalid="true"] ~ button': {
-        borderColor:  theme('colors.error.dark'),
+        borderColor: theme('colors.error.dark'),
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]': {
@@ -315,7 +315,7 @@ module.exports = function(theme) {
         backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       },
       '&[aria-invalid="true"] ~ button': {
-        borderColor:  theme('colors.error.light'),
+        borderColor: theme('colors.error.light'),
       },
       // TODO: is this needed? I don't think so.
       // '&:invalid:hover': {

@@ -4,12 +4,12 @@ import Dialog from './dialog.story.svelte';
 
 export default {
   component: Dialog,
-  title: 'Compositions/Dialog'
+  title: 'Compositions/Dialog',
 };
 
 export const DialogWithTrigger = {
-  args: {}
-}
+  args: {},
+};
 
 const Template = (args) => ({
   Component: Dialog,
@@ -21,7 +21,6 @@ export const Interaction = Template.bind({});
 Interaction.args = { ...DialogWithTrigger.args };
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
@@ -67,4 +66,3 @@ Interaction.play = async () => {
 
   await userEvent.click(submitButton);
 };
-

@@ -13,7 +13,7 @@ export async function POST(event: RequestEvent) {
     method: 'POST',
     headers: {
       cookie: reqCookie ? reqCookie : '',
-    }
+    },
   });
 
   // const resBody = await response.json();
@@ -23,7 +23,7 @@ export async function POST(event: RequestEvent) {
     status: 200,
     body: response.body,
     headers: {
-      'set-cookie': ''
-    }
+      'set-cookie': '',
+    },
   };
 }

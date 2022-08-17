@@ -5,9 +5,8 @@
   import Name from './name.svelte';
 
   export let callback: NameCallback;
-  export let inputName: string;
 </script>
 
 <Centered>
-  <Name {callback} {inputName} />
+  <Name {callback} firstInvalidInput={false} idx={0} />
 </Centered>

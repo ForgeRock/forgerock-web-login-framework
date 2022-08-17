@@ -8,7 +8,7 @@ const step = new FRStep(response);
 export default {
   argTypes: {
     callback: { control: false },
-    inputName: { control:false },
+    inputName: { control: false },
   },
   component: Input,
   parameters: {

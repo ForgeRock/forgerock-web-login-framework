@@ -15,11 +15,11 @@ export const Base = {
   args: {
     checkValidity: (e) => {
       const el = e.target;
-      return !!el.value
+      return !!el.value;
     },
     key: 'uniqueId',
     label: 'Select your option',
-    onChange:  (e) => console.log(e.target.value),
+    onChange: (e) => console.log(e.target.value),
     options: [
       { value: null, text: 'Choose Color' },
       { value: 0, text: 'Red' },
@@ -47,7 +47,6 @@ export const Interaction = Template.bind({});
 Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();

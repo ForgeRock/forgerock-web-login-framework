@@ -1,7 +1,6 @@
 const { resolve } = require('path');
 const preprocess = require('svelte-preprocess');
-// use `mergeConfig` to recursively merge Vite options
-const { mergeConfig } = require('vite');
+const { mergeConfig } = require('vite'); // use `mergeConfig` to recursively merge Vite options
 
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
@@ -24,13 +23,13 @@ module.exports = {
   ],
   framework: '@storybook/svelte',
   core: {
-    builder: '@storybook/builder-vite'
+    builder: '@storybook/builder-vite',
   },
   svelteOptions: {
-    preprocess: preprocess()
+    preprocess: preprocess(),
   },
   features: {
-    storyStoreV7: true
+    storyStoreV7: true,
   },
   // For tighter Vite integration
   async viteFinal(config, { configType }) {
@@ -40,22 +39,17 @@ module.exports = {
       resolve: {
         alias: {
           /**
-           * Reminder to ensure aliases are added to the following:
-           *
-           * 1. svelte.config.js
-           * 2. rollup.config.js
-           * 3. .storybook/main.js.
-           * 4. vitest.config.ts
-           *
-           * TODO: Share alias object with other configs listed above
+           * Reminder to ensure aliases are also added here:
+           * 1. .storybook/main.js.
+           * 2. tsconfig.json
            */
           $components: resolve('./src/lib/components'),
           $journey: resolve('./src/lib/journey'),
           $lib: resolve('./src/lib'),
           $locales: resolve('./src/locales'),
           $widget: resolve('./src/widget'),
-        }
-      }
+        },
+      },
     });
-  }
+  },
 };

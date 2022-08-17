@@ -1,6 +1,6 @@
 <script lang="ts">
   export let formEl: HTMLFormElement | null = null;
-  export let onSubmitWhenValid: (event: Event, isFormValid: boolean) => void;
+  export let onSubmitWhenValid: (event: SubmitEvent, isFormValid: boolean) => void;
 
   let isFormValid = false;
 
@@ -9,7 +9,7 @@
    * @param {Object} event - HTML form event
    * @return {undefined}
    */
-  function formSubmit(event: Event) {
+  function formSubmit(event: SubmitEvent) {
     /**
      * Reference for validation: https://www.aleksandrhovhannisyan.com/blog/html-input-validation-without-a-form/
      */
@@ -29,7 +29,9 @@
     // Iterate over all children of the form, and pluck out the the inputs
     Array.from(form.children).forEach((el, idx) => {
       // First child will be a `div`, so query the actual form elements
-      const inputs: NodeListOf<HTMLInputElement> | null = el.querySelectorAll('input, select, textarea');
+      // eslint-disable-next-line no-undef
+      const inputs: NodeListOf<HTMLInputElement> | null =
+        el.querySelectorAll('input, select, textarea');
 
       // If element has no form input, return early
       if (!inputs?.length) {

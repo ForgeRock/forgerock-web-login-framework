@@ -5,9 +5,8 @@
   import Checkbox from './boolean.svelte';
 
   export let callback: AttributeInputCallback<boolean>;
-  export let inputName: string;
 </script>
 
 <Centered>
-  <Checkbox {callback} {inputName} />
+  <Checkbox {callback} firstInvalidInput={false} idx={0} />
 </Centered>

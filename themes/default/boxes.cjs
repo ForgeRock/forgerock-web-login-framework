@@ -18,6 +18,6 @@ module.exports = function (theme) {
       height: 'fit-content',
       margin: `auto 0`,
       padding: `${theme('spacing.10')} ${theme('spacing.10')}`,
-    }
+    },
   };
 };

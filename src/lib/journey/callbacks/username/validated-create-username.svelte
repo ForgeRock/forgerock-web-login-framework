@@ -20,8 +20,6 @@
   let value = callback?.getInputValue();
   let validationFailure = getUsernameValidationFailureText(callback, label);
 
-  let type: 'text' = 'text';
-
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
@@ -55,6 +53,6 @@
   key={inputName}
   label={interpolate(callbackType, null, textInputLabel)}
   onChange={setValue}
-  {type}
+  type="text"
   value={typeof value === 'string' ? value : ''}
 />

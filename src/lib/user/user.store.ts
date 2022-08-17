@@ -1,6 +1,4 @@
-import {
-  UserManager, type ConfigOptions,
-} from '@forgerock/javascript-sdk';
+import { UserManager, type ConfigOptions } from '@forgerock/javascript-sdk';
 import { writable, type Writable } from 'svelte/store';
 
 export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
@@ -53,7 +51,7 @@ export function initialize(initOptions?: ConfigOptions) {
         set({
           completed: true,
           error: {
-            message: err.message
+            message: err.message,
           },
           loading: false,
           successful: false,
@@ -77,5 +75,5 @@ export function initialize(initOptions?: ConfigOptions) {
     get,
     reset,
     subscribe,
-  }
+  };
 }

@@ -40,7 +40,10 @@ export const LongLabel = {
     onChange: () => console.log('Checkbox value updated'),
     options: [
       { text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit', value: 0 },
-      { text: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.', value: 1 },
+      {
+        text: 'Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
+        value: 1,
+      },
     ],
     value: false,
   },

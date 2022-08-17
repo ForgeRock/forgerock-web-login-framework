@@ -32,7 +32,7 @@
 
   /**
    * Sets up of locale store with appropriate locale content
-  */
+   */
   initializeContent(content);
 
   // Use if not initializing journey in above "context module"

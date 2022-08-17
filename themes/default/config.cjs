@@ -21,7 +21,7 @@ module.exports = {
    *
    * You can either add properties straight to the theme and create your
    * own from scratch, or you can use an existing theme and extend/modify
-  */
+   */
   theme: {
     extend: {
       ...designTokens,

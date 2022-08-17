@@ -7,10 +7,9 @@
   import { onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
-  import type { User } from '$journey/interfaces';
   import Widget, { user } from '../../../../package/modal';
 
-  let userInfo: User | null;
+  let userInfo: Record<string, string> | null;
   let widget1: Widget;
   let widget2: Widget;
   let widgetEl1: HTMLDivElement;
@@ -30,12 +29,12 @@
           redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
+            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
           },
           realmPath: 'alpha',
           tree: 'Login',
         },
-      }
+      },
     });
 
     widget2 = new Widget({
@@ -46,38 +45,38 @@
           redirectUri: 'https://localhost:3000/callback',
           scope: 'openid profile email me.read',
           serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
+            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
           },
           realmPath: 'alpha',
           tree: 'Register',
         },
-      }
+      },
     });
 
     widget1.$on('modal-mount', (dialog: HTMLDialogElement) => {
       console.log('Instance 1 mount event fired');
-      console.log(dialog)
+      console.log(dialog);
     });
-    widget1.$on('journey-success', (response: User) => {
+    widget1.$on('journey-success', (response: Record<string, string>) => {
       console.log('Instance 1 success event fired');
-      (userInfo = response)
+      userInfo = response;
     });
     widget1.$on('journey-failure', (error: string | null) => {
       console.log('Instance 1 failure event fired');
-      console.log(error)
+      console.log(error);
     });
 
     widget1.$on('modal-mount', (dialog: HTMLDialogElement) => {
       console.log('Instance 2 mount event fired');
-      console.log(dialog)
+      console.log(dialog);
     });
-    widget1.$on('journey-success', (response: User) => {
+    widget1.$on('journey-success', (response: Record<string, string>) => {
       console.log('Instance 2 success event fired');
-      (userInfo = response)
+      userInfo = response;
     });
     widget1.$on('journey-failure', (error: string | null) => {
       console.log('Instance 2 failure event fired');
-      console.log(error)
+      console.log(error);
     });
   });
 
@@ -93,8 +92,10 @@
     <Button onClick={logout} style="primary">Logout</Button>
   {:else}
     <Button onClick={() => widget1.$set({ open: true })} style="primary">Open Login Modal</Button>
-    <Button onClick={() => widget2.$set({ open: true })} style="primary">Open Registration Modal</Button>
+    <Button onClick={() => widget2.$set({ open: true })} style="primary"
+      >Open Registration Modal</Button
+    >
   {/if}
 </div>
-<div bind:this={widgetEl1}></div>
-<div bind:this={widgetEl2}></div>
+<div bind:this={widgetEl1} />
+<div bind:this={widgetEl2} />

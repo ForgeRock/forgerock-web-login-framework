@@ -21,7 +21,7 @@ export const Base = {
   args: {
     checkValidity: (e) => {
       const el = e.target;
-      return !!el.value
+      return !!el.value;
     },
     key: 'simpleInput',
     label: 'Username',
@@ -48,7 +48,6 @@ export const Interaction = Template.bind({});
 Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();

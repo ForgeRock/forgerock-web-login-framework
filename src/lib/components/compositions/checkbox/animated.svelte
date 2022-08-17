@@ -1,11 +1,11 @@
 <script lang="ts">
   import { afterUpdate } from 'svelte';
 
-  import Error from "$components/primitives/message/error.svelte";
-  import Label from "$components/primitives/label/label.svelte";
+  import Error from '$components/primitives/message/error.svelte';
+  import Label from '$components/primitives/label/label.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage: string = '';
+  export let errorMessage = '';
   export let firstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
@@ -46,9 +46,9 @@
     on:change={onChangeWrapper}
     required={isRequired}
     type="checkbox"
-    />
+  />
   <Label {key} classes="tw_grid tw_grid-cols-[2.5em_1fr] tw_relative">
-    <span class="tw_animated-check dark:tw_animated-check_dark"></span>
+    <span class="tw_animated-check dark:tw_animated-check_dark" />
     <slot />
   </Label>
   <!--

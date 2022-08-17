@@ -3,7 +3,7 @@
   import Error from '$components/primitives/message/error.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage: string = '';
+  export let errorMessage = '';
   export let firstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
@@ -28,14 +28,7 @@
   and the second column as one flexible unit (1fr).
 -->
 <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
-  <Checkbox
-    {firstInvalidInput}
-    {isRequired}
-    isInvalid={isInvalid}
-    {key}
-    onChange={onChangeWrapper}
-    {value}
-  >
+  <Checkbox {firstInvalidInput} {isRequired} {isInvalid} {key} onChange={onChangeWrapper} {value}>
     <slot />
   </Checkbox>
   <!--

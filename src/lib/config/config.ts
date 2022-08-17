@@ -25,7 +25,8 @@ const configSchema = z.object({
         type: z.nativeEnum(CallbackType),
       }),
     )
-    .returns(z.instanceof(FRCallback)).optional(),
+    .returns(z.instanceof(FRCallback))
+    .optional(),
   clientId: z.string().optional(),
   middleware: z.array(z.function()).optional(),
   realmPath: z.string(),
@@ -33,27 +34,36 @@ const configSchema = z.object({
   scope: z.string().optional(),
   serverConfig: z.object({
     baseUrl: z.string(),
-    paths: z.object({
-      authenticate: z.string(),
-      authorize: z.string(),
-      accessToken: z.string(),
-      endSession: z.string(),
-      userInfo: z.string(),
-      revoke: z.string(),
-      sessions: z.string(),
-    }).optional(),
+    paths: z
+      .object({
+        authenticate: z.string(),
+        authorize: z.string(),
+        accessToken: z.string(),
+        endSession: z.string(),
+        userInfo: z.string(),
+        revoke: z.string(),
+        sessions: z.string(),
+      })
+      .optional(),
     timeout: z.number(), // TODO: Should be optional; fix in SDK
   }),
   support: z.union([z.literal('legacy'), z.literal('modern')]).optional(),
   tokenStore: z
     .union([
       z.object({
-        get: z.function().args(z.string()).returns(z.promise(z.object({
-          accessToken: z.string(),
-          idToken: z.string().optional(),
-          refreshToken: z.string().optional(),
-          tokenExpiry: z.number().optional(),
-        }))),
+        get: z
+          .function()
+          .args(z.string())
+          .returns(
+            z.promise(
+              z.object({
+                accessToken: z.string(),
+                idToken: z.string().optional(),
+                refreshToken: z.string().optional(),
+                tokenExpiry: z.number().optional(),
+              }),
+            ),
+          ),
         set: z.function().args(z.string()).returns(z.promise(z.void())),
         remove: z.function().args(z.string()).returns(z.promise(z.void())),
       }),
@@ -66,6 +76,7 @@ const configSchema = z.object({
   type: z.string().optional(),
   oauthThreshold: z.number().optional(),
 });
+export const partialConfigSchema = configSchema.partial();
 
 // const defaultPaths = {
 //   authenticate: 'authenticate',
@@ -77,7 +88,7 @@ const configSchema = z.object({
 //   sessions: 'sessions',
 // };
 
-export default function (config: z.infer<typeof configSchema>) {
+export default function (config: z.infer<typeof partialConfigSchema>) {
   configSchema.parse(config);
   Config.set(config);
 }

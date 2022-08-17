@@ -5,9 +5,8 @@
   import Kba from './kba-create.svelte';
 
   export let callback: KbaCreateCallback;
-  export let inputName: string;
 </script>
 
 <Centered>
-  <Kba {callback} {inputName} />
+  <Kba {callback} firstInvalidInput={false} idx={0} />
 </Centered>

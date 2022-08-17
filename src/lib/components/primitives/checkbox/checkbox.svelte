@@ -1,7 +1,7 @@
 <script lang="ts">
   import { afterUpdate } from 'svelte';
 
-  import Label from "$components/primitives/label/label.svelte";
+  import Label from '$components/primitives/label/label.svelte';
 
   export let firstInvalidInput: boolean;
   export let isRequired = false;

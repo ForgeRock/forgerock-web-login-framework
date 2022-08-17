@@ -28,7 +28,7 @@ export default {
         { name: 'prompt', value: 'Please accept this' },
         { name: 'required', value: true },
         { name: 'policies', value: {} },
-        { name: 'failedPolicies', value:  ['{ policyRequirement: "MUST_BE_ACCEPTED" }'] },
+        { name: 'failedPolicies', value: ['{ policyRequirement: "MUST_BE_ACCEPTED" }'] },
         { name: 'validateOnly', value: false },
         { name: 'value', value: false },
       ],

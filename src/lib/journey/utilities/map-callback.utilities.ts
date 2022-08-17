@@ -16,7 +16,7 @@ import TermsConditions from '$journey/callbacks/terms-and-conditions/terms-condi
  * appropriate callback component, pushing that component
  * the StepComponent's array.
  */
- export function mapCallbackToComponent(cb: any) {
+export function mapCallbackToComponent(cb: any) {
   /** *********************************************************************
    * SDK INTEGRATION POINT
    * Summary:SDK callback method for getting the callback type

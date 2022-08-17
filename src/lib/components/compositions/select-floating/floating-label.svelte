@@ -3,7 +3,7 @@
   import Error from '$components/primitives/message/error.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let defaultOption: number | null = null;
+  export let defaultOption: string | null = null;
   export let errorMessage = '';
   export let firstInvalidInput: boolean;
   export let isRequired: boolean;

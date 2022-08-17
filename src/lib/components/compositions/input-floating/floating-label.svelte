@@ -3,7 +3,7 @@
   import Error from '$components/primitives/message/error.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage: string = '';
+  export let errorMessage = '';
   export let firstInvalidInput: boolean;
   export let hasRightIcon = false;
   export let isRequired = false;
@@ -14,7 +14,7 @@
   // TODO: Placeholders don't reliably work with floating labels
   // export let placeholder: string;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
-  export let value: string = '';
+  export let value = '';
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {
@@ -35,7 +35,9 @@
   -->
   <Input
     {firstInvalidInput}
-    inputClasses={`tw_input-floating dark:tw_input-floating_dark ${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}
+    inputClasses={`tw_input-floating dark:tw_input-floating_dark ${
+      hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''
+    }`}
     {key}
     onChange={onChangeWrapper}
     {label}

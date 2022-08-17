@@ -60,7 +60,6 @@ export const Interaction = Template.bind({});
 Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
@@ -85,4 +84,3 @@ Interaction.play = async () => {
 
   await userEvent.tab();
 };
-
