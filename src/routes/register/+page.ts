@@ -1,4 +1,3 @@
-import Box from '$components/primitives/box/centered.svelte';
 // import { initialize, type InitObject } from '$journey/journey.store';
 
 import '../../app.css';

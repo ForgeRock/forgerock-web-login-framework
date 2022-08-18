@@ -1,8 +1,8 @@
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 
-export async function GET(event: RequestEvent) {
+export const GET: RequestHandler = async (event: RequestEvent) => {
   const response = await fetch(
     `${AM_DOMAIN_PATH}${OAUTH_REALM_PATH}/connect/endSession${event.url.search}`,
     {
@@ -13,14 +13,8 @@ export async function GET(event: RequestEvent) {
     },
   );
 
-  // const resBody = await response.json();
+  const resBody = await response.text();
   // console.log(response);
 
-  throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
-  // Suggestion (check for correctness before using):
-  // return new Response(response.body);
-  return {
-    status: 200,
-    body: response.body,
-  };
-}
+  return new Response(resBody);
+};

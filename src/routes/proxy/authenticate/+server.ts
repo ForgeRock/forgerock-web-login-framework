@@ -1,10 +1,9 @@
-import { json as json$1 } from '@sveltejs/kit';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get, set } from '$lib/server/sessions';
 
-export async function POST(event: RequestEvent) {
+export const POST: RequestHandler = async(event: RequestEvent) => {
   const bodyStream = event?.request?.body;
   const body = bodyStream?.getReader().read();
   let cookieUuid = '';
@@ -34,7 +33,7 @@ export async function POST(event: RequestEvent) {
     },
   );
 
-  const resBody = await response.json();
+  const resBody = await response.text();
 
   // console.log('Body of response from authenticate call:');
   // console.log(resBody);
@@ -48,22 +47,13 @@ export async function POST(event: RequestEvent) {
     }
   }
 
-  throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
-  // Suggestion (check for correctness before using):
-  // return json$1(resBody, {
-  //   headers: {
-  //     'set-cookie': cookieUuid
-  //       ? `cookie=${cookieUuid}; domain=.crbrl.ngrok.io; SameSite=None; HTTPOnly; Secure;`
-  //       : '',
-  //   }
-  // });
-  return {
-    status: 200,
-    body: resBody,
-    headers: {
-      'set-cookie': cookieUuid
-        ? `cookie=${cookieUuid}; domain=.crbrl.ngrok.io; SameSite=None; HTTPOnly; Secure;`
-        : '',
-    },
-  };
-}
+  const headers = new Headers();
+  headers.append(
+    'set-cookie',
+    cookieUuid
+      ? `cookie=${cookieUuid}; domain=.crbrl.ngrok.io; SameSite=None; HTTPOnly; Secure;`
+      : '',
+  );
+
+  return new Response(resBody, { headers });
+};

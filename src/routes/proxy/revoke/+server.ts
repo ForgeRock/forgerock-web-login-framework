@@ -1,8 +1,8 @@
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 
-export async function POST(event: RequestEvent) {
+export const POST: RequestHandler = async (event: RequestEvent) => {
   const bodyStream = event?.request?.body;
   const body = bodyStream?.getReader().read();
   const bodyString = body?.toString();
@@ -18,14 +18,8 @@ export async function POST(event: RequestEvent) {
     body: bodyString,
   });
 
-  // const resBody = await response.json();
+  const resBody = await response.text();
   // console.log(response);
 
-  throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
-  // Suggestion (check for correctness before using):
-  // return new Response(response.body);
-  return {
-    status: 200,
-    body: response.body,
-  };
-}
+  return new Response(resBody);
+};

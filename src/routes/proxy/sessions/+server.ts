@@ -1,9 +1,9 @@
-import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
 
 import { AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get as getCookie, remove as removeCookie } from '$lib/server/sessions';
 
-export async function POST(event: RequestEvent) {
+export const POST: RequestHandler = async (event: RequestEvent) => {
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
   const reqCookie = Array.isArray(reqCookieUuid) && getCookie(reqCookieUuid[1]);
@@ -16,15 +16,11 @@ export async function POST(event: RequestEvent) {
     },
   });
 
-  // const resBody = await response.json();
+  const resBody = await response.text();
   // console.log(response);
 
-  throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
-  return {
-    status: 200,
-    body: response.body,
-    headers: {
-      'set-cookie': '',
-    },
-  };
-}
+  const headers = new Headers();
+  headers.append('set-cookie', '');
+
+  return new Response(resBody, { headers });
+};
