@@ -11,7 +11,7 @@
 
   let formEl: HTMLDivElement;
   let userInfo: Record<string, string> | null;
-  let widget;
+  let widget: any;
 
   async function logout() {
     await user.logout();

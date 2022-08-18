@@ -10,8 +10,8 @@
   import Widget, { user } from '../../../../../package/modal';
 
   let userInfo: Record<string, string> | null;
-  let widget1: Widget;
-  let widget2: Widget;
+  let widget1: any;
+  let widget2: any;
   let widgetEl1: HTMLDivElement;
   let widgetEl2: HTMLDivElement;
 

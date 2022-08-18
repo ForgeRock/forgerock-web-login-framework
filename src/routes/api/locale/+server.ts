@@ -1,4 +1,5 @@
-import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
+import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { getLocale } from '$lib/utilities/i18n.utilities';
 

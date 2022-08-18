@@ -1,4 +1,5 @@
-import type { RequestEvent, RequestHandler } from '@sveltejs/kit';
+import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get, set } from '$lib/server/sessions';
