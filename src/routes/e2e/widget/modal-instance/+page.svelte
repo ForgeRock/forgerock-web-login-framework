@@ -7,7 +7,7 @@
   import { onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
-  import Widget, { user } from '../../../../package/modal';
+  import Widget, { user } from '../../../../../package/modal';
 
   let userInfo: Record<string, string> | null;
   let widget1: Widget;

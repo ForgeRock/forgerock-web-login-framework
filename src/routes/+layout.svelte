@@ -1,19 +1,21 @@
 <script context="module" lang="ts">
-  import configure from '$lib/config/config';
+  throw new Error("@migration task: Check code was safely removed (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292722)");
 
-  configure({
-    clientId: 'WebOAuthClient',
-    // redirectUri: 'https://crbrl.ngrok.io/callback',
-    redirectUri: 'https://localhost:3000/callback',
-    scope: 'openid profile me.read',
-    serverConfig: {
-      baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-      // baseUrl: 'https://crbrl.ngrok.io/proxy/',
-      timeout: 5000,
-    },
-    realmPath: 'alpha',
-    tree: 'Login',
-  });
+  // import configure from '$lib/config/config';
+
+  // configure({
+  //   clientId: 'WebOAuthClient',
+  //   // redirectUri: 'https://crbrl.ngrok.io/callback',
+  //   redirectUri: 'https://localhost:3000/callback',
+  //   scope: 'openid profile me.read',
+  //   serverConfig: {
+  //     baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+  //     // baseUrl: 'https://crbrl.ngrok.io/proxy/',
+  //     timeout: 5000,
+  //   },
+  //   realmPath: 'alpha',
+  //   tree: 'Login',
+  // });
 </script>
 
 <svelte:head>

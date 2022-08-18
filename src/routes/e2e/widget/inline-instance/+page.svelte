@@ -7,7 +7,7 @@
   import { onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
-  import Widget, { form, journey, user } from '../../../../package/inline';
+  import Widget, { form, journey, user } from '../../../../../package/inline';
 
   let formEl: HTMLDivElement;
   let userInfo: Record<string, string> | null;

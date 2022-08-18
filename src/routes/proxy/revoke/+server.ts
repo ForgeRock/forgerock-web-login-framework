@@ -21,6 +21,9 @@ export async function POST(event: RequestEvent) {
   // const resBody = await response.json();
   // console.log(response);
 
+  throw new Error("@migration task: Migrate this return statement (https://github.com/sveltejs/kit/discussions/5774#discussioncomment-3292701)");
+  // Suggestion (check for correctness before using):
+  // return new Response(response.body);
   return {
     status: 200,
     body: response.body,

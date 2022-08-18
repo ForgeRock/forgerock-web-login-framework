@@ -25,10 +25,10 @@ export async function GET(event: RequestEvent) {
   // console.log(response.url);
   // console.log(await response.text());
 
-  return {
+  return new Response(undefined, {
     status: 302,
     headers: {
       location: response.url,
-    },
-  };
+    }
+  });
 }

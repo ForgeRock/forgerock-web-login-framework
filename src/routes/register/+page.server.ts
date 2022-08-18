@@ -15,15 +15,13 @@ const locales = {
   us_es,
 };
 
-export async function GET(event: RequestEvent) {
+export async function load(event: RequestEvent) {
   const userLocale = event.request.headers.get('accept-language') || 'en-US';
 
   // TODO: Reworking typing here to index the locales object
   const locale = getLocale(userLocale, '_') as 'ca_en' | 'ca_fr' | 'us_en' | 'us_es';
 
   return {
-    body: {
-      content: locales[locale],
-    },
-  };
+  content: locales[locale],
+};
 }
