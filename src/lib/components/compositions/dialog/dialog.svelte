@@ -12,17 +12,30 @@
 
   export function closeDialog(args?: CloseOptions) {
     const { reason } = args || { reason: 'external' };
-    dialogEl?.addEventListener(
-      'animationend',
-      () => {
-        dialogEl?.close();
-        dialogEl?.classList.remove('tw_dialog-closing');
 
-        // Call dev provided callback function
-        closeCallback && closeCallback({ reason });
+    function completeClose() {
+      dialogEl?.close();
+      dialogEl?.classList.remove('tw_dialog-closing');
+
+      // Call dev provided callback function for event hook
+      closeCallback && closeCallback({ reason });
+    }
+
+    // Create timer in case the CSS is not loaded
+    const fallbackTimer = setTimeout(completeClose, 500);
+
+    // If animation starts, then CSS is loaded and timer can be removed
+    dialogEl?.addEventListener(
+      'animationstart',
+      () => {
+        // Animation started, so we can rely on CSS, rather than timer
+        clearTimeout(fallbackTimer);
       },
       { once: true },
     );
+
+    // Clean up the DOM and complete dialog closing
+    dialogEl?.addEventListener('animationend', completeClose, { once: true });
     dialogEl?.classList.add('tw_dialog-closing');
   }
 </script>

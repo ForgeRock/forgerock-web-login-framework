@@ -7,11 +7,8 @@
 ## Table of Contents
 
 - [Overview](#overview)
-- [Quick Start: Local Development](#quick-start-local-development)
-  - [Technical requirements](#technical-requirements)
-  - [Knowledge requirements](#knowledge-requirements)
-  - [Instal, build & run](#instal-build--run)
 - [Quick Start: Using the Widget in Your App](#quick-start-using-the-widget-in-your-app)
+  - [Adding the Widget's CSS](#adding-the-widgets-css)
   - [Using the Modal component](#using-the-modal-component)
   - [Using the Inline component](#using-the-inline-component)
 - [Complete Widget API](#complete-widget-api)
@@ -25,6 +22,10 @@
   - [Currently unsupported](#currently-unsupported)
   - [Widget customization (future)](#widget-customization-future)
   - [Additional modal events (future)](#additional-modal-events-future)
+- [Quick Start: Internal Login Framework Development](#quick-start-internal-login-framework-development)
+  - [Technical requirements](#technical-requirements)
+  - [Knowledge requirements](#knowledge-requirements)
+  - [Instal, build & run](#instal-build--run)
 - [Disclaimer](#disclaimer)
 - [License](#license)
 
@@ -45,28 +46,6 @@ The Modal component is recommended as it provides the quickest development exper
 
 The Inline component, on the other hand, allows you to render the resulting form within your app's controlled DOM and visual layer (rather than on top of it) in whatever way is best for you, but there are some caveats to understand. These will be discussed below in the [Inline section](#using-the-inline-component).
 
-## Quick Start: Local Development
-
-### Technical requirements
-
-1. Node.js v16 or higher
-2. npm v8 or higher
-
-### Knowledge requirements
-
-1. JavaScript & TypeScript
-2. Svelte
-3. Tailwind
-4. ES Modules
-
-### Instal, build & run
-
-1. `npm run install` (or simply `npm i`)
-2. `npm run build`
-3. `npm run dev` (leave running)
-
-This will install all the necessary dependencies, build the project and run it in `dev` mode, providing you with Hot Module Reloading. This will also produce the Widget package for use in external applications.
-
 ## Quick Start: Using the Widget in Your App
 
 Note: This project is currently in Alpha, so this is not available via public npm.
@@ -79,6 +58,31 @@ Note: This project is currently in Alpha, so this is not available via public np
 6. `npm link` ([See here for more on `npm link`](https://docs.npmjs.com/cli/v8/commands/npm-link))
 7. `cd <your project>` (`cd` into the project you want to install the Widget)
 8. `npm link forgerock-web-login-widget`
+
+### Adding the Widget's CSS
+
+There are a few ways to add the Widget's CSS to your product:
+
+1. Import it into your JavaScript project as a module
+2. Import it using a CSS preprocessor, like Sass, Less or PostCSS
+3. Copy and paste the CSS file from the Widget and link it into your HTML
+
+If you decide to import the CSS into your JavaScript, make sure your bundler knows how to import and process the CSS as a module. If using a CSS preprocessor, ensure your configure your preprocessor to access files from within your project's `node_modules` directory. Copying the file and pasting it into your project for linking in the HTML is the easiest.
+
+Linking CSS in HTML example:
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- ... -->
+    <link rel="stylesheet" href="/css/widget.css" />
+  </head>
+  <body>
+    <!-- ... -->
+  </body>
+</html>
+```
 
 ### Using the Modal component
 
@@ -321,8 +325,8 @@ NOTE: Optional `start` config:
 ```js
 journey.start({
   config: undefined, // OPTIONAL; defaults to undefined, mechanism to override base SDK config object
-  oauth: true, // OPTIONAL; defaults to true and returns OAuth tokens
-  user: true, // OPTIONAL; default to true and returns user information
+  oauth: true, // OPTIONAL; defaults to true and uses OAuth flow for acquiring tokens
+  user: true, // OPTIONAL; default to true and returns user information from `userinfo` endpoint
 });
 ```
 
@@ -489,6 +493,28 @@ modal.onClose((event) => {
   /* anything you want */
 });
 ```
+
+## Quick Start: Internal Login Framework Development
+
+### Technical requirements
+
+1. Node.js v16 or higher
+2. npm v8 or higher
+
+### Knowledge requirements
+
+1. JavaScript & TypeScript
+2. Svelte
+3. Tailwind
+4. ES Modules
+
+### Instal, build & run
+
+1. `npm run install` (or simply `npm i`)
+2. `npm run build`
+3. `npm run dev` (leave running)
+
+This will install all the necessary dependencies, build the project and run it in `dev` mode, providing you with Hot Module Reloading. This will also produce the Widget package for use in external applications.
 
 ## Disclaimer
 
