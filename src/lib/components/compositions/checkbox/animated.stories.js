@@ -1,3 +1,6 @@
+import { expect } from '@storybook/jest';
+import { screen, userEvent } from '@storybook/testing-library';
+
 import Checkbox from './animated.story.svelte';
 
 export default {
@@ -28,6 +31,15 @@ export const Base = {
   },
 };
 
+export const Checked = {
+  args: {
+    label: 'Check me!',
+    key: 'uniqueId',
+    onChange: () => console.log('Checkbox value updated'),
+    value: true,
+  },
+};
+
 export const Error = {
   args: {
     ...Base.args,
@@ -48,4 +60,43 @@ export const LongLabel = {
     onChange: () => console.log('Checkbox value updated'),
     value: false,
   },
+};
+
+const Template = (args) => ({
+  Component: Checkbox,
+  props: args,
+});
+
+export const Interaction = Template.bind({});
+
+Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
+
+Interaction.play = async () => {
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const submitButton = screen.getByText('Trigger Error');
+  await userEvent.click(submitButton);
+
+  await expect(screen.queryByText('Please accept this')).toBeInTheDocument();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const inputEl = screen.getByLabelText('Check to accept this agreement', {
+    selector: 'input',
+  });
+  await userEvent.click(inputEl);
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await expect(screen.queryByText('Please accept this')).toBeFalsy();
+
+  await userEvent.tab();
 };

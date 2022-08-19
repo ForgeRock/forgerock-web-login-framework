@@ -31,6 +31,20 @@ export const Base = {
   },
 };
 
+export const WithValue = {
+  args: {
+    checkValidity: (e) => {
+      const el = e.target;
+      return !!el.value;
+    },
+    key: 'simpleInput',
+    label: 'Username',
+    onChange: (e) => console.log(e.target.value),
+    placeholder: 'E.g. my-username',
+    value: 'demouser',
+  },
+};
+
 export const Error = {
   args: {
     ...Base.args,

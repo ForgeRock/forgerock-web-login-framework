@@ -1,11 +1,12 @@
 <script lang="ts">
+  /* eslint @typescript-eslint/no-empty-function: "off" */
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import { styles } from '$widget/styles.store';
   import { generateStyleString } from '$lib/utilities/style.utilities';
 
   export let busy = false;
   // export let customCss: { key: string; value: string }[] = [];
-  export let onClick: (event: Event) => void;
+  export let onClick: (event: Event) => void = (e) => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
   export let type: 'button' | 'submit' | null = null;
   export let width: 'auto' | 'full' = 'auto';

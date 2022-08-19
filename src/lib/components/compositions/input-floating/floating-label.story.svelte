@@ -12,6 +12,7 @@
   export let label: string;
   export let onChange: () => void;
   export let withForm = false;
+  export let value: string;
 
   let el: SvelteComponent;
 
@@ -41,6 +42,7 @@
       {label}
       {onChange}
       {isRequired}
+      {value}
     />
     <Button style="primary">Trigger Error</Button>
   </Form>
@@ -54,5 +56,6 @@
     {label}
     {onChange}
     {isRequired}
+    {value}
   />
 {/if}
