@@ -22,5 +22,9 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   // TODO: Reworking typing here to index the locales object
   const locale = getLocale(userLocale, '_') as 'ca_en' | 'ca_fr' | 'us_en' | 'us_es';
 
+  if (!locales[locale]) {
+    return new Response(JSON.stringify(locales.us_en));
+  }
+
   return new Response(JSON.stringify(locales[locale]));
 }

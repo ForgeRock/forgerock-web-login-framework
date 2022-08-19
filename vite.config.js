@@ -23,6 +23,10 @@ const config = {
     },
     https: true,
     port: 3000,
+    watch: {
+      // Very important or HMR will go nuts on all the package/* file changes
+      ignored: ['**/package/**'],
+    }
   },
   preview: {
     port: 3000,
