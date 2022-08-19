@@ -6,13 +6,40 @@ module.exports = function (theme) {
       position: 'relative',
       borderColor: theme('colors.secondary.DEFAULT'),
       borderBottomWidth: '1px',
-      borderTopWidth: '1px',
+      borderTopWidth: '0',
       marginTop: theme('spacing.8'),
       paddingBottom: theme('spacing.4'),
       paddingTop: theme('spacing.6'),
+
+      '&:after': {
+        borderColor: theme('colors.secondary.DEFAULT'),
+        borderTopWidth: '1px',
+        content: '""',
+        display: 'block',
+        position: 'absolute',
+        right: '0',
+        top: '-0.1em',
+        width: '45%',
+      },
+      '&:before': {
+        borderColor: theme('colors.secondary.DEFAULT'),
+        borderTopWidth: '1px',
+        content: '""',
+        display: 'block',
+        position: 'absolute',
+        top: '-0.1em',
+        width: '45%',
+      },
     },
     '.kba-fieldset_dark': {
       borderColor: colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString(),
+
+      '&:after': {
+        borderColor: colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString(),
+      },
+      '&:before': {
+        borderColor: colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString(),
+      },
     },
     '.kba-header': {
       fontWeight: theme('fontWeight.medium'),
@@ -29,7 +56,6 @@ module.exports = function (theme) {
       width: '100%',
 
       '& > svg': {
-        backgroundColor: theme('colors.background.light'),
         color: theme('colors.secondary.DEFAULT'),
         fill: 'currentcolor',
         top: `-${theme('spacing.3')}`,
@@ -39,7 +65,6 @@ module.exports = function (theme) {
     '.kba-lock-icon_dark': {
 
       '& > svg': {
-        backgroundColor: theme('colors.background.dark'),
         color: theme('colors.secondary.light'),
         fill: 'currentcolor',
       },

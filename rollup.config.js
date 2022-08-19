@@ -27,11 +27,18 @@ export default {
     console.warn(warning.message);
   },
   output: {
-    sourcemap: true,
+    entryFileNames: (chunkInfo) => {
+      // Don't include `svelte` in filename
+      return `${chunkInfo.name}.js`;
+    },
+    compact: true,
+    dir: 'package/',
     format: 'es',
     name: 'login-widget',
-    dir: 'package/',
     plugins: [],
+    preserveModules: true,
+    preserveModulesRoot: 'src/widget',
+    sourcemap: false,
   },
   plugins: [
     alias({
@@ -77,7 +84,7 @@ export default {
     svelte({
       compilerOptions: {
         // enable run-time checks when not in production
-        dev: !production,
+        dev: false,
       },
       emitCss: true,
       preprocess: preprocess({

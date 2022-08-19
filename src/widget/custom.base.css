@@ -71,6 +71,15 @@ Reset links to optimize for opt-in styling instead of opt-out.
   text-decoration: inherit;
 }
 /*
+Base link color when inside of localized content.
+*/
+:where(.ft_widget-root) a {
+  @apply tw_link;
+}
+:where(.tw_dark) a {
+  @apply tw_link_dark;
+}
+/*
 Add the correct font weight in Edge and Safari.
 */
 :where(.fr_widget-root) b,
