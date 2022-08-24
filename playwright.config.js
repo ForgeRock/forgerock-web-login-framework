@@ -1,5 +1,5 @@
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
-import { devices  } from '@playwright/test';
+import { devices } from '@playwright/test';
 
 const url = 'https://localhost:3000';
 const config = {
@@ -35,7 +35,7 @@ const config = {
     //   name: 'webkit',
     //   use: { ...devices['Desktop Safari'], ...devices['iPad (gen 7)'] },
     // },
-  ]
+  ],
 };
 
 export default config;

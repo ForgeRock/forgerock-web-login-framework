@@ -7,17 +7,11 @@
 </script>
 
 {#if errorMessage && showError}
-  <p
-    class="tw_input-error-message tw_s dark:tw_input-error-message_dark"
-    id={`${key}-message`}
-  >
+  <p class="tw_input-error-message tw_s dark:tw_input-error-message_dark" id={`${key}-message`}>
     {errorMessage}
   </p>
 {:else}
-  <p
-    class="tw_input-error-message tw_s dark:tw_input-error-message_dark"
-    id={`${key}-message`}
-  >
+  <p class="tw_input-error-message tw_s dark:tw_input-error-message_dark" id={`${key}-message`}>
     <T key="inputRequiredError" />
   </p>
 {/if}

@@ -1,4 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { getLocale } from '$lib/utilities/i18n.utilities';
 
@@ -13,15 +14,17 @@ const locales = {
   ca_fr,
   us_en,
   us_es,
-}
+};
 
-export async function get(event: RequestEvent) {
+export const GET: RequestHandler = async (event: RequestEvent) => {
   const userLocale = event.request.headers.get('accept-language') || 'en-US';
 
-  const locale = getLocale(userLocale, '_');
+  // TODO: Reworking typing here to index the locales object
+  const locale = getLocale(userLocale, '_') as 'ca_en' | 'ca_fr' | 'us_en' | 'us_es';
 
-  return {
-    body: locales[locale],
-  };
+  if (!locales[locale]) {
+    return new Response(JSON.stringify(locales.us_en));
+  }
+
+  return new Response(JSON.stringify(locales[locale]));
 }
-

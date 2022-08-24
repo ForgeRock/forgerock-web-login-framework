@@ -57,7 +57,7 @@ export function interpolate(
   if (!key) throw new Error('No key provided to t()');
 
   // Grab the text from the translations store.
-  const contentObj = get(strings);
+  const contentObj = get<Record<string, string> | null>(strings);
   const string = (contentObj && contentObj[key]) || '';
 
   let messageDirty = '';

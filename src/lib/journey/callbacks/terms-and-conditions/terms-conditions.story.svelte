@@ -6,11 +6,10 @@
   import Terms from './terms-conditions.svelte';
 
   export let callback: TermsAndConditionsCallback;
-  export let inputName: string;
 
   initialize();
 </script>
 
 <Centered>
-  <Terms {callback} idx={1} />
+  <Terms {callback} firstInvalidInput={false} idx={0} />
 </Centered>

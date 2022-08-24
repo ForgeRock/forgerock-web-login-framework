@@ -1,8 +1,4 @@
-import {
-  TokenManager,
-  type GetTokensOptions,
-  type OAuth2Tokens,
-} from '@forgerock/javascript-sdk';
+import { TokenManager, type GetTokensOptions, type OAuth2Tokens } from '@forgerock/javascript-sdk';
 import { writable, type Writable } from 'svelte/store';
 
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
@@ -75,12 +71,12 @@ export function initialize(initOptions?: GetTokensOptions) {
       loading: false,
       successful: false,
       response: null,
-    })
+    });
   }
 
   return {
     get,
     reset,
     subscribe,
-  }
+  };
 }

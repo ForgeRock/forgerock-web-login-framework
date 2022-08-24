@@ -12,10 +12,12 @@
       "$lib/*": ["src/lib/*"],
       "$locales": ["src/locales"],
       "$locales/*": ["src/locales/*"],
+      "$package": ["package"],
+      "$package/*": ["package/*"],
       "$widget": ["src/widget"],
       "$widget/*": ["src/widget/*"]
     },
     "resolveJsonModule": true,
-    "strict": true,
+    "strict": true
   }
 }

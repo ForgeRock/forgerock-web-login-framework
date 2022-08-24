@@ -36,4 +36,4 @@ jobs:
           # 👇 Chromatic projectToken, refer to the manage page to obtain it.
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
           # https://www.chromatic.com/docs/github-actions#ui-test-and-ui-review
-          exitZeroOnChanges: true  # 👈 Option to prevent the workflow from failing
+          exitZeroOnChanges: true # 👈 Option to prevent the workflow from failing

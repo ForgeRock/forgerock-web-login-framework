@@ -1,31 +1,11 @@
-import { resolve } from 'path';
-import { defineConfig } from 'vite'
-import { svelte } from '@sveltejs/vite-plugin-svelte'
+import { defineConfig } from 'vite';
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+
+import aliases from './alias.config';
 
 export default defineConfig({
   resolve: {
-    alias: {
-      /**
-       * Reminder to ensure aliases are added to the following:
-       *
-       * 1. svelte.config.js
-       * 2. rollup.config.js
-       * 3. .storybook/main.js.
-       * 4. vitest.config.ts
-       *
-       * TODO: Share alias object with other configs listed above
-       */
-      $components: resolve('./src/lib/components'),
-      $journey: resolve('./src/lib/journey'),
-      $lib: resolve('./src/lib'),
-      $locales: resolve('./src/locales'),
-      $widget: resolve('./src/widget'),
-    }
+    alias: aliases,
   },
-  plugins: [
-    svelte({ hot: !process.env.VITEST }),
-  ],
-  test: {
-    globals: true,
-  },
+  plugins: [svelte({ hot: !process.env.VITEST })],
 });

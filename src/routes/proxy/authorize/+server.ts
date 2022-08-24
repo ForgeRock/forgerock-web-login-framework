@@ -1,9 +1,10 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$lib/constants';
 import { get as getCookie } from '$lib/server/sessions';
 
-export async function get(event: RequestEvent) {
+export const GET: RequestHandler = async (event: RequestEvent) => {
   // console.log('Start authorization call');
   const cookie = event.request.headers.get('cookie');
   const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
@@ -18,17 +19,18 @@ export async function get(event: RequestEvent) {
       method: 'GET',
       headers: {
         cookie: reqCookie ? reqCookie : '',
-      }
-    }
+      },
+    },
   );
 
   // console.log(response.url);
   // console.log(await response.text());
 
-  return {
+  const headers = new Headers();
+  headers.append('location', response.url)
+
+  return new Response(undefined, {
     status: 302,
-    headers: {
-      location: response.url
-    }
-  };
-}
+    headers,
+  });
+};

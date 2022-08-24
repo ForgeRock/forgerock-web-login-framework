@@ -62,11 +62,18 @@
     </div>
   {:else if step.type === 'Step'}
     {#if failureMessage}
-      <Alert type="error" needsFocus={alertNeedsFocus}>{interpolate(failureMessageKey, null, failureMessage)}</Alert>
+      <Alert type="error" needsFocus={alertNeedsFocus}
+        >{interpolate(failureMessageKey, null, failureMessage)}</Alert
+      >
     {/if}
     {#each step?.callbacks as callback, idx}
       {@const firstInvalidInput = checkValidation(callback)}
-      <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} {firstInvalidInput} />
+      <svelte:component
+        this={mapCallbackToComponent(callback)}
+        {callback}
+        {idx}
+        {firstInvalidInput}
+      />
     {/each}
     <Button width="full" style="primary" type="submit">
       <T key="loginButton" />

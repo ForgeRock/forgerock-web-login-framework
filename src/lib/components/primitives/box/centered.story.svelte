@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Centered from "./centered.svelte";
+  import Centered from './centered.svelte';
 </script>
 
 <Centered>

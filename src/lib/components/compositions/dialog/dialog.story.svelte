@@ -1,4 +1,5 @@
 <script lang="ts">
+  /* eslint @typescript-eslint/no-empty-function: "off" */
   import Button from '$components/primitives/button/button.svelte';
   import Dialog from './dialog.svelte';
   import Form from '$components/primitives/form/form.svelte';
@@ -7,7 +8,7 @@
 
   // TODO: Export controls for changing dialog context
 
-  let dialogEl;
+  let dialogEl: HTMLDialogElement;
 
   function openDialog() {
     dialogEl.showModal();
@@ -33,9 +34,15 @@
     Sign In
   </h2>
   <Form onSubmitWhenValid={submitForm}>
-    <Input errorMessage="Please provide a value" isRequired={true} key="username" label="Username" onChange={() => {}} type="text" />
-    <Button width="full" style="primary" type="submit"
-      >Submit</Button
-    >
+    <Input
+      errorMessage="Please provide a value"
+      isRequired={true}
+      firstInvalidInput={false}
+      key="username"
+      label="Username"
+      onChange={() => {}}
+      type="text"
+    />
+    <Button onClick={() => {}} width="full" style="primary" type="submit">Submit</Button>
   </Form>
 </Dialog>

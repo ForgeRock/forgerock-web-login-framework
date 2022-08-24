@@ -1,6 +1,7 @@
 <script lang="ts">
-  import Button from "./button.svelte";
-  import { initialize } from '$widget/styles.store';
+  /* eslint @typescript-eslint/no-empty-function: "off" */
+  import Button from './button.svelte';
+  // import { initialize } from '$widget/styles.store';
 
   // Button props
   export let busy = false;
@@ -10,7 +11,6 @@
   export let text: string;
   export let type: 'button' | 'submit' | null = null;
   export let width: 'auto' | 'full' = 'auto';
-
 
   // initialize({ button: customCss });
 </script>

@@ -4,7 +4,7 @@
   import Label from '$components/primitives/label/label.svelte';
 
   export let selectClasses = '';
-  export let defaultOption: number | null = null;
+  export let defaultOption: string | null = null;
   export let firstInvalidInput: boolean;
   export let isRequired: boolean;
   export let isInvalid: boolean | null = null;

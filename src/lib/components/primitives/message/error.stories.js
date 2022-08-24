@@ -1,5 +1,3 @@
-import { screen, userEvent } from '@storybook/testing-library';
-
 import Error from './error.svelte';
 
 export default {
@@ -7,7 +5,7 @@ export default {
   parameters: {
     layout: 'centered',
   },
-  title: 'Primitives/Error'
+  title: 'Primitives/Error',
 };
 
 export const Base = {
@@ -15,4 +13,4 @@ export const Base = {
     errorMessage: 'Please review your input.',
     key: 'errorMessage',
   },
-}
+};

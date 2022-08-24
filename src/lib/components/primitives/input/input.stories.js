@@ -1,6 +1,5 @@
 import Input from './input.story.svelte';
 
-
 export default {
   argTypes: {
     isRequired: {
@@ -27,7 +26,7 @@ export const LabelFirst = {
     label: 'Username',
     placeholder: 'E.g.: my-username',
     onChange: () => console.log('Checkbox value updated'),
-  }
+  },
 };
 
 export const LabelLast = {
@@ -37,5 +36,5 @@ export const LabelLast = {
     labelOrder: 'last',
     placeholder: 'E.g.: my-username',
     onChange: () => console.log('Checkbox value updated'),
-  }
+  },
 };

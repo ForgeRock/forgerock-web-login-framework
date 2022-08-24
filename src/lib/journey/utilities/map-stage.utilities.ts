@@ -13,7 +13,7 @@ export function mapStepToStage(currentStep: any) {
   switch (currentStep?.getStage && currentStep.getStage()) {
     case 'Registration':
       return Registration;
-    case'UsernamePassword':
+    case 'UsernamePassword':
       return UsernamePassword;
     default:
       return Generic;

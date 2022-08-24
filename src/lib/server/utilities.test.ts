@@ -21,27 +21,24 @@ describe('Domain utilities should work as expected', () => {
 
 describe('Cookies should be rewritten for entity', () => {
   it('should convert server cookie to client cookie', () => {
-    const clientCookie = rewriteCookieForClient(
-      {
-        cookie: 'e1babb394ea5130=gfimW3GS8ADkkSaUv9cyWtzuFhk.*AAJTSQACMDIAAlNLABxiVzB3VHV1UmlQQVVDMmNueEVITFRkNWZPQzA9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Path=/; Domain=localhost; Secure; HttpOnly; SameSite=none',
-        amDomain: 'openam-crbrl-01.forgeblocks.com',
-        appDomain: 'localhost',
-      }
-
-    );
+    const clientCookie = rewriteCookieForClient({
+      cookie:
+        'e1babb394ea5130=gfimW3GS8ADkkSaUv9cyWtzuFhk.*AAJTSQACMDIAAlNLABxiVzB3VHV1UmlQQVVDMmNueEVITFRkNWZPQzA9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Path=/; Domain=localhost; Secure; HttpOnly; SameSite=none',
+      amDomain: 'openam-crbrl-01.forgeblocks.com',
+      appDomain: 'localhost',
+    });
     expect(clientCookie).toBe(
       'e1babb394ea5130=gfimW3GS8ADkkSaUv9cyWtzuFhk.*AAJTSQACMDIAAlNLABxiVzB3VHV1UmlQQVVDMmNueEVITFRkNWZPQzA9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Path=/; Domain=localhost; Secure; HttpOnly; SameSite=none',
     );
   });
 
   it('should convert client cookie to server cookie', () => {
-    const serverCookie = rewriteCookieForServer(
-      {
-        cookie: 'e1babb394ea5130=gfimW3GS8ADkkSaUv9cyWtzuFhk.*AAJTSQACMDIAAlNLABxiVzB3VHV1UmlQQVVDMmNueEVITFRkNWZPQzA9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Path=/; Domain=localhost; Secure; HttpOnly; SameSite=none',
-        amDomain: 'openam-crbrl-01.forgeblocks.com',
-        appDomain: 'localhost',
-      }
-    );
+    const serverCookie = rewriteCookieForServer({
+      cookie:
+        'e1babb394ea5130=gfimW3GS8ADkkSaUv9cyWtzuFhk.*AAJTSQACMDIAAlNLABxiVzB3VHV1UmlQQVVDMmNueEVITFRkNWZPQzA9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Path=/; Domain=localhost; Secure; HttpOnly; SameSite=none',
+      amDomain: 'openam-crbrl-01.forgeblocks.com',
+      appDomain: 'localhost',
+    });
     expect(serverCookie).toBe(
       'e1babb394ea5130=gfimW3GS8ADkkSaUv9cyWtzuFhk.*AAJTSQACMDIAAlNLABxiVzB3VHV1UmlQQVVDMmNueEVITFRkNWZPQzA9AAR0eXBlAANDVFMAAlMxAAIwMQ..*; Path=/; Domain=openam-crbrl-01.forgeblocks.com; Secure; HttpOnly; SameSite=none',
     );

@@ -50,7 +50,9 @@
       <!-- TODO: Needs localization strategy -->
       <Sanitize html={true} string={step.getHeader() || ''} />
     </h1>
-    <p class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+    <p
+      class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+    >
       <!-- TODO: Needs localization strategy -->
       <Sanitize html={true} string={step.getDescription() || ''} />
     </p>
@@ -58,8 +60,13 @@
       <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
     {/if}
     {#each step?.callbacks as callback, idx}
-    {@const firstInvalidInput = checkValidation(callback)}
-      <svelte:component this={mapCallbackToComponent(callback)} {callback} {firstInvalidInput} {idx} />
+      {@const firstInvalidInput = checkValidation(callback)}
+      <svelte:component
+        this={mapCallbackToComponent(callback)}
+        {callback}
+        {firstInvalidInput}
+        {idx}
+      />
     {/each}
     <Button width="full" style="primary" type="submit">
       <T key="nextButton" />

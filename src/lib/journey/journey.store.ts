@@ -48,7 +48,6 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
   let stepNumber = 0;
 
   async function next(prevStep: StepTypes = null, nextOptions?: StepOptions) {
-
     /**
      * Create an options object with nextOptions overriding anything from initOptions
      * TODO: Does this object merge need to be more granular?

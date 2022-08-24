@@ -200,22 +200,22 @@
 </script>
 
 <script lang="ts">
-  import type { z } from 'zod';
-
   import { createEventDispatcher, onMount as s_onMount, SvelteComponent } from 'svelte';
+  import type { z } from 'zod';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import Journey from '$journey/journey.svelte';
   import type { partialStringsSchema } from '$lib/locale.store';
 
   // Import the stores for initialization
+  import configure, { type partialConfigSchema } from '$lib/config/config';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
   // import { initialize as initializeStyles } from './styles.store';
 
-  export let config: ConfigOptions;
+  export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
   // TODO: Runtime customization needs further development
   // export let customStyles: any;
@@ -234,7 +234,7 @@
 
   // Set base config to SDK
   // TODO: Move to a shared utility
-  Config.set({
+  configure({
     // Set some basics by default
     ...{
       // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
@@ -262,7 +262,7 @@
   let _oauthStore = (oauthStore = initializeOauth(config));
   let _userStore = (userStore = initializeUser(config));
 
-  initializeContent(content, true);
+  initializeContent(content);
   // TODO: Runtime customization needs further development
   // initializeStyles(customStyles);
 

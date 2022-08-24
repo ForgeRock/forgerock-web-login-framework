@@ -22,7 +22,6 @@ export const Interaction = Template.bind({});
 Interaction.args = ThreeTwo.args;
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();

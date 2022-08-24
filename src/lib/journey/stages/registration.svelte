@@ -62,9 +62,14 @@
       <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
     {/if}
     {#each step?.callbacks as callback, idx}
-    <!-- TODO: Trying to minimize looping, but having it within template is a bit clunky -->
+      <!-- TODO: Trying to minimize looping, but having it within template is a bit clunky -->
       {@const firstInvalidInput = checkValidation(callback)}
-      <svelte:component this={mapCallbackToComponent(callback)} {callback} {idx} {firstInvalidInput} />
+      <svelte:component
+        this={mapCallbackToComponent(callback)}
+        {callback}
+        {idx}
+        {firstInvalidInput}
+      />
     {/each}
     <Button width="full" style="primary" type="submit">
       <T key="registerButton" />

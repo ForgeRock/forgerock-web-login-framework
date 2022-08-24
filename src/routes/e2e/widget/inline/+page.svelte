@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import Widget, { form, journey, user } from '../../../../package/inline';
+  import Widget, { form, journey, user } from '$package/inline';
 
   let formEl: HTMLDivElement;
   let userResponse: any | null;
@@ -34,6 +34,7 @@
           scope: 'openid profile email me.read',
           serverConfig: {
             baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+            timeout: 5000,
           },
           realmPath: 'alpha',
           tree: 'Login',

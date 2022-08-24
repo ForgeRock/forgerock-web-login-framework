@@ -4,7 +4,7 @@
   export let defaultOption: number;
   export let firstInvalidInput: boolean;
   export let isRequired = false;
-  export let isInvalid: boolean = false;
+  export let isInvalid = false;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;

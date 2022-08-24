@@ -13,7 +13,6 @@
   let textInputLabel = callback.getPrompt();
   let value = callback?.getInputValue();
 
-
   function setValue(event: Event) {
     callback.setInputValue((event.target as HTMLInputElement).value);
   }

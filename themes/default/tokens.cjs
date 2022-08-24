@@ -61,4 +61,4 @@ module.exports = {
     DEFAULT: theme('colors.tertiary.dark'),
     ...theme('colors'),
   }),
-}
+};

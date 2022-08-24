@@ -1,4 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import type { PageServerLoad } from './$types';
 
 import { getLocale } from '$lib/utilities/i18n.utilities';
 
@@ -15,14 +16,13 @@ const locales = {
   us_es,
 };
 
-export async function get(event: RequestEvent) {
+export const load: PageServerLoad = async (event: RequestEvent) => {
   const userLocale = event.request.headers.get('accept-language') || 'en-US';
 
-  const locale = getLocale(userLocale, '_');
+  // TODO: Reworking typing here to index the locales object
+  const locale = getLocale(userLocale, '_') as 'ca_en' | 'ca_fr' | 'us_en' | 'us_es';
 
   return {
-    body: {
-      content: locales[locale],
-    },
+    content: locales[locale],
   };
-}
+};

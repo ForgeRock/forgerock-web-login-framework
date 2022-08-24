@@ -5,9 +5,8 @@
   import Choice from './choice.svelte';
 
   export let callback: ChoiceCallback;
-  export let inputName: string;
 </script>
 
 <Centered>
-  <Choice {callback} {inputName} />
+  <Choice {callback} firstInvalidInput={false} idx={0} />
 </Centered>

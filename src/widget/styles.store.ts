@@ -1,4 +1,4 @@
-import { readable, type Readable } from "svelte/store";
+import { readable, type Readable } from 'svelte/store';
 
 interface Layout {
   labels: 'floating' | 'stacked';
@@ -10,7 +10,7 @@ interface Styles {
     primary: Record<string, string>[];
     secondary: Record<string, string>[];
     outline: Record<string, string>[];
-  }
+  };
 }
 
 export let styles: Readable<Styles>;

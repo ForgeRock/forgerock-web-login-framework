@@ -1,5 +1,5 @@
 <script lang="ts">
-  import Checkbox from "./checkbox.svelte";
+  import Checkbox from './checkbox.svelte';
 
   export let key: string;
   export let label: string;

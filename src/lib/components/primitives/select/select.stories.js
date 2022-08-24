@@ -35,7 +35,7 @@ export const LabelFirst = {
       { text: 'Blue', value: 2 },
     ],
     defaultOption: 0,
-  }
+  },
 };
 
 export const LabelLast = {
@@ -52,5 +52,5 @@ export const LabelLast = {
       { text: 'Blue', value: 2 },
     ],
     defaultOption: null,
-  }
+  },
 };

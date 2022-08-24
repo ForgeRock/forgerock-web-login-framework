@@ -9,7 +9,7 @@ export function extractDomainFromUrl(url: string) {
    * Demo: https://regex101.com/r/wN6cZ7/365
    */
   const arr = url.match(/^(?:https?:\/\/)?(?:[^@/\n]+@)?(?:www\.)?([^:/?\n]+)/);
-  if (!Array.isArray(arr) && !arr || !arr[1]) {
+  if ((!Array.isArray(arr) && !arr) || !arr[1]) {
     throw new Error('AM_DOMAIN_PATH is not a valid URL');
   }
   return arr[1];

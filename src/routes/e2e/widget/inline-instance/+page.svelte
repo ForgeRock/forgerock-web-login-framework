@@ -7,12 +7,11 @@
   import { onMount } from 'svelte';
 
   import Button from '$lib/components/primitives/button/button.svelte';
-  import type { User } from '$journey/interfaces';
-  import Widget, { form, journey, user } from '../../../../package/inline';
+  import Widget, { form, journey, user } from '../../../../../package/inline';
 
   let formEl: HTMLDivElement;
-  let userInfo: User | null;
-  let widget;
+  let userInfo: Record<string, string> | null;
+  let widget: any;
 
   async function logout() {
     await user.logout();
@@ -29,25 +28,25 @@
           redirectUri: `${window.location.origin}/callback`,
           scope: 'openid profile email me.read',
           serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/'
+            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
           },
           realmPath: 'alpha',
           tree: 'Login',
         },
-      }
+      },
     });
 
     widget.$on('form-mount', (widgetEl: HTMLElement) => {
       console.log('Instance mount event fired');
-      console.log(widgetEl)
+      console.log(widgetEl);
     });
-    widget.$on('journey-success', (response: User) => {
+    widget.$on('journey-success', (response: Record<string, string>) => {
       console.log('Instance success event fired');
-      (userInfo = response)
+      userInfo = response;
     });
     widget.$on('journey-failure', (error: string) => {
       console.log('Instance failure event fired');
-      console.log(error)
+      console.log(error);
     });
   });
 </script>
@@ -59,4 +58,4 @@
   </ul>
   <Button onClick={logout} style="primary">Logout</Button>
 {/if}
-<div bind:this={formEl} class={`${userInfo?.isAuthenticated ? 'tw_hidden' : ''} tw_p-6`}></div>
+<div bind:this={formEl} class={`${userInfo?.isAuthenticated ? 'tw_hidden' : ''} tw_p-6`} />

@@ -13,5 +13,5 @@ export const Base = {
   args: {
     key: 'uniqueId',
     label: 'Username',
-  }
+  },
 };

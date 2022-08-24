@@ -1,9 +1,10 @@
 import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$lib/constants';
 import { get, set } from '$lib/server/sessions';
 
-export async function post(event: RequestEvent) {
+export const POST: RequestHandler = async(event: RequestEvent) => {
   const bodyStream = event?.request?.body;
   const body = bodyStream?.getReader().read();
   let cookieUuid = '';
@@ -29,11 +30,11 @@ export async function post(event: RequestEvent) {
         'content-type': 'application/json',
         cookie: reqCookie ? reqCookie : '',
       },
-      body: body?.toString()
-    }
+      body: body?.toString(),
+    },
   );
 
-  const resBody = await response.json();
+  const resBody = await response.text();
 
   // console.log('Body of response from authenticate call:');
   // console.log(resBody);
@@ -47,13 +48,13 @@ export async function post(event: RequestEvent) {
     }
   }
 
-  return {
-    status: 200,
-    body: resBody,
-    headers: {
-      'set-cookie': cookieUuid
-        ? `cookie=${cookieUuid}; domain=.crbrl.ngrok.io; SameSite=None; HTTPOnly; Secure;`
-        : ''
-    }
-  };
-}
+  const headers = new Headers();
+  headers.append(
+    'set-cookie',
+    cookieUuid
+      ? `cookie=${cookieUuid}; domain=.crbrl.ngrok.io; SameSite=None; HTTPOnly; Secure;`
+      : '',
+  );
+
+  return new Response(resBody, { headers });
+};

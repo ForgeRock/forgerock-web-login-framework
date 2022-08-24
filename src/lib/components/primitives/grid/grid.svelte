@@ -1,9 +1,9 @@
 <script lang="ts">
-  export let num: number = 2;
+  export let num = 2;
 
   function generateClassString(...args: number[]) {
     return args.reduce((prev, curr) => {
-      switch(curr) {
+      switch (curr) {
         case 4:
           return `${prev} tw_grid-cols-4`;
         case 3:

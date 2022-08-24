@@ -3,7 +3,7 @@
 
   export let html = false;
   export let key: string;
-  export let values: Record<string, string> | undefined = undefined
+  export let values: Record<string, string> | undefined = undefined;
 
   let message = interpolate(key, values);
 </script>

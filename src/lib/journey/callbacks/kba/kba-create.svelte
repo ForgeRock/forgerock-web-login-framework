@@ -89,7 +89,7 @@
   <Input
     {firstInvalidInput}
     key={inputNameAnswer || 'ka-answer-label'}
-    label={interpolate("securityAnswer")}
+    label={interpolate('securityAnswer')}
     onChange={setAnswer}
     isRequired={true}
     type="text"

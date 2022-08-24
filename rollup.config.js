@@ -13,6 +13,8 @@ import typescript from '@rollup/plugin-typescript';
 import preprocess from 'svelte-preprocess';
 import tailwindcss from 'tailwindcss';
 
+import aliases from './alias.config';
+
 const production = !process.env.ROLLUP_WATCH;
 
 export default {
@@ -42,22 +44,7 @@ export default {
   },
   plugins: [
     alias({
-      /**
-       * Reminder to ensure aliases are added to the following:
-       *
-       * 1. svelte.config.js
-       * 2. rollup.config.js
-       * 3. .storybook/main.js.
-       * 4. vitest.config.ts
-       *
-       * TODO: Share alias object with other configs listed above
-       */
-      entries: {
-        $components: path.resolve('./src/lib/components'),
-        $journey: path.resolve('./src/lib/journey'),
-        $locales: path.resolve('./src/locales'),
-        $widget: path.resolve('./src/widget'),
-      },
+      entries: aliases,
     }),
     // Clear target directory
     {

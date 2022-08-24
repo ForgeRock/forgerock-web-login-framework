@@ -21,12 +21,25 @@ export const Base = {
   args: {
     checkValidity: (e) => {
       const el = e.target;
-      return !!el.value
+      return !!el.value;
     },
     key: 'simpleInput',
     label: 'Username',
     onChange: (e) => console.log(e.target.value),
     value: '',
+  },
+};
+
+export const WithValue = {
+  args: {
+    checkValidity: (e) => {
+      const el = e.target;
+      return !!el.value;
+    },
+    key: 'simpleInput',
+    label: 'Username',
+    onChange: (e) => console.log(e.target.value),
+    value: 'demouser',
   },
 };
 
@@ -48,7 +61,6 @@ export const Interaction = Template.bind({});
 Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();

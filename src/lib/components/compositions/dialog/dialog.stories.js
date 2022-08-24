@@ -1,15 +1,16 @@
+import { expect } from '@storybook/jest';
 import { screen, userEvent } from '@storybook/testing-library';
 
 import Dialog from './dialog.story.svelte';
 
 export default {
   component: Dialog,
-  title: 'Compositions/Dialog'
+  title: 'Compositions/Dialog',
 };
 
 export const DialogWithTrigger = {
-  args: {}
-}
+  args: {},
+};
 
 const Template = (args) => ({
   Component: Dialog,
@@ -21,10 +22,11 @@ export const Interaction = Template.bind({});
 Interaction.args = { ...DialogWithTrigger.args };
 
 Interaction.play = async () => {
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
+
+  await expect(screen.queryByText('Sign In')).not.toBeVisible();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -33,10 +35,15 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
+  await expect(screen.queryByText('Sign In')).toBeInTheDocument();
+
   const closeButton = screen.getByTitle('Close Modal');
   await userEvent.click(closeButton);
 
+
   await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await expect(screen.queryByText('Sign In')).not.toBeVisible();
 
   await userEvent.click(triggerButton);
 
@@ -66,5 +73,6 @@ Interaction.play = async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.click(submitButton);
-};
 
+  await expect(screen.queryByText('Sign In')).not.toBeVisible();
+};
