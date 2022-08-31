@@ -1,13 +1,13 @@
 <script lang="ts">
   import {
-    getAttributeValidationFailureText,
     getInputTypeFromPolicies,
     isInputRequired,
-  } from '$journey/utilities/callback.utilities';
+  } from '$journey/callbacks/utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import { interpolate } from '$lib/utilities/i18n.utilities';
+  import Policies from '$journey/callbacks/utilities/policies.svelte';
 
   export let callback: AttributeInputCallback<string>;
   export let firstInvalidInput: boolean;
@@ -20,7 +20,6 @@
   let type = getInputTypeFromPolicies(policies);
   let previousValue = callback?.getInputValue() as string;
   let textInputLabel = callback.getPrompt();
-  let validationFailure = getAttributeValidationFailureText(callback);
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -44,17 +43,17 @@
     type = getInputTypeFromPolicies(policies);
     previousValue = callback?.getInputValue() as string;
     textInputLabel = callback.getPrompt();
-    validationFailure = getAttributeValidationFailureText(callback);
   }
 </script>
 
 <Input
-  errorMessage={validationFailure}
   {firstInvalidInput}
   key={inputName}
   label={interpolate(outputName, null, textInputLabel)}
   onChange={setValue}
   {isRequired}
   {type}
-  value={previousValue}
-/>
+  value={previousValue}>
+
+  <Policies {callback} label={interpolate(outputName, null, textInputLabel)} messageKey="valueRequirements" />
+</Input>

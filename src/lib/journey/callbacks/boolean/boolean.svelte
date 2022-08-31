@@ -2,7 +2,7 @@
   import {
     getAttributeValidationFailureText,
     isInputRequired,
-  } from '$journey/utilities/callback.utilities';
+  } from '$journey/callbacks/utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/compositions/checkbox/animated.svelte';

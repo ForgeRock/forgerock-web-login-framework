@@ -20,3 +20,27 @@ export default {
     },
   ],
 };
+
+export const docsExample = {
+  type: 'TermsAndConditionsCallback',
+  output: [
+    {
+      name: 'version',
+      value: '0.0',
+    },
+    {
+      name: 'terms',
+      value: 'Terms and conditions text that customers must agree to.',
+    },
+    {
+      name: 'createDate',
+      value: '2019-10-28T04:20:11.320Z',
+    },
+  ],
+  input: [
+    {
+      name: 'IDToken1',
+      value: false,
+    },
+  ],
+};

@@ -73,4 +73,5 @@
       ><T key="showPassword" /></EyeIcon
     >
   </button>
+  <slot />
 </Input>

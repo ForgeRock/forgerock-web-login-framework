@@ -2,11 +2,11 @@
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
 
   import {
-    getUsernameValidationFailureText,
     isInputRequired,
-  } from '$journey/utilities/callback.utilities';
+  } from '$journey/callbacks/utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import { interpolate } from '$lib/utilities/i18n.utilities';
+  import Policies from '$journey/callbacks/utilities/policies.svelte';
 
   export let callback: ValidatedCreateUsernameCallback;
   export let firstInvalidInput: boolean;
@@ -18,7 +18,6 @@
   let label = callback.getPrompt();
   let textInputLabel = callback.getPrompt();
   let value = callback?.getInputValue();
-  let validationFailure = getUsernameValidationFailureText(callback, label);
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -42,12 +41,10 @@
     label = callback.getPrompt();
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
-    validationFailure = getUsernameValidationFailureText(callback, label);
   }
 </script>
 
 <Input
-  errorMessage={validationFailure}
   {firstInvalidInput}
   {isRequired}
   key={inputName}
@@ -55,4 +52,6 @@
   onChange={setValue}
   type="text"
   value={typeof value === 'string' ? value : ''}
-/>
+>
+  <Policies {callback} {label} messageKey="usernameRequirements" />
+</Input>

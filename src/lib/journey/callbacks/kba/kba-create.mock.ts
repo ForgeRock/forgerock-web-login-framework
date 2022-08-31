@@ -30,3 +30,27 @@ export default {
     },
   ],
 };
+
+export const docsExample = {
+  type: 'KbaCreateCallback',
+  output: [
+    {
+      name: 'prompt',
+      value: 'Select a security question',
+    },
+    {
+      name: 'predefinedQuestions',
+      value: ["What's your favorite color?"],
+    },
+  ],
+  input: [
+    {
+      name: 'IDToken1question',
+      value: '',
+    },
+    {
+      name: 'IDToken1answer',
+      value: '',
+    },
+  ],
+};

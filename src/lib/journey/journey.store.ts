@@ -2,38 +2,19 @@ import {
   FRAuth,
   FRStep,
   FRLoginFailure,
-  FRLoginSuccess,
   StepType,
+  FRCallback,
 } from '@forgerock/javascript-sdk';
-import type { Step, StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
 import { writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$lib/journey/utilities/decode.utilities';
+import type { JourneyStore, JourneyStoreValue, StepTypes } from './journey.interfaces';
 import { interpolate } from '$lib/utilities/i18n.utilities';
-
-export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
-  next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
-  reset: () => void;
-}
-export interface JourneyStoreValue {
-  completed: boolean;
-  // TODO: Think about turning this into an object with code, message and step
-  error: {
-    code: number | null;
-    message: string | null;
-    step: Step | undefined;
-  } | null;
-  loading: boolean;
-  step: StepTypes;
-  successful: boolean;
-  response: Step | null | undefined;
-}
-export interface Response {
-  tokenId: string;
-}
-export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
-
-const authIdTimeoutError = '110';
+import {
+  authIdTimeoutErrorCode,
+  shouldPopulateWithPreviousCallbacks,
+} from './utilities/step.utilities';
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const { set, subscribe }: Writable<JourneyStoreValue> = writable({
@@ -61,8 +42,8 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
      * Save previous step information just in case we have a total
      * form failure due to 400 response from ForgeRock.
      */
-    let previousCallbacks;
-    let previousStage;
+    let previousCallbacks: FRCallback[] | undefined;
+    let previousStage: string | undefined;
 
     if (prevStep && prevStep.type === StepType.Step) {
       previousStage = prevStep?.getStage && prevStep.getStage();
@@ -97,6 +78,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
 
     if (nextStep.type === StepType.Step) {
+      /**
+       * SUCCESSFUL CONTINUATION BLOCK
+       */
+
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
 
@@ -109,6 +94,11 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         response: null,
       });
     } else if (nextStep.type === StepType.LoginSuccess) {
+      /**
+       * SUCCESSFUL COMPLETION BLOCK
+       */
+
+      // Set final state
       set({
         completed: true,
         error: null,
@@ -119,6 +109,8 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       });
     } else if (nextStep.type === StepType.LoginFailure) {
       /**
+       * FAILURE COMPLETION BLOCK
+       *
        * Grab failure message, which may contain encoded HTML
        */
       const failureMessageStr = htmlDecode(nextStep.payload.message || '');
@@ -140,43 +132,51 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         });
       }
 
-      /** *******************************************************************
-       * SDK INTEGRATION POINT
-       * Summary: Repopulate callbacks/payload with previous data.
-       * --------------------------------------------------------------------
-       * Details: Now that we have a new authId (the identification of the
+      /**
+       * Now that we have a new authId (the identification of the
        * fresh step) let's populate this new step with old callback data if
-       * allowed with this stage. If not, the user will have to refill form. We
-       * will display the error we collected from the previous submission,
-       * restart the flow, and provide better UX with the previous form data,
-       * so the user doesn't have to refill the form.
+       * this is step one and meets a few criteria.
+       *
+       * If error code is 110 or error message includes "Constrained Violation",
+       * then the issue needs special handling.
+       *
+       * If this is the first step in the journey, replace the callbacks with
+       * existing callbacks to resubmit with a fresh authId.
        ******************************************************************* */
-      if (restartedStep.type === StepType.Step) {
+      if (
+        shouldPopulateWithPreviousCallbacks(nextStep, previousCallbacks, restartedStep, stepNumber)
+      ) {
         /**
-         * If error code is 110, then the issue is just the authId expiring.
-         * If this is the first step in the journey, replace the callbacks
-         * with existing callbacks to resubmit with a fresh authId.
+         * TypeScript notes:
+         *
+         * Assert that restartedStep is FRStep as that is required for the above condition to be true.
+         * Also, assert that previousCallbacks is FRCallback[] as that too is required for above to be true.
+         *
+         * Attempt a refactor using Ryan's suggestion found here: https://www.typescriptlang.org/play?#code/PTAEHUFMBsGMHsC2lQBd5oBYoCoE8AHSAZVgCcBLA1UABWgEM8BzM+AVwDsATAGiwoBnUENANQAd0gAjQRVSQAUCEmYKsTKGYUAbpGF4OY0BoadYKdJMoL+gzAzIoz3UNEiPOofEVKVqAHSKymAAmkYI7NCuqGqcANag8ABmIjQUXrFOKBJMggBcISGgoAC0oACCbvCwDKgU8JkY7p7ehCTkVDQS2E6gnPCxGcwmZqDSTgzxxWWVoASMFmgYkAAeRJTInN3ymj4d-jSCeNsMq-wuoPaOltigAKoASgAywhK7SbGQZIIz5VWCFzSeCrZagNYbChbHaxUDcCjJZLfSDbExIAgUdxkUBIursJzCFJtXydajBZJcWD1RqgJyofGcABqDGg7EgAB4cAA+AAUq3y3nBqwUPGEglQlE4IwA-FcJcNQALOOxENJvgBKUAAb0UJT1CNAPNQ7SJoIAvBbQAAiZWq75WzV0hmgUG6vXg6CCFBOsheVZukoB0CKAC+incNCGUtAZtpkHpvuZrI54slzF5VoAjA6ANzkynUrxCYjyqV8gWphUAH36KrVZHVAuB8BaXh17oNRpNqXNloA5JWpX3Ne33XqfZkyGy8+6w0GJziWV683PO8XS8wjXFmOqR0Go8wAhlYKzuPoeVbsNBoPBc6HgiocM0PL7QIh4H0GMD2JG7owpewDDMJA-AnuoiRfvAegiF4VoAKKrAwiALPoVpJNiVrgA4qADqAABykASFaQQqAA8l8ZDvF6-DAUcqCOAorjSHgcbvjoCpfF6aKINCwiXF8kgftEIgGBw2ILEwrAcDwQQlEAA
          */
-        if (nextStep.payload?.detail && stepNumber === 1) {
-          const details = nextStep.payload?.detail as { errorCode: string };
-          if (details?.errorCode === authIdTimeoutError) {
-            /**
-             * Resubmit with new authId, but old callbacks to prevent failing
-             * solely due to stale form.
-             */
-            if (previousCallbacks) {
-              restartedStep.callbacks = previousCallbacks;
-              restartedStep.payload = {
-                ...previousPayload,
-                authId: restartedStep.payload.authId,
-              };
-            }
-            restartedStep = await FRAuth.next(restartedStep, options);
-          }
+        restartedStep = restartedStep as FRStep;
+        // Rebuild callbacks onto restartedStep
+        restartedStep.callbacks = previousCallbacks as FRCallback[];
+
+        // Rebuild payload onto restartedStep ensuring the use of the NEW authId
+        restartedStep.payload = {
+          ...previousPayload,
+          authId: restartedStep.payload.authId,
+        };
+
+        const details = nextStep.payload.detail as { errorCode: string } | null;
+
+        /**
+         * Only if the authId expires do we resubmit with same callback values
+         */
+        if (details?.errorCode === authIdTimeoutErrorCode) {
+          restartedStep = await FRAuth.next(restartedStep, options);
         }
       }
 
       /**
+       * SET RESULT OF SUBSEQUENT REQUEST
+       *
        * After the above attempts to salvage the form submission, let's return
        * the final result to the user.
        */

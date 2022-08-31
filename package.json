@@ -2,6 +2,7 @@
   "name": "forgerock-web-login-framework",
   "version": "0.0.1",
   "scripts": {
+    "clean": "git clean -fdX -e \"!.env\"",
     "dev": "npm run build:widget && npm run dev:widget | npm run dev:app",
     "dev:app": "vite dev",
     "dev:style": "postcss src/lib/widget/main.css --output package/widget.css --watch",

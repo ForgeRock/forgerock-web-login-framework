@@ -3,9 +3,9 @@
 
   import Base from '$journey/callbacks/password/base.svelte';
   import {
-    getPasswordValidationFailureText,
     isInputRequired,
-  } from '$journey/utilities/callback.utilities';
+  } from '$journey/callbacks/utilities/callback.utilities';
+  import Policies from '$journey/callbacks/utilities/policies.svelte';
 
   export let callback: ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;
@@ -17,7 +17,6 @@
   const isRequired = isInputRequired(callback);
 
   let label = callback.getPrompt();
-  let validationFailure = getPasswordValidationFailureText(callback, label);
 
   $: {
     /**
@@ -25,8 +24,9 @@
      * on value changes within `callback`
      */
     label = callback.getPrompt();
-    validationFailure = getPasswordValidationFailureText(callback, label);
   }
 </script>
 
-<Base {callback} {firstInvalidInput} {idx} {isRequired} {validationFailure} />
+<Base {callback} {firstInvalidInput} {idx} {isRequired}>
+  <Policies {callback} {label} messageKey="passwordRequirements" />
+</Base>

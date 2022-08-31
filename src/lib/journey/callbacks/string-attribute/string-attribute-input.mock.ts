@@ -142,3 +142,65 @@ export default {
     },
   ],
 };
+
+export const docsExample = {
+  type: 'StringAttributeInputCallback',
+  output: [
+    {
+      name: 'name',
+      value: 'givenName',
+    },
+    {
+      name: 'prompt',
+      value: 'First Name',
+    },
+    {
+      name: 'required',
+      value: true,
+    },
+    {
+      name: 'policies',
+      value: {
+        policyRequirements: ['REQUIRED', 'VALID_TYPE'],
+        fallbackPolicies: null,
+        name: 'givenName',
+        policies: [
+          {
+            policyRequirements: ['REQUIRED'],
+            policyId: 'required',
+          },
+          {
+            policyRequirements: ['VALID_TYPE'],
+            policyId: 'valid-type',
+            params: {
+              types: ['string'],
+            },
+          },
+        ],
+        conditionalPolicies: null,
+      },
+    },
+    {
+      name: 'failedPolicies',
+      value: [],
+    },
+    {
+      name: 'validateOnly',
+      value: false,
+    },
+    {
+      name: 'value',
+      value: '',
+    },
+  ],
+  input: [
+    {
+      name: 'IDToken1',
+      value: '',
+    },
+    {
+      name: 'IDToken1validateOnly',
+      value: false,
+    },
+  ],
+};

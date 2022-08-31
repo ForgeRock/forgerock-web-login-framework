@@ -76,3 +76,87 @@ export default {
     },
   ],
 };
+
+export const docsExample = {
+  type: 'ValidatedCreatePasswordCallback',
+  output: [
+    {
+      name: 'echoOn',
+      value: false,
+    },
+    {
+      name: 'policies',
+      value: {
+        policyRequirements: [
+          'VALID_TYPE',
+          'MIN_LENGTH',
+          'AT_LEAST_X_CAPITAL_LETTERS',
+          'AT_LEAST_X_NUMBERS',
+          'CANNOT_CONTAIN_OTHERS',
+        ],
+        fallbackPolicies: null,
+        name: 'password',
+        policies: [
+          {
+            policyRequirements: ['VALID_TYPE'],
+            policyId: 'valid-type',
+            params: {
+              types: ['string'],
+            },
+          },
+          {
+            policyId: 'minimum-length',
+            params: {
+              minLength: 8,
+            },
+            policyRequirements: ['MIN_LENGTH'],
+          },
+          {
+            policyId: 'at-least-X-capitals',
+            params: {
+              numCaps: 1,
+            },
+            policyRequirements: ['AT_LEAST_X_CAPITAL_LETTERS'],
+          },
+          {
+            policyId: 'at-least-X-numbers',
+            params: {
+              numNums: 1,
+            },
+            policyRequirements: ['AT_LEAST_X_NUMBERS'],
+          },
+          {
+            policyId: 'cannot-contain-others',
+            params: {
+              disallowedFields: ['userName', 'givenName', 'sn'],
+            },
+            policyRequirements: ['CANNOT_CONTAIN_OTHERS'],
+          },
+        ],
+        conditionalPolicies: null,
+      },
+    },
+    {
+      name: 'failedPolicies',
+      value: [],
+    },
+    {
+      name: 'validateOnly',
+      value: false,
+    },
+    {
+      name: 'prompt',
+      value: 'Password',
+    },
+  ],
+  input: [
+    {
+      name: 'IDToken1',
+      value: '',
+    },
+    {
+      name: 'IDToken1validateOnly',
+      value: false,
+    },
+  ],
+};

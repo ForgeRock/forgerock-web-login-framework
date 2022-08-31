@@ -9,7 +9,7 @@
   // Import components
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey } from '$journey/utilities/callback.utilities';
+  import { convertStringToKey } from '$journey/utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
   import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
@@ -19,6 +19,7 @@
 
   export let failureMessage: string;
   export let formEl: HTMLFormElement | null = null;
+  export let loading: boolean;
   export let step: StepTypes;
   export let submitForm: () => void;
 
@@ -75,7 +76,7 @@
         {firstInvalidInput}
       />
     {/each}
-    <Button width="full" style="primary" type="submit">
+    <Button busy={loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>
     <p class="tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">

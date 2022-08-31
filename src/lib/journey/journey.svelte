@@ -2,11 +2,10 @@
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import T from '$components/i18n/locale-strings.svelte';
-  import type { JourneyStore } from '$journey/journey.store';
+  import type { JourneyStore } from '$journey/journey.interfaces';
   import { mapStepToStage } from '$journey/utilities/map-stage.utilities';
 
   export let formEl: HTMLFormElement | null = null;
-
   export let journeyStore: JourneyStore;
 
   function submitForm() {
@@ -24,6 +23,7 @@
     this={mapStepToStage($journeyStore?.step)}
     failureMessage={$journeyStore?.error?.message}
     bind:formEl
+    loading={$journeyStore.loading}
     {submitForm}
     step={$journeyStore?.step}
   />

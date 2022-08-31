@@ -3,7 +3,8 @@
 
   import Box from '$components/primitives/box/centered.svelte';
   import Journey from '../../lib/journey/journey.svelte';
-  import { initialize as initializeJourney, type JourneyStore } from '$journey/journey.store';
+  import { initialize as initializeJourney } from '$journey/journey.store';
+  import type { JourneyStore } from '$journey/journey.interfaces';
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOAuth, type OAuthStore } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser, type UserStore } from '$lib/user/user.store';

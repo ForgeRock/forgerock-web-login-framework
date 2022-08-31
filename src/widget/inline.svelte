@@ -11,7 +11,7 @@
   import { get } from 'svelte/store';
 
   // Import store types
-  import type { JourneyStore, JourneyStoreValue } from '$journey/journey.store';
+  import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
   import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
   import type { UserStore, UserStoreValue } from '$lib/user/user.store';
 
