@@ -14,6 +14,16 @@ export function convertStringToKey(string?: string | null): string {
     return '';
   }
 
+  if (string.toLocaleLowerCase().includes('constraint violation')) {
+    console.error(
+      'Delta Sierra error has occurred. Please communicate this to your system administrator.',
+    );
+    if (string.toLocaleLowerCase().includes('password')) {
+      return 'constraintViolationForPassword';
+    }
+    return 'constraintViolationForValue';
+  }
+
   const replaceFunction = (_: string, char: string): string => `${char.toLowerCase()}`;
 
   const normalizedString = string

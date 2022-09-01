@@ -12,7 +12,7 @@
   export let key: string;
   export let label: string;
   export let onChange: () => void;
-  export let options: { value: string | null; text: string }[];
+  export let options: { value: string; text: string }[];
   export let withForm = false;
 
   let el: SvelteComponent;

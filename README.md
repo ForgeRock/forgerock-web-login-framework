@@ -52,7 +52,7 @@ Note: This project is currently in Alpha, so this is not available via public np
 
 1. `git clone https://github.com/cerebrl/forgerock-web-login-framework`
 2. `cd forgerock-web-login-framework`
-3. `npm run install`
+3. `npm install` (or simply `npm i`)
 4. `npm run build:widget`
 5. `cd package` (this is the directory that contains the built components)
 6. `npm link` ([See here for more on `npm link`](https://docs.npmjs.com/cli/v8/commands/npm-link))
@@ -510,7 +510,7 @@ modal.onClose((event) => {
 
 ### Instal, build & run
 
-1. `npm run install` (or simply `npm i`)
+1. `npm install` (or simply `npm i`)
 2. `npm run build`
 3. `npm run dev` (leave running)
 

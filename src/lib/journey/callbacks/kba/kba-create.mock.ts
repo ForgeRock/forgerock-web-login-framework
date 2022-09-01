@@ -15,6 +15,10 @@ export default {
           name: 'predefinedQuestions',
           value: ["What's your favorite color?", 'Who was your first employer?'],
         },
+        {
+          name: 'allowUserDefinedQuestions',
+          value: true,
+        },
       ],
       input: [
         {
@@ -41,6 +45,10 @@ export const docsExample = {
     {
       name: 'predefinedQuestions',
       value: ["What's your favorite color?"],
+    },
+    {
+      name: 'allowUserDefinedQuestions',
+      value: false,
     },
   ],
   input: [

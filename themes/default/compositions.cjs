@@ -170,7 +170,7 @@ module.exports = (config, theme) => ({
     },
   },
   '.input-floating_dark': {
-    ':where(&:autofill) + label': {
+    '&:autofill + label': {
       // Needed to ensure the label is readable with browser autofill's light background
       color: `${theme('colors.secondary.dark')} !important`,
     },

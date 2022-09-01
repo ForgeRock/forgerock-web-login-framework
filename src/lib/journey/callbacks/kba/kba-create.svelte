@@ -18,18 +18,36 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
+  const inputArr = callback?.payload?.input;
+  const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
+  const inputNameQuestion = inputName;
+  const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
   const prompt = callback.getPrompt();
   const questions = callback
     .getPredefinedQuestions()
-    ?.map((label, idx) => ({ text: label, value: `${idx}` }));
-  const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
-  const inputNameQuestion = inputName;
-  const inputArr = callback?.payload?.input;
-  const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
+    ?.map(
+      (label, idx) => ({ text: label, value: `${idx}` }),
+    );
 
+  let customQuestionIndex: string | null = null;
+  let displayCustomQuestionInput = false;
+  let shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions');
   let value = '';
 
-  callback.setQuestion(questions[0].text);
+  questions.unshift({ text: prompt, value: '' });
+
+  /**
+   * Uncomment the below `setQuestion` if you remove the `unshift` above.
+   * The `unshift` defaults the UI to a non-question, but if you remove it,
+   * you will default to a question, which needs to be set in the callback.
+   *
+   * callback.setQuestion(questions[0].text);
+   */
+
+  if (shouldAllowCustomQuestion) {
+    customQuestionIndex = `${questions.length - 1}`;
+    questions.push({ text: interpolate('provideCustomQuestion'), value: customQuestionIndex });
+  }
 
   /**
    * @function setAnswer - Sets the value on the callback on element blur (lose focus)
@@ -50,7 +68,30 @@
    * @function setQuestion - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
    */
+  function selectQuestion(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+
+    if (value === customQuestionIndex) {
+      displayCustomQuestionInput = true;
+    } else {
+      displayCustomQuestionInput = false;
+      /** ***********************************************************************
+       * SDK INTEGRATION POINT
+       * Summary: SDK callback methods for setting values
+       * ------------------------------------------------------------------------
+       * Details: Each callback is wrapped by the SDK to provide helper methods
+       * for writing values to the callbacks received from AM
+       *********************************************************************** */
+      callback.setQuestion(value);
+    }
+  }
+
+  /**
+   * @function setQuestion - Sets the value on the callback on element blur (lose focus)
+   * @param {Object} event
+   */
   function setQuestion(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
     /** ***********************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for setting values
@@ -58,7 +99,11 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setQuestion((event.target as HTMLSelectElement).value);
+    callback.setQuestion(value);
+  }
+
+  $: {
+    shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions');
   }
 </script>
 
@@ -77,14 +122,25 @@
   </span>
 
   <Select
-    defaultOption={0}
     isRequired={true}
     firstInvalidInput={false}
     key={inputNameQuestion}
     label={prompt}
-    onChange={setQuestion}
+    onChange={selectQuestion}
     options={questions}
   />
+
+  {#if displayCustomQuestionInput}
+    <Input
+      firstInvalidInput={false}
+      key={inputNameAnswer || 'ka-question-label'}
+      label={interpolate('customSecurityQuestion')}
+      onChange={setQuestion}
+      isRequired={true}
+      type="text"
+      {value}
+    />
+  {/if}
 
   <Input
     {firstInvalidInput}

@@ -11,7 +11,7 @@
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
-  export let options: { value: string | null; text: string }[];
+  export let options: { value: string; text: string }[];
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {

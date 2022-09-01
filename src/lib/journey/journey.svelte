@@ -18,16 +18,16 @@
   }
 </script>
 
-{#if !$journeyStore.completed}
+{#if !$journeyStore?.completed}
   <svelte:component
-    this={mapStepToStage($journeyStore?.step)}
-    failureMessage={$journeyStore?.error?.message}
+    this={mapStepToStage($journeyStore.step)}
+    failureMessage={$journeyStore.error?.message}
     bind:formEl
     loading={$journeyStore.loading}
     {submitForm}
-    step={$journeyStore?.step}
+    step={$journeyStore.step}
   />
-{:else if $journeyStore.successful}
+{:else if $journeyStore?.successful}
   <Alert type="success">
     <T key="successMessage" />
   </Alert>

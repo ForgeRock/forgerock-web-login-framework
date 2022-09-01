@@ -12,7 +12,8 @@
   export let idx: number;
 
   /**
-   * This callback does not indicate that the input is required.
+   * At the time of this writing, this callback is never marked as required,
+   * but I'm adding this here as that could easily change.
    */
   const isRequired = isInputRequired(callback);
 

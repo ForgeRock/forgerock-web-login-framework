@@ -2,7 +2,6 @@
   import type { ChoiceCallback } from '@forgerock/javascript-sdk';
 
   import Select from '$components/compositions/select-floating/floating-label.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
 
   export let callback: ChoiceCallback;
   export let firstInvalidInput: boolean;
@@ -18,7 +17,7 @@
   const choiceOptions = callback
     .getChoices()
     ?.map((label, idx) => ({ text: label, value: `${idx}` }));
-  const defaultChoice = callback.getDefaultChoice();
+  const defaultChoice = `${callback.getDefaultChoice()}` || null;
   const inputName = callback?.payload?.input?.[0].name || `choice-${idx}`;
   const prompt = callback.getPrompt();
 
