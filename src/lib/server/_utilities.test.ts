@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractDomainFromUrl, rewriteCookieForClient, rewriteCookieForServer } from './utilities';
+import { extractDomainFromUrl, rewriteCookieForClient, rewriteCookieForServer } from './_utilities';
 
 describe('Domain utilities should work as expected', () => {
   it('should extract the domain out of a full URL', () => {

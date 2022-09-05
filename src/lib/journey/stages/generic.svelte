@@ -2,17 +2,17 @@
   import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
 
   // i18n
-  import { interpolate } from '$lib/utilities/i18n.utilities';
-  import T from '$components/i18n/locale-strings.svelte';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import T from '$components/_utilities/locale-strings.svelte';
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey } from '$journey/utilities/step.utilities';
+  import { convertStringToKey } from '$journey/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
-  import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
+  import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import Sanitize from '$components/i18n/server-strings.svelte';
+  import Sanitize from '$components/_utilities/server-strings.svelte';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 

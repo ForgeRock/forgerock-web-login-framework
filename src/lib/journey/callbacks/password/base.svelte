@@ -6,8 +6,8 @@
 
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import T from '$components/i18n/locale-strings.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import T from '$components/_utilities/locale-strings.svelte';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;

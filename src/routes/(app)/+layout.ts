@@ -1,5 +1,7 @@
 import configure from '$lib/config/config';
 
+import '../../app.css';
+
 configure({
   clientId: 'WebOAuthClient',
   // redirectUri: 'https://crbrl.ngrok.io/callback',

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
 
   import Box from '$components/primitives/box/centered.svelte';
-  import Journey from '../../lib/journey/journey.svelte';
+  import Journey from '../../../lib/journey/journey.svelte';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import type { JourneyStore } from '$journey/journey.interfaces';
   import { initialize as initializeContent } from '$lib/locale.store';

@@ -1,9 +1,9 @@
 <script lang="ts">
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import T from '$components/i18n/locale-strings.svelte';
+  import T from '$components/_utilities/locale-strings.svelte';
   import type { JourneyStore } from '$journey/journey.interfaces';
-  import { mapStepToStage } from '$journey/utilities/map-stage.utilities';
+  import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
 
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;

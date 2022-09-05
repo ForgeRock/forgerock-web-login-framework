@@ -1,5 +1,5 @@
 <script lang="ts">
-  import T from '$components/i18n/locale-strings.svelte';
+  import T from '$components/_utilities/locale-strings.svelte';
 
   export let errorMessage: string;
   export let key: string;

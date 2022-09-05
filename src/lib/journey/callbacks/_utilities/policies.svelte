@@ -9,8 +9,8 @@
     getValidationFailures,
     getValidationPolicies,
     type RestructuredParam,
-  } from '$journey/callbacks/utilities/callback.utilities';
-  import T from '$components/i18n/locale-strings.svelte';
+  } from '$journey/callbacks/_utilities/callback.utilities';
+  import T from '$components/_utilities/locale-strings.svelte';
 
   type ValidatedCallbacks =
   | AttributeInputCallback<boolean | string>

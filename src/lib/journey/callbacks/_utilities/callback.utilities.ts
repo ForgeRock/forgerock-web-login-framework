@@ -5,7 +5,7 @@ import type {
   ValidatedCreatePasswordCallback,
 } from '@forgerock/javascript-sdk';
 
-import { interpolate } from '$lib/utilities/i18n.utilities';
+import { interpolate } from '$lib/_utilities/i18n.utilities';
 import type { PolicyParams } from '@forgerock/javascript-sdk/lib/auth/interfaces';
 
 /** *********************************************

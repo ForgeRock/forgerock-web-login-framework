@@ -4,8 +4,8 @@
   import Base from '$journey/callbacks/password/base.svelte';
   import {
     isInputRequired,
-  } from '$journey/callbacks/utilities/callback.utilities';
-  import Policies from '$journey/callbacks/utilities/policies.svelte';
+  } from '$journey/callbacks/_utilities/callback.utilities';
+  import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
   export let callback: ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;

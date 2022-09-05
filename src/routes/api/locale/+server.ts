@@ -1,7 +1,7 @@
 import type { RequestEvent } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { getLocale } from '$lib/utilities/i18n.utilities';
+import { getLocale } from '$lib/_utilities/i18n.utilities';
 
 // Supported locales
 import ca_en from '$locales/ca/en/index.json';

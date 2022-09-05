@@ -2,7 +2,7 @@
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/compositions/checkbox/animated.svelte';
-  import T from '$components/i18n/locale-strings.svelte';
+  import T from '$components/_utilities/locale-strings.svelte';
 
   export let callback: TermsAndConditionsCallback;
   export let firstInvalidInput: boolean;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
 
   export let html = false;
   export let key: string;

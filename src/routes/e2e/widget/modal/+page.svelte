@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
 
   import Widget, { modal, journey, user } from '$package/modal';
 
+  let journeyParam = $page.url.searchParams.get('journey');
   let userResponse: any | null;
   let widget: Widget;
   let widgetEl: HTMLDivElement;
@@ -53,7 +55,7 @@
             timeout: 5000,
           },
           realmPath: 'alpha',
-          tree: 'Login',
+          tree: journeyParam || 'Login',
         },
         content,
         customStyles: {

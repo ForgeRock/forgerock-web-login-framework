@@ -8,13 +8,13 @@ import {
 import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
 import { writable, type Writable } from 'svelte/store';
 
-import { htmlDecode } from '$lib/journey/utilities/decode.utilities';
+import { htmlDecode } from '$journey/_utilities/decode.utilities';
 import type { JourneyStore, JourneyStoreValue, StepTypes } from './journey.interfaces';
-import { interpolate } from '$lib/utilities/i18n.utilities';
+import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
   shouldPopulateWithPreviousCallbacks,
-} from './utilities/step.utilities';
+} from './_utilities/step.utilities';
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const { set, subscribe }: Writable<JourneyStoreValue> = writable({

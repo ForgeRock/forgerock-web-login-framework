@@ -3,8 +3,8 @@
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
-  import T from '$components/i18n/locale-strings.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import T from '$components/_utilities/locale-strings.svelte';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
 
   export let callback: KbaCreateCallback;
