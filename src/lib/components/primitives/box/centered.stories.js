@@ -1,5 +1,3 @@
-import { screen, userEvent } from '@storybook/testing-library';
-
 import Centered from './centered.story.svelte';
 
 export default {

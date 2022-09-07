@@ -1,5 +1,5 @@
 import { expect } from '@storybook/jest';
-import { screen, userEvent } from '@storybook/testing-library';
+import { userEvent, within } from '@storybook/testing-library';
 
 import Checkbox from './animated.story.svelte';
 
@@ -47,7 +47,7 @@ export const Error = {
       const el = event.target;
       return el.checked;
     },
-    errorMessage: 'Please accept this',
+    message: 'Please accept this',
     label: 'Check to accept this agreement',
   },
 };
@@ -71,10 +71,8 @@ export const Interaction = Template.bind({});
 
 Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
-Interaction.play = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  await userEvent.tab();
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -82,21 +80,25 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const submitButton = screen.getByText('Trigger Error');
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const submitButton = canvas.getByText('Trigger Error');
   await userEvent.click(submitButton);
 
-  await expect(screen.queryByText('Please accept this')).toBeInTheDocument();
+  await expect(canvas.queryByText('Please accept this')).toBeVisible();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const inputEl = screen.getByLabelText('Check to accept this agreement', {
+  const inputEl = canvas.getByLabelText('Check to accept this agreement', {
     selector: 'input',
   });
   await userEvent.click(inputEl);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await expect(screen.queryByText('Please accept this')).toBeFalsy();
+  await expect(canvas.queryByText('Please accept this')).not.toBeVisible();
 
   await userEvent.tab();
 };

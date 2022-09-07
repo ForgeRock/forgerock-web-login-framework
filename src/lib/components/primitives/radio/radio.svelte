@@ -26,6 +26,7 @@
   bind:this={inputEl}
   class="tw_checkbox-input dark:tw_checkbox-input_dark tw_focusable-element dark:tw_focusable-element_dark"
   {checked}
+  data-message={`${key}-message`}
   id={key}
   {name}
   on:change={onChange}

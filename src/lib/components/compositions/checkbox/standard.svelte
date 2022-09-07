@@ -9,6 +9,7 @@
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let onChange: (event: Event) => void;
+  export let showMessage: boolean | undefined = undefined;
   export let value: boolean;
 
   function onChangeWrapper(event: Event) {
@@ -32,6 +33,6 @@
     column to match the label's layout.
    -->
   <span class="tw_col-start-2 tw_row-start-2">
-    <Message {message} {key} showMessage={isInvalid} type={isInvalid ? 'error' : 'info'} />
+    <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
   </span>
 </div>

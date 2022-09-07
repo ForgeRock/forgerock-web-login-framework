@@ -1,5 +1,5 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
-import { screen, userEvent } from '@storybook/testing-library';
+import { userEvent, within } from '@storybook/testing-library';
 import { expect } from '@storybook/jest';
 
 import response from './kba-create.mock';
@@ -35,19 +35,21 @@ export const Interaction = Template.bind({});
 
 Interaction.args = { ...Base.args };
 
-Interaction.play = async () => {
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const selectEl = screen.getByLabelText('Select a security question', {
+  const selectEl = canvas.getByLabelText('Select a security question', {
     selector: 'select',
   });
   await userEvent.selectOptions(selectEl, '0', { delay: 200 });
 
-  await expect(screen.queryByLabelText('Custom Security Question')).toBeNull();
+  await expect(canvas.queryByLabelText('Custom Security Question')).toBeNull();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -55,7 +57,7 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const answerEl = screen.getByLabelText('Security Answer', {
+  const answerEl = canvas.getByLabelText('Security Answer', {
     selector: 'input',
   });
 
@@ -71,9 +73,9 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await expect(screen.queryByLabelText('Custom Security Question')).toBeVisible();
+  await expect(canvas.queryByLabelText('Custom Security Question')).toBeVisible();
 
-  const questionEl = screen.getByLabelText('Custom Security Question', {
+  const questionEl = canvas.getByLabelText('Custom Security Question', {
     selector: 'input',
   });
 
@@ -96,7 +98,7 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await expect(screen.queryByLabelText('Custom Security Question')).toBeNull();
+  await expect(canvas.queryByLabelText('Custom Security Question')).toBeNull();
 
   await userEvent.clear(answerEl);
 };

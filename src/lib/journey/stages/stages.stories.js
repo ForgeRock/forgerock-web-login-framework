@@ -20,6 +20,7 @@ export default {
 
 export const Login = {
   args: {
+    failureMessage: '',
     stage: 'UsernamePassword',
     step: frLoginStep,
     submitForm: () => {
@@ -29,6 +30,7 @@ export const Login = {
 };
 export const Registration = {
   args: {
+    failureMessage: '',
     stage: 'Registration',
     step: frRegistrationStep,
     submitForm: () => {

@@ -31,8 +31,19 @@
 
   let customQuestionIndex: string | null = null;
   let displayCustomQuestionInput = false;
-  let shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions');
+  let shouldAllowCustomQuestion: boolean | undefined;
   let value = '';
+
+  /**
+   * `getOutputValue` throws if it doesn't find this property. There _may_ be a context
+   * in which the property doesn't exist, so I'm going to wrap it in a try-catch, just
+   * in case
+  */
+  try {
+    shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions') as boolean;
+  } catch (err) {
+    console.error('`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`');
+  }
 
   questions.unshift({ text: prompt, value: '' });
 
@@ -103,7 +114,16 @@
   }
 
   $: {
-    shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions');
+    /**
+     * `getOutputValue` throws if it doesn't find this property. There _may_ be a context
+     * in which the property doesn't exist, so I'm going to wrap it in a try-catch, just
+     * in case
+    */
+    try {
+      shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions') as boolean;
+    } catch (err) {
+      console.error('`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`');
+    }
   }
 </script>
 

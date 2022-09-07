@@ -13,7 +13,9 @@
   export let onChange: (event: Event) => void;
   // TODO: Placeholders don't reliably work with floating labels
   // export let placeholder: string;
-  export let showMessage: boolean |undefined = undefined;
+
+  // Below needs to be `undefined` to be optional and allow default value in Message component
+  export let showMessage: boolean | undefined = undefined;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value = '';
 

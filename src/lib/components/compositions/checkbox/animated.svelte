@@ -11,6 +11,7 @@
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let onChange: (event: Event) => void;
+  export let showMessage: boolean | undefined = undefined;
   export let value: boolean;
 
   let inputEl: HTMLInputElement;
@@ -38,6 +39,7 @@
     bind:this={inputEl}
     class="tw_checkbox-input_animated dark:tw_checkbox-input_animated_dark tw_sr-only"
     checked={value}
+    data-message={`${key}-message`}
     id={key}
     on:change={onChangeWrapper}
     required={isRequired}
@@ -52,11 +54,6 @@
     column to match the label's layout.
    -->
   <div class="tw_ml-10">
-    <Message
-      message={message}
-      {key}
-      showMessage={isInvalid}
-      type={isInvalid ? 'error' : 'info'}
-    />
+    <Message {key} {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
   </div>
 </div>

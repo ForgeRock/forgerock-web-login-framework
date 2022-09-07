@@ -6,7 +6,7 @@
   import Form from '$components/primitives/form/form.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage = '';
+  export let message = '';
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
@@ -14,24 +14,26 @@
   export let withForm = false;
 
   let el: SvelteComponent;
+  let isInvalid: boolean;
 
   function submitForm(event: SubmitEvent) {
     console.log('Form submitted');
-    errorMessage = 'Please accept this';
+    message = 'Please accept this';
   }
 
   onMount(() => {
-    if (!withForm && errorMessage) {
+    if (!withForm && message) {
       // Only done to force an error without any user interaction
       let root = el.$$.root;
       console.log(root);
       let errorEl = root.querySelector('input');
       errorEl?.setAttribute('aria-invalid', 'true');
+      isInvalid = true;
     }
   });
 
   $: {
-    console.log(errorMessage);
+    console.log(message);
   }
 </script>
 
@@ -41,8 +43,10 @@
       bind:this={el}
       {checkValidity}
       firstInvalidInput={false}
+      {isInvalid}
+      isRequired={true}
       {key}
-      message={errorMessage}
+      message={message}
       {onChange}
       {value}
     >
@@ -55,8 +59,10 @@
     bind:this={el}
     {checkValidity}
     firstInvalidInput={false}
+    {isInvalid}
+    isRequired={true}
     {key}
-    message={errorMessage}
+    message={message}
     {onChange}
     {value}
   >

@@ -12,6 +12,7 @@
   export let step: StepTypes;
   export let submitForm: () => void;
   export let stage: string;
+  export let loading: boolean = false;
 
   // Initialize localized content
   initialize();
@@ -19,10 +20,10 @@
 
 <Centered>
   {#if stage === 'UsernamePassword'}
-    <UsernamePassword {failureMessage} {step} {submitForm} />
+    <UsernamePassword {failureMessage} {loading} {step} {submitForm} />
   {:else if stage === 'Registration'}
-    <Registration {failureMessage} {step} {submitForm} />
+    <Registration {failureMessage} {loading} {step} {submitForm} />
   {:else}
-    <Generic {failureMessage} {step} {submitForm} />
+    <Generic {failureMessage} {loading} {step} {submitForm} />
   {/if}
 </Centered>

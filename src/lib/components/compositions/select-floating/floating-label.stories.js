@@ -1,4 +1,4 @@
-import { screen, userEvent } from '@storybook/testing-library';
+import { userEvent, within } from '@storybook/testing-library';
 
 import Select from './floating-label.story.svelte';
 
@@ -46,10 +46,8 @@ export const Interaction = Template.bind({});
 
 Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
-Interaction.play = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  await userEvent.tab();
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -57,12 +55,16 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const submitButton = screen.getByText('Trigger Error');
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const submitButton = canvas.getByText('Trigger Error');
   await userEvent.click(submitButton);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const inputEl = screen.getByLabelText('Select your option', {
+  const inputEl = canvas.getByLabelText('Select your option', {
     selector: 'select',
   });
   await userEvent.selectOptions(inputEl, '1');

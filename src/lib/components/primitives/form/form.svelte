@@ -26,7 +26,7 @@
       return;
     }
 
-    // Iterate over all children of the form, and pluck out the the inputs
+    // Iterate over all children of the form, and pluck out the inputs
     Array.from(form.children).forEach((el, idx) => {
       // First child will be a `div`, so query the actual form elements
       // eslint-disable-next-line no-undef
