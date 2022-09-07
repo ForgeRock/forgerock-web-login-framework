@@ -1,10 +1,9 @@
 <script lang="ts">
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
 
+  import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
-  import {
-    isInputRequired,
-  } from '$journey/callbacks/_utilities/callback.utilities';
+  import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
   export let callback: ValidatedCreatePasswordCallback;
@@ -17,17 +16,33 @@
    */
   const isRequired = isInputRequired(callback);
 
-  let label = callback.getPrompt();
+  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+  let prompt = callback.getPrompt();
+
+  let validationFailures = getValidationFailures(callback, prompt);
+  let isInvalid = !!validationFailures.length;
 
   $: {
     /**
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
      */
-    label = callback.getPrompt();
+    inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+    prompt = callback.getPrompt();
+
+    validationFailures = getValidationFailures(callback, prompt);
+    isInvalid = !!validationFailures.length;
   }
 </script>
 
-<Base {callback} {firstInvalidInput} {idx} {isRequired}>
-  <Policies {callback} {label} messageKey="passwordRequirements" />
+<Base
+  {callback}
+  {firstInvalidInput}
+  {idx}
+  {isInvalid}
+  {isRequired}
+  key={inputName}
+  showMessage={!validationFailures.length}
+>
+  <Policies {callback} key={inputName} label={prompt} messageKey="passwordRequirements" />
 </Base>

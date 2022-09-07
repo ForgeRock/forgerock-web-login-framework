@@ -24,7 +24,7 @@
 </script>
 
 <Button style="primary" width="auto" onClick={openDialog}>Open Dialog</Button>
-<Dialog bind:dialogEl dialogId="myDialog">
+<Dialog bind:dialogEl closeCallback={(args) => {}} dialogId="myDialog">
   <div class="tw_flex w-full tw_justify-center">
     <KeyIcon classes="tw_text-gray-400 tw_fill-current tw_mb-4" size="72px" />
   </div>
@@ -35,7 +35,7 @@
   </h2>
   <Form onSubmitWhenValid={submitForm}>
     <Input
-      errorMessage="Please provide a value"
+      message="Please provide a value"
       isRequired={true}
       firstInvalidInput={false}
       key="username"

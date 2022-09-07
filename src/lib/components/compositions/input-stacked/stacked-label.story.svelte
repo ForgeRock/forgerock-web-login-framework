@@ -37,11 +37,11 @@
   <Form onSubmitWhenValid={submitForm}>
     <Input
       {checkValidity}
-      {errorMessage}
       {isRequired}
       firstInvalidInput={false}
       {key}
       {label}
+      message={errorMessage}
       {onChange}
       {placeholder}
       {value}
@@ -52,11 +52,11 @@
   <Input
     bind:this={el}
     {checkValidity}
-    {errorMessage}
     {isRequired}
     firstInvalidInput={false}
     {key}
     {label}
+    message={errorMessage}
     {onChange}
     {placeholder}
     {value}

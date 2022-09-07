@@ -40,10 +40,10 @@
 </script>
 
 <Checkbox
-  errorMessage={validationFailure}
   {firstInvalidInput}
   isInvalid={!!validationFailure}
   key={inputName}
+  message={validationFailure}
   onChange={setValue}
   value={previousValue}
 >

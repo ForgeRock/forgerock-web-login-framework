@@ -1,8 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { page } from '$app/stores';
 
   import Widget, { form, journey, user } from '$package/inline';
 
+  let journeyParam = $page.url.searchParams.get('journey');
   let formEl: HTMLDivElement;
   let userResponse: any | null;
 
@@ -37,7 +39,7 @@
             timeout: 5000,
           },
           realmPath: 'alpha',
-          tree: 'Login',
+          tree: journeyParam || 'Login',
         },
         content,
       },

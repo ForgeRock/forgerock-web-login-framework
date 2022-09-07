@@ -1,9 +1,9 @@
 <script lang="ts">
   import Input from '$components/primitives/input/input.svelte';
-  import Error from '$components/primitives/message/error.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage = '';
+  export let message = '';
   export let firstInvalidInput: boolean;
   export let hasRightIcon = false;
   export let isRequired = false;
@@ -13,6 +13,7 @@
   export let onChange: (event: Event) => void;
   // TODO: Placeholders don't reliably work with floating labels
   // export let placeholder: string;
+  export let showMessage: boolean |undefined = undefined;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value = '';
 
@@ -21,10 +22,6 @@
       isInvalid = !checkValidity(event);
     }
     onChange(event);
-  }
-
-  $: {
-    isInvalid = !!errorMessage;
   }
 </script>
 
@@ -49,5 +46,5 @@
     {value}
   />
   <slot />
-  <Error {errorMessage} {key} showError={isInvalid} />
+  <Message {key} {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
 </div>

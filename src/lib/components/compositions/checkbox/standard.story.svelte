@@ -40,9 +40,9 @@
     <Checkbox
       bind:this={el}
       {checkValidity}
-      {errorMessage}
       firstInvalidInput={false}
       {key}
+      message={errorMessage}
       {onChange}
       {value}
     >
@@ -54,9 +54,9 @@
   <Checkbox
     bind:this={el}
     {checkValidity}
-    {errorMessage}
     firstInvalidInput={false}
     {key}
+    message={errorMessage}
     {onChange}
     {value}
   >

@@ -205,16 +205,6 @@ module.exports = (config, theme) => ({
     whiteSpace: 'nowrap',
   },
   /**
-   * Input error message
-   */
-  '.input-error-message': {
-    color: theme('colors.error.dark'),
-    width: '100%',
-  },
-  '.input-error-message_dark': {
-    color: theme('colors.error.light'),
-  },
-  /**
    * Radio animated composition
    * Rework of this example: https://codepen.io/dylanraga/pen/Qwqbab
    */

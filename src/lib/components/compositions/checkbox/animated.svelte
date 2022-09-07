@@ -1,11 +1,11 @@
 <script lang="ts">
   import { afterUpdate } from 'svelte';
 
-  import Error from '$components/primitives/message/error.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
   import Label from '$components/primitives/label/label.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage = '';
+  export let message = '';
   export let firstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
@@ -27,10 +27,6 @@
       inputEl.focus();
     }
   });
-
-  $: {
-    isInvalid = !!errorMessage;
-  }
 </script>
 
 <div class="tw_input-spacing">
@@ -56,6 +52,11 @@
     column to match the label's layout.
    -->
   <div class="tw_ml-10">
-    <Error {errorMessage} {key} showError={isInvalid} />
+    <Message
+      message={message}
+      {key}
+      showMessage={isInvalid}
+      type={isInvalid ? 'error' : 'info'}
+    />
   </div>
 </div>

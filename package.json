@@ -2,6 +2,8 @@
   "name": "forgerock-web-login-framework",
   "version": "0.0.1",
   "scripts": {
+    "ci": "vitest --dir src",
+    "ci:e2e": "playwright test",
     "clean": "git clean -fdX -e \"!.env\"",
     "dev": "npm run build:widget && npm run dev:widget | npm run dev:app",
     "dev:app": "vite dev",
@@ -13,7 +15,7 @@
     "package": "svelte-kit package",
     "preview": "vite preview",
     "test": "vitest --dir src",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build && playwright test",
     "test:storybook": "test-storybook",
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",

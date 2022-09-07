@@ -12,11 +12,13 @@
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;
   export let idx: number;
+  export let key: string;
+  export let isInvalid: boolean = false;
   export let isRequired = false;
+  export let showMessage: boolean;
   export let validationFailure = '';
 
   let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
   let textInputLabel = callback.getPrompt();
 
   let isVisible = false;
@@ -47,20 +49,22 @@
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+    key = callback?.payload?.input?.[0].name || `password-${idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
   }
 </script>
 
 <Input
-  errorMessage={validationFailure}
   {firstInvalidInput}
   hasRightIcon={true}
-  key={inputName}
+  {key}
   label={interpolate(callbackType, null, textInputLabel)}
+  message={validationFailure}
   onChange={setValue}
+  {isInvalid}
   {isRequired}
+  {showMessage}
   {type}
   value={typeof value === 'string' ? value : ''}
 >

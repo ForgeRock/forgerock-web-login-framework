@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
-test.only('modal widget', async ({ page }) => {
+test('modal widget', async ({ page }) => {
   await page.goto('widget/modal?journey=Registration');
   const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
   const dialog = page.locator('dialog');

@@ -108,6 +108,14 @@ export function getValidationFailureParams(failedPolicy: PolicyRequirement | und
         rule: 'validUsername',
       },
     ];
+  } else if (failedPolicy?.policyRequirement === 'VALID_EMAIL_ADDRESS_FORMAT') {
+    return [
+      {
+        length: null,
+        message: interpolate('invalidEmailAddress'),
+        rule: 'validEmailAddress',
+      },
+    ];
   } else {
     return [
       {

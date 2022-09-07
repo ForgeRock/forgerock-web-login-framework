@@ -26,10 +26,10 @@ jobs:
         run: npm run build
 
       - name: Test
-        run: npm run test
+        run: npm run ci
       - run: npx playwright install  --with-deps
       - name: E2E
-        run: npm run test:e2e
+        run: npm run ci:e2e
       - name: Publish to Chromatic
         uses: chromaui/action@v1
         with:

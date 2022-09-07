@@ -2,6 +2,7 @@
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
 
   import {
+    getValidationFailures,
     isInputRequired,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
@@ -15,9 +16,11 @@
   let callbackType = callback.getType();
   let inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
   let isRequired = isInputRequired(callback);
-  let label = callback.getPrompt();
-  let textInputLabel = callback.getPrompt();
+  let prompt = callback.getPrompt();
   let value = callback?.getInputValue();
+
+  let validationFailures = getValidationFailures(callback, prompt);
+  let isInvalid = !!validationFailures.length;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -38,20 +41,24 @@
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
     isRequired = isInputRequired(callback);
-    label = callback.getPrompt();
-    textInputLabel = callback.getPrompt();
+    prompt = callback.getPrompt();
     value = callback?.getInputValue();
+
+    validationFailures = getValidationFailures(callback, prompt);
+    isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
   {firstInvalidInput}
   {isRequired}
+  {isInvalid}
   key={inputName}
-  label={interpolate(callbackType, null, textInputLabel)}
+  label={interpolate(callbackType, null, prompt)}
   onChange={setValue}
+  showMessage={!validationFailures.length}
   type="text"
   value={typeof value === 'string' ? value : ''}
 >
-  <Policies {callback} {label} messageKey="usernameRequirements" />
+  <Policies {callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
 </Input>

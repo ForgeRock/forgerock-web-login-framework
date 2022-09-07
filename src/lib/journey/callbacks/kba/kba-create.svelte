@@ -122,8 +122,8 @@
   </span>
 
   <Select
-    isRequired={true}
     firstInvalidInput={false}
+    isRequired={true}
     key={inputNameQuestion}
     label={prompt}
     onChange={selectQuestion}
@@ -133,10 +133,10 @@
   {#if displayCustomQuestionInput}
     <Input
       firstInvalidInput={false}
+      isRequired={true}
       key={inputNameAnswer || 'ka-question-label'}
       label={interpolate('customSecurityQuestion')}
       onChange={setQuestion}
-      isRequired={true}
       type="text"
       {value}
     />
@@ -144,10 +144,10 @@
 
   <Input
     {firstInvalidInput}
+    isRequired={true}
     key={inputNameAnswer || 'ka-answer-label'}
     label={interpolate('securityAnswer')}
     onChange={setAnswer}
-    isRequired={true}
     type="text"
     {value}
   />

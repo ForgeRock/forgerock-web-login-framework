@@ -1,10 +1,10 @@
 <script lang="ts">
   import Select from '$components/primitives/select/select.svelte';
-  import Error from '$components/primitives/message/error.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let defaultOption: string | null = null;
-  export let errorMessage = '';
+  export let message = '';
   export let firstInvalidInput: boolean;
   export let isRequired: boolean;
   export let isInvalid: boolean | null = null;
@@ -18,10 +18,6 @@
       isInvalid = !checkValidity(event);
     }
     onChange(event);
-  }
-
-  $: {
-    isInvalid = !!errorMessage;
   }
 </script>
 
@@ -38,5 +34,5 @@
     onChange={onChangeWrapper}
     {options}
   />
-  <Error {errorMessage} {key} showError={isInvalid} />
+  <Message {message} {key} showMessage={isInvalid} type={isInvalid ? 'error' : 'info'} />
 </div>

@@ -1,11 +1,11 @@
 <script lang="ts">
   import Input from '$components/primitives/input/input.svelte';
-  import Error from '$components/primitives/message/error.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let firstInvalidInput: boolean;
   export let hasRightIcon = false;
-  export let errorMessage = '';
+  export let message = '';
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let key: string;
@@ -20,10 +20,6 @@
       isInvalid = !checkValidity(event);
     }
     onChange(event);
-  }
-
-  $: {
-    isInvalid = !!errorMessage;
   }
 </script>
 
@@ -43,5 +39,5 @@
     {value}
   />
   <slot />
-  <Error {errorMessage} {key} showError={isInvalid} />
+  <Message {message} {key} showMessage={isInvalid} type={isInvalid ? 'error' : 'info'} />
 </div>

@@ -15,6 +15,7 @@
   export let value: string;
 
   let el: SvelteComponent;
+  let isInvalid: boolean;
 
   function submitForm(event: SubmitEvent) {
     console.log('Form submitted');
@@ -28,6 +29,7 @@
       console.log(root);
       let errorEl = root.querySelector('input');
       errorEl?.setAttribute('aria-invalid', 'true');
+      isInvalid = true;
     }
   });
 </script>
@@ -36,12 +38,13 @@
   <Form onSubmitWhenValid={submitForm}>
     <Input
       {checkValidity}
-      {errorMessage}
       firstInvalidInput={false}
+      {isRequired}
+      {isInvalid}
       {key}
       {label}
+      message={errorMessage}
       {onChange}
-      {isRequired}
       {value}
     />
     <Button style="primary">Trigger Error</Button>
@@ -50,12 +53,13 @@
   <Input
     bind:this={el}
     {checkValidity}
-    {errorMessage}
     firstInvalidInput={false}
+    {isRequired}
+    {isInvalid}
     {key}
     {label}
+    message={errorMessage}
     {onChange}
-    {isRequired}
     {value}
   />
 {/if}

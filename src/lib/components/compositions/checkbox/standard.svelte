@@ -1,9 +1,9 @@
 <script lang="ts">
   import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
-  import Error from '$components/primitives/message/error.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage = '';
+  export let message = '';
   export let firstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
@@ -16,10 +16,6 @@
       isInvalid = !checkValidity(event);
     }
     onChange(event);
-  }
-
-  $: {
-    isInvalid = !!errorMessage;
   }
 </script>
 
@@ -36,6 +32,6 @@
     column to match the label's layout.
    -->
   <span class="tw_col-start-2 tw_row-start-2">
-    <Error {errorMessage} {key} showError={isInvalid} />
+    <Message {message} {key} showMessage={isInvalid} type={isInvalid ? 'error' : 'info'} />
   </span>
 </div>

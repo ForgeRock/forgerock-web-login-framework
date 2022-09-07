@@ -197,10 +197,13 @@ module.exports = function (theme) {
       position: 'relative',
       width: theme('spacing.4'),
       top: theme('spacing.1'),
+
       '& ~ span > .input-error-message': {
         display: 'none',
       },
-
+      '& ~ span > .input-info-message': {
+        display: 'none',
+      },
       '& ~ * > p': {
         display: 'none',
       },
@@ -258,6 +261,9 @@ module.exports = function (theme) {
       '& ~ .input-error-message': {
         display: 'none',
       },
+      '& ~ .input-info-message': {
+        display: 'none',
+      },
       '&[aria-invalid="true"]': {
         borderColor: theme('colors.error.dark'),
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
@@ -268,6 +274,9 @@ module.exports = function (theme) {
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
       '&[aria-invalid="true"] ~ .input-error-message': {
+        display: 'block',
+      },
+      '&[aria-invalid="true"] ~ .input-info-message': {
         display: 'block',
       },
       '&[aria-invalid="true"] ~ button': {
@@ -335,7 +344,33 @@ module.exports = function (theme) {
         color: theme('colors.secondary.dark'),
       },
     },
+    /**
+     * Input error message
+     */
+    '.input-error-message': {
+      color: theme('colors.error.dark'),
+      size: theme('fontSize.base'),
+      width: '100%',
+    },
+    '.input-error-message_dark': {
+      color: theme('colors.error.light'),
+    },
+    '.input-info-message': {
+      color: theme('colors.secondary.dark'),
+      size: theme('fontSize.base'),
+      width: '100%',
 
+      '&[data-error="true"]': {
+        color: theme('colors.error.dark'),
+      }
+    },
+    '.input-info-message_dark': {
+      color: theme('colors.secondary.light'),
+
+      '&[data-error="true"]': {
+        color: theme('colors.error.light'),
+      }
+    },
     '.link': {
       color: theme('colors.blue.600'),
       textDecoration: 'underline',

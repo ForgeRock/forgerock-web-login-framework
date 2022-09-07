@@ -38,11 +38,11 @@
     <Select
       {checkValidity}
       {defaultOption}
-      {errorMessage}
       firstInvalidInput={false}
       {isRequired}
       {key}
       {label}
+      message={errorMessage}
       {onChange}
       {options}
     />
@@ -53,11 +53,11 @@
     bind:this={el}
     {checkValidity}
     {defaultOption}
-    {errorMessage}
     firstInvalidInput={false}
     {isRequired}
     {key}
     {label}
+    message={errorMessage}
     {onChange}
     {options}
   />

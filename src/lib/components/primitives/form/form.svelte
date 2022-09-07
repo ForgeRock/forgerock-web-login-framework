@@ -55,6 +55,11 @@
           let messageKey = input.getAttribute('data-message');
           input.setAttribute('aria-describedby', messageKey || '');
 
+          if (messageKey) {
+            const messageEl = document.getElementById(messageKey)
+            messageEl?.setAttribute('data-error', 'true');
+          }
+
           // If there is no previous invalid input, this input is first and receives focus
           if (firstInvalidInput === null) {
             input.focus();
