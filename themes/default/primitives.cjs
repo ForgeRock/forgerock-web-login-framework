@@ -269,7 +269,7 @@ module.exports = function (theme) {
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+        backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
@@ -289,9 +289,10 @@ module.exports = function (theme) {
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
         outlineColor: colorLib(theme('colors.error.light')).fade(0.5).toString(),
+        backgroundColor: theme('colors.background.light')
       },
-      '&[aria-invalid="true"]:focus': {
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+      '&[aria-invalid="true"]:hover': {
+        backgroundColor: theme('colors.background.light'),
       },
       // TODO: is this needed? I don't think so.
       // '&:invalid:hover': {
@@ -315,13 +316,13 @@ module.exports = function (theme) {
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.light'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
       },
       '&[aria-invalid="true"]:focus': {
-        backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
       '&[aria-invalid="true"]:hover': {
-        backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
       '&[aria-invalid="true"] ~ button': {
         borderColor: theme('colors.error.light'),

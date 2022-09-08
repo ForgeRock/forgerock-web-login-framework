@@ -12,7 +12,7 @@
 
   /**
    * At the time of this writing, this callback is never marked as required,
-   * but I'm adding this here as that could easily change.
+   * but I'm adding this here as that could change.
    */
   const isRequired = isInputRequired(callback);
 

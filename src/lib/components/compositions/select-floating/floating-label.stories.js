@@ -18,10 +18,28 @@ export const Base = {
       return !!el.value;
     },
     key: 'uniqueId',
-    label: 'Select your option',
+    label: 'Choose Color',
     onChange: (e) => console.log(e.target.value),
     options: [
       { value: null, text: 'Choose Color' },
+      { value: 0, text: 'Red' },
+      { value: 1, text: 'Green' },
+      { value: 2, text: 'Blue' },
+    ],
+  },
+};
+
+export const LongLabel = {
+  args: {
+    checkValidity: (e) => {
+      const el = e.target;
+      return !!el.value;
+    },
+    key: 'uniqueId',
+    label: 'This is a very long label for testing purposes',
+    onChange: (e) => console.log(e.target.value),
+    options: [
+      { value: null, text: 'This is a very long label for testing purposes' },
       { value: 0, text: 'Red' },
       { value: 1, text: 'Green' },
       { value: 2, text: 'Blue' },
@@ -64,7 +82,7 @@ Interaction.play = async ({ canvasElement }) => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const inputEl = canvas.getByLabelText('Select your option', {
+  const inputEl = canvas.getByLabelText('Choose Color', {
     selector: 'select',
   });
   await userEvent.selectOptions(inputEl, '1');

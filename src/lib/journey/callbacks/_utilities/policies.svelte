@@ -40,21 +40,22 @@
 </script>
 
 <div class="tw_w-full" id={`${key}-message`}>
-  {#if simplifiedFailures.length || validationRules.length}
+  {#if simplifiedFailures.length}
     <p class="tw_m-1 tw_text-base tw_text-error-dark dark:tw_text-error-light tw_w-full">
       <T key={messageKey}></T>
     </p>
-  {/if}
-  {#if simplifiedFailures.length}
     <ul class="tw_m-1 tw_text-base tw_text-error-dark dark:tw_text-error-light tw_w-full">
       {#each simplifiedFailures as failure}
-        <li class="tw_list-disc tw_list-inside">{failure.message}</li>
+        <li class="tw_list-disc">{failure.message}</li>
       {/each}
     </ul>
   {:else if validationRules.length}
-    <ul class="tw_m-1 tw_text-base tw_text-white tw_w-full">
+    <p class="tw_m-1 tw_text-base tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">
+      <T key={messageKey}></T>
+    </p>
+    <ul class="tw_m-1 tw_text-base tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">
       {#each validationRules as rule}
-        <li class="tw_list-disc tw_list-inside">{rule.message}</li>
+        <li class="tw_list-disc">{rule.message}</li>
       {/each}
     </ul>
   {/if}

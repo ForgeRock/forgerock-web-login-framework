@@ -132,17 +132,17 @@ function getValidationMessageString(policy: Policy) {
     case 'at-least-X-capitals': {
       const params = policy?.params as { numCaps: number };
       const length = params?.numCaps;
-      return interpolate('includeTheMinimumNumberOfCapitals', {length: String(length)});
+      return interpolate('minimumNumberOfUppercase', {num: String(length)});
     }
     case 'at-least-X-numbers': {
-      const params = policy?.params as { numCaps: number };
-      const length = params?.numCaps;
-      return interpolate('includeTheMinimumNumberOfNumbers', {length: String(length)});
+      const params = policy?.params as { numNums: number };
+      const length = params?.numNums;
+      return interpolate('minimumNumberOfNumbers', {num: String(length)});
     }
     case 'cannot-contain-characters': {
       const params = policy?.params as { forbiddenChars: string[] };
       const chars = params?.forbiddenChars.reduce((prev, curr) => {
-        prev = `${prev}, ${curr}`;
+        prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
         return prev;
       }, '');
       return interpolate('fieldCanNotContainFollowingCharacters', {chars});
@@ -150,7 +150,7 @@ function getValidationMessageString(policy: Policy) {
     case 'cannot-contain-others': {
       const params = policy?.params as { disallowedFields: string[] };
       const fields = params?.disallowedFields?.reduce((prev, curr) => {
-        prev = `${prev}, ${interpolate(curr)}`;
+        prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
         return prev;
       }, '');
       return interpolate('fieldCanNotContainFollowingValues', {fields});
@@ -158,25 +158,40 @@ function getValidationMessageString(policy: Policy) {
     case 'maximum-length': {
       const params = policy?.params as { maxLength: number };
       const length = params?.maxLength;
-      return interpolate('exceedsMaximumCharacterLength', {length: String(length)});
+
+      if (length > 100) {
+        return '';
+      }
+      return interpolate('notToExceedMaximumCharacterLength', {max: String(length)});
     }
     case 'minimum-length': {
       const params = policy?.params as { minLength: number };
       const length = params?.minLength;
-      return interpolate('doesNotMeetMinimumCharacterLength', {length: String(length)});
+
+      if (length === 1) {
+        return '';
+      }
+      return interpolate('noLessThanMinimumCharacterLength', {min: String(length)});
     }
+    /**
+     * The below cases can be handled, but I think they create more noise than value to the user
+     */
     case 'not-empty':
-      return interpolate('fieldCanNotBeEmpty');
+      // return interpolate('fieldCanNotBeEmpty');
+      return '';
     case 'required':
-      return interpolate('requiredField');
+      // return interpolate('requiredField');
+      return '';
     case 'valid-username':
-      return interpolate('chooseDifferentUsername');
+      // return interpolate('chooseDifferentUsername');
+      return '';
     case 'valid-email-address-format':
-      return interpolate('useValidEmail');
+      // return interpolate('useValidEmail');
+      return '';
     case 'valid-type':
       return '';
     default:
-      return interpolate('pleaseCheckValue');
+      return '';
   }
 }
 
@@ -194,12 +209,11 @@ export function getValidationFailures(callback: ValidatedCallbacks, label: strin
 }
 
 export function getValidationPolicies(policies: StringDict<unknown>, label: string): Policy[] {
-  const value = policies?.value as Policies;
-  if (typeof value !== 'object') {
+  if (typeof policies !== 'object' && !policies) {
     return [];
   }
 
-  const reqs = value?.policies;
+  const reqs = policies?.policies;
   if (!Array.isArray(reqs)) {
     return [];
   }
@@ -209,7 +223,7 @@ export function getValidationPolicies(policies: StringDict<unknown>, label: stri
       ...(policy?.params && { params: policy?.params }),
       ...(policy?.policyId && { policyId: policy?.policyId }),
     };
-  });
+  }).filter((policy) => !!policy.message);
 }
 
 export function isInputRequired(callback: ValidatedCallbacks): boolean {
@@ -288,8 +302,6 @@ export function parseFailedPolicies(
 
 /** *********************************************
  * OLD METHODS
- * @param string
- * @returns
  */
 
 export function getAttributeValidationFailureText(

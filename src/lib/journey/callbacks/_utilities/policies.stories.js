@@ -17,9 +17,17 @@ export default {
   title: 'Callbacks/Utilities: Policies',
 };
 
-export const Password = {
+export const PasswordPolicies = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[1],
+    label: 'Password',
+    messageKey: 'passwordRequirements'
+  },
+};
+
+export const PasswordPolicyFailures = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[2],
     label: 'Password',
     messageKey: 'passwordRequirements'
   },

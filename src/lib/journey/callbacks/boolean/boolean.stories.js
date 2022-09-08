@@ -8,7 +8,6 @@ const step = new FRStep(response);
 export default {
   argTypes: {
     callback: { control: false },
-    inputName: { control: false },
   },
   component: Checkbox,
   parameters: {
@@ -20,13 +19,11 @@ export default {
 export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[0],
-    inputName: 'passwordCallback',
   },
 };
 
 export const Error = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[1],
-    inputName: 'passwordCallback',
   },
 };

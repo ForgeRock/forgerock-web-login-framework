@@ -30,6 +30,25 @@ export const Base = {
   },
 };
 
+export const LongLabel = {
+  args: {
+    checkValidity: (e) => {
+      const el = e.target;
+      console.log(el.value);
+      return !!el.value;
+    },
+    key: 'uniqueId',
+    label: 'This is a very long label for testing purposes',
+    onChange: (e) => console.log(e.target.value),
+    options: [
+      { value: null, text: 'This is a very long label for testing purposes' },
+      { value: 0, text: 'Red' },
+      { value: 1, text: 'Green' },
+      { value: 2, text: 'Blue' },
+    ],
+  },
+};
+
 export const Error = {
   args: {
     ...Base.args,

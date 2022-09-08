@@ -230,14 +230,50 @@ export const registrationStep: Step = {
         {
           name: 'policies',
           value: {
-            policyRequirements: ['VALID_TYPE'],
+            policyRequirements: [
+              'VALID_TYPE',
+              'MIN_LENGTH',
+              'AT_LEAST_X_CAPITAL_LETTERS',
+              'AT_LEAST_X_NUMBERS',
+              'CANNOT_CONTAIN_OTHERS',
+            ],
             fallbackPolicies: null,
             name: 'password',
             policies: [
               {
                 policyRequirements: ['VALID_TYPE'],
                 policyId: 'valid-type',
-                params: { types: ['string'] },
+                params: {
+                  types: ['string'],
+                },
+              },
+              {
+                policyId: 'minimum-length',
+                params: {
+                  minLength: 8,
+                },
+                policyRequirements: ['MIN_LENGTH'],
+              },
+              {
+                policyId: 'at-least-X-capitals',
+                params: {
+                  numCaps: 1,
+                },
+                policyRequirements: ['AT_LEAST_X_CAPITAL_LETTERS'],
+              },
+              {
+                policyId: 'at-least-X-numbers',
+                params: {
+                  numNums: 1,
+                },
+                policyRequirements: ['AT_LEAST_X_NUMBERS'],
+              },
+              {
+                policyId: 'cannot-contain-others',
+                params: {
+                  disallowedFields: ['userName', 'givenName', 'sn'],
+                },
+                policyRequirements: ['CANNOT_CONTAIN_OTHERS'],
               },
             ],
             conditionalPolicies: null,
@@ -258,6 +294,10 @@ export const registrationStep: Step = {
       output: [
         { name: 'prompt', value: 'Select a security question' },
         { name: 'predefinedQuestions', value: ["What's your favorite color?"] },
+        {
+          name: 'allowUserDefinedQuestions',
+          value: true,
+        },
       ],
       input: [
         { name: 'IDToken8question', value: '' },

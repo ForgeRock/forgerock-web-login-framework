@@ -32,6 +32,21 @@ export const Base = {
   },
 };
 
+export const LongLabel = {
+  args: {
+    checkValidity: (e) => {
+      const el = e.target;
+      return !!el.value;
+    },
+    errorMessage: '',
+    key: 'simpleInput',
+    isRequired: false,
+    label: 'This is a very long label for testing purposes',
+    onChange: (e) => console.log(e.target.value),
+    value: '',
+  },
+};
+
 export const WithValue = {
   args: {
     checkValidity: (e) => {

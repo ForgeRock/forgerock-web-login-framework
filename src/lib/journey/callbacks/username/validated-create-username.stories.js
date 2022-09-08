@@ -8,8 +8,6 @@ const step = new FRStep(response);
 export default {
   argTypes: {
     callback: { control: false },
-    inputName: { control: false },
-    showError: { control: 'boolean' },
   },
   component: Input,
   parameters: {
@@ -21,13 +19,11 @@ export default {
 export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreateUsernameCallback)[0],
-    inputName: 'usernameCallback',
   },
 };
 
 export const Error = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreateUsernameCallback)[1],
-    inputName: 'usernameCallback',
   },
 };

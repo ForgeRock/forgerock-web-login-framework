@@ -1,5 +1,5 @@
 import type { RequestEvent } from '@sveltejs/kit';
-import type { PageServerLoad } from '../$types';
+import type { PageServerLoad } from './$types';
 
 import { getLocale } from '$lib/_utilities/i18n.utilities';
 

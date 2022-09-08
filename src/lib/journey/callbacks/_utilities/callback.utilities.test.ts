@@ -82,100 +82,97 @@ describe('Test generic callback policy getter', () => {
   it('should test username creation policy getter', () => {
     const policies = getValidationPolicies(
       {
-        name: 'policies',
-        value: {
-          policyRequirements: [
-            'REQUIRED',
-            'MIN_LENGTH',
-            'VALID_TYPE',
-            'VALID_USERNAME',
-            'CANNOT_CONTAIN_CHARACTERS',
-            'MAX_LENGTH',
-          ],
-          fallbackPolicies: null,
-          name: 'userName',
-          policies: [
-            {
-              policyRequirements: ['REQUIRED'],
-              policyId: 'required',
+        policyRequirements: [
+          'REQUIRED',
+          'MIN_LENGTH',
+          'VALID_TYPE',
+          'VALID_USERNAME',
+          'CANNOT_CONTAIN_CHARACTERS',
+          'MAX_LENGTH',
+        ],
+        fallbackPolicies: null,
+        name: 'userName',
+        policies: [
+          {
+            policyRequirements: ['REQUIRED'],
+            policyId: 'required',
+          },
+          {
+            policyRequirements: ['REQUIRED'],
+            policyId: 'not-empty',
+          },
+          {
+            policyId: 'maximum-length',
+            params: {
+              maxLength: 255,
             },
-            {
-              policyRequirements: ['REQUIRED'],
-              policyId: 'not-empty',
+            policyRequirements: ['MAX_LENGTH'],
+          },
+          {
+            policyRequirements: ['MIN_LENGTH'],
+            policyId: 'minimum-length',
+            params: {
+              minLength: 1,
             },
-            {
-              policyId: 'maximum-length',
-              params: {
-                maxLength: 255,
-              },
-              policyRequirements: ['MAX_LENGTH'],
+          },
+          {
+            policyRequirements: ['VALID_TYPE'],
+            policyId: 'valid-type',
+            params: {
+              types: ['string'],
             },
-            {
-              policyRequirements: ['MIN_LENGTH'],
-              policyId: 'minimum-length',
-              params: {
-                minLength: 1,
-              },
+          },
+          {
+            policyId: 'valid-username',
+            policyRequirements: ['VALID_USERNAME'],
+          },
+          {
+            policyId: 'cannot-contain-characters',
+            params: {
+              forbiddenChars: ['/'],
             },
-            {
-              policyRequirements: ['VALID_TYPE'],
-              policyId: 'valid-type',
-              params: {
-                types: ['string'],
-              },
-            },
-            {
-              policyId: 'valid-username',
-              policyRequirements: ['VALID_USERNAME'],
-            },
-            {
-              policyId: 'cannot-contain-characters',
-              params: {
-                forbiddenChars: ['/'],
-              },
-              policyRequirements: ['CANNOT_CONTAIN_CHARACTERS'],
-            },
-          ],
-          conditionalPolicies: null,
-        },
+            policyRequirements: ['CANNOT_CONTAIN_CHARACTERS'],
+          },
+        ],
+        conditionalPolicies: null,
       },
       'username',
     );
 
     expect(policies).toStrictEqual([
-      {
-        message: 'Required Field',
-        policyId: 'required',
-      },
-      {
-        message: 'Field Can Not Be Empty',
-        policyId: 'not-empty',
-      },
-      {
-        message: 'Exceeds Maximum Character Length',
-        params: {
-          maxLength: 255,
-        },
-        policyId: 'maximum-length',
-      },
-      {
-        message: 'Does Not Meet Minimum Character Length',
-        params: {
-          minLength: 1,
-        },
-        policyId: 'minimum-length',
-      },
-      {
-        message: '',
-        params: {
-          types: ['string'],
-        },
-        policyId: 'valid-type',
-      },
-      {
-        message: 'Choose Different Username',
-        policyId: 'valid-username',
-      },
+      // {
+      //   message: 'Required Field',
+      //   policyId: 'required',
+      // },
+      // {
+      //   message: 'Field Can Not Be Empty',
+      //   policyId: 'not-empty',
+      // },
+      // {
+      //   message: 'Exceeds Maximum Character Length',
+      //   params: {
+      //     maxLength: 255,
+      //   },
+      //   policyId: 'maximum-length',
+      // },
+      // {
+      //   message: 'Does Not Meet Minimum Character Length',
+      //   params: {
+      //     minLength: 1,
+      //   },
+      //   policyId: 'minimum-length',
+      // },
+      // {
+      //   message: '',
+      //   params: {
+      //     types: ['string'],
+      //   },
+      //   policyId: 'valid-type',
+      // },
+      // {
+      //   message: 'Choose Different Username',
+      //   policyId: 'valid-username',
+      // },
       {
         message: 'Field Can Not Contain Following Characters',
         params: {
