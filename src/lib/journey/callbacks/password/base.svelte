@@ -15,7 +15,9 @@
   export let key: string;
   export let isInvalid: boolean = false;
   export let isRequired = false;
-  export let showMessage: boolean;
+
+  // Below needs to be `undefined` to be optional and allow default value in Message component
+  export let showMessage: boolean | undefined = undefined;
   export let validationFailure = '';
 
   let callbackType = callback.getType();
@@ -60,7 +62,7 @@
   hasRightIcon={true}
   {key}
   label={interpolate(callbackType, null, textInputLabel)}
-  message={validationFailure}
+  message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
   onChange={setValue}
   {isInvalid}
   {isRequired}
@@ -71,6 +73,7 @@
   <button
     class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
     on:click={toggleVisibility}
+    slot="input-button"
     type="button"
   >
     <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}

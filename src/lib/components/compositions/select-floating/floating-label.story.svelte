@@ -16,6 +16,7 @@
   export let withForm = false;
 
   let el: SvelteComponent;
+  let isInvalid: boolean;
 
   function submitForm(event: SubmitEvent) {
     console.log('Form submitted');
@@ -29,6 +30,7 @@
       console.log(root);
       let errorEl = root.querySelector('select');
       errorEl?.setAttribute('aria-invalid', 'true');
+      isInvalid = true;
     }
   });
 </script>

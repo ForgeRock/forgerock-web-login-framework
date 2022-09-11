@@ -15,7 +15,7 @@
   }
 
   function submitForm(event: SubmitEvent, isFormValid: boolean) {
-    console.log('Form submitted');
+    console.log(`Is form valid: ${isFormValid}`);
 
     if (isFormValid) {
       dialogEl.close();

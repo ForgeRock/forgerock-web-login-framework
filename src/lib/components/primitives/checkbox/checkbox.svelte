@@ -20,11 +20,11 @@
 </script>
 
 <input
+  aria-describedby={`${key}-message`}
   aria-invalid={isInvalid}
   bind:this={inputEl}
   class="tw_checkbox-input dark:tw_checkbox-input_dark tw_focusable-element dark:tw_focusable-element_dark"
   checked={value}
-  data-message={`${key}-message`}
   id={key}
   on:change={onChange}
   required={isRequired}

@@ -258,12 +258,6 @@ module.exports = function (theme) {
       '&:focus': {
         backgroundColor: theme('colors.background.light'),
       },
-      '& ~ .input-error-message': {
-        display: 'none',
-      },
-      '& ~ .input-info-message': {
-        display: 'none',
-      },
       '&[aria-invalid="true"]': {
         borderColor: theme('colors.error.dark'),
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
@@ -272,12 +266,6 @@ module.exports = function (theme) {
         backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
-      },
-      '&[aria-invalid="true"] ~ .input-error-message': {
-        display: 'block',
-      },
-      '&[aria-invalid="true"] ~ .input-info-message': {
-        display: 'block',
       },
       '&[aria-invalid="true"] ~ button': {
         borderColor: theme('colors.error.dark'),
@@ -288,7 +276,7 @@ module.exports = function (theme) {
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
-        outlineColor: colorLib(theme('colors.error.light')).fade(0.5).toString(),
+        outlineColor: colorLib(theme('colors.error.dark')).fade(0.3).toString(),
         backgroundColor: theme('colors.background.light')
       },
       '&[aria-invalid="true"]:hover': {
@@ -319,6 +307,7 @@ module.exports = function (theme) {
         backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
       },
       '&[aria-invalid="true"]:focus': {
+        outlineColor: `${colorLib(theme('colors.error.light')).fade(0.3).toString()} !important`,
         backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
       '&[aria-invalid="true"]:hover': {
@@ -350,7 +339,8 @@ module.exports = function (theme) {
      */
     '.input-error-message': {
       color: theme('colors.error.dark'),
-      size: theme('fontSize.base'),
+      fontSize: theme('fontSize.base'),
+      margin: theme('spacing.1'),
       width: '100%',
     },
     '.input-error-message_dark': {
@@ -358,17 +348,18 @@ module.exports = function (theme) {
     },
     '.input-info-message': {
       color: theme('colors.secondary.dark'),
-      size: theme('fontSize.base'),
+      fontSize: theme('fontSize.base'),
+      margin: theme('spacing.1'),
       width: '100%',
 
-      '&[data-error="true"]': {
+      '&.isInvalid': {
         color: theme('colors.error.dark'),
       }
     },
     '.input-info-message_dark': {
       color: theme('colors.secondary.light'),
 
-      '&[data-error="true"]': {
+      '&.isInvalid': {
         color: theme('colors.error.light'),
       }
     },
@@ -386,7 +377,7 @@ module.exports = function (theme) {
     '.select-base': {
       appearance: 'none',
       /**
-       * The below `background` property prevents Storybook a11y from determining contrast.
+       * The below background property prevents Storybook a11y from determining contrast.
        * This is likely due to the presence of the image.
        */
       background: `no-repeat right ${theme(
@@ -405,29 +396,23 @@ module.exports = function (theme) {
       '&:focus': {
         backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
       },
-      '&[aria-invalid="true"]:invalid': {
+      '&[aria-invalid="true"]': {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.dark'),
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+        backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
         backgroundPosition: 'right 0.75rem center, center right 2.25rem',
         backgroundSize: `16px 12px, ${theme('spacing.4')} ${theme('spacing.4')}`,
       },
-      '&[aria-invalid="true"]:invalid:focus': {
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
-      },
-      '&[aria-invalid="true"]:invalid:hover': {
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
-      },
     },
     '.select-base_dark': {
-      background: `no-repeat right ${theme(
-        'spacing.3',
-      )} center / 16px 12px url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
-        theme('colors.secondary.light'),
-      ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
+          theme('colors.secondary.dark'),
+        ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
+          theme('colors.error.dark'),
+        ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
       backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
 
       '&:hover,': {
@@ -436,19 +421,13 @@ module.exports = function (theme) {
       '&:focus': {
         backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
       },
-      '&[aria-invalid="true"]:invalid': {
+      '&[aria-invalid="true"]': {
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.light'),
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.light'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.black')).fade(0.95).toString(),
-      },
-      '&[aria-invalid="true"]:invalid:focus': {
-        backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
-      },
-      '&[aria-invalid="true"]:invalid:hover': {
-        backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
+        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
       },
     },
     '.spinner': {

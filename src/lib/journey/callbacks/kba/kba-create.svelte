@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { KbaCreateCallback } from '@forgerock/javascript-sdk';
+  import { writable } from 'svelte/store';
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
@@ -28,11 +29,11 @@
     ?.map(
       (label, idx) => ({ text: label, value: `${idx}` }),
     );
+  const value = writable('');
 
   let customQuestionIndex: string | null = null;
   let displayCustomQuestionInput = false;
   let shouldAllowCustomQuestion: boolean | undefined;
-  let value = '';
 
   /**
    * `getOutputValue` throws if it doesn't find this property. There _may_ be a context
@@ -80,10 +81,12 @@
    * @param {Object} event
    */
   function selectQuestion(event: Event) {
-    const value = (event.target as HTMLSelectElement).value;
+    const selectValue = (event.target as HTMLSelectElement).value;
 
-    if (value === customQuestionIndex) {
+    if (selectValue === customQuestionIndex) {
       displayCustomQuestionInput = true;
+      value.set('');
+      callback.setAnswer('');
     } else {
       displayCustomQuestionInput = false;
       /** ***********************************************************************
@@ -93,7 +96,7 @@
        * Details: Each callback is wrapped by the SDK to provide helper methods
        * for writing values to the callbacks received from AM
        *********************************************************************** */
-      callback.setQuestion(value);
+      callback.setQuestion(selectValue);
     }
   }
 
@@ -102,7 +105,7 @@
    * @param {Object} event
    */
   function setQuestion(event: Event) {
-    const value = (event.target as HTMLSelectElement).value;
+    const inputValue = (event.target as HTMLSelectElement).value;
     /** ***********************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for setting values
@@ -110,7 +113,7 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setQuestion(value);
+    callback.setQuestion(inputValue);
   }
 
   $: {
@@ -143,7 +146,6 @@
 
   <Select
     firstInvalidInput={false}
-    isRequired={true}
     key={inputNameQuestion}
     label={prompt}
     onChange={selectQuestion}
@@ -153,22 +155,23 @@
   {#if displayCustomQuestionInput}
     <Input
       firstInvalidInput={false}
-      isRequired={true}
-      key={inputNameAnswer || 'ka-question-label'}
+      key={`kba-custom-question-${idx}`}
       label={interpolate('customSecurityQuestion')}
+      showMessage={false}
+      message={interpolate('inputRequiredError')}
       onChange={setQuestion}
       type="text"
-      {value}
     />
   {/if}
 
   <Input
     {firstInvalidInput}
-    isRequired={true}
-    key={inputNameAnswer || 'ka-answer-label'}
+    key={inputNameAnswer || `kba-answer-${idx}`}
     label={interpolate('securityAnswer')}
+    showMessage={false}
+    message={interpolate('inputRequiredError')}
     onChange={setAnswer}
     type="text"
-    {value}
+    bind:value={$value}
   />
 </fieldset>

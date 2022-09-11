@@ -7,11 +7,14 @@
   export let hasRightIcon = false;
   export let message = '';
   export let isRequired = false;
-  export let isInvalid: boolean | null = null;
+  export let isInvalid: boolean | undefined = undefined;
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
   export let placeholder: string;
+
+  // Below needs to be `undefined` to be optional and allow default value in Message component
+  export let showMessage: boolean | undefined = undefined;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value = '';
 
@@ -36,8 +39,11 @@
     {isRequired}
     {isInvalid}
     {type}
-    {value}
+    bind:value
   />
-  <slot />
-  <Message {message} {key} showMessage={isInvalid} type={isInvalid ? 'error' : 'info'} />
+  <slot name="input-button" />
+  <div class="tw_w-full" id={`${key}-message`}>
+    <Message {key} {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
+    <slot />
+  </div>
 </div>

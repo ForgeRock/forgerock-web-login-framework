@@ -2,7 +2,7 @@
   import T from '$components/_utilities/locale-strings.svelte';
 
   export let message: string;
-  export let key: string;
+  export let key: string | undefined = undefined;
   export let showMessage: boolean = true;
   export let type: 'info' | 'error' = 'info';
 
@@ -19,12 +19,11 @@
   }
 </script>
 
-{#if showMessage}
-  <p class={generateClassString(type)} id={`${key}-message`}>
-    {#if message}
-      {message}
-    {:else}
-      <T key="inputRequiredError" />
-    {/if}
+{#if message}
+  <p
+    class={`__input-message ${!showMessage ? 'tw_hidden' : ''} ${generateClassString(type)}`}
+    id={`${key ? `${key}-message` : ''}`}
+  >
+    {message}
   </p>
 {/if}

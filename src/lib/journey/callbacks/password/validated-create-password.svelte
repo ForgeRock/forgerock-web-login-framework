@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
 
-  import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
+  import { getValidationPolicies, getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
   import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
@@ -19,6 +19,7 @@
   let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
   let prompt = callback.getPrompt();
 
+  let validationRules = getValidationPolicies(callback.getPolicies(), prompt);
   let validationFailures = getValidationFailures(callback, prompt);
   let isInvalid = !!validationFailures.length;
 
@@ -30,6 +31,7 @@
     inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
     prompt = callback.getPrompt();
 
+    validationRules = getValidationPolicies(callback.getPolicies(), prompt);
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
@@ -42,7 +44,7 @@
   {isInvalid}
   {isRequired}
   key={inputName}
-  showMessage={!validationFailures.length}
+  showMessage={isInvalid}
 >
-  <Policies {callback} key={inputName} label={prompt} messageKey="passwordRequirements" />
+  <Policies {callback} label={prompt} messageKey="passwordRequirements" />
 </Base>

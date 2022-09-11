@@ -16,4 +16,4 @@
   let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
 </script>
 
-<Base {callback} {firstInvalidInput} {idx} key={inputName} showMessage={false} />
+<Base {callback} {firstInvalidInput} {idx} key={inputName} />

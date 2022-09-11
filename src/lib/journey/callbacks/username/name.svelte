@@ -31,5 +31,6 @@
   label={interpolate(callbackType, null, textInputLabel)}
   onChange={setValue}
   type="text"
+  showMessage={false}
   value={typeof value === 'string' ? value : ''}
 />

@@ -2,6 +2,7 @@
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
 
   import {
+    getValidationPolicies,
     getValidationFailures,
     isInputRequired,
   } from '$journey/callbacks/_utilities/callback.utilities';
@@ -14,11 +15,12 @@
   export let idx: number;
 
   let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
+  let inputName = callback?.payload?.input?.[0].name || `validated-name-${idx}`;
   let isRequired = isInputRequired(callback);
   let prompt = callback.getPrompt();
   let value = callback?.getInputValue();
 
+  let validationRules = getValidationPolicies(callback.getPolicies(), prompt);
   let validationFailures = getValidationFailures(callback, prompt);
   let isInvalid = !!validationFailures.length;
 
@@ -44,6 +46,7 @@
     prompt = callback.getPrompt();
     value = callback?.getInputValue();
 
+    validationRules = getValidationPolicies(callback.getPolicies(), prompt);
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
@@ -55,8 +58,9 @@
   {isInvalid}
   key={inputName}
   label={interpolate(callbackType, null, prompt)}
+  message={isRequired ? interpolate('inputRequiredError') : undefined}
   onChange={setValue}
-  showMessage={!validationFailures.length}
+  showMessage={false}
   type="text"
   value={typeof value === 'string' ? value : ''}
 >

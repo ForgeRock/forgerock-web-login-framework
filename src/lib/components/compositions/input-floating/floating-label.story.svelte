@@ -6,7 +6,7 @@
   import Form from '$components/primitives/form/form.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage: string;
+  export let message: string;
   export let isRequired: boolean;
   export let key: string;
   export let label: string;
@@ -19,11 +19,11 @@
 
   function submitForm(event: SubmitEvent) {
     console.log('Form submitted');
-    errorMessage = 'This field must have a value';
+    message = 'This field must have a value';
   }
 
   onMount(() => {
-    if (!withForm && errorMessage) {
+    if (!withForm && message) {
       // Only done to force an error without any user interaction
       let root = el.$$.root;
       console.log(root);
@@ -43,7 +43,7 @@
       {isInvalid}
       {key}
       {label}
-      message={errorMessage}
+      message={message}
       {onChange}
       {value}
     />
@@ -58,7 +58,7 @@
     {isInvalid}
     {key}
     {label}
-    message={errorMessage}
+    message={message}
     {onChange}
     {value}
   />

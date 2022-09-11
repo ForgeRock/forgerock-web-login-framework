@@ -25,6 +25,7 @@ export const Base = {
     },
     key: 'simpleInput',
     label: 'Username',
+    message: '',
     onChange: (e) => console.log(e.target.value),
     placeholder: 'E.g. my-username',
     value: '',
@@ -39,6 +40,7 @@ export const LongLabel = {
     },
     key: 'simpleInput',
     label: 'This is a very long label for testing purposes',
+    message: '',
     onChange: (e) => console.log(e.target.value),
     placeholder: 'E.g. my-username',
     value: '',
@@ -53,6 +55,7 @@ export const WithValue = {
     },
     key: 'simpleInput',
     label: 'Username',
+    message: '',
     onChange: (e) => console.log(e.target.value),
     placeholder: 'E.g. my-username',
     value: 'demouser',
@@ -62,7 +65,7 @@ export const WithValue = {
 export const Error = {
   args: {
     ...Base.args,
-    errorMessage: 'This field must have a value.',
+    message: 'This field must have a value.',
     isRequired: true,
   },
 };
@@ -108,4 +111,8 @@ Interaction.play = async ({ canvasElement }) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.click(submitButton);
 };

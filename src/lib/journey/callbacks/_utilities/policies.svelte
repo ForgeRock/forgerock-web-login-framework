@@ -13,12 +13,12 @@
   import T from '$components/_utilities/locale-strings.svelte';
 
   type ValidatedCallbacks =
-  | AttributeInputCallback<boolean | string>
-  | ValidatedCreatePasswordCallback
-  | ValidatedCreateUsernameCallback;
+    | AttributeInputCallback<boolean | string>
+    | ValidatedCreatePasswordCallback
+    | ValidatedCreateUsernameCallback;
 
   export let callback: ValidatedCallbacks;
-  export let key: string;
+  export let key: string | undefined = undefined;
   export let label: string;
   export let messageKey: string;
 
@@ -39,24 +39,30 @@
   }
 </script>
 
-<div class="tw_w-full" id={`${key}-message`}>
-  {#if simplifiedFailures.length}
-    <p class="tw_m-1 tw_text-base tw_text-error-dark dark:tw_text-error-light tw_w-full">
-      <T key={messageKey}></T>
+{#if simplifiedFailures.length}
+  <div class="tw_input-policies tw_w-full" id={`${key ? `${key}-message` : ''}`}>
+    <p
+      class="tw_m-1 tw_text-base tw_font-bold tw_text-error-dark dark:tw_text-error-light tw_w-full"
+    >
+      <T key={messageKey} />
     </p>
     <ul class="tw_m-1 tw_text-base tw_text-error-dark dark:tw_text-error-light tw_w-full">
       {#each simplifiedFailures as failure}
         <li class="tw_list-disc">{failure.message}</li>
       {/each}
     </ul>
-  {:else if validationRules.length}
-    <p class="tw_m-1 tw_text-base tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">
-      <T key={messageKey}></T>
+  </div>
+{:else if validationRules.length}
+  <div class="tw_w-full" id={`${key ? `${key}-message` : ''}`}>
+    <p
+      class="tw_m-1 tw_text-base tw_font-bold tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full"
+    >
+      <T key={messageKey} />
     </p>
     <ul class="tw_m-1 tw_text-base tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">
       {#each validationRules as rule}
         <li class="tw_list-disc">{rule.message}</li>
       {/each}
     </ul>
-  {/if}
-</div>
+  </div>
+{/if}

@@ -11,6 +11,9 @@
   export let name: string;
   export let onChange: (event: Event) => void;
   export let options: { value: number | null; text: string }[];
+
+  // Below needs to be `undefined` to be optional and allow default value in Message component
+  export let showMessage: boolean | undefined = undefined;
 </script>
 
 {#each options as option}
@@ -34,5 +37,5 @@
   column to match the label's layout.
  -->
 <span class="tw_col-start-2 tw_row-start-2">
-  <Message {message} {key} showMessage={isInvalid} type={isInvalid ? 'error' : 'info'} />
+  <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
 </span>

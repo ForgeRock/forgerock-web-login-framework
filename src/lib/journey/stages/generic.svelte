@@ -72,7 +72,5 @@
     <Button busy={loading} style="primary" type="submit" width="full">
       <T key="nextButton" />
     </Button>
-  {:else if step.type === 'LoginSuccess'}
-    <T key="successMessage" />
   {/if}
 </Form>

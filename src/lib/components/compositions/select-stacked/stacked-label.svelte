@@ -6,12 +6,15 @@
   export let defaultOption: string | null = null;
   export let message = '';
   export let firstInvalidInput: boolean;
-  export let isRequired: boolean;
+  export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
   export let options: { value: string; text: string }[];
+
+  // Below needs to be `undefined` to be optional and allow default value in Message component
+  export let showMessage: boolean | undefined = undefined;
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {
@@ -34,5 +37,5 @@
     onChange={onChangeWrapper}
     {options}
   />
-  <Message {message} {key} showMessage={isInvalid} type={isInvalid ? 'error' : 'info'} />
+  <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
 </div>

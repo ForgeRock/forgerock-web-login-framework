@@ -6,6 +6,7 @@
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import {
+    getValidationPolicies,
     getValidationFailures,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
@@ -24,6 +25,7 @@
   let prompt = callback.getPrompt();
   let type = getInputTypeFromPolicies(policies);
 
+  let validationRules = getValidationPolicies(callback.getPolicies(), prompt);
   let validationFailures = getValidationFailures(callback, prompt);
   let isInvalid = !!validationFailures.length;
 
@@ -55,6 +57,7 @@
     prompt = callback.getPrompt();
     type = getInputTypeFromPolicies(policies);
 
+    validationRules = getValidationPolicies(callback.getPolicies(), prompt);
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
@@ -64,11 +67,12 @@
   {firstInvalidInput}
   key={inputName}
   label={interpolate(outputName, null, prompt)}
+  message={isRequired ? interpolate('inputRequiredError') : undefined}
   onChange={setValue}
   {isRequired}
   {isInvalid}
-  showMessage={!validationFailures.length}
   {type}
+  showMessage={!!isInvalid}
   value={previousValue}>
 
   <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />

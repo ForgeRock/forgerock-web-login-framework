@@ -6,7 +6,7 @@
   export let selectClasses = '';
   export let defaultOption: string | null = null;
   export let firstInvalidInput: boolean;
-  export let isRequired: boolean;
+  export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let key: string;
   export let label: string;
@@ -20,8 +20,8 @@
 
   /**
    * If label and option share the same text, only display option
-  */
-  if (defaultOption === null && (options[0].text === label)) {
+   */
+  if (defaultOption === null && options[0].text === label) {
     shouldDisplayOption = false;
   }
 
@@ -33,7 +33,9 @@
 
   function onChangeWrapper(event: Event) {
     const value = (event.target as HTMLSelectElement).value;
-    const selectedOption = options.find((option) => option.value === value);
+    const selectedOption = options.find((option) => {
+      return String(option.value) === value;
+    });
 
     // Check if text is same as label
     shouldDisplayOption = !(label === selectedOption?.text);
@@ -48,10 +50,12 @@
 {/if}
 
 <select
+  aria-describedby={`${key}-message`}
   aria-invalid={isInvalid}
   bind:this={inputEl}
-  class={`${ shouldDisplayOption ? selectClasses : '' } tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_select-base dark:tw_select-base_dark tw_w-full`}
-  data-message={`${key}-message`}
+  class={`${
+    shouldDisplayOption ? selectClasses : ''
+  } tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_select-base dark:tw_select-base_dark tw_w-full`}
   id={key}
   on:change={onChangeWrapper}
   required={isRequired}
@@ -64,5 +68,5 @@
 </select>
 
 {#if labelOrder === 'last'}
-  <Label {key} classes={`${ shouldDisplayOption ? labelClasses : 'tw_sr-only' }`}>{label}</Label>
+  <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>{label}</Label>
 {/if}

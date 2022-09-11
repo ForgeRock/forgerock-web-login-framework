@@ -7,6 +7,7 @@ export default {
   argTypes: {
     key: { control: 'text' },
     label: { control: 'text' },
+    message: { control: 'text' },
     type: { control: 'select', options: ['date', 'email', 'number', 'password', 'phone', 'text'] },
     value: { control: 'text' },
   },
@@ -23,7 +24,7 @@ export const Base = {
       const el = e.target;
       return !!el.value;
     },
-    errorMessage: '',
+    message: '',
     key: 'simpleInput',
     isRequired: false,
     label: 'Username',
@@ -38,7 +39,7 @@ export const LongLabel = {
       const el = e.target;
       return !!el.value;
     },
-    errorMessage: '',
+    message: '',
     key: 'simpleInput',
     isRequired: false,
     label: 'This is a very long label for testing purposes',
@@ -53,7 +54,7 @@ export const WithValue = {
       const el = e.target;
       return !!el.value;
     },
-    errorMessage: '',
+    message: '',
     key: 'simpleInput',
     isRequired: false,
     label: 'Username',
@@ -65,7 +66,7 @@ export const WithValue = {
 export const Error = {
   args: {
     ...Base.args,
-    errorMessage: 'This field must have a value.',
+    message: 'This field must have a value.',
     isRequired: true,
   },
 };
@@ -111,4 +112,8 @@ Interaction.play = async ({ canvasElement }) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.click(submitButton);
 };

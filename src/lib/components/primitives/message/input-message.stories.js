@@ -5,7 +5,7 @@ export default {
   parameters: {
     layout: 'centered',
   },
-  title: 'Primitives/InputMessage',
+  title: 'Primitives/Input Message',
 };
 
 export const Base = {
@@ -18,8 +18,8 @@ export const Base = {
 
 export const Error = {
   args: {
-    message: 'Please review your input.',
-    key: 'infoMessage',
-    type: 'info'
+    message: 'There is an error in your input.',
+    key: 'errorMessage',
+    type: 'error'
   },
 };

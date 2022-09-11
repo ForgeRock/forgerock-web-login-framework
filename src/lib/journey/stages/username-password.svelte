@@ -82,7 +82,5 @@
     <p class="tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
       <T key="dontHaveAnAccount" html={true} />
     </p>
-  {:else if step.type === 'LoginSuccess'}
-    <T key="loginSucess" />
   {/if}
 </Form>

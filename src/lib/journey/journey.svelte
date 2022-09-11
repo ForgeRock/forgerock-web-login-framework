@@ -4,6 +4,7 @@
   import T from '$components/_utilities/locale-strings.svelte';
   import type { JourneyStore } from '$journey/journey.interfaces';
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
+  import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;
@@ -28,9 +29,9 @@
     step={$journeyStore.step}
   />
 {:else if $journeyStore?.successful}
-  <Alert type="success">
-    <T key="successMessage" />
-  </Alert>
+  <div class="tw_text-center tw_w-full tw_py-4">
+    <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+  </div>
 {:else}
   <Alert type="error">
     <T html={true} key="unrecoverableError" />

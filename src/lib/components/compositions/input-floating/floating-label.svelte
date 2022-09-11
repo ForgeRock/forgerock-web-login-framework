@@ -45,8 +45,11 @@
     {isRequired}
     {isInvalid}
     {type}
-    {value}
+    bind:value
   />
-  <slot />
-  <Message {key} {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
+  <slot name="input-button" />
+  <div class="tw_w-full" id={`${key}-message`}>
+    <Message {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
+    <slot />
+  </div>
 </div>
