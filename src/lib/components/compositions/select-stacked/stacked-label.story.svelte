@@ -42,6 +42,7 @@
       {defaultOption}
       firstInvalidInput={false}
       {isRequired}
+      {isInvalid}
       {key}
       {label}
       message={errorMessage}
@@ -57,6 +58,7 @@
     {defaultOption}
     firstInvalidInput={false}
     {isRequired}
+    {isInvalid}
     {key}
     {label}
     message={errorMessage}

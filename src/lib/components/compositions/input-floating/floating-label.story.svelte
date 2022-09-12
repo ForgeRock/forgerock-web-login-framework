@@ -43,7 +43,7 @@
       {isInvalid}
       {key}
       {label}
-      message={message}
+      {message}
       {onChange}
       {value}
     />
@@ -58,7 +58,7 @@
     {isInvalid}
     {key}
     {label}
-    message={message}
+    {message}
     {onChange}
     {value}
   />

@@ -5,7 +5,7 @@
 
   export let firstInvalidInput: boolean;
   export let isRequired = false;
-  export let isInvalid: boolean | null = null;
+  export let isInvalid = false;
   export let key: string;
   export let onChange: (event: Event) => void;
   export let value: boolean;

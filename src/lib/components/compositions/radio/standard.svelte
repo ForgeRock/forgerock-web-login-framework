@@ -1,6 +1,7 @@
 <script lang="ts">
   import Radio from '$components/primitives/radio/radio.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
+  import type { Maybe } from '$lib/interfaces';
 
   export let defaultOption: number;
   export let message = '';
@@ -13,7 +14,7 @@
   export let options: { value: number | null; text: string }[];
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: boolean | undefined = undefined;
+  export let showMessage: Maybe<boolean> = undefined;
 </script>
 
 {#each options as option}

@@ -21,7 +21,7 @@ export const PasswordPolicies = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[1],
     label: 'Password',
-    messageKey: 'passwordRequirements'
+    messageKey: 'passwordRequirements',
   },
 };
 
@@ -29,6 +29,6 @@ export const PasswordPolicyFailures = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[2],
     label: 'Password',
-    messageKey: 'passwordRequirements'
+    messageKey: 'passwordRequirements',
   },
 };

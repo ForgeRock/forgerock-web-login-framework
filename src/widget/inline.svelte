@@ -44,17 +44,19 @@
       let oauth: OAuthTokenStoreValue;
       let journeyStoreUnsub = journeyStore.subscribe((response) => {
         if (!requestsOauth && response.successful) {
-          returnResponse && returnResponse({
-            journey: response,
-          });
+          returnResponse &&
+            returnResponse({
+              journey: response,
+            });
         } else if (requestsOauth && response.successful) {
           journey = response;
           oauthStore.get({ forceRenew: true });
         } else if (response.error) {
           journey = response;
-          returnError && returnError({
-            journey: response,
-          });
+          returnError &&
+            returnError({
+              journey: response,
+            });
         }
         // Clean up unneeded subscription
         if (response.completed) {
@@ -63,19 +65,21 @@
       });
       let oauthStoreUnsub = oauthStore.subscribe((response) => {
         if (!requestsUser && response.successful) {
-          returnResponse && returnResponse({
-            journey,
-            oauth: response,
-          });
+          returnResponse &&
+            returnResponse({
+              journey,
+              oauth: response,
+            });
         } else if (requestsUser && response.successful) {
           oauth = response;
           userStore.get();
         } else if (response.error) {
           oauth = response;
-          returnError && returnError({
-            journey,
-            oauth: response,
-          });
+          returnError &&
+            returnError({
+              journey,
+              oauth: response,
+            });
         }
         // Clean up unneeded subscription
         if (response.completed) {
@@ -84,17 +88,19 @@
       });
       let userStoreUnsub = userStore.subscribe((response) => {
         if (response.successful) {
-          returnResponse && returnResponse({
-            journey,
-            oauth,
-            user: response,
-          });
+          returnResponse &&
+            returnResponse({
+              journey,
+              oauth,
+              user: response,
+            });
         } else if (response.error) {
-          returnError && returnError({
-            journey,
-            oauth,
-            user: response,
-          });
+          returnError &&
+            returnError({
+              journey,
+              oauth,
+              user: response,
+            });
         }
         // Clean up unneeded subscription
         if (response.completed) {
@@ -192,7 +198,8 @@
       // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
       realmPath: 'alpha',
       // TODO: Once we move to SSR, this default should be more intelligent
-      redirectUri: (typeof window === 'object') ? window.location.href : 'https://localhost:3000/callback',
+      redirectUri:
+        typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
       scope: 'openid email',
       tree: 'Login',
     },

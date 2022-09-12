@@ -8,7 +8,7 @@
 </script>
 
 <div>
-  <Checkbox {key} {onChange} {value}>
+  <Checkbox firstInvalidInput={false} {key} {onChange} {value}>
     {label}
   </Checkbox>
 </div>

@@ -2,16 +2,17 @@
   import { afterUpdate } from 'svelte';
 
   import Message from '$components/primitives/message/input-message.svelte';
+  import type { Maybe } from '$lib/interfaces';
   import Label from '$components/primitives/label/label.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let message = '';
   export let firstInvalidInput: boolean;
   export let isRequired = false;
-  export let isInvalid: boolean | null = null;
+  export let isInvalid = false;
   export let key: string;
   export let onChange: (event: Event) => void;
-  export let showMessage: boolean | undefined = undefined;
+  export let showMessage: Maybe<boolean> = undefined;
   export let value: boolean;
 
   let inputEl: HTMLInputElement;

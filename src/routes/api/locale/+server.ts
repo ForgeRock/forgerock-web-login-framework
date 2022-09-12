@@ -27,4 +27,4 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   }
 
   return new Response(JSON.stringify(locales[locale]));
-}
+};

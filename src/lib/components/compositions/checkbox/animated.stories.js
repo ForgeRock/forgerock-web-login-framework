@@ -98,7 +98,10 @@ Interaction.play = async ({ canvasElement }) => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await expect(canvas.queryByText('Please accept this')).not.toBeVisible();
-
   await userEvent.tab();
+  await userEvent.click(submitButton);
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await expect(canvas.queryByText('Please accept this')).not.toBeVisible();
 };

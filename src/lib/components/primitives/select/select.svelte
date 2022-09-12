@@ -7,7 +7,7 @@
   export let defaultOption: string | null = null;
   export let firstInvalidInput: boolean;
   export let isRequired = false;
-  export let isInvalid: boolean | null = null;
+  export let isInvalid = false;
   export let key: string;
   export let label: string;
   export let labelClasses = '';

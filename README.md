@@ -420,7 +420,9 @@ import { modal } from 'forgerock-web-login-widget/modal';
 
 // Know when the modal auto-closes, not when the modal is
 // The property `reason` will be either "auto", "external", or "user" (see below)
-modal.onClose(({ reason }) => { /* Run anything you want */ });
+modal.onClose(({ reason }) => {
+  /* Run anything you want */
+});
 // Know when the modal has mounted
 modal.onMount((dialogElement, formElement) => {
   /* Run anything you want */

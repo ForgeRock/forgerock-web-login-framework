@@ -5,13 +5,13 @@
     ValidatedCreatePasswordCallback,
   } from '@forgerock/javascript-sdk';
 
-  import Centered from "$components/primitives/box/centered.svelte";
-  import Policies from "./policies.svelte";
+  import Centered from '$components/primitives/box/centered.svelte';
+  import Policies from './policies.svelte';
 
   type ValidatedCallbacks =
-  | AttributeInputCallback<boolean | string>
-  | ValidatedCreatePasswordCallback
-  | ValidatedCreateUsernameCallback;
+    | AttributeInputCallback<boolean | string>
+    | ValidatedCreatePasswordCallback
+    | ValidatedCreateUsernameCallback;
 
   export let callback: ValidatedCallbacks;
   export let label: string;

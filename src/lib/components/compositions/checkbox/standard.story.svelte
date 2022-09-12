@@ -46,7 +46,7 @@
       {isInvalid}
       isRequired={true}
       {key}
-      message={message}
+      {message}
       {onChange}
       {value}
     >
@@ -62,7 +62,7 @@
     {isInvalid}
     isRequired={true}
     {key}
-    message={message}
+    {message}
     {onChange}
     {value}
   >

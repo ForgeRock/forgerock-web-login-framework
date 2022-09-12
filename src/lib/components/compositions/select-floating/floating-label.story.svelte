@@ -40,8 +40,9 @@
     <Select
       {checkValidity}
       {defaultOption}
-      {isRequired}
       firstInvalidInput={false}
+      {isRequired}
+      {isInvalid}
       {key}
       {label}
       message={errorMessage}
@@ -55,8 +56,9 @@
     bind:this={el}
     {checkValidity}
     {defaultOption}
-    {isRequired}
     firstInvalidInput={false}
+    {isRequired}
+    {isInvalid}
     {key}
     {label}
     message={errorMessage}

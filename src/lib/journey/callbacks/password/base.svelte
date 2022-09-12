@@ -6,18 +6,19 @@
 
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import T from '$components/_utilities/locale-strings.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import type { Maybe } from '$lib/interfaces';
+  import T from '$components/_utilities/locale-strings.svelte';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;
   export let idx: number;
   export let key: string;
-  export let isInvalid: boolean = false;
+  export let isInvalid = false;
   export let isRequired = false;
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: boolean | undefined = undefined;
+  export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
 
   let callbackType = callback.getType();

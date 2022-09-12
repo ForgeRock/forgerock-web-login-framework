@@ -12,7 +12,7 @@
   export let step: StepTypes;
   export let submitForm: () => void;
   export let stage: string;
-  export let loading: boolean = false;
+  export let loading = false;
 
   // Initialize localized content
   initialize();

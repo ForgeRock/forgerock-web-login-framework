@@ -31,7 +31,7 @@ export function initialize(initOptions?: GetTokensOptions) {
      * TODO: Does this object merge need to be more granular?
      */
     const options = {
-      ...{query: { prompt: 'none' }},
+      ...{ query: { prompt: 'none' } },
       ...initOptions,
       ...getOptions,
     };

@@ -12,7 +12,7 @@ export const Base = {
   args: {
     message: 'Please review your input.',
     key: 'infoMessage',
-    type: 'info'
+    type: 'info',
   },
 };
 
@@ -20,6 +20,6 @@ export const Error = {
   args: {
     message: 'There is an error in your input.',
     key: 'errorMessage',
-    type: 'error'
+    type: 'error',
   },
 };

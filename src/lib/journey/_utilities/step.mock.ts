@@ -1,8 +1,7 @@
-import { CallbackType, FRStep } from "@forgerock/javascript-sdk";
+import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
 
 export const previousRegistrationStep = new FRStep({
-  authId:
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
+  authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
       type: CallbackType.ValidatedCreateUsernameCallback,
@@ -101,8 +100,7 @@ export const previousRegistrationStep = new FRStep({
 });
 
 export const restartedRegistrationStep = new FRStep({
-  authId:
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
+  authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
       type: CallbackType.ValidatedCreateUsernameCallback,
@@ -164,7 +162,7 @@ export const restartedRegistrationStep = new FRStep({
       _id: 23,
     },
     {
-      type:CallbackType.ValidatedCreatePasswordCallback,
+      type: CallbackType.ValidatedCreatePasswordCallback,
       output: [
         { name: 'echoOn', value: false },
         {

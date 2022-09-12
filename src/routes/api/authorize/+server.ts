@@ -27,7 +27,7 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   // console.log(await response.text());
 
   const headers = new Headers();
-  headers.append('location', response.url)
+  headers.append('location', response.url);
 
   return new Response(undefined, {
     status: 302,

@@ -42,7 +42,6 @@ Interaction.play = async ({ canvasElement }) => {
   const closeButton = canvas.getByTitle('Close Modal');
   await userEvent.click(closeButton);
 
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await expect(canvas.queryByText('Sign In')).not.toBeVisible();

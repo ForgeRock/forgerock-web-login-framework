@@ -28,9 +28,9 @@ interface Policy {
   params: Record<string, unknown>;
 }
 export interface RestructuredParam {
-    length: number | null;
-    message: string;
-    rule: string;
+  length: number | null;
+  message: string;
+  rule: string;
 }
 interface StringDict<T> {
   [name: string]: T;
@@ -66,7 +66,9 @@ export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email'
   return 'text';
 }
 
-export function getValidationFailureParams(failedPolicy: PolicyRequirement | undefined): RestructuredParam[] {
+export function getValidationFailureParams(
+  failedPolicy: PolicyRequirement | undefined,
+): RestructuredParam[] {
   if (failedPolicy?.policyRequirement === 'CHARACTER_SET') {
     const params = failedPolicy?.params as {
       'allow-unclassified-characters': boolean;
@@ -132,12 +134,12 @@ function getValidationMessageString(policy: Policy) {
     case 'at-least-X-capitals': {
       const params = policy?.params as { numCaps: number };
       const length = params?.numCaps;
-      return interpolate('minimumNumberOfUppercase', {num: String(length)});
+      return interpolate('minimumNumberOfUppercase', { num: String(length) });
     }
     case 'at-least-X-numbers': {
       const params = policy?.params as { numNums: number };
       const length = params?.numNums;
-      return interpolate('minimumNumberOfNumbers', {num: String(length)});
+      return interpolate('minimumNumberOfNumbers', { num: String(length) });
     }
     case 'cannot-contain-characters': {
       const params = policy?.params as { forbiddenChars: string[] };
@@ -145,7 +147,7 @@ function getValidationMessageString(policy: Policy) {
         prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
         return prev;
       }, '');
-      return interpolate('fieldCanNotContainFollowingCharacters', {chars});
+      return interpolate('fieldCanNotContainFollowingCharacters', { chars });
     }
     case 'cannot-contain-others': {
       const params = policy?.params as { disallowedFields: string[] };
@@ -153,7 +155,7 @@ function getValidationMessageString(policy: Policy) {
         prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
         return prev;
       }, '');
-      return interpolate('fieldCanNotContainFollowingValues', {fields});
+      return interpolate('fieldCanNotContainFollowingValues', { fields });
     }
     case 'maximum-length': {
       const params = policy?.params as { maxLength: number };
@@ -162,7 +164,7 @@ function getValidationMessageString(policy: Policy) {
       if (length > 100) {
         return '';
       }
-      return interpolate('notToExceedMaximumCharacterLength', {max: String(length)});
+      return interpolate('notToExceedMaximumCharacterLength', { max: String(length) });
     }
     case 'minimum-length': {
       const params = policy?.params as { minLength: number };
@@ -171,7 +173,7 @@ function getValidationMessageString(policy: Policy) {
       if (length === 1) {
         return '';
       }
-      return interpolate('noLessThanMinimumCharacterLength', {min: String(length)});
+      return interpolate('noLessThanMinimumCharacterLength', { min: String(length) });
     }
     /**
      * The below cases can be handled, but I think they create more noise than value to the user
@@ -217,13 +219,15 @@ export function getValidationPolicies(policies: StringDict<unknown>, label: stri
   if (!Array.isArray(reqs)) {
     return [];
   }
-  return reqs.map((policy) => {
-    return {
-      message: getValidationMessageString(policy),
-      ...(policy?.params && { params: policy?.params }),
-      ...(policy?.policyId && { policyId: policy?.policyId }),
-    };
-  }).filter((policy) => !!policy.message);
+  return reqs
+    .map((policy) => {
+      return {
+        message: getValidationMessageString(policy),
+        ...(policy?.params && { params: policy?.params }),
+        ...(policy?.policyId && { policyId: policy?.policyId }),
+      };
+    })
+    .filter((policy) => !!policy.message);
 }
 
 export function isInputRequired(callback: ValidatedCallbacks): boolean {
@@ -248,30 +252,25 @@ function convertCharacterSetToRuleObj(set: string) {
   if (type === '0123456789') {
     return {
       length: Number(num),
-      message: interpolate('minimumNumberOfNumbers', {num: String(num)}),
+      message: interpolate('minimumNumberOfNumbers', { num: String(num) }),
       rule: 'numbers',
     };
   } else if (type === 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
     return {
       length: Number(num),
-      message: interpolate('minimumNumberOfUppercase', {num: String(num)}),
+      message: interpolate('minimumNumberOfUppercase', { num: String(num) }),
       rule: 'uppercase',
     };
   } else if (type === 'abcdefghijklmnopqrstuvwxyz') {
     return {
       length: Number(num),
-      message: interpolate('minimumNumberOfLowercase', {num: String(num)}),
+      message: interpolate('minimumNumberOfLowercase', { num: String(num) }),
       rule: 'lowercase',
     };
-  } else if (
-    type.includes('@') ||
-    type.includes('!') ||
-    type.includes('*') ||
-    type.includes('#')
-  ) {
+  } else if (type.includes('@') || type.includes('!') || type.includes('*') || type.includes('#')) {
     return {
       length: Number(num),
-      message: interpolate('minimumNumberOfSymbols', {num: String(num)}),
+      message: interpolate('minimumNumberOfSymbols', { num: String(num) }),
       rule: 'symbols',
     };
   } else {

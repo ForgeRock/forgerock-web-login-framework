@@ -1,7 +1,10 @@
 <script lang="ts">
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
 
-  import { getValidationPolicies, getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
+  import {
+    getValidationPolicies,
+    getValidationFailures,
+  } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
   import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';

@@ -10,6 +10,7 @@
     getValidationPolicies,
     type RestructuredParam,
   } from '$journey/callbacks/_utilities/callback.utilities';
+  import type { Maybe } from '$lib/interfaces';
   import T from '$components/_utilities/locale-strings.svelte';
 
   type ValidatedCallbacks =
@@ -18,7 +19,7 @@
     | ValidatedCreateUsernameCallback;
 
   export let callback: ValidatedCallbacks;
-  export let key: string | undefined = undefined;
+  export let key: Maybe<string> = undefined;
   export let label: string;
   export let messageKey: string;
 

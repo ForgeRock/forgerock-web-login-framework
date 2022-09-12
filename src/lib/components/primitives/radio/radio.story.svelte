@@ -3,7 +3,7 @@
 
   export let defaultOption: number;
   export let isRequired = false;
-  export let isInvalid: boolean | undefined = undefined;
+  export let isInvalid = false;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;

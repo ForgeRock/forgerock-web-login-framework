@@ -73,7 +73,7 @@
   {isInvalid}
   {type}
   showMessage={!!isInvalid}
-  value={previousValue}>
-
+  value={previousValue}
+>
   <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />
 </Input>

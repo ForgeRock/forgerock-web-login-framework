@@ -46,7 +46,7 @@
       {isInvalid}
       isRequired={true}
       {key}
-      message={message}
+      {message}
       {onChange}
       {value}
     >
@@ -61,7 +61,7 @@
     firstInvalidInput={false}
     {isInvalid}
     {key}
-    message={message}
+    {message}
     {onChange}
     {value}
   >
