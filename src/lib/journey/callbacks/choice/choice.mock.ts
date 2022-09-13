@@ -29,3 +29,27 @@ export default {
     },
   ],
 };
+
+export const docsExample = {
+  type: 'ChoiceCallback',
+  output: [
+    {
+      name: 'prompt',
+      value: 'Choose one',
+    },
+    {
+      name: 'choices',
+      value: ['Choice A', 'Choice B', 'Choice C'],
+    },
+    {
+      name: 'defaultChoice',
+      value: 2,
+    },
+  ],
+  input: [
+    {
+      name: 'IDToken1',
+      value: 0,
+    },
+  ],
+};

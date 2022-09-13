@@ -1,4 +1,4 @@
-import { screen, userEvent } from '@storybook/testing-library';
+import { userEvent, within } from '@storybook/testing-library';
 // import { expect } from '@storybook/jest';
 
 import Input from './floating-label.story.svelte';
@@ -7,6 +7,7 @@ export default {
   argTypes: {
     key: { control: 'text' },
     label: { control: 'text' },
+    message: { control: 'text' },
     type: { control: 'select', options: ['date', 'email', 'number', 'password', 'phone', 'text'] },
     value: { control: 'text' },
   },
@@ -23,8 +24,25 @@ export const Base = {
       const el = e.target;
       return !!el.value;
     },
+    message: '',
     key: 'simpleInput',
+    isRequired: false,
     label: 'Username',
+    onChange: (e) => console.log(e.target.value),
+    value: '',
+  },
+};
+
+export const LongLabel = {
+  args: {
+    checkValidity: (e) => {
+      const el = e.target;
+      return !!el.value;
+    },
+    message: '',
+    key: 'simpleInput',
+    isRequired: false,
+    label: 'This is a very long label for testing purposes',
     onChange: (e) => console.log(e.target.value),
     value: '',
   },
@@ -36,7 +54,9 @@ export const WithValue = {
       const el = e.target;
       return !!el.value;
     },
+    message: '',
     key: 'simpleInput',
+    isRequired: false,
     label: 'Username',
     onChange: (e) => console.log(e.target.value),
     value: 'demouser',
@@ -46,7 +66,7 @@ export const WithValue = {
 export const Error = {
   args: {
     ...Base.args,
-    errorMessage: 'This field must have a value.',
+    message: 'This field must have a value.',
     isRequired: true,
   },
 };
@@ -60,10 +80,8 @@ export const Interaction = Template.bind({});
 
 Interaction.args = { ...Error.args, errorMessage: '', withForm: true };
 
-Interaction.play = async () => {
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  await userEvent.tab();
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -71,12 +89,16 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const submitButton = screen.getByText('Trigger Error');
+  await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  const submitButton = canvas.getByText('Trigger Error');
   await userEvent.click(submitButton);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const inputEl = screen.getByLabelText('Username', {
+  const inputEl = canvas.getByLabelText('Username', {
     selector: 'input',
   });
   await userEvent.click(inputEl);
@@ -90,4 +112,8 @@ Interaction.play = async () => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.click(submitButton);
 };

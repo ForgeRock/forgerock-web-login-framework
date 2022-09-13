@@ -40,3 +40,47 @@ export default {
     },
   ],
 };
+
+export const docsExample = {
+  type: 'BooleanAttributeInputCallback',
+  output: [
+    {
+      name: 'name',
+      value: 'preferences/marketing',
+    },
+    {
+      name: 'prompt',
+      value: 'Send me special offers and services',
+    },
+    {
+      name: 'required',
+      value: true,
+    },
+    {
+      name: 'policies',
+      value: {},
+    },
+    {
+      name: 'failedPolicies',
+      value: [],
+    },
+    {
+      name: 'validateOnly',
+      value: false,
+    },
+    {
+      name: 'value',
+      value: false,
+    },
+  ],
+  input: [
+    {
+      name: 'IDToken1',
+      value: false,
+    },
+    {
+      name: 'IDToken1validateOnly',
+      value: false,
+    },
+  ],
+};

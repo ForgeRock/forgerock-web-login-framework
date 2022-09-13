@@ -1,26 +1,33 @@
 <script lang="ts">
   import {
-    getAttributeValidationFailureText,
     getInputTypeFromPolicies,
     isInputRequired,
-  } from '$journey/utilities/callback.utilities';
+  } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
+  import {
+    getValidationPolicies,
+    getValidationFailures,
+  } from '$journey/callbacks/_utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
   export let callback: AttributeInputCallback<string>;
   export let firstInvalidInput: boolean;
   export let idx: number;
 
-  let inputName = callback?.payload?.input?.[0].name || `string-attr-${idx}`;
+  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
   let isRequired = isInputRequired(callback);
   let outputName = callback.getOutputByName('name', '');
   let policies = callback.getPolicies();
-  let type = getInputTypeFromPolicies(policies);
   let previousValue = callback?.getInputValue() as string;
-  let textInputLabel = callback.getPrompt();
-  let validationFailure = getAttributeValidationFailureText(callback);
+  let prompt = callback.getPrompt();
+  let type = getInputTypeFromPolicies(policies);
+
+  let validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+  let validationFailures = getValidationFailures(callback, prompt);
+  let isInvalid = !!validationFailures.length;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -38,23 +45,35 @@
   }
 
   $: {
+    /**
+     * We need to wrap this in a reactive block, so it reruns the function
+     * on value changes within `callback`
+     */
+    inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
     isRequired = isInputRequired(callback);
     outputName = callback.getOutputByName('name', '');
     policies = callback.getPolicies();
-    type = getInputTypeFromPolicies(policies);
     previousValue = callback?.getInputValue() as string;
-    textInputLabel = callback.getPrompt();
-    validationFailure = getAttributeValidationFailureText(callback);
+    prompt = callback.getPrompt();
+    type = getInputTypeFromPolicies(policies);
+
+    validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+    validationFailures = getValidationFailures(callback, prompt);
+    isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
-  errorMessage={validationFailure}
   {firstInvalidInput}
   key={inputName}
-  label={interpolate(outputName, null, textInputLabel)}
+  label={interpolate(outputName, null, prompt)}
+  message={isRequired ? interpolate('inputRequiredError') : undefined}
   onChange={setValue}
   {isRequired}
+  {isInvalid}
   {type}
+  showMessage={!!isInvalid}
   value={previousValue}
-/>
+>
+  <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />
+</Input>

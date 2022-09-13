@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { KbaCreateCallback } from '@forgerock/javascript-sdk';
+  import { writable } from 'svelte/store';
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
-  import T from '$components/i18n/locale-strings.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import T from '$components/_utilities/locale-strings.svelte';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
 
   export let callback: KbaCreateCallback;
@@ -18,18 +19,47 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
+  const inputArr = callback?.payload?.input;
+  const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
+  const inputNameQuestion = inputName;
+  const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
   const prompt = callback.getPrompt();
   const questions = callback
     .getPredefinedQuestions()
     ?.map((label, idx) => ({ text: label, value: `${idx}` }));
-  const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
-  const inputNameQuestion = inputName;
-  const inputArr = callback?.payload?.input;
-  const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
+  const value = writable('');
 
-  let value = '';
+  let customQuestionIndex: string | null = null;
+  let displayCustomQuestionInput = false;
+  let shouldAllowCustomQuestion: boolean | undefined;
 
-  callback.setQuestion(questions[0].text);
+  /**
+   * `getOutputValue` throws if it doesn't find this property. There _may_ be a context
+   * in which the property doesn't exist, so I'm going to wrap it in a try-catch, just
+   * in case
+   */
+  try {
+    shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions') as boolean;
+  } catch (err) {
+    console.error(
+      '`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`',
+    );
+  }
+
+  questions.unshift({ text: prompt, value: '' });
+
+  /**
+   * Uncomment the below `setQuestion` if you remove the `unshift` above.
+   * The `unshift` defaults the UI to a non-question, but if you remove it,
+   * you will default to a question, which needs to be set in the callback.
+   *
+   * callback.setQuestion(questions[0].text);
+   */
+
+  if (shouldAllowCustomQuestion) {
+    customQuestionIndex = `${questions.length - 1}`;
+    questions.push({ text: interpolate('provideCustomQuestion'), value: customQuestionIndex });
+  }
 
   /**
    * @function setAnswer - Sets the value on the callback on element blur (lose focus)
@@ -50,7 +80,32 @@
    * @function setQuestion - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
    */
+  function selectQuestion(event: Event) {
+    const selectValue = (event.target as HTMLSelectElement).value;
+
+    if (selectValue === customQuestionIndex) {
+      displayCustomQuestionInput = true;
+      value.set('');
+      callback.setAnswer('');
+    } else {
+      displayCustomQuestionInput = false;
+      /** ***********************************************************************
+       * SDK INTEGRATION POINT
+       * Summary: SDK callback methods for setting values
+       * ------------------------------------------------------------------------
+       * Details: Each callback is wrapped by the SDK to provide helper methods
+       * for writing values to the callbacks received from AM
+       *********************************************************************** */
+      callback.setQuestion(selectValue);
+    }
+  }
+
+  /**
+   * @function setQuestion - Sets the value on the callback on element blur (lose focus)
+   * @param {Object} event
+   */
   function setQuestion(event: Event) {
+    const inputValue = (event.target as HTMLSelectElement).value;
     /** ***********************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for setting values
@@ -58,7 +113,22 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setQuestion((event.target as HTMLSelectElement).value);
+    callback.setQuestion(inputValue);
+  }
+
+  $: {
+    /**
+     * `getOutputValue` throws if it doesn't find this property. There _may_ be a context
+     * in which the property doesn't exist, so I'm going to wrap it in a try-catch, just
+     * in case
+     */
+    try {
+      shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions') as boolean;
+    } catch (err) {
+      console.error(
+        '`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`',
+      );
+    }
   }
 </script>
 
@@ -77,22 +147,33 @@
   </span>
 
   <Select
-    defaultOption={0}
-    isRequired={true}
     firstInvalidInput={false}
     key={inputNameQuestion}
     label={prompt}
-    onChange={setQuestion}
+    onChange={selectQuestion}
     options={questions}
   />
 
+  {#if displayCustomQuestionInput}
+    <Input
+      firstInvalidInput={false}
+      key={`kba-custom-question-${idx}`}
+      label={interpolate('customSecurityQuestion')}
+      showMessage={false}
+      message={interpolate('inputRequiredError')}
+      onChange={setQuestion}
+      type="text"
+    />
+  {/if}
+
   <Input
     {firstInvalidInput}
-    key={inputNameAnswer || 'ka-answer-label'}
+    key={inputNameAnswer || `kba-answer-${idx}`}
     label={interpolate('securityAnswer')}
+    showMessage={false}
+    message={interpolate('inputRequiredError')}
     onChange={setAnswer}
-    isRequired={true}
     type="text"
-    {value}
+    bind:value={$value}
   />
 </fieldset>

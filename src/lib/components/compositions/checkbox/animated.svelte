@@ -1,16 +1,18 @@
 <script lang="ts">
   import { afterUpdate } from 'svelte';
 
-  import Error from '$components/primitives/message/error.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
+  import type { Maybe } from '$lib/interfaces';
   import Label from '$components/primitives/label/label.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage = '';
+  export let message = '';
   export let firstInvalidInput: boolean;
   export let isRequired = false;
-  export let isInvalid: boolean | null = null;
+  export let isInvalid = false;
   export let key: string;
   export let onChange: (event: Event) => void;
+  export let showMessage: Maybe<boolean> = undefined;
   export let value: boolean;
 
   let inputEl: HTMLInputElement;
@@ -27,10 +29,6 @@
       inputEl.focus();
     }
   });
-
-  $: {
-    isInvalid = !!errorMessage;
-  }
 </script>
 
 <div class="tw_input-spacing">
@@ -42,6 +40,7 @@
     bind:this={inputEl}
     class="tw_checkbox-input_animated dark:tw_checkbox-input_animated_dark tw_sr-only"
     checked={value}
+    data-message={`${key}-message`}
     id={key}
     on:change={onChangeWrapper}
     required={isRequired}
@@ -56,6 +55,6 @@
     column to match the label's layout.
    -->
   <div class="tw_ml-10">
-    <Error {errorMessage} {key} showError={isInvalid} />
+    <Message {key} {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
   </div>
 </div>

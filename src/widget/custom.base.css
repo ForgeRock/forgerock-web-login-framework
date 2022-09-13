@@ -65,16 +65,9 @@ Remove the default font size and weight for headings.
   font-weight: inherit;
 }
 /*
-Reset links to optimize for opt-in styling instead of opt-out.
-*/
-:where(.fr_widget-root) a {
-  color: inherit;
-  text-decoration: inherit;
-}
-/*
 Base link color when inside of localized content.
 */
-:where(.ft_widget-root) a {
+:where(.fr_widget-root) a {
   @apply tw_link;
 }
 :where(.tw_dark) a {

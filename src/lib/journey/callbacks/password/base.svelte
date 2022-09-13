@@ -6,17 +6,22 @@
 
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import T from '$components/i18n/locale-strings.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import type { Maybe } from '$lib/interfaces';
+  import T from '$components/_utilities/locale-strings.svelte';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;
   export let idx: number;
+  export let key: string;
+  export let isInvalid = false;
   export let isRequired = false;
+
+  // Below needs to be `undefined` to be optional and allow default value in Message component
+  export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
 
   let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
   let textInputLabel = callback.getPrompt();
 
   let isVisible = false;
@@ -47,30 +52,34 @@
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+    key = callback?.payload?.input?.[0].name || `password-${idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
   }
 </script>
 
 <Input
-  errorMessage={validationFailure}
   {firstInvalidInput}
   hasRightIcon={true}
-  key={inputName}
+  {key}
   label={interpolate(callbackType, null, textInputLabel)}
+  message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
   onChange={setValue}
+  {isInvalid}
   {isRequired}
+  {showMessage}
   {type}
   value={typeof value === 'string' ? value : ''}
 >
   <button
     class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
     on:click={toggleVisibility}
+    slot="input-button"
     type="button"
   >
     <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}
       ><T key="showPassword" /></EyeIcon
     >
   </button>
+  <slot />
 </Input>

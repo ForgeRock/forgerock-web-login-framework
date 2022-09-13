@@ -52,7 +52,7 @@ Note: This project is currently in Alpha, so this is not available via public np
 
 1. `git clone https://github.com/cerebrl/forgerock-web-login-framework`
 2. `cd forgerock-web-login-framework`
-3. `npm run install`
+3. `npm install` (or simply `npm i`)
 4. `npm run build:widget`
 5. `cd package` (this is the directory that contains the built components)
 6. `npm link` ([See here for more on `npm link`](https://docs.npmjs.com/cli/v8/commands/npm-link))
@@ -420,7 +420,9 @@ import { modal } from 'forgerock-web-login-widget/modal';
 
 // Know when the modal auto-closes, not when the modal is
 // The property `reason` will be either "auto", "external", or "user" (see below)
-modal.onClose(({ reason }) => { /* Run anything you want */ });
+modal.onClose(({ reason }) => {
+  /* Run anything you want */
+});
 // Know when the modal has mounted
 modal.onMount((dialogElement, formElement) => {
   /* Run anything you want */
@@ -510,11 +512,19 @@ modal.onClose((event) => {
 
 ### Instal, build & run
 
-1. `npm run install` (or simply `npm i`)
+1. `npm install` (or simply `npm i`)
 2. `npm run build`
 3. `npm run dev` (leave running)
 
 This will install all the necessary dependencies, build the project and run it in `dev` mode, providing you with Hot Module Reloading. This will also produce the Widget package for use in external applications.
+
+## Notes
+
+### Re-syncing with Chromatic
+
+```sh
+npx chromatic --project-token=e10acf0c74f9 --patch-build=<current-branch>...main
+```
 
 ## Disclaimer
 

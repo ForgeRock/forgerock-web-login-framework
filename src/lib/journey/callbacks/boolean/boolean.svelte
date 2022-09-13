@@ -2,11 +2,11 @@
   import {
     getAttributeValidationFailureText,
     isInputRequired,
-  } from '$journey/utilities/callback.utilities';
+  } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/compositions/checkbox/animated.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
 
   export let callback: AttributeInputCallback<boolean>;
   export let firstInvalidInput: boolean;
@@ -40,10 +40,10 @@
 </script>
 
 <Checkbox
-  errorMessage={validationFailure}
   {firstInvalidInput}
   isInvalid={!!validationFailure}
   key={inputName}
+  message={validationFailure}
   onChange={setValue}
   value={previousValue}
 >

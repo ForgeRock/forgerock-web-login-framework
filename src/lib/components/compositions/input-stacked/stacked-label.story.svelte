@@ -6,7 +6,7 @@
   import Input from './stacked-label.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let errorMessage: string;
+  export let message: string;
   export let isRequired: boolean;
   export let key: string;
   export let label: string;
@@ -16,19 +16,21 @@
   export let value: string;
 
   let el: SvelteComponent;
+  let isInvalid: boolean;
 
   function submitForm(event: SubmitEvent) {
     console.log('Form submitted');
-    errorMessage = 'This field must have a value';
+    message = 'This field must have a value';
   }
 
   onMount(() => {
-    if (!withForm && errorMessage) {
+    if (!withForm && message) {
       // Only done to force an error without any user interaction
       let root = el.$$.root;
       console.log(root);
       let errorEl = root.querySelector('input');
       errorEl?.setAttribute('aria-invalid', 'true');
+      isInvalid = true;
     }
   });
 </script>
@@ -37,11 +39,12 @@
   <Form onSubmitWhenValid={submitForm}>
     <Input
       {checkValidity}
-      {errorMessage}
-      {isRequired}
       firstInvalidInput={false}
+      {isRequired}
+      {isInvalid}
       {key}
       {label}
+      {message}
       {onChange}
       {placeholder}
       {value}
@@ -52,11 +55,12 @@
   <Input
     bind:this={el}
     {checkValidity}
-    {errorMessage}
-    {isRequired}
     firstInvalidInput={false}
+    {isRequired}
+    {isInvalid}
     {key}
     {label}
+    {message}
     {onChange}
     {placeholder}
     {value}

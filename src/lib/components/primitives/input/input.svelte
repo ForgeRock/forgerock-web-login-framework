@@ -29,18 +29,100 @@
   <Label {key} classes={`${labelClasses}`}>{label}</Label>
 {/if}
 
-<input
-  aria-invalid={isInvalid}
-  bind:this={inputEl}
-  class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
-  data-message={`${key}-message`}
-  id={key}
-  on:change={onChange}
-  placeholder={placeholder || label}
-  required={isRequired}
-  {type}
-  {value}
-/>
+<!--
+  Because we are using "two-way binding" with `bind:value`,
+  Svelte will error when `type` is dynamic. This is the reason
+  for the duplication below.
+-->
+{#if type === 'date'}
+  <input
+    aria-describedby={`${key}-message`}
+    aria-invalid={isInvalid}
+    bind:this={inputEl}
+    class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    id={key}
+    on:change={onChange}
+    placeholder={placeholder || label}
+    required={isRequired}
+    type="date"
+    bind:value
+  />
+{/if}
+
+{#if type === 'email'}
+  <input
+    aria-describedby={`${key}-message`}
+    aria-invalid={isInvalid}
+    bind:this={inputEl}
+    class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    id={key}
+    on:change={onChange}
+    placeholder={placeholder || label}
+    required={isRequired}
+    type="email"
+    bind:value
+  />
+{/if}
+
+{#if type === 'number'}
+  <input
+    aria-describedby={`${key}-message`}
+    aria-invalid={isInvalid}
+    bind:this={inputEl}
+    class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    id={key}
+    on:change={onChange}
+    placeholder={placeholder || label}
+    required={isRequired}
+    type="number"
+    bind:value
+  />
+{/if}
+
+{#if type === 'password'}
+  <input
+    aria-describedby={`${key}-message`}
+    aria-invalid={isInvalid}
+    bind:this={inputEl}
+    class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    id={key}
+    on:change={onChange}
+    placeholder={placeholder || label}
+    required={isRequired}
+    type="password"
+    bind:value
+  />
+{/if}
+
+{#if type === 'phone'}
+  <input
+    aria-describedby={`${key}-message`}
+    aria-invalid={isInvalid}
+    bind:this={inputEl}
+    class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    id={key}
+    on:change={onChange}
+    placeholder={placeholder || label}
+    required={isRequired}
+    type="phone"
+    bind:value
+  />
+{/if}
+
+{#if type === 'text'}
+  <input
+    aria-describedby={`${key}-message`}
+    aria-invalid={isInvalid}
+    bind:this={inputEl}
+    class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    id={key}
+    on:change={onChange}
+    placeholder={placeholder || label}
+    required={isRequired}
+    type="text"
+    bind:value
+  />
+{/if}
 
 {#if labelOrder === 'last'}
   <Label {key} classes={`${labelClasses}`}>{label}</Label>

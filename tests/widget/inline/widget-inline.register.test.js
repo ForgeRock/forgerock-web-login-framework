@@ -1,0 +1,31 @@
+import { expect, test } from '@playwright/test';
+import { v4 as uuid } from 'uuid';
+
+test('Inline registration widget', async ({ page }) => {
+  await page.goto('widget/inline?journey=Registration');
+
+  await page.fill('text=Username', uuid());
+  await page.fill('text=First Name', 'Demo');
+  await page.fill('text=Last Name', 'User');
+  await page.fill('text=Email Address', 'demo@user.com');
+  await page.fill('text=Password', 'willfail');
+  await page.selectOption('select', '0');
+  await page.fill('text=Security Answer', 'Red');
+  await page.click('text=Please accept our Terms and Conditions');
+  await page.locator('button', { hasText: 'Register' }).click();
+
+  await expect(page.locator('text=Password requirements')).toBeVisible();
+  await expect(page.locator('text=At least 1 number(s)')).toBeVisible();
+  await expect(page.locator('text=At least 1 uppercase')).toBeVisible();
+  await expect(page.locator('text=At least 1 lowercase')).toBeVisible();
+  await expect(page.locator('text=At least 1 symbol(s)')).toBeVisible();
+
+  await page.fill('text=Password', 'j56eKtae*1');
+  await page.locator('button', { hasText: 'Register' }).click();
+
+  const fullName = page.locator('#fullName');
+  const email = page.locator('#email');
+
+  expect(await fullName.innerText()).toBe('Full name: Demo User');
+  expect(await email.innerText()).toBe('Email: demo@user.com');
+});

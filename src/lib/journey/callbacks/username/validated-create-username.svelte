@@ -2,23 +2,27 @@
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
 
   import {
-    getUsernameValidationFailureText,
+    getValidationPolicies,
+    getValidationFailures,
     isInputRequired,
-  } from '$journey/utilities/callback.utilities';
+  } from '$journey/callbacks/_utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate } from '$lib/utilities/i18n.utilities';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
   export let callback: ValidatedCreateUsernameCallback;
   export let firstInvalidInput: boolean;
   export let idx: number;
 
   let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
+  let inputName = callback?.payload?.input?.[0].name || `validated-name-${idx}`;
   let isRequired = isInputRequired(callback);
-  let label = callback.getPrompt();
-  let textInputLabel = callback.getPrompt();
+  let prompt = callback.getPrompt();
   let value = callback?.getInputValue();
-  let validationFailure = getUsernameValidationFailureText(callback, label);
+
+  let validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+  let validationFailures = getValidationFailures(callback, prompt);
+  let isInvalid = !!validationFailures.length;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -39,20 +43,26 @@
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
     isRequired = isInputRequired(callback);
-    label = callback.getPrompt();
-    textInputLabel = callback.getPrompt();
+    prompt = callback.getPrompt();
     value = callback?.getInputValue();
-    validationFailure = getUsernameValidationFailureText(callback, label);
+
+    validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+    validationFailures = getValidationFailures(callback, prompt);
+    isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
-  errorMessage={validationFailure}
   {firstInvalidInput}
   {isRequired}
+  {isInvalid}
   key={inputName}
-  label={interpolate(callbackType, null, textInputLabel)}
+  label={interpolate(callbackType, null, prompt)}
+  message={isRequired ? interpolate('inputRequiredError') : undefined}
   onChange={setValue}
+  showMessage={false}
   type="text"
   value={typeof value === 'string' ? value : ''}
-/>
+>
+  <Policies {callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
+</Input>

@@ -8,7 +8,6 @@ const step = new FRStep(response);
 export default {
   argTypes: {
     callback: { control: false },
-    inputName: { control: false },
   },
   component: Input,
   parameters: {
@@ -20,14 +19,17 @@ export default {
 export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0],
-    inputName: 'passwordCallback',
   },
 };
 
-export const Error = {
+export const Policies = {
   args: {
-    showError: true,
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[1],
-    inputName: 'passwordCallbackWithError',
+  },
+};
+
+export const PolicyErrors = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[2],
   },
 };

@@ -1,5 +1,5 @@
 import { expect } from '@storybook/jest';
-import { screen, userEvent } from '@storybook/testing-library';
+import { userEvent, within } from '@storybook/testing-library';
 
 import Dialog from './dialog.story.svelte';
 
@@ -21,29 +21,30 @@ export const Interaction = Template.bind({});
 
 Interaction.args = { ...DialogWithTrigger.args };
 
-Interaction.play = async () => {
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
 
-  await expect(screen.queryByText('Sign In')).not.toBeVisible();
+  await expect(canvas.queryByText('Sign In')).not.toBeVisible();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const triggerButton = screen.getByText('Open Dialog');
+  const triggerButton = canvas.getByText('Open Dialog');
   await userEvent.click(triggerButton);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await expect(screen.queryByText('Sign In')).toBeInTheDocument();
+  await expect(canvas.queryByText('Sign In')).toBeInTheDocument();
 
-  const closeButton = screen.getByTitle('Close Modal');
+  const closeButton = canvas.getByTitle('Close Modal');
   await userEvent.click(closeButton);
 
-
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await expect(screen.queryByText('Sign In')).not.toBeVisible();
+  await expect(canvas.queryByText('Sign In')).not.toBeVisible();
 
   await userEvent.click(triggerButton);
 
@@ -54,12 +55,12 @@ Interaction.play = async () => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const submitButton = screen.getByText('Submit');
+  const submitButton = canvas.getByText('Submit');
   await userEvent.click(submitButton);
 
   await new Promise((resolve) => setTimeout(resolve, 2500));
 
-  const inputEl = screen.getByLabelText('Username', {
+  const inputEl = canvas.getByLabelText('Username', {
     selector: 'input',
   });
   await userEvent.type(inputEl, 'my-username', {
@@ -74,5 +75,5 @@ Interaction.play = async () => {
 
   await userEvent.click(submitButton);
 
-  await expect(screen.queryByText('Sign In')).not.toBeVisible();
+  await expect(canvas.queryByText('Sign In')).not.toBeVisible();
 };

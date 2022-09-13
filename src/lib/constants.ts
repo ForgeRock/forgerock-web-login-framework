@@ -1,4 +1,4 @@
-import { extractDomainFromUrl } from '$lib/server/utilities';
+import { extractDomainFromUrl } from '$lib/server/_utilities';
 
 const realmPath =
   import.meta.env.VITE_FR_REALM_PATH !== 'root'

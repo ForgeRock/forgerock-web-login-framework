@@ -6,22 +6,43 @@
   export let selectClasses = '';
   export let defaultOption: string | null = null;
   export let firstInvalidInput: boolean;
-  export let isRequired: boolean;
-  export let isInvalid: boolean | null = null;
+  export let isRequired = false;
+  export let isInvalid = false;
   export let key: string;
   export let label: string;
   export let labelClasses = '';
   export let labelOrder: 'first' | 'last' = 'first';
   export let onChange: (event: Event) => void;
-  export let options: { value: string | null; text: string }[];
+  export let options: { value: string; text: string }[];
 
   let inputEl: HTMLSelectElement;
+  let shouldDisplayOption = true;
+
+  /**
+   * If label and option share the same text, only display option
+   */
+  if (defaultOption === null && options[0].text === label) {
+    shouldDisplayOption = false;
+  }
 
   afterUpdate(() => {
     if (firstInvalidInput) {
       inputEl.focus();
     }
   });
+
+  function onChangeWrapper(event: Event) {
+    const value = (event.target as HTMLSelectElement).value;
+    const selectedOption = options.find((option) => {
+      return String(option.value) === value;
+    });
+
+    // Check if text is same as label
+    shouldDisplayOption = !(label === selectedOption?.text);
+
+    // Continue with calling onChange paramater
+    onChange(event);
+  }
 </script>
 
 {#if labelOrder === 'first'}
@@ -29,21 +50,23 @@
 {/if}
 
 <select
+  aria-describedby={`${key}-message`}
   aria-invalid={isInvalid}
   bind:this={inputEl}
-  class={`${selectClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_select-base dark:tw_select-base_dark tw_w-full`}
-  data-message={`${key}-message`}
+  class={`${
+    shouldDisplayOption ? selectClasses : ''
+  } tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_select-base dark:tw_select-base_dark tw_w-full`}
   id={key}
-  on:change={onChange}
+  on:change={onChangeWrapper}
   required={isRequired}
 >
   {#each options as option}
-    <option value={option.value ? option.value : ''} selected={option.value === defaultOption}>
+    <option value={option.value} selected={option.value === defaultOption}>
       {option.text}
     </option>
   {/each}
 </select>
 
 {#if labelOrder === 'last'}
-  <Label {key} classes={`${labelClasses}`}>{label}</Label>
+  <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>{label}</Label>
 {/if}

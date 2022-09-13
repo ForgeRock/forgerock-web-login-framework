@@ -1,5 +1,3 @@
-import { screen, userEvent } from '@storybook/testing-library';
-
 import Link from './link.story.svelte';
 
 export default {

@@ -22,6 +22,7 @@
 </script>
 
 <input
+  aria-describedby={`${key}-message`}
   aria-invalid={isInvalid}
   bind:this={inputEl}
   class="tw_checkbox-input dark:tw_checkbox-input_dark tw_focusable-element dark:tw_focusable-element_dark"

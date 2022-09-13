@@ -1,10 +1,13 @@
 import { FRStep } from '@forgerock/javascript-sdk';
 
+import { initialize } from '$lib/locale.store';
 import Step from './stages.story.svelte';
 import { loginStep, registrationStep } from './step.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
+
+initialize();
 
 export default {
   argTypes: {
@@ -20,6 +23,7 @@ export default {
 
 export const Login = {
   args: {
+    failureMessage: '',
     stage: 'UsernamePassword',
     step: frLoginStep,
     submitForm: () => {
@@ -29,6 +33,7 @@ export const Login = {
 };
 export const Registration = {
   args: {
+    failureMessage: '',
     stage: 'Registration',
     step: frRegistrationStep,
     submitForm: () => {

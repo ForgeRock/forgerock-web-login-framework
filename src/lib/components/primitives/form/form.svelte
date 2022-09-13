@@ -19,14 +19,7 @@
 
     isFormValid = false; // Restart with `false`
 
-    if (form.checkValidity()) {
-      isFormValid = true;
-      // Since form is valid, call provided submit function and return early
-      onSubmitWhenValid(event, isFormValid);
-      return;
-    }
-
-    // Iterate over all children of the form, and pluck out the the inputs
+    // Iterate over all children of the form, and pluck out the inputs
     Array.from(form.children).forEach((el, idx) => {
       // First child will be a `div`, so query the actual form elements
       // eslint-disable-next-line no-undef
@@ -49,11 +42,19 @@
         // Just check validity, but don't "report" it
         const isValid = input.checkValidity();
 
+        // Grab the associated elements to this input
+        const messageKey = input.getAttribute('aria-describedby') || '';
+        const messageContainer = document.getElementById(messageKey);
+        const messageEl = messageContainer?.querySelector('.__input-message');
+
         // If input is invalid, mark it with error and message
         if (!isValid) {
           input.setAttribute('aria-invalid', 'true');
-          let messageKey = input.getAttribute('data-message');
-          input.setAttribute('aria-describedby', messageKey || '');
+
+          if (messageKey) {
+            messageEl?.classList.add('tw_isInvalid');
+            messageEl?.classList.remove('tw_hidden');
+          }
 
           // If there is no previous invalid input, this input is first and receives focus
           if (firstInvalidInput === null) {
@@ -62,7 +63,8 @@
           }
         } else {
           input.setAttribute('aria-invalid', 'false');
-          input.setAttribute('aria-describedby', '');
+          messageEl?.classList.remove('tw_isInvalid');
+          messageEl?.classList.add('tw_hidden');
         }
         console.log(`Is element at index ${idx} valid ${isValid}`);
       });
@@ -70,6 +72,7 @@
 
     // If there's no invalid input, submit form.
     if (firstInvalidInput === null) {
+      isFormValid = true;
       onSubmitWhenValid(event, isFormValid);
     }
   }

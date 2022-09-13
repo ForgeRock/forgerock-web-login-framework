@@ -3,22 +3,23 @@
   import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
 
   // i18n
-  import { interpolate } from '$lib/utilities/i18n.utilities';
-  import T from '$components/i18n/locale-strings.svelte';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import T from '$components/_utilities/locale-strings.svelte';
 
   // Import components
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey } from '$journey/utilities/callback.utilities';
+  import { convertStringToKey } from '$journey/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
-  import { mapCallbackToComponent } from '$journey/utilities/map-callback.utilities';
+  import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
   export let failureMessage: string;
   export let formEl: HTMLFormElement | null = null;
+  export let loading: boolean;
   export let step: StepTypes;
   export let submitForm: () => void;
 
@@ -75,13 +76,11 @@
         {firstInvalidInput}
       />
     {/each}
-    <Button width="full" style="primary" type="submit">
+    <Button busy={loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>
     <p class="tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
       <T key="dontHaveAnAccount" html={true} />
     </p>
-  {:else if step.type === 'LoginSuccess'}
-    <T key="loginSucess" />
   {/if}
 </Form>

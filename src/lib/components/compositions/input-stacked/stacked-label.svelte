@@ -1,17 +1,21 @@
 <script lang="ts">
   import Input from '$components/primitives/input/input.svelte';
-  import Error from '$components/primitives/message/error.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
+  import type { Maybe } from '$lib/interfaces';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let firstInvalidInput: boolean;
   export let hasRightIcon = false;
-  export let errorMessage = '';
+  export let message = '';
   export let isRequired = false;
-  export let isInvalid: boolean | null = null;
+  export let isInvalid = false;
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
   export let placeholder: string;
+
+  // Below needs to be `undefined` to be optional and allow default value in Message component
+  export let showMessage: Maybe<boolean> = undefined;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value = '';
 
@@ -20,10 +24,6 @@
       isInvalid = !checkValidity(event);
     }
     onChange(event);
-  }
-
-  $: {
-    isInvalid = !!errorMessage;
   }
 </script>
 
@@ -40,8 +40,11 @@
     {isRequired}
     {isInvalid}
     {type}
-    {value}
+    bind:value
   />
-  <slot />
-  <Error {errorMessage} {key} showError={isInvalid} />
+  <slot name="input-button" />
+  <div class="tw_w-full" id={`${key}-message`}>
+    <Message {key} {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
+    <slot />
+  </div>
 </div>

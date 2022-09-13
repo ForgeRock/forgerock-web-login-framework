@@ -2,7 +2,7 @@
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import { styles } from '$widget/styles.store';
-  import { generateStyleString } from '$lib/utilities/style.utilities';
+  import { generateStyleString } from '$lib/_utilities/style.utilities';
 
   export let busy = false;
   // export let customCss: { key: string; value: string }[] = [];

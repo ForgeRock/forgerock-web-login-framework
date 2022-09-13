@@ -12,10 +12,11 @@
   export let key: string;
   export let label: string;
   export let onChange: () => void;
-  export let options: { value: string | null; text: string }[];
+  export let options: { value: string; text: string }[];
   export let withForm = false;
 
   let el: SvelteComponent;
+  let isInvalid: boolean;
 
   function submitForm(event: SubmitEvent) {
     console.log('Form submitted');
@@ -29,6 +30,7 @@
       console.log(root);
       let errorEl = root.querySelector('select');
       errorEl?.setAttribute('aria-invalid', 'true');
+      isInvalid = true;
     }
   });
 </script>
@@ -38,11 +40,12 @@
     <Select
       {checkValidity}
       {defaultOption}
-      {errorMessage}
       firstInvalidInput={false}
       {isRequired}
+      {isInvalid}
       {key}
       {label}
+      message={errorMessage}
       {onChange}
       {options}
     />
@@ -53,11 +56,12 @@
     bind:this={el}
     {checkValidity}
     {defaultOption}
-    {errorMessage}
     firstInvalidInput={false}
     {isRequired}
+    {isInvalid}
     {key}
     {label}
+    message={errorMessage}
     {onChange}
     {options}
   />

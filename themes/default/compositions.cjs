@@ -170,7 +170,7 @@ module.exports = (config, theme) => ({
     },
   },
   '.input-floating_dark': {
-    ':where(&:autofill) + label': {
+    '&:autofill + label': {
       // Needed to ensure the label is readable with browser autofill's light background
       color: `${theme('colors.secondary.dark')} !important`,
     },
@@ -203,16 +203,6 @@ module.exports = (config, theme) => ({
     transform: 'scale(0.85) translateY(-0.5rem) translateX(0.15rem)',
     transformOrigin: 'top left',
     whiteSpace: 'nowrap',
-  },
-  /**
-   * Input error message
-   */
-  '.input-error-message': {
-    color: theme('colors.error.dark'),
-    width: '100%',
-  },
-  '.input-error-message_dark': {
-    color: theme('colors.error.light'),
   },
   /**
    * Radio animated composition

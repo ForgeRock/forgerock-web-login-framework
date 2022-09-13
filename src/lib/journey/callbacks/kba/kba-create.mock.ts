@@ -15,6 +15,10 @@ export default {
           name: 'predefinedQuestions',
           value: ["What's your favorite color?", 'Who was your first employer?'],
         },
+        {
+          name: 'allowUserDefinedQuestions',
+          value: true,
+        },
       ],
       input: [
         {
@@ -27,6 +31,34 @@ export default {
         },
       ],
       _id: 26,
+    },
+  ],
+};
+
+export const docsExample = {
+  type: 'KbaCreateCallback',
+  output: [
+    {
+      name: 'prompt',
+      value: 'Select a security question',
+    },
+    {
+      name: 'predefinedQuestions',
+      value: ["What's your favorite color?"],
+    },
+    {
+      name: 'allowUserDefinedQuestions',
+      value: false,
+    },
+  ],
+  input: [
+    {
+      name: 'IDToken1question',
+      value: '',
+    },
+    {
+      name: 'IDToken1answer',
+      value: '',
     },
   ],
 };
