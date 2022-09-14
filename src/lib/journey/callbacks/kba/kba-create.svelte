@@ -138,7 +138,7 @@
     <T key="securityQuestions" />
   </legend>
 
-  <h2 class="tw_kba-header dark:tw_kba-header_dark">
+  <h2 class="tw_secondary-header dark:tw_secondary-header_dark">
     <T key="securityQuestionsPrompt" />
   </h2>
 

@@ -48,7 +48,7 @@
   <T key="registerHeader" />
 </h1>
 <p
-  class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+  class="tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
 >
   <T key="alreadyHaveAnAccount" html={true} />
 </p>
