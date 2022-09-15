@@ -522,8 +522,16 @@ This will install all the necessary dependencies, build the project and run it i
 
 ### Re-syncing with Chromatic
 
+Rebuilds and syncs with Chromatic:
+
 ```sh
 npx chromatic --project-token=e10acf0c74f9 --patch-build=<current-branch>...main
+```
+
+Make sure upstream is set on all branches:
+
+```sh
+git push -u origin --all
 ```
 
 ## Disclaimer

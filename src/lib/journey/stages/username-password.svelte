@@ -79,7 +79,7 @@
     <Button busy={loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>
-    <p class="tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+    <p class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
       <T key="dontHaveAnAccount" html={true} />
     </p>
   {/if}

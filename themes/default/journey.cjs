@@ -2,6 +2,17 @@ const colorLib = require('color');
 
 module.exports = function (theme) {
   return {
+    '.input-policies': {
+      fontSize: theme('fontSize.sm'),
+
+      'p': {
+        fontWeight: theme('fontWeight.bold'),
+        margin: theme('spacing.1'),
+      },
+      'ul': {
+        margin: theme('spacing.1'),
+      }
+    },
     '.kba-fieldset': {
       position: 'relative',
       borderColor: theme('colors.secondary.DEFAULT'),
@@ -40,13 +51,6 @@ module.exports = function (theme) {
       '&:before': {
         borderColor: colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString(),
       },
-    },
-    '.kba-header': {
-      fontWeight: theme('fontWeight.medium'),
-      marginBottom: theme('spacing.4'),
-    },
-    '.kba-header_dark': {
-      color: theme('colors.secondary.light'),
     },
     '.kba-lock-icon': {
       display: 'flex',

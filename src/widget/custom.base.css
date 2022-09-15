@@ -68,10 +68,10 @@ Remove the default font size and weight for headings.
 Base link color when inside of localized content.
 */
 :where(.fr_widget-root) a {
-  @apply tw_link;
+  @apply tw_text-link-dark;
 }
 :where(.tw_dark) a {
-  @apply tw_link_dark;
+  @apply tw_text-link-light;
 }
 /*
 Add the correct font weight in Edge and Safari.

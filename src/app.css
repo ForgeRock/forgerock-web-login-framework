@@ -15,6 +15,9 @@
   @apply tw_animate-squish;
 }
 
+/**
+ * For anchors in localized content
+ */
 a {
   @apply tw_link;
 }

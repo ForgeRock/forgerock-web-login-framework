@@ -20,6 +20,18 @@ module.exports = {
       dark: colors.red[800],
       light: colors.red[200],
     },
+    header: {
+      dark: colors.slate[700],
+      light: colors.gray[300],
+    },
+    label: {
+      dark: colors.gray[700],
+      light: colors.gray[300],
+    },
+    link: {
+      dark: colors.blue[600],
+      light: colors.blue[400],
+    },
     primary: {
       dark: colors.slate[700],
       /**
@@ -31,6 +43,10 @@ module.exports = {
     tertiary: {
       dark: colors.purple[700],
       light: colors.purple[400],
+    },
+    text: {
+      dark: colors.gray[700],
+      light: colors.gray[300],
     },
     secondary: {
       dark: colors.gray[700],
@@ -50,7 +66,7 @@ module.exports = {
     sans: ['"Open Sans"', ...defaultTheme.fontFamily.sans],
   },
   fontSize: {
-    sm: ['0.8125rem', '1.25'],
+    sm: ['0.875rem', '1.25'],
     base: ['0.9375rem', '1.25'],
     lg: ['1.25rem', '1'],
     xl: ['1.5rem', '2.5'],

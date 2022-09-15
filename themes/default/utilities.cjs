@@ -27,17 +27,25 @@ module.exports = (theme) => ({
       outlineColor: colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.1).toString(),
     },
   },
+  '.input-spacing': {
+    marginBottom: theme('spacing.4'),
+  },
   '.primary-header': {
-    color: theme('colors.primary.dark'),
+    color: theme('colors.header.dark'),
     fontSize: theme('fontSize.2xl'),
     fontWeight: theme('fontWeight.light'),
     marginBottom: theme('spacing.4'),
     textAlign: 'center',
   },
   '.primary-header_dark': {
-    color: theme('colors.secondary.light'),
+    color: theme('colors.header.light'),
   },
-  '.input-spacing': {
+  '.secondary-header': {
+    fontWeight: theme('fontWeight.medium'),
+    fontSize: theme('fontSize.base'),
     marginBottom: theme('spacing.4'),
+  },
+  '.secondary-header_dark': {
+    color: theme('colors.secondary.light'),
   },
 });

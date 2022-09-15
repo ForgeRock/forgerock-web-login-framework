@@ -11,6 +11,7 @@ module.exports = function (theme) {
       borderRadius: theme('borderRadius.DEFAULT'),
       borderWidth: '1px',
       color: theme('colors.black'),
+      fontSize: theme('fontSize.base'),
       marginBottom: theme('spacing.6'),
       padding: theme('spacing.4'),
 
@@ -114,6 +115,7 @@ module.exports = function (theme) {
       // NOTE: Ensure all button have borders for consistent height between regular and outline buttons
       border: `${theme('borderWidth.DEFAULT')} solid`,
       borderRadius: theme('borderRadius.DEFAULT'),
+      fontSize: theme('fontSize.base'),
       outlineOffset: '0',
       position: 'relative',
       fontSize: theme('fontSize.base'),
@@ -183,6 +185,7 @@ module.exports = function (theme) {
      * Checkbox primitive theme settings
      */
     '.checkbox-label': {
+      fontSize: theme('fontSize.base'),
       color: theme('colors.secondary.dark'),
     },
     '.checkbox-label_dark': {
@@ -322,10 +325,11 @@ module.exports = function (theme) {
       // },
     },
     '.input-label': {
-      color: theme('colors.secondary.dark'),
+      color: theme('colors.label.dark'),
+      fontSize: theme('fontSize.base'),
     },
     '.input-label_dark': {
-      color: theme('colors.secondary.light'),
+      color: theme('colors.label.light'),
 
       ':where(input:autofill) + &': {
         color: theme('colors.secondary.dark'),
@@ -339,7 +343,7 @@ module.exports = function (theme) {
      */
     '.input-error-message': {
       color: theme('colors.error.dark'),
-      fontSize: theme('fontSize.base'),
+      fontSize: theme('fontSize.sm'),
       margin: theme('spacing.1'),
       width: '100%',
     },
@@ -348,7 +352,7 @@ module.exports = function (theme) {
     },
     '.input-info-message': {
       color: theme('colors.secondary.dark'),
-      fontSize: theme('fontSize.base'),
+      fontSize: theme('fontSize.sm'),
       margin: theme('spacing.1'),
       width: '100%',
 
@@ -363,8 +367,11 @@ module.exports = function (theme) {
         color: theme('colors.error.light'),
       },
     },
+    /**
+     * Don't forget to update the anchor classes in src/widget/custom.base.css
+     */
     '.link': {
-      color: theme('colors.blue.600'),
+      color: theme('colors.link.dark'),
       textDecoration: 'underline',
 
       '&:hover': {
@@ -372,7 +379,7 @@ module.exports = function (theme) {
       },
     },
     '.link_dark': {
-      color: theme('colors.blue.400'),
+      color: theme('colors.link.light'),
     },
     '.select-base': {
       appearance: 'none',
@@ -387,6 +394,7 @@ module.exports = function (theme) {
       ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
       backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
       backgroundSize: '16px 12px',
+      color: theme('colors.label.dark'),
       // TODO: Use design tokens, not absolute values
       height: 'calc(3rem + 2px)',
 
@@ -414,6 +422,7 @@ module.exports = function (theme) {
         theme('colors.secondary.light'),
       ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
       backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
+      color: theme('colors.label.light'),
 
       '&:hover,': {
         backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
