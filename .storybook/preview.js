@@ -1,6 +1,11 @@
 import { themes } from '@storybook/theming';
 
+import { initialize } from '../src/lib/locale.store';
+
 import '../src/app.css';
+
+// Initializes localized content globally for all stories
+initialize();
 
 // Set background color quicker to ensure Accessibility contrast is properly measured
 // const prefersDarkTheme = window.matchMedia('(prefers-color-scheme: dark)').matches;

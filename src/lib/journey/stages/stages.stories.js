@@ -1,13 +1,10 @@
 import { FRStep } from '@forgerock/javascript-sdk';
 
-import { initialize } from '$lib/locale.store';
 import Step from './stages.story.svelte';
 import { loginStep, registrationStep } from './step.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
-
-initialize();
 
 export default {
   argTypes: {

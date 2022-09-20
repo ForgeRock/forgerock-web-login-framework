@@ -2,7 +2,7 @@
   import type { NameCallback } from '@forgerock/javascript-sdk';
 
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
 
   export let callback: NameCallback;
   export let firstInvalidInput: boolean;
@@ -28,7 +28,7 @@
 <Input
   {firstInvalidInput}
   key={inputName}
-  label={interpolate(callbackType, null, textInputLabel)}
+  label={interpolate(textToKey(callbackType), null, textInputLabel)}
   onChange={setValue}
   type="text"
   showMessage={false}

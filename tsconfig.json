@@ -1,8 +1,6 @@
 {
   "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
-    // @rollup/plugin-typescript TS1259: Module '"/Users/justin.lowery/Github/forgerock-web-login-framework/src/locales/ca/en/index"' can only be default-imported using the 'allowSyntheticDefaultImports' flag
-    "allowSyntheticDefaultImports": true,
     "paths": {
       "$components": ["src/lib/components"],
       "$components/*": ["src/lib/components/*"],

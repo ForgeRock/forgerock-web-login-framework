@@ -7,7 +7,6 @@
     TokenManager,
     UserManager,
     HttpClient,
-    type ConfigOptions,
   } from '@forgerock/javascript-sdk';
   import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
   import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';

@@ -9,7 +9,8 @@
   import { initialize as initializeOAuth, type OAuthStore } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser, type UserStore } from '$lib/user/user.store';
 
-  export let content;
+  /** @type {import('./$types').PageData} */
+  export let data;
 
   let journeyStore: JourneyStore = initializeJourney();
   let oauthStore: OAuthStore = initializeOAuth();
@@ -18,7 +19,7 @@
   /**
    * Sets up of locale store with appropriate locale content
    */
-  initializeContent(content);
+  initializeContent(data.content);
 
   // Use if not initializing journey in above "context module"
   onMount(async () => {

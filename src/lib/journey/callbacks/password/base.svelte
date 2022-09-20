@@ -6,7 +6,7 @@
 
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
   import type { Maybe } from '$lib/interfaces';
   import T from '$components/_utilities/locale-strings.svelte';
 
@@ -62,7 +62,7 @@
   {firstInvalidInput}
   hasRightIcon={true}
   {key}
-  label={interpolate(callbackType, null, textInputLabel)}
+  label={interpolate(textToKey(callbackType), null, textInputLabel)}
   message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
   onChange={setValue}
   {isInvalid}

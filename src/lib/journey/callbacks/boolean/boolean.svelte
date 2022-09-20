@@ -6,7 +6,7 @@
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import Checkbox from '$components/compositions/checkbox/animated.svelte';
-  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
 
   export let callback: AttributeInputCallback<boolean>;
   export let firstInvalidInput: boolean;
@@ -47,5 +47,5 @@
   onChange={setValue}
   value={previousValue}
 >
-  {interpolate(outputName.replace('/', ''), null, prompt)}
+  {interpolate(textToKey(outputName), null, prompt)}
 </Checkbox>

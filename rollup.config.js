@@ -95,7 +95,16 @@ export default {
     // If we're building for production (npm run build
     // instead of npm run dev), minify
     production && terser(),
-    typescript({ tsconfig: './tsconfig.json' }),
+    typescript({
+      compilerOptions: {
+        /**
+         * This is required due to the following error:
+         * @rollup/plugin-typescript TS2741: Property 'default' is missing in { ...
+         * when importing a JSON file for the locales.
+         */
+        // allowSyntheticDefaultImports: true,
+      },
+    }),
   ],
   watch: {
     clearScreen: false,

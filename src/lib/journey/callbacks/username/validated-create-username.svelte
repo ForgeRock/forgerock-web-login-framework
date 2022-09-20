@@ -7,7 +7,7 @@
     isInputRequired,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
   export let callback: ValidatedCreateUsernameCallback;
@@ -57,7 +57,7 @@
   {isRequired}
   {isInvalid}
   key={inputName}
-  label={interpolate(callbackType, null, prompt)}
+  label={interpolate(textToKey(callbackType), null, prompt)}
   message={isRequired ? interpolate('inputRequiredError') : undefined}
   onChange={setValue}
   showMessage={false}

@@ -1,4 +1,4 @@
-import xss from 'xss';
+import sanitize from 'xss';
 import { get } from 'svelte/store';
 import { z } from 'zod';
 
@@ -109,7 +109,43 @@ export function interpolate(
     messageDirty = externalText;
   }
 
-  const messageClean = xss(messageDirty);
+  const messageClean = sanitize(messageDirty);
 
   return messageClean;
+}
+
+export function textToKey(text: string | number) {
+  if (typeof text !== 'string' && typeof text !== 'number') {
+    throw new Error('Parameter for textToKey function needs to be of type string or number');
+  }
+  if (typeof text === 'number') {
+    text = String(text);
+  }
+  // If text is entirely uppercase, just lowercase it all
+  if (text.match(/^([A-Z]+)$/)) {
+    return text.toLowerCase();
+  }
+  // If text is entirely uppercase, just lowercase it all
+  if (text.match(/^([A-Z]+[\W]*)$/)) {
+    return text.replace(/\W/g, '').toLowerCase();
+  }
+
+  const transformedString = text
+    // .toLowerCase()
+    // Matches any non-word character followed up by a word or number character
+    .replace(/(\W)([\w\d])/g, (_, p1, p2) => {
+      if (p1.match(/['’"”]/) && p2.match(/[a-z]/)) {
+        return p2;
+      }
+      if (p1.match(/\W/) && p2.match(/[a-z]/)) {
+        return p2.toUpperCase();
+      }
+      if (p1.match(/\W/) && p2.match(/\d/)) {
+        return p2;
+      }
+      return p2;
+    })
+    .replace(/(\W)/g, '');
+
+  return transformedString.charAt(0).toLowerCase() + transformedString.slice(1);
 }
