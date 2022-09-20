@@ -1,0 +1,31 @@
+import { screen, userEvent } from '@storybook/testing-library';
+import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+
+import response from './suspend-text-output.mock';
+import SuspendTextOutput from './suspend-text-output.story.svelte';
+
+const step = new FRStep(response);
+
+export default {
+  argTypes: {
+    callback: { control: false },
+    inputName: { control: false },
+  },
+  component: SuspendTextOutput,
+  parameters: {
+    layout: 'fullscreen',
+  },
+  title: 'Callbacks/SuspendTextOutput',
+};
+
+export const Base = {
+  args: {
+    callback: step.getCallbackOfType(CallbackType.SuspendedTextOutputCallback),
+  },
+  play: async () => {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    await userEvent.tab();
+    screen.getByText("An email has been sent to the address you entered. Click the link in that email to proceed.")
+  }
+};
+
