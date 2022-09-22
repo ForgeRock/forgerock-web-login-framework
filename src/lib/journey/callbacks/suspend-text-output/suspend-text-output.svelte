@@ -1,13 +1,11 @@
 <script lang="ts">
   import type { SuspendedTextOutputCallback } from '@forgerock/javascript-sdk';
-  import Centered from '$components/primitives/box/centered.svelte';
 
   export let callback: SuspendedTextOutputCallback;
 
   const message = callback.getMessage();
-
 </script>
 
-<Centered>
-  <div>{message}</div>
-</Centered>
+<p class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+  {message}
+</p>

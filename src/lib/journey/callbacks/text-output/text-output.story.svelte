@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ConfirmationCallback, TextOutputCallback } from '@forgerock/javascript-sdk';
+  import Centered from '$components/primitives/box/centered.svelte';
 
   import TextOutput from './text-output.svelte';
 
@@ -7,4 +8,6 @@
   export let choice: ConfirmationCallback;
 </script>
 
-<TextOutput {callback} {choice} />
+<Centered>
+  <TextOutput {callback} {choice} />
+</Centered>

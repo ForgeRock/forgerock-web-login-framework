@@ -22,10 +22,5 @@ export const Base = {
   args: {
     callback: step.getCallbackOfType(CallbackType.SuspendedTextOutputCallback),
   },
-  play: async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    await userEvent.tab();
-    screen.getByText("An email has been sent to the address you entered. Click the link in that email to proceed.")
-  }
 };
 
