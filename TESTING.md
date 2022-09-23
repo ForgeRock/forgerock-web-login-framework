@@ -11,6 +11,8 @@ Please read the README and answer the following questions:
 
 ## Step 2. Use the Modal component
 
+[Available video introduction to the Widget](https://drive.google.com/file/d/1rnBYPNY2aUUslGOd3pZMu7mMnZBx6QYK/view?usp=sharing).
+
 1. Install the Widget into an existing or new app (preferably an existing app that already uses the ForgeRock JavaScript SDK)
 2. Use the Modal component in your app to login a user with ID Cloud's default Login journey
 3. Did the Modal work and look the way you envisioned it?
