@@ -125,13 +125,18 @@ export function textToKey(text: string | number) {
   if (text.match(/^([A-Z]+)$/)) {
     return text.toLowerCase();
   }
-  // If text is entirely uppercase, just lowercase it all
+  /**
+   * If text is entirely uppercase with trailing non-word chars,
+   * strip the non-word chars and lowercase the rest
+   */
   if (text.match(/^([A-Z]+[\W]*)$/)) {
     return text.replace(/\W/g, '').toLowerCase();
   }
-
+  /**
+   * If we have reached here, the text has word chars (`\w`) mixed with
+   * non-word chars (`\W`), so we have to do more for proper transform
+   */
   const transformedString = text
-    // .toLowerCase()
     // Matches any non-word character followed up by a word or number character
     .replace(/(\W)([\w\d])/g, (_, p1, p2) => {
       if (p1.match(/['’"”]/) && p2.match(/[a-z]/)) {

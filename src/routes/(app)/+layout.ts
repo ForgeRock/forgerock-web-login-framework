@@ -1,4 +1,4 @@
-import configure from '$lib/config/config';
+import configure from '$lib/config';
 
 import '../../app.css';
 

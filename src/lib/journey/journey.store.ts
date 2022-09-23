@@ -37,10 +37,8 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
      * form failure due to 400 response from ForgeRock.
      */
     let previousCallbacks: FRCallback[] | undefined;
-    let previousStage: string | undefined;
 
     if (prevStep && prevStep.type === StepType.Step) {
-      previousStage = prevStep?.getStage && prevStep.getStage();
       previousCallbacks = prevStep?.callbacks;
     }
     const previousPayload = prevStep?.payload;

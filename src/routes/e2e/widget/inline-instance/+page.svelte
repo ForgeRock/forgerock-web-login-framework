@@ -11,6 +11,7 @@
 
   let formEl: HTMLDivElement;
   let userInfo: Record<string, string> | null;
+  // TODO: Use a more specific type
   let widget: any;
 
   async function logout() {

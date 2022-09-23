@@ -154,7 +154,7 @@ describe('Test text-to-key function', () => {
   });
 
   it('Should convert sentence case with apostrophe to key', () => {
-    const key = textToKey('Don\'t buy eggs.');
+    const key = textToKey("Don't buy eggs.");
     const expected = 'dontBuyEggs';
     expect(key).toBe(expected);
   });

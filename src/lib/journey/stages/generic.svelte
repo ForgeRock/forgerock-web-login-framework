@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
+  import type { FRCallback } from '@forgerock/javascript-sdk';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -14,9 +14,11 @@
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
 
-  type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
+  // Types
+  import type { Maybe } from '$lib/interfaces';
+  import type { StepTypes } from '$journey/journey.interfaces';
 
-  export let failureMessage: string;
+  export let failureMessage: Maybe<string>;
   export let formEl: HTMLFormElement | null = null;
   export let loading: boolean;
   export let step: StepTypes;
@@ -26,10 +28,9 @@
   let hasPrevError = false;
 
   // TODO: Pull out and rework into a utility or helper
-  function checkValidation(callback: any) {
+  function checkValidation(callback: FRCallback) {
     let failedPolices = callback.getOutputByName('failedPolicies', []);
     if (failedPolices.length && !hasPrevError) {
-      console.log(callback);
       hasPrevError = true;
       return true;
     }

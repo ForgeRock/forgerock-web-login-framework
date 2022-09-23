@@ -17,7 +17,6 @@
   let isInvalid: boolean;
 
   function submitForm(event: SubmitEvent) {
-    console.log('Form submitted');
     message = 'Please accept this';
   }
 
@@ -25,16 +24,11 @@
     if (!withForm && message) {
       // Only done to force an error without any user interaction
       let root = el.$$.root;
-      console.log(root);
       let errorEl = root.querySelector('input');
       errorEl?.setAttribute('aria-invalid', 'true');
       isInvalid = true;
     }
   });
-
-  $: {
-    console.log(message);
-  }
 </script>
 
 {#if withForm}

@@ -71,9 +71,9 @@ Interaction.play = async ({ canvasElement }) => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  await expect(canvas.queryByLabelText('Custom Security Question')).toBeVisible();
+  await expect(canvas.queryByLabelText('Custom security question')).toBeVisible();
 
-  const questionEl = canvas.getByLabelText('Custom Security Question', {
+  const questionEl = canvas.getByLabelText('Custom security question', {
     selector: 'input',
   });
 

@@ -210,7 +210,7 @@ export function getValidationFailures(callback: ValidatedCallbacks, label: strin
   });
 }
 
-export function getValidationPolicies(policies: StringDict<unknown>, label: string): Policy[] {
+export function getValidationPolicies(policies: StringDict<unknown>): Policy[] {
   if (typeof policies !== 'object' && !policies) {
     return [];
   }
@@ -291,7 +291,7 @@ export function parseFailedPolicies(
       try {
         return JSON.parse(policy) as PolicyRequirement;
       } catch (err) {
-        console.log(`Parsing failure for ${label}`);
+        console.error(`Parsing failure for ${label}`);
       }
     } else {
       return policy as PolicyRequirement;

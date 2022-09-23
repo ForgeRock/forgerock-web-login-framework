@@ -80,64 +80,61 @@ describe('Test attribute validation failure getter', () => {
 
 describe('Test generic callback policy getter', () => {
   it('should test username creation policy getter', () => {
-    const policies = getValidationPolicies(
-      {
-        policyRequirements: [
-          'REQUIRED',
-          'MIN_LENGTH',
-          'VALID_TYPE',
-          'VALID_USERNAME',
-          'CANNOT_CONTAIN_CHARACTERS',
-          'MAX_LENGTH',
-        ],
-        fallbackPolicies: null,
-        name: 'userName',
-        policies: [
-          {
-            policyRequirements: ['REQUIRED'],
-            policyId: 'required',
+    const policies = getValidationPolicies({
+      policyRequirements: [
+        'REQUIRED',
+        'MIN_LENGTH',
+        'VALID_TYPE',
+        'VALID_USERNAME',
+        'CANNOT_CONTAIN_CHARACTERS',
+        'MAX_LENGTH',
+      ],
+      fallbackPolicies: null,
+      name: 'userName',
+      policies: [
+        {
+          policyRequirements: ['REQUIRED'],
+          policyId: 'required',
+        },
+        {
+          policyRequirements: ['REQUIRED'],
+          policyId: 'not-empty',
+        },
+        {
+          policyId: 'maximum-length',
+          params: {
+            maxLength: 255,
           },
-          {
-            policyRequirements: ['REQUIRED'],
-            policyId: 'not-empty',
+          policyRequirements: ['MAX_LENGTH'],
+        },
+        {
+          policyRequirements: ['MIN_LENGTH'],
+          policyId: 'minimum-length',
+          params: {
+            minLength: 1,
           },
-          {
-            policyId: 'maximum-length',
-            params: {
-              maxLength: 255,
-            },
-            policyRequirements: ['MAX_LENGTH'],
+        },
+        {
+          policyRequirements: ['VALID_TYPE'],
+          policyId: 'valid-type',
+          params: {
+            types: ['string'],
           },
-          {
-            policyRequirements: ['MIN_LENGTH'],
-            policyId: 'minimum-length',
-            params: {
-              minLength: 1,
-            },
+        },
+        {
+          policyId: 'valid-username',
+          policyRequirements: ['VALID_USERNAME'],
+        },
+        {
+          policyId: 'cannot-contain-characters',
+          params: {
+            forbiddenChars: ['/'],
           },
-          {
-            policyRequirements: ['VALID_TYPE'],
-            policyId: 'valid-type',
-            params: {
-              types: ['string'],
-            },
-          },
-          {
-            policyId: 'valid-username',
-            policyRequirements: ['VALID_USERNAME'],
-          },
-          {
-            policyId: 'cannot-contain-characters',
-            params: {
-              forbiddenChars: ['/'],
-            },
-            policyRequirements: ['CANNOT_CONTAIN_CHARACTERS'],
-          },
-        ],
-        conditionalPolicies: null,
-      },
-      'username',
-    );
+          policyRequirements: ['CANNOT_CONTAIN_CHARACTERS'],
+        },
+      ],
+      conditionalPolicies: null,
+    });
 
     expect(policies).toStrictEqual([
       // {

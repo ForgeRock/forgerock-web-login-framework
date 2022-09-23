@@ -1,19 +1,21 @@
 import { TokenManager, type GetTokensOptions, type OAuth2Tokens } from '@forgerock/javascript-sdk';
 import { writable, type Writable } from 'svelte/store';
 
+import type { Maybe } from '$lib/interfaces';
+
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
   get: (getOptions?: GetTokensOptions) => void;
   reset: () => void;
 }
 export interface OAuthTokenStoreValue {
   completed: boolean;
-  error: {
-    code?: number | null;
-    message: string | null;
-  } | null;
+  error: Maybe<{
+    code?: Maybe<number>;
+    message: Maybe<string>;
+  }>;
   loading: boolean;
   successful: boolean;
-  response: OAuth2Tokens | null | void;
+  response: Maybe<OAuth2Tokens> | void;
 }
 
 export function initialize(initOptions?: GetTokensOptions) {

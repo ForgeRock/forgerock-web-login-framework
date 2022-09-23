@@ -8,12 +8,14 @@
  * of the MIT license. See the LICENSE file for details.
  */
 
+import type { Maybe } from '$lib/interfaces';
+
 /**
  * @function htmlDecode - Decodes HTML encoded strings
  * @param {string} input - string that needs to be HTML decoded
  * @returns {string} - decoded string
  */
-export function htmlDecode(input: string) {
+export function htmlDecode(input: string): Maybe<string> {
   // Check if running in server before using the document object
   if (typeof document !== 'object') {
     return null;

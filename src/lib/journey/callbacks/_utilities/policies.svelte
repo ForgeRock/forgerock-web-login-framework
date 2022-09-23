@@ -24,7 +24,7 @@
   export let messageKey: string;
 
   let validationFailures = getValidationFailures(callback, label);
-  let validationRules = getValidationPolicies(callback.getPolicies(), label);
+  let validationRules = getValidationPolicies(callback.getPolicies());
   let simplifiedFailures = validationFailures.reduce((prev, curr) => {
     prev = prev.concat(curr.restructured);
     return prev;
@@ -32,7 +32,7 @@
 
   $: {
     validationFailures = getValidationFailures(callback, label);
-    validationRules = getValidationPolicies(callback.getPolicies(), label);
+    validationRules = getValidationPolicies(callback.getPolicies());
     simplifiedFailures = validationFailures.reduce((prev, curr) => {
       prev = prev.concat(curr.restructured);
       return prev;
@@ -42,9 +42,7 @@
 
 {#if simplifiedFailures.length}
   <div class="tw_input-policies tw_w-full" id={`${key ? `${key}-message` : ''}`}>
-    <p
-      class="tw_text-error-dark dark:tw_text-error-light tw_w-full"
-    >
+    <p class="tw_text-error-dark dark:tw_text-error-light tw_w-full">
       <T key={messageKey} />
     </p>
     <ul class="tw_text-error-dark dark:tw_text-error-light tw_w-full">
@@ -55,9 +53,7 @@
   </div>
 {:else if validationRules.length}
   <div class="tw_input-policies tw_w-full" id={`${key ? `${key}-message` : ''}`}>
-    <p
-      class="tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full"
-    >
+    <p class="tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">
       <T key={messageKey} />
     </p>
     <ul class="tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">

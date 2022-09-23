@@ -1,10 +1,9 @@
 <script lang="ts">
   import type { Maybe } from '$lib/interfaces';
-  import T from '$components/_utilities/locale-strings.svelte';
 
   export let message: string;
   export let key: Maybe<string> = undefined;
-  export let showMessage = true;
+  export let showMessage: Maybe<boolean> = true;
   export let type: 'info' | 'error' = 'info';
 
   function generateClassString(...args: string[]) {

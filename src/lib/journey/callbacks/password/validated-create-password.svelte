@@ -22,7 +22,7 @@
   let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
   let prompt = callback.getPrompt();
 
-  let validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+  let validationRules = getValidationPolicies(callback.getPolicies());
   let validationFailures = getValidationFailures(callback, prompt);
   let isInvalid = !!validationFailures.length;
 
@@ -34,7 +34,7 @@
     inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
     prompt = callback.getPrompt();
 
-    validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+    validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }

@@ -10,7 +10,9 @@
   import Widget, { user } from '../../../../../package/modal';
 
   let userInfo: Record<string, string> | null;
+  // TODO: Use a more specific type
   let widget1: any;
+  // TODO: Use a more specific type
   let widget2: any;
   let widgetEl1: HTMLDivElement;
   let widgetEl2: HTMLDivElement;
