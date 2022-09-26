@@ -4,6 +4,7 @@ const { mergeConfig } = require('vite'); // use `mergeConfig` to recursively mer
 
 module.exports = {
   stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
+  staticDirs: ['../static'],
   addons: [
     '@storybook/addon-a11y',
     '@storybook/addon-links',

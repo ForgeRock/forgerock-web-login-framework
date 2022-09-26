@@ -1,10 +1,11 @@
 import { FRStep } from '@forgerock/javascript-sdk';
 
 import Step from './stages.story.svelte';
-import { loginStep, registrationStep } from './step.mock';
+import { loginStep, registrationStep, usernamePasswordStep } from './step.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
+const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
 
 export default {
   argTypes: {
@@ -18,10 +19,11 @@ export default {
   title: 'Journey/Step',
 };
 
-export const Login = {
+export const Generic = {
   args: {
+    displayIcon: true,
     failureMessage: '',
-    stage: 'UsernamePassword',
+    stage: frLoginStep.getStage(),
     step: frLoginStep,
     submitForm: () => {
       console.log('Form submitted.');
@@ -30,9 +32,22 @@ export const Login = {
 };
 export const Registration = {
   args: {
+    displayIcon: true,
     failureMessage: '',
-    stage: 'Registration',
+    stage: frRegistrationStep.getStage(),
     step: frRegistrationStep,
+    submitForm: () => {
+      console.log('Form submitted.');
+    },
+  },
+};
+export const UsernamePassword = {
+  args: {
+    displayIcon: true,
+    failureMessage: '',
+    labelType: 'stacked',
+    stage: frUsernamePasswordStep.getStage(),
+    step: frUsernamePasswordStep,
     submitForm: () => {
       console.log('Form submitted.');
     },

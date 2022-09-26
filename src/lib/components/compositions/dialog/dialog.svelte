@@ -1,10 +1,13 @@
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
   import XIcon from '../../icons/x-icon.svelte';
+  import { style } from '$lib/style.store';
 
   export let closeCallback: (args: { reason: 'auto' | 'external' | 'user' }) => void;
   export let dialogEl: HTMLDialogElement | null = null;
   export let dialogId: string;
+  export let forceOpen = false;
+  export let withHeader = false;
 
   interface CloseOptions {
     reason: 'auto' | 'external' | 'user';
@@ -41,23 +44,60 @@
 </script>
 
 <!-- Inspired by https://github.com/mvolkmann/svelte-dialog -->
-<!-- TODO: Animate modal from bottom and fade in -->
 <dialog
   id={dialogId}
   bind:this={dialogEl}
-  class={`tw_dialog-box dark:tw_dialog-box_dark md:tw_dialog-box_medium`}
+  class={`tw_dialog-box dark:tw_dialog-box_dark md:tw_dialog-box_medium ${
+    forceOpen ? '' : 'tw_dialog-box_animate'
+  }`}
+  open={forceOpen}
 >
-  <div class="tw_w-full tw_-mt-4 tw_relative tw_text-right">
-    <button
-      class="tw_dialog-x tw_focusable-element dark:tw_focusable-element_dark"
-      on:click={() => closeDialog({ reason: 'user' })}
-      aria-controls={dialogId}
-    >
-      <XIcon
-        classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"
-        ><T key="closeModal" /></XIcon
+  {#if withHeader}
+    <div class="tw_dialog-header dark:tw_dialog-header_dark">
+      <div
+        class="tw_dialog-logo dark:tw_dialog-logo_dark"
+        style={`--logo-dark: url("${$style?.logo?.dark}"); --logo-light: url("${
+          $style?.logo?.light
+        }"); ${$style?.logo?.height ? `height: ${$style?.logo.height}px;` : ''} ${
+          $style?.logo?.width ? `width: ${$style?.logo.width}px;` : ''
+        }`}
+      />
+      <button
+        class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
+        on:click={() => closeDialog({ reason: 'user' })}
+        aria-controls={dialogId}
       >
-    </button>
+        <XIcon
+          classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"
+          ><T key="closeModal" /></XIcon
+        >
+      </button>
+    </div>
+  {:else}
+    <div
+      class={`tw_pt-10 md:tw_pt-10 tw_text-right ${
+        $style?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
+      }`}
+    >
+      <button
+        class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
+        on:click={() => closeDialog({ reason: 'user' })}
+        aria-controls={dialogId}
+      >
+        <XIcon
+          classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"
+          ><T key="closeModal" /></XIcon
+        >
+      </button>
+      {#if $style?.logo}
+        <div
+          class="tw_dialog-logo dark:tw_dialog-logo_dark"
+          style={`--logo-dark: url("${$style?.logo?.dark}"); --logo-light: url("${$style?.logo?.light}")`}
+        />
+      {/if}
+    </div>
+  {/if}
+  <div class="tw_dialog-body">
+    <slot />
   </div>
-  <slot />
 </dialog>

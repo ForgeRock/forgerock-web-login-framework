@@ -5,7 +5,9 @@
   import type { JourneyStore } from '$journey/journey.interfaces';
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
+  import { StepType } from '@forgerock/javascript-sdk';
 
+  export let displayIcon: boolean;
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;
 
@@ -20,14 +22,21 @@
 </script>
 
 {#if !$journeyStore?.completed}
-  <svelte:component
-    this={mapStepToStage($journeyStore.step)}
-    failureMessage={$journeyStore.error?.message}
-    bind:formEl
-    loading={$journeyStore.loading}
-    {submitForm}
-    step={$journeyStore.step}
-  />
+  {#if !$journeyStore.step}
+    <div class="tw_text-center tw_w-full tw_py-4">
+      <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+    </div>
+  {:else if $journeyStore.step.type === StepType.Step}
+    <svelte:component
+      this={mapStepToStage($journeyStore.step)}
+      {displayIcon}
+      failureMessage={$journeyStore.error?.message}
+      bind:formEl
+      loading={$journeyStore.loading}
+      {submitForm}
+      step={$journeyStore.step}
+    />
+  {/if}
 {:else if $journeyStore?.successful}
   <div class="tw_text-center tw_w-full tw_py-4">
     <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />

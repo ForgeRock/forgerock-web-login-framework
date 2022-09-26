@@ -12,7 +12,7 @@
   export let key: string;
   export let label: string;
   export let onChange: (event: Event) => void;
-  export let placeholder: string;
+  export let placeholder: Maybe<string> = undefined;
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
@@ -27,7 +27,7 @@
   }
 </script>
 
-<div class="tw_input-spacing">
+<div class="tw_input-spacing tw_flex tw_flex-wrap">
   <Input
     {firstInvalidInput}
     inputClasses={`${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}

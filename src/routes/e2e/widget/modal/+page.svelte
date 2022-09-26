@@ -19,7 +19,8 @@
     console.log(dialog);
     console.log(form);
 
-    journey.start();
+    // Calling this on mount is not good if using HMR as it results in a ton of requests on change
+    // journey.start();
   });
   // TODO: Use a more specific type
   journey.onSuccess((response: any) => {
@@ -60,19 +61,18 @@
           tree: journeyParam || 'Login',
         },
         content,
-        customStyles: {
-          buttons: {
-            // primary: [
-            //   { key: 'color', value: '#000000' },
-            //   { key: 'background-color', value: '#bada55' },
-            //   { key: 'border-color', value: '#bada55' },
-            // ],
+        style: {
+          labels: 'floating',
+          logo: {
+            dark: '/img/fr-logomark-white.png',
+            light: '/img/fr-logomark-black.png',
+          },
+          sections: {
+            header: true,
           },
         },
       },
     });
-
-    console.log(widget);
   });
 </script>
 

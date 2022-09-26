@@ -2,7 +2,8 @@
   import type { KbaCreateCallback } from '@forgerock/javascript-sdk';
   import { writable } from 'svelte/store';
 
-  import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import Floating from '$components/compositions/input-floating/floating-label.svelte';
+  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -11,6 +12,9 @@
   export let callback: KbaCreateCallback;
   export let firstInvalidInput: boolean;
   export let idx: number;
+  export let labelType: 'floating' | 'stacked' = 'floating';
+
+  const Input = labelType === 'floating' ? Floating : Stacked;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT

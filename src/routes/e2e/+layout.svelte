@@ -6,6 +6,7 @@
 </script>
 
 <svelte:head>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     /**
       * This style block allows for the vertical expansion of the html

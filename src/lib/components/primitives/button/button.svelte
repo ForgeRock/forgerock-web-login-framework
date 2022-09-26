@@ -1,8 +1,6 @@
 <script lang="ts">
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import { styles } from '$widget/styles.store';
-  import { generateStyleString } from '$lib/_utilities/style.utilities';
 
   export let busy = false;
   // export let customCss: { key: string; value: string }[] = [];
@@ -39,7 +37,6 @@
     width,
   )} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width}`}
   on:click={onClick}
-  style={generateStyleString($styles?.buttons?.primary)}
   {type}
 >
   {#if busy}

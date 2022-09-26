@@ -16,11 +16,11 @@
   let userStore: UserStore = initializeUser();
 
   /**
-   * Sets up of locale store with appropriate locale content
+   * Sets up locale store with appropriate content
    */
   initializeContent(data.content);
 
-  // Use if not initializing journey in above "context module"
+  // Use if not initializing journey in a "context module"
   onMount(async () => {
     journeyStore.next();
   });
@@ -36,5 +36,5 @@
 </script>
 
 <Box>
-  <Journey {journeyStore} />
+  <Journey displayIcon={true} {journeyStore} />
 </Box>
