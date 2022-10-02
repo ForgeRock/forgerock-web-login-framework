@@ -6,6 +6,7 @@
 
   let journeyParam = $page.url.searchParams.get('journey');
   let formEl: HTMLDivElement;
+  // TODO: Use a more specific type
   let userResponse: any | null;
 
   async function logout() {
@@ -14,6 +15,7 @@
   }
 
   form.onMount((component: HTMLElement) => console.log(component));
+  // TODO: Use a more specific type
   journey.onSuccess((response: any) => (userResponse = response?.user));
   journey.onFailure((error: string) => console.log(error));
 

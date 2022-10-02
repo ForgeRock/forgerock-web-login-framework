@@ -1,4 +1,4 @@
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { CallbackType, type FRCallback } from '@forgerock/javascript-sdk';
 
 // Callback handler components
 import Boolean from '$journey/callbacks/boolean/boolean.svelte';
@@ -10,13 +10,14 @@ import Name from '$journey/callbacks/username/name.svelte';
 import Password from '$journey/callbacks/password/password.svelte';
 import StringAttributeInput from '$journey/callbacks/string-attribute/string-attribute-input.svelte';
 import TermsConditions from '$journey/callbacks/terms-and-conditions/terms-conditions.svelte';
+import Unknown from '$journey/callbacks/unknown/unknown.svelte';
 
 /**
  * Iterate through callbacks received from AM and map the callback to the
  * appropriate callback component, pushing that component
  * the StepComponent's array.
  */
-export function mapCallbackToComponent(cb: any) {
+export function mapCallbackToComponent(cb: FRCallback) {
   /** *********************************************************************
    * SDK INTEGRATION POINT
    * Summary:SDK callback method for getting the callback type
@@ -43,7 +44,7 @@ export function mapCallbackToComponent(cb: any) {
       return ValidatedCreateUsername;
     case CallbackType.TermsAndConditionsCallback:
       return TermsConditions;
-    // default:
-    //   return Unknown;
+    default:
+      return Unknown;
   }
 }

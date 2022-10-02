@@ -1,5 +1,10 @@
 <script lang="ts">
-  import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
+  import type {
+    FRCallback,
+    FRLoginFailure,
+    FRLoginSuccess,
+    FRStep,
+  } from '@forgerock/javascript-sdk';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -8,6 +13,7 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
+  import type { Maybe } from '$lib/interfaces';
   import { convertStringToKey } from '$journey/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import NewUserIcon from '$components/icons/new-user-icon.svelte';
@@ -16,7 +22,7 @@
 
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
-  export let failureMessage: string;
+  export let failureMessage: Maybe<string>;
   export let formEl: HTMLFormElement | null = null;
   export let loading: boolean;
   export let step: StepTypes;
@@ -26,10 +32,9 @@
   let hasPrevError = false;
 
   // TODO: Pull out and rework into a utility or helper
-  function checkValidation(callback: any) {
+  function checkValidation(callback: FRCallback) {
     let failedPolices = callback.getOutputByName('failedPolicies', []);
     if (failedPolices.length && !hasPrevError) {
-      console.log(callback);
       hasPrevError = true;
       return true;
     }

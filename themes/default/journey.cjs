@@ -5,13 +5,13 @@ module.exports = function (theme) {
     '.input-policies': {
       fontSize: theme('fontSize.sm'),
 
-      'p': {
+      p: {
         fontWeight: theme('fontWeight.bold'),
         margin: theme('spacing.1'),
       },
-      'ul': {
+      ul: {
         margin: theme('spacing.1'),
-      }
+      },
     },
     '.kba-fieldset': {
       position: 'relative',

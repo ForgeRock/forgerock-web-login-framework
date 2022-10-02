@@ -170,7 +170,7 @@
   import Journey from '$journey/journey.svelte';
 
   // Import the stores for initialization
-  import configure, { type partialConfigSchema } from '$lib/config/config';
+  import configure, { type partialConfigSchema } from '$lib/config';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent, partialStringsSchema } from '$lib/locale.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
@@ -180,6 +180,7 @@
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
   // TODO: Runtime customization needs further development
+  // TODO: Use a more specific type
   // export let customStyles: any;
 
   const dispatch = createEventDispatcher();

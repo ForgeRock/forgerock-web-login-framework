@@ -19,7 +19,6 @@
   let isInvalid: boolean;
 
   function submitForm(event: SubmitEvent) {
-    console.log('Form submitted');
     errorMessage = 'Please select an option';
   }
 
@@ -27,7 +26,6 @@
     if (!withForm && errorMessage) {
       // Only done to force an error without any user interaction
       let root = el.$$.root;
-      console.log(root);
       let errorEl = root.querySelector('select');
       errorEl?.setAttribute('aria-invalid', 'true');
       isInvalid = true;

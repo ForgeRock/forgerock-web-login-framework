@@ -5,6 +5,7 @@
   import Widget, { modal, journey, user } from '$package/modal';
 
   let journeyParam = $page.url.searchParams.get('journey');
+  // TODO: Use a more specific type
   let userResponse: any | null;
   let widget: Widget;
   let widgetEl: HTMLDivElement;
@@ -20,6 +21,7 @@
 
     journey.start();
   });
+  // TODO: Use a more specific type
   journey.onSuccess((response: any) => {
     console.log(response);
     userResponse = response?.user;

@@ -66,7 +66,6 @@
           messageEl?.classList.remove('tw_isInvalid');
           messageEl?.classList.add('tw_hidden');
         }
-        console.log(`Is element at index ${idx} valid ${isValid}`);
       });
     });
 

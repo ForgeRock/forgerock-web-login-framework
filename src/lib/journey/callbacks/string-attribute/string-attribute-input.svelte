@@ -25,7 +25,7 @@
   let prompt = callback.getPrompt();
   let type = getInputTypeFromPolicies(policies);
 
-  let validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+  let validationRules = getValidationPolicies(callback.getPolicies());
   let validationFailures = getValidationFailures(callback, prompt);
   let isInvalid = !!validationFailures.length;
 
@@ -57,7 +57,7 @@
     prompt = callback.getPrompt();
     type = getInputTypeFromPolicies(policies);
 
-    validationRules = getValidationPolicies(callback.getPolicies(), prompt);
+    validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }

@@ -1,6 +1,11 @@
 <script lang="ts">
   import { afterUpdate } from 'svelte';
-  import type { FRLoginFailure, FRLoginSuccess, FRStep } from '@forgerock/javascript-sdk';
+  import type {
+    FRCallback,
+    FRLoginFailure,
+    FRLoginSuccess,
+    FRStep,
+  } from '@forgerock/javascript-sdk';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -15,9 +20,12 @@
   import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
+  // Types
+  import type { Maybe } from '$lib/interfaces';
+
   type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
 
-  export let failureMessage: string;
+  export let failureMessage: Maybe<string>;
   export let formEl: HTMLFormElement | null = null;
   export let loading: boolean;
   export let step: StepTypes;
@@ -28,10 +36,9 @@
   let hasPrevError = false;
 
   // TODO: Pull out and rework into a utility or helper
-  function checkValidation(callback: any) {
+  function checkValidation(callback: FRCallback) {
     let failedPolices = callback.getOutputByName('failedPolicies', []);
     if (failedPolices.length && !hasPrevError) {
-      console.log(callback);
       hasPrevError = true;
       return true;
     }
@@ -63,9 +70,9 @@
     </div>
   {:else if step.type === 'Step'}
     {#if failureMessage}
-      <Alert type="error" needsFocus={alertNeedsFocus}
-        >{interpolate(failureMessageKey, null, failureMessage)}</Alert
-      >
+      <Alert type="error" needsFocus={alertNeedsFocus}>
+        {interpolate(failureMessageKey, null, failureMessage)}
+      </Alert>
     {/if}
     {#each step?.callbacks as callback, idx}
       {@const firstInvalidInput = checkValidation(callback)}
@@ -79,7 +86,9 @@
     <Button busy={loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>
-    <p class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+    <p
+      class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+    >
       <T key="dontHaveAnAccount" html={true} />
     </p>
   {/if}

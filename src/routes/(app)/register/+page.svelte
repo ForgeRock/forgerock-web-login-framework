@@ -9,7 +9,7 @@
   import { initialize as initializeOAuth, type OAuthStore } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser, type UserStore } from '$lib/user/user.store';
 
-  export let content;
+  export let data;
 
   let journeyStore: JourneyStore = initializeJourney({ tree: 'Registration' });
   let oauthStore: OAuthStore = initializeOAuth();
@@ -18,7 +18,7 @@
   /**
    * Sets up of locale store with appropriate locale content
    */
-  initializeContent(content);
+  initializeContent(data.content);
 
   // Use if not initializing journey in above "context module"
   onMount(async () => {

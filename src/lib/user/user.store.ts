@@ -1,16 +1,18 @@
 import { UserManager, type ConfigOptions } from '@forgerock/javascript-sdk';
 import { writable, type Writable } from 'svelte/store';
 
+import type { Maybe } from '$lib/interfaces';
+
 export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
   get: (getOptions?: ConfigOptions) => void;
   reset: () => void;
 }
 export interface UserStoreValue {
   completed: boolean;
-  error: {
-    code?: number | null;
-    message: string | null;
-  } | null;
+  error: Maybe<{
+    code?: Maybe<number>;
+    message: Maybe<string>;
+  }>;
   loading: boolean;
   successful: boolean;
   response: unknown;
