@@ -12,11 +12,6 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  const logo = {
-    dark: '/img/fr-logo-white.png',
-    light: '/image/fr-logo-black.png',
-  };
-
   let journeyStore: JourneyStore = initializeJourney();
   let oauthStore: OAuthStore = initializeOAuth();
   let userStore: UserStore = initializeUser();

@@ -1,7 +1,67 @@
-import type { CallbackType } from '@forgerock/javascript-sdk';
+import { CallbackType } from '@forgerock/javascript-sdk';
 
-export const docsExample = {
-  type: 'TextOutputCallback',
+export default {
+  authId: 'foo',
+  callbacks: [
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value: 'A red fox jumps over the lazy dog.',
+        },
+        {
+          name: 'messageType',
+          value: '0',
+        },
+      ],
+    },
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value: 'Have you read our <a href="#">privacy policy</a>?',
+        },
+        {
+          name: 'messageType',
+          value: '0',
+        },
+      ],
+    },
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            'Dangerous script tag should be rendered as plaintext: <br/> <script>alert("pwned")</script>',
+        },
+        {
+          name: 'messageType',
+          value: '0',
+        },
+      ],
+    },
+    {
+      type: CallbackType.SuspendedTextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            'An email has been sent to the address you entered. Click the link in that email to proceed.',
+        },
+        {
+          name: 'messageType',
+          value: '0',
+        },
+      ],
+    },
+  ],
+};
+
+export const docsBaseExample = {
+  type: CallbackType.TextOutputCallback,
   output: [
     {
       name: 'message',
@@ -14,55 +74,16 @@ export const docsExample = {
   ],
 };
 
-export default {
-  authId: 'foo',
-  "callbacks": [
+export const docsSuspendedExample = {
+  type: 'SuspendedTextOutputCallback',
+  output: [
     {
-      "type": "TextOutputCallback",
-      "output": [
-        {
-          "name": "message",
-          "value": "Had coffee?"
-        },
-        {
-          "name": "messageType",
-          "value": "0"
-        }
-      ]
+      name: 'message',
+      value: 'An email has been sent to your inbox.',
     },
     {
-      "type": "ConfirmationCallback",
-      "output": [
-        {
-          "name": "prompt",
-          "value": ""
-        },
-        {
-          "name": "messageType",
-          "value": 0
-        },
-        {
-          "name": "options",
-          "value": [
-            "Yes",
-            "No"
-          ]
-        },
-        {
-          "name": "optionType",
-          "value": -1
-        },
-        {
-          "name": "defaultOption",
-          "value": 1
-        }
-      ],
-      "input": [
-        {
-          "name": "IDToken2",
-          "value": 0
-        }
-      ]
-    }
+      name: 'messageType',
+      value: '0',
+    },
   ],
-}
+};

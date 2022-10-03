@@ -37,7 +37,7 @@
    * displayed. If you want to localize it, you'll need to add content keys
    * in the locale file for that to override the original value.
    */
-  const label = interpolate(prompt, null, prompt);
+  const label = interpolate(textToKey(prompt), null, prompt);
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)

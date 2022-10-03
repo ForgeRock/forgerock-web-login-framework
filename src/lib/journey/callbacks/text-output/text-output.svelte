@@ -1,35 +1,18 @@
 <script lang="ts">
-  import type { ConfirmationCallback, TextOutputCallback } from '@forgerock/javascript-sdk';
+  import type { SuspendedTextOutputCallback, TextOutputCallback } from '@forgerock/javascript-sdk';
+  import sanitize from 'xss';
 
-  import Button from '$components/primitives/button/button.svelte';
+  export let callback: SuspendedTextOutputCallback | TextOutputCallback;
 
-  import xss from 'xss';
-  export let callback: TextOutputCallback;
-  export let choice: ConfirmationCallback;
+  let dirtyMessage = callback.getMessage();
+  let cleanMessage = sanitize(dirtyMessage);
 
-  const options = choice.getOptions();
-
-  $: message = callback.getMessage();
-
-  const sanitized = xss(message);
-
-  $: selected = choice.getDefaultOption(); // gets the index position
-
-  function setValue(index: number) {
-    selected = index;
+  $: {
+    dirtyMessage = callback.getMessage();
+    cleanMessage = sanitize(dirtyMessage);
   }
 </script>
 
 <p class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
-  {message}
+  {@html cleanMessage}
 </p>
-{#each options as opt, index}
-  <Button
-    style={selected === index ? 'primary' : 'secondary'}
-    type="button"
-    width="auto"
-    onClick={() => setValue(index)}
-  >
-    {opt}
-  </Button>
-{/each}

@@ -2,15 +2,17 @@ import { CallbackType, type FRCallback } from '@forgerock/javascript-sdk';
 
 // Callback handler components
 import Boolean from '$journey/callbacks/boolean/boolean.svelte';
-import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
-import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
 import Choice from '$journey/callbacks/choice/choice.svelte';
+import Confirmation from '$journey/callbacks/confirmation/confirmation.svelte';
 import KbaCreate from '$journey/callbacks/kba/kba-create.svelte';
 import Name from '$journey/callbacks/username/name.svelte';
 import Password from '$journey/callbacks/password/password.svelte';
 import StringAttributeInput from '$journey/callbacks/string-attribute/string-attribute-input.svelte';
 import TermsConditions from '$journey/callbacks/terms-and-conditions/terms-conditions.svelte';
+import TextOutput from '$journey/callbacks/text-output/text-output.svelte';
 import Unknown from '$journey/callbacks/unknown/unknown.svelte';
+import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
+import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
 
 /**
  * Iterate through callbacks received from AM and map the callback to the
@@ -30,6 +32,8 @@ export function mapCallbackToComponent(cb: FRCallback) {
       return Boolean;
     case CallbackType.ChoiceCallback:
       return Choice;
+    case CallbackType.ConfirmationCallback:
+      return Confirmation;
     case CallbackType.KbaCreateCallback:
       return KbaCreate;
     case CallbackType.NameCallback:
@@ -44,6 +48,10 @@ export function mapCallbackToComponent(cb: FRCallback) {
       return ValidatedCreateUsername;
     case CallbackType.TermsAndConditionsCallback:
       return TermsConditions;
+    // Intentional fall-through
+    case CallbackType.TextOutputCallback:
+    case CallbackType.SuspendedTextOutputCallback:
+      return TextOutput;
     default:
       return Unknown;
   }

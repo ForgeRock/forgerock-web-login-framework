@@ -1,9 +1,9 @@
-import { userEvent, within } from '@storybook/testing-library';
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { expect } from '@storybook/jest';
+import { userEvent, within } from '@storybook/testing-library';
 
 import response from './text-output.mock';
 import TextOutput from './text-output.story.svelte';
-import { expect } from '@storybook/jest';
 
 const step = new FRStep(response);
 
@@ -21,40 +21,40 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.TextOutputCallback),
-    choice: step.getCallbackOfType(CallbackType.ConfirmationCallback),
+    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[0],
   },
+};
 
+export const WithHTML = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[1],
+  },
+};
+
+export const WithScript = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[2],
+  },
+};
+
+export const Suspended = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.SuspendedTextOutputCallback)[0],
+  },
 };
 
 const Template = (args) => ({
   Component: TextOutput,
-  props: args
+  props: args,
 });
 
 export const Interaction = Template.bind({});
 
-Interaction.args = Base.args;
+Interaction.args = { ...WithHTML.args };
+
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
-  await new Promise((resolve) => setTimeout(resolve, 100));
-  const question = canvas.getByText("Had coffee?")
-  await userEvent.tab();
-
-  const yes = canvas.getByText('Yes');
-
-  await userEvent.tab();
-
-  await userEvent.click(yes);
-
-  const no = canvas.getByText('No');
-
-  await userEvent.click(no);
-
-  await userEvent.tab();
-
-  await expect(no).toBeVisible();
-  await expect(yes).toBeVisible();
-  await expect(question).toBeVisible();
+  // This essentially just tests whether the HTML renders the link as a valid element
+  await expect(canvas.getByText('privacy policy')).toBeTruthy();
 };

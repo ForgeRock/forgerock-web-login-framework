@@ -5,9 +5,8 @@
   import TextOutput from './text-output.svelte';
 
   export let callback: TextOutputCallback;
-  export let choice: ConfirmationCallback;
 </script>
 
 <Centered>
-  <TextOutput {callback} {choice} />
+  <TextOutput {callback} />
 </Centered>

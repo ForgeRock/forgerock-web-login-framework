@@ -4,7 +4,11 @@
   export let html = false;
   export let string: string;
 
-  let message = sanitize(string);
+  let message: string;
+
+  $: {
+    message = sanitize(string);
+  }
 </script>
 
 {#if html}

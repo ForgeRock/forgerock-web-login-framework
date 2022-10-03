@@ -37,6 +37,7 @@ export const stringsSchema = z
     passwordCallback: z.string(),
     passwordRequirements: z.string(),
     pleaseCheckValue: z.string(),
+    pleaseConfirm: z.string(),
     preferencesMarketing: z.string(),
     preferencesUpdates: z.string(),
     provideCustomQuestion: z.string(),
