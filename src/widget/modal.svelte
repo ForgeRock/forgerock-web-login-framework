@@ -212,13 +212,11 @@
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
-  // import { initialize as initializeStyles } from './styles.store';
+  import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
-  // TODO: Runtime customization needs further development
-  // TODO: Use a more specific type
-  // export let customStyles: any;
+  export let style: Style;
 
   const dispatch = createEventDispatcher();
 
@@ -263,8 +261,7 @@
   let _userStore = (userStore = initializeUser(config));
 
   initializeContent(content);
-  // TODO: Runtime customization needs further development
-  // initializeStyles(customStyles);
+  initializeStyle(style);
 
   s_onMount(() => {
     dialogComp = _dialogComp;
@@ -293,6 +290,14 @@
     closeCallback={_closeCallback}
     dialogId="sampleDialog"
   >
-    <Journey bind:formEl journeyStore={_journeyStore} />
+    <!--
+      `displayIcon` prioritizes the direct configuration with `style.stages.icon`,
+      but falls back to the existence of the logo with `style.logo`
+    -->
+    <Journey
+      bind:formEl
+      displayIcon={style?.stage?.icon ?? !style?.logo}
+      journeyStore={_journeyStore}
+    />
   </Dialog>
 </div>

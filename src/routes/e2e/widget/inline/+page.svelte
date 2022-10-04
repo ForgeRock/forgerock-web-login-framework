@@ -44,6 +44,7 @@
           tree: journeyParam || 'Login',
         },
         content,
+        displayIcon: true,
       },
     });
     // Start the  journey after initialization or within the form.onMount event

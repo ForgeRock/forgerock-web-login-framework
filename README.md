@@ -145,28 +145,28 @@ Steps recommended:
 
 1. Wrap your current CSS in a layer called `app`:
 
-    ```css
-    @layer app {
-      /* Your app's CSS */
-    }
-    ```
+   ```css
+   @layer app {
+     /* Your app's CSS */
+   }
+   ```
 
-    Widget layers are already declared within the Widget's CSS.
+   Widget layers are already declared within the Widget's CSS.
 
 2. Declare the order of layers in your index HTML file before any CSS is loaded:
 
-    ```html
-    <style type="text/css">
-      @layer app;
-      /* List the Widget layers last */
-      @layer 'fr-widget.base';
-      @layer 'fr-widget.utilities';
-      @layer 'fr-widget.components';
-      @layer 'fr-widget.variants';
-    </style>
-    ```
+   ```html
+   <style type="text/css">
+     @layer app;
+     /* List the Widget layers last */
+     @layer 'fr-widget.base';
+     @layer 'fr-widget.utilities';
+     @layer 'fr-widget.components';
+     @layer 'fr-widget.variants';
+   </style>
+   ```
 
-    It's important to note that none of the CSS imported for the Widget will overwrite any of your app's CSS. It's all namespaced to ensure there are no collisions. Unless, that is, you use the exact same selector naming convention we use.
+   It's important to note that none of the CSS imported for the Widget will overwrite any of your app's CSS. It's all namespaced to ensure there are no collisions. Unless, that is, you use the exact same selector naming convention we use.
 
 ### Using the Modal component
 

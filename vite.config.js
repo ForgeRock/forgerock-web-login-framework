@@ -24,8 +24,8 @@ const config = {
     https: true,
     port: 3000,
     watch: {
-      // Very important or HMR will go nuts on all the package/* file changes
-      ignored: ['**/package/**'],
+      // If a request is made of page render, enable this ignore or it will cause a ton of requests on change
+      // ignored: ['**/package/**'],
     },
   },
   preview: {

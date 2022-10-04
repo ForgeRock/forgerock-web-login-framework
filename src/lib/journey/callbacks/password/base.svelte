@@ -5,10 +5,12 @@
   } from '@forgerock/javascript-sdk';
 
   import EyeIcon from '$components/icons/eye-icon.svelte';
-  import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
-  import type { Maybe } from '$lib/interfaces';
+  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
+
+  import type { Maybe } from '$lib/interfaces';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;
@@ -16,6 +18,9 @@
   export let key: string;
   export let isInvalid = false;
   export let isRequired = false;
+  export let labelType: Maybe<'floating' | 'stacked'>;
+
+  const Input = labelType === 'floating' ? Floating : Stacked;
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;

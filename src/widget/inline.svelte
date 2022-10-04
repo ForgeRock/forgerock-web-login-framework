@@ -175,13 +175,11 @@
   import { initialize as initializeContent, partialStringsSchema } from '$lib/locale.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
-  // import { initialize as initializeStyles } from './styles.store';
+  import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
-  // TODO: Runtime customization needs further development
-  // TODO: Use a more specific type
-  // export let customStyles: any;
+  export let style: Style;
 
   const dispatch = createEventDispatcher();
 
@@ -219,8 +217,7 @@
   let _userStore = (userStore = initializeUser(config));
 
   initializeContent(content);
-  // TODO: Runtime customization needs further development
-  // initializeStyles(customStyles);
+  initializeStyle(style);
 
   s_onMount(() => {
     /**
@@ -239,5 +236,6 @@
 </script>
 
 <div class="fr_widget-root">
-  <Journey bind:formEl journeyStore={_journeyStore} />
+  <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
+  <Journey bind:formEl displayIcon={style?.stage?.icon ?? true} journeyStore={_journeyStore} />
 </div>

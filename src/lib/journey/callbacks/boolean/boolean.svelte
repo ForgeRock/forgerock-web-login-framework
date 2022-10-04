@@ -2,10 +2,12 @@
   import { getAttributeValidationFailureText } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
-  import Checkbox from '$components/compositions/checkbox/animated.svelte';
+  import Animated from '$components/compositions/checkbox/animated.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
+  import Standard from '$components/compositions/checkbox/standard.svelte';
 
   export let callback: AttributeInputCallback<boolean>;
+  export let checkAndRadioType: 'animated' | 'standard' = 'animated';
   export let firstInvalidInput: boolean;
   export let idx: number;
 
@@ -16,6 +18,7 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
+  const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
   const inputName = callback?.payload?.input?.[0].name || `boolean-attr-${idx}`;
   // A boolean being required doesn't make much sense, so commenting it out for now
   // const isRequired = isInputRequired(callback);

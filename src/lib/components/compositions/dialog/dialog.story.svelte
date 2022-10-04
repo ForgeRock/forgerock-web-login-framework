@@ -4,9 +4,14 @@
   import Dialog from './dialog.svelte';
   import Form from '$components/primitives/form/form.svelte';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import KeyIcon from '$components/icons/key-icon.svelte';
+  import { initialize } from '$lib/style.store';
+
+  import type { Logo } from '$lib/style.store';
 
   // TODO: Export controls for changing dialog context
+  export let forceOpen: boolean;
+  export let logo: Logo;
+  export let withHeader: boolean;
 
   let dialogEl: HTMLDialogElement;
 
@@ -21,13 +26,19 @@
       dialogEl.close();
     }
   }
+
+  initialize({ logo });
 </script>
 
-<Button style="primary" width="auto" onClick={openDialog}>Open Dialog</Button>
-<Dialog bind:dialogEl closeCallback={(args) => {}} dialogId="myDialog">
-  <div class="tw_flex w-full tw_justify-center">
-    <KeyIcon classes="tw_text-gray-400 tw_fill-current tw_mb-4" size="72px" />
-  </div>
+{#if !forceOpen}
+  <Button style="primary" width="auto" onClick={openDialog}>Open Dialog</Button>
+{:else}
+  <div
+    class="tw_h-full tw_w-full tw_top-0 tw_left-0 tw_fixed tw_bg-body-light dark:tw_bg-body-dark"
+  />
+{/if}
+
+<Dialog bind:dialogEl closeCallback={(args) => {}} dialogId="myDialog" {forceOpen} {withHeader}>
   <h2
     class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray dark:tw_text-white"
   >

@@ -10,7 +10,7 @@
   export let labelClasses = '';
   export let labelOrder: 'first' | 'last' = 'first';
   export let onChange: (event: Event) => void;
-  export let placeholder: string | null = null;
+  export let placeholder: string | null = ' ';
   export let isRequired = false;
   export let isInvalid: boolean | null = null;
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
@@ -26,7 +26,7 @@
 </script>
 
 {#if labelOrder === 'first'}
-  <Label {key} classes={`${labelClasses}`}>{label}</Label>
+  <Label {key} classes={`${labelClasses} tw_w-full tw_ml-1`}>{label}</Label>
 {/if}
 
 <!--
@@ -42,7 +42,7 @@
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
     id={key}
     on:change={onChange}
-    placeholder={placeholder || label}
+    {placeholder}
     required={isRequired}
     type="date"
     bind:value
@@ -57,7 +57,7 @@
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
     id={key}
     on:change={onChange}
-    placeholder={placeholder || label}
+    {placeholder}
     required={isRequired}
     type="email"
     bind:value
@@ -72,7 +72,7 @@
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
     id={key}
     on:change={onChange}
-    placeholder={placeholder || label}
+    {placeholder}
     required={isRequired}
     type="number"
     bind:value
@@ -87,7 +87,7 @@
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
     id={key}
     on:change={onChange}
-    placeholder={placeholder || label}
+    {placeholder}
     required={isRequired}
     type="password"
     bind:value
@@ -102,7 +102,7 @@
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
     id={key}
     on:change={onChange}
-    placeholder={placeholder || label}
+    {placeholder}
     required={isRequired}
     type="phone"
     bind:value
@@ -117,7 +117,7 @@
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
     id={key}
     on:change={onChange}
-    placeholder={placeholder || label}
+    {placeholder}
     required={isRequired}
     type="text"
     bind:value

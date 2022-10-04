@@ -8,7 +8,58 @@ export default {
   title: 'Compositions/Dialog',
 };
 
-export const DialogWithTrigger = {
+export const Base = {
+  args: {
+    forceOpen: true,
+  },
+};
+
+export const NoHeaderWithIcon = {
+  args: {
+    forceOpen: true,
+    logo: {
+      dark: '/img/fr-logomark-white.png',
+      light: '/img/fr-logomark-black.png',
+    },
+  },
+};
+
+export const HeaderWithLogo = {
+  args: {
+    forceOpen: true,
+    withHeader: true,
+    logo: {
+      dark: '/img/fr-logo-white.png',
+      light: '/img/fr-logo-black.png',
+      width: 200,
+    },
+  },
+};
+
+export const HeaderWithStackedLogo = {
+  args: {
+    forceOpen: true,
+    withHeader: true,
+    logo: {
+      dark: '/img/fr-logo-stacked-white.png',
+      height: 150,
+      light: '/img/fr-logo-stacked-black.png',
+    },
+  },
+};
+
+export const HeaderWithSvgLogo = {
+  args: {
+    forceOpen: true,
+    withHeader: true,
+    logo: {
+      dark: '/img/fr-logo-stacked-white.svg',
+      light: '/img/fr-logo-stacked-black.svg',
+    },
+  },
+};
+
+export const WithTrigger = {
   args: {},
 };
 
@@ -19,7 +70,7 @@ const Template = (args) => ({
 
 export const Interaction = Template.bind({});
 
-Interaction.args = { ...DialogWithTrigger.args };
+Interaction.args = { ...WithTrigger.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);

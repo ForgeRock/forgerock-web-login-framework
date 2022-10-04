@@ -9,9 +9,12 @@
   import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
+  import type { Maybe } from '$lib/interfaces';
+
   export let callback: ValidatedCreatePasswordCallback;
   export let firstInvalidInput: boolean;
   export let idx: number;
+  export let labelType: Maybe<'floating' | 'stacked'> = 'floating';
 
   /**
    * At the time of this writing, this callback is never marked as required,
@@ -47,6 +50,7 @@
   {isInvalid}
   {isRequired}
   key={inputName}
+  {labelType}
   showMessage={isInvalid}
 >
   <Policies {callback} label={prompt} messageKey="passwordRequirements" />

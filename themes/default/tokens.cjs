@@ -8,6 +8,9 @@ module.exports = {
     secondary: theme('colors.secondary.dark'),
   }),
   colors: {
+    focus: {
+      DEFAULT: colors.purple[700],
+    },
     background: {
       dark: colors.slate[800],
       light: colors.slate[100],
@@ -41,8 +44,8 @@ module.exports = {
       light: colorLib(colors.sky[600]).darken(0.075).hex(),
     },
     tertiary: {
-      dark: colors.purple[700],
-      light: colors.purple[400],
+      dark: colors.slate[800],
+      light: colors.slate[100],
     },
     text: {
       dark: colors.gray[700],
@@ -74,7 +77,7 @@ module.exports = {
     '3xl': ['3rem', '3.75'],
   },
   ringColor: ({ theme }) => ({
-    DEFAULT: theme('colors.tertiary.dark'),
+    DEFAULT: theme('colors.focus.DEFAULT'),
     ...theme('colors'),
   }),
 };

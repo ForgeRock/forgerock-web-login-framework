@@ -98,17 +98,22 @@ module.exports = (config, theme) => ({
    */
   '.dialog-box': {
     backgroundColor: theme('colors.background.light'),
+    border: `1px solid ${theme('colors.secondary.dark')}`,
+    bottom: 0,
     borderRadius: theme('borderRadius.DEFAULT'),
-    boxShadow: theme('boxShadow.DEFAULT'),
+    boxShadow: theme('boxShadow.lg'),
     height: '100%',
     margin: `${theme('spacing.2')} 0 0 0`,
     maxHeight: '100%',
     maxWidth: '100%',
-    opacity: 0,
-    padding: theme('spacing.6'),
-    paddingBottom: theme('spacing.16'),
-    top: '75%',
+    padding: theme('spacing.0'),
+    top: 0,
     width: '100%',
+    position: 'fixed',
+  },
+  '.dialog-box_animate': {
+    opacity: 0,
+    top: '75%',
     willChange: 'top, opacity',
 
     '&[open]': {
@@ -121,17 +126,70 @@ module.exports = (config, theme) => ({
   },
   '.dialog-box_dark': {
     backgroundColor: theme('colors.background.dark'),
+    borderColor: theme('colors.black'),
 
     '&::backdrop': {
       backgroundColor: colorLib(theme('colors.body.dark')).fade(0.2).toString(),
     },
   },
+  '.dialog-body': {
+    margin: `${theme('spacing.10')} ${theme('spacing.6')}`,
+  },
+  '.dialog-header': {
+    alignItems: 'stretch',
+    backgroundColor: theme('colors.tertiary.light'),
+    borderBottom: `1px solid ${theme('colors.secondary.DEFAULT')}`,
+    borderTopLeftRadius: theme('borderRadius.DEFAULT'),
+    borderTopRightRadius: theme('borderRadius.DEFAULT'),
+    display: 'flex',
+    justifyContent: 'center',
+    minHeight: theme('spacing.40'),
+    padding: `${theme('spacing.8')} ${theme('spacing.24')}`,
+    position: 'relative',
+    marginBottom: theme('spacing.8'),
+
+    '.dialog-logo': {
+      display: 'inline-flex',
+      height: 'inherit',
+    },
+  },
+  '.dialog-header_dark': {
+    backgroundColor: theme('colors.tertiary.dark'),
+    borderBottomColor: theme('colors.secondary.dark'),
+  },
+  '.dialog-no-header': {
+    padding: `${theme('spacing.6')} 0`,
+  },
+  '.dialog-logo': {
+    backgroundImage: 'var(--logo-light)',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+    backgroundSize: 'contain',
+    height: '100%',
+    width: '100%',
+  },
+  '.dialog-logo_dark': {
+    backgroundImage: 'var(--logo-dark)',
+  },
   '.dialog-box_medium': {
     height: 'fit-content',
     margin: 'auto',
     maxWidth: theme('maxWidth.lg'),
-    padding: theme('spacing.12'),
+    padding: theme('spacing.0'),
     width: theme('width["3/4"]'),
+
+    '.dialog-body': {
+      margin: `${theme('spacing.6')} ${theme('spacing.12')} ${theme('spacing.16')}`,
+    },
+    '.dialog-header': {
+      // height: 'fit-content',
+      // minHeight: theme('spacing.36'),
+      padding: `${theme('spacing.8')} ${theme('spacing.28')}`,
+      marginBottom: theme('spacing.16'),
+    },
+    '.dialog-no-header': {
+      padding: `${theme('spacing.10')} 0`,
+    },
   },
   '.dialog-closing': {
     '&[open]': {
@@ -145,7 +203,12 @@ module.exports = (config, theme) => ({
   },
   '.dialog-x': {
     borderRadius: theme('borderRadius.DEFAULT'),
+    marginRight: theme('spacing.2'),
+    position: 'absolute',
+    right: theme('spacing.4'),
+    top: theme('spacing.7'),
   },
+  '.dialog-x_medium': {},
   /**
    * Essentially the same technique as Twitter Bootstrap's v5 "floating label"
    * https://getbootstrap.com/docs/5.0/forms/floating-labels/
