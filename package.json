@@ -9,6 +9,7 @@
     "chromatic": "chromatic --project-token=e10acf0c74f9 --force-rebuild",
     "ci": "vitest --dir src",
     "ci:e2e": "playwright test",
+    "ci:e2e:debug": "PWDEBUG=1 playwright test",
     "clean": "git clean -fdX -e \"!.env\"",
     "dev": "npm run build:widget && npm run dev:widget | npm run dev:app",
     "dev:app": "vite dev",
@@ -28,13 +29,14 @@
   },
   "dependencies": {
     "@forgerock/javascript-sdk": "^3.2.2",
+    "playwright": "^1.27.0",
     "uuid": "^8.3.2",
     "xss": "^1.0.13",
     "zod": "^3.17.3"
   },
   "devDependencies": {
     "@babel/core": "^7.18.0",
-    "@playwright/test": "^1.25.0",
+    "@playwright/test": "^1.27.0",
     "@rollup/plugin-alias": "^3.1.9",
     "@rollup/plugin-commonjs": "^22.0.2",
     "@rollup/plugin-json": "^4.1.0",
