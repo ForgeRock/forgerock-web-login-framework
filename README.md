@@ -2,7 +2,7 @@
 
 ## WARNING: VAPORWARE
 
-**This is a prototype of a development framework for integrating a ForgeRock Login Widget into an existing app, or running as a standalone Login App. This project is not officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with unsupported software.**
+**This is a prototype of a development framework for generating a ForgeRock Login App for self-hosting or JavaScript Widget into an existing self-hosted SPA (React, Vue, Angular, etc.). This project is not officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
 
 ## Table of Contents
 
@@ -18,6 +18,7 @@
   - [Request](#request)
   - [Modal](#modal)
   - [Inline](#inline)
+  - [Styling API](#styling-api)
 - [Future APIs (not implemented)](#future-apis-not-implemented)
   - [Currently unsupported](#currently-unsupported)
   - [Widget customization (future)](#widget-customization-future)
@@ -31,7 +32,7 @@
 
 ## Overview
 
-This Login Widget is intended to be an all-inclusive, UI component that can be used within any modern JavaScript app for handling the default login, registration and related user flows. It can be used within a React, Vue, Angular or any other modern JavaScript framework (does not currently support Node.js or server-rendering (SSR)).
+The Login Widget produced by this framework is intended to be an all-inclusive, UI component that can be used within any modern JavaScript app for handling the default login, registration and related user flows. It can be used within a React, Vue, Angular or any other modern JavaScript framework (does not currently support Node.js or server-rendering (SSR)).
 
 This Widget uses the ForgeRock JavaScript SDK internally. It adds a UI rendering layer on top of the SDK to help eliminate the need to develop and maintain the UI components necessary for providing complex authentication flows. Although this rendering layer is developed with Svelte and Tailwind, it is "compiled away" and has no runtime dependencies. It is library and framework agnostic.
 
@@ -89,7 +90,7 @@ More details will be discussed below in the [Inline section](#using-the-inline-c
 
 ## Quick Start: Using the Widget in Your App
 
-Note: This project is currently in Beta, so this is not available via public npm.
+Note: This project is currently in Beta, so this is not available via public npm. Because of this, it's worth noting what's not [currently supported](#currently-unsupported).
 
 1. `git clone https://github.com/cerebrl/forgerock-web-login-framework`
 2. `cd forgerock-web-login-framework`
@@ -214,7 +215,7 @@ new Widget({
 
 This mounts your Widget into the DOM. If you choose the modal version, it will be hidden at first.
 
-Note: [See additional documentation about configuring the JS SDK](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/).
+Note: [See additional documentation about configuring the JS SDK](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html).
 
 #### Starting a journey (Modal)
 
@@ -223,13 +224,14 @@ The Widget will be mounted to the DOM, but it will not display the first step of
 ```js
 import Widget, { journey } from 'forgerock-web-login-widget/modal';
 
-// Call after instantiating the Widget
 new Widget({
   target: document.getElementById('login-widget'), // Any existing element in the DOM
   props: {
     config: {}, // Your JS SDK configuration; see below
   },
 });
+
+// Be sure to call after instantiating the Widget
 journey.start();
 
 // OR, call on button click
@@ -282,7 +284,7 @@ React, for example, uses the Virtual DOM, and the Inline component cannot mount 
 Now, import the Widget where you'd like to mount it. In whatever way your framework requires, provide a reference to the element mounted in the actual DOM as the target of the Widget instantiation.
 
 ```js
-// As modal dialog
+// As inline
 import Widget from 'forgerock-web-login-widget/inline';
 
 // ...
@@ -297,7 +299,7 @@ new Widget({
 
 This mounts your Widget into the DOM. If you choose the modal version, it will be hidden at first.
 
-Note: [See additional documentation about configuring the JS SDK](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/).
+Note: [See additional documentation about configuring the JS SDK](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html).
 
 #### Starting a journey (Inline)
 
@@ -375,6 +377,11 @@ const widget = new Widget({
      * OPTIONAL; See below for the content object schema
      */
     content: {},
+
+    /**
+     * OPTIONAL; See below for Styling section
+     */
+    style: {},
   },
 });
 
@@ -382,7 +389,7 @@ const widget = new Widget({
 widget.$destroy();
 ```
 
-NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://sdks.forgerock.com/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app/), or you can [see our API docs for more developer detail](https://sdks.forgerock.com/javascript/api-reference-core/interfaces/configoptions.html).
+NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html), or you can [see our API docs for more developer detail](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/configoptions.html).
 
 NOTE: For content schema, please [use the example en-US locale file](/src/locales/us/en/index.json).
 
@@ -497,7 +504,7 @@ The full `options` object:
 }
 ```
 
-For the full type definition of this, please [view our SDK documentation](https://sdks.forgerock.com/javascript/api-reference-core/interfaces/httpclientrequestoptions.html).
+For the full type definition of this, please [view our SDK API documentation](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/httpclientrequestoptions.html).
 
 ### Modal
 
@@ -546,6 +553,43 @@ form.onMount((formElement) => {
 
 It's worth noting that if the Widget has already mounted before the `onMount` statement, it will never run. It won't retroactively run the callback function.
 
+### Styling API
+
+The Widget can be configured for styling purposes via the JavaScript API. This allows you to choose the type of labels used or providing a logo for the modal.
+
+Example:
+
+```js
+const widget = new Widget({
+  target: document.getElementById('widget-root'),
+  props: {
+    config: { /* ... */ },
+    content: { /* ... */ },
+    /**
+     * OPTIONAL
+     */
+    style: {
+      checksAndRadios: 'animated', // OPTIONAL; choices are 'animated' or 'standard'
+      labels: 'floating', // OPTIONAL; choices are 'floating' or 'stacked'
+      logo: { // OPTIONAL; only used with modal form factor
+        dark: 'https://example.com/img/white-logo.png', // OPTIONAL; used if theme has a dark variant
+        light: 'https://example.com/img/black-logo.png', // REQUIRED if logo property is provided; full URL
+        height: '300px', // OPTIONAL; provides additional controls to logo display
+        width: '400px', // OPTIONAL; provides additional controls to logo display
+      },
+      sections: { // OPTIONAL; only used with modal form factor
+        header: false, // OPTIONAL; uses a modal "header" section that displays logo
+      },
+      stage: {
+        icon: true, // OPTIONAL; displays generic icons for the provided stages
+      },
+    },
+  },
+});
+```
+
+Note that the `logo` and `section` property only apply to the "modal" form factor, and not the "inline".
+
 ## Future APIs (not implemented)
 
 ### Currently **unsupported**
@@ -553,7 +597,7 @@ It's worth noting that if the Widget has already mounted before the `onMount` st
 1. WebAuthn
 2. Push Authentication
 3. Recaptcha
-4. QR Codes
+4. QR Code display
 5. TextOutputCallback with scripts
 6. Device Profile
 7. Email Suspend (Forgot Password/Username flows)
