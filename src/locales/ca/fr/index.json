@@ -31,6 +31,7 @@
   "passwordCallback": "Mot de passe",
   "passwordRequirements": "Password requirements:",
   "pleaseCheckValue": "Please check this value",
+  "pleaseConfirm": "Please Confirm",
   "preferencesMarketing": "Envoyez-moi des offres spéciales et des services",
   "preferencesUpdates": "Envoyez-moi des nouvelles et des mises à jour",
   "provideCustomQuestion": "Provide custom question",

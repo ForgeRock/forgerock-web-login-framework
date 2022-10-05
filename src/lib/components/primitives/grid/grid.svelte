@@ -1,7 +1,7 @@
 <script lang="ts">
   export let num = 2;
 
-  function generateClassString(...args: number[]) {
+  function generateClassString(...args: Array<number | string>) {
     return args.reduce((prev, curr) => {
       switch (curr) {
         case 4:
@@ -17,6 +17,6 @@
   }
 </script>
 
-<div class={`tw_grid ${generateClassString(num)} tw_gap-4`}>
+<div class={`${generateClassString(num)} tw_gap-4 tw_grid tw_input-spacing`}>
   <slot />
 </div>

@@ -6,7 +6,11 @@
   export let key: string;
   export let values: Maybe<Record<string, string>> = undefined;
 
-  let message = interpolate(key, values);
+  let message: string;
+
+  $: {
+    message = interpolate(key, values);
+  }
 </script>
 
 {#if html}

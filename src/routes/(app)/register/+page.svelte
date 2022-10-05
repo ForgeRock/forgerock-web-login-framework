@@ -9,6 +9,7 @@
   import { initialize as initializeOAuth, type OAuthStore } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser, type UserStore } from '$lib/user/user.store';
 
+  /** @type {import('./$types').PageData} */
   export let data;
 
   let journeyStore: JourneyStore = initializeJourney({ tree: 'Registration' });
