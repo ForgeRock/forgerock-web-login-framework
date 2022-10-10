@@ -1,4 +1,7 @@
-import { FRStep } from '@forgerock/javascript-sdk';
+import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
+import { expect, jest } from '@storybook/jest';
+import { fireEvent, userEvent, within } from '@storybook/testing-library';
+import { action } from '@storybook/addon-actions';
 
 import Step from './stages.story.svelte';
 import { loginStep, registrationStep, usernamePasswordStep } from './step.mock';
@@ -36,11 +39,10 @@ export const Registration = {
     failureMessage: '',
     stage: frRegistrationStep.getStage(),
     step: frRegistrationStep,
-    submitForm: () => {
-      console.log('Form submitted.');
-    },
+    submitForm: jest.fn()
   },
 };
+
 export const UsernamePassword = {
   args: {
     displayIcon: true,
@@ -48,8 +50,148 @@ export const UsernamePassword = {
     labelType: 'stacked',
     stage: frUsernamePasswordStep.getStage(),
     step: frUsernamePasswordStep,
-    submitForm: () => {
-      console.log('Form submitted.');
-    },
-  },
+    submitForm: jest.fn(),
+  }
 };
+
+const Template = (args) => ({
+  Component: Step,
+  props: args,
+});
+export const LoginInteraction = Template.bind({});
+export const RegistrationInteraction = Template.bind({})
+
+RegistrationInteraction.args = {
+  ...Registration.argTypes,
+  ...Registration.args
+};
+
+RegistrationInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.tab();
+  await userEvent.tab();
+
+  const username = canvas.getByLabelText('Username')
+  const password = canvas.getByLabelText('Password')
+  const firstName = canvas.getByLabelText('First Name')
+  const lastName = canvas.getByLabelText('Last Name')
+  const email = canvas.getByLabelText('Email Address')
+  const specialOffers = canvas.getByRole('checkbox', { name: /special/ })
+  const news = canvas.getByRole('checkbox', { name: /news/ })
+  const securityQuestion = canvas.getByLabelText('Select a security question')
+  const securityAnswer = canvas.getByLabelText('Security Answer')
+  const toc = canvas.getByRole('checkbox', { name: 'Please accept our Terms and Conditions' });
+
+  const usernameCb = frRegistrationStep.getCallbacksOfType(CallbackType.ValidatedCreateUsernameCallback)[0];
+  const passwordCb = frRegistrationStep.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0];
+  const firstNameCb = frRegistrationStep.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[0];
+  console.log(frRegistrationStep)
+  const lastNameCb = frRegistrationStep.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[1];
+  const emailCb = frRegistrationStep.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[2];
+  const specialOffersCb = frRegistrationStep.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[0]
+  const newsOffersCb = frRegistrationStep.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[1]
+
+  const securityQuestions = frRegistrationStep.getCallbacksOfType(CallbackType.KbaCreateCallback)[0];
+
+  const tocCb = frRegistrationStep.getCallbacksOfType(CallbackType.TermsAndConditionsCallback)[0]
+
+  expect(username).toHaveFocus();
+  await userEvent.type(username, 'user')
+
+
+  await userEvent.tab();
+  expect(firstName).toHaveFocus();
+  await userEvent.type(firstName, 'my-name')
+
+  await userEvent.tab();
+  expect(lastName).toHaveFocus();
+  await userEvent.type(lastName, 'last-name')
+
+  await userEvent.tab();
+  expect(email).toHaveFocus();
+  await userEvent.type(email, 'myemail@email.com')
+
+  await userEvent.tab();
+
+  expect(specialOffers).toHaveFocus();
+  await userEvent.click(specialOffers);
+  await userEvent.tab();
+
+  expect(news).toHaveFocus();
+  await userEvent.click(news);
+  await userEvent.tab();
+
+  await userEvent.type(password, 'password')
+  expect(password).toHaveFocus();
+  await userEvent.tab();
+  await userEvent.tab();
+
+  expect(securityQuestion).toHaveFocus()
+  await userEvent.selectOptions(securityQuestion, '0');
+  await userEvent.tab();
+
+  expect(securityAnswer).toHaveFocus()
+  await userEvent.type(securityAnswer, 'blue');
+  await userEvent.tab();
+
+  expect(toc).toHaveFocus()
+  await userEvent.click(toc);
+  await userEvent.tab();
+
+  const submit = canvas.getByRole('button', { name: 'Register' });
+  await userEvent.click(submit)
+  expect(Registration.args.submitForm).toHaveBeenCalled();
+
+
+  console.log(usernameCb)
+  expect(usernameCb.getInputValue()).toBe('user')
+  expect(passwordCb.getInputValue()).toBe('password')
+  expect(firstNameCb.getInputValue()).toBe('my-name')
+  expect(lastNameCb.getInputValue()).toBe('last-name')
+  expect(emailCb.getInputValue()).toBe('myemail@email.com')
+  expect(newsOffersCb.getInputValue()).toBe(true)
+  expect(specialOffersCb.getInputValue()).toBe(true)
+  expect(securityQuestions.payload.input[0].value).toBe('0');
+  expect(securityQuestions.payload.input[1].value).toBe('blue');
+  expect(tocCb.getInputValue()).toBe(true)
+  console.log(securityQuestions);
+}
+
+LoginInteraction.args = {
+  ...UsernamePassword.argTypes,
+  ...UsernamePassword.args
+};
+
+LoginInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.tab();
+
+  const nameCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.NameCallback)[0];
+  const passwordCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.PasswordCallback)[0];
+
+  const username = canvas.getByLabelText('User Name');
+  const password = canvas.getByLabelText('Password');
+  expect(username).toHaveFocus();
+  userEvent.type(username, 'username01')
+  expect(canvas.getByLabelText('User Name').value).toEqual('username01')
+
+  await userEvent.tab();
+
+  expect(password).toHaveFocus();
+  userEvent.type(password, 'Password123')
+
+  expect(canvas.getByLabelText('Password').value).toEqual('Password123')
+
+  await userEvent.tab();
+  await userEvent.tab();
+  const signin = canvas.getByRole('button', { name: 'Sign In' })
+  expect(signin).toHaveFocus();
+  await fireEvent.click(signin);
+
+  expect(UsernamePassword.args.submitForm).toHaveBeenCalled();
+
+
+  expect(nameCb.getInputValue()).toBe('username01')
+  expect(passwordCb.getInputValue()).toBe('Password123')
+}
+

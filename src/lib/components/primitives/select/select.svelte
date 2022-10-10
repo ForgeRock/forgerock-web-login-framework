@@ -39,8 +39,9 @@
 
     // Check if text is same as label
     shouldDisplayOption = !(label === selectedOption?.text);
+    console.log(shouldDisplayOption);
 
-    // Continue with calling onChange paramater
+    // Continue with calling onChange parameter
     onChange(event);
   }
 </script>

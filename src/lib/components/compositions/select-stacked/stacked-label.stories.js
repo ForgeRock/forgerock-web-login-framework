@@ -1,4 +1,5 @@
 import { userEvent, within } from '@storybook/testing-library';
+import { expect, jest } from '@storybook/jest';
 
 import Select from './stacked-label.story.svelte';
 
@@ -13,11 +14,11 @@ export default {
 
 export const Base = {
   args: {
-    checkValidity: (e) => {
+    checkValidity: jest.fn((e) => {
       const el = e.target;
       console.log(el.value);
       return !!el.value;
-    },
+    }),
     key: 'uniqueId',
     label: 'Select your option',
     onChange: (e) => console.log(e.target.value),
@@ -52,6 +53,7 @@ export const LongLabel = {
 export const Error = {
   args: {
     ...Base.args,
+    onChange: jest.fn(),
     errorMessage: 'Please select an option',
     isRequired: true,
   },
@@ -88,7 +90,8 @@ Interaction.play = async ({ canvasElement }) => {
     selector: 'select',
   });
   await userEvent.selectOptions(inputEl, '1');
-
+  expect(Error.args.onChange).toHaveBeenCalled();
+  expect(Error.args.checkValidity).toHaveBeenCalled();
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();

@@ -3,12 +3,10 @@ import { v4 as uuid } from 'uuid';
 
 test('modal widget', async ({ page }) => {
   await page.goto('widget/modal?journey=Registration');
+
   const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
-  const dialog = page.locator('dialog');
-  expect(await dialog.isVisible()).toBeFalsy();
 
   await loginButton.click();
-  expect(await dialog.isVisible()).toBeTruthy();
 
   await page.fill('text="Username"', uuid());
   await page.fill('text=First Name', 'Demo');
