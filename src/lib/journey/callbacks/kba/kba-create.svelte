@@ -9,12 +9,17 @@
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
 
-  export let callback: KbaCreateCallback;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
-  export let labelType: 'floating' | 'stacked' = 'floating';
+  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
+  import type { Maybe } from '$lib/interfaces';
 
-  const Input = labelType === 'floating' ? Floating : Stacked;
+  export let callback: KbaCreateCallback;
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
+
+  const Input = style.labels === 'floating' ? Floating : Stacked;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -24,7 +29,7 @@
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
   const inputArr = callback?.payload?.input;
-  const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
+  const inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata.idx}`;
   const inputNameQuestion = inputName;
   const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
   const prompt = callback.getPrompt();
@@ -151,7 +156,7 @@
   </span>
 
   <Select
-    firstInvalidInput={false}
+    isFirstInvalidInput={false}
     key={inputNameQuestion}
     label={prompt}
     onChange={selectQuestion}
@@ -160,8 +165,8 @@
 
   {#if displayCustomQuestionInput}
     <Input
-      firstInvalidInput={false}
-      key={`kba-custom-question-${idx}`}
+      isFirstInvalidInput={false}
+      key={`kba-custom-question-${callbackMetadata.idx}`}
       label={interpolate('customSecurityQuestion')}
       showMessage={false}
       message={interpolate('inputRequiredError')}
@@ -171,8 +176,8 @@
   {/if}
 
   <Input
-    {firstInvalidInput}
-    key={inputNameAnswer || `kba-answer-${idx}`}
+    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    key={inputNameAnswer || `kba-answer-${callbackMetadata.idx}`}
     label={interpolate('securityAnswer')}
     showMessage={false}
     message={interpolate('inputRequiredError')}

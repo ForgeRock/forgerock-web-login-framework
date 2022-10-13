@@ -11,17 +11,20 @@
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
+  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: ValidatedCreateUsernameCallback;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
-  export let labelType: Maybe<'floating' | 'stacked'> = 'floating';
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
 
-  const Input = labelType === 'floating' ? Floating : Stacked;
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `validated-name-${idx}`;
+  let inputName = callback?.payload?.input?.[0].name || `validated-name-${callbackMetadata.idx}`;
   let isRequired = isInputRequired(callback);
   let prompt = callback.getPrompt();
   let value = callback?.getInputValue();
@@ -47,7 +50,7 @@
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
+    inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata.idx}`;
     isRequired = isInputRequired(callback);
     prompt = callback.getPrompt();
     value = callback?.getInputValue();
@@ -59,7 +62,7 @@
 </script>
 
 <Input
-  {firstInvalidInput}
+  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
   {isRequired}
   {isInvalid}
   key={inputName}

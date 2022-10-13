@@ -3,7 +3,7 @@
 
   import Label from '$components/primitives/label/label.svelte';
 
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let inputClasses = '';
   export let key: string;
   export let label: string;
@@ -19,7 +19,7 @@
   let inputEl: HTMLInputElement;
 
   afterUpdate(() => {
-    if (firstInvalidInput) {
+    if (isFirstInvalidInput) {
       inputEl.focus();
     }
   });

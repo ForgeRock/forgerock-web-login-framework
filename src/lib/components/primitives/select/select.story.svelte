@@ -14,7 +14,7 @@
   <Select
     {defaultOption}
     {isRequired}
-    firstInvalidInput={false}
+    isFirstInvalidInput={false}
     {key}
     {label}
     {labelOrder}

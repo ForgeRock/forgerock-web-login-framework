@@ -5,8 +5,8 @@
 
   export let defaultOption: Maybe<string> = null;
   export let message = '';
-  export let firstInvalidInput: boolean;
   export let groupLabel: string = '';
+  export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
@@ -24,7 +24,7 @@
     <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
       <Radio
         checked={defaultOption === option.value}
-        {firstInvalidInput}
+        {isFirstInvalidInput}
         {isRequired}
         {isInvalid}
         key={`${key}-${option.value}`}

@@ -4,7 +4,7 @@
   import Label from '../label/label.svelte';
 
   export let checked = false;
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
@@ -15,7 +15,7 @@
   let inputEl: HTMLInputElement;
 
   afterUpdate(() => {
-    if (firstInvalidInput) {
+    if (isFirstInvalidInput) {
       inputEl.focus();
     }
   });

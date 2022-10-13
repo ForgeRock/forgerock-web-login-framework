@@ -17,7 +17,7 @@
         checked={defaultOption === option.value}
         {isRequired}
         {isInvalid}
-        firstInvalidInput={false}
+        isFirstInvalidInput={false}
         key={`${key}-${option.value}`}
         {name}
         {onChange}

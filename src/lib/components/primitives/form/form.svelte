@@ -1,4 +1,5 @@
 <script lang="ts">
+  export let ariaDescribedBy: string;
   export let formEl: HTMLFormElement | null = null;
   export let onSubmitWhenValid: (event: SubmitEvent, isFormValid: boolean) => void;
 
@@ -15,7 +16,7 @@
      */
     const form = event.target as HTMLFormElement;
 
-    let firstInvalidInput: number | null = null;
+    let isFirstInvalidInput: number | null = null;
 
     isFormValid = false; // Restart with `false`
 
@@ -57,9 +58,9 @@
           }
 
           // If there is no previous invalid input, this input is first and receives focus
-          if (firstInvalidInput === null) {
+          if (isFirstInvalidInput === null) {
             input.focus();
-            firstInvalidInput = idx;
+            isFirstInvalidInput = idx;
           }
         } else {
           input.setAttribute('aria-invalid', 'false');
@@ -70,7 +71,7 @@
     });
 
     // If there's no invalid input, submit form.
-    if (firstInvalidInput === null) {
+    if (isFirstInvalidInput === null) {
       isFormValid = true;
       onSubmitWhenValid(event, isFormValid);
     }
@@ -79,6 +80,7 @@
 
 <form
   bind:this={formEl}
+  aria-describedby={ariaDescribedBy}
   class={`tw_form-base ${isFormValid ? 'tw_form-valid' : 'tw_form-invalid'}`}
   novalidate
   on:submit|preventDefault={formSubmit}

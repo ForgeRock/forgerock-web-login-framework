@@ -13,11 +13,17 @@
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
-  export let callback: AttributeInputCallback<string>;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
+  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
+  import type { Maybe } from '$lib/interfaces';
 
-  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+  export let callback: AttributeInputCallback<string>;
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
+
+  let inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
   let isRequired = isInputRequired(callback);
   let outputName = callback.getOutputByName('name', '');
   let policies = callback.getPolicies();
@@ -49,7 +55,7 @@
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
      */
-    inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
     isRequired = isInputRequired(callback);
     outputName = callback.getOutputByName('name', '');
     policies = callback.getPolicies();
@@ -64,7 +70,7 @@
 </script>
 
 <Input
-  {firstInvalidInput}
+  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
   key={inputName}
   label={interpolate(outputName, null, prompt)}
   message={isRequired ? interpolate('inputRequiredError') : undefined}

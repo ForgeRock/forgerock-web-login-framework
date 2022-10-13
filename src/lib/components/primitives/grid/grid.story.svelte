@@ -6,9 +6,9 @@
 </script>
 
 <Grid num={3}>
-  <Input firstInvalidInput={false} key="firstName" label="First name" onChange={() => {}} />
-  <Input firstInvalidInput={false} key="middleName" label="Middle name" onChange={() => {}} />
-  <Input firstInvalidInput={false} key="lastName" label="Last name" onChange={() => {}} />
+  <Input isFirstInvalidInput={false} key="firstName" label="First name" onChange={() => {}} />
+  <Input isFirstInvalidInput={false} key="middleName" label="Middle name" onChange={() => {}} />
+  <Input isFirstInvalidInput={false} key="lastName" label="Last name" onChange={() => {}} />
 </Grid>
 
 <Grid num={2}>

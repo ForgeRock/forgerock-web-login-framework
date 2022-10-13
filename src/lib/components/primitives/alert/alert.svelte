@@ -3,6 +3,7 @@
   import InfoIcon from '$components/icons/info-icon.svelte';
   import WarningIcon from '$components/icons/warning-icon.svelte';
 
+  export let id: string;
   export let needsFocus = false;
   export let type: 'error' | 'info' | 'success' | 'warning' | '' = '';
 
@@ -36,6 +37,7 @@
 <div
   bind:this={divEl}
   class={`${generateClassString(type)} tw_alert dark:tw_alert_dark tw_input-spacing`}
+  {id}
   tabindex="-1"
 >
   <p class="tw_grid tw_grid-cols-[2em_1fr]">

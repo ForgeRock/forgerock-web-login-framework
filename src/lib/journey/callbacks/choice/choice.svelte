@@ -4,14 +4,19 @@
   import Radio from '$components/compositions/radio/animated.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
+
+  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: ChoiceCallback;
   export let displayType: 'radio' | 'select' = 'select';
-  export let firstInvalidInput: boolean;
-  export let idx: number;
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
 
-  const inputName = callback?.payload?.input?.[0].name || `choice-${idx}`;
+  const inputName = callback?.payload?.input?.[0].name || `choice-${callbackMetadata.idx}`;
   const prompt = callback.getPrompt();
 
   /**
@@ -66,7 +71,7 @@
 
 {#if displayType === 'select'}
   <Select
-    {firstInvalidInput}
+    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
     defaultOption={defaultChoice}
     isRequired={false}
     key={inputName}
@@ -76,7 +81,7 @@
   />
 {:else}
   <Radio
-    {firstInvalidInput}
+    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
     defaultOption={defaultChoice}
     isRequired={false}
     key={inputName}

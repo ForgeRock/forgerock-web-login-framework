@@ -5,7 +5,7 @@
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let message = '';
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let hasRightIcon = false;
   export let isRequired = false;
   export let isInvalid = false;
@@ -34,7 +34,7 @@
     NOTE: `placeholder` for the input is required for Twitter Bootstrap's floating label
   -->
   <Input
-    {firstInvalidInput}
+    {isFirstInvalidInput}
     inputClasses={`tw_input-floating dark:tw_input-floating_dark ${
       hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''
     }`}

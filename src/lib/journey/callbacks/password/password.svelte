@@ -9,14 +9,21 @@
 
   import Base from './base.svelte';
 
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: PasswordCallback;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
-  export let labelType: Maybe<'floating' | 'stacked'> = 'floating';
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
 
-  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+  let inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
 </script>
 
-<Base {callback} {firstInvalidInput} {idx} {labelType} key={inputName} />
+<Base {callback} {callbackMetadata} {selfSubmitFunction} {stepMetadata} {style} key={inputName} />

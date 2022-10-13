@@ -10,7 +10,7 @@
 </script>
 
 <div>
-  <Radio {defaultOption} firstInvalidInput={false} {key} {name} {onChange} {options}>
+  <Radio {defaultOption} isFirstInvalidInput={false} {key} {name} {onChange} {options}>
     {label}
   </Radio>
 </div>

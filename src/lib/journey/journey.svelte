@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { afterUpdate } from 'svelte';
+
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
@@ -11,6 +13,8 @@
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;
 
+  let alertNeedsFocus = false;
+
   function submitForm() {
     // Get next step, passing previous step with new data
     journeyStore?.next($journeyStore.step);
@@ -19,6 +23,10 @@
     journeyStore?.reset();
     journeyStore?.next();
   }
+
+  afterUpdate(() => {
+    alertNeedsFocus = !$journeyStore.successful;
+  });
 </script>
 
 {#if !$journeyStore?.completed}
@@ -42,7 +50,7 @@
     <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
   </div>
 {:else}
-  <Alert type="error">
+  <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
     <T html={true} key="unrecoverableError" />
   </Alert>
   <Button style="secondary" onClick={tryAgain}>

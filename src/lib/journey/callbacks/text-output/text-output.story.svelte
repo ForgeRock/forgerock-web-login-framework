@@ -1,12 +1,26 @@
 <script lang="ts">
-  import type { ConfirmationCallback, TextOutputCallback } from '@forgerock/javascript-sdk';
+  import type { TextOutputCallback } from '@forgerock/javascript-sdk';
   import Centered from '$components/primitives/box/centered.svelte';
 
   import TextOutput from './text-output.svelte';
 
   export let callback: TextOutputCallback;
+
+  let callbackMetadata = {
+    isFirstInvalidInput: false,
+    isReadyForSubmission: false,
+    isSelfSubmittingCb: false,
+    isUserInputRequired: true,
+    idx: 0,
+  };
+  let stepMetadata = {
+    isStepSelfSubmittable: false,
+    numOfCallbacks: 2,
+    numOfSelfSubmittableCbs: 0,
+    numOfUserInputCbs: 2,
+  };
 </script>
 
 <Centered>
-  <TextOutput {callback} />
+  <TextOutput {callback} {callbackMetadata} {stepMetadata} />
 </Centered>

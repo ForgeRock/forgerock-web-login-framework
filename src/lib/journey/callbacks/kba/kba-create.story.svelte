@@ -5,8 +5,22 @@
   import Kba from './kba-create.svelte';
 
   export let callback: KbaCreateCallback;
+
+  let callbackMetadata = {
+    isFirstInvalidInput: false,
+    isReadyForSubmission: false,
+    isSelfSubmittingCb: false,
+    isUserInputRequired: true,
+    idx: 0,
+  };
+  let stepMetadata = {
+    isStepSelfSubmittable: false,
+    numOfCallbacks: 2,
+    numOfSelfSubmittableCbs: 0,
+    numOfUserInputCbs: 2,
+  };
 </script>
 
 <Centered>
-  <Kba {callback} firstInvalidInput={false} idx={0} />
+  <Kba {callback} {callbackMetadata} {stepMetadata} />
 </Centered>

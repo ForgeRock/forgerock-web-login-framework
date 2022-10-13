@@ -25,6 +25,13 @@ import type { Maybe } from '$lib/interfaces';
 // | CallbackType.ValidatedCreatePasswordCallback
 // | CallbackType.ValidatedCreateUsernameCallback;
 
+export interface CallbackMetadata {
+  isFirstInvalidInput: boolean;
+  isReadyForSubmission: boolean;
+  isSelfSubmittingCb: boolean;
+  isUserInputRequired: boolean;
+  idx: number;
+}
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
   next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
   reset: () => void;
@@ -41,6 +48,13 @@ export interface JourneyStoreValue {
   successful: boolean;
   response: Maybe<Step>;
 }
+export interface StepMetadata {
+  isStepSelfSubmittable: boolean,
+  numOfCallbacks: number,
+  numOfSelfSubmittableCbs: number,
+  numOfUserInputCbs: number,
+}
+export type SelfSubmitFunction = () => void;
 export type StepTypes = WidgetStep | FRLoginSuccess | FRLoginFailure | null;
 export interface WidgetStep extends FRStep {
   /**

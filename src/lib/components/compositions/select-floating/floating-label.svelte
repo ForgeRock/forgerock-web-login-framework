@@ -6,7 +6,7 @@
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let defaultOption: string | null = null;
   export let message = '';
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
@@ -28,7 +28,7 @@
 <div class={`tw_input-spacing tw_relative`}>
   <Select
     {defaultOption}
-    {firstInvalidInput}
+    {isFirstInvalidInput}
     {isRequired}
     {isInvalid}
     {key}

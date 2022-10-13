@@ -5,17 +5,20 @@
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
 
+  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: NameCallback;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
-  export let labelType: Maybe<'floating' | 'stacked'> = 'floating';
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
 
-  const Input = labelType === 'floating' ? Floating : Stacked;
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `name-${idx}`;
+  let inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata.idx}`;
   let textInputLabel = callback.getPrompt();
   let value = callback?.getInputValue();
 
@@ -25,14 +28,14 @@
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `name-${idx}`;
+    inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
   }
 </script>
 
 <Input
-  {firstInvalidInput}
+  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
   key={inputName}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}
   onChange={setValue}
