@@ -1,4 +1,5 @@
 import configure from '$lib/config';
+import { initialize as initializeLinks } from '$lib/links.store';
 
 import '../../app.css';
 
@@ -14,4 +15,8 @@ configure({
   },
   realmPath: 'alpha',
   tree: 'Login',
+});
+
+initializeLinks({
+  termsAndConditions: 'https://www.forgerock.com/terms',
 });

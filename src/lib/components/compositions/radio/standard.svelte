@@ -41,6 +41,6 @@
   column to match the label's layout.
  -->
   <span class="tw_col-start-2 tw_row-start-2">
-    <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
+    <Message dirtyMessage={message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
   </span>
 </fieldset>

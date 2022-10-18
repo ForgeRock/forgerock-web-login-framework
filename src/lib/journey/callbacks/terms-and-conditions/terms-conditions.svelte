@@ -2,6 +2,10 @@
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import Link from '$components/primitives/link/link.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
+  import { links } from '$lib/links.store';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
 
@@ -30,10 +34,11 @@
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
   const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
+  const termsLinkHtml = `<a href=${$links?.termsAndConditions} target="_blank">${interpolate(
+    'termsAndConditionsLinkText',
+    )}</a>`;
 
-  let inputName: string;
-  // Currently NOT supporting the render of the full terms
-  // let terms = callback.getTerms();
+  let inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -62,4 +67,5 @@
   value={false}
 >
   <T key="termsAndConditions" />
+  <Message classes="tw_col-start-2 tw_row-start-2" dirtyMessage={termsLinkHtml} />
 </Checkbox>

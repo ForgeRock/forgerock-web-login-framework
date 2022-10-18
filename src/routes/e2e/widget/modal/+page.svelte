@@ -61,6 +61,9 @@
           tree: journeyParam || 'Login',
         },
         content,
+        links: {
+          termsAndConditions: 'https://www.forgerock.com/terms',
+        },
         style: {
           labels: 'floating',
           logo: {
