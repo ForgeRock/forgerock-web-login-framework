@@ -10,7 +10,7 @@
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let value: number | null;
+  export let value: string;
 
   let inputEl: HTMLInputElement;
 

@@ -4,6 +4,7 @@ import { CallbackType, type FRCallback } from '@forgerock/javascript-sdk';
 import Boolean from '$journey/callbacks/boolean/boolean.svelte';
 import Choice from '$journey/callbacks/choice/choice.svelte';
 import Confirmation from '$journey/callbacks/confirmation/confirmation.svelte';
+import HiddenValue from '$journey/callbacks/hidden-value/hidden-value.svelte';
 import KbaCreate from '$journey/callbacks/kba/kba-create.svelte';
 import Name from '$journey/callbacks/username/name.svelte';
 import Password from '$journey/callbacks/password/password.svelte';
@@ -34,6 +35,8 @@ export function mapCallbackToComponent(cb: FRCallback) {
       return Choice;
     case CallbackType.ConfirmationCallback:
       return Confirmation;
+    case CallbackType.HiddenValueCallback:
+      return HiddenValue;
     case CallbackType.KbaCreateCallback:
       return KbaCreate;
     case CallbackType.NameCallback:

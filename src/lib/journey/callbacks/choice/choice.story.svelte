@@ -5,8 +5,9 @@
   import Choice from './choice.svelte';
 
   export let callback: ChoiceCallback;
+  export let displayType: 'radio' | 'select' | undefined;
 </script>
 
 <Centered>
-  <Choice {callback} firstInvalidInput={false} idx={0} />
+  <Choice {callback} firstInvalidInput={false} idx={0} {displayType} />
 </Centered>

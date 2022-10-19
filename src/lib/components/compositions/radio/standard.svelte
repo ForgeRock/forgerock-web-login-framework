@@ -3,40 +3,44 @@
   import Message from '$components/primitives/message/input-message.svelte';
   import type { Maybe } from '$lib/interfaces';
 
-  export let defaultOption: number;
+  export let defaultOption: Maybe<string> = null;
   export let message = '';
   export let firstInvalidInput: boolean;
+  export let groupLabel: string = '';
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let options: { value: number | null; text: string }[];
+  export let options: { value: string; text: string }[];
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
 </script>
 
-{#each options as option}
-  <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
-    <Radio
-      checked={defaultOption === option.value}
-      {firstInvalidInput}
-      {isRequired}
-      {isInvalid}
-      key={`${key}-${option.value}`}
-      {name}
-      {onChange}
-      value={option.value}
-    >
-      {option.text}
-    </Radio>
-  </div>
-{/each}
-<!--
+<fieldset>
+  <legend class="tw_input-label dark:tw_input-label_dark tw_font-bold tw_mb-4">{groupLabel}</legend>
+  {#each options as option}
+    <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
+      <Radio
+        checked={defaultOption === option.value}
+        {firstInvalidInput}
+        {isRequired}
+        {isInvalid}
+        key={`${key}-${option.value}`}
+        {name}
+        {onChange}
+        value={option.value}
+      >
+        {option.text}
+      </Radio>
+    </div>
+  {/each}
+  <!--
   NOTE: The below places the error message on the second row and in second
   column to match the label's layout.
  -->
-<span class="tw_col-start-2 tw_row-start-2">
-  <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
-</span>
+  <span class="tw_col-start-2 tw_row-start-2">
+    <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
+  </span>
+</fieldset>
