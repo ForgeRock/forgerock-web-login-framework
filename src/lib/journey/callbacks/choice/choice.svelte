@@ -5,7 +5,11 @@
   import Select from '$components/compositions/select-floating/floating-label.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
 
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
@@ -16,9 +20,8 @@
   export let stepMetadata: StepMetadata;
   export let style: Style = {};
 
-  const inputName = callback?.payload?.input?.[0].name || `choice-${callbackMetadata.idx}`;
-  const prompt = callback.getPrompt();
-
+  let inputName: string;
+  let prompt: string;
   /**
    * Since locale content keys for the choice component are built off of the
    * values, there will not be any existing key-value pairs in the provided
@@ -26,8 +29,7 @@
    * displayed. If you want to localize it, you'll need to add content keys
    * in the locale file for that to override the original value.
    */
-  const label = interpolate(textToKey(prompt), null, prompt);
-
+  let label: string;
   let choiceOptions: { value: string; text: string }[];
   let defaultChoice: Maybe<string>;
 
@@ -66,6 +68,9 @@
       value: `${idx}`,
     }));
     defaultChoice = `${callback.getDefaultChoice()}` || null;
+    inputName = callback?.payload?.input?.[0].name || `choice-${callbackMetadata.idx}`;
+    prompt = callback.getPrompt();
+    label = interpolate(textToKey(prompt), null, prompt);
   }
 </script>
 

@@ -9,10 +9,7 @@
   // Import components
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import {
-    convertStringToKey,
-    initCheckValidation,
-  } from '$journey/_utilities/step.utilities';
+  import { convertStringToKey, initCheckValidation } from '$journey/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
   import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';

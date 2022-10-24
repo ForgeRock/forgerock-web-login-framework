@@ -6,10 +6,18 @@
     getValidationFailures,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
-  import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
+  import {
+    type FailedPolicy,
+    isInputRequired,
+    type Policy,
+  } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
@@ -25,12 +33,11 @@
    */
   const isRequired = isInputRequired(callback);
 
-  let inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
-  let prompt = callback.getPrompt();
-
-  let validationRules = getValidationPolicies(callback.getPolicies());
-  let validationFailures = getValidationFailures(callback, prompt);
-  let isInvalid = !!validationFailures.length;
+  let inputName: string;
+  let prompt: string;
+  let validationRules: Policy[];
+  let validationFailures: FailedPolicy[];
+  let isInvalid: boolean;
 
   $: {
     /**
@@ -39,7 +46,6 @@
      */
     inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
     prompt = callback.getPrompt();
-
     validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;

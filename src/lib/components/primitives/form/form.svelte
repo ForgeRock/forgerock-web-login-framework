@@ -1,6 +1,8 @@
 <script lang="ts">
   export let ariaDescribedBy: string;
   export let formEl: HTMLFormElement | null = null;
+  export let id = 'formId';
+  export let needsFocus = false;
   export let onSubmitWhenValid: (event: SubmitEvent, isFormValid: boolean) => void;
 
   let isFormValid = false;
@@ -76,14 +78,23 @@
       onSubmitWhenValid(event, isFormValid);
     }
   }
+
+  $: {
+    console.log('Form has been updated.');
+    if (needsFocus) {
+      formEl && formEl.focus();
+    }
+  }
 </script>
 
 <form
   bind:this={formEl}
   aria-describedby={ariaDescribedBy}
-  class={`tw_form-base ${isFormValid ? 'tw_form-valid' : 'tw_form-invalid'}`}
+  {id}
+  class={`tw_form-base ${isFormValid ? 'tw_form-valid' : 'tw_form-invalid'} tw_outline-none`}
   novalidate
   on:submit|preventDefault={formSubmit}
+  tabindex="-1"
 >
   <slot />
 </form>

@@ -1,12 +1,12 @@
 <script lang="ts">
   import Radio from './standard.svelte';
 
-  export let defaultOption = 0;
+  export let defaultOption = '0';
   export let key: string;
   export let label: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let options: { text: string; value: number | null }[];
+  export let options: { text: string; value: string | null }[];
 </script>
 
 <div>

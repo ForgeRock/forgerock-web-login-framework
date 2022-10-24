@@ -36,7 +36,9 @@
 
 <div
   bind:this={divEl}
-  class={`${generateClassString(type)} tw_alert dark:tw_alert_dark tw_input-spacing`}
+  class={`${generateClassString(
+    type,
+  )} tw_alert dark:tw_alert_dark tw_input-spacing tw_outline-none`}
   {id}
   tabindex="-1"
 >

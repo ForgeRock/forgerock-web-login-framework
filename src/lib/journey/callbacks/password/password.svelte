@@ -23,7 +23,11 @@
   export let stepMetadata: StepMetadata;
   export let style: Style = {};
 
-  let inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+  let inputName: string;
+
+  $: {
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+  }
 </script>
 
 <Base {callback} {callbackMetadata} {selfSubmitFunction} {stepMetadata} {style} key={inputName} />

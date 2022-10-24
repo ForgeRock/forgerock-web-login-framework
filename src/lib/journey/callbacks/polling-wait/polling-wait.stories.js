@@ -24,7 +24,7 @@ export const Base = {
     callbackMetadata: {
       isFirstInvalidInput: false,
       isReadyForSubmission: false,
-      isSelfSubmittingCb: true,
+      isSelfSubmitting: true,
       isUserInputRequired: false,
       idx: 0,
     },

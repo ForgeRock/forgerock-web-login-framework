@@ -2,7 +2,7 @@ import { FRLoginFailure } from '@forgerock/javascript-sdk';
 import { describe, expect, it } from 'vitest';
 
 import { previousRegistrationStep, restartedRegistrationStep } from './step.mock';
-import { convertStringToKey, isStepReadyToSubmit, shouldPopulateWithPreviousCallbacks } from './step.utilities';
+import { convertStringToKey, shouldPopulateWithPreviousCallbacks } from './step.utilities';
 
 describe('Test string to key conversion', () => {
   it('should strip non-alphanumeric keys from string', () => {
@@ -159,45 +159,5 @@ describe('Test step population of previous callback', () => {
     );
 
     expect(result).toBeFalsy();
-  });
-
-  it('should identify a step ready to be self-submitted', () => {
-    const result = isStepReadyToSubmit([
-      {
-          "isFirstInvalidInput": false,
-          "isReadyForSubmission": true,
-          "isSelfSubmittingCb": true,
-          "isUserInputRequired": false,
-          "idx": 0
-      },
-      {
-          "isFirstInvalidInput": false,
-          "isReadyForSubmission": true,
-          "isSelfSubmittingCb": true,
-          "isUserInputRequired": false,
-          "idx": 1
-      }
-    ]);
-    expect(result).toBe(true);
-  });
-
-  it('should identify a step NOT ready to be self-submitted', () => {
-    const result = isStepReadyToSubmit([
-      {
-          "isFirstInvalidInput": false,
-          "isReadyForSubmission": false,
-          "isSelfSubmittingCb": true,
-          "isUserInputRequired": false,
-          "idx": 0
-      },
-      {
-          "isFirstInvalidInput": false,
-          "isReadyForSubmission": true,
-          "isSelfSubmittingCb": true,
-          "isUserInputRequired": false,
-          "idx": 1
-      }
-    ]);
-    expect(result).toBe(false);
   });
 });

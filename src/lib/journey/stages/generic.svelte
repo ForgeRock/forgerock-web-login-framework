@@ -9,10 +9,7 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import {
-    convertStringToKey,
-    initCheckValidation,
-  } from '$journey/_utilities/step.utilities';
+  import { convertStringToKey, initCheckValidation } from '$journey/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
@@ -31,27 +28,48 @@
   export let step: WidgetStep;
   export let submitForm: () => void;
 
+  const formFailureMessageId = 'genericStepFailureMessage';
+  const formHeaderId = 'genericStepHeader';
+  const formElementId = 'genericStepForm';
+
   let alertNeedsFocus = false;
   let callbackMetadataArray: CallbackMetadata[] = [];
   let checkValidation: (callback: FRCallback) => boolean;
   let failureMessageKey = '';
+  let formAriaDescriptor = 'genericStepHeader';
+  let formNeedsFocus = false;
   let stepMetadata: StepMetadata;
 
   function determineSubmission() {
     // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
     // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 
-    // The below variation is more liberal first self-submittable cb to call this wins.
+    // The below variation is more liberal, first self-submittable cb to call this wins.
     if (stepMetadata.isStepSelfSubmittable) {
-      submitForm();
+      submitFormWrapper();
     }
+  }
+  function submitFormWrapper() {
+    alertNeedsFocus = false;
+    formNeedsFocus = false;
+
+    submitForm();
   }
 
   afterUpdate(() => {
-    alertNeedsFocus = !!failureMessage;
+    if (failureMessage) {
+      formAriaDescriptor = formFailureMessageId;
+      alertNeedsFocus = true;
+      formNeedsFocus = false;
+    } else {
+      formAriaDescriptor = formHeaderId;
+      alertNeedsFocus = false;
+      formNeedsFocus = true;
+    }
   });
 
   $: {
+    console.log(formNeedsFocus);
     checkValidation = initCheckValidation();
     callbackMetadataArray = buildCallbackMetadata(step, checkValidation);
     stepMetadata = buildStepMetadata(callbackMetadataArray);
@@ -59,23 +77,31 @@
   }
 </script>
 
-<Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={submitForm}>
+<Form
+  bind:formEl
+  ariaDescribedBy={formAriaDescriptor}
+  id={formElementId}
+  needsFocus={formNeedsFocus}
+  onSubmitWhenValid={submitFormWrapper}
+>
   {#if displayIcon}
     <div class="tw_flex tw_justify-center">
       <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
   {/if}
-  <h1 class="tw_primary-header dark:tw_primary-header_dark">
-    <Sanitize html={true} string={step?.getHeader() || ''} />
-  </h1>
-  <p
-    class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-  >
-    <Sanitize html={true} string={step?.getDescription() || ''} />
-  </p>
+  <header id={formHeaderId}>
+    <h1 class="tw_primary-header dark:tw_primary-header_dark">
+      <Sanitize html={true} string={step?.getHeader() || ''} />
+    </h1>
+    <p
+      class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+    >
+      <Sanitize html={true} string={step?.getDescription() || ''} />
+    </p>
+  </header>
 
   {#if failureMessage}
-    <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+    <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
       {interpolate(failureMessageKey, null, failureMessage)}
     </Alert>
   {/if}

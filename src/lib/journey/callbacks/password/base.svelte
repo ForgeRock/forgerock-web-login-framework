@@ -11,7 +11,11 @@
   import T from '$components/_utilities/locale-strings.svelte';
 
   import type { Maybe } from '$lib/interfaces';
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
@@ -29,12 +33,12 @@
   export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
 
-  let callbackType = callback.getType();
-  let textInputLabel = callback.getPrompt();
+  let callbackType: string;
+  let textInputLabel: string;
 
   let isVisible = false;
   let type: 'password' | 'text' = 'password';
-  let value = callback?.getInputValue();
+  let value: unknown;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)

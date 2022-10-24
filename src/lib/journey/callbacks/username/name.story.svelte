@@ -9,7 +9,7 @@
   let callbackMetadata = {
     isFirstInvalidInput: false,
     isReadyForSubmission: false,
-    isSelfSubmittingCb: false,
+    isSelfSubmitting: false,
     isUserInputRequired: true,
     idx: 0,
   };

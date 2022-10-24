@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Maybe } from '$lib/interfaces';
   import { afterUpdate } from 'svelte';
 
   import Label from '../label/label.svelte';
@@ -10,7 +11,7 @@
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let value: string;
+  export let value: Maybe<string>;
 
   let inputEl: HTMLInputElement;
 

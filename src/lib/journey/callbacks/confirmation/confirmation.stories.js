@@ -25,7 +25,7 @@ export const Base = {
     callbackMetadata: {
       isFirstInvalidInput: false,
       isReadyForSubmission: false,
-      isSelfSubmittingCb: false,
+      isSelfSubmitting: false,
       isUserInputRequired: true,
       idx: 0,
     },
@@ -44,7 +44,7 @@ export const SingleOptSelfSubmit = {
     callbackMetadata: {
       isFirstInvalidInput: false,
       isReadyForSubmission: false,
-      isSelfSubmittingCb: true,
+      isSelfSubmitting: true,
       isUserInputRequired: true,
       idx: 0,
     },
@@ -63,7 +63,7 @@ export const TwoOptSelfSubmit = {
     callbackMetadata: {
       isFirstInvalidInput: false,
       isReadyForSubmission: false,
-      isSelfSubmittingCb: true,
+      isSelfSubmitting: true,
       isUserInputRequired: false,
       idx: 0,
     },

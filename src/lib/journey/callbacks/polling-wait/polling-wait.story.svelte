@@ -4,7 +4,11 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import PollingWait from './polling-wait.svelte';
 
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
 
   export let callback: PollingWaitCallback;
   export let callbackMetadata: CallbackMetadata;

@@ -28,7 +28,7 @@ import type { Maybe } from '$lib/interfaces';
 export interface CallbackMetadata {
   isFirstInvalidInput: boolean;
   isReadyForSubmission: boolean;
-  isSelfSubmittingCb: boolean;
+  isSelfSubmitting: boolean;
   isUserInputRequired: boolean;
   idx: number;
 }
@@ -49,10 +49,10 @@ export interface JourneyStoreValue {
   response: Maybe<Step>;
 }
 export interface StepMetadata {
-  isStepSelfSubmittable: boolean,
-  numOfCallbacks: number,
-  numOfSelfSubmittableCbs: number,
-  numOfUserInputCbs: number,
+  isStepSelfSubmittable: boolean;
+  numOfCallbacks: number;
+  numOfSelfSubmittableCbs: number;
+  numOfUserInputCbs: number;
 }
 export type SelfSubmitFunction = () => void;
 export type StepTypes = WidgetStep | FRLoginSuccess | FRLoginFailure | null;

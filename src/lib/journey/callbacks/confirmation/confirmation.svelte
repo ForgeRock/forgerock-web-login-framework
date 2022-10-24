@@ -21,9 +21,8 @@
   export let stepMetadata: StepMetadata;
   export let style: Style = {};
 
-  const inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata.idx}`;
-
-  let label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm');
+  let inputName: string;
+  let label: string;
   let options: { value: string; text: string }[];
   let defaultChoice: number;
   let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
@@ -56,8 +55,10 @@
   // TODO: use selfSubmitFunction to communicate to step component that this callback is ready
 
   $: {
+    inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata.idx}`;
     options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
     defaultChoice = callback.getDefaultOption();
+    label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm');
 
     if (displayType === 'select' || !stepMetadata.isStepSelfSubmittable) {
       // Since the user needs to confirm, add this non-value to force selection
@@ -83,9 +84,7 @@
   <Grid num={options.length}>
     {#each options as opt}
       <Button
-        style={options.length > 1 && defaultChoice === Number(opt.value)
-          ? 'primary'
-          : buttonStyle}
+        style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}
         type="button"
         width="auto"
         onClick={() => setBtnValue(Number(opt.value))}

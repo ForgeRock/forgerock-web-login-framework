@@ -5,7 +5,11 @@
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
 
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
@@ -17,10 +21,10 @@
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata.idx}`;
-  let textInputLabel = callback.getPrompt();
-  let value = callback?.getInputValue();
+  let callbackType: string;
+  let inputName: string;
+  let textInputLabel: string;
+  let value: unknown;
 
   function setValue(event: Event) {
     callback.setInputValue((event.target as HTMLInputElement).value);

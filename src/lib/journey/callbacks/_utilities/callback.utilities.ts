@@ -11,21 +11,21 @@ import type { PolicyParams } from '@forgerock/javascript-sdk/lib/auth/interfaces
 /** *********************************************
  * INTERFACES AND TYPES
  */
-
-interface FailedPolicy {
-  params: Partial<PolicyParams> | undefined;
-  policyRequirement: string;
-  restructured: RestructuredParam[];
-}
-interface Policies {
-  policies: unknown[];
-  policyRequirements: string[];
-}
-interface Policy {
+export interface Policy {
   message: string;
   policyId: string;
   policyRequirements: string[];
   params: Record<string, unknown>;
+}
+export interface FailedPolicy {
+  params: Partial<PolicyParams> | undefined;
+  policyRequirement: string;
+  restructured: RestructuredParam[];
+}
+
+interface Policies {
+  policies: unknown[];
+  policyRequirements: string[];
 }
 export interface RestructuredParam {
   length: number | null;

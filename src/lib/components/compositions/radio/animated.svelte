@@ -7,14 +7,14 @@
 
   export let defaultOption: Maybe<string> = null;
   export let message = '';
-  export let groupLabel: string = '';
+  export let groupLabel = '';
   export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let options: { value: string; text: string }[];
+  export let options: { text: string; value: string | null }[];
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;

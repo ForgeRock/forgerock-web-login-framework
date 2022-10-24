@@ -5,7 +5,11 @@
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
 
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
@@ -26,8 +30,10 @@
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
   const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
-  const inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
-  const terms = callback.getTerms();
+
+  let inputName: string;
+  // Currently NOT supporting the render of the full terms
+  // let terms = callback.getTerms();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -42,6 +48,10 @@
      * for writing values to the callbacks received from AM
      *********************************************************************** */
     callback.setAccepted((event.target as HTMLInputElement).checked);
+  }
+
+  $: {
+    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
   }
 </script>
 

@@ -1,13 +1,13 @@
 <script lang="ts">
   import Radio from '$components/primitives/radio/radio.svelte';
 
-  export let defaultOption: number;
+  export let defaultOption: string;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let options: { value: number | null; text: string }[];
+  export let options: { value: string | null; text: string }[];
 </script>
 
 <div>

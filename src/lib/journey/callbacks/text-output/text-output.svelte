@@ -2,7 +2,13 @@
   import type { SuspendedTextOutputCallback, TextOutputCallback } from '@forgerock/javascript-sdk';
   import sanitize from 'xss';
 
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import Text from '$components/primitives/text/text.svelte';
+
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
@@ -21,6 +27,6 @@
   }
 </script>
 
-<p class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light">
+<Text classes="tw_font-bold tw_mt-6">
   {@html cleanMessage}
-</p>
+</Text>

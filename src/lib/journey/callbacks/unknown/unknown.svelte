@@ -1,5 +1,9 @@
 <script lang="ts">
-  import type { CallbackMetadata, SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Maybe } from '$lib/interfaces';
   import type { Style } from '$lib/style.store';
   import type { FRCallback } from '@forgerock/javascript-sdk';

@@ -96,7 +96,7 @@ Now, Svelte understands that fullName is a derived value from the concatenation 
 
 You are correct. We should avoid nesting elements that handle user events within each other, and it’s a good callout. This is actually a tricky beast, and the solution isn’t going to be very easy, unfortunately.
 
-What I’d recommend is altering the primitive Message component. What you can do is use the @html keyword and pass a string with an HTML link to the Message component. Docs here: https://svelte.dev/docs#template-syntax-html. But, when you do this, make sure to *sanitize* the HTML string before it’s injected as this is definitely a “footgun” (see the text-output.svelte as an example: https://github.com/cerebrl/forgerock-web-login-framework/blob/main/src/lib/journey/callbacks/text-output/text-output.svelte).
+What I’d recommend is altering the primitive Message component. What you can do is use the @html keyword and pass a string with an HTML link to the Message component. Docs here: https://svelte.dev/docs#template-syntax-html. But, when you do this, make sure to _sanitize_ the HTML string before it’s injected as this is definitely a “footgun” (see the text-output.svelte as an example: https://github.com/cerebrl/forgerock-web-login-framework/blob/main/src/lib/journey/callbacks/text-output/text-output.svelte).
 
 Then, you can pass '<a href={link} _target="blank">View full Terms & Conditions</a>' into the message prop of the Checkbox component. Of course, the message string needs to be a translated string, not a hardcoded string. Let me know if this makes sense to you.
 
@@ -117,7 +117,7 @@ export let links: z.infer<typeof partialLinksSchema>; // <- NEW PROP
 export let style: Style;
 ```
 
-*(The typing I’ll address in a bit.)*
+_(The typing I’ll address in a bit.)_
 
 Then, the developer passes this new links prop like this:
 
@@ -129,7 +129,8 @@ new Widget({
       // JS SDK configuration
     },
     content,
-    links: { // <- NEW PROP
+    links: {
+      // <- NEW PROP
       termsConditions: 'https://example.com/terms',
     },
     style: {
