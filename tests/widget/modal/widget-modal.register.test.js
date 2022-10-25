@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
-test.only('modal widget', async ({ page }) => {
+test('modal widget', async ({ page }) => {
   await page.goto('widget/modal?journey=Registration');
   const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
   const dialog = page.locator('dialog');
@@ -25,7 +25,7 @@ test.only('modal widget', async ({ page }) => {
   expect(termsUrl).toBe('https://www.forgerock.com/terms');
   expect(termsTarget).toBe('_blank');
 
-  await page.click('text=Please accept our Terms and Conditions');
+  await page.click('text=Please accept our Terms & Conditions');
   await page.locator('button', { hasText: 'Register' }).click();
 
   const fullName = page.locator('#fullName');

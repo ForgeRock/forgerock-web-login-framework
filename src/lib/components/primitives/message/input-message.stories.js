@@ -10,7 +10,7 @@ export default {
 
 export const Base = {
   args: {
-    message: 'Please review your input.',
+    dirtyMessage: 'Please review your input.',
     key: 'infoMessage',
     type: 'info',
   },
@@ -18,7 +18,7 @@ export const Base = {
 
 export const Error = {
   args: {
-    message: 'There is an error in your input.',
+    dirtyMessage: 'There is an error in your input.',
     key: 'errorMessage',
     type: 'error',
   },

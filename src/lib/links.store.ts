@@ -2,7 +2,7 @@ import { readable, type Readable } from 'svelte/store';
 import { z } from 'zod';
 
 export const linksSchema = z.object({
-  termsAndConditions: z.string().optional(),
+  termsAndConditions: z.string(),
 });
 
 export const partialLinksSchema = linksSchema.partial();

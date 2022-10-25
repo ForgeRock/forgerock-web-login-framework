@@ -1,7 +1,8 @@
 <script lang="ts">
   import Centered from '$components/primitives/box/centered.svelte';
   import Generic from './generic.svelte';
-  import { initialize } from '$lib/style.store';
+  import { initialize as initializeLinks } from '$lib/links.store';
+  import { initialize as initializeStyles } from '$lib/style.store';
   import Registration from './registration.svelte';
   import UsernamePassword from './username-password.svelte';
 
@@ -15,8 +16,9 @@
   export let loading = false;
   export let labelType: 'floating' | 'stacked';
 
-  // Initialize localized content
-  initialize({ labels: labelType });
+  // Initialize stores
+  initializeLinks({ termsAndConditions: '/' });
+  initializeStyles({ labels: labelType });
 </script>
 
 <Centered>
