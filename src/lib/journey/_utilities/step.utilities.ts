@@ -9,6 +9,11 @@ import {
 export const authIdTimeoutErrorCode = '110';
 export const constrainedViolationMessage = 'constraint violation';
 
+/**
+ * @function convertStringToKey -
+ * @param {string} string
+ * @returns {string}
+ */
 export function convertStringToKey(string?: string | null): string {
   if (!string) {
     return '';
@@ -33,6 +38,31 @@ export function convertStringToKey(string?: string | null): string {
   return key;
 }
 
+/**
+ * @function initCheckValidation -
+ * @returns {boolean}
+ */
+export function initCheckValidation() {
+  let hasPrevError = false;
+
+  return function checkValidation(callback: FRCallback) {
+    const failedPolices = callback.getOutputByName('failedPolicies', []);
+    if (failedPolices.length && !hasPrevError) {
+      hasPrevError = true;
+      return true;
+    }
+    return false;
+  };
+}
+
+/**
+ * @function shouldPopulateWithPreviousCallbacks -
+ * @param {object} nextStep
+ * @param {array} previousCallbacks
+ * @param {object} restartedStep
+ * @param {number} stepNumber
+ * @returns {boolean}
+ */
 export function shouldPopulateWithPreviousCallbacks(
   nextStep: FRLoginFailure,
   previousCallbacks: FRCallback[] | undefined,

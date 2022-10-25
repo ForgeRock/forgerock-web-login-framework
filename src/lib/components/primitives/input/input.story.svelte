@@ -12,7 +12,7 @@
 <div>
   <Input
     {isRequired}
-    firstInvalidInput={false}
+    isFirstInvalidInput={false}
     {key}
     {label}
     {labelOrder}

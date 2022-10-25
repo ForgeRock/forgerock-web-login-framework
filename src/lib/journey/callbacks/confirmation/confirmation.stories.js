@@ -1,5 +1,5 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
-import { expect } from '@storybook/jest';
+import { expect, jest } from '@storybook/jest';
 import { userEvent, within } from '@storybook/testing-library';
 
 import response from './confirmation.mock';
@@ -22,12 +22,58 @@ export default {
 export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
+    callbackMetadata: {
+      isFirstInvalidInput: false,
+      isReadyForSubmission: false,
+      isSelfSubmitting: false,
+      isUserInputRequired: true,
+      idx: 0,
+    },
+    stepMetadata: {
+      isStepSelfSubmittable: false,
+      numOfCallbacks: 2,
+      numOfSelfSubmittableCbs: 0,
+      numOfUserInputCbs: 2,
+    },
   },
 };
 
-export const SingleOption = {
+export const SingleOptSelfSubmit = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[1],
+    callbackMetadata: {
+      isFirstInvalidInput: false,
+      isReadyForSubmission: false,
+      isSelfSubmitting: true,
+      isUserInputRequired: true,
+      idx: 0,
+    },
+    stepMetadata: {
+      isStepSelfSubmittable: true,
+      numOfCallbacks: 2,
+      numOfSelfSubmittableCbs: 2,
+      numOfUserInputCbs: 0,
+    },
+  },
+};
+
+export const TwoOptSelfSubmit = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
+    callbackMetadata: {
+      isFirstInvalidInput: false,
+      isReadyForSubmission: false,
+      isSelfSubmitting: true,
+      isUserInputRequired: false,
+      idx: 0,
+    },
+    selfSubmitFunction: jest.fn(),
+    stepMetadata: {
+      isStepSelfSubmittable: true,
+      numOfCallbacks: 2,
+      numOfSelfSubmittableCbs: 2,
+      numOfUserInputCbs: 0,
+    },
   },
 };
 
@@ -36,11 +82,11 @@ const Template = (args) => ({
   props: args,
 });
 
-export const Interaction = Template.bind({});
+export const BaseInteraction = Template.bind({});
 
-Interaction.args = { ...Base.args };
+BaseInteraction.args = { ...Base.args };
 
-Interaction.play = async ({ canvasElement }) => {
+BaseInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0];
   const select = canvas.getByLabelText('Please Confirm');
@@ -51,5 +97,25 @@ Interaction.play = async ({ canvasElement }) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.selectOptions(select, '1');
+  await expect(cb.getInputValue()).toBe(1);
+};
+
+export const ButtonInteraction = Template.bind({});
+
+ButtonInteraction.args = { ...TwoOptSelfSubmit.args };
+
+ButtonInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0];
+  const posButton = canvas.getByRole('button', { name: 'Yes' });
+
+  await userEvent.click(posButton);
+  await expect(cb.getInputValue()).toBe(0);
+  await expect(TwoOptSelfSubmit.args.selfSubmitFunction).toBeCalled();
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  const negButton = canvas.getByRole('button', { name: 'No' });
+
+  await userEvent.click(negButton);
   await expect(cb.getInputValue()).toBe(1);
 };

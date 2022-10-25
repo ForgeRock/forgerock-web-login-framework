@@ -36,7 +36,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.ConfirmationCallback,
+      type: 'ConfirmationCallback',
       output: [
         {
           name: 'prompt',
@@ -48,7 +48,7 @@ export default {
         },
         {
           name: 'options',
-          value: ['Next'],
+          value: ['Cancel out of flow.'],
         },
         {
           name: 'optionType',
@@ -62,7 +62,7 @@ export default {
       input: [
         {
           name: 'IDToken2',
-          value: 0,
+          value: 100,
         },
       ],
     },

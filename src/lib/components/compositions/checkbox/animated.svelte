@@ -7,7 +7,7 @@
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let message = '';
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
@@ -25,7 +25,7 @@
   }
 
   afterUpdate(() => {
-    if (firstInvalidInput) {
+    if (isFirstInvalidInput) {
       inputEl.focus();
     }
   });

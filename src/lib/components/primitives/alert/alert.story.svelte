@@ -6,7 +6,7 @@
 </script>
 
 <div>
-  <Alert {type}>
+  <Alert id="alertStory" {type}>
     {message}
   </Alert>
 </div>

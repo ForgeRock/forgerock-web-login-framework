@@ -5,8 +5,22 @@
   import Input from './validated-create-username.svelte';
 
   export let callback: ValidatedCreateUsernameCallback;
+
+  let callbackMetadata = {
+    isFirstInvalidInput: false,
+    isReadyForSubmission: false,
+    isSelfSubmitting: false,
+    isUserInputRequired: true,
+    idx: 0,
+  };
+  let stepMetadata = {
+    isStepSelfSubmittable: false,
+    numOfCallbacks: 2,
+    numOfSelfSubmittableCbs: 0,
+    numOfUserInputCbs: 2,
+  };
 </script>
 
 <Centered>
-  <Input {callback} firstInvalidInput={false} idx={0} />
+  <Input {callback} {callbackMetadata} {stepMetadata} />
 </Centered>

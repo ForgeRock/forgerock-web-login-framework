@@ -11,27 +11,34 @@
   import T from '$components/_utilities/locale-strings.svelte';
 
   import type { Maybe } from '$lib/interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
+  export let callbackMetadata: CallbackMetadata;
   export let key: string;
   export let isInvalid = false;
   export let isRequired = false;
-  export let labelType: Maybe<'floating' | 'stacked'>;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
 
-  const Input = labelType === 'floating' ? Floating : Stacked;
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
 
-  let callbackType = callback.getType();
-  let textInputLabel = callback.getPrompt();
+  let callbackType: string;
+  let textInputLabel: string;
 
   let isVisible = false;
   let type: 'password' | 'text' = 'password';
-  let value = callback?.getInputValue();
+  let value: unknown;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -57,14 +64,14 @@
 
   $: {
     callbackType = callback.getType();
-    key = callback?.payload?.input?.[0].name || `password-${idx}`;
+    key = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
   }
 </script>
 
 <Input
-  {firstInvalidInput}
+  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
   hasRightIcon={true}
   {key}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}

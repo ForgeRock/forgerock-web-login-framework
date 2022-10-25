@@ -38,11 +38,11 @@
 </script>
 
 {#if withForm}
-  <Form onSubmitWhenValid={submitForm}>
+  <Form ariaDescribedBy="animatedCheckboxStory" onSubmitWhenValid={submitForm}>
     <Checkbox
       bind:this={el}
       {checkValidity}
-      firstInvalidInput={false}
+      isFirstInvalidInput={false}
       {isInvalid}
       isRequired={true}
       {key}
@@ -58,7 +58,7 @@
   <Checkbox
     bind:this={el}
     {checkValidity}
-    firstInvalidInput={false}
+    isFirstInvalidInput={false}
     {isInvalid}
     {key}
     {message}

@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { FRStep, FRCallback } from '@forgerock/javascript-sdk';
+  import type { FRCallback } from '@forgerock/javascript-sdk';
+  import { afterUpdate } from 'svelte';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -8,16 +9,17 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey } from '$journey/_utilities/step.utilities';
+  import { convertStringToKey, initCheckValidation } from '$journey/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
+  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import Sanitize from '$components/_utilities/server-strings.svelte';
   import ShieldIcon from '$components/icons/shield-icon.svelte';
   import { style } from '$lib/style.store';
 
   // Types
   import type { Maybe } from '$lib/interfaces';
-  import type { WidgetStep } from '$journey/journey.interfaces';
+  import type { CallbackMetadata, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
 
   export let displayIcon: boolean;
   export let failureMessage: Maybe<string>;
@@ -26,56 +28,98 @@
   export let step: WidgetStep;
   export let submitForm: () => void;
 
-  let failureMessageKey = '';
-  let hasPrevError = false;
+  const formFailureMessageId = 'genericStepFailureMessage';
+  const formHeaderId = 'genericStepHeader';
+  const formElementId = 'genericStepForm';
 
-  // TODO: Pull out and rework into a utility or helper
-  function checkValidation(callback: FRCallback) {
-    let failedPolices = callback.getOutputByName('failedPolicies', []);
-    if (failedPolices.length && !hasPrevError) {
-      hasPrevError = true;
-      return true;
+  let alertNeedsFocus = false;
+  let callbackMetadataArray: CallbackMetadata[] = [];
+  let checkValidation: (callback: FRCallback) => boolean;
+  let failureMessageKey = '';
+  let formAriaDescriptor = 'genericStepHeader';
+  let formNeedsFocus = false;
+  let stepMetadata: StepMetadata;
+
+  function determineSubmission() {
+    // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
+    // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
+
+    // The below variation is more liberal, first self-submittable cb to call this wins.
+    if (stepMetadata.isStepSelfSubmittable) {
+      submitFormWrapper();
     }
-    return false;
+  }
+  function submitFormWrapper() {
+    alertNeedsFocus = false;
+    formNeedsFocus = false;
+
+    submitForm();
   }
 
+  afterUpdate(() => {
+    if (failureMessage) {
+      formAriaDescriptor = formFailureMessageId;
+      alertNeedsFocus = true;
+      formNeedsFocus = false;
+    } else {
+      formAriaDescriptor = formHeaderId;
+      alertNeedsFocus = false;
+      formNeedsFocus = true;
+    }
+  });
+
   $: {
+    console.log(formNeedsFocus);
+    checkValidation = initCheckValidation();
+    callbackMetadataArray = buildCallbackMetadata(step, checkValidation);
+    stepMetadata = buildStepMetadata(callbackMetadataArray);
     failureMessageKey = convertStringToKey(failureMessage);
   }
 </script>
 
-{#if displayIcon}
-  <div class="tw_flex tw_justify-center">
-    <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
-  </div>
-{/if}
-<h1 class="tw_primary-header dark:tw_primary-header_dark">
-  <!-- TODO: Needs localization strategy -->
-  <Sanitize html={true} string={step?.getHeader() || ''} />
-</h1>
-<p
-  class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+<Form
+  bind:formEl
+  ariaDescribedBy={formAriaDescriptor}
+  id={formElementId}
+  needsFocus={formNeedsFocus}
+  onSubmitWhenValid={submitFormWrapper}
 >
-  <!-- TODO: Needs localization strategy -->
-  <Sanitize html={true} string={step?.getDescription() || ''} />
-</p>
-
-<Form bind:formEl onSubmitWhenValid={submitForm}>
-  {#if failureMessage}
-    <Alert type="error">{interpolate(failureMessageKey, null, failureMessage)}</Alert>
+  {#if displayIcon}
+    <div class="tw_flex tw_justify-center">
+      <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+    </div>
   {/if}
+  <header id={formHeaderId}>
+    <h1 class="tw_primary-header dark:tw_primary-header_dark">
+      <Sanitize html={true} string={step?.getHeader() || ''} />
+    </h1>
+    <p
+      class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+    >
+      <Sanitize html={true} string={step?.getDescription() || ''} />
+    </p>
+  </header>
+
+  {#if failureMessage}
+    <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+      {interpolate(failureMessageKey, null, failureMessage)}
+    </Alert>
+  {/if}
+
   {#each step?.callbacks as callback, idx}
-    {@const firstInvalidInput = checkValidation(callback)}
     <svelte:component
       this={mapCallbackToComponent(callback)}
       {callback}
-      {firstInvalidInput}
-      {idx}
-      labelType={$style?.labels}
-      checkAndRadioType={$style?.checksAndRadios}
+      callbackMetadata={callbackMetadataArray[idx]}
+      selfSubmitFunction={determineSubmission}
+      stepMetadata={{ ...stepMetadata }}
+      style={$style}
     />
   {/each}
-  <Button busy={loading} style="primary" type="submit" width="full">
-    <T key="nextButton" />
-  </Button>
+
+  {#if !stepMetadata.isStepSelfSubmittable}
+    <Button busy={loading} style="primary" type="submit" width="full">
+      <T key="nextButton" />
+    </Button>
+  {/if}
 </Form>

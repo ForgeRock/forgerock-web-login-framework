@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { KbaCreateCallback } from '@forgerock/javascript-sdk';
+  import type { KbaCreateCallback, NameValue } from '@forgerock/javascript-sdk';
   import { writable } from 'svelte/store';
 
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
@@ -9,12 +9,21 @@
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
 
-  export let callback: KbaCreateCallback;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
-  export let labelType: 'floating' | 'stacked' = 'floating';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
+  import type { Maybe } from '$lib/interfaces';
 
-  const Input = labelType === 'floating' ? Floating : Stacked;
+  export let callback: KbaCreateCallback;
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
+
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -23,19 +32,16 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
-  const inputArr = callback?.payload?.input;
-  const inputName = callback?.payload?.input?.[0].name || `kba-${idx}`;
-  const inputNameQuestion = inputName;
-  const inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
-  const prompt = callback.getPrompt();
-  const questions = callback
-    .getPredefinedQuestions()
-    ?.map((label, idx) => ({ text: label, value: `${idx}` }));
-  const value = writable('');
-
   let customQuestionIndex: string | null = null;
   let displayCustomQuestionInput = false;
+  let inputArr: NameValue[] | undefined;
+  let inputName: string;
+  let inputNameQuestion: string;
+  let inputNameAnswer: string | false;
+  let prompt: string;
+  let questions: { text: string; value: string }[];
   let shouldAllowCustomQuestion: boolean | undefined;
+  let value = writable('');
 
   /**
    * `getOutputValue` throws if it doesn't find this property. There _may_ be a context
@@ -48,21 +54,6 @@
     console.error(
       '`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`',
     );
-  }
-
-  questions.unshift({ text: prompt, value: '' });
-
-  /**
-   * Uncomment the below `setQuestion` if you remove the `unshift` above.
-   * The `unshift` defaults the UI to a non-question, but if you remove it,
-   * you will default to a question, which needs to be set in the callback.
-   *
-   * callback.setQuestion(questions[0].text);
-   */
-
-  if (shouldAllowCustomQuestion) {
-    customQuestionIndex = `${questions.length - 1}`;
-    questions.push({ text: interpolate('provideCustomQuestion'), value: customQuestionIndex });
   }
 
   /**
@@ -121,6 +112,15 @@
   }
 
   $: {
+    inputArr = callback?.payload?.input;
+    inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata.idx}`;
+    inputNameQuestion = inputName;
+    inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
+    prompt = callback.getPrompt();
+    questions = callback
+      .getPredefinedQuestions()
+      ?.map((label, idx) => ({ text: label, value: `${idx}` }));
+
     /**
      * `getOutputValue` throws if it doesn't find this property. There _may_ be a context
      * in which the property doesn't exist, so I'm going to wrap it in a try-catch, just
@@ -132,6 +132,21 @@
       console.error(
         '`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`',
       );
+    }
+
+    questions.unshift({ text: prompt, value: '' });
+
+    /**
+     * Uncomment the below `setQuestion` if you remove the `unshift` above.
+     * The `unshift` defaults the UI to a non-question, but if you remove it,
+     * you will default to a question, which needs to be set in the callback.
+     *
+     * callback.setQuestion(questions[0].text);
+     */
+
+    if (shouldAllowCustomQuestion) {
+      customQuestionIndex = `${questions.length - 1}`;
+      questions.push({ text: interpolate('provideCustomQuestion'), value: customQuestionIndex });
     }
   }
 </script>
@@ -151,7 +166,7 @@
   </span>
 
   <Select
-    firstInvalidInput={false}
+    isFirstInvalidInput={false}
     key={inputNameQuestion}
     label={prompt}
     onChange={selectQuestion}
@@ -160,8 +175,8 @@
 
   {#if displayCustomQuestionInput}
     <Input
-      firstInvalidInput={false}
-      key={`kba-custom-question-${idx}`}
+      isFirstInvalidInput={false}
+      key={`kba-custom-question-${callbackMetadata.idx}`}
       label={interpolate('customSecurityQuestion')}
       showMessage={false}
       message={interpolate('inputRequiredError')}
@@ -171,8 +186,8 @@
   {/if}
 
   <Input
-    {firstInvalidInput}
-    key={inputNameAnswer || `kba-answer-${idx}`}
+    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    key={inputNameAnswer || `kba-answer-${callbackMetadata.idx}`}
     label={interpolate('securityAnswer')}
     showMessage={false}
     message={interpolate('inputRequiredError')}

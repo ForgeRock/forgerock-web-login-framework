@@ -5,30 +5,38 @@
     getValidationPolicies,
     getValidationFailures,
     isInputRequired,
+    type Policy,
+    type FailedPolicy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: ValidatedCreateUsernameCallback;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
-  export let labelType: Maybe<'floating' | 'stacked'> = 'floating';
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
 
-  const Input = labelType === 'floating' ? Floating : Stacked;
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType = callback.getType();
-  let inputName = callback?.payload?.input?.[0].name || `validated-name-${idx}`;
-  let isRequired = isInputRequired(callback);
-  let prompt = callback.getPrompt();
-  let value = callback?.getInputValue();
-
-  let validationRules = getValidationPolicies(callback.getPolicies());
-  let validationFailures = getValidationFailures(callback, prompt);
-  let isInvalid = !!validationFailures.length;
+  let callbackType: string;
+  let inputName: string;
+  let isRequired: boolean;
+  let prompt: string;
+  let value: unknown;
+  let validationRules: Policy[];
+  let validationFailures: FailedPolicy[];
+  let isInvalid: boolean;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -47,11 +55,10 @@
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `validated-name=${idx}`;
+    inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata.idx}`;
     isRequired = isInputRequired(callback);
     prompt = callback.getPrompt();
     value = callback?.getInputValue();
-
     validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
@@ -59,7 +66,7 @@
 </script>
 
 <Input
-  {firstInvalidInput}
+  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
   {isRequired}
   {isInvalid}
   key={inputName}

@@ -5,7 +5,7 @@
 
   export let selectClasses = '';
   export let defaultOption: string | null = null;
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
@@ -26,7 +26,7 @@
   }
 
   afterUpdate(() => {
-    if (firstInvalidInput) {
+    if (isFirstInvalidInput) {
       inputEl.focus();
     }
   });

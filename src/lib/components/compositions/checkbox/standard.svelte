@@ -5,7 +5,7 @@
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let message = '';
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
@@ -26,7 +26,7 @@
   and the second column as one flexible unit (1fr).
 -->
 <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
-  <Checkbox {firstInvalidInput} {isRequired} {isInvalid} {key} onChange={onChangeWrapper} {value}>
+  <Checkbox {isFirstInvalidInput} {isRequired} {isInvalid} {key} onChange={onChangeWrapper} {value}>
     <slot />
   </Checkbox>
   <!--

@@ -5,8 +5,22 @@
   import Password from './password.svelte';
 
   export let callback: PasswordCallback;
+
+  let callbackMetadata = {
+    isFirstInvalidInput: false,
+    isReadyForSubmission: false,
+    isSelfSubmitting: false,
+    isUserInputRequired: true,
+    idx: 0,
+  };
+  let stepMetadata = {
+    isStepSelfSubmittable: false,
+    numOfCallbacks: 2,
+    numOfSelfSubmittableCbs: 0,
+    numOfUserInputCbs: 2,
+  };
 </script>
 
 <Centered>
-  <Password {callback} firstInvalidInput={false} idx={0} />
+  <Password {callback} {callbackMetadata} {stepMetadata} />
 </Centered>

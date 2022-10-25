@@ -1,21 +1,22 @@
 <script lang="ts">
+  import type { Maybe } from '$lib/interfaces';
   import { afterUpdate } from 'svelte';
 
   import Label from '../label/label.svelte';
 
   export let checked = false;
-  export let firstInvalidInput: boolean;
+  export let isFirstInvalidInput: boolean;
   export let isRequired = false;
   export let isInvalid = false;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
-  export let value: string;
+  export let value: Maybe<string>;
 
   let inputEl: HTMLInputElement;
 
   afterUpdate(() => {
-    if (firstInvalidInput) {
+    if (isFirstInvalidInput) {
       inputEl.focus();
     }
   });

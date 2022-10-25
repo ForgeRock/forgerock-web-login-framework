@@ -2,11 +2,15 @@
   import type { ConfirmationCallback } from '@forgerock/javascript-sdk';
   import Centered from '$components/primitives/box/centered.svelte';
 
-  import TextOutput from './confirmation.svelte';
+  import Confirmation from './confirmation.svelte';
+  import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
 
   export let callback: ConfirmationCallback;
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: () => void;
+  export let stepMetadata: StepMetadata;
 </script>
 
 <Centered>
-  <TextOutput {callback} firstInvalidInput={false} idx={0} />
+  <Confirmation {callback} {callbackMetadata} {selfSubmitFunction} {stepMetadata} />
 </Centered>

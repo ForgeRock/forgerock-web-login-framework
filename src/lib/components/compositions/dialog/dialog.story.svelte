@@ -44,11 +44,11 @@
   >
     Sign In
   </h2>
-  <Form onSubmitWhenValid={submitForm}>
+  <Form ariaDescribedBy="dialogStory" onSubmitWhenValid={submitForm}>
     <Input
       message="Please provide a value"
       isRequired={true}
-      firstInvalidInput={false}
+      isFirstInvalidInput={false}
       key="username"
       label="Username"
       onChange={() => {}}

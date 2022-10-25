@@ -563,21 +563,27 @@ Example:
 const widget = new Widget({
   target: document.getElementById('widget-root'),
   props: {
-    config: { /* ... */ },
-    content: { /* ... */ },
+    config: {
+      /* ... */
+    },
+    content: {
+      /* ... */
+    },
     /**
      * OPTIONAL
      */
     style: {
       checksAndRadios: 'animated', // OPTIONAL; choices are 'animated' or 'standard'
       labels: 'floating', // OPTIONAL; choices are 'floating' or 'stacked'
-      logo: { // OPTIONAL; only used with modal form factor
+      logo: {
+        // OPTIONAL; only used with modal form factor
         dark: 'https://example.com/img/white-logo.png', // OPTIONAL; used if theme has a dark variant
         light: 'https://example.com/img/black-logo.png', // REQUIRED if logo property is provided; full URL
         height: '300px', // OPTIONAL; provides additional controls to logo display
         width: '400px', // OPTIONAL; provides additional controls to logo display
       },
-      sections: { // OPTIONAL; only used with modal form factor
+      sections: {
+        // OPTIONAL; only used with modal form factor
         header: false, // OPTIONAL; uses a modal "header" section that displays logo
       },
       stage: {

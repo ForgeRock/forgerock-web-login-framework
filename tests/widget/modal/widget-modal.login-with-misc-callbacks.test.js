@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-test('Modal widget with simple login and confirmation', async ({ page }) => {
-  await page.goto('widget/modal?journey=LoginTestCallbacks');
+test('Modal widget with simple login and misc callbacks', async ({ page }) => {
+  await page.goto('widget/modal?journey=LoginWithMiscCallbacks');
 
   const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
   await loginButton.click();
@@ -14,13 +14,16 @@ test('Modal widget with simple login and confirmation', async ({ page }) => {
 
   // Confirmation
   expect(await page.locator('text="Are you human?"').innerText()).toBe('Are you human?');
-  await page.selectOption('select', '0');
-  await page.locator('button', { hasText: 'Next' }).click();
+  await page.locator('button', { hasText: 'Yes' }).click(); // <- Self submitting callback
 
   // Choice
-  expect(await page.locator('text="Are you sure?"').innerText()).toBe('Are you sure?');
-  await page.selectOption('select', '0');
+  const selectEl = page.getByLabel('Are you sure?');
+  await selectEl.selectOption('0');
   await page.locator('button', { hasText: 'Next' }).click();
+
+  // Polling Wait
+  // NOTE: Make sure timer is same or more than set in Polling Wait node
+  await page.waitForTimeout(3000);
 
   const fullName = page.locator('#fullName');
   const email = page.locator('#email');

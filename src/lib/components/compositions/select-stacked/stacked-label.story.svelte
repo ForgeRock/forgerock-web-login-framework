@@ -34,11 +34,11 @@
 </script>
 
 {#if withForm}
-  <Form onSubmitWhenValid={submitForm}>
+  <Form ariaDescribedBy="StackedLabelSelectStory" onSubmitWhenValid={submitForm}>
     <Select
       {checkValidity}
       {defaultOption}
-      firstInvalidInput={false}
+      isFirstInvalidInput={false}
       {isRequired}
       {isInvalid}
       {key}
@@ -54,7 +54,7 @@
     bind:this={el}
     {checkValidity}
     {defaultOption}
-    firstInvalidInput={false}
+    isFirstInvalidInput={false}
     {isRequired}
     {isInvalid}
     {key}

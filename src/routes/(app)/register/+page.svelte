@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
 
   import Box from '$components/primitives/box/centered.svelte';
@@ -32,6 +33,10 @@
     }
     if ($oauthStore?.successful && !$userStore.completed) {
       userStore.get();
+      goto('/');
+    }
+    if ($userStore?.successful) {
+      goto('/');
     }
   }
 </script>

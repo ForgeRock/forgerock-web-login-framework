@@ -2,6 +2,8 @@
   import {
     getInputTypeFromPolicies,
     isInputRequired,
+    type FailedPolicy,
+    type Policy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
@@ -13,21 +15,31 @@
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
+  import type { Style } from '$lib/style.store';
+  import type { Maybe } from '$lib/interfaces';
+  import type { StringDict } from '@forgerock/javascript-sdk/lib/shared/interfaces';
+
   export let callback: AttributeInputCallback<string>;
-  export let firstInvalidInput: boolean;
-  export let idx: number;
+  export let callbackMetadata: CallbackMetadata;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: StepMetadata;
+  export let style: Style = {};
 
-  let inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
-  let isRequired = isInputRequired(callback);
-  let outputName = callback.getOutputByName('name', '');
-  let policies = callback.getPolicies();
-  let previousValue = callback?.getInputValue() as string;
-  let prompt = callback.getPrompt();
-  let type = getInputTypeFromPolicies(policies);
-
-  let validationRules = getValidationPolicies(callback.getPolicies());
-  let validationFailures = getValidationFailures(callback, prompt);
-  let isInvalid = !!validationFailures.length;
+  let inputName: string;
+  let isRequired: boolean;
+  let outputName: string;
+  let policies: StringDict<any>;
+  let previousValue: string;
+  let prompt: string;
+  let type: 'email' | 'text';
+  let validationRules: Policy[];
+  let validationFailures: FailedPolicy[];
+  let isInvalid: boolean;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -49,14 +61,13 @@
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
      */
-    inputName = callback?.payload?.input?.[0].name || `password-${idx}`;
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
     isRequired = isInputRequired(callback);
     outputName = callback.getOutputByName('name', '');
     policies = callback.getPolicies();
     previousValue = callback?.getInputValue() as string;
     prompt = callback.getPrompt();
     type = getInputTypeFromPolicies(policies);
-
     validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
@@ -64,7 +75,7 @@
 </script>
 
 <Input
-  {firstInvalidInput}
+  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
   key={inputName}
   label={interpolate(outputName, null, prompt)}
   message={isRequired ? interpolate('inputRequiredError') : undefined}

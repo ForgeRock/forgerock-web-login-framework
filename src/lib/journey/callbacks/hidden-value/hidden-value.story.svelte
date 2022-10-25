@@ -5,8 +5,22 @@
   import HiddenValue from './hidden-value.svelte';
 
   export let callback: HiddenValueCallback;
+
+  let callbackMetadata = {
+    isFirstInvalidInput: false,
+    isReadyForSubmission: false,
+    isSelfSubmitting: false,
+    isUserInputRequired: true,
+    idx: 0,
+  };
+  let stepMetadata = {
+    isStepSelfSubmittable: false,
+    numOfCallbacks: 2,
+    numOfSelfSubmittableCbs: 0,
+    numOfUserInputCbs: 2,
+  };
 </script>
 
 <Centered>
-  <HiddenValue {callback} firstInvalidInput={false} idx={0} />
+  <HiddenValue {callback} {callbackMetadata} {stepMetadata} />
 </Centered>

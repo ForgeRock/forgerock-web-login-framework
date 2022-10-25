@@ -5,8 +5,22 @@
   import Checkbox from './boolean.svelte';
 
   export let callback: AttributeInputCallback<boolean>;
+
+  let callbackMetadata = {
+    isFirstInvalidInput: false,
+    isReadyForSubmission: false,
+    isSelfSubmitting: false,
+    isUserInputRequired: true,
+    idx: 0,
+  };
+  let stepMetadata = {
+    isStepSelfSubmittable: false,
+    numOfCallbacks: 2,
+    numOfSelfSubmittableCbs: 0,
+    numOfUserInputCbs: 2,
+  };
 </script>
 
 <Centered>
-  <Checkbox {callback} firstInvalidInput={false} idx={0} />
+  <Checkbox {callback} {callbackMetadata} {stepMetadata} />
 </Centered>
