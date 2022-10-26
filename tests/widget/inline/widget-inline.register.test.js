@@ -11,7 +11,7 @@ test('Inline registration widget', async ({ page }) => {
   await page.fill('text=Password', 'willfail');
   await page.selectOption('select', '0');
   await page.fill('text=Security Answer', 'Red');
-  await page.click('text=Please accept our Terms and Conditions');
+  await page.click('text=Please accept our Terms & Conditions');
   await page.locator('button', { hasText: 'Register' }).click();
 
   await expect(page.locator('text=Password requirements')).toBeVisible();

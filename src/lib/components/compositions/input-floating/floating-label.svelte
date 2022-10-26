@@ -50,7 +50,7 @@
   />
   <slot name="input-button" />
   <div class="tw_w-full" id={`${key}-message`}>
-    <Message {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
+    <Message dirtyMessage={message} {showMessage} type={isInvalid ? 'error' : 'info'} />
     <slot />
   </div>
 </div>

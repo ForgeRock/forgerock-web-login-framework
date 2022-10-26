@@ -44,6 +44,9 @@
           tree: journeyParam || 'Login',
         },
         content,
+        links: {
+          termsAndConditions: 'https://www.forgerock.com/terms',
+        },
         displayIcon: true,
       },
     });

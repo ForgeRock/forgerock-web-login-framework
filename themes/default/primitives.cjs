@@ -372,6 +372,7 @@ module.exports = function (theme) {
      */
     '.link': {
       color: theme('colors.link.dark'),
+      fontSize: theme('fontSize.base'),
       textDecoration: 'underline',
 
       '&:hover': {

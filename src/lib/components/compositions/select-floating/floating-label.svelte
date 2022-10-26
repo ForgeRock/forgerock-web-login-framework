@@ -39,5 +39,5 @@
     {options}
     selectClasses="tw_select-floating"
   />
-  <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
+  <Message dirtyMessage={message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
 </div>

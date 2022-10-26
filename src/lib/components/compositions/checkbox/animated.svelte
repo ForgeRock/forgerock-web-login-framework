@@ -55,6 +55,6 @@
     column to match the label's layout.
    -->
   <div class="tw_ml-10">
-    <Message {key} {message} {showMessage} type={isInvalid ? 'error' : 'info'} />
+    <Message {key} dirtyMessage={message} {showMessage} type={isInvalid ? 'error' : 'info'} />
   </div>
 </div>

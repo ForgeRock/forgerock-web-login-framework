@@ -53,6 +53,7 @@ export const stringsSchema = z
     submitButton: z.string(),
     successMessage: z.string(),
     termsAndConditions: z.string(),
+    termsAndConditionsLinkText: z.string(),
     tryAgain: z.string(),
     useValidEmail: z.string(),
     unrecoverableError: z.string(),

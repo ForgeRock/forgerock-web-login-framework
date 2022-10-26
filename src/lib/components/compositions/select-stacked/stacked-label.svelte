@@ -38,5 +38,5 @@
     onChange={onChangeWrapper}
     {options}
   />
-  <Message {message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
+  <Message dirtyMessage={message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
 </div>

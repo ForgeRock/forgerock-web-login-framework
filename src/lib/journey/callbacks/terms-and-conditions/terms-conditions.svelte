@@ -2,6 +2,9 @@
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
+  import Link from '$components/primitives/link/link.svelte';
+  import { links } from '$lib/links.store';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
 
@@ -20,8 +23,6 @@
   export let stepMetadata: StepMetadata;
   export let style: Style = {};
 
-  // TODO: Component needs a UX story to be complete
-
   /** *************************************************************************
    * SDK INTEGRATION POINT
    * Summary: SDK callback methods for getting values
@@ -32,8 +33,6 @@
   const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
 
   let inputName: string;
-  // Currently NOT supporting the render of the full terms
-  // let terms = callback.getTerms();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -55,11 +54,20 @@
   }
 </script>
 
-<Checkbox
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
-  key={inputName}
-  onChange={setValue}
-  value={false}
->
-  <T key="termsAndConditions" />
-</Checkbox>
+{#if $links?.termsAndConditions}
+  <Link classes="tw_block tw_mb-4" href={$links?.termsAndConditions} target="_blank">
+    {interpolate('termsAndConditionsLinkText')}
+  </Link>
+  <Checkbox
+    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    key={inputName}
+    onChange={setValue}
+    value={false}
+  >
+    <T key="termsAndConditions" />
+  </Checkbox>
+{:else}
+  <p class=" tw_text-error-dark dark:tw_text-error-light tw_input-spacing">
+    Error: Configuration is missing <code>termsAndConditions</code> URL.
+  </p>
+{/if}

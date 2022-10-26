@@ -1,10 +1,14 @@
 <script lang="ts">
+  import sanitize from 'xss';
   import type { Maybe } from '$lib/interfaces';
 
-  export let message: string;
+  export let classes = '';
+  export let dirtyMessage: string;
   export let key: Maybe<string> = undefined;
   export let showMessage: Maybe<boolean> = true;
   export let type: 'info' | 'error' = 'info';
+
+  let cleanMessage = sanitize(dirtyMessage);
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -17,13 +21,19 @@
       }
     }, '');
   }
+
+  $: {
+    cleanMessage = sanitize(dirtyMessage);
+  }
 </script>
 
-{#if message}
+{#if dirtyMessage}
   <p
-    class={`__input-message ${!showMessage ? 'tw_hidden' : ''} ${generateClassString(type)}`}
+    class={`${classes} __input-message ${!showMessage ? 'tw_hidden' : ''} ${generateClassString(
+      type,
+    )}`}
     id={`${key ? `${key}-message` : ''}`}
   >
-    {message}
+    {@html cleanMessage}
   </p>
 {/if}

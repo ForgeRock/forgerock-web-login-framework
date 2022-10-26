@@ -17,7 +17,15 @@ test('modal widget', async ({ page }) => {
   await page.fill('text=Password', 'j56eKtae*1');
   await page.selectOption('select', '0');
   await page.fill('text=Security Answer', 'Red');
-  await page.click('text=Please accept our Terms and Conditions');
+
+  const termsLink = page.locator('text=View full Terms & Conditions');
+  const termsUrl = await termsLink.getAttribute('href');
+  const termsTarget = await termsLink.getAttribute('target');
+
+  expect(termsUrl).toBe('https://www.forgerock.com/terms');
+  expect(termsTarget).toBe('_blank');
+
+  await page.click('text=Please accept our Terms & Conditions');
   await page.locator('button', { hasText: 'Register' }).click();
 
   const fullName = page.locator('#fullName');

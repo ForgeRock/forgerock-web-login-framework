@@ -210,12 +210,14 @@
   import configure, { type partialConfigSchema } from '$lib/config';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent } from '$lib/locale.store';
+  import { initialize as initializeLinks, partialLinksSchema } from '$lib/links.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
   import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
+  export let links: z.infer<typeof partialLinksSchema>;
   export let style: Style;
 
   const dispatch = createEventDispatcher();
@@ -261,6 +263,7 @@
   let _userStore = (userStore = initializeUser(config));
 
   initializeContent(content);
+  initializeLinks(links);
   initializeStyle(style);
 
   s_onMount(() => {
