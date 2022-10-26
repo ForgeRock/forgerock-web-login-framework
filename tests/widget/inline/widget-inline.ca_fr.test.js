@@ -1,9 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-test('inline widget in Canadian French', async ({ browser }) => {
-  const context = await browser.newContext({ locale: 'fr-CA' });
-  const page = await context.newPage();
-
+test.use({ locale: 'fr-CA' });
+test('inline widget in Canadian French', async ({ page }) => {
   await page.goto('widget/inline');
 
   await page.fill('text="Nom d\'utilisateur"', 'demouser');

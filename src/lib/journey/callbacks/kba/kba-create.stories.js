@@ -36,6 +36,8 @@ Interaction.args = { ...Base.args };
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
+  const cb = step.getCallbackOfType(CallbackType.KbaCreateCallback);
+
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
@@ -95,6 +97,10 @@ Interaction.play = async ({ canvasElement }) => {
   await userEvent.selectOptions(selectEl, '1', { delay: 200 });
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  console.log(cb)
+  expect(cb.getInputValue()).toBe('1')
+  expect(cb.payload.input[1].value).toBe('Tacos')
 
   await expect(canvas.queryByLabelText('Custom Security Question')).toBeNull();
 

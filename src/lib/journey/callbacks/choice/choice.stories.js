@@ -46,19 +46,22 @@ Interaction.args = { ...Base.args };
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   const cb = step.getCallbacksOfType(CallbackType.ChoiceCallback)[0];
+
   const select = canvas.getByLabelText('Choose one');
+  await userEvent.tab();
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  expect(select).toHaveFocus();
+  expect(select.value).toEqual("2")
 
-  await userEvent.selectOptions(select, '0');
-  await expect(cb.getInputValue()).toBe(0);
+  userEvent.selectOptions(select, "1")
+  expect(select.value).toEqual("1")
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  await userEvent.selectOptions(select, '1');
   await expect(cb.getInputValue()).toBe(1);
-};
+  userEvent.selectOptions(select, "0")
 
+  expect(select.value).toEqual("0")
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+}
 export const RadioInteraction = Template.bind({});
 
 RadioInteraction.args = { ...Radio.args };

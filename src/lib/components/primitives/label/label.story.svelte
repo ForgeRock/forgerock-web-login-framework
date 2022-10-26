@@ -3,6 +3,9 @@
 
   export let key: string;
   export let classes: string;
+  export let inputLabel: string;
 </script>
 
-<Label {key} {classes}>Input Label</Label>
+<Label {key} {classes}>
+  {inputLabel}
+</Label>

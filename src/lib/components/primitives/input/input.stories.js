@@ -1,4 +1,6 @@
 import Input from './input.story.svelte';
+import { expect, jest } from '@storybook/jest';
+import { within, userEvent } from '@storybook/testing-library';
 
 export default {
   argTypes: {
@@ -25,7 +27,7 @@ export const LabelFirst = {
     key: 'uniqueId',
     label: 'Username',
     placeholder: 'E.g.: my-username',
-    onChange: () => console.log('Checkbox value updated'),
+    onChange: jest.fn(() => console.log('Checkbox value updated')),
   },
 };
 
@@ -37,4 +39,27 @@ export const LabelLast = {
     placeholder: 'E.g.: my-username',
     onChange: () => console.log('Checkbox value updated'),
   },
+};
+
+const Template = (args) => ({
+  Component: Input,
+  props: args,
+});
+
+export const Interaction = Template.bind({});
+
+Interaction.args = { ...LabelFirst.args, };
+
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+
+  await userEvent.tab();
+
+  await userEvent.type(canvas.getByLabelText('Username'), 'input here')
+
+  await new Promise(res => setTimeout(res, 1000))
+
+  await userEvent.tab();
+
+  expect(LabelFirst.args.onChange).toHaveBeenCalled();
 };

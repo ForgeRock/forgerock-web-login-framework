@@ -1,9 +1,7 @@
 import { expect, test } from '@playwright/test';
 
-test('inline widget test fallback to US English with unsupported locale', async ({ browser }) => {
-  const context = await browser.newContext({ locale: 'jp' });
-  const page = await context.newPage();
-
+test.use({ locale: 'jp' });
+test('inline widget test fallback to US English with unsupported locale', async ({ page }) => {
   await page.goto('widget/inline');
 
   await page.fill('text="User Name"', 'demouser');

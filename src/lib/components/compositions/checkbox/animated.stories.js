@@ -1,4 +1,5 @@
-import { expect } from '@storybook/jest';
+import { FRStep } from '@forgerock/javascript-sdk';
+import { expect, jest } from '@storybook/jest';
 import { userEvent, within } from '@storybook/testing-library';
 
 import Checkbox from './animated.story.svelte';
@@ -43,10 +44,11 @@ export const Checked = {
 export const Error = {
   args: {
     ...Base.args,
-    checkValidity: (event) => {
+    onChange: jest.fn(),
+    checkValidity: jest.fn((event) => {
       const el = event.target;
       return el.checked;
-    },
+    }),
     message: 'Please accept this',
     label: 'Check to accept this agreement',
   },
@@ -95,6 +97,9 @@ Interaction.play = async ({ canvasElement }) => {
     selector: 'input',
   });
   await userEvent.click(inputEl);
+
+  expect(Error.args.checkValidity).toHaveBeenCalled();
+  expect(Error.args.onChange).toHaveBeenCalled();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 

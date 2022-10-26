@@ -1,5 +1,5 @@
 import { userEvent, within } from '@storybook/testing-library';
-// import { expect } from '@storybook/jest';
+import { expect, jest } from '@storybook/jest';
 
 import Input from './stacked-label.story.svelte';
 
@@ -19,14 +19,14 @@ export default {
 
 export const Base = {
   args: {
-    checkValidity: (e) => {
+    checkValidity: jest.fn((e) => {
       const el = e.target;
       return !!el.value;
-    },
+    }),
     key: 'simpleInput',
     label: 'Username',
     message: '',
-    onChange: (e) => console.log(e.target.value),
+    onChange: jest.fn((e) => console.log(e.target.value)),
     placeholder: 'E.g. my-username',
     value: '',
   },
@@ -111,6 +111,9 @@ Interaction.play = async ({ canvasElement }) => {
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.tab();
+
+  expect(Error.args.onChange).toHaveBeenCalled();
+  expect(Error.args.checkValidity).toHaveBeenCalled();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 

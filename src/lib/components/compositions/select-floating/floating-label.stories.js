@@ -1,4 +1,5 @@
 import { userEvent, within } from '@storybook/testing-library';
+import { expect, jest } from '@storybook/jest';
 
 import Select from './floating-label.story.svelte';
 
@@ -13,13 +14,13 @@ export default {
 
 export const Base = {
   args: {
-    checkValidity: (e) => {
+    checkValidity: jest.fn((e) => {
       const el = e.target;
       return !!el.value;
-    },
+    }),
     key: 'uniqueId',
     label: 'Choose Color',
-    onChange: (e) => console.log(e.target.value),
+    onChange: jest.fn((e) => console.log(e.target.value)),
     options: [
       { value: null, text: 'Choose Color' },
       { value: 0, text: 'Red' },
@@ -88,6 +89,8 @@ Interaction.play = async ({ canvasElement }) => {
   await userEvent.selectOptions(inputEl, '1');
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
+  expect(Error.args.onChange).toHaveBeenCalled();
+  expect(Error.args.checkValidity).toHaveBeenCalled();
 
   await userEvent.tab();
 };

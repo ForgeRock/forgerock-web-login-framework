@@ -1,14 +1,16 @@
 import { expect, test } from '@playwright/test';
 
-test('inline widget in Spanish with unknown country', async ({ browser }) => {
-  const context = await browser.newContext({ locale: 'es' });
-  const page = await context.newPage();
-
+test.use({ locale: 'es' });
+test('inline widget in Spanish with unknown country', async ({ page }) => {
   await page.goto('widget/inline');
 
-  await page.fill('text="Nombre de usuario"', 'demouser');
-  await page.fill('text=Contraseña', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Iniciar sesion' }).click();
+  await page.getByRole('textbox', { name: "Nombre de usuario" }).fill('demouser')
+
+  await page.getByRole('textbox', { name: "Contraseña" }).fill('j56eKtae*1');
+
+  const submit = await page.getByRole('button', { name: 'Iniciar sesion' })
+
+  submit.click();
 
   const fullName = page.locator('#fullName');
   const email = page.locator('#email');

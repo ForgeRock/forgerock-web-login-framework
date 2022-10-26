@@ -2,11 +2,14 @@ import { expect, test } from '@playwright/test';
 
 test('modal widget', async ({ page }) => {
   await page.goto('widget/modal');
+
   const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
   const dialog = page.locator('dialog');
   expect(await dialog.isVisible()).toBeFalsy();
 
   await loginButton.click();
+  // Add just a bit of a delay to ensure dialog responds
+  await page.waitForTimeout(1000);
   expect(await dialog.isVisible()).toBeTruthy();
 
   await page.fill('text="User Name"', 'demouser');

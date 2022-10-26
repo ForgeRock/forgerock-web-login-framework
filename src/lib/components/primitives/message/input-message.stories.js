@@ -1,3 +1,5 @@
+import { expect } from '@storybook/jest';
+import { within } from '@storybook/testing-library';
 import ErrorComponent from './input-message.svelte';
 
 export default {
@@ -23,3 +25,16 @@ export const Error = {
     type: 'error',
   },
 };
+
+const Template = (args) => ({
+  Component: ErrorComponent,
+  props: args
+});
+export const Interaction = Template.bind({});
+Interaction.args = { ...Base.args };
+
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const paragraph = canvas.getByText('Please review your input.')
+  expect(paragraph).toHaveTextContent('Please review your input.');
+}

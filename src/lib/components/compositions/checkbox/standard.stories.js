@@ -1,4 +1,4 @@
-import { expect } from '@storybook/jest';
+import { expect, jest } from '@storybook/jest';
 import { userEvent, within } from '@storybook/testing-library';
 
 import Checkbox from './standard.story.svelte';
@@ -26,7 +26,7 @@ export const Base = {
   args: {
     label: 'Check me!',
     key: 'uniqueId',
-    onChange: () => console.log('Checkbox value updated'),
+    onChange: jest.fn(() => console.log('Checkbox value updated')),
     value: false,
   },
 };
@@ -51,10 +51,10 @@ export const LongLabel = {
 export const Error = {
   args: {
     ...Base.args,
-    checkValidity: (event) => {
+    checkValidity: jest.fn((event) => {
       const el = event.target;
       return el.checked;
-    },
+    }),
     message: 'Please accept this',
     label: 'Check to accept this agreement',
   },
@@ -98,6 +98,8 @@ Interaction.play = async ({ canvasElement }) => {
 
   await userEvent.tab();
   await userEvent.click(submitButton);
+  expect(Error.args.checkValidity).toHaveBeenCalled();
+  expect(Error.args.onChange).toHaveBeenCalled();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 

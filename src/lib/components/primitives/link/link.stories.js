@@ -1,3 +1,5 @@
+import { expect } from '@storybook/jest';
+import { userEvent, within } from '@storybook/testing-library';
 import Link from './link.story.svelte';
 
 export default {
@@ -13,3 +15,19 @@ export const Base = {
     href: '/',
   },
 };
+
+const Template = (args) => ({
+  Component: Link,
+  props: args
+});
+export const Interaction = Template.bind({});
+Interaction.args = { ...Base.args };
+
+Interaction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const link = canvas.getByRole('link')
+  userEvent.tab();
+  expect(link).toHaveFocus();
+  expect(link).toHaveAttribute('href', '/')
+}
+
