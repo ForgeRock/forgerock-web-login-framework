@@ -88,7 +88,7 @@ module.exports = function (theme) {
       backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
     },
     '.password-icon': {
-      color: theme('colors.primary.dark'),
+      color: theme('colors.secondary.dark'),
       fill: 'currentcolor',
     },
     '.password-icon_dark': {

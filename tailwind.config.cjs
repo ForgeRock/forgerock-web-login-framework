@@ -7,8 +7,4 @@ module.exports = {
       // https://tailwindcss.com/docs/theme
     },
   },
-  // prefix: '<your prefix, if needed>',
-  // plugins: [
-  // https://tailwindcss.com/docs/plugins#adding-components
-  // ]
 };
