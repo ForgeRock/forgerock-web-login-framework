@@ -1,4 +1,5 @@
-import adapter from '@sveltejs/adapter-auto';
+import auto from '@sveltejs/adapter-auto';
+import node from '@sveltejs/adapter-node';
 import preprocess from 'svelte-preprocess';
 import { mdsvex } from 'mdsvex';
 
@@ -6,7 +7,12 @@ import { mdsvex } from 'mdsvex';
 const config = {
   extensions: ['.svelte', '.md'],
   kit: {
-    adapter: adapter(),
+    adapter: process.env.PREVIEW ? node() : auto(),
+  },
+  server: {
+    watch: {
+      usePolling: true
+    }
   },
   // Consult https://github.com/sveltejs/svelte-preprocess
   // for more information about preprocessors
