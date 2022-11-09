@@ -4,7 +4,10 @@
 
   import Widget, { form, journey, user } from '$package/inline';
 
+  let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
+  let suspendedIdParam = $page.url.searchParams.get('suspendedId');
+
   let formEl: HTMLDivElement;
   // TODO: Use a more specific type
   let userResponse: any | null;
@@ -41,7 +44,6 @@
             timeout: 5000,
           },
           realmPath: 'alpha',
-          tree: journeyParam || 'Login',
         },
         content,
         links: {
@@ -51,7 +53,10 @@
       },
     });
     // Start the  journey after initialization or within the form.onMount event
-    journey.start();
+    journey.start({
+      journey: journeyParam || authIndexValue || undefined,
+      resumeUrl: suspendedIdParam ? location.href : undefined,
+    });
   });
 </script>
 

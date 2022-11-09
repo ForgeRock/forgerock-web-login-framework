@@ -31,16 +31,15 @@ const widget = new Widget({
       realmPath: 'alpha', // OPTIONAL; Uses 'alpha', if not provided
       redirectUri: window.location.href, // OPTIONAL; falls back to `window.location.href`
       scope: 'openid email', // OPTIONAL; falls back to minimal 'openid email'
-      tree: 'Login', // OPTIONAL; falls back to default Login journey provided in ForgeRock
     },
 
     /**
-     * OPTIONAL; See below for the content object schema
+     * OPTIONAL; See below for the content object schema [1]
      */
     content: {},
 
     /**
-     * OPTIONAL; See below for Styling section
+     * OPTIONAL; See below for the style object schema [2]
      */
     style: {},
   },
@@ -52,7 +51,8 @@ widget.$destroy();
 
 NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html), or you can [see our API docs for more developer detail](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/configoptions.html).
 
-NOTE: For content schema, please [use the example en-US locale file](/src/locales/us/en/index.json).
+1. For content schema, please [use the example en-US locale file](/src/locales/us/en/index.json)
+2. For `style` schema and more information, please [see the Style section below](#styling-api)
 
 ### Journey
 
@@ -82,6 +82,7 @@ NOTE: Optional `start` config:
 journey.start({
   config: undefined, // OPTIONAL; defaults to undefined, mechanism to override base SDK config object
   oauth: true, // OPTIONAL; defaults to true and uses OAuth flow for acquiring tokens
+  resumeUrl: location.href, // OPTIONAL; full URL of app to continue journey from a "magic link"
   user: true, // OPTIONAL; default to true and returns user information from `userinfo` endpoint
 });
 ```
@@ -185,6 +186,7 @@ modal.onMount((dialogElement, formElement) => {
 });
 
 // "Open" the modal (this implicitly calls `journey.start()`)
+// Optional config can be passed in, see below for more details
 modal.open();
 
 // "Close" the modal
@@ -198,6 +200,17 @@ It's worth noting that if the Widget has already mounted before the `onMount` st
 1. `"user"`: user closed the dialog via UI
 2. `"auto"`: the modal was closed because user successfully authenticated
 3. `"external"`: the application itself called the `modal.close` function
+
+NOTE: Optional `open` config (same optional config of `journey.start`):
+
+```js
+modal.open({
+  config: undefined, // OPTIONAL; defaults to undefined, mechanism to override base SDK config object
+  oauth: true, // OPTIONAL; defaults to true and uses OAuth flow for acquiring tokens
+  resumeUrl: location.href, // OPTIONAL; full URL of app to continue journey from a "magic link"
+  user: true, // OPTIONAL; default to true and returns user information from `userinfo` endpoint
+});
+```
 
 ### Inline
 

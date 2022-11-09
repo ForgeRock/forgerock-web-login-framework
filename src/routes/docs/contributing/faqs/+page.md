@@ -145,3 +145,16 @@ This was always true for XUI and is still somewhat true for Platform Login. Cust
 The Login Widget is directly designed to address this. We are explicitly designing a framework that allows them to add, extend, customize the login flow directly in the client application. Through good design, education and evangelism, I feel we can effectively "flip" the mental model of how our customers control their UX on its head and provide a far superior developer experience while doing so.
 
 Anyway, I'm happy to continue this conversation with you and the rest of the team. I think it's vital for us to deeply understand this concept and evaluate this feature without the historical bias of its legacy. If, after deep contemplation, we still have a strong reason to allow for this "legacy" (as I call it) feature, then I'm happy to support it :)
+
+### Question: Why do we not recommend setting a default `tree`?
+
+There are some edge cases when using journeys/trees in ways other than initially authenticating a user. A few examples are:
+
+1. Journey continuation with the Email Suspend Node
+2. Transactional Authorization
+
+In these examples, journeys are started _without_ explicitly declaring the `authIndexValue` (a reference to the journey) in the `/authenticate` request. Now, if we set a `tree` on the base config, the JavaScript SDK will, by default, add that as a value on the `authIndexValue` parameter. This can lead to conflicts between the journey the `suspendedId` or `advices` implicitly uses and the journey the `authIndexValue` is referencing.
+
+To fix this, we recommend removing the configuration of the tree on base configurations, and only pass the intended tree at the start of a journey. This also better aligns with the other SDKs as they only append the `authIndexType` and `authIndexValue` at the start of calling a journey, but not on the subsequent calls to the endpoint.
+
+Lastly, a default `tree` is not really needed as AM will fall back to the "default" tree set in AM if the `/authenticate` endpoint is initially called without an `authIndexValue` being given.
