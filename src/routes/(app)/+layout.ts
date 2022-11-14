@@ -14,7 +14,6 @@ configure({
     timeout: 5000,
   },
   realmPath: 'alpha',
-  tree: 'Login',
 });
 
 initializeLinks({

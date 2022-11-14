@@ -80,80 +80,80 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
   const news = canvas.getByRole('checkbox', { name: /news/ })
   const securityQuestion = canvas.getByLabelText('Select a security question')
   const securityAnswer = canvas.getByLabelText('Security Answer')
-  const toc = canvas.getByRole('checkbox', { name: 'Please accept our Terms and Conditions' });
+  const tocLink = canvas.getByRole('link', { name: 'View full Terms & Conditions' });
+  const toc = canvas.getByRole('checkbox', { name: 'Please accept our Terms & Conditions' });
 
   const usernameCb = frRegistrationStep.getCallbacksOfType(CallbackType.ValidatedCreateUsernameCallback)[0];
   const passwordCb = frRegistrationStep.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0];
   const firstNameCb = frRegistrationStep.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[0];
-  console.log(frRegistrationStep)
   const lastNameCb = frRegistrationStep.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[1];
   const emailCb = frRegistrationStep.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[2];
   const specialOffersCb = frRegistrationStep.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[0]
   const newsOffersCb = frRegistrationStep.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[1]
-
   const securityQuestions = frRegistrationStep.getCallbacksOfType(CallbackType.KbaCreateCallback)[0];
-
   const tocCb = frRegistrationStep.getCallbacksOfType(CallbackType.TermsAndConditionsCallback)[0]
 
-  expect(username).toHaveFocus();
+  await expect(username).toHaveFocus();
   await userEvent.type(username, 'user')
 
-
   await userEvent.tab();
-  expect(firstName).toHaveFocus();
+  await expect(firstName).toHaveFocus();
   await userEvent.type(firstName, 'my-name')
 
   await userEvent.tab();
-  expect(lastName).toHaveFocus();
+  await expect(lastName).toHaveFocus();
   await userEvent.type(lastName, 'last-name')
 
   await userEvent.tab();
-  expect(email).toHaveFocus();
+  await expect(email).toHaveFocus();
   await userEvent.type(email, 'myemail@email.com')
 
   await userEvent.tab();
 
-  expect(specialOffers).toHaveFocus();
+  await expect(specialOffers).toHaveFocus();
   await userEvent.click(specialOffers);
   await userEvent.tab();
 
-  expect(news).toHaveFocus();
+  await expect(news).toHaveFocus();
   await userEvent.click(news);
   await userEvent.tab();
 
   await userEvent.type(password, 'password')
-  expect(password).toHaveFocus();
+  await expect(password).toHaveFocus();
   await userEvent.tab();
   await userEvent.tab();
 
-  expect(securityQuestion).toHaveFocus()
+  await expect(securityQuestion).toHaveFocus()
   await userEvent.selectOptions(securityQuestion, '0');
   await userEvent.tab();
 
-  expect(securityAnswer).toHaveFocus()
+  await expect(securityAnswer).toHaveFocus()
   await userEvent.type(securityAnswer, 'blue');
   await userEvent.tab();
 
-  expect(toc).toHaveFocus()
+  await expect(tocLink).toHaveFocus()
+  await userEvent.tab();
+
+  await expect(toc).toHaveFocus()
   await userEvent.click(toc);
   await userEvent.tab();
 
   const submit = canvas.getByRole('button', { name: 'Register' });
   await userEvent.click(submit)
-  expect(Registration.args.submitForm).toHaveBeenCalled();
+  await expect(Registration.args.submitForm).toHaveBeenCalled();
 
 
   console.log(usernameCb)
-  expect(usernameCb.getInputValue()).toBe('user')
-  expect(passwordCb.getInputValue()).toBe('password')
-  expect(firstNameCb.getInputValue()).toBe('my-name')
-  expect(lastNameCb.getInputValue()).toBe('last-name')
-  expect(emailCb.getInputValue()).toBe('myemail@email.com')
-  expect(newsOffersCb.getInputValue()).toBe(true)
-  expect(specialOffersCb.getInputValue()).toBe(true)
-  expect(securityQuestions.payload.input[0].value).toBe('0');
-  expect(securityQuestions.payload.input[1].value).toBe('blue');
-  expect(tocCb.getInputValue()).toBe(true)
+  await expect(usernameCb.getInputValue()).toBe('user')
+  await expect(passwordCb.getInputValue()).toBe('password')
+  await expect(firstNameCb.getInputValue()).toBe('my-name')
+  await expect(lastNameCb.getInputValue()).toBe('last-name')
+  await expect(emailCb.getInputValue()).toBe('myemail@email.com')
+  await expect(newsOffersCb.getInputValue()).toBe(true)
+  await expect(specialOffersCb.getInputValue()).toBe(true)
+  await expect(securityQuestions.payload.input[0].value).toBe('0');
+  await expect(securityQuestions.payload.input[1].value).toBe('blue');
+  await expect(tocCb.getInputValue()).toBe(true)
   console.log(securityQuestions);
 }
 
@@ -171,27 +171,26 @@ LoginInteraction.play = async ({ canvasElement }) => {
 
   const username = canvas.getByLabelText('User Name');
   const password = canvas.getByLabelText('Password');
-  expect(username).toHaveFocus();
-  userEvent.type(username, 'username01')
-  expect(canvas.getByLabelText('User Name').value).toEqual('username01')
+  await expect(username).toHaveFocus();
+  await userEvent.type(username, 'username01')
+  await expect(canvas.getByLabelText('User Name').value).toEqual('username01')
 
   await userEvent.tab();
 
-  expect(password).toHaveFocus();
-  userEvent.type(password, 'Password123')
+  await expect(password).toHaveFocus();
+  await userEvent.type(password, 'Password123')
 
-  expect(canvas.getByLabelText('Password').value).toEqual('Password123')
+  await expect(canvas.getByLabelText('Password').value).toEqual('Password123')
 
   await userEvent.tab();
   await userEvent.tab();
   const signin = canvas.getByRole('button', { name: 'Sign In' })
-  expect(signin).toHaveFocus();
+  await expect(signin).toHaveFocus();
   await fireEvent.click(signin);
 
-  expect(UsernamePassword.args.submitForm).toHaveBeenCalled();
+  await expect(UsernamePassword.args.submitForm).toHaveBeenCalled();
 
-
-  expect(nameCb.getInputValue()).toBe('username01')
-  expect(passwordCb.getInputValue()).toBe('Password123')
+  await expect(nameCb.getInputValue()).toBe('username01')
+  await expect(passwordCb.getInputValue()).toBe('Password123')
 }
 

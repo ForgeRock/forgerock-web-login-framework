@@ -7,26 +7,15 @@
     TokenManager,
     UserManager,
   } from '@forgerock/javascript-sdk';
-  import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
   import { get } from 'svelte/store';
 
   // Import store types
+  import type { JourneyOptions, Response } from './interfaces';
   import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
   import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
-  import type { UserStore, UserStoreValue } from '$lib/user/user.store';
+  import type { UserStore } from '$lib/user/user.store';
 
   import './main.css';
-
-  export interface Response {
-    journey?: JourneyStoreValue;
-    oauth?: OAuthTokenStoreValue;
-    user?: UserStoreValue;
-  }
-  export interface JourneyOptions {
-    config?: StepOptions;
-    oauth?: boolean; // defaults to true
-    user?: boolean; // defaults to true
-  }
 
   let callMounted: (form: HTMLFormElement) => void;
   let journeyStore: JourneyStore;
@@ -108,7 +97,14 @@
         }
       });
 
-      journeyStore.next();
+      if (options?.resumeUrl) {
+        journeyStore.resume(options.resumeUrl);
+      } else {
+        journeyStore.start({
+          ...options?.config,
+          tree: options?.journey,
+        });
+      }
     },
     onFailure(fn: (response: Response) => void) {
       returnError = (response: Response) => fn(response);

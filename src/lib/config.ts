@@ -73,7 +73,7 @@ const configSchema = z
         z.literal('localStorage'),
       ])
       .optional(),
-    tree: z.string(),
+    tree: z.string().optional(),
     type: z.string().optional(),
     oauthThreshold: z.number().optional(),
   })

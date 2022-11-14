@@ -22,7 +22,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
   let stepNumber = 0;
 
-  async function next(prevStep: StepTypes = null, nextOptions?: StepOptions) {
+  async function next(prevStep: StepTypes = null, nextOptions?: StepOptions, resumeUrl?: string) {
     /**
      * Create an options object with nextOptions overriding anything from initOptions
      * TODO: Does this object merge need to be more granular?
@@ -54,10 +54,25 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     });
 
     try {
-      /**
-       * Initial attempt to retrieve next step
-       */
-      nextStep = await FRAuth.next(prevStep as FRStep, options);
+      if (resumeUrl) {
+        // If resuming an unknown journey remove the tree from the options
+        options.tree = undefined;
+
+        /**
+         * Attempt to resume journey
+         */
+        nextStep = await FRAuth.resume(resumeUrl, options);
+      } else if (prevStep) {
+        // If continuing on a tree remove it from the options
+        options.tree = undefined;
+
+        /**
+         * Initial attempt to retrieve next step
+         */
+        nextStep = await FRAuth.next(prevStep as FRStep, options);
+      } else {
+        nextStep = await FRAuth.next(undefined, options);
+      }
     } catch (err) {
       console.error(`Next step request | ${err}`);
 
@@ -213,6 +228,14 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
   }
 
+  async function resume(url: string, resumeOptions?: StepOptions) {
+    await next(undefined, resumeOptions, url);
+  }
+
+  async function start(startOptions?: StepOptions) {
+    await next(undefined, startOptions);
+  }
+
   function reset() {
     set({
       completed: false,
@@ -227,6 +250,8 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
   return {
     next,
     reset,
+    resume,
+    start,
     subscribe,
   };
 }

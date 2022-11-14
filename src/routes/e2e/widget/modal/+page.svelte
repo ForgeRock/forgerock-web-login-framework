@@ -4,7 +4,10 @@
 
   import Widget, { modal, journey, user } from '$package/modal';
 
+  let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
+  let suspendedIdParam = $page.url.searchParams.get('suspendedId');
+
   // TODO: Use a more specific type
   let userResponse: any | null;
   let widget: Widget;
@@ -58,7 +61,6 @@
             timeout: 5000,
           },
           realmPath: 'alpha',
-          tree: journeyParam || 'Login',
         },
         content,
         links: {
@@ -89,7 +91,14 @@
     </ul>
     <button on:click={logout}>Logout</button>
   {:else}
-    <button on:click={() => modal.open()}>Open Login Modal</button>
+    <button
+      on:click={() =>
+        modal.open({
+          journey: journeyParam || authIndexValue || undefined,
+          resumeUrl: suspendedIdParam ? location.href : undefined,
+        })}>
+      Open Login Modal
+    </button>
   {/if}
 </div>
 <div bind:this={widgetEl} />

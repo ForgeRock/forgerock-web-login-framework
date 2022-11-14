@@ -35,6 +35,8 @@ export interface CallbackMetadata {
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
   next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
   reset: () => void;
+  resume: (url: string, resumeOptions?: StepOptions) => void;
+  start: (startOptions?: StepOptions) => void;
 }
 export interface JourneyStoreValue {
   completed: boolean;

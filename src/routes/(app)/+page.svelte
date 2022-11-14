@@ -2,23 +2,26 @@
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
 
-  let journeyParam = $page.url.searchParams.get('journey');
-
   import Box from '$components/primitives/box/centered.svelte';
   import Journey from '$journey/journey.svelte';
   import { initialize as initializeJourney } from '$journey/journey.store';
-  import type { JourneyStore } from '$journey/journey.interfaces';
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOAuth, type OAuthStore } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser, type UserStore } from '$lib/user/user.store';
   import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
 
+  import type { JourneyStore } from '$journey/journey.interfaces';
+
   /** @type {import('./$types').PageData} */
   export let data;
 
-  let journeyStore: JourneyStore = initializeJourney({ tree: journeyParam || 'Login' });
-  let oauthStore: OAuthStore = initializeOAuth();
-  let userStore: UserStore = initializeUser();
+  const authIndexValue = $page.url.searchParams.get('authIndexValue');
+  const journeyParam = $page.url.searchParams.get('journey');
+  const suspendedIdParam = $page.url.searchParams.get('suspendedId');
+
+  const journeyStore: JourneyStore = initializeJourney();
+  const oauthStore: OAuthStore = initializeOAuth();
+  const userStore: UserStore = initializeUser();
 
   let name = '';
 
@@ -42,7 +45,9 @@
     userStore.reset();
 
     // Fetch fresh journey step
-    journeyStore.next();
+    journeyStore.start({
+      tree: journeyParam || authIndexValue || undefined,
+    });
   }
 
   /**
@@ -52,7 +57,13 @@
 
   // Use if not initializing journey in a "context module"
   onMount(async () => {
-    journeyStore.next();
+    if (suspendedIdParam) {
+      journeyStore.resume(location.href);
+    } else {
+      journeyStore.start({
+        tree: journeyParam || authIndexValue || undefined,
+      });
+    }
   });
 
   $: {
