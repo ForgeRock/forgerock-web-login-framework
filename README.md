@@ -641,8 +641,8 @@ modal.onClose((event) => {
 
 ### Technical requirements
 
-1. Node.js v16 or higher
-2. npm v8 or higher
+1. Node.js v16
+2. npm v8
 
 ### Knowledge requirements
 
@@ -651,7 +651,7 @@ modal.onClose((event) => {
 3. Tailwind
 4. ES Modules
 
-### Instal, build & run
+### Install, build & run
 
 1. `npm install` (or simply `npm i`)
 2. `npm run build`
