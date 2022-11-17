@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { modal, journey, user } from '$package/modal';
+  import Widget, { modal, journey, user } from '$package/modal.svelte';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -96,7 +96,8 @@
         modal.open({
           journey: journeyParam || authIndexValue || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
-        })}>
+        })}
+    >
       Open Login Modal
     </button>
   {/if}

@@ -82,3 +82,21 @@ jobs:
           header: lighthouse
           message: |
             ${{ steps.lighthouse_result.outputs.comment }}
+  e2e:
+    needs: additional
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [16.x, 18.x]
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+      - name: install dependencies
+        run: npm ci
+      - name: install playwright browsers
+        run: npx playwright install --with-deps
+      - name: E2E
+        run: npm run ci:e2e
+        env:
+          DEBUG: pw:api
+          PLAYWRIGHT_TEST_BASE_URL: "https://preview-pr-${{ github.event.number }}-ryanbas21.cloud.okteto.net/"

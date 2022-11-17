@@ -12,7 +12,7 @@
 
   <meta charset="utf-8" />
   <title>Login Application</title>
-  <link rel="icon" href="/favicon.ico" />
+  <link rel="icon" href="/favicon.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>

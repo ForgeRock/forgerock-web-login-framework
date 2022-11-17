@@ -7,7 +7,7 @@ jobs:
   pr:
     strategy:
       matrix:
-        node: [16.x]
+        node: [16.x, 18.x]
         os: [macos-latest, ubuntu-latest] #, windows-latest]
     runs-on: ${{ matrix.os }}
     steps:
@@ -20,11 +20,7 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: 'npm'
       - run: npm ci
-      - run: npm install -g @lhci/cli@0.8.x
       - run: npm run build
-      - run: npx playwright install  --with-deps
-      - name: E2E
-        run: npm run ci:e2e
       - name: Publish to Chromatic
         if: ${{ matrix.os == 'ubuntu-latest' }}
         uses: chromaui/action@v1

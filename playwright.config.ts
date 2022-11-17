@@ -1,12 +1,13 @@
 /** @type {import('@playwright/test').PlaywrightTestConfig} */
-import { devices } from '@playwright/test';
+import { devices, PlaywrightTestConfig } from '@playwright/test';
 
-const url = 'https://localhost:3000';
-const config = {
+const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'https://localhost:3000';
+const config: PlaywrightTestConfig = {
   webServer: {
     command: 'npm run preview',
     ignoreHTTPSErrors: true,
     url,
+    reuseExistingServer: !process.env.CI
   },
   use: {
     headless: !!process.env.CI,
@@ -14,7 +15,7 @@ const config = {
     ignoreHTTPSErrors: true,
   },
   forbidOnly: !!process.env.CI,
-  workers: process.env.CI ? 2 : 4,
+  workers: process.env.CI ? 1 : 0,
   testDir: 'tests',
   timeout: 120 * 1000,
   projects: [
