@@ -21,6 +21,7 @@ These are end-to-end tests that cannot be automated and must be manually tested.
 #### Please manually test the following
 
 1. Journey continuation feature (e.g. Email Suspend Node) requires manual testing due to the randomly generated code sent to email which cannot be automated at this time.
+2. Social authentication feature requires manual testing due to the use of accounts and credentials for external services, which cannot be automated.
 
 ## Troubleshooting
 
