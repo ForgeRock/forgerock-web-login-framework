@@ -30,7 +30,7 @@ export default {
   output: {
     entryFileNames: (chunkInfo) => {
       // Don't include `svelte` in filename
-      return `${chunkInfo.name}.js`;
+      return `${chunkInfo.name.replace('.svelte', '')}.js`;
     },
     compact: true,
     dir: 'package/',

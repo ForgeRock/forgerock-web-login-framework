@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { modal, journey, user } from '$package/modal.svelte';
+  import Widget, { modal, journey, user } from '$package/modal';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');

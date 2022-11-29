@@ -99,4 +99,4 @@ jobs:
         run: npm run ci:e2e
         env:
           DEBUG: pw:api
-          PLAYWRIGHT_TEST_BASE_URL: "https://preview-pr-${{ github.event.number }}-ryanbas21.cloud.okteto.net/"
+          PLAYWRIGHT_TEST_BASE_URL: "https://preview-pr-${{ github.event.number }}-ryanbas21.cloud.okteto.net"

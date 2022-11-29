@@ -3,19 +3,21 @@ import { devices, PlaywrightTestConfig } from '@playwright/test';
 
 const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'https://localhost:3000';
 const config: PlaywrightTestConfig = {
-  webServer: {
+  webServer: process.env.CI ? null : {
     command: 'npm run preview',
-    ignoreHTTPSErrors: true,
     url,
-    reuseExistingServer: !process.env.CI
+    ignoreHTTPSErrors: true,
+    reuseExistingServer: true
   },
   use: {
     headless: !!process.env.CI,
     baseURL: `${url}/e2e/`,
     ignoreHTTPSErrors: true,
+    trace: 'on'
   },
+  retries: process.env.CI ? 2 : 0,
   forbidOnly: !!process.env.CI,
-  workers: process.env.CI ? 1 : 0,
+  workers: process.env.CI ? 1 : undefined,
   testDir: 'tests',
   timeout: 120 * 1000,
   projects: [

@@ -9,10 +9,15 @@ test('2step login with access', async ({ page }) => {
 
   // this is for the start page not for the app
   await page.keyboard.press('Tab');
-  await page.keyboard.press('Enter')
-  // Add just a bit of a delay to ensure dialog responds
+  await Promise.all([
+    // this event triggers the request
+    page.keyboard.press('Enter'),
+    // regex to match, made it this way to match on a future am url that may have some different domain
+    // its a bit ugly but i went through regex101 and this should do the trick for at least this 
+    // characater sequence.
+    page.waitForResponse(/^(.*?)\/am\/json\/realms\/root\/realms\/alpha\/authenticate(.*)/gm)
+  ]);
 
-  await page.waitForTimeout(1000);
   expect(await dialog.isVisible()).toBeTruthy();
 
 
