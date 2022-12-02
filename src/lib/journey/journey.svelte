@@ -15,6 +15,11 @@
 
   let alertNeedsFocus = false;
 
+  function changeJourneys(journey: string) {
+    journeyStore?.reset();
+    journeyStore?.start({ tree: journey });
+  }
+
   function submitForm() {
     // Get next step, passing previous step with new data
     journeyStore?.next($journeyStore.step);
@@ -37,9 +42,10 @@
   {:else if $journeyStore.step.type === StepType.Step}
     <svelte:component
       this={mapStepToStage($journeyStore.step)}
+      {changeJourneys}
+      bind:formEl
       {displayIcon}
       failureMessage={$journeyStore.error?.message}
-      bind:formEl
       loading={$journeyStore.loading}
       {submitForm}
       step={$journeyStore.step}

@@ -3,12 +3,41 @@ import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces'
 import { writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
-import type { JourneyStore, JourneyStoreValue, StepTypes } from './journey.interfaces';
+import type { JourneyStore, JourneyStoreValue, StackObject, StackStore, StepTypes } from './journey.interfaces';
 import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
   shouldPopulateWithPreviousCallbacks,
 } from './_utilities/step.utilities';
+
+export function stack(journeyObj: StackObject): StackStore {
+  const { update, set, subscribe }: Writable<StackObject[]> = writable([journeyObj]);
+
+  return {
+    pop: () => {
+      update((current) => {
+        if (current.length) {
+          return current.slice(0, -1);
+        } else {
+          return current;
+        }
+      });
+    },
+    push: (newJourney: StackObject) => {
+      update((current) => {
+        if (newJourney.key !== current[current.length - 1]?.key) {
+          return [ ...current, newJourney ];
+        } else {
+          return current;
+        }
+    });
+    },
+    reset: () => {
+      set([]);
+    },
+    subscribe,
+  };
+}
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const { set, subscribe }: Writable<JourneyStoreValue> = writable({
@@ -18,6 +47,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     step: null,
     successful: false,
     response: null,
+  });
+  const { push } = stack({
+    journey: initOptions?.tree,
+    key: initOptions?.tree || 'default'
   });
 
   let stepNumber = 0;
@@ -51,6 +84,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       step: prevStep,
       successful: false,
       response: null,
+    });
+    push({
+      journey: initOptions?.tree,
+      key: initOptions?.tree || 'default'
     });
 
     try {
@@ -254,4 +291,4 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     start,
     subscribe,
   };
-}
+};

@@ -1,7 +1,6 @@
 import type { FRStep, FRLoginFailure, FRLoginSuccess } from '@forgerock/javascript-sdk';
 import type { Step, StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
 import type { Writable } from 'svelte/store';
-
 import type { Maybe } from '$lib/interfaces';
 
 // type Callbacks = CallbackType.BooleanAttributeInputCallback
@@ -50,6 +49,15 @@ export interface JourneyStoreValue {
   step: StepTypes;
   successful: boolean;
   response: Maybe<Step>;
+}
+export interface StackStore extends Pick<Writable<StackObject[]>, 'subscribe'> {
+  pop: () => void;
+  push: (obj: StackObject) => void;
+  reset: () => void;
+}
+export interface StackObject {
+  journey: Maybe<string>;
+  key: string;
 }
 export interface StepMetadata {
   isUserInputOptional: boolean;

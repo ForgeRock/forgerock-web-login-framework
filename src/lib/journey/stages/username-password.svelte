@@ -20,6 +20,7 @@
   import type { Maybe } from '$lib/interfaces';
   import type { CallbackMetadata, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
 
+  export let changeJourneys: (journey: string) => void;
   export let displayIcon: boolean;
   export let failureMessage: Maybe<string>;
   export let formEl: HTMLFormElement | null = null;
@@ -87,6 +88,14 @@
       <T key="loginButton" />
     </Button>
   {/if}
+
+  <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
+    <button on:click|preventDefault={() => { changeJourneys('ResetPassword') }}>
+      Forgot Password?
+    </button>
+  </p>
+
+  <hr />
 
   <p
     class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
