@@ -2,11 +2,13 @@ import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
 test('modal widget', async ({ page }) => {
-  await page.goto('widget/modal?journey=Registration');
+  await page.goto('widget/modal?journey=Registration', { waitUntil: "networkidle" });
 
   const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
 
   await loginButton.click();
+
+  await page.waitForEvent("requestfinished");
 
   await page.fill('text="Username"', uuid());
   await page.fill('text=First Name', 'Demo');

@@ -96,7 +96,8 @@
         modal.open({
           journey: journeyParam || authIndexValue || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
-        })}>
+        })}
+    >
       Open Login Modal
     </button>
   {/if}

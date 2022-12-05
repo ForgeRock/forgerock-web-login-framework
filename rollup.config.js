@@ -8,12 +8,11 @@ import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
 import resolve from '@rollup/plugin-node-resolve';
 import svelte from 'rollup-plugin-svelte';
-import { terser } from 'rollup-plugin-terser';
+import terser from '@rollup/plugin-terser';
 import typescript from '@rollup/plugin-typescript';
 import preprocess from 'svelte-preprocess';
 import tailwindcss from 'tailwindcss';
-
-import aliases from './alias.config';
+import aliases from './alias.config.js';
 
 const production = !process.env.ROLLUP_WATCH;
 
@@ -31,7 +30,7 @@ export default {
   output: {
     entryFileNames: (chunkInfo) => {
       // Don't include `svelte` in filename
-      return `${chunkInfo.name}.js`;
+      return `${chunkInfo.name.replace('.svelte', '')}.js`;
     },
     compact: true,
     dir: 'package/',

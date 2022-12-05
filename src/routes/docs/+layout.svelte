@@ -1,6 +1,6 @@
 <script>
-  import TopNav from "./top-nav.svelte";
-  import SideNav from "./side-nav.svelte";
+  import TopNav from './top-nav.svelte';
+  import SideNav from './side-nav.svelte';
 </script>
 
 <svelte:head>
@@ -102,15 +102,15 @@
       --typography-spacing-vertical: 1.3rem;
     }
 
-    [data-theme=light],
-    :root:not([data-theme=dark]) {
+    [data-theme='light'],
+    :root:not([data-theme='dark']) {
       --code-background-color: hsl(205deg, 20%, 94%);
       --muted-color: hsl(205deg, 10%, 30%);
       --primary: hsl(195deg, 85%, 21%);
     }
 
     @media only screen and (prefers-color-scheme: dark) {
-      :root:not([data-theme=light]) {
+      :root:not([data-theme='light']) {
         --code-background-color: #090d10;
         --muted-color: hsl(205deg, 10%, 70%);
         --primary: hsl(195deg, 85%, 81%);
@@ -144,9 +144,7 @@
 
 <slot />
 
-<footer class="container">
-  &copy; Copyright 2020 ForgeRock AS. All Rights Reserved.
-</footer>
+<footer class="container">&copy; Copyright 2020 ForgeRock AS. All Rights Reserved.</footer>
 
 <style>
   footer {

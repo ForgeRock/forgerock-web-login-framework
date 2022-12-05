@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('modal widget accessibility', async ({ page }) => {
-  await page.goto('widget/modal');
+  await page.goto('widget/modal', { waitUntil: "networkidle" });
 
   const dialog = page.locator('dialog');
   expect(await dialog.isVisible()).toBeFalsy();

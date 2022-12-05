@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test.use({ locale: 'fr-CA' });
 test('inline widget in Canadian French', async ({ page }) => {
-  await page.goto('widget/inline');
+  await page.goto('widget/inline', { waitUntil: 'networkidle' });
 
   await page.fill('text="Nom d\'utilisateur"', 'demouser');
   await page.fill('text=Mot de passe', 'j56eKtae*1');
