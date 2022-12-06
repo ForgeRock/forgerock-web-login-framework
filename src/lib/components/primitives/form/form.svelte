@@ -80,7 +80,6 @@
   }
 
   $: {
-    console.log('Form has been updated.');
     if (needsFocus) {
       formEl && formEl.focus();
     }

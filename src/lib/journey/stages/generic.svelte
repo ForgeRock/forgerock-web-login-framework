@@ -1,6 +1,6 @@
 <script lang="ts">
   import { FRAuth, type FRCallback } from '@forgerock/javascript-sdk';
-  import { afterUpdate } from 'svelte';
+  import { afterUpdate, onMount } from 'svelte';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -22,15 +22,15 @@
   import { style } from '$lib/style.store';
 
   // Types
-  import type { Maybe } from '$lib/interfaces';
-  import type { CallbackMetadata, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
+  import type { CallbackMetadata, StageFormObject, StageJourneyObject, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
+  import BackTo from './_utilities/back-to.svelte';
+  import { captureLinks } from './_utilities/stage.utilities';
 
-  export let displayIcon: boolean;
-  export let failureMessage: Maybe<string>;
+ // New API
+  export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
-  export let loading: boolean;
+  export let journey: StageJourneyObject;
   export let step: WidgetStep;
-  export let submitForm: () => void;
 
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
@@ -39,9 +39,10 @@
   let alertNeedsFocus = false;
   let callbackMetadataArray: CallbackMetadata[] = [];
   let checkValidation: (callback: FRCallback) => boolean;
-  let failureMessageKey = '';
+  let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
+  let linkWrapper: HTMLElement;
   let stepMetadata: StepMetadata;
 
   function determineSubmission() {
@@ -57,11 +58,11 @@
     alertNeedsFocus = false;
     formNeedsFocus = false;
 
-    submitForm();
+    form?.submit();
   }
 
   afterUpdate(() => {
-    if (failureMessage) {
+    if (form?.message) {
       formAriaDescriptor = formFailureMessageId;
       alertNeedsFocus = true;
       formNeedsFocus = false;
@@ -72,13 +73,14 @@
     }
   });
 
+  onMount(() => captureLinks(linkWrapper, journey));
+
   $: {
     shouldRedirectFromStep(step) && FRAuth.redirect(step);
-    console.log(formNeedsFocus);
     checkValidation = initCheckValidation();
     callbackMetadataArray = buildCallbackMetadata(step, checkValidation);
     stepMetadata = buildStepMetadata(callbackMetadataArray);
-    failureMessageKey = convertStringToKey(failureMessage);
+    formMessageKey = convertStringToKey(form?.message);
   }
 </script>
 
@@ -89,12 +91,12 @@
   needsFocus={formNeedsFocus}
   onSubmitWhenValid={submitFormWrapper}
 >
-  {#if displayIcon}
+  {#if form?.icon}
     <div class="tw_flex tw_justify-center">
       <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
   {/if}
-  <header id={formHeaderId}>
+  <header bind:this={linkWrapper} id={formHeaderId}>
     <h1 class="tw_primary-header dark:tw_primary-header_dark">
       <Sanitize html={true} string={step?.getHeader() || ''} />
     </h1>
@@ -105,9 +107,9 @@
     </p>
   </header>
 
-  {#if failureMessage}
+  {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
-      {interpolate(failureMessageKey, null, failureMessage)}
+      {interpolate(formMessageKey, null, form?.message)}
     </Alert>
   {/if}
 
@@ -124,8 +126,10 @@
   {/each}
 
   {#if stepMetadata.isUserInputOptional || !stepMetadata.isStepSelfSubmittable}
-    <Button busy={loading} style="primary" type="submit" width="full">
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="nextButton" />
     </Button>
   {/if}
+
+  <BackTo {journey} />
 </Form>

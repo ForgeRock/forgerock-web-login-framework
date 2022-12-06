@@ -166,22 +166,28 @@
   import Journey from '$journey/journey.svelte';
 
   // Import the stores for initialization
-  import configure, { type partialConfigSchema } from '$lib/config';
+  import configure from '$lib/sdk.config';
+  import { initialize as initializeJourneys } from '$journey/config.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
-  import { initialize as initializeContent, partialStringsSchema } from '$lib/locale.store';
+  import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeLinks, partialLinksSchema } from '$lib/links.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
   import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
+import type { partialConfigSchema } from '$lib/sdk.config';
+import type { partialJourneysSchema } from '$journey/config.store';
+  import type { partialStringsSchema } from '$lib/locale.store';
+
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
+  export let journeys: z.infer<typeof partialJourneysSchema>;
   export let links: z.infer<typeof partialLinksSchema>;
   export let style: Style;
 
   const dispatch = createEventDispatcher();
 
-  // A refernce to the `form` DOM element
+  // A reference to the `form` DOM element
   let formEl: HTMLFormElement;
 
   // Set base config to SDK
@@ -198,7 +204,6 @@
       redirectUri:
         typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
       scope: 'openid email',
-      tree: 'Login',
     },
     // Let user provided config override defaults
     ...config,
@@ -215,6 +220,7 @@
   let _userStore = (userStore = initializeUser(config));
 
   initializeContent(content);
+  initializeJourneys(journeys);
   initializeLinks(links);
   initializeStyle(style);
 

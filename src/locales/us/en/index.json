@@ -1,5 +1,7 @@
 {
   "alreadyHaveAnAccount": "Already have an account? <a href='/'>Sign in here!</a>",
+  "backToDefault": "Back to Sign In",
+  "backToLogin": "Back to Sign In",
   "dontHaveAnAccount": "No account? <a href='/register'>Register here!</a>",
   "closeModal": "Close",
   "chooseDifferentUsername": "Please choose a different username.",
@@ -12,6 +14,8 @@
   "exceedsMaximumCharacterLength": "Exceeds maximum of {max} characters",
   "fieldCanNotContainFollowingCharacters": "Cannot contain these character(s): {chars}",
   "fieldCanNotContainFollowingValues": "Cannot contain these value(s): {fields}",
+  "forgotPassword": "Forgot password?",
+  "forgotUsername": "Forgot username?",
   "givenName": "First name",
   "inputRequiredError": "Value is required",
   "loading": "Loading ...",

@@ -34,10 +34,24 @@ export interface CallbackMetadata {
 }
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
   next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
+  pop: () => void;
+  push: (changeOptions: StepOptions) => void;
   reset: () => void;
   resume: (url: string, resumeOptions?: StepOptions) => void;
   start: (startOptions?: StepOptions) => void;
 }
+export interface StageFormObject {
+  icon: boolean;
+  message: string;
+  status: string;
+  submit: () => void;
+};
+export interface StageJourneyObject {
+  loading: boolean;
+  pop: () => void;
+  push: (options: StepOptions) => void;
+  stack: StackStore;
+};
 export interface JourneyStoreValue {
   completed: boolean;
   error: Maybe<{
@@ -50,14 +64,10 @@ export interface JourneyStoreValue {
   successful: boolean;
   response: Maybe<Step>;
 }
-export interface StackStore extends Pick<Writable<StackObject[]>, 'subscribe'> {
-  pop: () => void;
-  push: (obj: StackObject) => void;
+export interface StackStore extends Pick<Writable<StepOptions[]>, 'subscribe'> {
+  pop: () => Promise<StepOptions[]>;
+  push: (options?: StepOptions) => Promise<StepOptions[]>;
   reset: () => void;
-}
-export interface StackObject {
-  journey: Maybe<string>;
-  key: string;
 }
 export interface StepMetadata {
   isUserInputOptional: boolean;

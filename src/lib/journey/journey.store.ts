@@ -3,40 +3,59 @@ import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces'
 import { writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
-import type { JourneyStore, JourneyStoreValue, StackObject, StackStore, StepTypes } from './journey.interfaces';
+import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
 import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
   shouldPopulateWithPreviousCallbacks,
 } from './_utilities/step.utilities';
 
-export function stack(journeyObj: StackObject): StackStore {
-  const { update, set, subscribe }: Writable<StackObject[]> = writable([journeyObj]);
+function initializeStack(initOptions?: StepOptions) {
+  const initialValue = initOptions ? [initOptions] : [];
+  const { update, set, subscribe }: Writable<StepOptions[]> = writable(initialValue);
 
-  return {
-    pop: () => {
-      update((current) => {
-        if (current.length) {
-          return current.slice(0, -1);
-        } else {
-          return current;
-        }
+  // Assign to exported variable (see bottom of file)
+  stack = {
+    pop: async (): Promise<StepOptions[]> => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+          if (current.length) {
+            state = current.slice(0, -1);
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
       });
     },
-    push: (newJourney: StackObject) => {
-      update((current) => {
-        if (newJourney.key !== current[current.length - 1]?.key) {
-          return [ ...current, newJourney ];
-        } else {
-          return current;
-        }
-    });
+    push: async (options?: StepOptions): Promise<StepOptions[]> => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+
+          console.log(options);
+
+          if (!current.length) {
+            state = [ { ...options } ];
+          } else if (options && options?.tree !== current[current.length - 1]?.tree) {
+            state = [ ...current, options ];
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
+      });
     },
     reset: () => {
       set([]);
     },
     subscribe,
   };
+
+  return stack;
 }
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
@@ -48,10 +67,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     successful: false,
     response: null,
   });
-  const { push } = stack({
-    journey: initOptions?.tree,
-    key: initOptions?.tree || 'default'
-  });
+  const stack = initializeStack();
 
   let stepNumber = 0;
 
@@ -84,10 +100,6 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       step: prevStep,
       successful: false,
       response: null,
-    });
-    push({
-      journey: initOptions?.tree,
-      key: initOptions?.tree || 'default'
     });
 
     try {
@@ -265,11 +277,25 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
   }
 
+  async function pop() {
+    reset();
+    const updatedStack = await stack.pop();
+    const currentJourney = updatedStack[updatedStack.length - 1];
+    await start(currentJourney);
+  }
+
+  async function push(newOptions: StepOptions) {
+    reset();
+    await stack.push(newOptions);
+    await start(newOptions);
+  }
+
   async function resume(url: string, resumeOptions?: StepOptions) {
     await next(undefined, resumeOptions, url);
   }
 
   async function start(startOptions?: StepOptions) {
+    await stack.push(startOptions);
     await next(undefined, startOptions);
   }
 
@@ -286,9 +312,13 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
   return {
     next,
+    pop,
+    push,
     reset,
     resume,
     start,
     subscribe,
   };
 };
+
+export let stack: StackStore;

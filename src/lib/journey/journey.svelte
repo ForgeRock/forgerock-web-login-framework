@@ -3,22 +3,19 @@
 
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
+  import { stack } from '$journey/journey.store';
   import T from '$components/_utilities/locale-strings.svelte';
-  import type { JourneyStore } from '$journey/journey.interfaces';
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import { StepType } from '@forgerock/javascript-sdk';
+
+  import type { JourneyStore } from '$journey/journey.interfaces';
 
   export let displayIcon: boolean;
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;
 
   let alertNeedsFocus = false;
-
-  function changeJourneys(journey: string) {
-    journeyStore?.reset();
-    journeyStore?.start({ tree: journey });
-  }
 
   function submitForm() {
     // Get next step, passing previous step with new data
@@ -32,6 +29,10 @@
   afterUpdate(() => {
     alertNeedsFocus = !$journeyStore.successful;
   });
+
+  $: {
+    console.log($stack);
+  }
 </script>
 
 {#if !$journeyStore?.completed}
@@ -42,12 +43,19 @@
   {:else if $journeyStore.step.type === StepType.Step}
     <svelte:component
       this={mapStepToStage($journeyStore.step)}
-      {changeJourneys}
       bind:formEl
-      {displayIcon}
-      failureMessage={$journeyStore.error?.message}
-      loading={$journeyStore.loading}
-      {submitForm}
+      form={{
+        icon: displayIcon,
+        message: $journeyStore.error?.message || '',
+        status: $journeyStore.error?.code ? 'error' : 'ok',
+        submit: submitForm,
+      }}
+      journey={{
+        loading: $journeyStore.loading,
+        pop: journeyStore.pop,
+        push: journeyStore.push,
+        stack,
+      }}
       step={$journeyStore.step}
     />
   {/if}
