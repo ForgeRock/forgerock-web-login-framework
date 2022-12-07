@@ -17,7 +17,7 @@ The widget can be themed quite easily through a [Tailwind configuration file](ht
 Taking advantage of the Widget's light and dark mode is simple. We use [Tailwind's optional `<body>` class](https://tailwindcss.com/docs/dark-mode) to trigger the mode. You can manually add `tw_dark` to the `<body>` element to "force" dark mode.
 
 ```html
-<body class="tw_dark">
+<body class="tw_dark"></body>
 ```
 
 Or, you can programmatically do it like this:
@@ -31,6 +31,7 @@ Or, you can programmatically do it like this:
     }
   </script>
   <!-- Rest of HTML -->
+</body>
 ```
 
 ### Theme configuration
@@ -67,7 +68,6 @@ module.exports = {
     },
   },
 };
-
 ```
 
 ##### Screenshot

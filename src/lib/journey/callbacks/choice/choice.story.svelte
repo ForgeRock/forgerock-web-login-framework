@@ -8,6 +8,7 @@
   export let displayType: 'radio' | 'select' | undefined;
 
   let callbackMetadata = {
+    canForceUserInputOptionality: false,
     isFirstInvalidInput: false,
     isReadyForSubmission: false,
     isSelfSubmitting: false,
@@ -16,6 +17,7 @@
   };
   let stepMetadata = {
     isStepSelfSubmittable: false,
+    isUserInputOptional: false,
     numOfCallbacks: 2,
     numOfSelfSubmittableCbs: 0,
     numOfUserInputCbs: 2,

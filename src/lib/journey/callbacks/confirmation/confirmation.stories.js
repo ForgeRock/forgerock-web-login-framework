@@ -89,7 +89,7 @@ BaseInteraction.args = { ...Base.args };
 BaseInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0];
-  const select = canvas.getByLabelText('Please Confirm');
+  const select = canvas.getByLabelText('Please confirm');
 
   await userEvent.selectOptions(select, '0');
   await expect(cb.getInputValue()).toBe(0);

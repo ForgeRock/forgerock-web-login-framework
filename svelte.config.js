@@ -13,11 +13,11 @@ const config = {
   },
   server: {
     watch: {
-      usePolling: true
-    }
+      usePolling: true,
+    },
   },
   resolve: {
-    alias: aliases
+    alias: aliases,
   },
   // Consult https://github.com/sveltejs/svelte-preprocess
   // for more information about preprocessors

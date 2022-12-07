@@ -18,10 +18,9 @@ export const Base = {
   },
 };
 
-
 const Template = (args) => ({
   Component: Label,
-  props: args
+  props: args,
 });
 export const Interaction = Template.bind({});
 
@@ -29,7 +28,6 @@ Interaction.args = { ...Base.args, inputLabel: 'Username' };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const text = canvas.getByText('Username')
+  const text = canvas.getByText('Username');
   expect(text).toBeInTheDocument();
-}
-
+};

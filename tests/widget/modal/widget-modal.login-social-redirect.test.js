@@ -6,11 +6,8 @@ test('Modal widget with social callback redirect', async ({ page }) => {
   const loginButton = page.getByRole('button', { name: 'Open Login Modal' });
   await loginButton.click();
 
-  const button = await page.locator('button', { hasText: 'Sign in with Google' })
-  await Promise.all([
-    button.click(),
-    page.waitForNavigation()
-  ]);
+  const button = await page.locator('button', { hasText: 'Sign in with Google' });
+  await Promise.all([button.click(), page.waitForNavigation()]);
   expect(page.url()).toContain('accounts.google.com', 'redirect_uri');
 });
 
@@ -20,7 +17,7 @@ test('Modal widget with social callback redirect no local auth', async ({ page }
   const loginButton = page.getByRole('button', { name: 'Open Login Modal' });
   await Promise.all([
     loginButton.click(),
-    page.waitForFunction(() => window.location.origin === 'https://accounts.google.com')
+    page.waitForFunction(() => window.location.origin === 'https://accounts.google.com'),
   ]);
   expect(page.url()).toContain('accounts.google.com', 'redirect_uri');
 });

@@ -28,13 +28,13 @@ export const Error = {
 
 const Template = (args) => ({
   Component: ErrorComponent,
-  props: args
+  props: args,
 });
 export const Interaction = Template.bind({});
 Interaction.args = { ...Base.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const paragraph = canvas.getByText('Please review your input.')
+  const paragraph = canvas.getByText('Please review your input.');
   expect(paragraph).toHaveTextContent('Please review your input.');
-}
+};

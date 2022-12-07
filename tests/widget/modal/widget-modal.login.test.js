@@ -10,8 +10,8 @@ test('modal widget', async ({ page }) => {
   await Promise.all([
     loginButton.click(),
     // Add just a bit of a delay to ensure dialog responds
-    page.waitForEvent('requestfinished')
-  ])
+    page.waitForEvent('requestfinished'),
+  ]);
   expect(await dialog.isVisible()).toBeTruthy();
 
   await page.fill('text="Username"', 'demouser');

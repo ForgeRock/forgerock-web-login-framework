@@ -34,11 +34,9 @@ Interaction.args = { ...Base.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbackOfType(CallbackType.NameCallback)
+  const cb = step.getCallbackOfType(CallbackType.NameCallback);
   const element = canvas.getByRole('textbox');
-  await userEvent.type(element, 'input here')
+  await userEvent.type(element, 'input here');
   await userEvent.tab();
-  expect(cb.getInputValue()).toBe('input here')
-
+  expect(cb.getInputValue()).toBe('input here');
 };
-

@@ -51,17 +51,17 @@ Interaction.play = async ({ canvasElement }) => {
   await userEvent.tab();
 
   expect(select).toHaveFocus();
-  expect(select.value).toEqual("2")
+  expect(select.value).toEqual('2');
 
-  userEvent.selectOptions(select, "1")
-  expect(select.value).toEqual("1")
+  userEvent.selectOptions(select, '1');
+  expect(select.value).toEqual('1');
 
   await expect(cb.getInputValue()).toBe(1);
-  userEvent.selectOptions(select, "0")
+  userEvent.selectOptions(select, '0');
 
-  expect(select.value).toEqual("0")
+  expect(select.value).toEqual('0');
   await new Promise((resolve) => setTimeout(resolve, 1000));
-}
+};
 export const RadioInteraction = Template.bind({});
 
 RadioInteraction.args = { ...Radio.args };
