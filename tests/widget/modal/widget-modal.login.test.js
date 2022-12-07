@@ -7,12 +7,14 @@ test('modal widget', async ({ page }) => {
   const dialog = page.locator('dialog');
   expect(await dialog.isVisible()).toBeFalsy();
 
-  await loginButton.click();
-  // Add just a bit of a delay to ensure dialog responds
-  await page.waitForTimeout(1000);
+  await Promise.all([
+    loginButton.click(),
+    // Add just a bit of a delay to ensure dialog responds
+    page.waitForEvent('requestfinished')
+  ])
   expect(await dialog.isVisible()).toBeTruthy();
 
-  await page.fill('text="User Name"', 'demouser');
+  await page.fill('text="Username"', 'demouser');
   await page.fill('text=Password', 'j56eKtae*1');
   await page.locator('button', { hasText: 'Sign In' }).click();
 

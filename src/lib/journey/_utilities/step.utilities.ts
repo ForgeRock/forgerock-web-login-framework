@@ -4,6 +4,7 @@ import {
   FRLoginFailure,
   FRLoginSuccess,
   StepType,
+  CallbackType,
 } from '@forgerock/javascript-sdk';
 
 export const authIdTimeoutErrorCode = '110';
@@ -53,6 +54,19 @@ export function initCheckValidation() {
     }
     return false;
   };
+}
+
+/**
+ * @function shouldRedirectFromStep -
+ * @returns {boolean}
+ */
+export function shouldRedirectFromStep(step: FRStep) {
+  try {
+    step.getCallbackOfType(CallbackType.RedirectCallback);
+    return true;
+  } catch (e) {
+    return false;
+  }
 }
 
 /**

@@ -26,6 +26,7 @@ import type { Maybe } from '$lib/interfaces';
 // | CallbackType.ValidatedCreateUsernameCallback;
 
 export interface CallbackMetadata {
+  canForceUserInputOptionality: boolean;
   isFirstInvalidInput: boolean;
   isReadyForSubmission: boolean;
   isSelfSubmitting: boolean;
@@ -51,6 +52,7 @@ export interface JourneyStoreValue {
   response: Maybe<Step>;
 }
 export interface StepMetadata {
+  isUserInputOptional: boolean;
   isStepSelfSubmittable: boolean;
   numOfCallbacks: number;
   numOfSelfSubmittableCbs: number;

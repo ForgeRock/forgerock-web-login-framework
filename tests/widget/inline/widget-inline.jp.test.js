@@ -4,7 +4,7 @@ test.use({ locale: 'jp' });
 test('inline widget test fallback to US English with unsupported locale', async ({ page }) => {
   await page.goto('widget/inline');
 
-  await page.fill('text="User Name"', 'demouser');
+  await page.fill('text="Username"', 'demouser');
   await page.fill('text=Password', 'j56eKtae*1');
   await page.locator('button', { hasText: 'Sign In' }).click();
 

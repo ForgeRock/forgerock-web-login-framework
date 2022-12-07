@@ -9,6 +9,8 @@ import KbaCreate from '$journey/callbacks/kba/kba-create.svelte';
 import Name from '$journey/callbacks/username/name.svelte';
 import Password from '$journey/callbacks/password/password.svelte';
 import PollingWait from '$journey/callbacks/polling-wait/polling-wait.svelte';
+import Redirect from '$journey/callbacks/redirect/redirect.svelte';
+import SelectIdp from '$journey/callbacks/select-idp/select-idp.svelte';
 import StringAttributeInput from '$journey/callbacks/string-attribute/string-attribute-input.svelte';
 import TermsConditions from '$journey/callbacks/terms-and-conditions/terms-conditions.svelte';
 import TextOutput from '$journey/callbacks/text-output/text-output.svelte';
@@ -46,6 +48,10 @@ export function mapCallbackToComponent(cb: FRCallback) {
       return Password;
     case CallbackType.PollingWaitCallback:
       return PollingWait;
+    case CallbackType.RedirectCallback:
+      return Redirect;
+    case CallbackType.SelectIdPCallback:
+      return SelectIdp;
     case CallbackType.StringAttributeInputCallback:
       return StringAttributeInput;
     case CallbackType.ValidatedCreatePasswordCallback:

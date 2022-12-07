@@ -11,11 +11,13 @@
   import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
+  import { goto } from '$app/navigation';
 
   /** @type {import('./$types').PageData} */
   export let data;
 
   const authIndexValue = $page.url.searchParams.get('authIndexValue');
+  const formPostEntryParam = $page.url.searchParams.get('form_post_entry');
   const journeyParam = $page.url.searchParams.get('journey');
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
@@ -57,8 +59,9 @@
 
   // Use if not initializing journey in a "context module"
   onMount(async () => {
-    if (suspendedIdParam) {
+    if (suspendedIdParam || formPostEntryParam) {
       journeyStore.resume(location.href);
+      goto('/', { replaceState: true });
     } else {
       journeyStore.start({
         tree: journeyParam || authIndexValue || undefined,

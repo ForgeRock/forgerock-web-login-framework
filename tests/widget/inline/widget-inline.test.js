@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('inline widget', async ({ page }) => {
   await page.goto('widget/inline');
 
-  await page.fill('text="User Name"', 'demouser');
+  await page.fill('text="Username"', 'demouser');
   await page.fill('text=Password', 'j56eKtae*1');
   await page.locator('button', { hasText: 'Sign In' }).click();
 

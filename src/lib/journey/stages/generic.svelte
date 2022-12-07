@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { FRCallback } from '@forgerock/javascript-sdk';
+  import { FRAuth, type FRCallback } from '@forgerock/javascript-sdk';
   import { afterUpdate } from 'svelte';
 
   // i18n
@@ -9,7 +9,11 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey, initCheckValidation } from '$journey/_utilities/step.utilities';
+  import {
+    convertStringToKey,
+    initCheckValidation,
+    shouldRedirectFromStep,
+  } from '$journey/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
@@ -69,6 +73,7 @@
   });
 
   $: {
+    shouldRedirectFromStep(step) && FRAuth.redirect(step);
     console.log(formNeedsFocus);
     checkValidation = initCheckValidation();
     callbackMetadataArray = buildCallbackMetadata(step, checkValidation);
@@ -112,12 +117,13 @@
       {callback}
       callbackMetadata={callbackMetadataArray[idx]}
       selfSubmitFunction={determineSubmission}
+      {step}
       stepMetadata={{ ...stepMetadata }}
       style={$style}
     />
   {/each}
 
-  {#if !stepMetadata.isStepSelfSubmittable}
+  {#if stepMetadata.isUserInputOptional || !stepMetadata.isStepSelfSubmittable}
     <Button busy={loading} style="primary" type="submit" width="full">
       <T key="nextButton" />
     </Button>

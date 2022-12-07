@@ -6,7 +6,7 @@ test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
   await loginButton.click();
 
-  await page.fill('text="User Name"', 'demouser');
+  await page.fill('text="Username"', 'demouser');
   await page.locator('button', { hasText: 'Next' }).click();
 
   await page.fill('text=Password', 'j56eKtae*1');
@@ -19,11 +19,13 @@ test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   // Choice
   const selectEl = page.getByLabel('Are you sure?');
   await selectEl.selectOption('0');
-  await page.locator('button', { hasText: 'Next' }).click();
+  await Promise.all([
+    page.locator('button', { hasText: 'Next' }).click(),
 
-  // Polling Wait
-  // NOTE: Make sure timer is same or more than set in Polling Wait node
-  await page.waitForTimeout(3000);
+    // Polling Wait
+    // NOTE: Make sure timer is same or more than set in Polling Wait node
+    page.waitForTimeout(3000),
+  ])
 
   const fullName = page.locator('#fullName');
   const email = page.locator('#email');
