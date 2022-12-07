@@ -13,8 +13,11 @@
     const currentJourney = $configuredJourneys.find((journey) => {
       return journey.journey === $stack[$stack.length - 2]?.tree;
     });
-    const key = currentJourney?.key.replace(/([a-z])/, (_, char) => `${char.toUpperCase()}`);
-    return `backTo${key || 'Default'}`;
+
+    const key = currentJourney?.key;
+    const capitalizedKey =
+      typeof key === 'string' ? key.replace(/([a-z])/, (_, char) => `${char.toUpperCase()}`) : key;
+    return `backTo${capitalizedKey || 'Default'}`;
   }
 
   $: {

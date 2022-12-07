@@ -45,13 +45,13 @@ export interface StageFormObject {
   message: string;
   status: string;
   submit: () => void;
-};
+}
 export interface StageJourneyObject {
   loading: boolean;
   pop: () => void;
   push: (options: StepOptions) => void;
   stack: StackStore;
-};
+}
 export interface JourneyStoreValue {
   completed: boolean;
   error: Maybe<{

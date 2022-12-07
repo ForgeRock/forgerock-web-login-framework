@@ -17,7 +17,13 @@
   import { style } from '$lib/style.store';
 
   // Types
-  import type { CallbackMetadata, StageFormObject, StageJourneyObject, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    WidgetStep,
+  } from '$journey/journey.interfaces';
   import { captureLinks } from './_utilities/stage.utilities';
 
   // New API
@@ -91,16 +97,24 @@
   {/if}
 
   <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
-    <button on:click|preventDefault={() => { journey.push({ tree: 'ResetPassword' })}}>
+    <button
+      on:click|preventDefault={() => {
+        journey.push({ tree: 'ResetPassword' });
+      }}
+    >
       {interpolate('forgotPassword', null, 'Forgot Password?')}
     </button>
     &nbsp;
-    <button on:click|preventDefault={() => { journey.push({ tree: 'ForgottenUsername' })}}>
+    <button
+      on:click|preventDefault={() => {
+        journey.push({ tree: 'ForgottenUsername' });
+      }}
+    >
       {interpolate('forgotUsername', null, 'Forgot Username?')}
     </button>
   </p>
 
-  <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark"/>
+  <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
 
   <p
     bind:this={linkWrapper}

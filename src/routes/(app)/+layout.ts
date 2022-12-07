@@ -1,4 +1,5 @@
-import configure, { initialize as initializeJourneys } from '$lib/sdk.config';
+import configure from '$lib/sdk.config';
+import { initialize as initializeJourneys } from '$journey/config.store';
 import { initialize as initializeLinks } from '$lib/links.store';
 
 import '../../app.css';

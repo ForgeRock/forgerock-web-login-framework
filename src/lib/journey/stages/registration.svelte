@@ -16,10 +16,16 @@
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import { style } from '$lib/style.store';
 
-  import type { CallbackMetadata, StageFormObject, StageJourneyObject, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    WidgetStep,
+  } from '$journey/journey.interfaces';
   import { captureLinks } from './_utilities/stage.utilities';
 
-   // New API
+  // New API
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;

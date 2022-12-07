@@ -13,7 +13,7 @@ test('modal widget', async ({ page }) => {
   await page.fill('text="Username"', uuid());
   await page.fill('text=First Name', 'Demo');
   await page.fill('text=Last Name', 'User');
-  await page.fill('text=Email Address', 'demo@user.com');
+  await page.fill('text=Email Address', 'test@auto.com');
   await page.fill('text=Password', 'j56eKtae*1');
   await page.selectOption('select', '0');
   await page.fill('text=Security Answer', 'Red');

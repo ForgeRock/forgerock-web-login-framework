@@ -38,9 +38,9 @@ function initializeStack(initOptions?: StepOptions) {
           console.log(options);
 
           if (!current.length) {
-            state = [ { ...options } ];
+            state = [{ ...options }];
           } else if (options && options?.tree !== current[current.length - 1]?.tree) {
-            state = [ ...current, options ];
+            state = [...current, options];
           } else {
             state = current;
           }
@@ -319,6 +319,6 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     start,
     subscribe,
   };
-};
+}
 
 export let stack: StackStore;

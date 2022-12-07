@@ -22,11 +22,17 @@
   import { style } from '$lib/style.store';
 
   // Types
-  import type { CallbackMetadata, StageFormObject, StageJourneyObject, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    WidgetStep,
+  } from '$journey/journey.interfaces';
   import BackTo from './_utilities/back-to.svelte';
   import { captureLinks } from './_utilities/stage.utilities';
 
- // New API
+  // New API
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;

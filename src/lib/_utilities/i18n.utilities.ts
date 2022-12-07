@@ -120,7 +120,7 @@ export function interpolate(
           return `${name}="${value}"`;
         }
       }
-    }
+    },
   });
 
   return messageClean;

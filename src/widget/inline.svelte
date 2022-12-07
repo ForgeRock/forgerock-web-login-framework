@@ -175,8 +175,8 @@
   import { initialize as initializeUser } from '$lib/user/user.store';
   import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
-import type { partialConfigSchema } from '$lib/sdk.config';
-import type { partialJourneysSchema } from '$journey/config.store';
+  import type { partialConfigSchema } from '$lib/sdk.config';
+  import type { partialJourneysSchema } from '$journey/config.store';
   import type { partialStringsSchema } from '$lib/locale.store';
 
   export let config: z.infer<typeof partialConfigSchema>;

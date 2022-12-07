@@ -29,10 +29,6 @@
   afterUpdate(() => {
     alertNeedsFocus = !$journeyStore.successful;
   });
-
-  $: {
-    console.log($stack);
-  }
 </script>
 
 {#if !$journeyStore?.completed}

@@ -2,7 +2,7 @@ import { readable, type Readable } from 'svelte/store';
 import { z } from 'zod';
 
 export const journeyItemSchema = z.object({
-  journey: z.string(),
+  journey: z.string().optional(),
   key: z.string(),
   match: z.string().array(),
 });
@@ -25,12 +25,12 @@ const defaultJourneys: any = {
   forgotPassword: {
     journey: 'ResetPassword',
     key: 'forgotPassword',
-    match: ['#/service/ResetPassword'],
+    match: ['#/service/ResetPassword', '?journey=ResetPassword'],
   },
   forgotUsername: {
     journey: 'ForgottenUsername',
     key: 'forgotUsername',
-    match: ['#/service/ForgottenUsername'],
+    match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
   },
   login: {
     journey: undefined,
@@ -53,20 +53,16 @@ export function initialize(customJourneys?: any) {
   if (customJourneys) {
     const arr = Object.keys(customJourneys);
     configuredJourneys = readable(
-      arr.map(
-        (key) => {
-          return customJourneys[key];
-        },
-      ),
+      arr.map((key) => {
+        return customJourneys[key];
+      }),
     );
   } else {
     const arr = Object.keys(defaultJourneys);
     configuredJourneys = readable(
-      arr.map(
-        (key) => {
-          return defaultJourneys[key];
-        },
-      ),
+      arr.map((key) => {
+        return defaultJourneys[key];
+      }),
     );
   }
 }

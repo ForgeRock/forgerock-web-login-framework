@@ -1,8 +1,8 @@
 {
-  "alreadyHaveAnAccount": "Already have an account? <a href='/'>Sign in here!</a>",
+  "alreadyHaveAnAccount": "Already have an account? <a href='?journey'>Sign in here!</a>",
   "backToDefault": "Back to Sign In",
   "backToLogin": "Back to Sign In",
-  "dontHaveAnAccount": "No account? <a href='/register'>Register here!</a>",
+  "dontHaveAnAccount": "No account? <a href='?journey=Registration'>Register here!</a>",
   "closeModal": "Close",
   "chooseDifferentUsername": "Please choose a different username.",
   "constraintViolationForPassword": "Password does not meet the requirements.",
