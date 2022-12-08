@@ -1,0 +1,40 @@
+name: Release
+on:
+  push:
+    branches:
+      - main
+      - next
+      - beta
+      - alpha
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+env:
+  GH_TOKEN: ${{ github.token }}
+  NPM_TOKEN: ${{ secrets.NPM_TOKEN }} # Also needs permissions.
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['16.x']
+        os: ['ubuntu-latest']
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          persist-credentials: false # https://semantic-release.gitbook.io/semantic-release/recipes/ci-configurations/github-actions#pushing-package.json-changes-to-a-master-branch
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node }}
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build
+        env:
+          NODE_ENV: production
+      - name: Release
+        run: npx semantic-release

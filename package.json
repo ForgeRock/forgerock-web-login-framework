@@ -1,5 +1,5 @@
 {
-  "name": "forgerock-web-login-framework",
+  "name": "@forgerock/login-framework",
   "version": "0.0.1",
   "scripts": {
     "check": "npm run check:lint && npm run check:svelte",
@@ -11,6 +11,7 @@
     "ci:e2e": "playwright test",
     "ci:e2e:debug": "PWDEBUG=1 playwright test",
     "clean": "git clean -fdX -e \"!.env\"",
+    "commit": "cz",
     "dev": "npm run build:widget && npm run dev:widget | npm run dev:app",
     "dev:app": "vite dev",
     "dev:style": "postcss --watch src/lib/widget/main.css --output package/widget.css",
@@ -20,12 +21,13 @@
     "build:storybook": "build-storybook",
     "build:widget": "rollup -c",
     "format": "prettier --ignore-path .gitignore --write --plugin-search-dir=. .",
-    "package": "svelte-kit package",
+    "package": "svelte-package",
     "preview": "vite preview",
     "storybook": "start-storybook --no-open -p 6006",
     "test": "vitest --dir src",
     "test:e2e": "npm run build && playwright test",
-    "test:storybook": "test-storybook"
+    "test:storybook": "test-storybook",
+    "prepare": "husky install"
   },
   "dependencies": {
     "@forgerock/javascript-sdk": "^3.4.0",
@@ -42,6 +44,13 @@
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-terser": "^0.1.0",
     "@rollup/plugin-typescript": "^9.0.2",
+    "@semantic-release/changelog": "^6.0.2",
+    "@semantic-release/commit-analyzer": "^9.0.2",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^8.0.7",
+    "@semantic-release/npm": "^9.0.1",
+    "@semantic-release/release-notes-generator": "^10.0.3",
     "@storybook/addon-a11y": "^6.5.13",
     "@storybook/addon-actions": "^6.5.13",
     "@storybook/addon-essentials": "^6.5.13",
@@ -57,6 +66,7 @@
     "@sveltejs/adapter-auto": "^1.0.0-next.88",
     "@sveltejs/adapter-node": "^1.0.0-next.100",
     "@sveltejs/kit": "1.0.0-next.551",
+    "@sveltejs/package": "^1.0.0-next.6",
     "@sveltejs/vite-plugin-svelte": "^1.2.0",
     "@types/uuid": "^8.3.4",
     "@typescript-eslint/eslint-plugin": "^5.43.0",
@@ -67,19 +77,22 @@
     "babel-loader": "^9.1.0",
     "chromatic": "^6.11.4",
     "color": "^4.2.3",
+    "commitizen": "^4.2.6",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-storybook": "^0.6.7",
     "eslint-plugin-svelte3": "^4.0.0",
+    "husky": "^8.0.2",
     "jest": "^28.1.3",
     "jest-playwright-preset": "^2.0.0",
+    "lint-staged": "^13.1.0",
     "markdown-toc": "^1.2.0",
     "mdsvex": "^0.10.6",
     "postcss": "^8.4.19",
     "postcss-cli": "^10.0.0",
     "postcss-import": "^15.0.0",
     "prettier": "2.7.1",
-    "prettier-plugin-svelte": "2.8.0",
     "rimraf": "3.0.2",
     "rollup": "^3.3.0",
     "rollup-plugin-postcss": "4.0.2",
@@ -104,5 +117,22 @@
   },
   "volta": {
     "node": "16.18.1"
+  },
+  "lint-staged": {
+    "*.{js,svelte}": "eslint --cache --fix .",
+    "*.{js,css,md,svelte,json}": "prettier --write",
+    "*.svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cerebrl/forgerock-web-login-framework.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }

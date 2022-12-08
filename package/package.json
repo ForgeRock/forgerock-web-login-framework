@@ -1,6 +1,11 @@
 {
-  "name": "forgerock-web-login-widget",
+  "name": "@forgerock/login-widget",
   "version": "0.1.1",
   "type": "module",
+  "exports": {
+    "./inline": "./inline.js",
+    "./modal": "./modal.js"
+  },
+  "files": ["../README.md"],
   "dependencies": {}
 }
