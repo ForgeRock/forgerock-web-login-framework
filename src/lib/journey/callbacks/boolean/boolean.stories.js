@@ -36,18 +36,17 @@ const Template = (args) => ({
 export const Interaction = Template.bind({});
 
 Interaction.args = {
-  ...Base.args
+  ...Base.args,
 };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const check = canvas.getByRole('checkbox')
+  const check = canvas.getByRole('checkbox');
 
   const cb = step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[0];
 
   expect(check).not.toBeChecked();
   check.click();
   expect(check).toBeChecked();
-  expect(cb.getInputValue()).toBe(true)
-}
-
+  expect(cb.getInputValue()).toBe(true);
+};

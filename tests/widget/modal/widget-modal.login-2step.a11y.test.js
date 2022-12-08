@@ -3,7 +3,7 @@ import { expect, test } from '@playwright/test';
 test('2step login with access', async ({ page }) => {
   await page.goto('widget/modal?journey=LoginWithConfirmation', { waitUntil: 'networkidle' });
 
-  const dialog = page.locator('dialog') ;
+  const dialog = page.locator('dialog');
   expect(await dialog.isVisible()).toBeFalsy();
 
   // this is for the start page not for the app

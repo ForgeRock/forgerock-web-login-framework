@@ -56,26 +56,24 @@ const Template = (args) => ({
   props: args,
 });
 
-export const Interaction = Template.bind({})
+export const Interaction = Template.bind({});
 
 Interaction.args = { ...Base.args };
 Interaction.play = async ({ canvasElement }) => {
-
   const canvas = within(canvasElement);
   const red = canvas.getByRole('radio', { name: 'Red' });
   const green = canvas.getByRole('radio', { name: 'Green' });
   const blue = canvas.getByRole('radio', { name: 'Blue' });
 
   await userEvent.tab();
-  expect(red).toHaveFocus()
+  expect(red).toHaveFocus();
   expect(Base.args.onChange).not.toHaveBeenCalled();
 
   await userEvent.click(green);
-  expect(green).toHaveFocus()
+  expect(green).toHaveFocus();
   expect(Base.args.onChange).toHaveBeenCalled();
 
   await userEvent.click(blue);
-  expect(blue).toHaveFocus()
+  expect(blue).toHaveFocus();
   expect(Base.args.onChange).toHaveBeenCalled();
-
-}
+};

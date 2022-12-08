@@ -46,14 +46,14 @@ Interaction.args = { ...Base.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[0]
-  const input = canvas.getByLabelText('First Name');
+  const cb = step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[0];
+  const input = canvas.getByLabelText('First name');
 
-  await userEvent.tab()
+  await userEvent.tab();
   expect(input).toHaveFocus();
 
-  await userEvent.type(input, 'username')
-  await userEvent.tab()
+  await userEvent.type(input, 'username');
+  await userEvent.tab();
 
   expect(cb.getInputValue()).toBe('username');
 };

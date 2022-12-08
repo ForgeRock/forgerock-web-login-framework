@@ -49,7 +49,7 @@ Interaction.play = async ({ canvasElement }) => {
   });
   await userEvent.selectOptions(selectEl, '0', { delay: 200 });
 
-  await expect(canvas.queryByLabelText('Custom Security Question')).toBeNull();
+  await expect(canvas.queryByLabelText('Custom security question')).toBeNull();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
@@ -57,7 +57,7 @@ Interaction.play = async ({ canvasElement }) => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  const answerEl = canvas.getByLabelText('Security Answer', {
+  const answerEl = canvas.getByLabelText('Security answer', {
     selector: 'input',
   });
 
@@ -98,11 +98,11 @@ Interaction.play = async ({ canvasElement }) => {
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
 
-  console.log(cb)
-  expect(cb.getInputValue()).toBe('1')
-  expect(cb.payload.input[1].value).toBe('Tacos')
+  console.log(cb);
+  expect(cb.getInputValue()).toBe('1');
+  expect(cb.payload.input[1].value).toBe('Tacos');
 
-  await expect(canvas.queryByLabelText('Custom Security Question')).toBeNull();
+  await expect(canvas.queryByLabelText('Custom security question')).toBeNull();
 
   await userEvent.clear(answerEl);
 };

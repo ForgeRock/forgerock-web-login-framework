@@ -90,7 +90,7 @@ Interaction.play = async ({ canvasElement }) => {
 
   await expect(canvas.queryByText('Sign In')).toBeInTheDocument();
 
-  const closeButton = canvas.getByTitle('Close Modal');
+  const closeButton = canvas.getByTitle('Close');
   await userEvent.click(closeButton);
 
   await new Promise((resolve) => setTimeout(resolve, 1000));

@@ -48,18 +48,18 @@ const Template = (args) => ({
 
 export const Interaction = Template.bind({});
 
-Interaction.args = { ...LabelFirst.args, };
+Interaction.args = { ...LabelFirst.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
 
   await userEvent.tab();
 
-  await userEvent.type(canvas.getByLabelText('Username'), 'input here')
+  await userEvent.type(canvas.getByLabelText('Username'), 'input here');
 
-  await new Promise(res => setTimeout(res, 1000))
+  await new Promise((res) => setTimeout(res, 1000));
 
   await userEvent.tab();
 
-  expect(LabelFirst.args.onChange).toHaveBeenCalled();
+  await expect(LabelFirst.args.onChange).toHaveBeenCalled();
 };

@@ -117,7 +117,7 @@ await page.selectOption('select', '0');
 await page.locator('button', { hasText: 'Next' }).click();
 ```
 
-… you may now be able to spot the issue. The `await` is ignored, so it continues on to the next line, the `select`. Since a select element DOES already exist on the page from the *previous* step, it uses it. What’s more, there’s also already a “Next” button, so it tries to click it.
+… you may now be able to spot the issue. The `await` is ignored, so it continues on to the next line, the `select`. Since a select element DOES already exist on the page from the _previous_ step, it uses it. What’s more, there’s also already a “Next” button, so it tries to click it.
 
 But, the DOM refreshes because the response from the server is received, but the above code already executed, so it’s stuck. It’s already waiting on this line of code:
 

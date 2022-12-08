@@ -47,18 +47,17 @@ Interaction.args = { ...Base.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0]
+  const cb = step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0];
   await userEvent.tab();
   const input = canvas.getByLabelText('Password');
   expect(input).toHaveFocus();
-  await userEvent.type(input, 'myPassword')
+  await userEvent.type(input, 'myPassword');
   const button = canvas.getByRole('button');
 
-  await userEvent.click(button)
+  await userEvent.click(button);
   const text = canvas.getByLabelText('Password');
 
-  expect(text.type).not.toEqual('password')
-  expect(text.type).toEqual('text')
+  expect(text.type).not.toEqual('password');
+  expect(text.type).toEqual('text');
   expect(cb.payload.input[0].value).toBe('myPassword');
 };
-

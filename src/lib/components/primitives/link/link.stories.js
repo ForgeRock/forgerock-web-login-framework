@@ -18,16 +18,15 @@ export const Base = {
 
 const Template = (args) => ({
   Component: Link,
-  props: args
+  props: args,
 });
 export const Interaction = Template.bind({});
 Interaction.args = { ...Base.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const link = canvas.getByRole('link')
+  const link = canvas.getByRole('link');
   userEvent.tab();
   expect(link).toHaveFocus();
-  expect(link).toHaveAttribute('href', '/')
-}
-
+  expect(link).toHaveAttribute('href', '/');
+};

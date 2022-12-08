@@ -1,5 +1,5 @@
 <script>
-  import SideNav from "../side-nav.svelte";
+  import SideNav from '../side-nav.svelte';
 </script>
 
 <main class="container container-main">

@@ -25,7 +25,7 @@ test('Modal widget with simple login and misc callbacks', async ({ page }) => {
     // Polling Wait
     // NOTE: Make sure timer is same or more than set in Polling Wait node
     page.waitForTimeout(3000),
-  ])
+  ]);
 
   const fullName = page.locator('#fullName');
   const email = page.locator('#email');

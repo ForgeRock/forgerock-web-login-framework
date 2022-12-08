@@ -63,27 +63,26 @@ const Template = (args) => ({
   props: args,
 });
 
-export const Interaction = Template.bind({})
+export const Interaction = Template.bind({});
 
 Interaction.args = { ...LabelLast.args, label: 'Choose Color' };
 Interaction.play = async ({ canvasElement }) => {
-
   const canvas = within(canvasElement);
 
   const label = canvas.getByLabelText('Choose Color');
 
   await userEvent.tab();
 
-  expect(label).toHaveFocus()
+  expect(label).toHaveFocus();
 
   expect(LabelLast.args.onChange).not.toHaveBeenCalled();
 
-  await userEvent.selectOptions(label, ['0'])
-  expect(canvas.getByText('Red')).toHaveTextContent('Red')
+  await userEvent.selectOptions(label, ['0']);
+  expect(canvas.getByText('Red')).toHaveTextContent('Red');
   expect(LabelLast.args.onChange).toHaveBeenCalled();
-  await userEvent.selectOptions(label, ['1'])
-  expect(canvas.getByText('Green')).toHaveTextContent('Green')
+  await userEvent.selectOptions(label, ['1']);
+  expect(canvas.getByText('Green')).toHaveTextContent('Green');
   expect(LabelLast.args.onChange).toHaveBeenCalled();
-  await userEvent.selectOptions(label, ['2'])
-  expect(canvas.getByText('Blue')).toHaveTextContent('Blue')
-}
+  await userEvent.selectOptions(label, ['2']);
+  expect(canvas.getByText('Blue')).toHaveTextContent('Blue');
+};

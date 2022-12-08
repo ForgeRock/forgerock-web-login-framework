@@ -22,7 +22,7 @@ export const Base = {
   args: {
     callback: step.getCallbackOfType(CallbackType.TermsAndConditionsCallback),
   },
-}
+};
 const Template = (args) => ({
   Component: Input,
   props: args,
@@ -34,11 +34,9 @@ Interaction.args = { ...Base.args };
 
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbackOfType(CallbackType.TermsAndConditionsCallback)
+  const cb = step.getCallbackOfType(CallbackType.TermsAndConditionsCallback);
   const element = canvas.getByRole('checkbox');
   await userEvent.click(element);
   await userEvent.tab();
-  expect(cb.getInputValue()).toBe(true)
-
+  expect(cb.getInputValue()).toBe(true);
 };
-
