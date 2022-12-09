@@ -22,7 +22,7 @@ jobs:
       - run: npm ci
       - run: npm run build
       - name: Publish to Chromatic
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.node < 17 }}
+        if: ${{ matrix.os == 'ubuntu-latest' && matrix.node < 17 && !github.event.pull_request.draft }}
         uses: chromaui/action@v1
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
