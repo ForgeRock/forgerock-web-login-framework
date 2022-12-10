@@ -5,6 +5,17 @@ const realmPath =
     ? `realms/${import.meta.env.VITE_FR_REALM_PATH}`
     : '';
 
+declare global {
+  interface ImportMeta {
+    readonly env: ImportMetaEnv
+  }
+  interface ImportMetaEnv {
+    readonly VITE_FR_AM_URL: string;
+    readonly VITE_FR_AM_COOKIE_NAME: string;
+    readonly APP_DOMAIN: string;
+  }
+}
+
 export const AM_COOKIE_NAME = import.meta.env.VITE_FR_AM_COOKIE_NAME;
 export const AM_DOMAIN_PATH = import.meta.env.VITE_FR_AM_URL;
 export const AM_DOMAIN = extractDomainFromUrl(import.meta.env.VITE_FR_AM_URL);
