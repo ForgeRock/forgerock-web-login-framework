@@ -6,6 +6,5 @@
     "./inline": "./inline.js",
     "./modal": "./modal.js"
   },
-  "files": ["../README.md"],
   "dependencies": {}
 }
