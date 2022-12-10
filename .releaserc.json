@@ -20,7 +20,7 @@
     }
   ],
   "ci": true,
-  "repositoryUrl": "git@github.com:cerebrl/forgerock-web-login-framework.git",
+  "repositoryUrl": "https://github.com/cerebrl/forgerock-web-login-framework.git",
   "plugins": [
     "@semantic-release/commit-analyzer",
     "@semantic-release/release-notes-generator",
