@@ -28,7 +28,7 @@
     [
       "@semantic-release/exec",
       {
-        "prepare": "node ./tools/edit-package.cjs ${nextRelease.version}"
+        "release": "node ./tools/prepare.sh ${nextRelease.version}"
       }
     ],
     [
