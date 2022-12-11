@@ -6,6 +6,7 @@ node_modules
 !/.svelte-kit/tsconfig.json
 /package/*
 /package/**/*
+!/package/README.md
 !/*/package.json
 .env
 .env.*
