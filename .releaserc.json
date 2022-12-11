@@ -38,16 +38,16 @@
       }
     ],
     [
-      "@semantic-release/github",
-      {
-        "assets": ["package/*.md", "package/*.json"]
-      }
-    ],
-    [
       "@semantic-release/git",
       {
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
-        "assets": ["package.json", "widget.css", "README.md"]
+        "assets": ["packages/package.json", "package.json"]
+      }
+    ],
+    [
+      "@semantic-release/github",
+      {
+        "assets": ["package/*.{js,css,json}", "!package/node_modules/*", "package.json"]
       }
     ]
   ]
