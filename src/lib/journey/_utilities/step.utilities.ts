@@ -61,12 +61,7 @@ export function initCheckValidation() {
  * @returns {boolean}
  */
 export function shouldRedirectFromStep(step: FRStep) {
-  try {
-    step.getCallbackOfType(CallbackType.RedirectCallback);
-    return true;
-  } catch (e) {
-    return false;
-  }
+  return step.getCallbacksOfType(CallbackType.RedirectCallback).length > 0;
 }
 
 /**

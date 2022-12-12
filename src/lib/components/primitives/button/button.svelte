@@ -3,6 +3,7 @@
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   export let busy = false;
+  export let classes = '';
   // export let customCss: { key: string; value: string }[] = [];
   export let onClick: (event: Event) => void = (e) => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
@@ -35,7 +36,7 @@
   class={`${generateClassString(
     style,
     width,
-  )} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width}`}
+  )} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width} ${classes}`}
   on:click={onClick}
   {type}
 >

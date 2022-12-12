@@ -95,7 +95,7 @@
     />
   {/each}
 
-  {#if !stepMetadata.isStepSelfSubmittable}
+  {#if stepMetadata.isUserInputOptional || !stepMetadata.isStepSelfSubmittable}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="registerButton" />
     </Button>

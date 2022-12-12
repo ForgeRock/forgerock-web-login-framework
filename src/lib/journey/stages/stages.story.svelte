@@ -1,9 +1,16 @@
 <script lang="ts">
+  import type {
+    PasswordCallback,
+    NameCallback,
+    SelectIdPCallback,
+  } from '@forgerock/javascript-sdk';
+
   import Centered from '$components/primitives/box/centered.svelte';
   import Generic from './generic.svelte';
   import { initialize as initializeLinks } from '$lib/links.store';
   import { initialize as initializeStyles } from '$lib/style.store';
   import Registration from './registration.svelte';
+
   import UsernamePassword from './username-password.svelte';
 
   import type {
@@ -17,6 +24,11 @@
   export let step: WidgetStep;
   export let stage: string;
   export let labelType: 'floating' | 'stacked';
+
+  export let passwordCallback: PasswordCallback;
+  export let socialCallback: SelectIdPCallback;
+  export let usernameCallback: NameCallback;
+  export let localAuth: boolean;
 
   // Initialize stores
   initializeLinks({ termsAndConditions: '/' });

@@ -6,10 +6,25 @@ import { writable } from 'svelte/store';
 import { initialize } from '../config.store';
 import Step from './stages.story.svelte';
 import { loginStep, registrationStep, usernamePasswordStep } from './step.mock';
+import {
+  multipleProvidersLocalAuthFormStep,
+  multipleProvidersLocalAuthNoFormStep,
+  multipleProvidersNoLocalAuthStep,
+  singleProviderLocalAuthFormStep,
+  singleProviderLocalAuthNoFormStep,
+} from '../callbacks/select-idp/select-idp.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
 const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
+
+const frSocialMultipleProvidersLocalAuthFormStep = new FRStep(multipleProvidersLocalAuthFormStep);
+const frSocialMultipleProvidersLocalAuthNoFormStep = new FRStep(
+  multipleProvidersLocalAuthNoFormStep,
+);
+const frSocialMultipleProvidersNoLocalAuthStep = new FRStep(multipleProvidersNoLocalAuthStep);
+const frSocialSingleProviderLocalAuthFormStep = new FRStep(singleProviderLocalAuthFormStep);
+const frSocialSingleProviderLocalAuthNoFormStep = new FRStep(singleProviderLocalAuthNoFormStep);
 
 initialize();
 
@@ -79,6 +94,101 @@ export const UsernamePassword = {
     labelType: 'stacked',
     stage: frUsernamePasswordStep.getStage(),
     step: frUsernamePasswordStep,
+  },
+};
+
+export const SocialMultipleProvidersLocalAuthForm = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frSocialMultipleProvidersLocalAuthFormStep.getStage(),
+    step: frSocialMultipleProvidersLocalAuthFormStep,
+  },
+};
+
+export const SocialMultipleProvidersLocalAuthNoForm = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frSocialMultipleProvidersLocalAuthNoFormStep.getStage(),
+    step: frSocialMultipleProvidersLocalAuthNoFormStep,
+  },
+};
+
+export const SocialMultipleProvidersNoLocalAuth = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frSocialMultipleProvidersNoLocalAuthStep.getStage(),
+    step: frSocialMultipleProvidersNoLocalAuthStep,
+  },
+};
+
+export const SocialSingleProviderLocalAuthForm = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frSocialSingleProviderLocalAuthFormStep.getStage(),
+    step: frSocialSingleProviderLocalAuthFormStep,
+  },
+};
+
+export const SocialSingleProviderLocalAuthNoForm = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frSocialSingleProviderLocalAuthNoFormStep.getStage(),
+    step: frSocialSingleProviderLocalAuthNoFormStep,
   },
 };
 
