@@ -1,10 +1,11 @@
 import { get } from 'svelte/store';
 import type { z } from 'zod';
 
-import { configuredJourneys, journeyItemSchema } from '$journey/config.store';
+import { configuredJourneys } from '$journey/config.store';
 
 import type { StageJourneyObject } from '$journey/journey.interfaces';
 import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import type { StoreItem } from '$journey/config.store';
 
 /**
  * @function captureLinks - This is a callback for onMount that internally handled links and prevents navigation
@@ -47,7 +48,7 @@ export function captureLinks(linkWrapper: HTMLElement, currentJourney: StageJour
  */
 export function matchJourneyAndDecideAction(
   href: string | false | null,
-  journeys: z.infer<typeof journeyItemSchema>[],
+  journeys: StoreItem[],
   stack: StepOptions[],
 ) {
   if (href) {

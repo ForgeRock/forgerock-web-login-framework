@@ -35,8 +35,6 @@ function initializeStack(initOptions?: StepOptions) {
         update((current) => {
           let state;
 
-          console.log(options);
-
           if (!current.length) {
             state = [{ ...options }];
           } else if (options && options?.tree !== current[current.length - 1]?.tree) {

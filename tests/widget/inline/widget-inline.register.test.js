@@ -27,5 +27,5 @@ test('Inline registration widget', async ({ page }) => {
   const email = page.locator('#email');
 
   expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  expect(await email.innerText()).toBe('Email: test@auto.com');
 });

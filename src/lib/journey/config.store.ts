@@ -1,68 +1,66 @@
 import { readable, type Readable } from 'svelte/store';
 import { z } from 'zod';
 
-export const journeyItemSchema = z.object({
+export const journeyConfigItemSchema = z.object({
   journey: z.string().optional(),
-  key: z.string(),
-  match: z.string().array(),
+  match: z.string().regex(/^(#\/service|\?journey)/, { message: 'HREF string must start with `?journey` or `#/service`' }).array(),
 });
-export const journeysSchema = z.object({
-  default: journeyItemSchema,
-  forgotPassword: journeyItemSchema,
-  forgotUsername: journeyItemSchema,
-  login: journeyItemSchema,
-  register: journeyItemSchema,
+export const journeyConfigSchema = z.object({
+  forgotPassword: journeyConfigItemSchema,
+  forgotUsername: journeyConfigItemSchema,
+  login: journeyConfigItemSchema,
+  register: journeyConfigItemSchema,
 });
 
-export const partialJourneysSchema = journeysSchema.partial();
+type JourneyKeys = keyof z.infer<typeof journeyConfigSchema>;
+type ConfigItem = z.infer<typeof journeyConfigItemSchema>;
+export type StoreItem = { key: string } & ConfigItem;
 
-export let configuredJourneys: Readable<z.infer<typeof journeyItemSchema>[]>;
-
-/**
- * Change `any` here to something that actually works
- */
-const defaultJourneys: any = {
+const defaultJourneys = {
   forgotPassword: {
     journey: 'ResetPassword',
-    key: 'forgotPassword',
     match: ['#/service/ResetPassword', '?journey=ResetPassword'],
   },
   forgotUsername: {
     journey: 'ForgottenUsername',
-    key: 'forgotUsername',
     match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
   },
   login: {
     journey: undefined,
-    key: 'login',
     match: ['#/service/Login', '?journey'],
   },
   register: {
     journey: 'Registration',
-    key: 'register',
     match: ['#/service/Registration', '?journey=Registration'],
   },
-};
+} satisfies  Record<JourneyKeys, ConfigItem>;
 
-/**
- * TODO: My intention is to type the parameter with `z.infer<typeof partialJourneysSchema>`,
- * but when I do, the `map` does not like it. I tried a few things to fix it with no avail.
- * I just threw an `any` on it for the time being.
- */
-export function initialize(customJourneys?: any) {
+// Ensure default follows schema
+journeyConfigSchema.parse(defaultJourneys);
+
+export let configuredJourneys: Readable<StoreItem[]>;
+
+export function initialize(customJourneys: z.infer<typeof journeyConfigSchema>) {
   if (customJourneys) {
-    const arr = Object.keys(customJourneys);
-    configuredJourneys = readable(
-      arr.map((key) => {
-        return customJourneys[key];
-      }),
+    // Provide developer feedback if customized
+    journeyConfigSchema.parse(customJourneys);
+
+    const arr = Object.keys(customJourneys) as JourneyKeys[]
+    configuredJourneys =  readable(
+      arr.map((key) => ({
+        ...customJourneys[key],
+        key,
+      })),
     );
   } else {
-    const arr = Object.keys(defaultJourneys);
-    configuredJourneys = readable(
-      arr.map((key) => {
-        return defaultJourneys[key];
-      }),
+    const arr = Object.keys(defaultJourneys) as JourneyKeys[];
+    configuredJourneys =  readable(
+      arr.map(
+        (key) => ({
+          ...defaultJourneys[key],
+          key,
+        }),
+      ),
     );
   }
-}
+};
