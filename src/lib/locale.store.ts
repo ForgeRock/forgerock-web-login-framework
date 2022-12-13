@@ -6,6 +6,8 @@ import fallback from '$locales/us/en/index.json';
 export const stringsSchema = z
   .object({
     alreadyHaveAnAccount: z.string(),
+    backToDefault: z.string(),
+    backToLogin: z.string(),
     dontHaveAnAccount: z.string(),
     closeModal: z.string(),
     chooseDifferentUsername: z.string(),
@@ -18,6 +20,8 @@ export const stringsSchema = z
     exceedsMaximumCharacterLength: z.string(),
     fieldCanNotContainFollowingCharacters: z.string(),
     fieldCanNotContainFollowingValues: z.string(),
+    forgotPassword: z.string(),
+    forgotUsername: z.string(),
     givenName: z.string(),
     inputRequiredError: z.string(),
     loading: z.string(),

@@ -1,14 +1,17 @@
 import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
 import { expect, jest } from '@storybook/jest';
 import { fireEvent, userEvent, within } from '@storybook/testing-library';
-import { action } from '@storybook/addon-actions';
+import { writable } from 'svelte/store';
 
+import { initialize } from '../config.store';
 import Step from './stages.story.svelte';
 import { loginStep, registrationStep, usernamePasswordStep } from './step.mock';
 
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
 const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
+
+initialize();
 
 export default {
   argTypes: {
@@ -24,33 +27,58 @@ export default {
 
 export const Generic = {
   args: {
-    displayIcon: true,
-    failureMessage: '',
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
     stage: frLoginStep.getStage(),
     step: frLoginStep,
-    submitForm: () => {
-      console.log('Form submitted.');
-    },
   },
 };
 export const Registration = {
   args: {
-    displayIcon: true,
-    failureMessage: '',
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
     stage: frRegistrationStep.getStage(),
     step: frRegistrationStep,
-    submitForm: jest.fn(),
   },
 };
 
 export const UsernamePassword = {
   args: {
-    displayIcon: true,
-    failureMessage: '',
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([{ tree: 'Login' }]),
+    },
     labelType: 'stacked',
     stage: frUsernamePasswordStep.getStage(),
     step: frUsernamePasswordStep,
-    submitForm: jest.fn(),
   },
 };
 
@@ -156,7 +184,7 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
 
   const submit = canvas.getByRole('button', { name: 'Register' });
   await userEvent.click(submit);
-  await expect(Registration.args.submitForm).toHaveBeenCalled();
+  await expect(Registration.args.form.submit).toHaveBeenCalled();
 
   console.log(usernameCb);
   await expect(usernameCb.getInputValue()).toBe('user');
@@ -203,7 +231,7 @@ LoginInteraction.play = async ({ canvasElement }) => {
   await expect(signin).toHaveFocus();
   await fireEvent.click(signin);
 
-  await expect(UsernamePassword.args.submitForm).toHaveBeenCalled();
+  await expect(UsernamePassword.args.form.submit).toHaveBeenCalled();
 
   await expect(nameCb.getInputValue()).toBe('username01');
   await expect(passwordCb.getInputValue()).toBe('Password123');

@@ -6,14 +6,16 @@
   import Registration from './registration.svelte';
   import UsernamePassword from './username-password.svelte';
 
-  import type { WidgetStep } from '$journey/journey.interfaces';
+  import type {
+    StageFormObject,
+    StageJourneyObject,
+    WidgetStep,
+  } from '$journey/journey.interfaces';
 
-  export let displayIcon: boolean;
-  export let failureMessage: string;
+  export let form: StageFormObject;
+  export let journey: StageJourneyObject;
   export let step: WidgetStep;
-  export let submitForm: () => void;
   export let stage: string;
-  export let loading = false;
   export let labelType: 'floating' | 'stacked';
 
   // Initialize stores
@@ -23,10 +25,10 @@
 
 <Centered>
   {#if stage === 'UsernamePassword'}
-    <UsernamePassword {displayIcon} {failureMessage} {loading} {step} {submitForm} />
+    <UsernamePassword {form} {journey} {step} />
   {:else if stage === 'Registration'}
-    <Registration {displayIcon} {failureMessage} {loading} {step} {submitForm} />
+    <Registration {form} {journey} {step} />
   {:else}
-    <Generic {displayIcon} {failureMessage} {loading} {step} {submitForm} />
+    <Generic {form} {journey} {step} />
   {/if}
 </Centered>

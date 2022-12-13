@@ -108,8 +108,20 @@ export function interpolate(
      */
     messageDirty = externalText;
   }
-
-  const messageClean = sanitize(messageDirty);
+  const messageClean = sanitize(messageDirty, {
+    /**
+     * Allow `?` as first char in `href` value for anchor tags.
+     * To preserve original behavior in addition to this one exception,
+     * return `undefined` for all other cases.
+     */
+    onTagAttr: function (tag, name, value) {
+      if (tag == 'a' && name == 'href') {
+        if (value.substr(0, 1) === '?') {
+          return `${name}="${value}"`;
+        }
+      }
+    },
+  });
 
   return messageClean;
 }

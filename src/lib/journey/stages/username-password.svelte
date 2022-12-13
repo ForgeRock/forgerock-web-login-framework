@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { FRCallback } from '@forgerock/javascript-sdk';
-  import { afterUpdate } from 'svelte';
+  import { afterUpdate, onMount } from 'svelte';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -17,20 +17,26 @@
   import { style } from '$lib/style.store';
 
   // Types
-  import type { Maybe } from '$lib/interfaces';
-  import type { CallbackMetadata, StepMetadata, WidgetStep } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    WidgetStep,
+  } from '$journey/journey.interfaces';
+  import { captureLinks } from './_utilities/stage.utilities';
 
-  export let displayIcon: boolean;
-  export let failureMessage: Maybe<string>;
+  // New API
+  export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
-  export let loading: boolean;
+  export let journey: StageJourneyObject;
   export let step: WidgetStep;
-  export let submitForm: () => void;
 
   let alertNeedsFocus = false;
   let callbackMetadataArray: CallbackMetadata[] = [];
   let checkValidation: (callback: FRCallback) => boolean;
-  let failureMessageKey = '';
+  let formMessageKey = '';
+  let linkWrapper: HTMLElement;
   let stepMetadata: StepMetadata;
 
   function determineSubmission() {
@@ -39,24 +45,26 @@
 
     // The below variation is more liberal first self-submittable cb to call this wins.
     if (stepMetadata.isStepSelfSubmittable) {
-      submitForm();
+      form?.submit();
     }
   }
 
   afterUpdate(() => {
-    alertNeedsFocus = !!failureMessage;
+    alertNeedsFocus = !!form?.message;
   });
+
+  onMount(() => captureLinks(linkWrapper, journey));
 
   $: {
     checkValidation = initCheckValidation();
     callbackMetadataArray = buildCallbackMetadata(step, checkValidation);
     stepMetadata = buildStepMetadata(callbackMetadataArray);
-    failureMessageKey = convertStringToKey(failureMessage);
+    formMessageKey = convertStringToKey(form?.message);
   }
 </script>
 
-<Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={submitForm}>
-  {#if displayIcon}
+<Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+  {#if form?.icon}
     <div class="tw_flex tw_justify-center">
       <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
@@ -65,9 +73,9 @@
     <T key="loginHeader" />
   </h1>
 
-  {#if failureMessage}
+  {#if form?.message}
     <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
-      {interpolate(failureMessageKey, null, failureMessage)}
+      {interpolate(formMessageKey, null, form?.message)}
     </Alert>
   {/if}
 
@@ -83,12 +91,33 @@
   {/each}
 
   {#if !stepMetadata.isStepSelfSubmittable}
-    <Button busy={loading} style="primary" type="submit" width="full">
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>
   {/if}
 
+  <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
+    <button
+      on:click|preventDefault={() => {
+        journey.push({ tree: 'ResetPassword' });
+      }}
+    >
+      {interpolate('forgotPassword', null, 'Forgot Password?')}
+    </button>
+    &nbsp;
+    <button
+      on:click|preventDefault={() => {
+        journey.push({ tree: 'ForgottenUsername' });
+      }}
+    >
+      {interpolate('forgotUsername', null, 'Forgot Username?')}
+    </button>
+  </p>
+
+  <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
+
   <p
+    bind:this={linkWrapper}
     class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
   >
     <T key="dontHaveAnAccount" html={true} />

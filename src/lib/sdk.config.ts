@@ -2,6 +2,9 @@ import { CallbackType, FRCallback } from '@forgerock/javascript-sdk';
 import { Config } from '@forgerock/javascript-sdk';
 import { z } from 'zod';
 
+/**
+ * Configure underlying SDK
+ */
 const configSchema = z
   .object({
     callbackFactory: z

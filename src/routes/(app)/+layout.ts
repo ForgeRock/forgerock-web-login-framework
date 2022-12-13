@@ -1,4 +1,5 @@
-import configure from '$lib/config';
+import configure from '$lib/sdk.config';
+import { initialize as initializeJourneys } from '$journey/config.store';
 import { initialize as initializeLinks } from '$lib/links.store';
 
 import '../../app.css';
@@ -15,6 +16,8 @@ configure({
   },
   realmPath: 'alpha',
 });
+
+initializeJourneys();
 
 initializeLinks({
   termsAndConditions: 'https://www.forgerock.com/terms',
