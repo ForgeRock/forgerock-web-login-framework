@@ -93,7 +93,7 @@ export const partialConfigSchema = configSchema.partial();
 //   sessions: 'sessions',
 // };
 
-export default function(config: z.infer<typeof partialConfigSchema>) {
+export default function (config: z.infer<typeof partialConfigSchema>) {
   configSchema.parse(config);
   Config.set(config);
 }

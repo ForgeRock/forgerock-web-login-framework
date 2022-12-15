@@ -69,8 +69,8 @@
     "@sveltejs/package": "^1.0.0-next.6",
     "@sveltejs/vite-plugin-svelte": "^1.2.0",
     "@types/uuid": "^8.3.4",
-    "@typescript-eslint/eslint-plugin": "^5.43.0",
-    "@typescript-eslint/parser": "^5.43.0",
+    "@typescript-eslint/eslint-plugin": "^5.46.0",
+    "@typescript-eslint/parser": "^5.46.0",
     "@vitejs/plugin-basic-ssl": "^0.1.2",
     "@vitest/ui": "^0.25.2",
     "autoprefixer": "^10.4.13",
@@ -92,7 +92,7 @@
     "postcss": "^8.4.19",
     "postcss-cli": "^10.0.0",
     "postcss-import": "^15.0.0",
-    "prettier": "2.7.1",
+    "prettier": "2.8.1",
     "rimraf": "3.0.2",
     "rollup": "^3.3.0",
     "rollup-plugin-postcss": "4.0.2",
@@ -120,7 +120,7 @@
   },
   "lint-staged": {
     "*.{js,svelte}": "eslint --cache --fix .",
-    "*.{js,css,md,svelte,json}": "prettier --write",
+    "*.{js,css,md,json}": "prettier --write",
     "*.svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning"
   },
   "repository": {
