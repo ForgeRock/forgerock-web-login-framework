@@ -3,7 +3,12 @@ import { z } from 'zod';
 
 export const journeyConfigItemSchema = z.object({
   journey: z.string().optional(),
-  match: z.string().regex(/^(#\/service|\?journey)/, { message: 'HREF string must start with `?journey` or `#/service`' }).array(),
+  match: z
+    .string()
+    .regex(/^(#\/service|\?journey)/, {
+      message: 'HREF string must start with `?journey` or `#/service`',
+    })
+    .array(),
 });
 export const journeyConfigSchema = z.object({
   forgotPassword: journeyConfigItemSchema,
@@ -33,20 +38,20 @@ const defaultJourneys = {
     journey: 'Registration',
     match: ['#/service/Registration', '?journey=Registration'],
   },
-} satisfies  Record<JourneyKeys, ConfigItem>;
+} satisfies Record<JourneyKeys, ConfigItem>;
 
 // Ensure default follows schema
 journeyConfigSchema.parse(defaultJourneys);
 
 export let configuredJourneys: Readable<StoreItem[]>;
 
-export function initialize(customJourneys: z.infer<typeof journeyConfigSchema>) {
+export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema>) {
   if (customJourneys) {
     // Provide developer feedback if customized
     journeyConfigSchema.parse(customJourneys);
 
-    const arr = Object.keys(customJourneys) as JourneyKeys[]
-    configuredJourneys =  readable(
+    const arr = Object.keys(customJourneys) as JourneyKeys[];
+    configuredJourneys = readable(
       arr.map((key) => ({
         ...customJourneys[key],
         key,
@@ -54,13 +59,11 @@ export function initialize(customJourneys: z.infer<typeof journeyConfigSchema>) 
     );
   } else {
     const arr = Object.keys(defaultJourneys) as JourneyKeys[];
-    configuredJourneys =  readable(
-      arr.map(
-        (key) => ({
-          ...defaultJourneys[key],
-          key,
-        }),
-      ),
+    configuredJourneys = readable(
+      arr.map((key) => ({
+        ...defaultJourneys[key],
+        key,
+      })),
     );
   }
-};
+}

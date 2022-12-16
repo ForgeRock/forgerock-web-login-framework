@@ -7,7 +7,7 @@ const realmPath =
 
 declare global {
   interface ImportMeta {
-    readonly env: ImportMetaEnv
+    readonly env: ImportMetaEnv;
   }
   interface ImportMetaEnv {
     readonly VITE_FR_AM_URL: string;

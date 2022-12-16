@@ -17,6 +17,8 @@
   export let data;
 
   const authIndexValue = $page.url.searchParams.get('authIndexValue');
+  const codeParam = $page.url.searchParams.get('code');
+  const stateParam = $page.url.searchParams.get('state');
   const formPostEntryParam = $page.url.searchParams.get('form_post_entry');
   const journeyParam = $page.url.searchParams.get('journey');
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
@@ -59,7 +61,7 @@
 
   // Use if not initializing journey in a "context module"
   onMount(async () => {
-    if (suspendedIdParam || formPostEntryParam) {
+    if (suspendedIdParam || formPostEntryParam || (codeParam && stateParam)) {
       journeyStore.resume(location.href);
       goto('/', { replaceState: true });
     } else {

@@ -2,6 +2,54 @@ const colorLib = require('color');
 
 module.exports = function (theme) {
   return {
+    '.button-apple': {
+      borderColor: theme('colors.secondary.light'),
+      backgroundColor: theme('colors.black'),
+      color: theme('colors.white'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-apple_dark': {
+      borderColor: theme('colors.secondary.light'),
+      backgroundColor: theme('colors.white'),
+      color: theme('colors.black'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-facebook': {
+      borderColor: theme('colors.secondary.light'),
+      backgroundColor: '#1877F2',
+      color: theme('colors.white'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-facebook_dark': {
+      borderColor: theme('colors.secondary.light'),
+      backgroundColor: theme('colors.white'),
+      color: '#1877F2',
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-google': {
+      borderColor: theme('colors.secondary.light'),
+      backgroundColor: theme('colors.white'),
+      color: theme('colors.black'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-google_dark': {
+      borderColor: theme('colors.secondary.light'),
+      backgroundColor: theme('colors.white'),
+      color: theme('colors.black'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
     '.input-policies': {
       fontSize: theme('fontSize.sm'),
 

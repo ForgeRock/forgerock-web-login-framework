@@ -26,7 +26,11 @@ describe('Test compare function for requested journey comparison', () => {
         tree: undefined,
       },
     ];
-    const { action, journey } = matchJourneyAndDecideAction('?journey=ResetPassword', journeys, stack);
+    const { action, journey } = matchJourneyAndDecideAction(
+      '?journey=ResetPassword',
+      journeys,
+      stack,
+    );
     expect(action).toBe('push');
     expect(journey).toBe('ResetPassword');
   });

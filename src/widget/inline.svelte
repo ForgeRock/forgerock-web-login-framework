@@ -176,12 +176,12 @@
   import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
   import type { partialConfigSchema } from '$lib/sdk.config';
-  import type { partialJourneysSchema } from '$journey/config.store';
+  import type { journeyConfigSchema } from '$journey/config.store';
   import type { partialStringsSchema } from '$lib/locale.store';
 
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
-  export let journeys: z.infer<typeof partialJourneysSchema>;
+  export let journeys: z.infer<typeof journeyConfigSchema>;
   export let links: z.infer<typeof partialLinksSchema>;
   export let style: Style;
 

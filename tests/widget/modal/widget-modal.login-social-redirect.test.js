@@ -6,7 +6,7 @@ test('Modal widget with social callback redirect', async ({ page }) => {
   const loginButton = page.getByRole('button', { name: 'Open Login Modal' });
   await loginButton.click();
 
-  const button = await page.locator('button', { hasText: 'Sign in with Google' });
+  const button = await page.getByRole('button', { name: 'Continue with Google' });
   await Promise.all([button.click(), page.waitForNavigation()]);
   expect(page.url()).toContain('accounts.google.com', 'redirect_uri');
 });
