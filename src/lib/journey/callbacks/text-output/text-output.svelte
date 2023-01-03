@@ -12,17 +12,22 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: SuspendedTextOutputCallback | TextOutputCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  // Unused props. Setting to const prevents errors in console
+  export const callbackMetadata: Maybe<CallbackMetadata> = null;
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
 
-  let dirtyMessage = callback.getMessage();
+  export let callback: never;
+
+
+  let typedCallback = callback as SuspendedTextOutputCallback | TextOutputCallback;
+  let dirtyMessage = typedCallback.getMessage();
   let cleanMessage = sanitize(dirtyMessage);
 
   $: {
-    dirtyMessage = callback.getMessage();
+    typedCallback = callback as SuspendedTextOutputCallback | TextOutputCallback;
+    dirtyMessage = typedCallback.getMessage();
     cleanMessage = sanitize(dirtyMessage);
   }
 </script>

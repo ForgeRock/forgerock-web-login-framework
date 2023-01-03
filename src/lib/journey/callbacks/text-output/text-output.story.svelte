@@ -4,7 +4,7 @@
 
   import TextOutput from './text-output.svelte';
 
-  export let callback: TextOutputCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

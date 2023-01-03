@@ -1,4 +1,4 @@
-export function extractDomainFromUrl(url: string) {
+export function extractDomainFromUrl(url: unknown) {
   if (typeof url !== 'string') {
     throw new Error('AM_DOMAIN_PATH is not a string');
   }
@@ -12,6 +12,7 @@ export function extractDomainFromUrl(url: string) {
   if ((!Array.isArray(arr) && !arr) || !arr[1]) {
     throw new Error('AM_DOMAIN_PATH is not a valid URL');
   }
+
   return arr[1];
 }
 

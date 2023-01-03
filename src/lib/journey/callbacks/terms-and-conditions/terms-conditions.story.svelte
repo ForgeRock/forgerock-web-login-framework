@@ -5,7 +5,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Terms from './terms-conditions.svelte';
 
-  export let callback: TermsAndConditionsCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

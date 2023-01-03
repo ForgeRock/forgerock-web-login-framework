@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Checkbox from './boolean.svelte';
 
-  export let callback: AttributeInputCallback<boolean>;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

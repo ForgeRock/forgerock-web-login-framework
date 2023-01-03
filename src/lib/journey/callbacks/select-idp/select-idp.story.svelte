@@ -7,7 +7,7 @@
   import SelectIdp from './select-idp.svelte';
 
   export let passwordCallback: PasswordCallback;
-  export let socialCallback: SelectIdPCallback;
+  export let socialCallback: never;
   export let usernameCallback: NameCallback;
   export let localAuth: boolean;
 

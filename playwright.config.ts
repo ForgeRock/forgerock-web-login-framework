@@ -11,7 +11,7 @@ const config: PlaywrightTestConfig = {
     reuseExistingServer: true,
   },
   use: {
-    headless: !!process.env.CI,
+    headless: true, // !!process.env.CI,
     baseURL: `${url}/e2e/`,
     ignoreHTTPSErrors: true,
     trace: 'on',
@@ -26,14 +26,12 @@ const config: PlaywrightTestConfig = {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        ...devices['Desktop Chrome HiDPI'],
         ...devices['Desktop Edge'],
-        ...devices['Desktop Edge HiDPI'],
       },
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'], ...devices['Desktop Firefox HiDPI'] },
+      use: { ...devices['Desktop Firefox'] },
     },
     // {
     //   name: 'webkit',

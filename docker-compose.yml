@@ -4,6 +4,11 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        VITE_FR_AM_URL: $VITE_FR_AM_URL
+        VITE_FR_AM_COOKIE_NAME: $VITE_FR_AM_COOKIE_NAME
+        VITE_FR_OAUTH_PUBLIC_CLIENT: $VITE_FR_OAUTH_PUBLIC_CLIENT
+        VITE_FR_REALM_PATH: $VITE_FR_REALM_PATH
     ports:
       - 3000:3000
   dev:

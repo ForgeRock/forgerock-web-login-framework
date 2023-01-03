@@ -10,7 +10,7 @@
     StepMetadata,
   } from '$journey/journey.interfaces';
 
-  export let callback: PollingWaitCallback;
+  export let callback: never;
   export let callbackMetadata: CallbackMetadata;
   export let selfSubmitFunction: SelfSubmitFunction;
   export let stepMetadata: StepMetadata;

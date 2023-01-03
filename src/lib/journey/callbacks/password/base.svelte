@@ -18,13 +18,15 @@
   } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let callbackMetadata: CallbackMetadata;
   export let key: string;
   export let isInvalid = false;
   export let isRequired = false;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
   export let style: Style = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;

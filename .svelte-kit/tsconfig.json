@@ -2,11 +2,41 @@
 	"compilerOptions": {
 		"baseUrl": "..",
 		"paths": {
+			"$components": [
+				"src/lib/components"
+			],
+			"$components/*": [
+				"src/lib/components/*"
+			],
+			"$journey": [
+				"src/lib/journey"
+			],
+			"$journey/*": [
+				"src/lib/journey/*"
+			],
 			"$lib": [
 				"src/lib"
 			],
 			"$lib/*": [
 				"src/lib/*"
+			],
+			"$locales": [
+				"src/locales"
+			],
+			"$locales/*": [
+				"src/locales/*"
+			],
+			"$package": [
+				"package"
+			],
+			"$package/*": [
+				"package/*"
+			],
+			"$widget": [
+				"src/widget"
+			],
+			"$widget/*": [
+				"src/widget/*"
 			]
 		},
 		"rootDirs": [

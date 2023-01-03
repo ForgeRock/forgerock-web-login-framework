@@ -10,14 +10,16 @@ const config = {
   extensions: ['.svelte', '.md'],
   kit: {
     adapter: process.env.PREVIEW ? node() : auto(),
+    alias: aliases,
+  },
+  package: {
+    dir: 'svelte-package',
+    emitTypes: true,
   },
   server: {
     watch: {
       usePolling: true,
     },
-  },
-  resolve: {
-    alias: aliases,
   },
   // Consult https://github.com/sveltejs/svelte-preprocess
   // for more information about preprocessors

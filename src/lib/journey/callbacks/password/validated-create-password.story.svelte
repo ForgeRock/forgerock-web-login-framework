@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './validated-create-password.svelte';
 
-  export let callback: ValidatedCreatePasswordCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
+  import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
 
@@ -8,10 +10,8 @@
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOAuth, type OAuthStore } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser, type UserStore } from '$lib/user/user.store';
-  import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
-  import { goto } from '$app/navigation';
 
   /** @type {import('./$types').PageData} */
   export let data;

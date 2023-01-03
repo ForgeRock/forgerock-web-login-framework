@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import HiddenValue from './hidden-value.svelte';
 
-  export let callback: HiddenValueCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

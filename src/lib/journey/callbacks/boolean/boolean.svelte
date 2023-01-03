@@ -14,10 +14,10 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: AttributeInputCallback<boolean>;
+  export let callback: never;
   export let callbackMetadata: CallbackMetadata;
-  export let stepMetadata: StepMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let style: Style = {};
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
@@ -28,6 +28,7 @@
   let outputName: string;
   let previousValue: boolean;
   let prompt: string;
+  let typedCallback: AttributeInputCallback<boolean>;
   let validationFailure: string;
 
   function setValue(event: Event) {
@@ -38,17 +39,18 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setInputValue((event.target as HTMLInputElement).checked);
+    typedCallback.setInputValue((event.target as HTMLInputElement).checked);
   }
 
   $: {
-    inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata.idx}`;
+    typedCallback = callback as AttributeInputCallback<boolean>;
+    inputName = typedCallback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata.idx}`;
     // A boolean being required doesn't make much sense, so commenting it out for now
     // isRequired = isInputRequired(callback);
-    outputName = callback.getOutputByName('name', '');
-    previousValue = callback.getInputValue() as boolean;
-    prompt = callback.getPrompt();
-    validationFailure = getAttributeValidationFailureText(callback);
+    outputName = typedCallback.getOutputByName('name', '');
+    previousValue = typedCallback.getInputValue() as boolean;
+    prompt = typedCallback.getPrompt();
+    validationFailure = getAttributeValidationFailureText(typedCallback);
   }
 </script>
 
