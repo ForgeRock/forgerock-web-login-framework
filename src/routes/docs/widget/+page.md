@@ -1,4 +1,4 @@
-## Overview
+# Overview
 
 The Login Widget produced by this framework is intended to be an all-inclusive, UI component that can be used within any modern JavaScript app for handling the default login, registration and related user flows within the ForgeRock Platform. It can be used within a React, Vue, Angular or any other modern JavaScript framework (does not currently support Node.js or server-side rendering (SSR)).
 

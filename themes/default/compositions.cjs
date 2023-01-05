@@ -274,9 +274,11 @@ module.exports = (config, theme) => ({
   '.animated-radio': {
     position: 'relative',
     cursor: 'pointer',
-    fontSize: '1.5em',
-    height: '1em',
-    width: '1em',
+    // fontSize: '1.5em',
+    // replacing `1em` with `24px`
+    // using `em` results in misaligned circles due to half-pixel (e.g. 22.5px) grid alignment issue
+    height: '24px',
+    width: '24px',
 
     /**
      * Larger circle that grows inward

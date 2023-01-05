@@ -2,17 +2,17 @@
   import Image from '../../image.svelte';
 </script>
 
-## Tutorials
+# Tutorials
 
 Below are tutorials for popular Web frameworks/libraries, like React, Angular and Vue.
 
-### Inline with React and Webpack
+## Inline with React and Webpack
 
-### Angular with Angular CLI
+## Angular with Angular CLI
 
-### Modal with Vue and Vite
+## Modal with Vue and Vite
 
-### "Magic links" and journey continuation
+## "Magic links" and journey continuation
 
 Verifying a user's email address, building a "forgot password" flow, or using an email as a two-factor authentication method, ForgeRock's Email Suspend Node within journeys is the tool for the job. This results in the journey/tree being suspended until the user clicks a link (aka "magic link") found in their email. This link contains a randomly generated code that is used to continue the suspended journey.
 

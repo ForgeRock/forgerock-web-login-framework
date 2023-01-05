@@ -1,6 +1,6 @@
-## FAQs
+# FAQs
 
-### Question: Research and thoughts on Svelte?
+## Question: Research and thoughts on Svelte?
 
 Hey you two! I finished the SvelteKit todo sample app, though there are likely some bugs. I’m really happy how quickly I built it and deployed it onto Vercel. I didn’t come across any real issues or struggles. I have a few minor dislikes, but nothing moderate, serious or critical.
 
@@ -21,16 +21,16 @@ Here are the things that stand out to me about Svelte:
 
 Here are a few dislikes:
 
-- I’m continuously forgetting to “unwrap” the store with the $ prefix; though, this is admittedly very minor.
+- I’m continuously forgetting to “unwrap” the store with the `$` prefix; though, this is admittedly very minor.
 - Only one “component” per file. This still annoys me a little bit. Though, it doesn’t really impact functionality at all.
-- In the script portion, you can’t arbitrarily create template partials, like in React: let greeting = <p>Hello</p>;. Like the above, not a huge deal, but I did mildly want it in building the form.svelte.
+- In the script portion, you can’t arbitrarily create template partials, like in React: `let greeting = <p>Hello</p>;`. Like the above, not a huge deal, but I did mildly want it in building the `form.svelte`.
 - You can’t write TypeScript in the template portion of the component. This has some minor typing implications that can be a bit of a head-scratcher.
 
-### Question: Do I post a PR from a fork of this repo or from a branch directly from this repo?
+## Question: Do I post a PR from a fork of this repo or from a branch directly from this repo?
 
 Due to the limitations of our current CI, we need PRs to come from this repo. Forking and using a fork is okay, but the final PR that will be merged needs to be a pushed branch into this repo.
 
-### Question: What is the `routes` directory and why `routes/(app)` and `routes/e2e`?
+## Question: What is the `routes` directory and why `routes/(app)` and `routes/e2e`?
 
 Quick explanation about the deployed e2e test apps (going off of the question in the standup):
 
@@ -39,7 +39,7 @@ Quick explanation about the deployed e2e test apps (going off of the question in
 
 For now, let’s just consider the first app for testing just the Login and Register journeys, and the second, widget e2e test apps for the whole flow.
 
-### Question: My component is not updating as I expect it
+## Question: My component is not updating as I expect it
 
 Any variable that derives its value from function calls or calculations needs to be wrapped in the reactive block.
 
@@ -76,7 +76,7 @@ So, we need to communicate to Svelte that other variables need to be observed as
 
 Now, Svelte understands that fullName is a derived value from the concatenation of first and last, so it adds them to the observed variables.
 
-### Question: This seems to make the whole label clickable to check / uncheck the checkbox, which is why it “feels” wrong to be putting a link in an element which is already clickable. Problem is, I don’t know if this hunch is correct, or what the alternative might be.
+## Question: This seems to make the whole label clickable to check / uncheck the checkbox, which is why it “feels” wrong to be putting a link in an element which is already clickable. Problem is, I don’t know if this hunch is correct, or what the alternative might be.
 
 You are correct. We should avoid nesting elements that handle user events within each other, and it’s a good callout. This is actually a tricky beast, and the solution isn’t going to be very easy, unfortunately.
 
@@ -86,7 +86,7 @@ Then, you can pass `<a href={link} _target="blank">View full Terms & Conditions<
 
 The end result should be the message, which is a link, printed on its own line outside of the label, but still within the Checkbox component and laid out appropriately.
 
-### Question: I’m trying to define a new property for the config of the widget. I would like to know.. how do I do this? And once I add it, how do I reference it in the code?
+## Question: I’m trying to define a new property for the config of the widget. I would like to know.. how do I do this? And once I add it, how do I reference it in the code?
 
 Sorry that this isn’t more clear. You won’t use the config prop because that’s dedicated to the JS SDK configuration. What you’ll need is similar to the content prop and style prop.
 
@@ -128,7 +128,7 @@ The type definition for this links prop and the handling of this data will need 
 
 I’m mentioning stores here (docs: https://svelte.dev/docs#run-time-svelte-store) because we probably don’t want to have to pass a links object around everywhere in the app. So, using Svelte Stores allows us to collect the links and then import them into the app where needed. Let me know if this makes sense.
 
-### Question: How are we going to handle scripts from AM?
+## Question: How are we going to handle scripts from AM?
 
 As for the Push nodes, this is for the QR code display. I'd rather "natively" support QR codes, rather than have the Widget actually run the external script. So, we will either parse the script like the WebAuthn or add a switch to send JSON rather than a script from the node.
 
@@ -146,7 +146,7 @@ The Login Widget is directly designed to address this. We are explicitly designi
 
 Anyway, I'm happy to continue this conversation with you and the rest of the team. I think it's vital for us to deeply understand this concept and evaluate this feature without the historical bias of its legacy. If, after deep contemplation, we still have a strong reason to allow for this "legacy" (as I call it) feature, then I'm happy to support it :)
 
-### Question: Why do we not recommend setting a default `tree`?
+## Question: Why do we not recommend setting a default `tree`?
 
 There are some edge cases when using journeys/trees in ways other than initially authenticating a user. A few examples are:
 
