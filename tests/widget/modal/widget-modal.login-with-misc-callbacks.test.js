@@ -1,35 +1,36 @@
 import { expect, test } from '@playwright/test';
 
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+
 test('Modal widget with simple login and misc callbacks', async ({ page }) => {
-  await page.goto('widget/modal?journey=LoginWithMiscCallbacks');
+  const { clickButton, navigate } = asyncEvents(page);
 
-  const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
-  await loginButton.click();
+  await navigate('widget/modal?journey=LoginWithMiscCallbacks');
 
-  await page.fill('text="Username"', 'demouser');
-  await page.locator('button', { hasText: 'Next' }).click();
+  await clickButton('Open Login Modal', '/authenticate');
 
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Next' }).click();
+  // Username
+  await page.getByLabel('Username').fill('demouser');
+  await clickButton('Next', '/authenticate');
+
+  // Password
+  await page.getByLabel('Password').fill('j56eKtae*1');
+  await clickButton('Next', '/authenticate');
 
   // Confirmation
-  expect(await page.locator('text="Are you human?"').innerText()).toBe('Are you human?');
-  await page.locator('button', { hasText: 'Yes' }).click(); // <- Self submitting callback
+  await expect(page.getByText('Are you human?')).toBeVisible();
+  await clickButton('Yes', '/authenticate'); // <- Self submitting callback
 
   // Choice
   const selectEl = page.getByLabel('Are you sure?');
   await selectEl.selectOption('0');
-  await Promise.all([
-    page.locator('button', { hasText: 'Next' }).click(),
 
-    // Polling Wait
+  // Polling Wait
+  await Promise.all([
     // NOTE: Make sure timer is same or more than set in Polling Wait node
     page.waitForTimeout(3000),
+    page.locator('button', { hasText: 'Next' }).click(),
   ]);
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
-
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await verifyUserInfo(page, expect);
 });

@@ -1,15 +1,16 @@
 import { expect, test } from '@playwright/test';
 
-test('inline widget', async ({ page }) => {
-  await page.goto('widget/inline');
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  await page.fill('text="Username"', 'demouser');
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Sign In' }).click();
+test('Inline widget with login', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  await navigate('widget/inline');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Password').fill('j56eKtae*1');
+
+  await clickButton('Sign In', '/authenticate');
+
+  await verifyUserInfo(page, expect);
 });
