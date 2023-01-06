@@ -1,16 +1,17 @@
 import { expect, test } from '@playwright/test';
 
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+
 test.use({ locale: 'fr-CA' });
-test('inline widget in Canadian French', async ({ page }) => {
-  await page.goto('widget/inline', { waitUntil: 'networkidle' });
+test('Inline widget with login in Canadian French', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  await page.fill('text="Nom d\'utilisateur"', 'demouser');
-  await page.fill('text=Mot de passe', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Se connecter' }).click();
+  await navigate('widget/inline');
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  await page.getByLabel('utilisateur').fill('demouser');
+  await page.getByLabel('Mot de passe').fill('j56eKtae*1');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await clickButton('Se connecter', '/authenticate');
+
+  await verifyUserInfo(page, expect);
 });

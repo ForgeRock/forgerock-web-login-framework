@@ -1,60 +1,50 @@
 import { expect, test } from '@playwright/test';
 
-test('modal widget accessibility', async ({ page }) => {
-  await page.goto('widget/modal', { waitUntil: 'networkidle' });
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  const dialog = page.locator('dialog');
-  expect(await dialog.isVisible()).toBeFalsy();
-  const button = page.getByRole('button', { name: 'Open Login Modal' });
+test('Modal widget with failed and successful login, keyboard only', async ({ page }) => {
+  const { navigate, pressEnter, pressSpacebar } = asyncEvents(page);
 
-  // this is for the start page not for the app
+  await navigate('widget/modal');
+
+  // Tab to Open Login Modal button and press Enter
   await page.keyboard.press('Tab');
-  await page.keyboard.press('Enter');
+  await pressEnter('/authenticate');
 
-  // Add just a bit of a delay to ensure dialog responds
-  await page.waitForTimeout(1000);
-  expect(await dialog.isVisible()).toBeTruthy();
-
-  const username = page.getByRole('textbox', { name: /Username/ });
-  const password = page.getByRole('textbox', { name: /Password/ });
+  const username1 = page.getByLabel('Username');
+  const password1 = page.getByLabel('Password');
 
   await page.keyboard.press('Tab');
-  expect(username).toBeFocused();
-  await username.type('username01');
+  await expect(username1).toBeFocused();
+  await username1.fill('username01');
 
   await page.keyboard.press('Tab');
-  expect(password).toBeFocused();
-  await password.type('password');
+  await expect(password1).toBeFocused();
+  await password1.fill('password');
+
+  await page.keyboard.press('Tab'); // focuses on reveal password button
+  await page.keyboard.press('Tab'); // focuses submission button
+
+  // Submit with incorrect credentials
+  await pressSpacebar('/authenticate');
+
+  await expect(page.getByText('Sign in failed')).toBeVisible();
+
+  const username2 = page.getByLabel('Username');
+  const password2 = page.getByLabel('Password');
 
   await page.keyboard.press('Tab');
-  await page.keyboard.press('Enter');
-
-  const loginBtn = page.getByRole('button', { name: 'Sign In' });
-  await page.keyboard.press('Tab');
-
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(2000);
-  await page.waitForLoadState('networkidle');
-
-  const user_name = page.getByRole('textbox', { name: 'Username' });
-  const pw = page.getByRole('textbox', { name: 'Password' });
-  const tryAgain = page.getByText('Sign in failed');
-
-  expect(await tryAgain.textContent()).toBe('Sign in failed');
-  await page.keyboard.press('Tab');
-
-  await user_name.type('demouser');
+  expect(username2).toBeFocused();
+  await username2.fill('demouser');
 
   await page.keyboard.press('Tab');
-  await pw.type('j56eKtae*1');
+  await expect(password2).toBeFocused();
+  await password2.fill('j56eKtae*1');
 
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Enter');
+  await page.keyboard.press('Tab'); // focuses on reveal password button
+  await page.keyboard.press('Tab'); // focuses submission button
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  await pressSpacebar('/authenticate');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await verifyUserInfo(page, expect);
 });

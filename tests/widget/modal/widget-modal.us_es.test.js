@@ -1,22 +1,19 @@
 import { expect, test } from '@playwright/test';
 
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+
 test.use({ locale: 'es-US' });
-test('modal widget in US Spanish', async ({ page }) => {
-  await page.goto('widget/modal', { waitUntil: 'networkidle' });
+test('Modal widget with login in US Spanish', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
+  await navigate('widget/modal');
 
-  await loginButton.click();
+  await clickButton('Open Login Modal', '/authenticate');
 
-  await page.waitForEvent('requestfinished');
-  await page.fill('text="Nombre de usuario"', 'demouser');
-  await page.fill('text=Contraseña', 'j56eKtae*1');
+  await page.getByLabel('Nombre de usuario').fill('demouser');
+  await page.getByLabel('ontraseña').fill('j56eKtae*1');
 
-  await page.locator('button', { hasText: 'Iniciar sesion' }).click();
+  await clickButton('Iniciar sesion', '/authenticate');
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
-
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await verifyUserInfo(page, expect);
 });

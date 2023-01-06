@@ -1,27 +1,26 @@
 import { test, expect } from '@playwright/test';
-test('2step login with inline accessiblity', async ({ page }) => {
-  await page.goto('widget/inline?journey=LoginWithConfirmation');
 
-  const username = page.getByRole('textbox', { name: /Username/ });
-  await page.keyboard.press('Tab');
-  await username.type('demouser');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Enter');
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  const password = page.getByRole('textbox', { name: /Password/ });
-  await password.type('j56eKtae*1');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
+test('Inline widget with 2step login, keyboard only', async ({ page }) => {
+  const { navigate, pressSpacebar } = asyncEvents(page);
 
-  await page.keyboard.press('Enter');
-  await page.waitForTimeout(2000);
+  await navigate('widget/inline?journey=LoginWithConfirmation');
 
-  const yes = page.getByRole('button', { name: /Yes/ });
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Enter');
+  await page.getByLabel('Username').fill('demouser');
+  await page.keyboard.press('Tab'); // focuses submission button
+  await pressSpacebar('/authenticate');
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.keyboard.press('Tab'); // focuses view password button
+
+  await page.keyboard.press('Tab'); // focuses submission button
+  await pressSpacebar('/authenticate');
+
+  const yesBtn = page.getByRole('button', { name: 'Yes' });
+  await yesBtn.focus(); // focuses on positive response button
+
+  await pressSpacebar('/authenticate');
+
+  await verifyUserInfo(page, expect);
 });
