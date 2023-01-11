@@ -18,7 +18,7 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
 
   export let callback: never;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: Style = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
@@ -36,14 +36,14 @@
   $: {
     typedCallback = callback as NameCallback;
     callbackType = typedCallback.getType();
-    inputName = typedCallback?.payload?.input?.[0].name || `name-${callbackMetadata.idx}`;
+    inputName = typedCallback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
     textInputLabel = typedCallback.getPrompt();
     value = typedCallback?.getInputValue();
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
   key={inputName}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}
   onChange={setValue}

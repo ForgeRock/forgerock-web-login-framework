@@ -3,12 +3,10 @@
     getInputTypeFromPolicies,
     isInputRequired,
     type FailedPolicy,
-    type Policy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import {
-    getValidationPolicies,
     getValidationFailures,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
@@ -30,7 +28,7 @@
   export const style: Style = {};
 
   export let callback: never;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
 
 
   let inputName: string;
@@ -41,7 +39,6 @@
   let prompt: string;
   let type: 'email' | 'text';
   let typedCallback: AttributeInputCallback<string>;
-  let validationRules: Policy[];
   let validationFailures: FailedPolicy[];
   let isInvalid: boolean;
 
@@ -66,21 +63,20 @@
      * on value changes within `callback`
      */
     typedCallback = callback as AttributeInputCallback<string>;
-    inputName = typedCallback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+    inputName = typedCallback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     isRequired = isInputRequired(typedCallback);
     outputName = typedCallback.getOutputByName('name', '');
     policies = typedCallback.getPolicies();
     previousValue = typedCallback?.getInputValue() as string;
     prompt = typedCallback.getPrompt();
     type = getInputTypeFromPolicies(policies);
-    validationRules = getValidationPolicies(typedCallback.getPolicies());
     validationFailures = getValidationFailures(typedCallback, prompt);
     isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
   key={inputName}
   label={interpolate(outputName, null, prompt)}
   message={isRequired ? interpolate('inputRequiredError') : undefined}

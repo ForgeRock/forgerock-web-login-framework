@@ -2,10 +2,8 @@
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
 
   import {
-    getValidationPolicies,
     getValidationFailures,
     isInputRequired,
-    type Policy,
     type FailedPolicy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
@@ -26,7 +24,7 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
 
   export let callback: never;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: Style = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
@@ -38,7 +36,6 @@
   let prompt: string;
   let typedCallback: ValidatedCreateUsernameCallback;
   let value: unknown;
-  let validationRules: Policy[];
   let validationFailures: FailedPolicy[];
 
   /**
@@ -59,18 +56,17 @@
   $: {
     typedCallback = callback as ValidatedCreateUsernameCallback;
     callbackType = typedCallback.getType();
-    inputName = typedCallback?.payload?.input?.[0].name || `validated-name=${callbackMetadata.idx}`;
+    inputName = typedCallback?.payload?.input?.[0].name || `validated-name=${callbackMetadata?.idx}`;
     isRequired = isInputRequired(typedCallback);
     prompt = typedCallback.getPrompt();
     value = typedCallback?.getInputValue();
-    validationRules = getValidationPolicies(typedCallback.getPolicies());
     validationFailures = getValidationFailures(typedCallback, prompt);
     isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
   {isRequired}
   {isInvalid}
   key={inputName}

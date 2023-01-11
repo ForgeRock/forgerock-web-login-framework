@@ -18,6 +18,8 @@
     StageJourneyObject,
     WidgetStep,
   } from '$journey/journey.interfaces';
+  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+  import { initCheckValidation } from './_utilities/step.utilities';
 
   export let form: StageFormObject;
   export let journey: StageJourneyObject;
@@ -25,10 +27,13 @@
   export let stage: string;
   export let labelType: 'floating' | 'stacked';
 
-  export let passwordCallback: PasswordCallback;
-  export let socialCallback: SelectIdPCallback;
-  export let usernameCallback: NameCallback;
-  export let localAuth: boolean;
+  // Create metadata
+  const callbackMetadata = buildCallbackMetadata(step, initCheckValidation());
+  const stepMetadata = buildStepMetadata(callbackMetadata);
+  const metadata = {
+    callbacks: callbackMetadata,
+    step: stepMetadata,
+  };
 
   // Initialize stores
   initializeLinks({ termsAndConditions: '/' });
@@ -37,10 +42,10 @@
 
 <Centered>
   {#if stage === 'UsernamePassword'}
-    <UsernamePassword {form} {journey} {step} />
+    <UsernamePassword {form} {journey} {metadata} {step} />
   {:else if stage === 'Registration'}
-    <Registration {form} {journey} {step} />
+    <Registration {form} {journey} {metadata} {step} />
   {:else}
-    <Generic {form} {journey} {step} />
+    <Generic {form} {journey} {metadata} {step} />
   {/if}
 </Centered>

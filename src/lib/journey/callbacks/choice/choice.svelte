@@ -20,7 +20,7 @@
 
   export let callback: never;
   export let displayType: 'radio' | 'select' = 'select';
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
 
   let choiceOptions: { value: string; text: string }[];
   let inputName: string;
@@ -72,7 +72,7 @@
       value: `${idx}`,
     }));
     defaultChoice = `${typedCallback.getDefaultChoice()}` || null;
-    inputName = typedCallback?.payload?.input?.[0].name || `choice-${callbackMetadata.idx}`;
+    inputName = typedCallback?.payload?.input?.[0].name || `choice-${callbackMetadata?.idx}`;
     prompt = typedCallback.getPrompt();
     label = interpolate(textToKey(prompt), null, prompt);
   }
@@ -80,7 +80,7 @@
 
 {#if displayType === 'select'}
   <Select
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
     defaultOption={defaultChoice}
     isRequired={false}
     key={inputName}
@@ -90,7 +90,7 @@
   />
 {:else}
   <Radio
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
     defaultOption={defaultChoice}
     isRequired={false}
     key={inputName}

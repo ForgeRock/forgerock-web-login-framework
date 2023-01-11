@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isStepReadyToSubmit } from './metadata.utilities';
+import { isStepReadyToSubmit } from './data-analysis.utilities';
 
 describe('Test metadata functions for step and callback', () => {
   it('should identify a step ready to be self-submitted', () => {

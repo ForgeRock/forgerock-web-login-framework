@@ -1,6 +1,4 @@
 <script lang="ts">
-  import type { HiddenValueCallback } from '@forgerock/javascript-sdk';
-
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
@@ -14,5 +12,10 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: Style = {};
 
+  /**
+   * TODO: this can't be a `const` to fix the warning as it can't be assigned a default value
+   * due to the `never` type that is an unfortunately side-effect of our callback mapping at
+   * the stage level.
+   */
   export let callback: never;
 </script>

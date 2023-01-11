@@ -19,9 +19,9 @@
 
   export let callback: never;
   export let displayType: Maybe<'buttons' | 'select'> = null;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
+  export let stepMetadata: Maybe<StepMetadata>;
 
 
   let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
@@ -37,7 +37,7 @@
    */
   function setBtnValue(index: number) {
     typedCallback.setOptionIndex(index);
-    callbackMetadata.isReadyForSubmission = true;
+    if (callbackMetadata) { callbackMetadata.isReadyForSubmission = true; }
     selfSubmitFunction && selfSubmitFunction();
   }
 
@@ -60,12 +60,12 @@
 
   $: {
     typedCallback = callback as ConfirmationCallback;
-    inputName = typedCallback?.payload?.input?.[0].name || `confirmation-${callbackMetadata.idx}`;
+    inputName = typedCallback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
     options = typedCallback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
     defaultChoice = typedCallback.getDefaultOption();
     label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm');
 
-    if (displayType === 'select' || !stepMetadata.isStepSelfSubmittable) {
+    if (displayType === 'select' || !stepMetadata?.isStepSelfSubmittable) {
       // Since the user needs to confirm, add this non-value to force selection
       options.unshift({ value: '', text: label });
     } else if (options.length === 1) {
@@ -76,9 +76,9 @@
   }
 </script>
 
-{#if displayType === 'select' || !stepMetadata.isStepSelfSubmittable}
+{#if displayType === 'select' || !stepMetadata?.isStepSelfSubmittable}
   <Select
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
     isRequired={false}
     key={inputName}
     {label}

@@ -1,12 +1,8 @@
 <script lang="ts">
-  import type { RedirectCallback } from '@forgerock/javascript-sdk';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Redirect from './redirect.svelte';
-  import type { WidgetStep } from '$journey/journey.interfaces';
 
   export let callback: never;
-  export let step: WidgetStep;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

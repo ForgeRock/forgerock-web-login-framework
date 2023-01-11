@@ -1,15 +1,7 @@
-<script lang="ts">
-  import type { PasswordCallback } from '@forgerock/javascript-sdk';
-  import type { SelectIdPCallback } from '@forgerock/javascript-sdk';
-  import type { NameCallback } from '@forgerock/javascript-sdk';
-
-  import Centered from '$components/primitives/box/centered.svelte';
+<script lang="ts">import Centered from '$components/primitives/box/centered.svelte';
   import SelectIdp from './select-idp.svelte';
 
-  export let passwordCallback: PasswordCallback;
   export let socialCallback: never;
-  export let usernameCallback: NameCallback;
-  export let localAuth: boolean;
 
   let socialCallbackMetadata = {
     canForceUserInputOptionality: true,

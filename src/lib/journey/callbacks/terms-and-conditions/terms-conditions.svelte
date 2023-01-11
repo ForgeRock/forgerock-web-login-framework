@@ -23,7 +23,7 @@
 
   export let callback: never;
   export let checkAndRadioType: 'animated' | 'standard' = 'animated';
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -54,7 +54,7 @@
 
   $: {
     typedCallback = callback as TermsAndConditionsCallback;
-    inputName = typedCallback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
+    inputName = typedCallback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`;
   }
 </script>
 
@@ -63,7 +63,7 @@
     {interpolate('termsAndConditionsLinkText')}
   </Link>
   <Checkbox
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
     key={inputName}
     onChange={setValue}
     value={false}

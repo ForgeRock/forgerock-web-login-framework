@@ -60,6 +60,10 @@ export interface JourneyStoreValue {
     step: Maybe<Step>;
   }>;
   loading: boolean;
+  metadata: {
+    callbacks: CallbackMetadata[];
+    step: StepMetadata;
+  } | null;
   step: StepTypes;
   successful: boolean;
   response: Maybe<Step>;

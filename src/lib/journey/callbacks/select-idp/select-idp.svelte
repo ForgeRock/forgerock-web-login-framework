@@ -18,9 +18,9 @@
   export const style: Style = {};
 
   export let callback: never;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
+  export let stepMetadata: Maybe<StepMetadata>;
 
 
   let idps: { value: string; text: string }[];
@@ -32,7 +32,7 @@
    */
   function setBtnValue(value: string) {
     typedCallback.setProvider(value);
-    callbackMetadata.isReadyForSubmission = true;
+    if (callbackMetadata) { callbackMetadata.isReadyForSubmission = true; }
     selfSubmitFunction && selfSubmitFunction();
   }
 
@@ -97,7 +97,7 @@
   </Grid>
 {/each}
 
-{#if stepMetadata.numOfCallbacks > 1}
+{#if stepMetadata && stepMetadata.numOfCallbacks > 1}
   <Grid num={1}>
     <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
   </Grid>

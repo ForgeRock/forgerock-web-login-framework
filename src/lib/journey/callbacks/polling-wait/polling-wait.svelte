@@ -17,7 +17,7 @@
   export const style: Style = {};
 
   export let callback: never;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
 
   let message: string;
@@ -29,7 +29,7 @@
     message = typedCallback.getMessage();
     time = typedCallback.getWaitTime();
     setTimeout(() => {
-      callbackMetadata.isReadyForSubmission = true;
+      if (callbackMetadata) { callbackMetadata.isReadyForSubmission = true; }
       selfSubmitFunction && selfSubmitFunction();
     }, time);
   }

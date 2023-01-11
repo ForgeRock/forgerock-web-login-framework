@@ -2,14 +2,12 @@
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
 
   import {
-    getValidationPolicies,
     getValidationFailures,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
   import {
     type FailedPolicy,
     isInputRequired,
-    type Policy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
@@ -22,9 +20,9 @@
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: never;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
+  export let stepMetadata: Maybe<StepMetadata>;
   export let style: Style = {};
 
   /**
@@ -38,7 +36,6 @@
   let inputName: string;
   let isInvalid: boolean;
   let prompt: string;
-  let validationRules: Policy[];
   let validationFailures: FailedPolicy[];
 
   $: {
@@ -47,9 +44,8 @@
      * on value changes within `callback`
      */
     typedCallback = callback as ValidatedCreatePasswordCallback;
-    inputName = typedCallback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+    inputName = typedCallback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     prompt = typedCallback.getPrompt();
-    validationRules = getValidationPolicies(typedCallback.getPolicies());
     validationFailures = getValidationFailures(typedCallback, prompt);
     isInvalid = !!validationFailures.length;
   }

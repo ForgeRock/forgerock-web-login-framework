@@ -23,7 +23,7 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let key: string;
   export let isInvalid = false;
   export let isRequired = false;
@@ -66,14 +66,14 @@
 
   $: {
     callbackType = callback.getType();
-    key = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+    key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
   hasRightIcon={true}
   {key}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}

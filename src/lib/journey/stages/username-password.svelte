@@ -1,5 +1,4 @@
 <script lang="ts">
-  import type { FRCallback } from '@forgerock/javascript-sdk';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
@@ -9,42 +8,43 @@
   // Import components
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey, initCheckValidation } from '$journey/_utilities/step.utilities';
+  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
   import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
-  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import { style } from '$lib/style.store';
 
   // Types
   import type {
-    CallbackMetadata,
+  CallbackMetadata,
     StageFormObject,
     StageJourneyObject,
     StepMetadata,
     WidgetStep,
   } from '$journey/journey.interfaces';
   import { captureLinks } from './_utilities/stage.utilities';
+  import type { Maybe } from '$lib/interfaces';
 
   // New API
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
+  export let metadata: Maybe<{
+    callbacks: CallbackMetadata[];
+    step: StepMetadata;
+  }>;
   export let step: WidgetStep;
 
   let alertNeedsFocus = false;
-  let callbackMetadataArray: CallbackMetadata[] = [];
-  let checkValidation: (callback: FRCallback) => boolean;
   let formMessageKey = '';
   let linkWrapper: HTMLElement;
-  let stepMetadata: StepMetadata;
 
   function determineSubmission() {
     // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
     // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 
     // The below variation is more liberal first self-submittable cb to call this wins.
-    if (stepMetadata.isStepSelfSubmittable) {
+    if (metadata?.step?.isStepSelfSubmittable) {
       form?.submit();
     }
   }
@@ -59,9 +59,6 @@
   onMount(() => captureLinks(linkWrapper, journey));
 
   $: {
-    checkValidation = initCheckValidation();
-    callbackMetadataArray = buildCallbackMetadata(step, checkValidation);
-    stepMetadata = buildStepMetadata(callbackMetadataArray);
     formMessageKey = convertStringToKey(form?.message);
   }
 </script>
@@ -86,14 +83,14 @@
     <svelte:component
       this={mapCallbackToComponent(callback)}
       callback={returnCallback(callback)}
-      callbackMetadata={callbackMetadataArray[idx]}
+      callbackMetadata={metadata?.callbacks[idx]}
       selfSubmitFunction={determineSubmission}
-      stepMetadata={{ ...stepMetadata }}
+      stepMetadata={metadata?.step && { ...metadata?.step }}
       style={$style}
     />
   {/each}
 
-  {#if !stepMetadata.isStepSelfSubmittable}
+  {#if metadata?.step?.isUserInputOptional || !metadata?.step?.isStepSelfSubmittable}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>
