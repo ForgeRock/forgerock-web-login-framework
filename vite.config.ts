@@ -1,13 +1,8 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
 
-import aliases from './alias.config';
-
 const config = {
   plugins: [basicSsl(), sveltekit()],
-  resolve: {
-    alias: aliases,
-  },
   server: {
     host: '0.0.0.0',
     cors: {
@@ -25,7 +20,7 @@ const config = {
     https: true,
     port: 8443,
     watch: {
-      // If a request is made of page render, enable this ignore or it will cause a ton of requests on change
+      // If a request is made on page render, enable the below, or it will cause a ton of requests on change
       // ignored: ['**/package/**'],
     },
   },

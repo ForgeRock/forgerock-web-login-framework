@@ -214,13 +214,14 @@
 
   import type { partialConfigSchema } from '$lib/sdk.config';
   import type { journeyConfigSchema } from '$journey/config.store';
+  import type { Maybe } from '$lib/interfaces';
   import type { partialStringsSchema } from '$lib/locale.store';
 
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
-  export let journeys: z.infer<typeof journeyConfigSchema>;
+  export let journeys: z.infer<typeof journeyConfigSchema> | undefined = undefined;
   export let links: z.infer<typeof partialLinksSchema>;
-  export let style: Style;
+  export let style: Style | undefined = undefined;
 
   const dispatch = createEventDispatcher();
 

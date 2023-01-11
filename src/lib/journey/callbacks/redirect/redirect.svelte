@@ -12,16 +12,20 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: RedirectCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  // Unused props. Setting to const prevents errors in console
+  export const callbackMetadata: Maybe<CallbackMetadata> = null;
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
+
+  export let callback: never;
 
   let message: string;
+  let typedCallback: RedirectCallback;
 
   $: {
-    message = `${interpolate('redirectingTo')} ${new URL(callback.getRedirectUrl()).hostname}`;
+    typedCallback = callback as RedirectCallback;
+    message = `${interpolate('redirectingTo')} ${new URL(typedCallback.getRedirectUrl()).hostname}`;
   }
 </script>
 

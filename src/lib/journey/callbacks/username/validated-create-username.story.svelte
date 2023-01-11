@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './validated-create-username.svelte';
 
-  export let callback: ValidatedCreateUsernameCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

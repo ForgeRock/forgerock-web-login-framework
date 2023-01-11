@@ -15,36 +15,40 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: SelectIdPCallback;
+  export const style: Style = {};
+
+  export let callback: never;
   export let callbackMetadata: CallbackMetadata;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+
 
   let idps: { value: string; text: string }[];
+  let typedCallback: SelectIdPCallback;
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
    * @param {number} index
    */
   function setBtnValue(value: string) {
-    callback.setProvider(value);
+    typedCallback.setProvider(value);
     callbackMetadata.isReadyForSubmission = true;
     selfSubmitFunction && selfSubmitFunction();
   }
 
   $: {
-    const localAuthentication = callback
+    typedCallback = callback as SelectIdPCallback;
+    const localAuthentication = typedCallback
       .getProviders()
       .filter((provider) => provider.provider === 'localAuthentication');
 
-    const socialProviders = callback
+    const socialProviders = typedCallback
       .getProviders()
       .filter((provider) => provider.provider !== 'localAuthentication');
 
     if (localAuthentication.length > 0) {
       // Assume that clicking "next" will indicate the user wants to use local authentication
-      callback.setProvider('localAuthentication');
+      typedCallback.setProvider('localAuthentication');
     }
 
     idps = socialProviders.map((option, index) => ({

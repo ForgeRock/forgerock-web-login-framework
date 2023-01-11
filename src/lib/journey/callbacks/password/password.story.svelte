@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Password from './password.svelte';
 
-  export let callback: PasswordCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

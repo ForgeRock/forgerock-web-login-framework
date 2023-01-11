@@ -12,7 +12,8 @@
    * @param {Object} event - HTML form event
    * @return {undefined}
    */
-  function formSubmit(event: SubmitEvent) {
+  // TODO: Using an `any` to give us time to figure out these weird event types that just changed
+  function formSubmit(event: any) {
     /**
      * Reference for validation: https://www.aleksandrhovhannisyan.com/blog/html-input-validation-without-a-form/
      */

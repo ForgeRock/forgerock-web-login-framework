@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Name from './name.svelte';
 
-  export let callback: NameCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

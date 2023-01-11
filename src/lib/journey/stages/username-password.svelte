@@ -48,6 +48,9 @@
       form?.submit();
     }
   }
+  function returnCallback(callback: any) {
+    return callback as never;
+  }
 
   afterUpdate(() => {
     alertNeedsFocus = !!form?.message;
@@ -82,7 +85,7 @@
   {#each step?.callbacks as callback, idx}
     <svelte:component
       this={mapCallbackToComponent(callback)}
-      {callback}
+      callback={returnCallback(callback)}
       callbackMetadata={callbackMetadataArray[idx]}
       selfSubmitFunction={determineSubmission}
       stepMetadata={{ ...stepMetadata }}

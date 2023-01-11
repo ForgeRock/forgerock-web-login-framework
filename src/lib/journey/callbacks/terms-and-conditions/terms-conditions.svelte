@@ -16,12 +16,14 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: TermsAndConditionsCallback;
+  // Unused props. Setting to const` prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
+
+  export let callback: never;
   export let checkAndRadioType: 'animated' | 'standard' = 'animated';
   export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -33,6 +35,7 @@
   const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
 
   let inputName: string;
+  let typedCallback: TermsAndConditionsCallback;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -46,11 +49,12 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setAccepted((event.target as HTMLInputElement).checked);
+    typedCallback.setAccepted((event.target as HTMLInputElement).checked);
   }
 
   $: {
-    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
+    typedCallback = callback as TermsAndConditionsCallback;
+    inputName = typedCallback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
   }
 </script>
 

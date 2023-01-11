@@ -5,7 +5,7 @@
   import Redirect from './redirect.svelte';
   import type { WidgetStep } from '$journey/journey.interfaces';
 
-  export let callback: RedirectCallback;
+  export let callback: never;
   export let step: WidgetStep;
 
   let callbackMetadata = {

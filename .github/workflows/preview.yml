@@ -42,12 +42,12 @@ jobs:
           node-version: '16.x'
       - uses: ryanbas21/update-cors-am-github-action@latest
         with:
-          AM_URL: ${{ secrets.AM_URL }}
+          AM_URL: ${{ secrets.VITE_FR_AM_URL }}
           USERNAME: ${{ secrets.AM_USERNAME }}
           PASSWORD: ${{ secrets.AM_PASSWORD }}
-          REALM_PATH: ${{ secrets.AM_REALM }}
+          REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
           ORIGINS: ${{ needs.preview.outputs.urls }}
-          COOKIE_NAME: ${{ secrets.COOKIE_NAME }}
+          COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
           REDIRECTION_URIS: ${{ secrets.REDIRECTION_URIS }}
           REMOVE: false
           CORS_CONFIG_NAME: 'org-ui'

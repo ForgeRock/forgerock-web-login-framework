@@ -17,10 +17,12 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: KbaCreateCallback;
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
+  export let callback: never;
   export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
   export let style: Style = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
@@ -41,6 +43,7 @@
   let prompt: string;
   let questions: { text: string; value: string }[];
   let shouldAllowCustomQuestion: boolean | undefined;
+  let typedCallback = callback as KbaCreateCallback;
   let value = writable('');
 
   /**
@@ -49,7 +52,7 @@
    * in case
    */
   try {
-    shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions') as boolean;
+    shouldAllowCustomQuestion = typedCallback.getOutputValue('allowUserDefinedQuestions') as boolean;
   } catch (err) {
     console.error(
       '`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`',
@@ -68,7 +71,7 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setAnswer((event.target as HTMLSelectElement).value);
+    typedCallback.setAnswer((event.target as HTMLSelectElement).value);
   }
 
   /**
@@ -81,7 +84,7 @@
     if (selectValue === customQuestionIndex) {
       displayCustomQuestionInput = true;
       value.set('');
-      callback.setAnswer('');
+      typedCallback.setAnswer('');
     } else {
       displayCustomQuestionInput = false;
       /** ***********************************************************************
@@ -91,7 +94,7 @@
        * Details: Each callback is wrapped by the SDK to provide helper methods
        * for writing values to the callbacks received from AM
        *********************************************************************** */
-      callback.setQuestion(selectValue);
+      typedCallback.setQuestion(selectValue);
     }
   }
 
@@ -108,16 +111,16 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setQuestion(inputValue);
+    typedCallback.setQuestion(inputValue);
   }
 
   $: {
-    inputArr = callback?.payload?.input;
-    inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata.idx}`;
+    inputArr = typedCallback?.payload?.input;
+    inputName = typedCallback?.payload?.input?.[0].name || `kba-${callbackMetadata.idx}`;
     inputNameQuestion = inputName;
     inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
-    prompt = callback.getPrompt();
-    questions = callback
+    prompt = typedCallback.getPrompt();
+    questions = typedCallback
       .getPredefinedQuestions()
       ?.map((label, idx) => ({ text: label, value: `${idx}` }));
 
@@ -127,7 +130,7 @@
      * in case
      */
     try {
-      shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions') as boolean;
+      shouldAllowCustomQuestion = typedCallback.getOutputValue('allowUserDefinedQuestions') as boolean;
     } catch (err) {
       console.error(
         '`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`',

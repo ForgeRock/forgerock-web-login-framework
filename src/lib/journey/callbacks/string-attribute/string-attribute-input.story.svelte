@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './string-attribute-input.svelte';
 
-  export let callback: AttributeInputCallback<string>;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

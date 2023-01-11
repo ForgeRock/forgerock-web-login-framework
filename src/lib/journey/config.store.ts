@@ -45,7 +45,7 @@ journeyConfigSchema.parse(defaultJourneys);
 
 export let configuredJourneys: Readable<StoreItem[]>;
 
-export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema>) {
+export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> | null) {
   if (customJourneys) {
     // Provide developer feedback if customized
     journeyConfigSchema.parse(customJourneys);

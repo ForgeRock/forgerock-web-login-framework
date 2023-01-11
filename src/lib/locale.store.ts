@@ -1,6 +1,9 @@
 import { readable, writable, type Readable, type Writable } from 'svelte/store';
 import { z } from 'zod';
 
+// TODO: Reevaluate use of JS versus JSON without breaking type generation for lib
+// eslint-disable-next-line
+// @ts-ignore
 import fallback from '$locales/us/en/index.json';
 
 export const stringsSchema = z

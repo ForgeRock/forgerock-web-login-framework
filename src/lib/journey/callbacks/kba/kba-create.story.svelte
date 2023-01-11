@@ -4,7 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Kba from './kba-create.svelte';
 
-  export let callback: KbaCreateCallback;
+  export let callback: never;
 
   let callbackMetadata = {
     canForceUserInputOptionality: false,

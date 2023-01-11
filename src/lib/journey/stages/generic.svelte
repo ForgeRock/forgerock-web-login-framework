@@ -60,6 +60,9 @@
       submitFormWrapper();
     }
   }
+  function returnCallback(callback: any) {
+    return callback as never;
+  }
   function submitFormWrapper() {
     alertNeedsFocus = false;
     formNeedsFocus = false;
@@ -122,10 +125,9 @@
   {#each step?.callbacks as callback, idx}
     <svelte:component
       this={mapCallbackToComponent(callback)}
-      {callback}
+      callback={returnCallback(callback)}
       callbackMetadata={callbackMetadataArray[idx]}
       selfSubmitFunction={determineSubmission}
-      {step}
       stepMetadata={{ ...stepMetadata }}
       style={$style}
     />

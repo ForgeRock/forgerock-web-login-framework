@@ -5,7 +5,7 @@
   import Confirmation from './confirmation.svelte';
   import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
 
-  export let callback: ConfirmationCallback;
+  export let callback: never;
   export let callbackMetadata: CallbackMetadata;
   export let selfSubmitFunction: () => void;
   export let stepMetadata: StepMetadata;

@@ -394,7 +394,7 @@ widget.$destroy();
 
 NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html), or you can [see our API docs for more developer detail](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/configoptions.html).
 
-NOTE: For content schema, please [use the example en-US locale file](/src/locales/us/en/index.json).
+NOTE: For content schema, please [use the example en-US locale file](/src/locales/us/en/index.ts).
 
 ### Journey
 

@@ -14,25 +14,29 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: ConfirmationCallback;
+  // Unused props. Setting to const prevents errors in console
+  export const style: Style = {};
+
+  export let callback: never;
   export let displayType: Maybe<'buttons' | 'select'> = null;
   export let callbackMetadata: CallbackMetadata;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let stepMetadata: StepMetadata;
-  export let style: Style = {};
 
+
+  let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
+  let defaultChoice: number;
   let inputName: string;
   let label: string;
   let options: { value: string; text: string }[];
-  let defaultChoice: number;
-  let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
+  let typedCallback: ConfirmationCallback;
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
    * @param {number} index
    */
   function setBtnValue(index: number) {
-    callback.setOptionIndex(index);
+    typedCallback.setOptionIndex(index);
     callbackMetadata.isReadyForSubmission = true;
     selfSubmitFunction && selfSubmitFunction();
   }
@@ -49,15 +53,16 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setOptionIndex(Number((event.target as HTMLSelectElement).value));
+    typedCallback.setOptionIndex(Number((event.target as HTMLSelectElement).value));
   }
 
   // TODO: use selfSubmitFunction to communicate to step component that this callback is ready
 
   $: {
-    inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata.idx}`;
-    options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
-    defaultChoice = callback.getDefaultOption();
+    typedCallback = callback as ConfirmationCallback;
+    inputName = typedCallback?.payload?.input?.[0].name || `confirmation-${callbackMetadata.idx}`;
+    options = typedCallback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
+    defaultChoice = typedCallback.getDefaultOption();
     label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm');
 
     if (displayType === 'select' || !stepMetadata.isStepSelfSubmittable) {
