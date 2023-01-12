@@ -7,13 +7,15 @@ node_modules
 /package/*
 /package/**/*
 !/package/README.md
-!/*/package.json
+!/package/LICENSE
+!/package/package.json
 .env
 .env.*
 !.env.example
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
 .syncthing*
 /test-results/
 /playwright-report/
