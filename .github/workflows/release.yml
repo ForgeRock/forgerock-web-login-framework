@@ -43,3 +43,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+          VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+          VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
+          VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
