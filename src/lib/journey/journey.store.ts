@@ -11,6 +11,7 @@ import {
   shouldPopulateWithPreviousCallbacks,
 } from './stages/_utilities/step.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+import type { Maybe } from '$lib/interfaces';
 
 function initializeStack(initOptions?: StepOptions) {
   const initialValue = initOptions ? [initOptions] : [];
@@ -246,8 +247,21 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        * the final result to the user.
        */
       if (restartedStep.type === StepType.Step) {
-        const callbackMetadata = buildCallbackMetadata(restartedStep, initCheckValidation());
-        const stepMetadata = buildStepMetadata(callbackMetadata);
+        const stageAttribute = restartedStep.getStage();
+
+        let stageJson: Maybe<Record<string, unknown>> = null;
+
+        // Check if stage attribute is serialized JSON
+        if (stageAttribute && stageAttribute.includes("{")) {
+          try {
+            stageJson = JSON.parse(stageAttribute);
+          } catch (err) {
+            console.warn('Stage attribute value was not parsable');
+          }
+        }
+
+        const callbackMetadata = buildCallbackMetadata(restartedStep, initCheckValidation(), stageJson);
+        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
 
         set({
           completed: false,

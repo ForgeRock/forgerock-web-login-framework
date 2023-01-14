@@ -1,49 +1,61 @@
 import { describe, expect, it } from 'vitest';
 
-import { isStepReadyToSubmit } from './data-analysis.utilities';
+import { buildCallbackMetadata, buildStepMetadata } from './metadata.utilities';
+import { step } from './step.mock';
 
-describe('Test metadata functions for step and callback', () => {
-  it('should identify a step ready to be self-submitted', () => {
-    const result = isStepReadyToSubmit([
+describe('Test metadata builder functions', () => {
+  it('should have metadata without stage attributes', () => {
+    const result = buildCallbackMetadata(step, () => false, null);
+
+    expect(result).toStrictEqual([
       {
-        canForceUserInputOptionality: false,
-        isFirstInvalidInput: false,
-        isReadyForSubmission: true,
-        isSelfSubmitting: true,
-        isUserInputRequired: false,
+        canForceUserInputOptionality: undefined,
         idx: 0,
-      },
-      {
-        canForceUserInputOptionality: false,
-        isFirstInvalidInput: false,
-        isReadyForSubmission: true,
-        isSelfSubmitting: true,
-        isUserInputRequired: false,
-        idx: 1,
-      },
-    ]);
-    expect(result).toBe(true);
-  });
-
-  it('should identify a step NOT ready to be self-submitted', () => {
-    const result = isStepReadyToSubmit([
-      {
-        canForceUserInputOptionality: false,
         isFirstInvalidInput: false,
         isReadyForSubmission: false,
-        isSelfSubmitting: true,
-        isUserInputRequired: false,
-        idx: 0,
+        isSelfSubmitting: false,
+        isUserInputRequired: true,
       },
       {
-        canForceUserInputOptionality: false,
-        isFirstInvalidInput: false,
-        isReadyForSubmission: true,
-        isSelfSubmitting: true,
-        isUserInputRequired: false,
+        canForceUserInputOptionality: undefined,
         idx: 1,
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: false,
+        isUserInputRequired: true,
       },
     ]);
-    expect(result).toBe(false);
+  });
+
+  it('should have metadata with stage attributes', () => {
+    const stageJson = {
+      themeId: 'zardoz',
+      ValidatedCreatePasswordCallback: [
+        { id: 'subNode1', confirmPassword: true, policyDisplayCheckmark: true },
+      ],
+    };
+    const result = buildCallbackMetadata(step, () => false, stageJson);
+
+    expect(result).toStrictEqual([
+      {
+        canForceUserInputOptionality: undefined,
+        idx: 0,
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: false,
+        isUserInputRequired: true,
+      },
+      {
+        canForceUserInputOptionality: undefined,
+        confirmPassword: true,
+        id: 'subNode1',
+        idx: 1,
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: false,
+        isUserInputRequired: true,
+        policyDisplayCheckmark: true,
+      },
+    ]);
   });
 });
