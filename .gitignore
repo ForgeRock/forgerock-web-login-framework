@@ -7,6 +7,7 @@ node_modules
 /package/*
 /package/**/*
 !/package/README.md
+!/package/CHANGELOG.md
 !/package/LICENSE
 !/package/package.json
 .env
