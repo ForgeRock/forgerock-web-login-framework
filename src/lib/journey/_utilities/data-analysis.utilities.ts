@@ -62,7 +62,7 @@ export function canForceUserInputOptionality(callback: FRCallback) {
     ];
 
   // If there is a function, run it and it will return a boolean
-  return fn && fn(callback);
+  return fn ? fn(callback) : false;
 }
 
 /**
@@ -85,7 +85,7 @@ export function isStepSelfSubmittable(callbacks: CallbackMetadata[], userInputOp
   }
 
   const unsubmittableCallbacks = callbacks.filter(
-    (callback) => callback.isUserInputRequired && !callback.isSelfSubmitting,
+    (callback) => callback.derived.isUserInputRequired && !callback.derived.isSelfSubmitting,
   );
   return !unsubmittableCallbacks.length;
 }
@@ -96,9 +96,9 @@ export function isStepSelfSubmittable(callbacks: CallbackMetadata[], userInputOp
  * @returns
  */
 export function isStepReadyToSubmit(callbacks: CallbackMetadata[]) {
-  const selfSubmittableCbs = callbacks.filter((callback) => callback.isSelfSubmitting);
+  const selfSubmittableCbs = callbacks.filter((callback) => callback.derived.isSelfSubmitting);
   const selfSubmittableCbsReadyForSubmission = callbacks.filter(
-    (callback) => callback.isSelfSubmitting && callback.isReadyForSubmission,
+    (callback) => callback.derived.isSelfSubmitting && callback.derived.isReadyForSubmission,
   );
   // Are all self-submittable callbacks ready to be submitted
   return selfSubmittableCbsReadyForSubmission.length === selfSubmittableCbs.length;
@@ -133,7 +133,7 @@ export function isUserInputOptional(
   // default reducer function to check if both overriding callback exists
   // along with user input required callbacks
   const fallbackFn = (prev: boolean, curr: CallbackMetadata) => {
-    if (curr.canForceUserInputOptionality && numOfUserInputCbs > 0) {
+    if (curr.derived.canForceUserInputOptionality && numOfUserInputCbs > 0) {
       prev = true;
     }
     return prev;

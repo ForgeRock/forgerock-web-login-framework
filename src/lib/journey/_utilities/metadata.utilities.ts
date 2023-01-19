@@ -1,6 +1,6 @@
-import type { FRCallback } from '@forgerock/javascript-sdk';
+import type { FRCallback, FRStep } from '@forgerock/javascript-sdk';
 
-import type { CallbackMetadata, WidgetStep } from '$journey/journey.interfaces';
+import type { CallbackMetadata } from '$journey/journey.interfaces';
 import {
   canForceUserInputOptionality,
   isCbReadyByDefault,
@@ -13,11 +13,11 @@ import {
 /**
  * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
  * @param {object} step - The modified Widget step object
- * @param checkValidation
+ * @param checkValidation - function that checks if current callback is the first invalid callback
  * @returns {array}
  */
 export function buildCallbackMetadata(
-  step: WidgetStep,
+  step: FRStep,
   checkValidation: (callback: FRCallback) => boolean,
   stageJson?: Record<string, unknown> | null,
 ) {
@@ -41,13 +41,20 @@ export function buildCallbackMetadata(
     }
 
     return {
-      canForceUserInputOptionality: canForceUserInputOptionality(callback),
-      isFirstInvalidInput: checkValidation(callback),
-      isReadyForSubmission: isCbReadyByDefault(callback),
-      isSelfSubmitting: isSelfSubmitting(callback),
-      isUserInputRequired: requiresUserInput(callback),
+      derived: {
+        canForceUserInputOptionality: canForceUserInputOptionality(callback),
+        isFirstInvalidInput: checkValidation(callback),
+        isReadyForSubmission: isCbReadyByDefault(callback),
+        isSelfSubmitting: isSelfSubmitting(callback),
+        isUserInputRequired: requiresUserInput(callback),
+      },
       idx,
-      ...stageCbMetadata,
+      // Only use the `platform` prop if there's metadata to add
+      ...(stageCbMetadata && {
+        platform: {
+          ...stageCbMetadata,
+        },
+      }),
     };
   });
 }
@@ -61,7 +68,9 @@ export function buildStepMetadata(
   callbackMetadataArray: CallbackMetadata[],
   stageJson?: Record<string, unknown> | null,
 ) {
-  const numOfUserInputCbs = callbackMetadataArray.filter((cb) => !!cb.isUserInputRequired).length;
+  const numOfUserInputCbs = callbackMetadataArray.filter(
+    (cb) => !!cb.derived.isUserInputRequired,
+  ).length;
   const userInputOptional = isUserInputOptional(callbackMetadataArray, numOfUserInputCbs);
 
   let stageMetadata;
@@ -70,18 +79,26 @@ export function buildStepMetadata(
     stageMetadata = Object.keys(stageJson).reduce((prev, curr) => {
       // Filter out objects or arrays as those are for the callbacks
       if (typeof stageJson[curr] !== 'object') {
-        prev[curr] =  stageJson[curr];
+        prev[curr] = stageJson[curr];
       }
       return prev;
     }, {} as Record<string, unknown>);
   }
 
   return {
-    isStepSelfSubmittable: isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
-    isUserInputOptional: userInputOptional,
-    numOfCallbacks: callbackMetadataArray.length,
-    numOfSelfSubmittableCbs: callbackMetadataArray.filter((cb) => !!cb.isSelfSubmitting).length,
-    numOfUserInputCbs: numOfUserInputCbs,
-    ...stageMetadata,
+    derived: {
+      isStepSelfSubmittable: isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
+      isUserInputOptional: userInputOptional,
+      numOfCallbacks: callbackMetadataArray.length,
+      numOfSelfSubmittableCbs: callbackMetadataArray.filter((cb) => !!cb.derived.isSelfSubmitting)
+        .length,
+      numOfUserInputCbs: numOfUserInputCbs,
+    },
+    // Only use the `platform` prop if there's metadata to add
+    ...(stageMetadata && {
+      platform: {
+        ...stageMetadata,
+      },
+    }),
   };
 }

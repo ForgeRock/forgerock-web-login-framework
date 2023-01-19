@@ -19,19 +19,13 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: never;
+  export let callback: ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let stepMetadata: Maybe<StepMetadata>;
   export let style: Style = {};
 
-  /**
-   * At the time of this writing, this callback is never marked as required,
-   * but I'm adding this here as that could change.
-   */
-  let typedCallback = callback as ValidatedCreatePasswordCallback;
-
-  const isRequired = isInputRequired(typedCallback);
+  const isRequired = isInputRequired(callback);
 
   let inputName: string;
   let isInvalid: boolean;
@@ -43,16 +37,15 @@
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
      */
-    typedCallback = callback as ValidatedCreatePasswordCallback;
-    inputName = typedCallback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
-    prompt = typedCallback.getPrompt();
-    validationFailures = getValidationFailures(typedCallback, prompt);
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
+    prompt = callback.getPrompt();
+    validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Base
-  callback={typedCallback}
+  callback={callback}
   {callbackMetadata}
   {isInvalid}
   {isRequired}
@@ -62,5 +55,5 @@
   {stepMetadata}
   {style}
 >
-  <Policies callback={typedCallback} label={prompt} messageKey="passwordRequirements" />
+  <Policies callback={callback} label={prompt} messageKey="passwordRequirements" />
 </Base>

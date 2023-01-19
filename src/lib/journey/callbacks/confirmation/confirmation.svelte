@@ -17,7 +17,7 @@
   // Unused props. Setting to const prevents errors in console
   export const style: Style = {};
 
-  export let callback: never;
+  export let callback: ConfirmationCallback;
   export let displayType: Maybe<'buttons' | 'select'> = null;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
@@ -29,15 +29,14 @@
   let inputName: string;
   let label: string;
   let options: { value: string; text: string }[];
-  let typedCallback: ConfirmationCallback;
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
    * @param {number} index
    */
   function setBtnValue(index: number) {
-    typedCallback.setOptionIndex(index);
-    if (callbackMetadata) { callbackMetadata.isReadyForSubmission = true; }
+    callback.setOptionIndex(index);
+    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
     selfSubmitFunction && selfSubmitFunction();
   }
 
@@ -53,19 +52,18 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    typedCallback.setOptionIndex(Number((event.target as HTMLSelectElement).value));
+    callback.setOptionIndex(Number((event.target as HTMLSelectElement).value));
   }
 
   // TODO: use selfSubmitFunction to communicate to step component that this callback is ready
 
   $: {
-    typedCallback = callback as ConfirmationCallback;
-    inputName = typedCallback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
-    options = typedCallback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
-    defaultChoice = typedCallback.getDefaultOption();
+    inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
+    options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
+    defaultChoice = callback.getDefaultOption();
     label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm');
 
-    if (displayType === 'select' || !stepMetadata?.isStepSelfSubmittable) {
+    if (displayType === 'select' || !stepMetadata?.derived.isStepSelfSubmittable) {
       // Since the user needs to confirm, add this non-value to force selection
       options.unshift({ value: '', text: label });
     } else if (options.length === 1) {
@@ -76,9 +74,9 @@
   }
 </script>
 
-{#if displayType === 'select' || !stepMetadata?.isStepSelfSubmittable}
+{#if displayType === 'select' || !stepMetadata?.derived.isStepSelfSubmittable}
   <Select
-    isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     isRequired={false}
     key={inputName}
     {label}

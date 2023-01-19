@@ -14,7 +14,7 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: never;
+  export let callback: AttributeInputCallback<boolean>;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
@@ -28,7 +28,6 @@
   let outputName: string;
   let previousValue: boolean;
   let prompt: string;
-  let typedCallback: AttributeInputCallback<boolean>;
   let validationFailure: string;
 
   function setValue(event: Event) {
@@ -39,23 +38,22 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    typedCallback.setInputValue((event.target as HTMLInputElement).checked);
+    callback.setInputValue((event.target as HTMLInputElement).checked);
   }
 
   $: {
-    typedCallback = callback as AttributeInputCallback<boolean>;
-    inputName = typedCallback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata?.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata?.idx}`;
     // A boolean being required doesn't make much sense, so commenting it out for now
     // isRequired = isInputRequired(callback);
-    outputName = typedCallback.getOutputByName('name', '');
-    previousValue = typedCallback.getInputValue() as boolean;
-    prompt = typedCallback.getPrompt();
-    validationFailure = getAttributeValidationFailureText(typedCallback);
+    outputName = callback.getOutputByName('name', '');
+    previousValue = callback.getInputValue() as boolean;
+    prompt = callback.getPrompt();
+    validationFailure = getAttributeValidationFailureText(callback);
   }
 </script>
 
 <Checkbox
-  isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   isInvalid={!!validationFailure}
   key={inputName}
   message={validationFailure}

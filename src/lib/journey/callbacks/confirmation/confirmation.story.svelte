@@ -6,7 +6,7 @@
   import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: never;
+  export let callback: ConfirmationCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: () => void;
   export let stepMetadata: Maybe<StepMetadata>;

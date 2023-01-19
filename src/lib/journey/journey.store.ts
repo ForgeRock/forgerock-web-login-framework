@@ -252,7 +252,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         let stageJson: Maybe<Record<string, unknown>> = null;
 
         // Check if stage attribute is serialized JSON
-        if (stageAttribute && stageAttribute.includes("{")) {
+        if (stageAttribute && stageAttribute.includes('{')) {
           try {
             stageJson = JSON.parse(stageAttribute);
           } catch (err) {
@@ -260,7 +260,11 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           }
         }
 
-        const callbackMetadata = buildCallbackMetadata(restartedStep, initCheckValidation(), stageJson);
+        const callbackMetadata = buildCallbackMetadata(
+          restartedStep,
+          initCheckValidation(),
+          stageJson,
+        );
         const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
 
         set({

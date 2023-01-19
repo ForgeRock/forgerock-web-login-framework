@@ -16,20 +16,19 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: Style = {};
 
-  export let callback: never;
+  export let callback: PollingWaitCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
 
   let message: string;
   let time: number;
-  let typedCallback: PollingWaitCallback
 
   $: {
-    typedCallback = callback as PollingWaitCallback;
-    message = typedCallback.getMessage();
-    time = typedCallback.getWaitTime();
+    callback = callback as PollingWaitCallback;
+    message = callback.getMessage();
+    time = callback.getWaitTime();
     setTimeout(() => {
-      if (callbackMetadata) { callbackMetadata.isReadyForSubmission = true; }
+      if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
       selfSubmitFunction && selfSubmitFunction();
     }, time);
   }

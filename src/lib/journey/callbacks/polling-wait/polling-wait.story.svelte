@@ -5,16 +5,31 @@
   import PollingWait from './polling-wait.svelte';
 
   import type {
-    CallbackMetadata,
     SelfSubmitFunction,
-    StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Maybe } from '$lib/interfaces';
 
-  export let callback: never;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
+  export let callback: PollingWaitCallback;
   export let selfSubmitFunction: SelfSubmitFunction;
-  export let stepMetadata: Maybe<StepMetadata>;
+
+  let callbackMetadata = {
+    derived: {
+      canForceUserInputOptionality: false,
+      isFirstInvalidInput: false,
+      isReadyForSubmission: false,
+      isSelfSubmitting: true,
+      isUserInputRequired: false,
+    },
+    idx: 0,
+  };
+  let stepMetadata = {
+    derived: {
+      isStepSelfSubmittable: true,
+      isUserInputOptional: false,
+      numOfCallbacks: 2,
+      numOfSelfSubmittableCbs: 2,
+      numOfUserInputCbs: 0,
+    },
+  };
 </script>
 
 <Centered>

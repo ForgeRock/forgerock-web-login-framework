@@ -17,7 +17,7 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: never;
+  export let callback: NameCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: Style = {};
 
@@ -26,24 +26,22 @@
   let callbackType: string;
   let inputName: string;
   let textInputLabel: string;
-  let typedCallback: NameCallback;
   let value: unknown;
 
   function setValue(event: Event) {
-    typedCallback.setInputValue((event.target as HTMLInputElement).value);
+    callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
   $: {
-    typedCallback = callback as NameCallback;
-    callbackType = typedCallback.getType();
-    inputName = typedCallback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
-    textInputLabel = typedCallback.getPrompt();
-    value = typedCallback?.getInputValue();
+    callbackType = callback.getType();
+    inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
+    textInputLabel = callback.getPrompt();
+    value = callback?.getInputValue();
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   key={inputName}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}
   onChange={setValue}

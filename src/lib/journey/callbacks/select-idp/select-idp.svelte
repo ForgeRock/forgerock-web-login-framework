@@ -17,38 +17,35 @@
 
   export const style: Style = {};
 
-  export let callback: never;
+  export let callback: SelectIdPCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let stepMetadata: Maybe<StepMetadata>;
 
-
   let idps: { value: string; text: string }[];
-  let typedCallback: SelectIdPCallback;
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
    * @param {number} index
    */
   function setBtnValue(value: string) {
-    typedCallback.setProvider(value);
-    if (callbackMetadata) { callbackMetadata.isReadyForSubmission = true; }
+    callback.setProvider(value);
+    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
     selfSubmitFunction && selfSubmitFunction();
   }
 
   $: {
-    typedCallback = callback as SelectIdPCallback;
-    const localAuthentication = typedCallback
+    const localAuthentication = callback
       .getProviders()
       .filter((provider) => provider.provider === 'localAuthentication');
 
-    const socialProviders = typedCallback
+    const socialProviders = callback
       .getProviders()
       .filter((provider) => provider.provider !== 'localAuthentication');
 
     if (localAuthentication.length > 0) {
       // Assume that clicking "next" will indicate the user wants to use local authentication
-      typedCallback.setProvider('localAuthentication');
+      callback.setProvider('localAuthentication');
     }
 
     idps = socialProviders.map((option, index) => ({
@@ -97,7 +94,7 @@
   </Grid>
 {/each}
 
-{#if stepMetadata && stepMetadata.numOfCallbacks > 1}
+{#if stepMetadata && stepMetadata.derived.numOfCallbacks > 1}
   <Grid num={1}>
     <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
   </Grid>

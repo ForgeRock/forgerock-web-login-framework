@@ -18,14 +18,12 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: Style = {};
 
-  export let callback: never;
+  export let callback: RedirectCallback;
 
   let message: string;
-  let typedCallback: RedirectCallback;
 
   $: {
-    typedCallback = callback as RedirectCallback;
-    message = `${interpolate('redirectingTo')} ${new URL(typedCallback.getRedirectUrl()).hostname}`;
+    message = `${interpolate('redirectingTo')} ${new URL(callback.getRedirectUrl()).hostname}`;
   }
 </script>
 

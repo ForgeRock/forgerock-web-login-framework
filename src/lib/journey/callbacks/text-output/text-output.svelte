@@ -18,16 +18,13 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: Style = {};
 
-  export let callback: never;
+  export let callback: SuspendedTextOutputCallback | TextOutputCallback;
 
-
-  let typedCallback = callback as SuspendedTextOutputCallback | TextOutputCallback;
-  let dirtyMessage = typedCallback.getMessage();
+  let dirtyMessage = callback.getMessage();
   let cleanMessage = sanitize(dirtyMessage);
 
   $: {
-    typedCallback = callback as SuspendedTextOutputCallback | TextOutputCallback;
-    dirtyMessage = typedCallback.getMessage();
+    dirtyMessage = callback.getMessage();
     cleanMessage = sanitize(dirtyMessage);
   }
 </script>

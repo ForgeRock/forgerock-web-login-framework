@@ -1,23 +1,30 @@
-<script lang="ts">import Centered from '$components/primitives/box/centered.svelte';
+<script lang="ts">
+  import type { SelectIdPCallback } from '@forgerock/javascript-sdk';
+
+  import Centered from '$components/primitives/box/centered.svelte';
   import SelectIdp from './select-idp.svelte';
 
-  export let socialCallback: never;
+  export let socialCallback: SelectIdPCallback;
 
   let socialCallbackMetadata = {
-    canForceUserInputOptionality: true,
-    isFirstInvalidInput: false,
-    isReadyForSubmission: true,
-    isSelfSubmitting: true,
-    isUserInputRequired: false,
+    derived: {
+      canForceUserInputOptionality: true,
+      isFirstInvalidInput: false,
+      isReadyForSubmission: true,
+      isSelfSubmitting: true,
+      isUserInputRequired: false,
+    },
     idx: 0,
   };
 
   let stepMetadata = {
-    isStepSelfSubmittable: true,
-    isUserInputOptional: true,
-    numOfCallbacks: 1,
-    numOfSelfSubmittableCbs: 1,
-    numOfUserInputCbs: 0,
+    derived: {
+      isStepSelfSubmittable: true,
+      isUserInputOptional: true,
+      numOfCallbacks: 1,
+      numOfSelfSubmittableCbs: 1,
+      numOfUserInputCbs: 0,
+    },
   };
 </script>
 

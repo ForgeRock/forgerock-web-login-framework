@@ -23,17 +23,21 @@ export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
     callbackMetadata: {
-      isFirstInvalidInput: false,
-      isReadyForSubmission: false,
-      isSelfSubmitting: false,
-      isUserInputRequired: true,
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: false,
+        isUserInputRequired: true,
+      },
       idx: 0,
     },
     stepMetadata: {
-      isStepSelfSubmittable: false,
-      numOfCallbacks: 2,
-      numOfSelfSubmittableCbs: 0,
-      numOfUserInputCbs: 2,
+      derived: {
+        isStepSelfSubmittable: false,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 0,
+        numOfUserInputCbs: 2,
+      },
     },
   },
 };
@@ -42,17 +46,21 @@ export const SingleOptSelfSubmit = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[1],
     callbackMetadata: {
-      isFirstInvalidInput: false,
-      isReadyForSubmission: false,
-      isSelfSubmitting: true,
-      isUserInputRequired: true,
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: true,
+        isUserInputRequired: true,
+      },
       idx: 0,
     },
     stepMetadata: {
-      isStepSelfSubmittable: true,
-      numOfCallbacks: 2,
-      numOfSelfSubmittableCbs: 2,
-      numOfUserInputCbs: 0,
+      derived: {
+        isStepSelfSubmittable: true,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 2,
+        numOfUserInputCbs: 0,
+      },
     },
   },
 };
@@ -61,18 +69,22 @@ export const TwoOptSelfSubmit = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
     callbackMetadata: {
-      isFirstInvalidInput: false,
-      isReadyForSubmission: false,
-      isSelfSubmitting: true,
-      isUserInputRequired: false,
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: true,
+        isUserInputRequired: false,
+      },
       idx: 0,
     },
     selfSubmitFunction: jest.fn(),
     stepMetadata: {
-      isStepSelfSubmittable: true,
-      numOfCallbacks: 2,
-      numOfSelfSubmittableCbs: 2,
-      numOfUserInputCbs: 0,
+      derived: {
+        isStepSelfSubmittable: true,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 2,
+        numOfUserInputCbs: 0,
+      },
     },
   },
 };

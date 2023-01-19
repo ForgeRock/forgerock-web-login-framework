@@ -73,7 +73,7 @@
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata?.isFirstInvalidInput || false}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   hasRightIcon={true}
   {key}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}

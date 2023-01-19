@@ -17,7 +17,7 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: never;
+  export let callback: PasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let stepMetadata: Maybe<StepMetadata>;
@@ -25,12 +25,11 @@
 
 
   let inputName: string;
-  let typedCallback: PasswordCallback;
 
   $: {
-    typedCallback = callback as PasswordCallback;
-    inputName = typedCallback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
+    callback = callback as PasswordCallback;
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
   }
 </script>
 
-<Base callback={typedCallback} {callbackMetadata} {selfSubmitFunction} {stepMetadata} {style} key={inputName} />
+<Base callback={callback} {callbackMetadata} {selfSubmitFunction} {stepMetadata} {style} key={inputName} />

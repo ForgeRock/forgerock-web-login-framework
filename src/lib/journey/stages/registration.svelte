@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { FRStep } from '@forgerock/javascript-sdk';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
@@ -11,7 +12,6 @@
   import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import NewUserIcon from '$components/icons/new-user-icon.svelte';
-  import { mapCallbackToComponent } from '$journey/_utilities/map-callback.utilities';
   import { style } from '$lib/style.store';
 
   import type {
@@ -19,10 +19,10 @@
     StageFormObject,
     StageJourneyObject,
     StepMetadata,
-    WidgetStep,
   } from '$journey/journey.interfaces';
   import { captureLinks } from './_utilities/stage.utilities';
   import type { Maybe } from '$lib/interfaces';
+  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
   // New API
   export let form: StageFormObject;
@@ -32,7 +32,7 @@
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   }>;
-  export let step: WidgetStep;
+  export let step: FRStep;
 
   let alertNeedsFocus = false;
   let formMessageKey = '';
@@ -43,7 +43,7 @@
     // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 
     // The below variation is more liberal first self-submittable cb to call this wins.
-    if (metadata?.step?.isStepSelfSubmittable) {
+    if (metadata?.step?.derived.isStepSelfSubmittable) {
       form?.submit();
     }
   }
@@ -85,17 +85,18 @@
   {/if}
 
   {#each step?.callbacks as callback, idx}
-    <svelte:component
-      this={mapCallbackToComponent(callback)}
-      callback={returnCallback(callback)}
-      callbackMetadata={metadata?.callbacks[idx]}
-      selfSubmitFunction={determineSubmission}
-      stepMetadata={metadata?.step && { ...metadata?.step }}
-      style={$style}
+    <CallbackMapper
+      props={{
+        callback,
+        callbackMetadata: metadata?.callbacks[idx],
+        selfSubmitFunction: determineSubmission,
+        stepMetadata: metadata?.step && { ...metadata.step },
+        style: $style,
+      }}
     />
   {/each}
 
-  {#if metadata?.step?.isUserInputOptional || !metadata?.step?.isStepSelfSubmittable}
+  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="registerButton" />
     </Button>

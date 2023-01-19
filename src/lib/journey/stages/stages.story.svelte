@@ -1,9 +1,5 @@
 <script lang="ts">
-  import type {
-    PasswordCallback,
-    NameCallback,
-    SelectIdPCallback,
-  } from '@forgerock/javascript-sdk';
+  import type { FRStep } from '@forgerock/javascript-sdk';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Generic from './generic.svelte';
@@ -13,17 +9,13 @@
 
   import UsernamePassword from './username-password.svelte';
 
-  import type {
-    StageFormObject,
-    StageJourneyObject,
-    WidgetStep,
-  } from '$journey/journey.interfaces';
+  import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import { initCheckValidation } from './_utilities/step.utilities';
 
   export let form: StageFormObject;
   export let journey: StageJourneyObject;
-  export let step: WidgetStep;
+  export let step: FRStep;
   export let stage: string;
   export let labelType: 'floating' | 'stacked';
 
