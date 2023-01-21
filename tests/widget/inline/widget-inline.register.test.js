@@ -6,7 +6,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Inline widget with user registration', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/inline?journey=Registration');
+  await navigate('widget/inline?journey=TEST_Registration');
 
   await page.getByLabel('Username').fill(uuid());
   await page.getByLabel('First Name').fill('Demo');

@@ -5,6 +5,7 @@
   "dontHaveAnAccount": "Vous n'avez pas de compte? <a href='?journey=Registration'>S'inscrire ici!</a>",
   "closeModal": "Fermer Modal",
   "chooseDifferentUsername": "Please choose a different username.",
+  "confirmPassword": "Confirm password",
   "constraintViolationForPassword": "Your password does not meet the acceptance criteria.",
   "constraintViolationForValue": "Your provided value does not meet the acceptance criteria.",
   "customSecurityQuestion": "Custom security question",

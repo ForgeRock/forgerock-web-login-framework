@@ -5,7 +5,12 @@ import { writable } from 'svelte/store';
 
 import { initialize } from '../config.store';
 import Step from './stages.story.svelte';
-import { loginStep, registrationStep, usernamePasswordStep } from './step.mock';
+import {
+  confirmPasswordStep,
+  loginStep,
+  registrationStep,
+  usernamePasswordStep,
+} from './step.mock';
 import {
   multipleProvidersLocalAuthFormStep,
   multipleProvidersLocalAuthNoFormStep,
@@ -14,6 +19,7 @@ import {
   singleProviderLocalAuthNoFormStep,
 } from '../callbacks/select-idp/select-idp.mock';
 
+const frConfirmPassword = new FRStep(confirmPasswordStep);
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
 const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
@@ -94,6 +100,25 @@ export const UsernamePassword = {
     labelType: 'stacked',
     stage: frUsernamePasswordStep.getStage(),
     step: frUsernamePasswordStep,
+  },
+};
+
+export const ConfirmPassword = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frConfirmPassword.getStage(),
+    step: frConfirmPassword,
   },
 };
 
@@ -196,7 +221,98 @@ const Template = (args) => ({
   Component: Step,
   props: args,
 });
+
 export const LoginInteraction = Template.bind({});
+
+LoginInteraction.args = {
+  ...UsernamePassword.argTypes,
+  ...UsernamePassword.args,
+};
+
+LoginInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.tab();
+
+  const nameCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.NameCallback)[0];
+  const passwordCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.PasswordCallback)[0];
+
+  const username = canvas.getByLabelText('Username');
+  const password = canvas.getByLabelText('Password');
+  await expect(username).toHaveFocus();
+  await userEvent.type(username, 'username01');
+  await expect(canvas.getByLabelText('Username').value).toEqual('username01');
+
+  await userEvent.tab();
+
+  await expect(password).toHaveFocus();
+  await userEvent.type(password, 'Password123');
+
+  await expect(canvas.getByLabelText('Password').value).toEqual('Password123');
+
+  await userEvent.tab();
+  await userEvent.tab();
+  const signin = canvas.getByRole('button', { name: 'Sign in' });
+  await expect(signin).toHaveFocus();
+  await fireEvent.click(signin);
+
+  await expect(UsernamePassword.args.form.submit).toHaveBeenCalled();
+
+  await expect(nameCb.getInputValue()).toBe('username01');
+  await expect(passwordCb.getInputValue()).toBe('Password123');
+};
+
+export const ConfirmPasswordInteraction = Template.bind({});
+
+ConfirmPasswordInteraction.args = {
+  ...ConfirmPassword.argTypes,
+  ...ConfirmPassword.args,
+};
+
+ConfirmPasswordInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.tab();
+
+  const nameCb = frConfirmPassword.getCallbacksOfType(
+    CallbackType.ValidatedCreateUsernameCallback,
+  )[0];
+  const passwordCb = frConfirmPassword.getCallbacksOfType(
+    CallbackType.ValidatedCreatePasswordCallback,
+  )[0];
+
+  const username = canvas.getByLabelText('Username');
+  const password1 = canvas.getByLabelText('Password');
+  const password2 = canvas.getByLabelText('Confirm password');
+
+  await userEvent.type(username, 'username01');
+  await userEvent.type(password1, 'Password123');
+  await userEvent.type(password2, 'PasswordABC');
+
+  await password2.blur();
+
+  const submitBtn = canvas.getByRole('button', { name: 'Next' });
+  await fireEvent.click(submitBtn);
+
+  // Expecting the form NOT to be submitted due to mismatched passwords
+  await expect(ConfirmPassword.args.form.submit).not.toHaveBeenCalled();
+  await expect(password2.getAttribute('aria-invalid')).toBe('true');
+  const errorMessage1 = canvas.getByText('Passwords do not match');
+  await expect(errorMessage1).toBeVisible();
+
+  await userEvent.clear(password2);
+  await userEvent.type(password2, 'Password123');
+  await password2.blur();
+
+  await fireEvent.click(submitBtn);
+  await expect(ConfirmPassword.args.form.submit).toHaveBeenCalled();
+
+  await expect(password2.getAttribute('aria-invalid')).toBe('false');
+  const errorMessage2 = canvas.queryByText('Passwords do not match');
+  await expect(errorMessage2).toBe(null);
+
+  await expect(nameCb.getInputValue()).toBe('username01');
+  await expect(passwordCb.getInputValue()).toBe('Password123');
+};
+
 export const RegistrationInteraction = Template.bind({});
 
 RegistrationInteraction.args = {
@@ -308,41 +424,4 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
   await expect(securityQuestions.payload.input[1].value).toBe('blue');
   await expect(tocCb.getInputValue()).toBe(true);
   console.log(securityQuestions);
-};
-
-LoginInteraction.args = {
-  ...UsernamePassword.argTypes,
-  ...UsernamePassword.args,
-};
-
-LoginInteraction.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  await userEvent.tab();
-
-  const nameCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.NameCallback)[0];
-  const passwordCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.PasswordCallback)[0];
-
-  const username = canvas.getByLabelText('Username');
-  const password = canvas.getByLabelText('Password');
-  await expect(username).toHaveFocus();
-  await userEvent.type(username, 'username01');
-  await expect(canvas.getByLabelText('Username').value).toEqual('username01');
-
-  await userEvent.tab();
-
-  await expect(password).toHaveFocus();
-  await userEvent.type(password, 'Password123');
-
-  await expect(canvas.getByLabelText('Password').value).toEqual('Password123');
-
-  await userEvent.tab();
-  await userEvent.tab();
-  const signin = canvas.getByRole('button', { name: 'Sign in' });
-  await expect(signin).toHaveFocus();
-  await fireEvent.click(signin);
-
-  await expect(UsernamePassword.args.form.submit).toHaveBeenCalled();
-
-  await expect(nameCb.getInputValue()).toBe('username01');
-  await expect(passwordCb.getInputValue()).toBe('Password123');
 };

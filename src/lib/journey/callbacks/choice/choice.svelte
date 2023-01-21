@@ -19,7 +19,6 @@
   export const style: Style = {};
 
   export let callback: ChoiceCallback;
-  export let displayType: 'radio' | 'select' = 'select';
   export let callbackMetadata: Maybe<CallbackMetadata>;
 
   let choiceOptions: { value: string; text: string }[];
@@ -76,17 +75,7 @@
   }
 </script>
 
-{#if displayType === 'select'}
-  <Select
-    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    defaultOption={defaultChoice}
-    isRequired={false}
-    key={inputName}
-    {label}
-    onChange={setValue}
-    options={choiceOptions}
-  />
-{:else}
+{#if callbackMetadata?.platform?.displayType === 'radio'}
   <Radio
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     defaultOption={defaultChoice}
@@ -95,6 +84,16 @@
     groupLabel={prompt}
     onChange={setValue}
     name={inputName}
+    options={choiceOptions}
+  />
+{:else}
+  <Select
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    defaultOption={defaultChoice}
+    isRequired={false}
+    key={inputName}
+    {label}
+    onChange={setValue}
     options={choiceOptions}
   />
 {/if}

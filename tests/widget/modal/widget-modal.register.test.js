@@ -6,7 +6,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Modal widget with user registration', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/modal?journey=Registration');
+  await navigate('widget/modal?journey=TEST_Registration');
 
   await clickButton('Open Login Modal', '/authenticate');
 

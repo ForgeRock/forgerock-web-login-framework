@@ -24,7 +24,7 @@ export function buildCallbackMetadata(
   const callbackCount: Record<string, number> = {};
 
   return step?.callbacks.map((callback, idx) => {
-    const cb = callback as FRCallback;
+    const cb = callback;
     const callbackType = cb.getType();
 
     let stageCbMetadata;
@@ -64,9 +64,9 @@ export function buildCallbackMetadata(
  * @param {array} callbackMetadataArray - The array returned from buildCallbackMetadata
  * @returns {object}
  */
-export function buildStepMetadata(
+export function buildStepMetadata<T = unknown>(
   callbackMetadataArray: CallbackMetadata[],
-  stageJson?: Record<string, unknown> | null,
+  stageJson?: Record<string, T> | null,
 ) {
   const numOfUserInputCbs = callbackMetadataArray.filter(
     (cb) => !!cb.derived.isUserInputRequired,
@@ -76,13 +76,13 @@ export function buildStepMetadata(
   let stageMetadata;
 
   if (stageJson) {
-    stageMetadata = Object.keys(stageJson).reduce((prev, curr) => {
+    stageMetadata = Object.keys(stageJson).reduce<Record<string, T>>((prev, curr) => {
       // Filter out objects or arrays as those are for the callbacks
       if (typeof stageJson[curr] !== 'object') {
         prev[curr] = stageJson[curr];
       }
       return prev;
-    }, {} as Record<string, unknown>);
+    }, {});
   }
 
   return {

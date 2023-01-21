@@ -5,7 +5,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/modal?journey=LoginWithMiscCallbacks');
+  await navigate('widget/modal?journey=TEST_LoginWithMiscCallbacks');
 
   await clickButton('Open Login Modal', '/authenticate');
 

@@ -19,9 +19,19 @@
   export let stage: string;
   export let labelType: 'floating' | 'stacked';
 
+  let stageJson;
+
+  if (stage && stage.includes('{')) {
+    try {
+      stageJson = JSON.parse(stage);
+    } catch (err) {
+      console.error('Could not parse stage data');
+    }
+  }
+
   // Create metadata
-  const callbackMetadata = buildCallbackMetadata(step, initCheckValidation());
-  const stepMetadata = buildStepMetadata(callbackMetadata);
+  const callbackMetadata = buildCallbackMetadata(step, initCheckValidation(), stageJson);
+  const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
   const metadata = {
     callbacks: callbackMetadata,
     step: stepMetadata,

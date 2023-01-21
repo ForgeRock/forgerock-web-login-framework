@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { ConfirmationCallback } from '@forgerock/javascript-sdk';
 
+  import Animated from '$components/compositions/checkbox/animated.svelte';
+  import Standard from '$components/compositions/checkbox/standard.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
   import Grid from '$components/primitives/grid/grid.svelte';
@@ -18,14 +20,14 @@
   export const style: Style = {};
 
   export let callback: ConfirmationCallback;
-  export let displayType: Maybe<'buttons' | 'select'> = null;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let stepMetadata: Maybe<StepMetadata>;
 
+  const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
   let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
-  let defaultChoice: number;
+  let defaultChoice: number = callback.getDefaultOption();
   let inputName: string;
   let label: string;
   let options: { value: string; text: string }[];
@@ -55,15 +57,50 @@
     callback.setOptionIndex(Number((event.target as HTMLSelectElement).value));
   }
 
+  /**
+   * @function setOptionValue - Sets the value on the callback on element blur (lose focus)
+   * @param {Object} event
+   */
+  function setCheckboxValue(event: Event) {
+    /** ***********************************************************************
+     * SDK INTEGRATION POINT
+     * Summary: SDK callback methods for setting values
+     * ------------------------------------------------------------------------
+     * Details: Each callback is wrapped by the SDK to provide helper methods
+     * for writing values to the callbacks received from AM
+     *********************************************************************** */
+    const value = (event.target as HTMLInputElement).checked;
+    if (value) {
+      callback.setOptionIndex(0);
+    } else {
+      // If checkbox is unset, revert back to default choice
+      callback.setOptionIndex(defaultChoice);
+    }
+  }
+
+  if (callback.getInputValue() === 0) {
+    /**
+     * If input value is 0 (falsy value), then let's make sure it's set to the default value
+     * There's a case when the input value is 100, and for that we leave it 100
+     */
+    callback.setOptionIndex(defaultChoice);
+  }
+
   // TODO: use selfSubmitFunction to communicate to step component that this callback is ready
 
   $: {
     inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
     options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
+
+    if (callbackMetadata?.platform?.showOnlyPositiveAnswer) {
+      // The positive option is always first in the options array
+      options = options.slice(0, 1);
+    }
+
     defaultChoice = callback.getDefaultOption();
     label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm');
 
-    if (displayType === 'select' || !stepMetadata?.derived.isStepSelfSubmittable) {
+    if (!stepMetadata?.derived.isStepSelfSubmittable && options.length > 1) {
       // Since the user needs to confirm, add this non-value to force selection
       options.unshift({ value: '', text: label });
     } else if (options.length === 1) {
@@ -74,15 +111,27 @@
   }
 </script>
 
-{#if displayType === 'select' || !stepMetadata?.derived.isStepSelfSubmittable}
-  <Select
-    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    isRequired={false}
-    key={inputName}
-    {label}
-    onChange={setOptionValue}
-    {options}
-  />
+{#if !stepMetadata?.derived.isStepSelfSubmittable}
+  {#if options.length > 1}
+    <Select
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      isRequired={false}
+      key={inputName}
+      {label}
+      onChange={setOptionValue}
+      {options}
+    />
+  {:else}
+    <Checkbox
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      isInvalid={false}
+      key={inputName}
+      onChange={setCheckboxValue}
+      value={false}
+    >
+      {options[0].text}
+  </Checkbox>
+  {/if}
 {:else}
   <Grid num={options.length}>
     {#each options as opt}

@@ -1,9 +1,7 @@
 <script lang="ts">
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
 
-  import {
-    getValidationFailures,
-  } from '$journey/callbacks/_utilities/callback.utilities';
+  import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
   import {
     type FailedPolicy,
@@ -19,10 +17,12 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: Maybe<StepMetadata>;
   export let style: Style = {};
 
   const isRequired = isInputRequired(callback);
@@ -45,15 +45,13 @@
 </script>
 
 <Base
-  callback={callback}
+  {callback}
   {callbackMetadata}
   {isInvalid}
   {isRequired}
   key={inputName}
-  {selfSubmitFunction}
   showMessage={isInvalid}
-  {stepMetadata}
   {style}
 >
-  <Policies callback={callback} label={prompt} messageKey="passwordRequirements" />
+  <Policies {callback} label={prompt} messageKey="passwordRequirements" />
 </Base>

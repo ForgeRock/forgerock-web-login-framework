@@ -85,23 +85,58 @@
   $: {
     cbType = props.callback.getType();
 
-    _BooleanAttributeInputCallback = props.callback as AttributeInputCallback<boolean>;
-    _ChoiceCallback = props.callback as ChoiceCallback;
-    _ConfirmationCallback = props.callback as ConfirmationCallback;
-    _HiddenValueCallback = props.callback as HiddenValueCallback;
-    _KbaCreateCallback = props.callback as KbaCreateCallback;
-    _NameCallback = props.callback as NameCallback;
-    _PasswordCallback = props.callback as PasswordCallback;
-    _PollingWaitCallback = props.callback as PollingWaitCallback;
-    _RedirectCallback = props.callback as RedirectCallback;
-    _SelectIdPCallback = props.callback as SelectIdPCallback;
-    _StringAttributeInputCallback = props.callback as AttributeInputCallback<string>;
-    _ValidatedCreatePasswordCallback = props.callback as ValidatedCreatePasswordCallback;
-    _ValidatedCreateUsernameCallback = props.callback as ValidatedCreateUsernameCallback;
-    _TermsAndConditionsCallback = props.callback as TermsAndConditionsCallback;
-    _TextOutputCallback = props.callback as TextOutputCallback;
-    _SuspendedTextOutputCallback = props.callback as SuspendedTextOutputCallback;
-    _FRCallback = props.callback as FRCallback;
+    switch(cbType) {
+      case CallbackType.BooleanAttributeInputCallback:
+        _BooleanAttributeInputCallback = props.callback as AttributeInputCallback<boolean>;
+          break;
+        case CallbackType.ChoiceCallback:
+        _ChoiceCallback = props.callback as ChoiceCallback;
+        break;
+      case CallbackType.ConfirmationCallback:
+        _ConfirmationCallback = props.callback as ConfirmationCallback;
+        break;
+      case CallbackType.HiddenValueCallback:
+        _HiddenValueCallback = props.callback as HiddenValueCallback;
+        break;
+      case CallbackType.KbaCreateCallback:
+        _KbaCreateCallback = props.callback as KbaCreateCallback;
+        break;
+      case CallbackType.NameCallback:
+        _NameCallback = props.callback as NameCallback;
+        break;
+      case CallbackType.PasswordCallback:
+        _PasswordCallback = props.callback as PasswordCallback;
+        break;
+      case CallbackType.PollingWaitCallback:
+        _PollingWaitCallback = props.callback as PollingWaitCallback;
+        break;
+      case CallbackType.RedirectCallback:
+        _RedirectCallback = props.callback as RedirectCallback;
+        break;
+      case CallbackType.SelectIdPCallback:
+        _SelectIdPCallback = props.callback as SelectIdPCallback;
+        break;
+      case CallbackType.StringAttributeInputCallback:
+        _StringAttributeInputCallback = props.callback as AttributeInputCallback<string>;
+          break;
+        case CallbackType.ValidatedCreatePasswordCallback:
+        _ValidatedCreatePasswordCallback = props.callback as ValidatedCreatePasswordCallback;
+        break;
+      case CallbackType.ValidatedCreateUsernameCallback:
+        _ValidatedCreateUsernameCallback = props.callback as ValidatedCreateUsernameCallback;
+        break;
+      case CallbackType.TermsAndConditionsCallback:
+        _TermsAndConditionsCallback = props.callback as TermsAndConditionsCallback;
+        break;
+      case CallbackType.TextOutputCallback:
+        _TextOutputCallback = props.callback as TextOutputCallback;
+        break;
+      case CallbackType.SuspendedTextOutputCallback:
+        _SuspendedTextOutputCallback = props.callback as SuspendedTextOutputCallback;
+        break;
+      default:
+        _FRCallback = props.callback as FRCallback;
+    }
   }
 </script>
 

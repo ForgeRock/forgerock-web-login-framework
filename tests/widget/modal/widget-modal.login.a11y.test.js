@@ -5,7 +5,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Modal widget with failed and successful login, keyboard only', async ({ page }) => {
   const { navigate, pressEnter, pressSpacebar } = asyncEvents(page);
 
-  await navigate('widget/modal');
+  await navigate('widget/modal?journey=TEST_Login');
 
   // Tab to Open Login Modal button and press Enter
   await page.keyboard.press('Tab');

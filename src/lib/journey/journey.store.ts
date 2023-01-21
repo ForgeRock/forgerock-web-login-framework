@@ -137,11 +137,21 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
 
     if (nextStep.type === StepType.Step) {
-      /**
-       * SUCCESSFUL CONTINUATION BLOCK
-       */
-      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation());
-      const stepMetadata = buildStepMetadata(callbackMetadata);
+      const stageAttribute = nextStep.getStage();
+
+      let stageJson: Maybe<Record<string, unknown>> = null;
+
+      // Check if stage attribute is serialized JSON
+      if (stageAttribute && stageAttribute.includes('{')) {
+        try {
+          stageJson = JSON.parse(stageAttribute);
+        } catch (err) {
+          console.warn('Stage attribute value was not parsable');
+        }
+      }
+
+      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;

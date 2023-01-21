@@ -8,7 +8,7 @@ test('Inline widget with login test in fallback US English with unsupported loca
 }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/inline');
+  await navigate('widget/inline?journey=TEST_Login');
 
   await page.getByLabel('Username').fill('demouser');
   await page.getByLabel('Password').fill('j56eKtae*1');

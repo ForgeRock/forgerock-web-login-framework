@@ -5,6 +5,7 @@
   "dontHaveAnAccount": "No account? <a href='?journey=Registration'>Register here!</a>",
   "closeModal": "Close",
   "chooseDifferentUsername": "Please choose a different username.",
+  "confirmPassword": "Confirm password",
   "constraintViolationForPassword": "Password does not meet the requirements.",
   "constraintViolationForValue": "Value does not meet the requirements.",
   "continueWith": "Continue with ",

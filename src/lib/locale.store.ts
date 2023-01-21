@@ -14,6 +14,7 @@ export const stringsSchema = z
     dontHaveAnAccount: z.string(),
     closeModal: z.string(),
     chooseDifferentUsername: z.string(),
+    confirmPassword: z.string(),
     constraintViolationForPassword: z.string(),
     constraintViolationForValue: z.string(),
     continueWith: z.string(),

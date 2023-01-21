@@ -17,10 +17,12 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: PasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: Maybe<StepMetadata>;
   export let style: Style = {};
 
 
@@ -32,4 +34,4 @@
   }
 </script>
 
-<Base callback={callback} {callbackMetadata} {selfSubmitFunction} {stepMetadata} {style} key={inputName} />
+<Base callback={callback} {callbackMetadata} {style} key={inputName} />

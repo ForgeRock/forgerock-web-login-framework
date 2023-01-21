@@ -5,7 +5,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Modal widget with 2step login, keyboard only', async ({ page }) => {
   const { navigate, pressEnter, pressSpacebar } = asyncEvents(page);
 
-  await navigate('widget/modal?journey=LoginWithConfirmation');
+  await navigate('widget/modal?journey=TEST_LoginWithConfirmation');
 
   await expect(page.getByRole('dialog')).toBeHidden();
 

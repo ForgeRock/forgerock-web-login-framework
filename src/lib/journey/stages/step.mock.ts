@@ -1,5 +1,103 @@
 import { type Step, CallbackType } from '@forgerock/javascript-sdk';
 
+export const confirmPasswordStep: Step = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlRFU1RfQ29uZmlybVBhc3N3b3JkIiwib3RrIjoiaThocm1iN2dqOTRkNHRna2Y3Z21wZWN0MTYiLCJhdXRoSW5kZXhUeXBlIjoic2VydmljZSIsInJlYWxtIjoiL2FscGhhIiwic2Vzc2lvbklkIjoiKkFBSlRTUUFDTURJQUJIUjVjR1VBQ0VwWFZGOUJWVlJJQUFKVE1RQUNNREUuKmV5SjBlWEFpT2lKS1YxUWlMQ0pqZEhraU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkuWlhsS01HVllRV2xQYVVwTFZqRlJhVXhEU214aWJVMXBUMmxLUWsxVVNUUlJNRXBFVEZWb1ZFMXFWVEpKYVhkcFdWZDRia2xxYjJsYVIyeDVTVzR3TGk1SmRGTjRjSGsyUlVONlgwWnZUWFZzUTFvdGVHZDNMbTlwTFY4emJsbFhhbUk0VDBSeGJuWlFjRWRhYW10T1RYWm5NamMyYVMxeVZsVkxkSEZPTkV4ME1uRkpkMWxJUlVsUmJHZHFkMVpoTmxCMVVuQklNWEoyYUV0YVZGVnpWbTAzV0daVk9YRkJRazFVY0UxQlNHeHVPSHBmWkhOQ01GWnlNVm8zYUdVelYwdEhNRTEwY210clZYWklVelZoVkRVeGJUQTNhRWN6Y0cxMVlXMXZkVGMwUmxGUFUwMDNaazlvV0ZCR1JtdHJhM2R0TFZZMFZsRnJXVmQwTVc5M1JHcFVOMnBaTlZGVFh6QlhiMlp4YmtRdE1UZHpRV2hTVjBaUkxVMUpNVFJoU25STlIxWlBNMHhCVlc5TlpXbFBZM0puYUVWMU5sSkRPRU5GWjFrdGVVbHNjRVpxV0ZSUlIwYzBPRmxvVERVM1RuTlJWR1ZZVlVGbk5GUkpZemxEUTB3eWRUbHdTWEpPUTBnMFNuVXhaa2hqU0ZsU2R6RnVUbkJwVGpJM00ySkJXSE4wU0hKb1FrdzFVbmhyVTBFNFRIbG1RbEpWWVZCV1NVeExRa1UwZDFWdWVuaE9jVTVGVkUxdlpUUnNNR0Z1ZVhGaFpHVTVTMkpaWmxobmNtOVVaMEpLWmtOV2RHWlBSWHBZV0VGT1prOWZXVm8zTlVkek5rcElVM2hsZEVoSU1tNTRhRVJEY0dKblp6SkVlbTUyT0ZGVWVsOTBNM0ZsZW1OTE9YRkZZVTVVYmxadVFqYzBkbGR6ZWxRMFYwbG5iM2hTUnpSTVNFMURNRzVKYUZCSU5IWmFlSGQyY0ZGWFpsaFRVbGRDY0VGUk5sUjZhalZYT0Y5cmVYTlNaRUo0U0hBMVRuVkRVa05CWmtSeFRVTjRWMVJ4VDJWMmVrTlViak5TTm1sVlkxZG1OV2RTTjBzNU1UbFRUMVZPVUV0eFVISk9jWFEwYVZWNGNWSllMVmRDYkRkM09GZHlNVmh3Ym5kdVYwZGtTRmRSYjBkTmFuZDNMV2d4YTFCQllVeG5UMFZaU2pOTmRVaGhWbVppYTJ4U1RteHhZekk0T0ZWRFgyODJSWEl5T1U1YWExVXdaMmx4YW5wT2JHaE1hbWc0WkZkaVFUbDZaRWhPVmxWUlZ6VkRSVjlwTUd4NFFrVk9VbUl6TWpKdVlsa3hVakowWVcxWFpYSkNZbmhHYUVWV2NFMWpMalZqVWkxMWJFNXlNbEpWWDFWSFVHVkpWazFxVFZFLmhnbll0cTRzWVJWWjZzU3c4cEhfT3FLWFkxT25GN0xUaE9DUnhrLWtUVFEiLCJleHAiOjE2NzQxNzI0ODgsImlhdCI6MTY3NDE3MjE4OH0.2M4EMYwOxms_0UrtqhoE5-DCE4Mfkcuk7ShpuamnYzs',
+  callbacks: [
+    {
+      type: CallbackType.ValidatedCreateUsernameCallback,
+      output: [
+        {
+          name: 'policies',
+          value: {
+            policyRequirements: [
+              'REQUIRED',
+              'MIN_LENGTH',
+              'VALID_TYPE',
+              'VALID_USERNAME',
+              'CANNOT_CONTAIN_CHARACTERS',
+              'MAX_LENGTH',
+            ],
+            fallbackPolicies: null,
+            name: 'userName',
+            policies: [
+              { policyRequirements: ['REQUIRED'], policyId: 'required' },
+              { policyRequirements: ['REQUIRED'], policyId: 'not-empty' },
+              {
+                policyRequirements: ['MIN_LENGTH'],
+                policyId: 'minimum-length',
+                params: { minLength: 1 },
+              },
+              {
+                policyRequirements: ['VALID_TYPE'],
+                policyId: 'valid-type',
+                params: { types: ['string'] },
+              },
+              { policyId: 'valid-username', policyRequirements: ['VALID_USERNAME'] },
+              {
+                policyId: 'cannot-contain-characters',
+                params: { forbiddenChars: ['/'] },
+                policyRequirements: ['CANNOT_CONTAIN_CHARACTERS'],
+              },
+              {
+                policyId: 'minimum-length',
+                params: { minLength: 1 },
+                policyRequirements: ['MIN_LENGTH'],
+              },
+              {
+                policyId: 'maximum-length',
+                params: { maxLength: 255 },
+                policyRequirements: ['MAX_LENGTH'],
+              },
+            ],
+            conditionalPolicies: null,
+          },
+        },
+        { name: 'failedPolicies', value: [] },
+        { name: 'validateOnly', value: false },
+        { name: 'prompt', value: 'Username' },
+      ],
+      input: [
+        { name: 'IDToken1', value: '' },
+        { name: 'IDToken1validateOnly', value: false },
+      ],
+      _id: 0,
+    },
+    {
+      type: CallbackType.ValidatedCreatePasswordCallback,
+      output: [
+        { name: 'echoOn', value: false },
+        {
+          name: 'policies',
+          value: {
+            policyRequirements: ['VALID_TYPE'],
+            fallbackPolicies: null,
+            name: 'password',
+            policies: [
+              {
+                policyRequirements: ['VALID_TYPE'],
+                policyId: 'valid-type',
+                params: { types: ['string'] },
+              },
+            ],
+            conditionalPolicies: null,
+          },
+        },
+        { name: 'failedPolicies', value: [] },
+        { name: 'validateOnly', value: false },
+        { name: 'prompt', value: 'Password' },
+      ],
+      input: [
+        { name: 'IDToken2', value: '' },
+        { name: 'IDToken2validateOnly', value: false },
+      ],
+      _id: 1,
+    },
+  ],
+  stage:
+    '{"ValidatedCreatePasswordCallback":[{"id":"db09cd18-65a7-424a-9c9e-84c528c3e560","confirmPassword":true}]}',
+  header: 'Quick Register',
+};
 export const loginStep: Step = {
   authId:
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IkxvZ2luIiwib3RrIjoiNmwxb2RmdWFzbjBxMXNrZXBjZTUzZmMyNCIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaW9uSWQiOiIqQUFKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTVrTVhnMlptVkJNVmhZU0ZnNFR6VlNTMmRTUTFKQkxsQTBVV0p4Um10Tk5tMDRSblpNV1Y5eVZ6UnBZM0IzVlRneGIxUkxUa3c0YUVweE9UZFNOSGhHYzBGRVpIUjVRVlpMVVhab2Vtd3hjRkl6VVdsMGNIaENVV1pPVVhSbmFWODJlUzFmVGxCR1UwMVJkRGhNT0VSMGFVUk1UMkpHYUZsck1XSnNYMUUxU1ROQlRHd3dRbXRGVjI5TWNUaExTR001V21SbVpWTkZRVXBOTjBFMVEzQTBaRzQxVEc5cExTMVFUWGRoWnpaM2FrUkxORWxmVldKWllXbFRTak5FZGxkclQwZFpSVTV6V0hsSWFuY3RjV0o1WlV0emR6RTBZVWR6Ym5CdVVIVnNWbTFXWkZOc01XMUViSFUyTmxsNFZXOUhUMlZ3UVRKU09VSnVVRE5rYjBOWFMyTXpkREJqWXpVMWFqRm5lUzFYYzJabmVGTmlWekZZTlhkcVRtZFBVR1ozWW5SNVRISktjMHRwYzA0eWMyTTJWbFJ1T1RnMFZpMUVWVzVzVjJRMVN6QlZVVXBPY2w5MllVMURUMUZtU1hSM2NFc3lYMnhZWVhCdE9VVjNWRW8zY0VwVmQwVnJabHBKTkRWM1IyVlBVMGRDVlVaWlp5MVVhV05IVEdwT2NrcGZXazlxTkdKZmVXMWphWE5SU0U1WFdGOUtZeTFRZFZJNGIyWm9RbkE1U1RaRGMyWmZVbGcwWHpKUGJteDNVbDk0Y0d4dFUySlVSVlIxWTA5UVNHTnBkSGx1VjFsQ05VaDJObnB4WjFaNmJ5MDRNMkZCUVVzdFQydGpZWHBNWm1NeU1XYzNNbW94ZWxCU05HWnBhbUZaYVhGRFZGOUVhWE5IT0c0eVV6RkZUazF5T1ZOV2N6QmFjSE5WYkRKWlYzUkplSGhqT0MxMmMxQTBiaTEzWnpsUk5XcExkbkozWlV0c2EyOU9WazVETm5wT1dDMUNhbll6WVV0dFVUTjRVbVJxYUc5eU4zQnJSSFI2TUZKU1RHcHJXaTFYWkdwb05UaFliVFJtYTFKVFJFOTJWMHBLUlZJNVFUUmtXbEZHZEU1elQxcHBTR3BWWjFOdFgzVnpNSE4xZFVwR09EZE5hQzA0WldGd1YybDFMWGgzZFZaeGNuVk5SV0pQVmpGR1J6ZFJUbmRNU1RBdGJWWmlja3gyZVVsS04wNUJiamhxVEZZdFlsZHFMVVp1Wm1vd0xqWlBjemhUU2taUFNUaDRPVzgyTkV4NVdrNXVMVkUuRGpTUGdQck5VdFQ0U2JKWm9fZ2NiUlZCbWVQcGRHcUZzb1UyM250dVNCdyIsImV4cCI6MTY1NDIxNDQxMywiaWF0IjoxNjU0MjE0MTEzfQ.ZGwMWJb5crNXiAvvfvnwciOTyXaAKHjSk-aExg7QdnQ',

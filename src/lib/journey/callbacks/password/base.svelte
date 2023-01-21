@@ -4,6 +4,7 @@
     ValidatedCreatePasswordCallback,
   } from '@forgerock/javascript-sdk';
 
+  import ConfirmInput from './confirm-input.svelte';
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
@@ -11,16 +12,8 @@
   import T from '$components/_utilities/locale-strings.svelte';
 
   import type { Maybe } from '$lib/interfaces';
-  import type {
-    CallbackMetadata,
-    SelfSubmitFunction,
-    StepMetadata,
-  } from '$journey/journey.interfaces';
+  import type { CallbackMetadata } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
-
-  // Unused props. Setting to const prevents errors in console
-  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export const stepMetadata: Maybe<StepMetadata> = null;
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
@@ -35,18 +28,27 @@
   export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
 
+  let confirmValue: string;
   let callbackType: string;
-  let textInputLabel: string;
-
+  let doPasswordsMatch: Maybe<boolean>;
   let isVisible = false;
+  let textInputLabel: string;
   let type: 'password' | 'text' = 'password';
   let value: unknown;
 
+  /**
+   * @function confirmInput - ensures the second password input matches the first
+   * @param event
+   */
+  function confirmInput(event: Event) {
+    confirmValue = (event.target as HTMLInputElement)?.value;
+  }
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
    */
   function setValue(event: Event) {
+    value = (event.target as HTMLInputElement).value
     /** ***********************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for setting values
@@ -54,7 +56,7 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setInputValue((event.target as HTMLInputElement).value);
+    callback.setInputValue(value);
   }
   /**
    * @function toggleVisibility - toggles the password from masked to plaintext
@@ -69,6 +71,9 @@
     key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
+
+    // Only assign a boolean if the confirm input has an actual value
+    doPasswordsMatch = confirmValue !== undefined ? confirmValue === value : undefined;
   }
 </script>
 
@@ -97,3 +102,14 @@
   </button>
   <slot />
 </Input>
+
+{#if callbackMetadata?.platform?.confirmPassword}
+  <ConfirmInput
+    forceValidityFailure={doPasswordsMatch === false}
+    isInvalid={doPasswordsMatch === false}
+    {key}
+    onChange={confirmInput}
+    showMessage={doPasswordsMatch === false}
+    {style}
+  />
+{/if}
