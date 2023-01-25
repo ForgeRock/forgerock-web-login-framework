@@ -1,3 +1,10 @@
+# [1.0.0-alpha.10](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.9...v1.0.0-alpha.10) (2023-01-25)
+
+
+### Bug Fixes
+
+* links were required which makes zod throw an error in prod! ([125be19](https://github.com/cerebrl/forgerock-web-login-framework/commit/125be19abe9876e18bce7d56d84879bfd611d856))
+
 # [1.0.0-alpha.9](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.8...v1.0.0-alpha.9) (2023-01-25)
 
 
