@@ -43,8 +43,12 @@
        * The vast majority of these will be a list of one
        */
       Array.from(inputs).forEach((input) => {
-        // Just check validity, but don't "report" it
-        const isValid = input.checkValidity();
+        /**
+         * Just check validity, but don't "report" it
+         * The data attribute is a string of 'true', 'false', OR the value undefined
+         */
+        const isValid = input.checkValidity() && input.dataset.forceValidityFailure !== 'true';
+        // debugger;
 
         // Grab the associated elements to this input
         const messageKey = input.getAttribute('aria-describedby') || '';

@@ -5,7 +5,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Inline widget with 2step login, keyboard only', async ({ page }) => {
   const { navigate, pressSpacebar } = asyncEvents(page);
 
-  await navigate('widget/inline?journey=LoginWithConfirmation');
+  await navigate('widget/inline?journey=TEST_LoginWithConfirmation');
 
   await page.getByLabel('Username').fill('demouser');
   await page.keyboard.press('Tab'); // focuses submission button

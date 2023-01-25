@@ -15,15 +15,16 @@
   } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
+  import { derived } from 'svelte/store';
 
   // Unused props. Setting to const` prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: Style = {};
 
-  export let callback: never;
+  export let callback: TermsAndConditionsCallback;
   export let checkAndRadioType: 'animated' | 'standard' = 'animated';
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -35,7 +36,6 @@
   const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
 
   let inputName: string;
-  let typedCallback: TermsAndConditionsCallback;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -49,12 +49,11 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    typedCallback.setAccepted((event.target as HTMLInputElement).checked);
+    callback.setAccepted((event.target as HTMLInputElement).checked);
   }
 
   $: {
-    typedCallback = callback as TermsAndConditionsCallback;
-    inputName = typedCallback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`;
   }
 </script>
 
@@ -63,7 +62,7 @@
     {interpolate('termsAndConditionsLinkText')}
   </Link>
   <Checkbox
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     key={inputName}
     onChange={setValue}
     value={false}

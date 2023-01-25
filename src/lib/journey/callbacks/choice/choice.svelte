@@ -18,9 +18,8 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: Style = {};
 
-  export let callback: never;
-  export let displayType: 'radio' | 'select' = 'select';
-  export let callbackMetadata: CallbackMetadata;
+  export let callback: ChoiceCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
 
   let choiceOptions: { value: string; text: string }[];
   let inputName: string;
@@ -34,7 +33,6 @@
   let label: string;
   let prompt: string;
   let defaultChoice: Maybe<string>;
-  let typedCallback: ChoiceCallback;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -48,11 +46,10 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    typedCallback.setChoiceIndex(Number((event.target as HTMLSelectElement).value));
+    callback.setChoiceIndex(Number((event.target as HTMLSelectElement).value));
   }
 
   $: {
-    typedCallback = callback as ChoiceCallback
     /** *************************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for getting values
@@ -60,7 +57,7 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for accessing values from the callbacks received from AM
      ************************************************************************* */
-    choiceOptions = typedCallback.getChoices()?.map((text, idx) => ({
+    choiceOptions = callback.getChoices()?.map((text, idx) => ({
       /**
        * Since locale content keys for the choice component are built off of the
        * values, there will not be any existing key-value pairs in the provided
@@ -71,32 +68,32 @@
       text: interpolate(textToKey(text), null, text),
       value: `${idx}`,
     }));
-    defaultChoice = `${typedCallback.getDefaultChoice()}` || null;
-    inputName = typedCallback?.payload?.input?.[0].name || `choice-${callbackMetadata.idx}`;
-    prompt = typedCallback.getPrompt();
+    defaultChoice = `${callback.getDefaultChoice()}` || null;
+    inputName = callback?.payload?.input?.[0].name || `choice-${callbackMetadata?.idx}`;
+    prompt = callback.getPrompt();
     label = interpolate(textToKey(prompt), null, prompt);
   }
 </script>
 
-{#if displayType === 'select'}
-  <Select
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
-    defaultOption={defaultChoice}
-    isRequired={false}
-    key={inputName}
-    {label}
-    onChange={setValue}
-    options={choiceOptions}
-  />
-{:else}
+{#if callbackMetadata?.platform?.displayType === 'radio'}
   <Radio
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     defaultOption={defaultChoice}
     isRequired={false}
     key={inputName}
     groupLabel={prompt}
     onChange={setValue}
     name={inputName}
+    options={choiceOptions}
+  />
+{:else}
+  <Select
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    defaultOption={defaultChoice}
+    isRequired={false}
+    key={inputName}
+    {label}
+    onChange={setValue}
     options={choiceOptions}
   />
 {/if}

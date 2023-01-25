@@ -14,10 +14,9 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: Style = {};
 
-  export let callback: never;
+  export let callback: FRCallback;
 
-  const typedCallback = callback as FRCallback;
-  const type = typedCallback.getType();
+  const type = callback.getType();
 </script>
 
 <p class="tw_text-base tw_text-secondary-dark dark:tw_text-secondary-light tw_input-spacing">

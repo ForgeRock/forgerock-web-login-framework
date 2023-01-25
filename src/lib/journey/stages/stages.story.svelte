@@ -1,9 +1,5 @@
 <script lang="ts">
-  import type {
-    PasswordCallback,
-    NameCallback,
-    SelectIdPCallback,
-  } from '@forgerock/javascript-sdk';
+  import type { FRStep } from '@forgerock/javascript-sdk';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Generic from './generic.svelte';
@@ -13,22 +9,33 @@
 
   import UsernamePassword from './username-password.svelte';
 
-  import type {
-    StageFormObject,
-    StageJourneyObject,
-    WidgetStep,
-  } from '$journey/journey.interfaces';
+  import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
+  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+  import { initCheckValidation } from './_utilities/step.utilities';
 
   export let form: StageFormObject;
   export let journey: StageJourneyObject;
-  export let step: WidgetStep;
+  export let step: FRStep;
   export let stage: string;
   export let labelType: 'floating' | 'stacked';
 
-  export let passwordCallback: PasswordCallback;
-  export let socialCallback: SelectIdPCallback;
-  export let usernameCallback: NameCallback;
-  export let localAuth: boolean;
+  let stageJson;
+
+  if (stage && stage.includes('{')) {
+    try {
+      stageJson = JSON.parse(stage);
+    } catch (err) {
+      console.error('Could not parse stage data');
+    }
+  }
+
+  // Create metadata
+  const callbackMetadata = buildCallbackMetadata(step, initCheckValidation(), stageJson);
+  const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+  const metadata = {
+    callbacks: callbackMetadata,
+    step: stepMetadata,
+  };
 
   // Initialize stores
   initializeLinks({ termsAndConditions: '/' });
@@ -37,10 +44,10 @@
 
 <Centered>
   {#if stage === 'UsernamePassword'}
-    <UsernamePassword {form} {journey} {step} />
+    <UsernamePassword {form} {journey} {metadata} {step} />
   {:else if stage === 'Registration'}
-    <Registration {form} {journey} {step} />
+    <Registration {form} {journey} {metadata} {step} />
   {:else}
-    <Generic {form} {journey} {step} />
+    <Generic {form} {journey} {metadata} {step} />
   {/if}
 </Centered>

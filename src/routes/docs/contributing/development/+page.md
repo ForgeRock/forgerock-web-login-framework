@@ -44,9 +44,9 @@ The code within this directory is shared code and will not have a preference for
 The following are the patterns of modules that make up this `lib` directory:
 
 1. Components: generic UI modules
-    1. Primitives: smallest unit of a UI component with lowest specificity
-    2. Compositions: UI component that is comprised of primitives
-    3. Icons: UI components solely for rendering accessible icons
+   1. Primitives: smallest unit of a UI component with lowest specificity
+   2. Compositions: UI component that is comprised of primitives
+   3. Icons: UI components solely for rendering accessible icons
 2. Utilities: generic pure-stateless functions with singular, data-centric responsibilities
 3. Stores: reactive state-management objects for handling larger sets of data shared between components
 

@@ -7,8 +7,11 @@ import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './j
 import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
+  initCheckValidation,
   shouldPopulateWithPreviousCallbacks,
-} from './_utilities/step.utilities';
+} from './stages/_utilities/step.utilities';
+import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+import type { Maybe } from '$lib/interfaces';
 
 function initializeStack(initOptions?: StepOptions) {
   const initialValue = initOptions ? [initOptions] : [];
@@ -61,6 +64,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     completed: false,
     error: null,
     loading: false,
+    metadata: null,
     step: null,
     successful: false,
     response: null,
@@ -95,6 +99,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       completed: false,
       error: null,
       loading: true,
+      metadata: null,
       step: prevStep,
       successful: false,
       response: null,
@@ -132,9 +137,21 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
 
     if (nextStep.type === StepType.Step) {
-      /**
-       * SUCCESSFUL CONTINUATION BLOCK
-       */
+      const stageAttribute = nextStep.getStage();
+
+      let stageJson: Maybe<Record<string, unknown>> = null;
+
+      // Check if stage attribute is serialized JSON
+      if (stageAttribute && stageAttribute.includes('{')) {
+        try {
+          stageJson = JSON.parse(stageAttribute);
+        } catch (err) {
+          console.warn('Stage attribute value was not parsable');
+        }
+      }
+
+      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
@@ -143,6 +160,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         completed: false,
         error: null,
         loading: false,
+        metadata: {
+          callbacks: callbackMetadata,
+          step: stepMetadata,
+        },
         step: nextStep,
         successful: false,
         response: null,
@@ -157,6 +178,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         completed: true,
         error: null,
         loading: false,
+        metadata: null,
         step: null,
         successful: true,
         response: nextStep.payload,
@@ -235,6 +257,26 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        * the final result to the user.
        */
       if (restartedStep.type === StepType.Step) {
+        const stageAttribute = restartedStep.getStage();
+
+        let stageJson: Maybe<Record<string, unknown>> = null;
+
+        // Check if stage attribute is serialized JSON
+        if (stageAttribute && stageAttribute.includes('{')) {
+          try {
+            stageJson = JSON.parse(stageAttribute);
+          } catch (err) {
+            console.warn('Stage attribute value was not parsable');
+          }
+        }
+
+        const callbackMetadata = buildCallbackMetadata(
+          restartedStep,
+          initCheckValidation(),
+          stageJson,
+        );
+        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+
         set({
           completed: false,
           error: {
@@ -244,6 +286,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             step: prevStep?.payload,
           },
           loading: false,
+          metadata: {
+            callbacks: callbackMetadata,
+            step: stepMetadata,
+          },
           step: restartedStep,
           successful: false,
           response: null,
@@ -253,6 +299,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           completed: true,
           error: null,
           loading: false,
+          metadata: null,
           step: null,
           successful: true,
           response: restartedStep.payload,
@@ -267,6 +314,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             step: prevStep?.payload,
           },
           loading: false,
+          metadata: null,
           step: null,
           successful: false,
           response: restartedStep.payload,
@@ -302,6 +350,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       completed: false,
       error: null,
       loading: false,
+      metadata: null,
       step: null,
       successful: false,
       response: null,

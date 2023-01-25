@@ -5,6 +5,7 @@
   "dontHaveAnAccount": "Aun no tiene una cuenta? <a href='?journey=Registration'>Registrarse aqui!</a>",
   "closeModal": "Ventana Emergente",
   "chooseDifferentUsername": "Please choose a different username.",
+  "confirmPassword": "Confirm password",
   "constraintViolationForPassword": "Your password does not meet the acceptance criteria.",
   "constraintViolationForValue": "Your provided value does not meet the acceptance criteria.",
   "customSecurityQuestion": "Custom security question",

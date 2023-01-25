@@ -5,7 +5,7 @@ import { asyncEvents } from '../../utilities/async-events.js';
 test('Modal widget with testing journey changes', async ({ page }) => {
   const { clickLink, clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/modal');
+  await navigate('widget/modal?journey=TEST_Login');
 
   await clickButton('Open Login Modal', '/authenticate');
 

@@ -1,6 +1,6 @@
 import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
 
-export const step1 = new FRStep({
+export const previousRegistrationStep = new FRStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
@@ -99,7 +99,7 @@ export const step1 = new FRStep({
   status: 200,
 });
 
-export const step2 = new FRStep({
+export const restartedRegistrationStep = new FRStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
@@ -156,40 +156,10 @@ export const step2 = new FRStep({
         { name: 'prompt', value: 'Username' },
       ],
       input: [
-        { name: 'IDToken1', value: 'jlowery-005' },
+        { name: 'IDToken1', value: '' },
         { name: 'IDToken1validateOnly', value: false },
       ],
       _id: 23,
-    },
-    {
-      type: CallbackType.ValidatedCreatePasswordCallback,
-      output: [
-        { name: 'echoOn', value: false },
-        {
-          name: 'policies',
-          value: {
-            policyRequirements: ['VALID_TYPE'],
-            fallbackPolicies: null,
-            name: 'password',
-            policies: [
-              {
-                policyRequirements: ['VALID_TYPE'],
-                policyId: 'valid-type',
-                params: { types: ['string'] },
-              },
-            ],
-            conditionalPolicies: null,
-          },
-        },
-        { name: 'failedPolicies', value: [] },
-        { name: 'validateOnly', value: false },
-        { name: 'prompt', value: 'Password' },
-      ],
-      input: [
-        { name: 'IDToken7', value: '' },
-        { name: 'IDToken7validateOnly', value: false },
-      ],
-      _id: 6,
     },
     {
       type: CallbackType.ValidatedCreatePasswordCallback,

@@ -11,7 +11,7 @@ const config: PlaywrightTestConfig = {
     reuseExistingServer: true,
   },
   use: {
-    headless: true, // !!process.env.CI,
+    headless: !!process.env.CI,
     baseURL: `${url}/e2e/`,
     ignoreHTTPSErrors: true,
     trace: 'on',

@@ -4,11 +4,12 @@
 
   import Confirmation from './confirmation.svelte';
   import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
+  import type { Maybe } from '$lib/interfaces';
 
-  export let callback: never;
-  export let callbackMetadata: CallbackMetadata;
+  export let callback: ConfirmationCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: () => void;
-  export let stepMetadata: StepMetadata;
+  export let stepMetadata: Maybe<StepMetadata>;
 </script>
 
 <Centered>

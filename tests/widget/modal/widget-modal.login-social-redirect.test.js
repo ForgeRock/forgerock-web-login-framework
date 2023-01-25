@@ -5,7 +5,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Modal widget with social callback redirect', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/modal?journey=LoginWithSocial');
+  await navigate('widget/modal?journey=TEST_LoginWithSocial');
 
   await clickButton('Open Login Modal', '/authenticate');
 

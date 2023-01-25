@@ -52,6 +52,7 @@
         push: journeyStore.push,
         stack,
       }}
+      metadata={$journeyStore.metadata}
       step={$journeyStore.step}
     />
   {/if}
