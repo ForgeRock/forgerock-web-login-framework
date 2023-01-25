@@ -1,3 +1,11 @@
+# [1.0.0-alpha.9](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.8...v1.0.0-alpha.9) (2023-01-25)
+
+
+### Features
+
+* **callbacks:** added support for confirmation, choice and password with stage metadata ([3a296d7](https://github.com/cerebrl/forgerock-web-login-framework/commit/3a296d7c666d8e902a3b18ab830a31a734b06d6f))
+* **journey:** add stage attribute metadata to existing metadata journey state ([55bbb63](https://github.com/cerebrl/forgerock-web-login-framework/commit/55bbb63d79304d52764ad31905fd655d13105d39))
+
 # [1.0.0-alpha.8](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.7...v1.0.0-alpha.8) (2023-01-19)
 
 
