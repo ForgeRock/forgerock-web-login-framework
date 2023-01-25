@@ -3,15 +3,15 @@ import { z } from 'zod';
 
 export const linksSchema = z.object({
   termsAndConditions: z.string(),
-});
+}).strict();
 
 export const partialLinksSchema = linksSchema.partial();
-
 export let links: Readable<Record<string, string> | null>;
 
-export function initialize(customLinks: z.infer<typeof partialLinksSchema>) {
+
+export function initialize(customLinks?: z.infer<typeof partialLinksSchema>) {
   // Provide developer feedback for custom links
-  partialLinksSchema.parse(customLinks);
+  linksSchema.parse(customLinks);
 
   links = readable(customLinks);
 }
