@@ -1,3 +1,10 @@
+# [1.0.0-alpha.11](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.10...v1.0.0-alpha.11) (2023-01-26)
+
+
+### Features
+
+* **notify-slack:** slack notification on semantic-version-release ([d8552a0](https://github.com/cerebrl/forgerock-web-login-framework/commit/d8552a03a8cfdf3ce4f484e5de57c2a74ae26c5d))
+
 # [1.0.0-alpha.10](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.9...v1.0.0-alpha.10) (2023-01-25)
 
 
