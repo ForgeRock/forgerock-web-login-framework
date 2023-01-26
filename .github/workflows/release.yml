@@ -41,6 +41,7 @@ jobs:
       - name: Release
         run: npx semantic-release
         env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           HUSKY: 0
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
