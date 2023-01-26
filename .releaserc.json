@@ -54,6 +54,13 @@
       {
         "assets": ["package/*.{js,css,.d.ts,.cjs,json,md}", "!package/node_modules/*"]
       }
+    ],
+    [
+      "semantic-release-slack-bot",
+      {
+        "notifyOnSuccess": true,
+        "notifyOnFail": false
+      }
     ]
   ]
 }
