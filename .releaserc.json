@@ -33,7 +33,7 @@
     [
       "@semantic-release/exec",
       {
-        "release": "node ./tools/prepare.sh ${nextRelease.version}"
+        "prepare": "./tools/modify-gitignore.sh"
       }
     ],
     [
@@ -46,7 +46,7 @@
       "@semantic-release/git",
       {
         "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
-        "assets": ["package/package.json", "package.json", "package/CHANGELOG.md"]
+        "assets": ["package/*.{js,css,.d.ts,.cjs,json,md}", "package.json", "!.gitignore"]
       }
     ],
     [
@@ -59,7 +59,8 @@
       "semantic-release-slack-bot",
       {
         "notifyOnSuccess": true,
-        "notifyOnFail": false
+        "notifyOnFail": false,
+        "packageName": "@forgerock/login-widget"
       }
     ]
   ]

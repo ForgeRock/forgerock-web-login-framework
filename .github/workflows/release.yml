@@ -8,6 +8,7 @@ on:
       - alpha
       - '*.x'
 permissions:
+  id-token: write # Enable OIDC
   contents: write
   issues: write
   pull-requests: write
@@ -24,6 +25,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }}
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
@@ -38,12 +40,16 @@ jobs:
           VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
           VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
           VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+      - uses: chainguard-dev/actions/setup-gitsign@main
+
       - name: Release
-        run: npx semantic-release
+        uses: cycjimmy/semantic-release-action@v3
+        with:
+          semantic_version: "20.1.0"
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           HUSKY: 0
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
           VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
