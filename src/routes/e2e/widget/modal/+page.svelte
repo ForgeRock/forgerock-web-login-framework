@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
 
   import Widget, { modal, journey, user } from '$package/modal';
+  import type { Response } from '$lib/widget/interfaces';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -30,9 +31,9 @@
     console.log(response);
     userResponse = response?.user;
   });
-  journey.onFailure((Response) => {
+  journey.onFailure((response) => {
     console.log('Singleton onFailure event fired');
-    console.log(Response?.journey?.error);
+    console.log(response?.journey?.error);
   });
 
   modal.onClose((args: { reason: string }) =>
@@ -73,7 +74,7 @@
             light: '/img/fr-logomark-black.png',
           },
           sections: {
-            header: true,
+            header: false,
           },
         },
       },

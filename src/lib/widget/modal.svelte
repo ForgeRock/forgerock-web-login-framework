@@ -295,6 +295,7 @@
     bind:this={_dialogComp}
     closeCallback={_closeCallback}
     dialogId="sampleDialog"
+    withHeader= {style?.sections?.header}
   >
     <!--
       `displayIcon` prioritizes the direct configuration with `style.stages.icon`,
