@@ -1,3 +1,10 @@
+# [1.0.0-alpha.12](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.11...v1.0.0-alpha.12) (2023-01-30)
+
+
+### Bug Fixes
+
+* **update-rollup:** es only locally, cjs in CI for release ([40a2f55](https://github.com/cerebrl/forgerock-web-login-framework/commit/40a2f55887c9c5b7ed7eef47339c035d6c766afe))
+
 # [1.0.0-alpha.11](https://github.com/cerebrl/forgerock-web-login-framework/compare/v1.0.0-alpha.10...v1.0.0-alpha.11) (2023-01-26)
 
 
