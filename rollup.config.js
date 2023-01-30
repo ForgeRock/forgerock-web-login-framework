@@ -88,6 +88,7 @@ function warningHandler(warning) {
   // console.warn everything else
   console.warn(warning.message);
 }
+const { CI = false } = process.env;
 
 export default [
   /** ****************************
@@ -119,26 +120,30 @@ export default [
   /** ****************************
    * CJS Module Bundling
    */
-  {
-    input: 'src/lib/widget/inline.svelte',
-    onwarn: warningHandler,
-    output: {
-      file: path.join(packageFolder, 'inline.cjs'),
-      format: 'cjs',
-      sourcemap: true,
-      inlineDynamicImports: true,
-    },
-    plugins,
-  },
-  {
-    input: 'src/lib/widget/modal.svelte',
-    onwarn: warningHandler,
-    output: {
-      file: path.join(packageFolder, 'modal.cjs'),
-      format: 'cjs',
-      sourcemap: true,
-      inlineDynamicImports: true,
-    },
-    plugins,
-  },
-];
+  CI
+    ? {
+        input: 'src/lib/widget/inline.svelte',
+        onwarn: warningHandler,
+        output: {
+          file: path.join(packageFolder, 'inline.cjs'),
+          format: 'cjs',
+          sourcemap: true,
+          inlineDynamicImports: true,
+        },
+        plugins,
+      }
+    : undefined,
+  CI
+    ? {
+        input: 'src/lib/widget/modal.svelte',
+        onwarn: warningHandler,
+        output: {
+          file: path.join(packageFolder, 'modal.cjs'),
+          format: 'cjs',
+          sourcemap: true,
+          inlineDynamicImports: true,
+        },
+        plugins,
+      }
+    : undefined,
+].filter(Boolean);
