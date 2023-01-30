@@ -43,9 +43,7 @@ jobs:
       - uses: chainguard-dev/actions/setup-gitsign@main
 
       - name: Release
-        uses: cycjimmy/semantic-release-action@v3
-        with:
-          semantic_version: "20.1.0"
+        run: npx semantic-release
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           HUSKY: 0
