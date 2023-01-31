@@ -19,12 +19,12 @@ jobs:
           echo "::set-output name=preview_urls::$URLS"
       - uses: ryanbas21/update-cors-am-github-action@latest
         with:
-          VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+          AM_URL: ${{ secrets.VITE_FR_AM_URL }}
           USERNAME: ${{ secrets.AM_USERNAME }}
           PASSWORD: ${{ secrets.AM_PASSWORD }}
-          VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+          REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
           ORIGINS: ${{ steps.preview_urls.outputs.preview_urls }}
-          VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+          COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
           REDIRECTION_URIS: ${{ secrets.REDIRECTION_URIS }}
           REMOVE: true
           CORS_CONFIG_NAME: 'org-ui'
