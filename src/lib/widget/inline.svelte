@@ -177,7 +177,6 @@
 
   import type { partialConfigSchema } from '$lib/sdk.config';
   import type { journeyConfigSchema } from '$journey/config.store';
-  import type { Maybe } from '$lib/interfaces';
   import type { partialStringsSchema } from '$lib/locale.store';
 
   export let config: z.infer<typeof partialConfigSchema>;
