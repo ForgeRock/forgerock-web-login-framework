@@ -1,166 +1,25 @@
 <script context="module" lang="ts">
-  import {
-    Config,
-    FRUser,
-    type GetTokensOptions,
-    SessionManager,
-    TokenManager,
-    UserManager,
-  } from '@forgerock/javascript-sdk';
-  import { get } from 'svelte/store';
-
-  // Import store types
-  import type { JourneyOptions, Response } from './interfaces';
-  import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
-  import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
-  import type { UserStore } from '$lib/user/user.store';
+  import { widgetApiFactory } from './_utilities/api.utilities';
 
   import './main.css';
 
   let callMounted: (form: HTMLFormElement) => void;
-  let journeyStore: JourneyStore;
-  let oauthStore: OAuthStore;
-  let returnError: (response: Response) => void;
-  let returnResponse: (response: Response) => void;
-  let userStore: UserStore;
 
-  export const journey = {
-    start(options?: JourneyOptions): void {
-      const requestsOauth = options?.oauth || true;
-      const requestsUser = options?.user || true;
+  const api = widgetApiFactory();
 
-      let journey: JourneyStoreValue;
-      let oauth: OAuthTokenStoreValue;
-      let journeyStoreUnsub = journeyStore.subscribe((response) => {
-        if (!requestsOauth && response.successful) {
-          returnResponse &&
-            returnResponse({
-              journey: response,
-            });
-        } else if (requestsOauth && response.successful) {
-          journey = response;
-          oauthStore.get({ forceRenew: true });
-        } else if (response.error) {
-          journey = response;
-          returnError &&
-            returnError({
-              journey: response,
-            });
-        }
-        // Clean up unneeded subscription
-        if (response.completed) {
-          journeyStoreUnsub();
-        }
-      });
-      let oauthStoreUnsub = oauthStore.subscribe((response) => {
-        if (!requestsUser && response.successful) {
-          returnResponse &&
-            returnResponse({
-              journey,
-              oauth: response,
-            });
-        } else if (requestsUser && response.successful) {
-          oauth = response;
-          userStore.get();
-        } else if (response.error) {
-          oauth = response;
-          returnError &&
-            returnError({
-              journey,
-              oauth: response,
-            });
-        }
-        // Clean up unneeded subscription
-        if (response.completed) {
-          oauthStoreUnsub();
-        }
-      });
-      let userStoreUnsub = userStore.subscribe((response) => {
-        if (response.successful) {
-          returnResponse &&
-            returnResponse({
-              journey,
-              oauth,
-              user: response,
-            });
-        } else if (response.error) {
-          returnError &&
-            returnError({
-              journey,
-              oauth,
-              user: response,
-            });
-        }
-        // Clean up unneeded subscription
-        if (response.completed) {
-          userStoreUnsub();
-        }
-      });
-
-      if (options?.resumeUrl) {
-        journeyStore.resume(options.resumeUrl);
-      } else {
-        journeyStore.start({
-          ...options?.config,
-          tree: options?.journey,
-        });
-      }
-    },
-    onFailure(fn: (response: Response) => void) {
-      returnError = (response: Response) => fn(response);
-    },
-    onSuccess(fn: (response: Response) => void) {
-      returnResponse = (response: Response) => fn(response);
-    },
-  };
+  export const configuration = api.configuration;
   export const form = {
     onMount(fn: (form: HTMLFormElement) => void) {
       callMounted = (form: HTMLFormElement) => fn(form);
     },
   };
-  export const user = {
-    async authorized(remote = false) {
-      if (remote) {
-        return !!(await UserManager.getCurrentUser());
-      }
-      return !!(await TokenManager.getTokens());
-    },
-    async info(remote = false) {
-      if (remote) {
-        return await UserManager.getCurrentUser();
-      }
-      return get(userStore).response;
-    },
-    async logout() {
-      const { clientId } = Config.get();
-
-      /**
-       * If configuration has a clientId, then use FRUser to logout to ensure
-       * token revoking and removal; else, just end the session.
-       */
-      if (clientId) {
-        // Call SDK logout
-        await FRUser.logout();
-      } else {
-        await SessionManager.logout();
-      }
-
-      // Reset stores
-      journeyStore.reset();
-      oauthStore.reset();
-      userStore.reset();
-
-      // Fetch fresh journey step
-      journey.start();
-    },
-    async tokens(options?: GetTokensOptions) {
-      return await TokenManager.getTokens(options);
-    },
-  };
+  export const journey = api.journey;
+  export const request = api.request;
+  export const user = api.user;
 </script>
 
 <script lang="ts">
-  import { createEventDispatcher, onMount as s_onMount } from 'svelte';
+  import { createEventDispatcher, onMount } from 'svelte';
   import type { z } from 'zod';
 
   import Journey from '$journey/journey.svelte';
@@ -179,7 +38,7 @@
   import type { journeyConfigSchema } from '$journey/config.store';
   import type { partialStringsSchema } from '$lib/locale.store';
 
-  export let config: z.infer<typeof partialConfigSchema>;
+  export let config: z.infer<typeof partialConfigSchema> | undefined = undefined;
   export let content: z.infer<typeof partialStringsSchema>;
   export let journeys: z.infer<typeof journeyConfigSchema> | undefined = undefined;
   export let links: z.infer<typeof partialLinksSchema> | undefined = undefined;
@@ -190,41 +49,43 @@
   // A reference to the `form` DOM element
   let formEl: HTMLFormElement;
 
-  // Set base config to SDK
-  // TODO: Move to a shared utility
-  configure({
-    // Set some basics by default
-    ...{
-      // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-      clientId: 'WebLoginWidgetClient',
-      // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-      // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-      realmPath: 'alpha',
-      // TODO: Once we move to SSR, this default should be more intelligent
-      redirectUri:
-        typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
-      scope: 'openid email',
-    },
-    // Let user provided config override defaults
-    ...config,
-    // Force 'legacy' to remove confusion
-    ...{ support: 'legacy' },
-  });
+  if (config) {
+    // Set base config to SDK
+    // TODO: Move to a shared utility
+    configure({
+      // Set some basics by default
+      ...{
+        // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
+        clientId: 'WebLoginWidgetClient',
+        // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
+        // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
+        realmPath: 'alpha',
+        // TODO: Once we move to SSR, this default should be more intelligent
+        redirectUri:
+          typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+        scope: 'openid email',
+      },
+      // Let user provided config override defaults
+      ...config,
+      // Force 'legacy' to remove confusion
+      ...{ support: 'legacy' },
+    });
+  }
 
   /**
    * Initialize the stores and ensure both variables point to the same reference.
    * Variables with _ are the reactive version of the original variable from above.
    */
-  let _journeyStore = (journeyStore = initializeJourney(config));
-  let _oauthStore = (oauthStore = initializeOauth(config));
-  let _userStore = (userStore = initializeUser(config));
+  api.setJourneyStore(initializeJourney(config));
+  api.setOAuthStore(initializeOauth(config));
+  api.setUserStore(initializeUser(config));
 
   initializeContent(content);
   initializeJourneys(journeys);
   initializeLinks(links);
   initializeStyle(style);
 
-  s_onMount(() => {
+  onMount(() => {
     /**
      * Call mounted event for Singleton users
      */
@@ -242,5 +103,9 @@
 
 <div class="fr_widget-root">
   <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
-  <Journey bind:formEl displayIcon={style?.stage?.icon ?? true} journeyStore={_journeyStore} />
+  <Journey
+    bind:formEl
+    displayIcon={style?.stage?.icon ?? true}
+    journeyStore={api.getJourneyStore()}
+  />
 </div>

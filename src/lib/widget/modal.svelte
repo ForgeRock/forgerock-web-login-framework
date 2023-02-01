@@ -3,13 +3,10 @@
 
   import type { z } from 'zod';
 
-  // Import the stores for initialization
-  import configure from '$lib/sdk.config';
   import { widgetApiFactory } from './_utilities/api.utilities';
 
   // Import store types
-  import type { JourneyOptions } from './interfaces';
-  import type { partialConfigSchema } from '$lib/sdk.config';
+  import type { JourneyOptions, Modal } from './interfaces';
 
   import './main.css';
 
@@ -39,7 +36,7 @@
 
   export const configuration = api.configuration;
   export const journey = api.journey;
-  export const modal = api.modal;
+  export const modal = api.modal as Modal;
   export const request = api.request;
   export const user = api.user;
 </script>
@@ -49,6 +46,7 @@
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import Journey from '$journey/journey.svelte';
+  import configure from '$lib/sdk.config';
 
   import { initialize as initializeJourneys } from '$journey/config.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
@@ -58,8 +56,7 @@
   import { initialize as initializeUser } from '$lib/user/user.store';
   import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
-  // Moved config types to module definition ^^
-  // import type { partialConfigSchema } from '$lib/sdk.config';
+  import type { partialConfigSchema } from '$lib/sdk.config';
   import type { journeyConfigSchema } from '$journey/config.store';
   import type { partialStringsSchema } from '$lib/locale.store';
 

@@ -1,16 +1,3 @@
-import type { z } from 'zod';
-
-// Import the stores for initialization
-import configure from '$lib/sdk.config';
-
-// Import store types
-import type { JourneyOptions, Modal, Response } from '../interfaces';
-import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
-import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
-import type { partialConfigSchema } from '$lib/sdk.config';
-import type { UserStore } from '$lib/user/user.store';
-import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';
-import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
 import {
   Config,
   FRUser,
@@ -19,9 +6,23 @@ import {
   UserManager,
   type GetTokensOptions,
 } from '@forgerock/javascript-sdk';
+import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
 import { get } from 'svelte/store';
+import type { z } from 'zod';
 
-export function widgetApiFactory(modal: Modal) {
+// Import the stores for initialization
+import configure from '$lib/sdk.config';
+
+import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';
+
+// Import store types
+import type { JourneyOptions, Modal, Response } from '../interfaces';
+import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
+import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
+import type { partialConfigSchema } from '$lib/sdk.config';
+import type { UserStore } from '$lib/user/user.store';
+
+export function widgetApiFactory(modal?: Modal) {
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let userStore: UserStore;
@@ -67,7 +68,9 @@ export function widgetApiFactory(modal: Modal) {
             returnResponse({
               journey: response,
             });
-          modal.close({ reason: 'auto' });
+          if (modal) {
+            modal.close({ reason: 'auto' });
+          }
         } else if (requestsOauth && response.successful) {
           journey = response;
           oauthStore?.get({ forceRenew: true });
@@ -95,7 +98,9 @@ export function widgetApiFactory(modal: Modal) {
               journey,
               oauth: response,
             });
-          modal.close({ reason: 'auto' });
+          if (modal) {
+            modal.close({ reason: 'auto' });
+          }
         } else if (requestsUser && response.successful) {
           oauth = response;
           userStore?.get();
@@ -124,7 +129,9 @@ export function widgetApiFactory(modal: Modal) {
               oauth,
               user: response,
             });
-          modal.close({ reason: 'auto' });
+          if (modal) {
+            modal.close({ reason: 'auto' });
+          }
         } else if (response.error) {
           returnError &&
             returnError({
@@ -162,14 +169,22 @@ export function widgetApiFactory(modal: Modal) {
   const user = {
     async authorized(remote = false) {
       if (remote) {
-        return !!(await UserManager.getCurrentUser());
+        try {
+          return await UserManager.getCurrentUser();
+        } catch (err) {
+          return null;
+        }
       }
       return !!(await TokenManager.getTokens());
     },
     async info(remote = false) {
       userStore = userStore as UserStore;
       if (remote) {
-        return await UserManager.getCurrentUser();
+        try {
+          return await UserManager.getCurrentUser();
+        } catch (err) {
+          return null;
+        }
       }
       return get(userStore).response;
     },
@@ -190,15 +205,20 @@ export function widgetApiFactory(modal: Modal) {
       }
 
       // Reset stores
-      journeyStore.reset();
-      oauthStore.reset();
-      userStore.reset();
+      journeyStore && journeyStore.reset();
+      oauthStore && oauthStore.reset();
+      userStore && userStore.reset();
 
       // Fetch fresh journey step
-      journey.start();
+      journey && journey.start();
     },
     async tokens(options?: GetTokensOptions) {
-      return await TokenManager.getTokens(options);
+      // `getTokens` throws if no tokens, so catch and just return with `undefined`
+      try {
+        return await TokenManager.getTokens(options);
+      } catch (err) {
+        return;
+      }
     },
   };
 

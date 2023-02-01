@@ -3,7 +3,6 @@
   import { page } from '$app/stores';
 
   import Widget, { configuration, modal, journey, user } from '$package/modal';
-  import type { Response } from '$lib/widget/interfaces';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -19,6 +18,7 @@
     userResponse = null;
   }
 
+  // TODO: Investigate why the parameter types are needed here
   modal.onMount((dialog: HTMLDialogElement, form: HTMLFormElement) => {
     console.log(dialog);
     console.log(form);
