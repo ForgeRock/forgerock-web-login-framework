@@ -4,7 +4,7 @@ import type { z } from 'zod';
 import configure from '$lib/sdk.config';
 
 // Import store types
-import type { JourneyOptions, Modal, Response, WidgetApiParams } from '../interfaces';
+import type { JourneyOptions, Modal, Response } from '../interfaces';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
 import type { partialConfigSchema } from '$lib/sdk.config';
@@ -21,7 +21,14 @@ import {
 } from '@forgerock/javascript-sdk';
 import { get } from 'svelte/store';
 
-export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
+export function widgetApiFactory(modal: Modal) {
+  let journeyStore: JourneyStore;
+  let oauthStore: OAuthStore;
+  let userStore: UserStore;
+
+  let returnError: (response: Response) => void;
+  let returnResponse: (response: Response) => void;
+
   const configuration = {
     set(options: z.infer<typeof partialConfigSchema>): void {
       // Set base config to SDK
@@ -51,13 +58,6 @@ export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
       const requestsOauth = options?.oauth || true;
       const requestsUser = options?.user || true;
 
-      const journeyStore = widgetApiParams.journeyStore as JourneyStore;
-      const modal = widgetApiParams.modal as Modal;
-      const oauthStore = widgetApiParams.oauthStore as OAuthStore;
-      const returnError = widgetApiParams.returnError as (response: Response) => void;
-      const returnResponse = widgetApiParams.returnResponse as (response: Response) => void;
-      const userStore = widgetApiParams.userStore as UserStore;
-
       let journey: JourneyStoreValue;
       let oauth: OAuthTokenStoreValue;
 
@@ -70,7 +70,7 @@ export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
           modal.close({ reason: 'auto' });
         } else if (requestsOauth && response.successful) {
           journey = response;
-          oauthStore.get({ forceRenew: true });
+          oauthStore?.get({ forceRenew: true });
         } else if (response.error) {
           journey = response;
           returnError &&
@@ -98,7 +98,7 @@ export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
           modal.close({ reason: 'auto' });
         } else if (requestsUser && response.successful) {
           oauth = response;
-          userStore.get();
+          userStore?.get();
         } else if (response.error) {
           oauth = response;
           returnError &&
@@ -153,10 +153,10 @@ export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
       }
     },
     onFailure(fn: (response: Response) => void) {
-      widgetApiParams.returnError = (response) => fn(response);
+      returnError = (response) => fn(response);
     },
     onSuccess(fn: (response: Response) => void) {
-      widgetApiParams.returnResponse = (response) => fn(response);
+      returnResponse = (response) => fn(response);
     },
   };
   const user = {
@@ -167,18 +167,16 @@ export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
       return !!(await TokenManager.getTokens());
     },
     async info(remote = false) {
-      widgetApiParams.userStore = widgetApiParams.userStore as UserStore;
+      userStore = userStore as UserStore;
       if (remote) {
         return await UserManager.getCurrentUser();
       }
-      return get(widgetApiParams.userStore).response;
+      return get(userStore).response;
     },
     logout: async () => {
       const { clientId } = Config.get();
 
-      widgetApiParams.journeyStore = widgetApiParams.journeyStore as JourneyStore;
-      widgetApiParams.oauthStore = widgetApiParams.oauthStore as OAuthStore;
-      widgetApiParams.userStore = widgetApiParams.userStore as UserStore;
+      userStore = userStore as UserStore;
 
       /**
        * If configuration has a clientId, then use FRUser to logout to ensure
@@ -192,9 +190,9 @@ export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
       }
 
       // Reset stores
-      widgetApiParams.journeyStore.reset();
-      widgetApiParams.oauthStore.reset();
-      widgetApiParams.userStore.reset();
+      journeyStore.reset();
+      oauthStore.reset();
+      userStore.reset();
 
       // Fetch fresh journey step
       journey.start();
@@ -209,6 +207,25 @@ export function widgetApiFactory(widgetApiParams: WidgetApiParams) {
     journey,
     async request(options: HttpClientRequestOptions) {
       return await HttpClient.request(options);
+    },
+    getJourneyStore() {
+      return journeyStore;
+    },
+    getOAuthStore() {
+      return oauthStore;
+    },
+    getUserStore() {
+      return userStore;
+    },
+    ...(modal && { modal }),
+    setJourneyStore(store: JourneyStore) {
+      journeyStore = store;
+    },
+    setOAuthStore(store: OAuthStore) {
+      oauthStore = store;
+    },
+    setUserStore(store: UserStore) {
+      userStore = store;
     },
     user,
   };
