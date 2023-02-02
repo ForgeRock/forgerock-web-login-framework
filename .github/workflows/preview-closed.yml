@@ -6,6 +6,8 @@ on:
 jobs:
   closed:
     runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ryanbas21/update-cors-am-github-action:main
     steps:
       - name: Context
         uses: okteto/context@latest
