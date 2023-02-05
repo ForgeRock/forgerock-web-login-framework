@@ -69,7 +69,7 @@
     "@storybook/test-runner": "^0.10.0-next.4",
     "@storybook/testing-library": "^0.0.14-next.1",
     "@storybook/theming": "^7.0.0-beta.20",
-    "@sveltejs/adapter-auto": "^1.0.0",
+    "@sveltejs/adapter-auto": "^1.0.2",
     "@sveltejs/adapter-node": "^1.1.0",
     "@sveltejs/kit": "1.0.5",
     "@sveltejs/package": "^1.0.2",
