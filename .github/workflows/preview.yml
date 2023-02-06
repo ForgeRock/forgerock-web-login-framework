@@ -54,7 +54,7 @@ jobs:
       - name: Audit URLs using Lighthouse
         if: github.actor != 'dependabot[bot]'
         id: lighthouse_audit
-        uses: treosh/lighthouse-ci-action@v7
+        uses: treosh/lighthouse-ci-action@v9
         with: # hope this works because this is an array
           uploadArtifacts: true
           temporaryPublicStorage: true
