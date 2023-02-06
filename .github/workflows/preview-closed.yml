@@ -17,7 +17,7 @@ jobs:
       - name: Get Preview Endpoints
         id: preview_urls
         run: |
-          URLS=$(okteto preview endpoints pr-${{ github.event.number }}-${{ github.actor }} -o json | jq -c)
+          URLS=$(okteto preview endpoints pr-${{ github.event.number }}-${{ ryanbas21 }} -o json | jq -c)
           echo "::set-output name=preview_urls::$URLS"
       - uses: ryanbas21/update-cors-am-github-action@latest
         with:
