@@ -63,7 +63,7 @@ jobs:
         uses: manrueda/lighthouse-report-action@v1.1.2
         with:
           reports: '.lighthouseci'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GH_TOKEN }}
       - name: Upload artifacts
         uses: actions/upload-artifact@master
         with:
