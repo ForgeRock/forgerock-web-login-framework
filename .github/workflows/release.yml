@@ -41,7 +41,6 @@ jobs:
           VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
           VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
       - uses: chainguard-dev/actions/setup-gitsign@main
-
       - name: Release
         run: npx semantic-release
         env:
