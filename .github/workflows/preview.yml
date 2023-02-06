@@ -74,7 +74,7 @@ jobs:
       - name: Format lighthouse result
         if: github.actor != 'dependabot[bot]'
         id: lighthouse_result
-        uses: actions/github-script@v4
+        uses: actions/github-script@v6
         with:
           github-token: ${{secrets.GITHUB_TOKEN}}
           script: "const links = ${{ steps.lighthouse_audit.outputs.links }}\nconst results = (${{ steps.lighthouse_audit.outputs.manifest }}).filter(result => result.isRepresentativeRun);\nconst score = res => res >= 90 ? '\U0001F7E2' : res >= 50 ? '\U0001F7E0' : '\U0001F534';\nconst comment = results.map((result) => {\n  const summary = result.summary;\n  const url = result.url;\n  return `\n  \U0001F30E [${url}](${url})\n  ⚡️ [Lighthouse report](${links[url]})\n  | Category | Score |\n  | --- | --- |\n  ${Object.keys(summary).map((key) => {\n    const percentage = Math.round(summary[key] * 100);\n    return `| ${score(percentage)} ${key} | ${percentage} |`;\n  }).join('\\n')}\n  `;\n}).join('---');\ncore.setOutput(\"comment\", comment);\n"
