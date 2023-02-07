@@ -74,7 +74,7 @@
     "@sveltejs/kit": "1.0.5",
     "@sveltejs/package": "^1.0.2",
     "@sveltejs/vite-plugin-svelte": "^2.0.2",
-    "@types/uuid": "^8.3.4",
+    "@types/uuid": "^9.0.0",
     "@typescript-eslint/eslint-plugin": "^5.46.0",
     "@typescript-eslint/parser": "^5.46.0",
     "@vitejs/plugin-basic-ssl": "^0.1.2",
