@@ -20,7 +20,7 @@
   form.onMount((component: HTMLElement) => console.log(component));
   // TODO: Use a more specific type
   journey.onSuccess((response: any) => (userResponse = response?.user));
-  journey.onFailure((error: string) => console.log(error));
+  journey.onFailure((response) => console.log(response.journey?.error));
 
   onMount(async () => {
     let content;
@@ -49,7 +49,6 @@
         links: {
           termsAndConditions: 'https://www.forgerock.com/terms',
         },
-        displayIcon: true,
       },
     });
     // Start the  journey after initialization or within the form.onMount event

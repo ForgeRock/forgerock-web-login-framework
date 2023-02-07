@@ -1,15 +1,11 @@
 <script lang="ts">
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
 
-  import {
-    getValidationPolicies,
-    getValidationFailures,
-  } from '$journey/callbacks/_utilities/callback.utilities';
+  import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
   import {
     type FailedPolicy,
     isInputRequired,
-    type Policy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
@@ -21,32 +17,28 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: ValidatedCreatePasswordCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: Style = {};
 
-  /**
-   * At the time of this writing, this callback is never marked as required,
-   * but I'm adding this here as that could change.
-   */
   const isRequired = isInputRequired(callback);
 
   let inputName: string;
-  let prompt: string;
-  let validationRules: Policy[];
-  let validationFailures: FailedPolicy[];
   let isInvalid: boolean;
+  let prompt: string;
+  let validationFailures: FailedPolicy[];
 
   $: {
     /**
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
      */
-    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     prompt = callback.getPrompt();
-    validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
@@ -58,9 +50,7 @@
   {isInvalid}
   {isRequired}
   key={inputName}
-  {selfSubmitFunction}
   showMessage={isInvalid}
-  {stepMetadata}
   {style}
 >
   <Policies {callback} label={prompt} messageKey="passwordRequirements" />

@@ -1,8 +1,8 @@
-## Complete Widget API
+# Complete Widget API
 
 The Widget comes with methods and event handlers used to control the lifecycle of user journeys/authentication.
 
-### Widget
+## Widget
 
 ```js
 // As modal dialog
@@ -51,10 +51,10 @@ widget.$destroy();
 
 NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html), or you can [see our API docs for more developer detail](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/configoptions.html).
 
-1. For content schema, please [use the example en-US locale file](/src/locales/us/en/index.json)
+1. For content schema, please [use the example en-US locale file](/src/locales/us/en/index.ts)
 2. For `style` schema and more information, please [see the Style section below](#styling-api)
 
-### Journey
+## Journey
 
 The `journey` object:
 
@@ -117,7 +117,7 @@ NOTE: Schema for `response`
 }
 ```
 
-### User
+## User
 
 The `user` object:
 
@@ -137,7 +137,7 @@ await user.info({ remote: true }); // request user info from server
 await user.logout();
 ```
 
-### Request
+## Request
 
 The Widget has an alias to the JavaScript SDK's `HttpClient.request`, which is a convenience wrapper around the native `fetch`. All this does is auto-inject the Access Token into the `Authorization` header and manage some of the lifecycle around the token.
 
@@ -168,7 +168,7 @@ The full `options` object:
 
 For the full type definition of this, please [view our SDK API documentation](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/httpclientrequestoptions.html).
 
-### Modal
+## Modal
 
 The named `modal` import provides controls of the modal component.
 
@@ -212,7 +212,7 @@ modal.open({
 });
 ```
 
-### Inline
+## Inline
 
 The named `form` import provides a simple `onMount` event.
 
@@ -227,7 +227,7 @@ form.onMount((formElement) => {
 
 It's worth noting that if the Widget has already mounted before the `onMount` statement, it will never run. It won't retroactively run the callback function.
 
-### Styling API
+## Styling API
 
 The Widget can be configured for styling purposes via the JavaScript API. This allows you to choose the type of labels used or providing a logo for the modal.
 

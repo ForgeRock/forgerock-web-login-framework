@@ -13,15 +13,16 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: ChoiceCallback;
-  export let displayType: 'radio' | 'select' = 'select';
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
 
+  export let callback: ChoiceCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+
+  let choiceOptions: { value: string; text: string }[];
   let inputName: string;
-  let prompt: string;
   /**
    * Since locale content keys for the choice component are built off of the
    * values, there will not be any existing key-value pairs in the provided
@@ -30,7 +31,7 @@
    * in the locale file for that to override the original value.
    */
   let label: string;
-  let choiceOptions: { value: string; text: string }[];
+  let prompt: string;
   let defaultChoice: Maybe<string>;
 
   /**
@@ -68,31 +69,31 @@
       value: `${idx}`,
     }));
     defaultChoice = `${callback.getDefaultChoice()}` || null;
-    inputName = callback?.payload?.input?.[0].name || `choice-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `choice-${callbackMetadata?.idx}`;
     prompt = callback.getPrompt();
     label = interpolate(textToKey(prompt), null, prompt);
   }
 </script>
 
-{#if displayType === 'select'}
-  <Select
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
-    defaultOption={defaultChoice}
-    isRequired={false}
-    key={inputName}
-    {label}
-    onChange={setValue}
-    options={choiceOptions}
-  />
-{:else}
+{#if callbackMetadata?.platform?.displayType === 'radio'}
   <Radio
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     defaultOption={defaultChoice}
     isRequired={false}
     key={inputName}
     groupLabel={prompt}
     onChange={setValue}
     name={inputName}
+    options={choiceOptions}
+  />
+{:else}
+  <Select
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    defaultOption={defaultChoice}
+    isRequired={false}
+    key={inputName}
+    {label}
+    onChange={setValue}
     options={choiceOptions}
   />
 {/if}

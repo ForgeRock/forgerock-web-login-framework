@@ -17,10 +17,12 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: KbaCreateCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: Style = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
@@ -113,7 +115,7 @@
 
   $: {
     inputArr = callback?.payload?.input;
-    inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata?.idx}`;
     inputNameQuestion = inputName;
     inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
     prompt = callback.getPrompt();
@@ -176,7 +178,7 @@
   {#if displayCustomQuestionInput}
     <Input
       isFirstInvalidInput={false}
-      key={`kba-custom-question-${callbackMetadata.idx}`}
+      key={`kba-custom-question-${callbackMetadata?.idx}`}
       label={interpolate('customSecurityQuestion')}
       showMessage={false}
       message={interpolate('inputRequiredError')}
@@ -186,8 +188,8 @@
   {/if}
 
   <Input
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
-    key={inputNameAnswer || `kba-answer-${callbackMetadata.idx}`}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    key={inputNameAnswer || `kba-answer-${callbackMetadata?.idx}`}
     label={interpolate('securityAnswer')}
     showMessage={false}
     message={interpolate('inputRequiredError')}

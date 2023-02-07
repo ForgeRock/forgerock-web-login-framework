@@ -4,6 +4,7 @@
   import type { Maybe } from '$lib/interfaces';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
+  export let forceValidityFailure = false;
   export let isFirstInvalidInput: boolean;
   export let hasRightIcon = false;
   export let message = '';
@@ -29,6 +30,7 @@
 
 <div class="tw_input-spacing tw_flex tw_flex-wrap">
   <Input
+    {forceValidityFailure}
     {isFirstInvalidInput}
     inputClasses={`${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}
     {key}

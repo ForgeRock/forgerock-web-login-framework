@@ -22,16 +22,7 @@ module.exports = {
     // https://storybook.js.org/addons/storybook-addon-code-editor
     // 'storybook-addon-code-editor',
   ],
-  framework: '@storybook/svelte',
-  core: {
-    builder: '@storybook/builder-vite',
-  },
-  svelteOptions: {
-    preprocess: preprocess(),
-  },
-  features: {
-    storyStoreV7: true,
-  },
+  framework: '@storybook/sveltekit',
   // For tighter Vite integration
   async viteFinal(config, { configType }) {
     // return the customized config
@@ -41,8 +32,8 @@ module.exports = {
         alias: {
           /**
            * Reminder to ensure aliases are also added here:
-           * 1. .storybook/main.js.
-           * 2. tsconfig.json
+           * 1. /config.alias.js
+           * 2. /tsconfig.json
            */
           $components: resolve('./src/lib/components'),
           $journey: resolve('./src/lib/journey'),

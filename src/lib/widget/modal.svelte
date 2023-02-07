@@ -201,10 +201,10 @@
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import Journey from '$journey/journey.svelte';
-  import type { partialStringsSchema } from '$lib/locale.store';
 
   // Import the stores for initialization
-  import configure, { type partialConfigSchema } from '$lib/config';
+  import configure from '$lib/sdk.config';
+  import { initialize as initializeJourneys } from '$journey/config.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeLinks, partialLinksSchema } from '$lib/links.store';
@@ -212,14 +212,20 @@
   import { initialize as initializeUser } from '$lib/user/user.store';
   import { initialize as initializeStyle, type Style } from '$lib/style.store';
 
+  import type { partialConfigSchema } from '$lib/sdk.config';
+  import type { journeyConfigSchema } from '$journey/config.store';
+  import type { Maybe } from '$lib/interfaces';
+  import type { partialStringsSchema } from '$lib/locale.store';
+
   export let config: z.infer<typeof partialConfigSchema>;
   export let content: z.infer<typeof partialStringsSchema>;
-  export let links: z.infer<typeof partialLinksSchema>;
-  export let style: Style;
+  export let journeys: z.infer<typeof journeyConfigSchema> | undefined = undefined;
+  export let links: z.infer<typeof partialLinksSchema> | undefined = undefined;
+  export let style: Style | undefined = undefined;
 
   const dispatch = createEventDispatcher();
 
-  // Refernce to the closeCallback from the above module context
+  // Reference to the closeCallback from the above module context
   let _closeCallback = closeCallback;
 
   // Variables that reference the Svelte component and the DOM element
@@ -243,7 +249,6 @@
       redirectUri:
         typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
       scope: 'openid email',
-      tree: 'Login',
     },
     // Let user provided config override defaults
     ...config,
@@ -260,6 +265,7 @@
   let _userStore = (userStore = initializeUser(config));
 
   initializeContent(content);
+  initializeJourneys(journeys);
   initializeLinks(links);
   initializeStyle(style);
 

@@ -1,26 +1,22 @@
 import { expect, test } from '@playwright/test';
 
-test('modal widget', async ({ page }) => {
-  await page.goto('widget/modal');
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
-  const dialog = page.locator('dialog');
-  expect(await dialog.isVisible()).toBeFalsy();
+test('Modal widget with login', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  await Promise.all([
-    loginButton.click(),
-    // Add just a bit of a delay to ensure dialog responds
-    page.waitForEvent('requestfinished'),
-  ]);
-  expect(await dialog.isVisible()).toBeTruthy();
+  await navigate('widget/modal?journey=TEST_Login');
 
-  await page.fill('text="Username"', 'demouser');
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Sign In' }).click();
+  await expect(page.getByRole('dialog')).toBeHidden();
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  await clickButton('Open Login Modal', '/authenticate');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await expect(page.getByRole('dialog')).toBeVisible();
+
+  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Password').fill('j56eKtae*1');
+
+  await clickButton('Sign In', '/authenticate');
+
+  await verifyUserInfo(page, expect);
 });

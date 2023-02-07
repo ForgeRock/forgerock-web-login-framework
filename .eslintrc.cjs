@@ -8,7 +8,7 @@ module.exports = {
     'plugin:storybook/recommended',
   ],
   plugins: ['svelte3', '@typescript-eslint'],
-  ignorePatterns: ['*.cjs'],
+  ignorePatterns: ['*.cjs', '*.json', 'package/*', 'svelte-package/*'],
   overrides: [
     {
       files: ['*.svelte'],

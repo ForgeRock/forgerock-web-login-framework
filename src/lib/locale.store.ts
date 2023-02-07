@@ -1,16 +1,23 @@
 import { readable, writable, type Readable, type Writable } from 'svelte/store';
 import { z } from 'zod';
 
+// TODO: Reevaluate use of JS versus JSON without breaking type generation for lib
+// eslint-disable-next-line
+// @ts-ignore
 import fallback from '$locales/us/en/index.json';
 
 export const stringsSchema = z
   .object({
     alreadyHaveAnAccount: z.string(),
+    backToDefault: z.string(),
+    backToLogin: z.string(),
     dontHaveAnAccount: z.string(),
     closeModal: z.string(),
     chooseDifferentUsername: z.string(),
+    confirmPassword: z.string(),
     constraintViolationForPassword: z.string(),
     constraintViolationForValue: z.string(),
+    continueWith: z.string(),
     customSecurityQuestion: z.string(),
     doesNotMeetMinimumCharacterLength: z.string(),
     ensurePasswordIsMoreThan: z.string(),
@@ -18,6 +25,8 @@ export const stringsSchema = z
     exceedsMaximumCharacterLength: z.string(),
     fieldCanNotContainFollowingCharacters: z.string(),
     fieldCanNotContainFollowingValues: z.string(),
+    forgotPassword: z.string(),
+    forgotUsername: z.string(),
     givenName: z.string(),
     inputRequiredError: z.string(),
     loading: z.string(),
@@ -50,7 +59,6 @@ export const stringsSchema = z
     securityQuestions: z.string(),
     securityQuestionsPrompt: z.string(),
     showPassword: z.string(),
-    signInWith: z.string(),
     sn: z.string(),
     submitButton: z.string(),
     successMessage: z.string(),

@@ -1,31 +1,40 @@
 import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
-test('Inline registration widget', async ({ page }) => {
-  await page.goto('widget/inline?journey=Registration');
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  await page.fill('text=Username', uuid());
-  await page.fill('text=First Name', 'Demo');
-  await page.fill('text=Last Name', 'User');
-  await page.fill('text=Email Address', 'demo@user.com');
-  await page.fill('text=Password', 'willfail');
-  await page.selectOption('select', '0');
-  await page.fill('text=Security Answer', 'Red');
-  await page.click('text=Please accept our Terms & Conditions');
-  await page.locator('button', { hasText: 'Register' }).click();
+test('Inline widget with user registration', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  await expect(page.locator('text=Password requirements')).toBeVisible();
-  await expect(page.locator('text=At least 1 number(s)')).toBeVisible();
-  await expect(page.locator('text=At least 1 uppercase')).toBeVisible();
-  await expect(page.locator('text=At least 1 lowercase')).toBeVisible();
-  await expect(page.locator('text=At least 1 symbol(s)')).toBeVisible();
+  await navigate('widget/inline?journey=TEST_Registration');
 
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Register' }).click();
+  await page.getByLabel('Username').fill(uuid());
+  await page.getByLabel('First Name').fill('Demo');
+  await page.getByLabel('Last Name').fill('User');
+  await page.getByLabel('Email Address').fill('test@auto.com');
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  // Intentionally entire password that fails validation
+  await page.getByLabel('Password').fill('willfail');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await page
+    .getByLabel('Select a security question')
+    .selectOption({ label: `What's your favorite color?` });
+  await page.getByLabel('Security Answer').fill('Red');
+  // `getByLabel()` does not work, likely due to the `<span>` elements (?)
+  await page.getByText('Please accept our Terms & Conditions').click();
+
+  await clickButton('Register', '/authenticate');
+
+  await expect(page.getByText('Password requirements')).toBeVisible();
+  await expect(page.getByText('At least 1 number(s)')).toBeVisible();
+  await expect(page.getByText('At least 1 uppercase')).toBeVisible();
+  await expect(page.getByText('At least 1 lowercase')).toBeVisible();
+  await expect(page.getByText('At least 1 symbol(s)')).toBeVisible();
+
+  // Enter valid password
+  await page.getByLabel('Password').fill('j56eKtae*1');
+
+  await clickButton('Register', '/authenticate');
+
+  await verifyUserInfo(page, expect, 'register');
 });

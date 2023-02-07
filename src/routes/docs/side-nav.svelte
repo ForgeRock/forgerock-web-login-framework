@@ -3,7 +3,7 @@
 </script>
 
 <aside class="side-nav">
-  <h1 class="page-header">{header}</h1>
+  <header class="page-header">{header}</header>
   <nav class="nav-secondary">
     <slot />
   </nav>

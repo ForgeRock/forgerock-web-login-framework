@@ -15,9 +15,9 @@
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: AttributeInputCallback<boolean>;
-  export let callbackMetadata: CallbackMetadata;
-  export let stepMetadata: StepMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export let style: Style = {};
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
@@ -42,7 +42,7 @@
   }
 
   $: {
-    inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata?.idx}`;
     // A boolean being required doesn't make much sense, so commenting it out for now
     // isRequired = isInputRequired(callback);
     outputName = callback.getOutputByName('name', '');
@@ -53,7 +53,7 @@
 </script>
 
 <Checkbox
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   isInvalid={!!validationFailure}
   key={inputName}
   message={validationFailure}

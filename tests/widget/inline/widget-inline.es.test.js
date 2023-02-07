@@ -1,20 +1,17 @@
 import { expect, test } from '@playwright/test';
 
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+
 test.use({ locale: 'es' });
-test('inline widget in Spanish with unknown country', async ({ page }) => {
-  await page.goto('widget/inline');
+test('Inline widget with login in Spanish with unknown country', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  await page.getByRole('textbox', { name: 'Nombre de usuario' }).fill('demouser');
+  await navigate('widget/inline?journey=TEST_Login');
 
-  await page.getByRole('textbox', { name: 'Contraseña' }).fill('j56eKtae*1');
+  await page.getByLabel('Nombre de usuario').fill('demouser');
+  await page.getByLabel('Contraseña').fill('j56eKtae*1');
 
-  const submit = await page.getByRole('button', { name: 'Iniciar sesion' });
+  await clickButton('Iniciar sesion', '/authenticate');
 
-  submit.click();
-
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
-
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await verifyUserInfo(page, expect);
 });

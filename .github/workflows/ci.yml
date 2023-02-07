@@ -1,14 +1,12 @@
 name: 'CI Pipeline'
 on:
   pull_request:
-    branches-ignore:
-      - dependabot/**
 jobs:
   pr:
     strategy:
       matrix:
         node: [16.x, 18.x]
-        os: [macos-latest, ubuntu-latest] #, windows-latest]
+        os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -21,6 +19,11 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run build
+        env:
+          VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+          VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+          VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
+          VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
       - name: Publish to Chromatic
         if: ${{ matrix.os == 'ubuntu-latest' && matrix.node < 17 && !github.event.pull_request.draft }}
         uses: chromaui/action@v1

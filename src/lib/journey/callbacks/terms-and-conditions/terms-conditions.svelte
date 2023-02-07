@@ -15,13 +15,16 @@
   } from '$journey/journey.interfaces';
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
+  import { derived } from 'svelte/store';
+
+  // Unused props. Setting to const` prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
 
   export let callback: TermsAndConditionsCallback;
   export let checkAndRadioType: 'animated' | 'standard' = 'animated';
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export let callbackMetadata: Maybe<CallbackMetadata>;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -50,7 +53,7 @@
   }
 
   $: {
-    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`;
   }
 </script>
 
@@ -59,7 +62,7 @@
     {interpolate('termsAndConditionsLinkText')}
   </Link>
   <Checkbox
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     key={inputName}
     onChange={setValue}
     value={false}

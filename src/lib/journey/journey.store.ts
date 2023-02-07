@@ -3,22 +3,73 @@ import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces'
 import { writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
-import type { JourneyStore, JourneyStoreValue, StepTypes } from './journey.interfaces';
+import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
 import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
+  initCheckValidation,
   shouldPopulateWithPreviousCallbacks,
-} from './_utilities/step.utilities';
+} from './stages/_utilities/step.utilities';
+import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+import type { Maybe } from '$lib/interfaces';
+
+function initializeStack(initOptions?: StepOptions) {
+  const initialValue = initOptions ? [initOptions] : [];
+  const { update, set, subscribe }: Writable<StepOptions[]> = writable(initialValue);
+
+  // Assign to exported variable (see bottom of file)
+  stack = {
+    pop: async (): Promise<StepOptions[]> => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+          if (current.length) {
+            state = current.slice(0, -1);
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
+      });
+    },
+    push: async (options?: StepOptions): Promise<StepOptions[]> => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+
+          if (!current.length) {
+            state = [{ ...options }];
+          } else if (options && options?.tree !== current[current.length - 1]?.tree) {
+            state = [...current, options];
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
+      });
+    },
+    reset: () => {
+      set([]);
+    },
+    subscribe,
+  };
+
+  return stack;
+}
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const { set, subscribe }: Writable<JourneyStoreValue> = writable({
     completed: false,
     error: null,
     loading: false,
+    metadata: null,
     step: null,
     successful: false,
     response: null,
   });
+  const stack = initializeStack();
 
   let stepNumber = 0;
 
@@ -48,6 +99,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       completed: false,
       error: null,
       loading: true,
+      metadata: null,
       step: prevStep,
       successful: false,
       response: null,
@@ -85,9 +137,21 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
 
     if (nextStep.type === StepType.Step) {
-      /**
-       * SUCCESSFUL CONTINUATION BLOCK
-       */
+      const stageAttribute = nextStep.getStage();
+
+      let stageJson: Maybe<Record<string, unknown>> = null;
+
+      // Check if stage attribute is serialized JSON
+      if (stageAttribute && stageAttribute.includes('{')) {
+        try {
+          stageJson = JSON.parse(stageAttribute);
+        } catch (err) {
+          console.warn('Stage attribute value was not parsable');
+        }
+      }
+
+      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
@@ -96,6 +160,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         completed: false,
         error: null,
         loading: false,
+        metadata: {
+          callbacks: callbackMetadata,
+          step: stepMetadata,
+        },
         step: nextStep,
         successful: false,
         response: null,
@@ -110,6 +178,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         completed: true,
         error: null,
         loading: false,
+        metadata: null,
         step: null,
         successful: true,
         response: nextStep.payload,
@@ -188,6 +257,26 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        * the final result to the user.
        */
       if (restartedStep.type === StepType.Step) {
+        const stageAttribute = restartedStep.getStage();
+
+        let stageJson: Maybe<Record<string, unknown>> = null;
+
+        // Check if stage attribute is serialized JSON
+        if (stageAttribute && stageAttribute.includes('{')) {
+          try {
+            stageJson = JSON.parse(stageAttribute);
+          } catch (err) {
+            console.warn('Stage attribute value was not parsable');
+          }
+        }
+
+        const callbackMetadata = buildCallbackMetadata(
+          restartedStep,
+          initCheckValidation(),
+          stageJson,
+        );
+        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+
         set({
           completed: false,
           error: {
@@ -197,6 +286,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             step: prevStep?.payload,
           },
           loading: false,
+          metadata: {
+            callbacks: callbackMetadata,
+            step: stepMetadata,
+          },
           step: restartedStep,
           successful: false,
           response: null,
@@ -206,6 +299,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           completed: true,
           error: null,
           loading: false,
+          metadata: null,
           step: null,
           successful: true,
           response: restartedStep.payload,
@@ -220,6 +314,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             step: prevStep?.payload,
           },
           loading: false,
+          metadata: null,
           step: null,
           successful: false,
           response: restartedStep.payload,
@@ -228,11 +323,25 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
   }
 
+  async function pop() {
+    reset();
+    const updatedStack = await stack.pop();
+    const currentJourney = updatedStack[updatedStack.length - 1];
+    await start(currentJourney);
+  }
+
+  async function push(newOptions: StepOptions) {
+    reset();
+    await stack.push(newOptions);
+    await start(newOptions);
+  }
+
   async function resume(url: string, resumeOptions?: StepOptions) {
     await next(undefined, resumeOptions, url);
   }
 
   async function start(startOptions?: StepOptions) {
+    await stack.push(startOptions);
     await next(undefined, startOptions);
   }
 
@@ -241,6 +350,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       completed: false,
       error: null,
       loading: false,
+      metadata: null,
       step: null,
       successful: false,
       response: null,
@@ -249,9 +359,13 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
   return {
     next,
+    pop,
+    push,
     reset,
     resume,
     start,
     subscribe,
   };
 }
+
+export let stack: StackStore;

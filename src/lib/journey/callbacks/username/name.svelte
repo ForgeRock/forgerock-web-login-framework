@@ -13,10 +13,12 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: NameCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: Style = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
@@ -32,14 +34,14 @@
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   key={inputName}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}
   onChange={setValue}

@@ -1,4 +1,4 @@
-## Quick Start
+# Quick Start
 
 Using the Login Widget within your JavaScript SPA.
 
@@ -11,7 +11,7 @@ _Note: This project is currently in Beta, so this is not available via public np
 5. Copy the built `package/` directory with its contents and paste (or drag-n-drop) it into your project
 6. Import the Widget by directory reference, since it's local to your project (e.g.: `import Widget from '../path/to/package/modal';`)
 
-### Adding the Widget's CSS
+## Adding the Widget's CSS
 
 There are a few ways to add the Widget's CSS to your product:
 
@@ -50,7 +50,7 @@ Linking CSS in HTML example:
 </html>
 ```
 
-#### Controlling the CSS cascade
+### Controlling the CSS cascade
 
 To ensure the proper CSS cascade, you can use `@layer` to ensure the browser applies the CSS in the way you intend regardless of the order you import or declare the CSS in your project. You can [read more about this new browser feature in the Mozilla docs](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer).
 
@@ -83,9 +83,9 @@ Steps recommended:
 
    It's important to note that _none_ of the CSS imported for the Widget will overwrite any of your app's CSS. It's all namespaced to ensure there are no collisions. Unless, that is, you use the exact same selector naming convention we use: `tw_` prefix.
 
-### Using the Modal component
+## Using the Modal component
 
-#### Add element to your HTML file
+### Add element to your HTML file
 
 We recommend you add a new element on which you will mount the Widget to your static HTML file. For most SPAs (Single Page Applications), this will be your `index.html`. This new element should be a direct child element of the body, and not without the element you mount your SPA.
 
@@ -111,7 +111,7 @@ Example:
 
 NOTE: We do not recommend injecting the element on which you will mount the Modal component within your main application. This can cause Virtual DOM issues, so manually adding it within your static HTML file is best.
 
-#### Instantiate the Widget (Modal)
+### Instantiate the Widget (Modal)
 
 Now, you can import the Widget into your app wherever you would like as a modal dialog (aka "lightbox"), or as an embedded component. Once the Widget is imported, you will need to instantiate it.
 
@@ -133,7 +133,7 @@ This mounts your Widget into the DOM. If you choose the modal version, it will b
 
 Note: [See additional documentation about configuring the JS SDK](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html).
 
-#### Starting a journey (Modal)
+### Starting a journey (Modal)
 
 The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
 
@@ -158,7 +158,7 @@ buttonElement.addEventListener('click', (event) => {
 
 This `journey.start` method can be called anywhere in your application, or anytime as long as it's _after_ the Widget being mounted to the DOM.
 
-#### Listening for journey completion (Modal)
+### Listening for journey completion (Modal)
 
 Use the `journey.onSuccess` method to know when a user has completed their journey. Pass a callback function into this method to run when the journey successfully completes.
 
@@ -170,7 +170,7 @@ journey.onSuccess((response) => {
 
 And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation. For more about Widget events, [see the Widget Events section](#widget-events).
 
-#### Controlling the modal dialog
+### Controlling the modal dialog
 
 To show the modal, you will need to import the `modal` object, and use the `modal.open` method. It's common to execute this within a button's click handler.
 
@@ -187,15 +187,15 @@ loginButton.addEventListener('click', () => {
 
 Opening the modal will display the Widget in a "Lightbox" or modal dialog and make a request to your ID Cloud (or AM) instance. When the Widget gets the response, it will display the required fields for authenticating the user. When the user successfully authenticates, the modal will close itself. If you'd like to close the widget programmatically, you can call the `modal.close` method.
 
-### Using the Inline component
+## Using the Inline component
 
-#### Element for mounting
+### Element for mounting
 
 The Widget requires a real DOM element on which to mount. Since the Inline component will be mounted within your application's controlled DOM, it's important to understand the lifecycle of how your framework mounts elements to the DOM.
 
 React, for example, uses the Virtual DOM, and the Inline component cannot mount to a Virtual DOM element. So, you will need to wait until the element has been property mounted to the real DOM before instantiating the Widget. For more information about this, please [see our tutorial using React with the Inline component](/docs/widget/tutorials#inline-with-react-and-webpack).
 
-#### Instantiate the Widget (Inline)
+### Instantiate the Widget (Inline)
 
 Now, import the Widget where you'd like to mount it. In whatever way your framework requires, provide a reference to the element mounted in the actual DOM as the target of the Widget instantiation.
 
@@ -217,7 +217,7 @@ This mounts your Widget into the DOM. If you choose the modal version, it will b
 
 Note: [See additional documentation about configuring the JS SDK](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html).
 
-#### Starting a journey (Inline)
+### Starting a journey (Inline)
 
 The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
 
@@ -241,7 +241,7 @@ buttonElement.addEventListener('click', (event) => {
 
 This `journey.start` method can be called anywhere in your application, or anytime as long as it's _after_ the Widget being mounted to the DOM.
 
-#### Listening for journey completion (Inline)
+### Listening for journey completion (Inline)
 
 Use the `journey.onSuccess` method to know when a user has completed their journey. Pass a callback function into this method to run when the journey successfully completes.
 

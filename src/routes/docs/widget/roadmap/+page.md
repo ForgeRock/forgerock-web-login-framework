@@ -1,6 +1,6 @@
-## Future APIs (not implemented)
+# Future APIs (not implemented)
 
-### Currently **unsupported**
+## Currently **unsupported**
 
 1. WebAuthn
 2. Push Authentication
@@ -13,7 +13,7 @@
 9. Central Login
 10. SAML
 
-### Widget customization (future)
+## Widget customization (future)
 
 ```js
 new Widget({
@@ -28,7 +28,7 @@ new Widget({
 });
 ```
 
-### Additional modal events (future)
+## Additional modal events (future)
 
 ```js
 modal.onClose((event) => {

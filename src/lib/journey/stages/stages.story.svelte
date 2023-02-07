@@ -1,20 +1,41 @@
 <script lang="ts">
+  import type { FRStep } from '@forgerock/javascript-sdk';
+
   import Centered from '$components/primitives/box/centered.svelte';
   import Generic from './generic.svelte';
   import { initialize as initializeLinks } from '$lib/links.store';
   import { initialize as initializeStyles } from '$lib/style.store';
   import Registration from './registration.svelte';
+
   import UsernamePassword from './username-password.svelte';
 
-  import type { WidgetStep } from '$journey/journey.interfaces';
+  import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
+  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+  import { initCheckValidation } from './_utilities/step.utilities';
 
-  export let displayIcon: boolean;
-  export let failureMessage: string;
-  export let step: WidgetStep;
-  export let submitForm: () => void;
+  export let form: StageFormObject;
+  export let journey: StageJourneyObject;
+  export let step: FRStep;
   export let stage: string;
-  export let loading = false;
   export let labelType: 'floating' | 'stacked';
+
+  let stageJson;
+
+  if (stage && stage.includes('{')) {
+    try {
+      stageJson = JSON.parse(stage);
+    } catch (err) {
+      console.error('Could not parse stage data');
+    }
+  }
+
+  // Create metadata
+  const callbackMetadata = buildCallbackMetadata(step, initCheckValidation(), stageJson);
+  const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+  const metadata = {
+    callbacks: callbackMetadata,
+    step: stepMetadata,
+  };
 
   // Initialize stores
   initializeLinks({ termsAndConditions: '/' });
@@ -23,10 +44,10 @@
 
 <Centered>
   {#if stage === 'UsernamePassword'}
-    <UsernamePassword {displayIcon} {failureMessage} {loading} {step} {submitForm} />
+    <UsernamePassword {form} {journey} {metadata} {step} />
   {:else if stage === 'Registration'}
-    <Registration {displayIcon} {failureMessage} {loading} {step} {submitForm} />
+    <Registration {form} {journey} {metadata} {step} />
   {:else}
-    <Generic {displayIcon} {failureMessage} {loading} {step} {submitForm} />
+    <Generic {form} {journey} {metadata} {step} />
   {/if}
 </Centered>

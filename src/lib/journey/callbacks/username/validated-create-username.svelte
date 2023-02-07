@@ -2,10 +2,8 @@
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
 
   import {
-    getValidationPolicies,
     getValidationFailures,
     isInputRequired,
-    type Policy,
     type FailedPolicy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
@@ -21,22 +19,23 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: ValidatedCreateUsernameCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: Style = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   let callbackType: string;
   let inputName: string;
+  let isInvalid: boolean;
   let isRequired: boolean;
   let prompt: string;
   let value: unknown;
-  let validationRules: Policy[];
   let validationFailures: FailedPolicy[];
-  let isInvalid: boolean;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -55,18 +54,17 @@
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata?.idx}`;
     isRequired = isInputRequired(callback);
     prompt = callback.getPrompt();
     value = callback?.getInputValue();
-    validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   {isRequired}
   {isInvalid}
   key={inputName}
@@ -77,5 +75,5 @@
   type="text"
   value={typeof value === 'string' ? value : ''}
 >
-  <Policies {callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
+  <Policies callback={callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
 </Input>

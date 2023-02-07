@@ -2,15 +2,14 @@
 import { devices, PlaywrightTestConfig } from '@playwright/test';
 
 const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'https://localhost:3000';
+
 const config: PlaywrightTestConfig = {
-  webServer: process.env.CI
-    ? null
-    : {
-        command: 'npm run preview',
-        url,
-        ignoreHTTPSErrors: true,
-        reuseExistingServer: true,
-      },
+  webServer: {
+    command: 'npm run preview -- --host=localhost',
+    url,
+    ignoreHTTPSErrors: true,
+    reuseExistingServer: true,
+  },
   use: {
     headless: !!process.env.CI,
     baseURL: `${url}/e2e/`,
@@ -27,14 +26,12 @@ const config: PlaywrightTestConfig = {
       name: 'chromium',
       use: {
         ...devices['Desktop Chrome'],
-        ...devices['Desktop Chrome HiDPI'],
         ...devices['Desktop Edge'],
-        ...devices['Desktop Edge HiDPI'],
       },
     },
     {
       name: 'firefox',
-      use: { ...devices['Desktop Firefox'], ...devices['Desktop Firefox HiDPI'] },
+      use: { ...devices['Desktop Firefox'] },
     },
     // {
     //   name: 'webkit',

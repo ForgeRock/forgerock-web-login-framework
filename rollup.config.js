@@ -1,104 +1,149 @@
-import autoprefixer from 'autoprefixer';
-import path from 'path';
-import postcssImport from 'postcss-import';
-import rimraf from 'rimraf';
-import alias from '@rollup/plugin-alias';
 import commonjs from '@rollup/plugin-commonjs';
 import json from '@rollup/plugin-json';
 import postcss from 'rollup-plugin-postcss';
-import resolve from '@rollup/plugin-node-resolve';
-import svelte from 'rollup-plugin-svelte';
-import terser from '@rollup/plugin-terser';
-import typescript from '@rollup/plugin-typescript';
-import preprocess from 'svelte-preprocess';
+import postcssImport from 'postcss-import';
 import tailwindcss from 'tailwindcss';
+import autoprefixer from 'autoprefixer';
+import resolve from '@rollup/plugin-node-resolve';
+import typescript from '@rollup/plugin-typescript';
+import path from 'path';
+import svelte from 'rollup-plugin-svelte';
+import alias from '@rollup/plugin-alias';
+import sveltePreprocess from 'svelte-preprocess';
+import license from 'rollup-plugin-license';
+import * as url from 'url';
+
 import aliases from './alias.config.js';
 
+const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 const production = !process.env.ROLLUP_WATCH;
+const packageFolder = 'package';
+const plugins = [
+  license({
+    sourcemap: true,
+    cwd: process.cwd(), // The default
 
-export default {
-  input: ['src/widget/modal.svelte', 'src/widget/inline.svelte'],
-  onwarn: (warning) => {
-    // TODO: Revisit once the JS SDK is updated to pure ES Modules
-    if (warning.code === 'THIS_IS_UNDEFINED') {
-      return;
-    }
+    banner: {
+      commentStyle: 'regular', // The default
 
-    // console.warn everything else
-    console.warn(warning.message);
-  },
-  output: {
-    entryFileNames: (chunkInfo) => {
-      // Don't include `svelte` in filename
-      return `${chunkInfo.name.replace('.svelte', '')}.js`;
-    },
-    compact: true,
-    dir: 'package/',
-    format: 'es',
-    name: 'login-widget',
-    plugins: [],
-    preserveModules: true,
-    preserveModulesRoot: 'src/widget',
-    sourcemap: false,
-  },
-  plugins: [
-    alias({
-      entries: aliases,
-    }),
-    // Clear target directory
-    {
-      name: 'generate-bundle-plugin',
-      generateBundle() {
-        // Clears out `/package` directory when the new bundle is generated
-        // NOTE: Returning a promise is required to ensure this completes before writing bundle
-        return new Promise((resolve) => {
-          rimraf(path.resolve('./package/*.js'), () => {
-            // TODO: Improve this so it's not a nested function
-            // Can't do './package/*.js*' above or it removes the package.json file
-            rimraf(path.resolve('./package/*.js.map'), resolve);
-          });
-        });
+      content: {
+        file: path.join(__dirname, 'package/LICENSE'),
+        encoding: 'utf-8', // Default is utf-8
       },
     },
-    json(),
-    // Generate CSS output from `import 'thing.css';` imports and component <style>
-    postcss({
-      extract: path.resolve('./package/widget.css'),
-      plugins: [postcssImport, tailwindcss, autoprefixer],
-    }),
-    // Compile Svelte
-    svelte({
-      compilerOptions: {
-        // enable run-time checks when not in production
-        dev: false,
+  }),
+  alias({
+    entries: aliases,
+  }),
+  postcss({
+    extract: path.resolve('./package/widget.css'),
+    plugins: [postcssImport, tailwindcss, autoprefixer],
+  }),
+  svelte({
+    compilerOptions: {
+      // enable run-time checks when not in production
+      dev: !production,
+    },
+
+    // we want to embed the CSS in the generated JS bundle
+    emitCss: true,
+    preprocess: sveltePreprocess({
+      typescript: {
+        tsconfigFile: './tsconfig.json',
       },
-      emitCss: true,
-      preprocess: preprocess({
-        typescript: {
-          tsconfigFile: './tsconfig.json',
+    }),
+  }),
+  resolve({
+    browser: true,
+    dedupe: ['svelte'],
+  }),
+  commonjs(),
+  json(),
+
+  typescript({
+    tsconfig: './tsconfig.json',
+    sourceMap: true,
+    inlineSources: true,
+  }),
+  // minify
+  // production && terser(),
+];
+
+function warningHandler(warning) {
+  // TODO: Revisit once the JS SDK is updated to pure ES Modules
+  if (warning.code === 'THIS_IS_UNDEFINED') {
+    return;
+  }
+
+  // TODO: This is Tailwind confusing nested rules with cascade layers in file `src/lib/widget/main.css`
+  if (warning.message.includes('Nested @tailwind rules were detected, but are not supported.')) {
+    return;
+  }
+
+  // TODO: Improve our use of regular JS files within project; using `allowJS` breaks type generation
+  if (warning.message.includes('@rollup/plugin-typescript TS7016')) {
+    return;
+  }
+
+  // console.warn everything else
+  console.warn(warning.message);
+}
+const { CI = false } = process.env;
+
+export default [
+  /** ****************************
+   * ES Module Bundling
+   */
+  {
+    input: 'src/lib/widget/inline.svelte',
+    onwarn: warningHandler,
+    output: {
+      file: path.join(packageFolder, 'inline.js'),
+      format: 'es',
+      sourcemap: true,
+      inlineDynamicImports: true,
+    },
+    plugins,
+  },
+  {
+    input: 'src/lib/widget/modal.svelte',
+    onwarn: warningHandler,
+    output: {
+      file: path.join(packageFolder, 'modal.js'),
+      format: 'es',
+      sourcemap: true,
+      inlineDynamicImports: true,
+    },
+    plugins,
+  },
+
+  /** ****************************
+   * CJS Module Bundling
+   */
+  CI
+    ? {
+        input: 'src/lib/widget/inline.svelte',
+        onwarn: warningHandler,
+        output: {
+          file: path.join(packageFolder, 'inline.cjs'),
+          format: 'cjs',
+          sourcemap: true,
+          inlineDynamicImports: true,
         },
-      }),
-    }),
-
-    // If you have external dependencies installed from
-    // npm, you'll most likely need these plugins. In
-    // some cases you'll need additional configuration -
-    // consult the documentation for details:
-    // https://github.com/rollup/plugins/tree/master/packages/commonjs
-    resolve({
-      browser: true,
-      dedupe: ['svelte'],
-    }),
-    commonjs(),
-
-    // If we're building for production (npm run build
-    // instead of npm run dev), minify
-    production && terser(),
-    typescript({
-      tsconfig: './tsconfig.json',
-    }),
-  ],
-  watch: {
-    clearScreen: false,
-  },
-};
+        plugins,
+      }
+    : undefined,
+  CI
+    ? {
+        input: 'src/lib/widget/modal.svelte',
+        onwarn: warningHandler,
+        output: {
+          file: path.join(packageFolder, 'modal.cjs'),
+          format: 'cjs',
+          sourcemap: true,
+          inlineDynamicImports: true,
+        },
+        plugins,
+      }
+    : undefined,
+].filter(Boolean);

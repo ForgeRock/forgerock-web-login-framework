@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
+  import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
 
@@ -8,15 +10,15 @@
   import { initialize as initializeContent } from '$lib/locale.store';
   import { initialize as initializeOAuth, type OAuthStore } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser, type UserStore } from '$lib/user/user.store';
-  import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
-  import { goto } from '$app/navigation';
 
   /** @type {import('./$types').PageData} */
   export let data;
 
   const authIndexValue = $page.url.searchParams.get('authIndexValue');
+  const codeParam = $page.url.searchParams.get('code');
+  const stateParam = $page.url.searchParams.get('state');
   const formPostEntryParam = $page.url.searchParams.get('form_post_entry');
   const journeyParam = $page.url.searchParams.get('journey');
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
@@ -59,7 +61,7 @@
 
   // Use if not initializing journey in a "context module"
   onMount(async () => {
-    if (suspendedIdParam || formPostEntryParam) {
+    if (suspendedIdParam || formPostEntryParam || (codeParam && stateParam)) {
       journeyStore.resume(location.href);
       goto('/', { replaceState: true });
     } else {

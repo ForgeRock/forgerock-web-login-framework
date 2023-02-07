@@ -1,40 +1,45 @@
 import { expect, test } from '@playwright/test';
 
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+
 test('Modal widget with social callback redirect', async ({ page }) => {
-  await page.goto('widget/modal?journey=LoginWithSocial', { waitUntil: 'networkidle' });
+  const { clickButton, navigate } = asyncEvents(page);
 
-  const loginButton = page.getByRole('button', { name: 'Open Login Modal' });
-  await loginButton.click();
+  await navigate('widget/modal?journey=TEST_LoginWithSocial');
 
-  const button = await page.locator('button', { hasText: 'Sign in with Google' });
-  await Promise.all([button.click(), page.waitForNavigation()]);
+  await clickButton('Open Login Modal', '/authenticate');
+
+  const button = page.getByRole('button', { name: 'Continue with Google' });
+  await Promise.all([page.waitForNavigation(), button.click()]);
+
   expect(page.url()).toContain('accounts.google.com', 'redirect_uri');
 });
 
 test('Modal widget with social callback redirect no local auth', async ({ page }) => {
-  await page.goto('widget/modal?journey=LoginWithSocialNoLocalAuth', { waitUntil: 'networkidle' });
+  const { navigate } = asyncEvents(page);
+
+  await navigate('widget/modal?journey=LoginWithSocialNoLocalAuth');
 
   const loginButton = page.getByRole('button', { name: 'Open Login Modal' });
+
   await Promise.all([
-    loginButton.click(),
     page.waitForFunction(() => window.location.origin === 'https://accounts.google.com'),
+    loginButton.click(),
   ]);
   expect(page.url()).toContain('accounts.google.com', 'redirect_uri');
 });
 
 test('Modal widget with social callback local authentication', async ({ page }) => {
-  await page.goto('widget/modal?journey=LoginWithSocial', { waitUntil: 'networkidle' });
+  const { clickButton, navigate } = asyncEvents(page);
 
-  const loginButton = page.getByRole('button', { name: 'Open Login Modal' });
-  await loginButton.click();
+  await navigate('widget/modal?journey=LoginWithSocial');
 
-  await page.fill('text="Username"', 'demouser');
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.getByRole('button', { name: 'Next' }).click();
+  await clickButton('Open Login Modal', '/authenticate');
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Password').fill('j56eKtae*1');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await clickButton('Next', '/authenticate');
+
+  await verifyUserInfo(page, expect);
 });

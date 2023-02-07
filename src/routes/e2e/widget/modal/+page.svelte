@@ -26,13 +26,13 @@
     // journey.start();
   });
   // TODO: Use a more specific type
-  journey.onSuccess((response: any) => {
+  journey.onSuccess((response) => {
     console.log(response);
     userResponse = response?.user;
   });
-  journey.onFailure((error: string | null) => {
+  journey.onFailure((Response) => {
     console.log('Singleton onFailure event fired');
-    console.log(error);
+    console.log(Response?.journey?.error);
   });
 
   modal.onClose((args: { reason: string }) =>

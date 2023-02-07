@@ -12,20 +12,23 @@
   import type { Style } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
+
   export let callback: PollingWaitCallback;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
 
   let message: string;
   let time: number;
 
   $: {
+    callback = callback as PollingWaitCallback;
     message = callback.getMessage();
     time = callback.getWaitTime();
     setTimeout(() => {
-      callbackMetadata.isReadyForSubmission = true;
+      if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
       selfSubmitFunction && selfSubmitFunction();
     }, time);
   }

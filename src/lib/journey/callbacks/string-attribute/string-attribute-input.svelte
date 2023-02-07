@@ -3,12 +3,10 @@
     getInputTypeFromPolicies,
     isInputRequired,
     type FailedPolicy,
-    type Policy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
 
   import {
-    getValidationPolicies,
     getValidationFailures,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
@@ -24,11 +22,14 @@
   import type { Maybe } from '$lib/interfaces';
   import type { StringDict } from '@forgerock/javascript-sdk/lib/shared/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
+
   export let callback: AttributeInputCallback<string>;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+
 
   let inputName: string;
   let isRequired: boolean;
@@ -37,7 +38,6 @@
   let previousValue: string;
   let prompt: string;
   let type: 'email' | 'text';
-  let validationRules: Policy[];
   let validationFailures: FailedPolicy[];
   let isInvalid: boolean;
 
@@ -61,21 +61,20 @@
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
      */
-    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     isRequired = isInputRequired(callback);
     outputName = callback.getOutputByName('name', '');
     policies = callback.getPolicies();
     previousValue = callback?.getInputValue() as string;
     prompt = callback.getPrompt();
     type = getInputTypeFromPolicies(policies);
-    validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   key={inputName}
   label={interpolate(outputName, null, prompt)}
   message={isRequired ? interpolate('inputRequiredError') : undefined}
@@ -86,5 +85,5 @@
   showMessage={!!isInvalid}
   value={previousValue}
 >
-  <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />
+  <Policies callback={callback} key={inputName} label={prompt} messageKey="valueRequirements" />
 </Input>

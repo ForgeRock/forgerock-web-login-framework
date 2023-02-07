@@ -2,7 +2,7 @@
   window.global = window;
 
   window.onload = () => {
-    const body = document.body.root;
+    const root = document.getElementById('storybook-root');
     root.classList.add('tw_bg-background-light');
     root.classList.add('dark:tw_bg-background-dark');
   };
@@ -35,7 +35,7 @@
 
   html,
   body,
-  #root {
+  #storybook-root {
     height: 100%;
     min-height: 100%;
   }
@@ -44,22 +44,22 @@
     padding: 0 !important;
   }
 
-  .sb-main-centered #root {
+  .sb-main-centered #storybook-root {
     display: flex;
     width: 100%;
   }
 
-  .sb-main-centered #root > * {
+  .sb-main-centered #storybook-root > * {
     margin: auto;
     width: 100vw;
     max-width: 400px;
   }
 
-  .sb-main-padded #root {
+  .sb-main-padded #storybook-root {
     padding: 1rem;
   }
 
-  .sb-main-fullscreen #root {
+  .sb-main-fullscreen #storybook-root {
     padding: 0;
   }
 </style>

@@ -4,26 +4,34 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import Choice from './choice.svelte';
 
-  export let callback: ChoiceCallback;
-  export let displayType: 'radio' | 'select' | undefined;
+  import type { CallbackMetadata } from '$journey/journey.interfaces';
+  import type { Maybe } from '$lib/interfaces';
 
-  let callbackMetadata = {
-    canForceUserInputOptionality: false,
-    isFirstInvalidInput: false,
-    isReadyForSubmission: false,
-    isSelfSubmitting: false,
-    isUserInputRequired: true,
+  export let callback: ChoiceCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+
+  let mergedCallbackMetadata = {
+    derived: {
+      canForceUserInputOptionality: false,
+      isFirstInvalidInput: false,
+      isReadyForSubmission: false,
+      isSelfSubmitting: false,
+      isUserInputRequired: true,
+    },
     idx: 0,
+    ...callbackMetadata,
   };
   let stepMetadata = {
-    isStepSelfSubmittable: false,
-    isUserInputOptional: false,
-    numOfCallbacks: 2,
-    numOfSelfSubmittableCbs: 0,
-    numOfUserInputCbs: 2,
+    derived: {
+      isStepSelfSubmittable: false,
+      isUserInputOptional: false,
+      numOfCallbacks: 2,
+      numOfSelfSubmittableCbs: 0,
+      numOfUserInputCbs: 2,
+    },
   };
 </script>
 
 <Centered>
-  <Choice {callback} {callbackMetadata} {displayType} {stepMetadata} />
+  <Choice {callback} callbackMetadata={mergedCallbackMetadata} {stepMetadata} />
 </Centered>

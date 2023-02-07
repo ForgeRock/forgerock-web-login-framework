@@ -8,11 +8,13 @@
   import type { Style } from '$lib/style.store';
   import type { FRCallback } from '@forgerock/javascript-sdk';
 
+  // Unused props. Setting to const prevents errors in console
+  export const callbackMetadata: Maybe<CallbackMetadata> = null;
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: Style = {};
+
   export let callback: FRCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
 
   const type = callback.getType();
 </script>
