@@ -1,7 +1,6 @@
 module.exports = {
   ci: {
     collect: {
-      staticDistDir: '.svelte-kit/output',
     },
     assert: {
       // assert options here
@@ -11,6 +10,7 @@ module.exports = {
     },
     server: {
       // server options here
+
     },
     wizard: {
       // wizard options here
