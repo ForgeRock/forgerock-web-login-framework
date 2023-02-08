@@ -52,7 +52,6 @@ jobs:
           REMOVE: false
           CORS_CONFIG_NAME: 'org-ui'
       - name: Audit URLs using Lighthouse
-        if: github.actor != 'dependabot[bot]'
         id: lighthouse_audit
         uses: treosh/lighthouse-ci-action@v9
         with: # hope this works because this is an array
@@ -61,7 +60,6 @@ jobs:
           urls: |
             https://preview-pr-${{ github.event.number }}-ryanbas21.cloud.okteto.net/
       - name: Lighthouse Report
-        if: github.actor != 'dependabot[bot]'
         uses: manrueda/lighthouse-report-action@v1.1.2
         with:
           reports: '.lighthouseci'
