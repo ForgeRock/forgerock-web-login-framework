@@ -172,7 +172,8 @@ export function widgetApiFactory(modal?: Modal) {
         try {
           return await UserManager.getCurrentUser();
         } catch (err) {
-          return null;
+          console.warn(err);
+          return;
         }
       }
       return !!(await TokenManager.getTokens());
@@ -183,7 +184,8 @@ export function widgetApiFactory(modal?: Modal) {
         try {
           return await UserManager.getCurrentUser();
         } catch (err) {
-          return null;
+          console.warn(err);
+          return;
         }
       }
       return get(userStore).response;
@@ -217,6 +219,7 @@ export function widgetApiFactory(modal?: Modal) {
       try {
         return await TokenManager.getTokens(options);
       } catch (err) {
+        console.warn(err);
         return;
       }
     },

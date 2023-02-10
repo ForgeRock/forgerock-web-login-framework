@@ -54,6 +54,75 @@ NOTE: For more SDK configuration options, please [see our SDK's configuration do
 1. For content schema, please [use the example en-US locale file](/src/locales/us/en/index.ts)
 2. For `style` schema and more information, please [see the Style section below](#styling-api)
 
+### Configuration
+
+This object can be useful when you want to leverage APIs that require interaction with the ForgeRock platform or access stored tokens in a location of your app that may not directly use the `Widget`. When the `configuration.set` method is used, it removes the need to set the `config` property within the `Widget` class instantiation.
+
+For example, these would be equivalent:
+
+```js
+import Widget, { configuration } from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget, { configuration } from 'forgerock-web-login-widget/inline';
+
+// Configuration within Widget instantiation
+const widget = new Widget({
+  target: document.getElementById('widget-root'),
+  props: {
+    config: {
+      /**
+       * REQUIRED; SDK configuration object
+       */
+      serverConfig: {
+        baseUrl: 'https://customer.forgeblocks.com/am',
+      },
+      /**
+       * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+       * Remaining config is optional with fallback values shown
+       */
+      clientId: 'WebLoginWidgetClient',
+      realmPath: 'alpha',
+      redirectUri: window.location.href,
+      scope: 'openid email',
+      tree: 'Login',
+    },
+  },
+});
+```
+
+```js
+import Widget, { configuration } from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget, { configuration } from 'forgerock-web-login-widget/inline';
+
+// Configuration outside Widget instantiation
+configuration.set({
+  /**
+   * REQUIRED; SDK configuration object
+   */
+  serverConfig: {
+    baseUrl: 'https://customer.forgeblocks.com/am',
+  },
+  /**
+   * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+   * Remaining config is optional with fallback values shown
+   */
+  clientId: 'WebLoginWidgetClient',
+  realmPath: 'alpha',
+  redirectUri: window.location.href,
+  scope: 'openid email',
+  tree: 'Login',
+});
+
+const widget = new Widget({
+  target: document.getElementById('widget-root'),
+});
+```
+
+Note: It's important to not that all methods of the `user` API imported from this module require configuration to be set. So, setting the configuration is best done at the top index or entry file of your application. Then you can use the all APIs without failure.
+
 ## Journey
 
 The `journey` object:

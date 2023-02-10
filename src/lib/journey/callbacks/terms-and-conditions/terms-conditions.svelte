@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -13,14 +14,14 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
   import { derived } from 'svelte/store';
 
   // Unused props. Setting to const` prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: Style = {};
+  export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: TermsAndConditionsCallback;
   export let checkAndRadioType: 'animated' | 'standard' = 'animated';

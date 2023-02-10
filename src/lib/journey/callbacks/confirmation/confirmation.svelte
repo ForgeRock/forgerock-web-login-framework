@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ConfirmationCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import Standard from '$components/compositions/checkbox/standard.svelte';
@@ -13,11 +14,11 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   // Unused props. Setting to const prevents errors in console
-  export const style: Style = {};
+  export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: ConfirmationCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;

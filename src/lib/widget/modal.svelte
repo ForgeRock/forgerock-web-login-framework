@@ -54,17 +54,18 @@
   import { initialize as initializeLinks, partialLinksSchema } from '$lib/links.store';
   import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
   import { initialize as initializeUser } from '$lib/user/user.store';
-  import { initialize as initializeStyle, type Style } from '$lib/style.store';
+  import { initialize as initializeStyle } from '$lib/style.store';
 
   import type { partialConfigSchema } from '$lib/sdk.config';
   import type { journeyConfigSchema } from '$journey/config.store';
   import type { partialStringsSchema } from '$lib/locale.store';
+  import type { partialStyleSchema } from '$lib/style.store';
 
   export let config: z.infer<typeof partialConfigSchema> | undefined = undefined;
-  export let content: z.infer<typeof partialStringsSchema>;
+  export let content: z.infer<typeof partialStringsSchema> | undefined = undefined;
   export let journeys: z.infer<typeof journeyConfigSchema> | undefined = undefined;
   export let links: z.infer<typeof partialLinksSchema> | undefined = undefined;
-  export let style: Style | undefined = undefined;
+  export let style: z.infer<typeof partialStyleSchema> | undefined = undefined;
 
   const dispatch = createEventDispatcher();
 

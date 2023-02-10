@@ -8,11 +8,15 @@ export const linksSchema = z
   .strict();
 
 export const partialLinksSchema = linksSchema.partial();
-export let links: Readable<Record<string, string> | null>;
+export let links: Readable<z.infer<typeof partialLinksSchema> | undefined>;
 
 export function initialize(customLinks?: z.infer<typeof partialLinksSchema>) {
-  // Provide developer feedback for custom links
-  linksSchema.parse(customLinks);
-
-  links = readable(customLinks);
+  // If customLinks is provided, provide feedback for object
+  if (customLinks) {
+    // Provide developer feedback for custom links
+    linksSchema.parse(customLinks);
+    links = readable(customLinks);
+  } else {
+    links = readable();
+  }
 }

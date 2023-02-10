@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import Base from '$journey/callbacks/password/base.svelte';
@@ -14,7 +15,7 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   // Unused props. Setting to const prevents errors in console
@@ -23,7 +24,7 @@
 
   export let callback: ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: Style = {};
+  export let style: z.infer<typeof styleSchema> = {};
 
   const isRequired = isInputRequired(callback);
 

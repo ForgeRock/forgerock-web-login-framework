@@ -249,4 +249,38 @@ journey.onSuccess((response) => {
 });
 ```
 
-And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation. For more about Widget events, [see the Widget Events section](#widget-events).
+And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented within the [Full API section here](/docs/widget/full-api). For more about Widget events, [see the Widget Events section](/docs/widget/full-api#widget-events).
+
+## Checking user information
+
+There are many reasons why you may need user information throughout your application. It may be to display the user's first name or email, it may be to use tokens for protected resources, or to validate an Access Token with the ForgeRock server. Any of these will require the underlying SDK to be configured. To do this, you have two choices:
+
+1. Configure the SDK through `Widget` instantiation
+2. Configure the SDK through the `configuration` object
+
+We've seen [configuring the SDK through `Widget` instantiation](#instantiate-the-widget-modal), but that may not always be preferable as the Widget may not be relevant in all parts of your app. Let's see how we can use the second option instead.
+
+```js
+let userInfo;
+
+// Configure the underlying SDK, so it can communicate with the ForgeRock platform
+configuration.set({
+  clientId: 'WebOAuthClient',
+  redirectUri: `${window.location.origin}/callback`,
+  scope: 'openid profile email me.read',
+  serverConfig: {
+    baseUrl: 'https://example.forgeblocks.com/am/',
+    timeout: 5000,
+  },
+  realmPath: 'alpha',
+});
+
+// Do we have stored tokens
+if (await user.tokens()) {
+  // User has tokens, so attempt call to /userinfo
+  userInfo = await user.info(true);
+} else {
+  // If no tokens, assign null
+  userInfo = null;
+}
+```

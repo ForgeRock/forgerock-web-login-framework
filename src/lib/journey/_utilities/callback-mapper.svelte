@@ -8,6 +8,7 @@
   */
 
   import { CallbackType } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   // Callback handler components
   import Boolean from '$journey/callbacks/boolean/boolean.svelte';
@@ -51,7 +52,7 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   export let props: {
@@ -59,7 +60,7 @@
     callbackMetadata: Maybe<CallbackMetadata>;
     selfSubmitFunction: SelfSubmitFunction;
     stepMetadata: Maybe<StepMetadata>;
-    style: Style;
+    style: z.infer<typeof styleSchema>;
   };
 
   let cbType: string;

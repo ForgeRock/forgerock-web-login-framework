@@ -1,6 +1,7 @@
 <script lang="ts">
   import { getAttributeValidationFailureText } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
@@ -11,14 +12,14 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: AttributeInputCallback<boolean>;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let style: Style = {};
+  export let style: z.infer<typeof styleSchema> = {};
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
