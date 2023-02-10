@@ -33,10 +33,6 @@ jobs:
           URLS=$(okteto preview endpoints pr-${{ github.event.number }}-ryanbas21 -o json | jq -c)
           echo "::set-output name=preview_urls::$URLS"
   additional:
-    permissions:
-      pull-requests: write
-      issues: write
-      repository-projects: write
     needs: preview
     runs-on: ubuntu-latest
     steps:
