@@ -519,7 +519,7 @@ For the full type definition of this, please [view our SDK API documentation](ht
 The named `modal` import provides controls of the modal component.
 
 ```js
-import { modal } from 'forgerock-web-login-widget/modal';
+import { modal } from 'forgerock-login-widget/modal';
 
 // Know when the model has been closed to run your own logic
 // The property `reason` will be either "auto", "external", or "user" (see below)
@@ -551,7 +551,7 @@ It's worth noting that if the Widget has already mounted before the `onMount` st
 The named `form` import provides a simple `onMount` event.
 
 ```js
-import { form } from 'forgerock-web-login-widget/inline';
+import { form } from 'forgerock-login-widget/inline';
 
 // Know when the inline form has mounted
 form.onMount((formElement) => {
