@@ -13,12 +13,8 @@
   },
   "typesVersions": {
     "*": {
-      "modal": [
-        "./modal.d.ts"
-      ],
-      "inline": [
-        "./inline.d.ts"
-      ]
+      "modal": ["./modal.d.ts"],
+      "inline": ["./inline.d.ts"]
     }
   },
   "dependencies": {},

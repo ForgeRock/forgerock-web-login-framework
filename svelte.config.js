@@ -2,6 +2,8 @@ import auto from '@sveltejs/adapter-auto';
 import node from '@sveltejs/adapter-node';
 import preprocess from 'svelte-preprocess';
 import { mdsvex } from 'mdsvex';
+import slug from 'remark-slug';
+import autolink from 'remark-autolink-headings';
 
 import aliases from './alias.config.js';
 
@@ -27,7 +29,10 @@ const config = {
     preprocess({
       postcss: true,
     }),
-    mdsvex({ extensions: ['.md'] }),
+    mdsvex({
+      extensions: ['.md'],
+      remarkPlugins: [slug, autolink],
+    }),
   ],
 };
 

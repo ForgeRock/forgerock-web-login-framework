@@ -3,14 +3,15 @@
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![semantic-release: conventional](https://img.shields.io/badge/semantic--release-conventional-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-## WARNING: VAPORWARE
+## WARNING: ALPHA VERSION
 
-**This is a prototype of a development framework for generating a ForgeRock Login App for self-hosting or JavaScript Widget into an existing self-hosted SPA (React, Vue, Angular, etc.). This project is not officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
+**This is a early preview (alpha) of a development framework for generating a JavaScript Widget into an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a ForgeRock Login App for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
 
 ## Table of Contents
 
 - [Overview](#overview)
 - [Quick Start: Using the Widget in Your App](#quick-start-using-the-widget-in-your-app)
+  - [Installing the package](#installing-the-package)
   - [Adding the Widget's CSS](#adding-the-widgets-css)
   - [Using the Modal component](#using-the-modal-component)
   - [Using the Inline component](#using-the-inline-component)
@@ -22,14 +23,7 @@
   - [Modal](#modal)
   - [Inline](#inline)
   - [Styling API](#styling-api)
-- [Future APIs (not implemented)](#future-apis-not-implemented)
-  - [Currently unsupported](#currently-unsupported)
-  - [Widget customization (future)](#widget-customization-future)
-  - [Additional modal events (future)](#additional-modal-events-future)
-- [Quick Start: Internal Login Framework Development](#quick-start-internal-login-framework-development)
-  - [Technical requirements](#technical-requirements)
-  - [Knowledge requirements](#knowledge-requirements)
-  - [Instal, build & run](#instal-build--run)
+- [Currently unsupported](#currently-unsupported)
 - [Disclaimer](#disclaimer)
 - [License](#license)
 
@@ -41,12 +35,12 @@ This Widget uses the ForgeRock JavaScript SDK internally. It adds a UI rendering
 
 This Widget can be used in two different ways (or "form factors"):
 
-1. **Modal** component: this renders the form elements inside a modal dialog that can be opened and closed. This component is mounted outside of your app's controlled DOM.
-2. **Inline** component: this is just the form elements themselves, no container. This component is intended to be rendered inside your app's controlled DOM.
+1. **Modal** component: this renders the form elements inside a modal dialog that can be opened and closed. This component is mounted _outside_ of your app's controlled DOM.
+2. **Inline** component: this is just the form elements themselves, no container. This component is intended to be rendered _inside_ your app's controlled DOM.
 
 Both components provide the same authentication, token and user features. The only difference is how the component is rendered within your app.
 
-The Modal component is recommended as it provides the quickest development experience for providing login and registration flows into your app with the least disruption to your codebase. The Modal will be controlled within your app, but rendered in its own DOM root node and visual layer.
+The Modal component is recommended for those new to our products as it provides the quickest development experience for providing login and registration flows into your app with the least disruption to your codebase. The Modal will be controlled within your app, but rendered in its own DOM root node and visual layer.
 
 For example:
 
@@ -93,14 +87,13 @@ More details will be discussed below in the [Inline section](#using-the-inline-c
 
 ## Quick Start: Using the Widget in Your App
 
-Note: This project is currently in Beta, so this is not available via public npm. Because of this, it's worth noting what's not [currently supported](#currently-unsupported).
+### Installing the package
 
-1. `git clone https://github.com/cerebrl/forgerock-web-login-framework`
-2. `cd forgerock-web-login-framework`
-3. `npm install` (or simply `npm i`)
-4. `npm run build:widget`
-5. Copy the built `package/` directory with its contents and paste (or drag-n-drop) it into your project
-6. Import the Widget by directory reference, since it's local to your project; e.g. `import Widget from '../path/to/package/modal';`
+Note: **This project is currently in Alpha**, so importing the widget from npm requires the `alpha` tag. Because of this, it's worth noting what's not [currently supported](#currently-unsupported).
+
+```shell
+npm install @forgerock/login-widget@alpha
+```
 
 ### Adding the Widget's CSS
 
@@ -108,7 +101,7 @@ There are a few ways to add the Widget's CSS to your product:
 
 1. Import it into your JavaScript project as a module
 2. Import it using a CSS preprocessor, like Sass, Less or PostCSS
-3. Copy and paste the CSS file from the Widget and link it into your HTML
+3. Copy the CSS file from the package and link it into your HTML
 
 If you decide to import the CSS into your JavaScript, make sure your bundler knows how to import and process the CSS as a module. If using a CSS preprocessor, ensure you configure your preprocessor to access files from within your `package/` directory.
 
@@ -117,23 +110,26 @@ Copying the file and pasting it into your project for linking in the HTML is the
 Importing into your JavaScript:
 
 ```js
-import '../path/to/package/widget.css';
+// app.js
+import '@forgerock/login-widget/widget.css';
 ```
 
 Importing into your CSS:
 
 ```css
-@import '../path/to/package/widget.css';
+/* style.css */
+@import '@forgerock/login-widget/widget.css';
 ```
 
-Linking CSS in HTML example:
+Linking CSS in HTML example (you may have to copy the CSS file out of the npm module and into your static files directory):
 
 ```html
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- ... -->
-    <link rel="stylesheet" href="/path/to/package/widget.css" />
+    <link rel="stylesheet" href="/path/to/file/widget.css" />
   </head>
   <body>
     <!-- ... -->
@@ -143,7 +139,7 @@ Linking CSS in HTML example:
 
 #### Controlling the CSS cascade
 
-To ensure the proper CSS cascade, you can use `@layer` to ensure the browser applies the CSS in the way you intend regardless of the order you import or declare the CSS in your project. You can [read more about this new browser feature in the Mozilla docs](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer).
+Though not required, this helps solve common style issues that may pop up related to the CSS cascade. Using `@layer` will ensure the browser applies the CSS in the way you intend, regardless of the order you import or declare the CSS in your project. You can [read more about this new browser feature in the Mozilla docs](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer).
 
 Steps recommended:
 
@@ -204,7 +200,7 @@ Now, you can import the Widget into your app wherever you would like as a modal 
 
 ```js
 // As modal dialog
-import Widget from 'forgerock-web-login-widget/modal';
+import Widget from '@forgerock/login-widget/modal';
 
 // ...
 
@@ -225,7 +221,7 @@ Note: [See additional documentation about configuring the JS SDK](https://backst
 The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
 
 ```js
-import Widget, { journey } from 'forgerock-web-login-widget/modal';
+import Widget, { journey } from '@forgerock/login-widget/modal';
 
 new Widget({
   target: document.getElementById('login-widget'), // Any existing element in the DOM
@@ -262,7 +258,7 @@ And, that's it. You now can mount, display, and authenticate users through the F
 To show the modal, you will need to import the `modal` object, and use the `modal.open` method. It's common to execute this within a button's click handler.
 
 ```js
-import Widget, { modal } from 'forgerock-web-login-widget/modal';
+import Widget, { modal } from '@forgerock/login-widget/modal';
 
 // ...
 
@@ -288,7 +284,7 @@ Now, import the Widget where you'd like to mount it. In whatever way your framew
 
 ```js
 // As inline
-import Widget from 'forgerock-web-login-widget/inline';
+import Widget from '@forgerock/login-widget/inline';
 
 // ...
 
@@ -309,7 +305,7 @@ Note: [See additional documentation about configuring the JS SDK](https://backst
 The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
 
 ```js
-import Widget, { journey } from 'forgerock-web-login-widget/inline';
+import Widget, { journey } from '@forgerock/login-widget/inline';
 
 // Call after instantiating the Widget
 new Widget({
@@ -348,10 +344,10 @@ The Widget comes with methods and event handlers used to control the lifecycle o
 
 ```js
 // As modal dialog
-import Widget from 'forgerock-web-login-widget/modal';
+import Widget from '@forgerock/login-widget/modal';
 
 // OR, as embedded
-import Widget from 'forgerock-web-login-widget/inline';
+import Widget from '@forgerock/login-widget/inline';
 
 // Instantiate Widget
 const widget = new Widget({
@@ -401,8 +397,11 @@ NOTE: For content schema, please [use the example en-US locale file](/src/locale
 The `journey` object:
 
 ```js
-import { journey } from 'forgerock-web-login-widget/modal';
-// OR, import { journey } from 'forgerock-web-login-widget/inline';
+// As modal dialog
+import Widget from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget from '@forgerock/login-widget/inline';
 
 // Call to start the journey
 // Optional config can be passed in, see below for more details
@@ -463,8 +462,11 @@ NOTE: Schema for `response`
 The `user` object:
 
 ```js
-import { user } from 'forgerock-web-login-widget/modal';
-// OR, import { user } from 'forgerock-web-login-widget/inline';
+// As modal dialog
+import Widget from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget from '@forgerock/login-widget/inline';
 
 // Is user currently authorized
 await user.authorized(); // do they have OAuth tokens (local)?
@@ -483,8 +485,11 @@ await user.logout();
 The Widget has an alias to the JavaScript SDK's `HttpClient.request`, which is a convenience wrapper around the native `fetch`. All this does is auto-inject the Access Token into the `Authorization` header and manage some of the lifecycle around the token.
 
 ```js
-import { request } from 'forgerock-web-login-widget/modal';
-// OR, import { request } from 'forgerock-web-login-widget/inline';
+// As modal dialog
+import Widget from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget from '@forgerock/login-widget/inline';
 
 // See below for more details on the options
 request({ init: { method: 'GET' }, url: 'https://protected.resource.com' });
@@ -514,9 +519,9 @@ For the full type definition of this, please [view our SDK API documentation](ht
 The named `modal` import provides controls of the modal component.
 
 ```js
-import { modal } from 'forgerock-web-login-widget/modal';
+import { modal } from 'forgerock-login-widget/modal';
 
-// Know when the modal auto-closes, not when the modal is
+// Know when the model has been closed to run your own logic
 // The property `reason` will be either "auto", "external", or "user" (see below)
 modal.onClose(({ reason }) => {
   /* Run anything you want */
@@ -546,7 +551,7 @@ It's worth noting that if the Widget has already mounted before the `onMount` st
 The named `form` import provides a simple `onMount` event.
 
 ```js
-import { form } from 'forgerock-web-login-widget/inline';
+import { form } from 'forgerock-login-widget/inline';
 
 // Know when the inline form has mounted
 form.onMount((formElement) => {
@@ -599,81 +604,16 @@ const widget = new Widget({
 
 Note that the `logo` and `section` property only apply to the "modal" form factor, and not the "inline".
 
-## Future APIs (not implemented)
-
-### Currently **unsupported**
+## Currently **unsupported**
 
 1. WebAuthn
 2. Push Authentication
-3. Recaptcha
+3. ReCAPTCHA
 4. QR Code display
 5. TextOutputCallback with scripts
 6. Device Profile
-7. Email Suspend (Forgot Password/Username flows)
-8. Social Login
-9. Central Login
-10. SAML
-
-### Widget customization (future)
-
-```js
-new Widget({
-  // ... previous config properties ...
-
-  // All optional; default value is assigned below
-  customization: {
-    labels: 'floating', // "floating" or "stacked"
-    modalBackdrop: true, // boolean; display modal backdrop
-    modalAutoClose: true, // boolean; automatically close modal on success
-  },
-});
-```
-
-### Additional modal events (future)
-
-```js
-modal.onClose((event) => {
-  /* anything you want */
-});
-```
-
-## Quick Start: Internal Login Framework Development
-
-### Technical requirements
-
-1. Node.js v16
-2. npm v8
-
-### Knowledge requirements
-
-1. JavaScript & TypeScript
-2. Svelte
-3. Tailwind
-4. ES Modules
-
-### Install, build & run
-
-1. `npm install` (or simply `npm i`)
-2. `npm run build`
-3. `npm run dev` (leave running)
-
-This will install all the necessary dependencies, build the project and run it in `dev` mode, providing you with Hot Module Reloading. This will also produce the Widget package for use in external applications.
-
-## Notes
-
-### Re-syncing with Chromatic
-
-Rebuilds and syncs with Chromatic:
-
-```sh
-npx chromatic --project-token=e10acf0c74f9 --patch-build=<current-branch>...main
-```
-
-Make sure upstream is set on all branches:
-
-```sh
-git push -u origin <branch>
-```
+7. Central Login
+8. SAML
 
 ## Disclaimer
 
@@ -688,6 +628,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-&copy; Copyright 2020 ForgeRock AS. All Rights Reserved.
+&copy; Copyright 2022-2023 ForgeRock AS. All Rights Reserved.
 
 [forgerock-logo]: https://www.forgerock.com/themes/custom/forgerock/images/fr-logo-horz-color.svg 'ForgeRock Logo'

@@ -1,4 +1,18 @@
+<script>
+  export let data;
+</script>
+
 # FAQs
+
+## Question: What is "The Framework"?
+
+This "framework" is essentially a "meta-framework" built with SvelteKit that enforces a set of patterns, tools and guidelines that assist developers in producing a custom or modified version of standard { data.package.name }, as well as the future { data.app.name }. Many may find the out-of-the-box { data.package.name } perfectly suitable for use in the projects; for those this framework is not that relevant. But, for those that would like to customize their own { data.package.name } for use in their project, this framework will assist in safely and reliably modifying the { data.package.name } to suit their needs.
+
+Currently, this framework only provides theming customization as a feature, but future releases will provide customization of stage and callback components' structure and behavior. This will be provided without sacrificing the ability to update the framework when future versions are released.
+
+## Question: What is "The Login Widget" in relation to "The Framework"?
+
+The "login widget" or "widget" is a UI component described in the README for this project, and it is produced using the "framework". Modifications and builds of the "widget" are created using the "framework"; the "widget" is what developers will actually use in their app.
 
 ## Question: Research and thoughts on Svelte?
 
