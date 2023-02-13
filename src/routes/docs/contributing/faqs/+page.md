@@ -10,6 +10,10 @@ This "framework" is essentially a "meta-framework" built with SvelteKit that enf
 
 Currently, this framework only provides theming customization as a feature, but future releases will provide customization of stage and callback components' structure and behavior. This will be provided without sacrificing the ability to update the framework when future versions are released.
 
+## Question: What is "The Login Widget" in relation to "The Framework"?
+
+The "login widget" or "widget" is a UI component described in the README for this project, and it is produced using the "framework". Modifications and builds of the "widget" are created using the "framework"; the "widget" is what developers will actually use in their app.
+
 ## Question: Research and thoughts on Svelte?
 
 Hey you two! I finished the SvelteKit todo sample app, though there are likely some bugs. I’m really happy how quickly I built it and deployed it onto Vercel. I didn’t come across any real issues or struggles. I have a few minor dislikes, but nothing moderate, serious or critical.
