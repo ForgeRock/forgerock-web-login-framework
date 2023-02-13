@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { z } from 'zod';
+
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -6,14 +8,14 @@
   import T from '$components/_utilities/locale-strings.svelte';
 
   import type { Maybe } from '$lib/interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
 
   export let forceValidityFailure = false;
   export let key: string;
   export let onChange: (event: Event) => void;
   export let isInvalid = false;
   export let isRequired = true;
-  export let style: Style = {};
+  export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 

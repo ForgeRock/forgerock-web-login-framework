@@ -1,5 +1,7 @@
 <script lang="ts">
   import type { SelectIdPCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
+
   import AppleIcon from '../../../components/icons/apple-icon.svelte';
   import FacebookIcon from '../../../components/icons/facebook-icon.svelte';
   import GoogleIcon from '../../../components/icons/google-icon.svelte';
@@ -12,10 +14,10 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export const style: Style = {};
+  export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: SelectIdPCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;

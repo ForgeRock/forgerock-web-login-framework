@@ -1,26 +1,49 @@
 import { readable, type Readable } from 'svelte/store';
+import { z } from 'zod';
 
-export interface Logo {
-  dark?: string;
-  height?: number;
-  light: string;
-  width?: number;
-}
-export interface Style {
-  checksAndRadios?: 'animated' | 'standard';
-  labels?: 'floating' | 'stacked';
-  logo?: Logo;
-  sections?: {
-    header?: boolean;
-  };
-  stage?: {
-    icon: boolean;
-  };
-}
+export const logoSchema = z
+  .object({
+    dark: z.string().optional(),
+    height: z.number().optional(),
+    light: z.string().optional(),
+    width: z.number().optional(),
+  })
+  .strict();
 
-export let style: Readable<Style>;
+export const styleSchema = z
+  .object({
+    checksAndRadios: z.union([z.literal('animated'), z.literal('standard')]).optional(),
+    labels: z.union([z.literal('floating').optional(), z.literal('stacked')]).optional(),
+    logo: logoSchema.optional(),
+    sections: z
+      .object({
+        header: z.boolean().optional(),
+      })
+      .optional(),
+    stage: z
+      .object({
+        icon: z.boolean().optional(),
+      })
+      .optional(),
+  })
+  .strict();
 
-// TODO: Implement Zod for better usability
-export function initialize(customStyle?: Style) {
-  style = readable(customStyle);
+export const partialStyleSchema = styleSchema.partial();
+export let style: Readable<z.infer<typeof partialStyleSchema>>;
+
+const fallbackStyle = {
+  checksAndRadios: 'animated',
+  labels: 'floating',
+  logo: {},
+  sections: {},
+  stage: {},
+} as const;
+
+export function initialize(customStyle?: z.infer<typeof partialStyleSchema>) {
+  if (customStyle) {
+    styleSchema.parse(customStyle);
+    style = readable(customStyle);
+  } else {
+    style = readable(fallbackStyle);
+  }
 }

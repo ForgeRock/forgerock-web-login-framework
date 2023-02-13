@@ -3,6 +3,7 @@
     PasswordCallback,
     ValidatedCreatePasswordCallback,
   } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import ConfirmInput from './confirm-input.svelte';
   import EyeIcon from '$components/icons/eye-icon.svelte';
@@ -13,14 +14,14 @@
 
   import type { Maybe } from '$lib/interfaces';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let key: string;
   export let isInvalid = false;
   export let isRequired = false;
-  export let style: Style = {};
+  export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 

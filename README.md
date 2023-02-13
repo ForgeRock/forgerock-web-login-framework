@@ -336,6 +336,40 @@ journey.onSuccess((response) => {
 
 And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation. For more about Widget events, [see the Widget Events section](#widget-events).
 
+## Checking user information
+
+There are many reasons why you may need user information throughout your application. It may be to display the user's first name or email, it may be to use tokens for protected resources, or to validate an Access Token with the ForgeRock server. Any of these will require the underlying SDK to be configured. To do this, you have two choices:
+
+1. Configure the SDK through `Widget` instantiation
+2. Configure the SDK through the `configuration` object
+
+We've seen [configuring the SDK through `Widget` instantiation](#instantiate-the-widget-modal), but that may not always be preferable as the Widget may not be relevant in all parts of your app. Let's see how we can use the second option instead.
+
+```js
+let userInfo;
+
+// Configure the underlying SDK, so it can communicate with the ForgeRock platform
+configuration.set({
+  clientId: 'WebOAuthClient',
+  redirectUri: `${window.location.origin}/callback`,
+  scope: 'openid profile email me.read',
+  serverConfig: {
+    baseUrl: 'https://example.forgeblocks.com/am/',
+    timeout: 5000,
+  },
+  realmPath: 'alpha',
+});
+
+// Do we have stored tokens
+if (await user.tokens()) {
+  // User has tokens, so attempt call to /userinfo
+  userInfo = await user.info(true);
+} else {
+  // If no tokens, assign null
+  userInfo = null;
+}
+```
+
 ## Complete Widget API
 
 The Widget comes with methods and event handlers used to control the lifecycle of user journeys/authentication.
@@ -391,6 +425,65 @@ widget.$destroy();
 NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html), or you can [see our API docs for more developer detail](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/configoptions.html).
 
 NOTE: For content schema, please [use the example en-US locale file](/src/locales/us/en/index.ts).
+
+### Configuration
+
+This object can be useful when you want to leverage APIs that require interaction with the ForgeRock platform or access stored tokens in a location of your app that may not directly use the `Widget`. When the `configuration.set` method is used, it removes the need to set the `config` property within the `Widget` class instantiation.
+
+For example, these would be equivalent:
+
+```js
+// Configuration within Widget instantiation
+const widget = new Widget({
+  target: document.getElementById('widget-root'),
+  props: {
+    config: {
+      /**
+       * REQUIRED; SDK configuration object
+       */
+      serverConfig: {
+        baseUrl: 'https://customer.forgeblocks.com/am',
+      },
+      /**
+       * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+       * Remaining config is optional with fallback values shown
+       */
+      clientId: 'WebLoginWidgetClient',
+      realmPath: 'alpha',
+      redirectUri: window.location.href,
+      scope: 'openid email',
+      tree: 'Login',
+    },
+  },
+});
+```
+
+```js
+// Configuration outside Widget instantiation
+configuration.set({
+  /**
+   * REQUIRED; SDK configuration object
+   */
+  serverConfig: {
+    baseUrl: 'https://customer.forgeblocks.com/am',
+  },
+  /**
+   * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+   * Remaining config is optional with fallback values shown
+   */
+  clientId: 'WebLoginWidgetClient',
+  realmPath: 'alpha',
+  redirectUri: window.location.href,
+  scope: 'openid email',
+  tree: 'Login',
+});
+
+const widget = new Widget({
+  target: document.getElementById('widget-root'),
+});
+```
+
+Note: It's important to not that all methods of the `user` API imported from this module require configuration to be set. So, setting the configuration is best done at the top index or entry file of your application. Then you can use the all APIs without failure.
 
 ### Journey
 

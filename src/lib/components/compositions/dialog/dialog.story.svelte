@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { z } from 'zod';
+
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Button from '$components/primitives/button/button.svelte';
   import Dialog from './dialog.svelte';
@@ -6,11 +8,11 @@
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import { initialize } from '$lib/style.store';
 
-  import type { Logo } from '$lib/style.store';
+  import type { logoSchema } from '$lib/style.store';
 
   // TODO: Export controls for changing dialog context
   export let forceOpen: boolean;
-  export let logo: Logo;
+  export let logo: z.infer<typeof logoSchema>;
   export let withHeader: boolean;
 
   let dialogEl: HTMLDialogElement;

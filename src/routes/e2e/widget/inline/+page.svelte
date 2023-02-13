@@ -18,7 +18,7 @@
     userResponse = null;
   }
 
-  form.onMount((component: HTMLElement) => console.log(component));
+  form.onMount((component) => console.log(component));
   // TODO: Use a more specific type
   journey.onSuccess((response) => (userResponse = response?.user));
   journey.onFailure((response) => console.log(response.journey?.error));

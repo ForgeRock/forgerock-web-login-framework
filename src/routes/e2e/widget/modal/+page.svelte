@@ -2,8 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { modal, journey, user } from '$package/modal';
-  import type { Response } from '$lib/widget/interfaces';
+  import Widget, { configuration, modal, journey, user } from '$package/modal';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -19,6 +18,7 @@
     userResponse = null;
   }
 
+  // TODO: Investigate why the parameter types are needed here
   modal.onMount((dialog: HTMLDialogElement, form: HTMLFormElement) => {
     console.log(dialog);
     console.log(form);
@@ -42,6 +42,18 @@
 
   onMount(async () => {
     let content;
+
+    configuration.set({
+      clientId: 'WebOAuthClient',
+      redirectUri: `${window.location.origin}/callback`,
+      scope: 'openid profile email me.read',
+      serverConfig: {
+        baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+        timeout: 5000,
+      },
+      realmPath: 'alpha',
+    });
+
     /**
      * Reuse translated content from locale api if not en-US
      */
@@ -53,16 +65,6 @@
     widget = new Widget({
       target: widgetEl,
       props: {
-        config: {
-          clientId: 'WebOAuthClient',
-          redirectUri: `${window.location.origin}/callback`,
-          scope: 'openid profile email me.read',
-          serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-            timeout: 5000,
-          },
-          realmPath: 'alpha',
-        },
         content,
         links: {
           termsAndConditions: 'https://www.forgerock.com/terms',
