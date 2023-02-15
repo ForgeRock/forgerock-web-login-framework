@@ -4,12 +4,17 @@ node_modules
 /.svelte-kit/*
 /.svelte-kit/**/*
 !/.svelte-kit/tsconfig.json
-/package/*
-/package/**/*
+
+# ignore package dir
+package/*
+package/**/*
+
+# don't ignore these files
 !/package/README.md
 !/package/CHANGELOG.md
 !/package/LICENSE
 !/package/package.json
+
 .env
 .env.*
 !.env.example
