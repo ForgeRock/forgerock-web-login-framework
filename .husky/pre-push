@@ -2,4 +2,4 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 CI=true npm run ci
-npm run test:e2e
+CI=true npm run test:e2e

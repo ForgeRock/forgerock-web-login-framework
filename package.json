@@ -84,6 +84,7 @@
     "chromatic": "^6.17.0",
     "color": "^4.2.3",
     "commitizen": "^4.2.6",
+    "concurrently": "^7.6.0",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
