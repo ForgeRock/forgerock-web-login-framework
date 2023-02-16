@@ -13,10 +13,14 @@
   },
   "typesVersions": {
     "*": {
-      "modal": ["./modal.d.ts"],
-      "inline": ["./inline.d.ts"]
+      "modal": [
+        "./modal.d.ts"
+      ],
+      "inline": [
+        "./inline.d.ts"
+      ]
     }
   },
   "dependencies": {},
-  "version": "1.0.0-beta.1"
+  "version": "1.0.0-beta.2"
 }

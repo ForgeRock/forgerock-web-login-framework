@@ -1,3 +1,16 @@
+# [1.0.0-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2023-02-16)
+
+
+### Bug Fixes
+
+* **types:** fix runtime and compile-time type bugs in widget API ([3ee678d](https://github.com/forgerock/forgerock-web-login-framework/commit/3ee678d512cfd2f2de76b158f3493edd8428759f))
+* **widget:** update-package-lock ([ac58f93](https://github.com/forgerock/forgerock-web-login-framework/commit/ac58f938a3ac7810cf0e6806d43f54493a19216f))
+
+
+### Features
+
+* **config:** add ability to configure widget outside of Widget instantiation ([892a40e](https://github.com/forgerock/forgerock-web-login-framework/commit/892a40e4900650bf435d1062e1f6a6d255445fa4))
+
 # 1.0.0-beta.1 (2023-02-07)
 
 
