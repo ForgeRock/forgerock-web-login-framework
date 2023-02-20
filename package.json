@@ -117,7 +117,7 @@
     "storybook-addon-code-editor": "^0.3.7",
     "storybook-dark-mode": "2.0.5",
     "svelte": "^3.55.1",
-    "svelte-check": "^3.0.1",
+    "svelte-check": "^3.0.3",
     "svelte-dts": "^0.3.7",
     "svelte-loader": "^3.1.4",
     "svelte-preprocess": "^4.10.7",
