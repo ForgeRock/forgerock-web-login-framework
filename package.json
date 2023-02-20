@@ -64,7 +64,7 @@
     "@storybook/addon-links": "^7.0.0-beta.20",
     "@storybook/addon-postcss": "^2.0.0",
     "@storybook/jest": "^0.0.11-next.0",
-    "@storybook/svelte": "^7.0.0-beta.20",
+    "@storybook/svelte": "^7.0.0-beta.51",
     "@storybook/sveltekit": "^7.0.0-beta.20",
     "@storybook/test-runner": "^0.10.0-next.4",
     "@storybook/testing-library": "^0.0.14--canary.30.5f44d14.0",
