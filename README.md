@@ -3,9 +3,9 @@
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![semantic-release: conventional](https://img.shields.io/badge/semantic--release-conventional-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-## WARNING: ALPHA VERSION
+## WARNING: BETA VERSION
 
-**This is a early preview (alpha) of a development framework for generating a JavaScript Widget into an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a ForgeRock Login App for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
+**This is a early preview (beta) of a development framework for generating a JavaScript Widget into an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a ForgeRock Login App for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
 
 ## Table of Contents
 
@@ -89,10 +89,10 @@ More details will be discussed below in the [Inline section](#using-the-inline-c
 
 ### Installing the package
 
-Note: **This project is currently in Alpha**, so importing the widget from npm requires the `alpha` tag. Because of this, it's worth noting what's not [currently supported](#currently-unsupported).
+Note: **This project is currently in Beta**, so importing the widget from npm requires the `beta` tag. Because of this, it's worth noting what's not [currently supported](#currently-unsupported).
 
 ```shell
-npm install @forgerock/login-widget@alpha
+npm install @forgerock/login-widget@beta
 ```
 
 ### Adding the Widget's CSS

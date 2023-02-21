@@ -4,10 +4,10 @@ Using the Login Widget within your JavaScript SPA.
 
 ## Installing the package
 
-Note: **This project is currently in Alpha**, so importing the widget from npm requires the `alpha` tag. Because of this, it's worth noting what's not [currently supported](../roadmap/#currently-unsupported).
+Note: **This project is currently in Beta**, so importing the widget from npm requires the `beta` tag. Because of this, it's worth noting what's not [currently supported](../roadmap/#currently-unsupported).
 
 ```shell
-npm install @forgerock/login-widget@alpha
+npm install @forgerock/login-widget@beta
 ```
 
 ## Adding the Widget's CSS

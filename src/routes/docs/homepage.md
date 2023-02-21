@@ -6,7 +6,7 @@
 
 # ForgeRock { data.framework.name }
 
-## WARNING: ALPHA VERSION
+## WARNING: BETA VERSION
 
 **This is a early preview ({ data.package.version }) of a development framework for generating a JavaScript { data.package.name } into an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a ForgeRock { data.app.name} for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
 
@@ -22,7 +22,7 @@ The { data.package.name } produced by this framework is intended to be an all-in
 
 ## ForgeRock { data.package.name }
 
-The Login Widget, currently in alpha, is an embeddable JavaScript component that requires no "runtime" UI libraries or frameworks, allowing it to be used within a React, Angular, Vue, etc. application without any additional dependencies.
+The Login Widget, currently in beta, is an embeddable JavaScript component that requires no "runtime" UI libraries or frameworks, allowing it to be used within a React, Angular, Vue, etc. application without any additional dependencies.
 
 This Widget helps you easily integrate your existing or new apps with the ForgeRock platform and its journeys. It supports the rendering of the built-in nodes and their corresponding callbacks within authentication and self-service journeys. [Please see our "Roadmap" section for current limitations and planned features](/docs/widget/roadmap).
 
