@@ -2,23 +2,19 @@
   "name": "@forgerock/login-widget",
   "type": "module",
   "exports": {
-    "inline": {
+    "./inline": {
       "import": "./inline.js",
       "require": "./inline.cjs"
     },
-    "modal": {
+    "./modal": {
       "import": "./modal.js",
       "require": "./modal.cjs"
     }
   },
   "typesVersions": {
     "*": {
-      "modal": [
-        "./modal.d.ts"
-      ],
-      "inline": [
-        "./inline.d.ts"
-      ]
+      "modal": ["./modal.d.ts"],
+      "inline": ["./inline.d.ts"]
     }
   },
   "dependencies": {},
