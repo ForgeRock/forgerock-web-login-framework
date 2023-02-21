@@ -9,16 +9,16 @@
     "./modal": {
       "import": "./modal.js",
       "require": "./modal.cjs"
+    },
+    "./widget.css": {
+      "import": "./widget.css",
+      "require": "./widget.css"
     }
   },
   "typesVersions": {
     "*": {
-      "modal": [
-        "./modal.d.ts"
-      ],
-      "inline": [
-        "./inline.d.ts"
-      ]
+      "modal": ["./modal.d.ts"],
+      "inline": ["./inline.d.ts"]
     }
   },
   "dependencies": {},
