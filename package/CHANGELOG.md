@@ -1,3 +1,10 @@
+# [1.0.0-beta.3](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2023-02-21)
+
+
+### Bug Fixes
+
+* **package.json:** fix-export-syntax ([a421492](https://github.com/forgerock/forgerock-web-login-framework/commit/a4214926531424013c151169727bb59bd7661a1b))
+
 # [1.0.0-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2023-02-16)
 
 
