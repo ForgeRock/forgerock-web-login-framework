@@ -1,0 +1,6 @@
+.hars
+.vscode
+.svelte-kit/
+.svelte-kit/tsconfig.json
+package
+.scripts
