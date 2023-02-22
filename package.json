@@ -4,7 +4,10 @@
   "scripts": {
     "build": "npm run build:widget && npm run build:app",
     "build:app": "vite build",
-    "build:widget": "rollup -c",
+    "build:dev:widget": "rollup -c",
+    "build:dev:svelte-package": "svelte-package",
+    "build:dev:types": "rollup -c ./rollup.types.config.js",
+    "build:widget": "npm-run-all build:dev:*",
     "build:storybook": "storybook build",
     "build:release": "npm-run-all build:release:*",
     "build:release:widget": "rollup -c",
