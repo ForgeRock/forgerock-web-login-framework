@@ -15,7 +15,7 @@
     "check:lint": "prettier --ignore-path .gitignore -w --plugin-search-dir=. . && eslint --fix --ignore-path .gitignore .",
     "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning",
     "check:watch": "svelte-check --tsconfig ./tsconfig.json --watch",
-    "chromatic": "chromatic --project-token=e10acf0c74f9 --force-rebuild",
+    "chromatic": "chromatic --force-rebuild",
     "ci": "vitest --dir src",
     "ci:e2e": "playwright test",
     "ci:e2e:debug": "PWDEBUG=1 playwright test",
