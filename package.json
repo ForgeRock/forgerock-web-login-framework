@@ -14,6 +14,7 @@
     "build:release:package": "svelte-package",
     "build:release:types": "rollup -c ./rollup.types.config.js",
     "build:release:clean": "node ./.scripts/processTypes.mjs",
+    "build:types": "npm run build:release:package & npm run build:release:types & npm run build:release:clean",
     "check": "npm run check:lint && npm run check:svelte",
     "check:lint": "prettier --ignore-path .gitignore -w --plugin-search-dir=. . && eslint --fix --ignore-path .gitignore .",
     "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning",

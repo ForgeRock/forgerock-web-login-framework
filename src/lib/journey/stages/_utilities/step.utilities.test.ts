@@ -1,8 +1,12 @@
-import { FRLoginFailure } from '@forgerock/javascript-sdk';
+import { CallbackType, FRLoginFailure } from '@forgerock/javascript-sdk';
 import { describe, expect, it } from 'vitest';
 
 import { previousRegistrationStep, restartedRegistrationStep } from './step.mock';
-import { convertStringToKey, shouldPopulateWithPreviousCallbacks } from './step.utilities';
+import {
+  convertStringToKey,
+  initCheckValidation,
+  shouldPopulateWithPreviousCallbacks,
+} from './step.utilities';
 
 describe('Test string to key conversion', () => {
   it('should strip non-alphanumeric keys from string', () => {
@@ -35,6 +39,26 @@ describe('Test string to key conversion', () => {
     expect(result0).toBe(expected);
     expect(result1).toBe(expected);
     expect(result2).toBe(expected);
+  });
+});
+
+describe('Test check validation', () => {
+  it('should return true with failed policies', () => {
+    const checkValidation = initCheckValidation();
+    const result = checkValidation(
+      restartedRegistrationStep.getCallbackOfType(CallbackType.ValidatedCreateUsernameCallback),
+    );
+
+    expect(result).toBe(true);
+  });
+
+  it('should return false with no failed policies', () => {
+    const checkValidation = initCheckValidation();
+    const result = checkValidation(
+      restartedRegistrationStep.getCallbackOfType(CallbackType.ValidatedCreatePasswordCallback),
+    );
+
+    expect(result).toBe(false);
   });
 });
 

@@ -69,6 +69,7 @@
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
         on:click={() => closeDialog('user')}
         aria-controls={dialogId}
+        aria-label="Close"
       >
         <XIcon
           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"
