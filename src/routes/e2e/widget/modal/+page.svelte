@@ -4,8 +4,10 @@
 
   import Widget, { configuration, modal, journey, user } from '$package/modal';
 
-  let authIndexValue = $page.url.searchParams.get('authIndexValue');
+  let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
+  let codeParam = $page.url.searchParams.get('code');
   let journeyParam = $page.url.searchParams.get('journey');
+  let stateParam = $page.url.searchParams.get('state');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
   // TODO: Use a more specific type
@@ -26,14 +28,22 @@
     // Calling this on mount is not good if using HMR as it results in a ton of requests on change
     // journey.start();
   });
-  // TODO: Use a more specific type
+
   journey.onSuccess((response) => {
-    console.log(response);
     userResponse = response?.user;
+
+    if (codeParam || suspendedIdParam) {
+      history.replaceState(null, '', '/e2e/widget/modal');
+    }
   });
+
   journey.onFailure((response) => {
     console.log('Singleton onFailure event fired');
     console.log(response?.journey?.error);
+
+    if (codeParam || suspendedIdParam) {
+      history.replaceState(null, '', '/e2e/widget/modal');
+    }
   });
 
   modal.onClose((args: { reason: string }) =>
@@ -75,12 +85,16 @@
             dark: '/img/fr-logomark-white.png',
             light: '/img/fr-logomark-black.png',
           },
-          sections: {
-            header: false,
-          },
         },
       },
     });
+
+    if (codeParam && stateParam) {
+      modal.open({
+        journey: journeyParam || authIndexValueParam || undefined,
+        resumeUrl: suspendedIdParam || (codeParam && stateParam) ? location.href : undefined,
+      });
+    }
   });
 </script>
 
@@ -97,8 +111,8 @@
     <button
       on:click={() =>
         modal.open({
-          journey: journeyParam || authIndexValue || undefined,
-          resumeUrl: suspendedIdParam ? location.href : undefined,
+          journey: journeyParam || authIndexValueParam || undefined,
+          resumeUrl: suspendedIdParam || (codeParam && stateParam) ? location.href : undefined,
         })}
     >
       Open Login Modal

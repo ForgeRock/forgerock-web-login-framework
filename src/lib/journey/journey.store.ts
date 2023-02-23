@@ -151,6 +151,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       const stageAttribute = nextStep.getStage();
 
       let stageJson: Maybe<Record<string, unknown>> = null;
+      let stageName: Maybe<string> = null;
 
       // Check if stage attribute is serialized JSON
       if (stageAttribute && stageAttribute.includes('{')) {
@@ -159,10 +160,12 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         } catch (err) {
           console.warn('Stage attribute value was not parsable');
         }
+      } else if (stageAttribute) {
+        stageName = stageAttribute;
       }
 
       const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
-      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
@@ -271,6 +274,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         const stageAttribute = restartedStep.getStage();
 
         let stageJson: Maybe<Record<string, unknown>> = null;
+        let stageName: Maybe<string> = null;
 
         // Check if stage attribute is serialized JSON
         if (stageAttribute && stageAttribute.includes('{')) {
@@ -279,6 +283,8 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           } catch (err) {
             console.warn('Stage attribute value was not parsable');
           }
+        } else if (stageAttribute) {
+          stageName = stageAttribute;
         }
 
         const callbackMetadata = buildCallbackMetadata(
@@ -286,7 +292,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           initCheckValidation(),
           stageJson,
         );
-        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
         set({
           completed: false,

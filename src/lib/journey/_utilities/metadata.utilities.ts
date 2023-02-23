@@ -67,6 +67,7 @@ export function buildCallbackMetadata(
 export function buildStepMetadata<T = unknown>(
   callbackMetadataArray: CallbackMetadata[],
   stageJson?: Record<string, T> | null,
+  stageName?: string | null,
 ) {
   const numOfUserInputCbs = callbackMetadataArray.filter(
     (cb) => !!cb.derived.isUserInputRequired,
@@ -99,6 +100,12 @@ export function buildStepMetadata<T = unknown>(
       platform: {
         ...stageMetadata,
       },
+    }),
+    // stageName and stateMetadata are mutually exclusive
+    ...(stageName && {
+      platform: {
+        stageName,
+      }
     }),
   };
 }

@@ -3,10 +3,11 @@
   import { page } from '$app/stores';
 
   import Widget, { form, journey, user } from '$package/inline';
-  import type { Response } from '$lib/widget/interfaces';
 
-  let authIndexValue = $page.url.searchParams.get('authIndexValue');
+  let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
+  let codeParam = $page.url.searchParams.get('code');
   let journeyParam = $page.url.searchParams.get('journey');
+  let stateParam = $page.url.searchParams.get('state');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
   let formEl: HTMLDivElement;
@@ -19,9 +20,23 @@
   }
 
   form.onMount((component) => console.log(component));
-  // TODO: Use a more specific type
-  journey.onSuccess((response) => (userResponse = response?.user));
-  journey.onFailure((response) => console.log(response.journey?.error));
+
+  journey.onSuccess((response) => {
+    userResponse = response?.user;
+
+    if (codeParam || suspendedIdParam) {
+      history.replaceState(null, '', '/e2e/widget/modal');
+    }
+  });
+
+  journey.onFailure((response) => {
+    console.log('Singleton onFailure event fired');
+    console.log(response?.journey?.error);
+
+    if (codeParam || suspendedIdParam) {
+      history.replaceState(null, '', '/e2e/widget/modal');
+    }
+  });
 
   onMount(async () => {
     let content;
@@ -54,8 +69,8 @@
     });
     // Start the  journey after initialization or within the form.onMount event
     journey.start({
-      journey: journeyParam || authIndexValue || undefined,
-      resumeUrl: suspendedIdParam ? location.href : undefined,
+      journey: journeyParam || authIndexValueParam || undefined,
+      resumeUrl: suspendedIdParam || (codeParam && stateParam) ? location.href : undefined,
     });
   });
 </script>
