@@ -1,7 +1,6 @@
 module.exports = {
   ci: {
-    collect: {
-    },
+    collect: {},
     assert: {
       // assert options here
     },
@@ -10,7 +9,6 @@ module.exports = {
     },
     server: {
       // server options here
-
     },
     wizard: {
       // wizard options here

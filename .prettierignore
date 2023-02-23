@@ -4,3 +4,5 @@
 .svelte-kit/tsconfig.json
 package
 .scripts
+svelte-package
+package-lock.json
