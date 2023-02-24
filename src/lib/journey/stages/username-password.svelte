@@ -12,7 +12,7 @@
   import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
-  import { style } from '$lib/style.store';
+  import { styleStore } from '$lib/style.store';
 
   // Types
   import type {
@@ -86,7 +86,7 @@
         callbackMetadata: metadata?.callbacks[idx],
         selfSubmitFunction: determineSubmission,
         stepMetadata: metadata?.step && { ...metadata.step },
-        style: $style,
+        style: $styleStore,
       }}
     />
   {/each}

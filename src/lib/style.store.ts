@@ -1,4 +1,4 @@
-import { readable, type Readable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 import { z } from 'zod';
 
 export const logoSchema = z
@@ -29,21 +29,18 @@ export const styleSchema = z
   .strict();
 
 export const partialStyleSchema = styleSchema.partial();
-export let style: Readable<z.infer<typeof partialStyleSchema>>;
-
-const fallbackStyle = {
+export const styleStore: Writable<z.infer<typeof partialStyleSchema>> = writable({
   checksAndRadios: 'animated',
   labels: 'floating',
   logo: {},
   sections: {},
   stage: {},
-} as const;
+});
 
 export function initialize(customStyle?: z.infer<typeof partialStyleSchema>) {
   if (customStyle) {
     styleSchema.parse(customStyle);
-    style = readable(customStyle);
-  } else {
-    style = readable(fallbackStyle);
+    styleStore.set(customStyle);
   }
+  return styleStore;
 }

@@ -1,4 +1,4 @@
-import { readable, type Readable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 import { z } from 'zod';
 
 export const journeyConfigItemSchema = z.object({
@@ -43,7 +43,12 @@ const defaultJourneys = {
 // Ensure default follows schema
 journeyConfigSchema.parse(defaultJourneys);
 
-export let configuredJourneys: Readable<StoreItem[]>;
+export const configuredJourneysStore: Writable<StoreItem[]> = writable(
+  (Object.keys(defaultJourneys) as JourneyKeys[]).map((key) => ({
+    ...defaultJourneys[key],
+    key,
+  })),
+);
 
 export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> | null) {
   if (customJourneys) {
@@ -51,19 +56,12 @@ export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> 
     journeyConfigSchema.parse(customJourneys);
 
     const arr = Object.keys(customJourneys) as JourneyKeys[];
-    configuredJourneys = readable(
+    configuredJourneysStore.set(
       arr.map((key) => ({
         ...customJourneys[key],
         key,
       })),
     );
-  } else {
-    const arr = Object.keys(defaultJourneys) as JourneyKeys[];
-    configuredJourneys = readable(
-      arr.map((key) => ({
-        ...defaultJourneys[key],
-        key,
-      })),
-    );
   }
+  return configuredJourneysStore;
 }

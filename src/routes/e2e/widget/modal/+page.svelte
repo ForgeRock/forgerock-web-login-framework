@@ -2,7 +2,11 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { configuration, modal, journey, user } from '$package/modal';
+  import Widget, { configuration, component, journey, user } from '$package/index';
+
+  const config = configuration();
+  const componentEvents = component();
+  const journeyEvents = journey();
 
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let codeParam = $page.url.searchParams.get('code');
@@ -10,9 +14,7 @@
   let stateParam = $page.url.searchParams.get('state');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
-  // TODO: Use a more specific type
   let userResponse: any | null;
-  let widget: Widget;
   let widgetEl: HTMLDivElement;
 
   async function logout() {
@@ -20,49 +22,18 @@
     userResponse = null;
   }
 
-  // TODO: Investigate why the parameter types are needed here
-  modal.onMount((dialog: HTMLDialogElement, form: HTMLFormElement) => {
-    console.log(dialog);
-    console.log(form);
-
-    // Calling this on mount is not good if using HMR as it results in a ton of requests on change
-    // journey.start();
+  componentEvents.subscribe((event) => {
+    console.log(`Modal closed due to ${event && event.reason}`);
   });
-
-  journey.onSuccess((response) => {
-    userResponse = response?.user;
-
-    if (codeParam || suspendedIdParam) {
-      history.replaceState(null, '', '/e2e/widget/modal');
+  journeyEvents.subscribe((event) => {
+    console.log(event);
+    if (event?.user?.successful) {
+      userResponse = event?.user;
     }
   });
-
-  journey.onFailure((response) => {
-    console.log('Singleton onFailure event fired');
-    console.log(response?.journey?.error);
-
-    if (codeParam || suspendedIdParam) {
-      history.replaceState(null, '', '/e2e/widget/modal');
-    }
-  });
-
-  modal.onClose((args: { reason: string }) =>
-    console.log(`Modal closed due to ${args && args.reason}`),
-  );
 
   onMount(async () => {
     let content;
-
-    configuration.set({
-      clientId: 'WebOAuthClient',
-      redirectUri: `${window.location.origin}/callback`,
-      scope: 'openid profile email me.read',
-      serverConfig: {
-        baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-        timeout: 5000,
-      },
-      realmPath: 'alpha',
-    });
 
     /**
      * Reuse translated content from locale api if not en-US
@@ -72,34 +43,39 @@
       content = response.ok && (await response.json());
     }
 
-    widget = new Widget({
-      target: widgetEl,
-      props: {
-        content,
-        links: {
-          termsAndConditions: 'https://www.forgerock.com/terms',
+    config.set({
+      config: {
+        clientId: 'WebOAuthClient',
+        redirectUri: `${window.location.origin}/callback`,
+        scope: 'openid profile email me.read',
+        serverConfig: {
+          baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+          timeout: 5000,
         },
-        style: {
-          labels: 'floating',
-          logo: {
-            dark: '/img/fr-logomark-white.png',
-            light: '/img/fr-logomark-black.png',
-          },
+        realmPath: 'alpha',
+      },
+      content,
+      links: {
+        termsAndConditions: 'https://www.forgerock.com/terms',
+      },
+      style: {
+        labels: 'floating',
+        logo: {
+          dark: '/img/fr-logomark-white.png',
+          light: '/img/fr-logomark-black.png',
+        },
+        sections: {
+          header: false,
         },
       },
     });
 
-    if (codeParam && stateParam) {
-      modal.open({
-        journey: journeyParam || authIndexValueParam || undefined,
-        resumeUrl: suspendedIdParam || (codeParam && stateParam) ? location.href : undefined,
-      });
-    }
+    new Widget({ target: widgetEl });
   });
 </script>
 
 <div class="tw_p-6">
-  {#if userResponse?.successful}
+  {#if userResponse}
     <ul>
       <li id="fullName">
         <strong>Full name</strong>: {`${userResponse.response?.given_name} ${userResponse.response?.family_name}`}
@@ -109,11 +85,13 @@
     <button on:click={logout}>Logout</button>
   {:else}
     <button
-      on:click={() =>
-        modal.open({
+      on:click={() => {
+        journeyEvents.start({
           journey: journeyParam || authIndexValueParam || undefined,
-          resumeUrl: suspendedIdParam || (codeParam && stateParam) ? location.href : undefined,
-        })}
+          resumeUrl: suspendedIdParam ? location.href : undefined,
+        });
+        componentEvents.open();
+      }}
     >
       Open Login Modal
     </button>

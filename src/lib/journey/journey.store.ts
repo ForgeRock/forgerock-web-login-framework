@@ -59,17 +59,16 @@ function initializeStack(initOptions?: StepOptions) {
   return stack;
 }
 
+export const journeyStore: Writable<JourneyStoreValue> = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  metadata: null,
+  step: null,
+  successful: false,
+  response: null,
+});
 export function initialize(initOptions?: StepOptions): JourneyStore {
-  const journeyStore: Writable<JourneyStoreValue> = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    metadata: null,
-    step: null,
-    successful: false,
-    response: null,
-  });
-  const { set, subscribe } = journeyStore;
   const stack = initializeStack();
 
   let restartOptions: StepOptions;
@@ -106,7 +105,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     const previousPayload = prevStep?.payload;
     let nextStep: StepTypes;
 
-    set({
+    journeyStore.set({
       completed: false,
       error: null,
       loading: true,
@@ -170,7 +169,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
 
-      set({
+      journeyStore.set({
         completed: false,
         error: null,
         loading: false,
@@ -188,7 +187,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        */
 
       // Set final state
-      set({
+      journeyStore.set({
         completed: true,
         error: null,
         loading: false,
@@ -294,7 +293,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         );
         const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
-        set({
+        journeyStore.set({
           completed: false,
           error: {
             code: nextStep.getCode(),
@@ -312,7 +311,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           response: null,
         });
       } else if (restartedStep.type === StepType.LoginSuccess) {
-        set({
+        journeyStore.set({
           completed: true,
           error: null,
           loading: false,
@@ -322,7 +321,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           response: restartedStep.payload,
         });
       } else {
-        set({
+        journeyStore.set({
           completed: true,
           error: {
             code: nextStep.getCode(),
@@ -363,7 +362,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
   }
 
   function reset() {
-    set({
+    journeyStore.set({
       completed: false,
       error: null,
       loading: false,
@@ -381,7 +380,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     reset,
     resume,
     start,
-    subscribe,
+    subscribe: journeyStore.subscribe,
   };
 }
 
