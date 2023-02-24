@@ -27,13 +27,9 @@
     // journey.start();
   });
   // TODO: Use a more specific type
-  journey.onSuccess((response) => {
+  journey.subscribe((response) => {
     console.log(response);
     userResponse = response?.user;
-  });
-  journey.onFailure((response) => {
-    console.log('Singleton onFailure event fired');
-    console.log(response?.journey?.error);
   });
 
   modal.onClose((args: { reason: string }) =>

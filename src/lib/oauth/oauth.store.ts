@@ -40,6 +40,14 @@ export function initialize(initOptions?: GetTokensOptions) {
 
     let tokens: OAuth2Tokens | void;
 
+    set({
+      completed: false,
+      error: null,
+      loading: true,
+      successful: false,
+      response: null,
+    })
+
     try {
       tokens = await TokenManager.getTokens(options);
     } catch (err: unknown) {

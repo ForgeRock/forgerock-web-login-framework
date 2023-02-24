@@ -3,7 +3,6 @@
   import { page } from '$app/stores';
 
   import Widget, { form, journey, user } from '$package/inline';
-  import type { Response } from '$lib/widget/interfaces';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -19,9 +18,6 @@
   }
 
   form.onMount((component) => console.log(component));
-  // TODO: Use a more specific type
-  journey.onSuccess((response) => (userResponse = response?.user));
-  journey.onFailure((response) => console.log(response.journey?.error));
 
   onMount(async () => {
     let content;
@@ -52,6 +48,9 @@
         },
       },
     });
+
+    journey.subscribe((response) => (userResponse = response?.user));
+
     // Start the  journey after initialization or within the form.onMount event
     journey.start({
       journey: journeyParam || authIndexValue || undefined,

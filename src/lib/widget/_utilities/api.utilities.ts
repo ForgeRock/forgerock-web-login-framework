@@ -7,7 +7,7 @@ import {
   type GetTokensOptions,
 } from '@forgerock/javascript-sdk';
 import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
-import { get } from 'svelte/store';
+import { derived, get, writable, type Writable } from 'svelte/store';
 import type { z } from 'zod';
 
 // Import the stores for initialization
@@ -15,8 +15,8 @@ import configure from '$lib/sdk.config';
 
 import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';
 
-// Import store types
 import type { JourneyOptions, Modal, Response } from '../interfaces';
+import type { Maybe } from '$lib/interfaces';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
 import type { partialConfigSchema } from '$lib/sdk.config';
@@ -26,9 +26,6 @@ export function widgetApiFactory(modal?: Modal) {
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let userStore: UserStore;
-
-  let returnError: (response: Response) => void;
-  let returnResponse: (response: Response) => void;
 
   const configuration = {
     set(options: z.infer<typeof partialConfigSchema>): void {
@@ -54,146 +51,176 @@ export function widgetApiFactory(modal?: Modal) {
       });
     },
   };
-  const journey = {
-    start(options?: JourneyOptions): void {
-      const requestsOauth = options?.oauth || true;
-      const requestsUser = options?.user || true;
+  const journey = (() => {
+    const { set, subscribe }: Writable<Maybe<Response>> = writable(null);
 
-      let journey: JourneyStoreValue;
-      let oauth: OAuthTokenStoreValue;
+    return {
+      start(options?: JourneyOptions): void {
+        const requestsOauth = options?.oauth || true;
+        const requestsUser = options?.user || true;
 
-      const journeyStoreUnsub = journeyStore.subscribe((response) => {
-        if (!requestsOauth && response.successful) {
-          returnResponse &&
-            returnResponse({
+        let journey: JourneyStoreValue;
+        let oauth: OAuthTokenStoreValue;
+
+        const journeyStoreUnsub = journeyStore.subscribe((response) => {
+          if (!requestsOauth && response.successful) {
+            set({
               journey: response,
             });
-          if (modal) {
-            modal.close({ reason: 'auto' });
-          }
-        } else if (requestsOauth && response.successful) {
-          journey = response;
-          oauthStore?.get({ forceRenew: true });
-        } else if (response.error) {
-          journey = response;
-          returnError &&
-            returnError({
+            if (modal) {
+              modal.close({ reason: 'auto' });
+            }
+          } else if (requestsOauth && response.successful) {
+            journey = response;
+            oauthStore?.get({ forceRenew: true });
+          } else if (response.error) {
+            journey = response;
+            set({
               journey: response,
             });
-        }
-        /**
-         * Clean up unneeded subscription, but only when it's successful
-         * Leaving the subscription allows for the journey to be
-         * restarted internally.
-         */
-        if (response.successful) {
-          journeyStoreUnsub();
-        }
-      });
-
-      const oauthStoreUnsub = oauthStore.subscribe((response) => {
-        if (!requestsUser && response.successful) {
-          returnResponse &&
-            returnResponse({
-              journey,
-              oauth: response,
-            });
-          if (modal) {
-            modal.close({ reason: 'auto' });
           }
-        } else if (requestsUser && response.successful) {
-          oauth = response;
-          userStore?.get();
-        } else if (response.error) {
-          oauth = response;
-          returnError &&
-            returnError({
-              journey,
-              oauth: response,
-            });
-        }
-        /**
-         * Clean up unneeded subscription, but only when it's successful
-         * Leaving the subscription allows for the journey to be
-         * restarted internally.
-         */
-        if (response.successful) {
-          oauthStoreUnsub();
-        }
-      });
-      const userStoreUnsub = userStore.subscribe((response) => {
-        if (response.successful) {
-          returnResponse &&
-            returnResponse({
-              journey,
-              oauth,
-              user: response,
-            });
-          if (modal) {
-            modal.close({ reason: 'auto' });
+          /**
+           * Clean up unneeded subscription, but only when it's successful
+           * Leaving the subscription allows for the journey to be
+           * restarted internally.
+           */
+          if (response.successful) {
+            journeyStoreUnsub();
           }
-        } else if (response.error) {
-          returnError &&
-            returnError({
-              journey,
-              oauth,
-              user: response,
-            });
-        }
-        /**
-         * Clean up unneeded subscription, but only when it's successful
-         * Leaving the subscription allows for the journey to be
-         * restarted internally.
-         */
-        if (response.successful) {
-          userStoreUnsub();
-        }
-      });
-
-      if (options?.resumeUrl) {
-        journeyStore.resume(options.resumeUrl);
-      } else {
-        journeyStore.start({
-          ...options?.config,
-          tree: options?.journey,
         });
-      }
-    },
-    onFailure(fn: (response: Response) => void) {
-      returnError = (response) => fn(response);
-    },
-    onSuccess(fn: (response: Response) => void) {
-      returnResponse = (response) => fn(response);
-    },
-  };
+
+        const oauthStoreUnsub = oauthStore.subscribe((response) => {
+          if (!requestsUser && response.successful) {
+            set({
+              journey,
+              oauth: response,
+            });
+            if (modal) {
+              modal.close({ reason: 'auto' });
+            }
+          } else if (requestsUser && response.successful) {
+            oauth = response;
+            userStore?.get();
+          } else if (response.error) {
+            oauth = response;
+            set({
+              journey,
+              oauth: response,
+            });
+          }
+          /**
+           * Clean up unneeded subscription, but only when it's successful
+           * Leaving the subscription allows for the journey to be
+           * restarted internally.
+           */
+          if (response.successful) {
+            oauthStoreUnsub();
+          }
+        });
+        const userStoreUnsub = userStore.subscribe((response) => {
+          if (response.successful) {
+            set({
+              journey,
+              oauth,
+              user: response,
+            });
+            if (modal) {
+              modal.close({ reason: 'auto' });
+            }
+          } else if (response.error) {
+            set({
+              journey,
+              oauth,
+              user: response,
+            });
+          }
+          /**
+           * Clean up unneeded subscription, but only when it's successful
+           * Leaving the subscription allows for the journey to be
+           * restarted internally.
+           */
+          if (response.successful) {
+            userStoreUnsub();
+          }
+        });
+
+        if (options?.resumeUrl) {
+          journeyStore.resume(options.resumeUrl);
+        } else {
+          journeyStore.start({
+            ...options?.config,
+            tree: options?.journey,
+          });
+        }
+      },
+      subscribe,
+    };
+  })();
   const user = {
     async authorized(remote = false) {
-      if (remote) {
-        try {
-          return await UserManager.getCurrentUser();
-        } catch (err) {
-          console.warn(err);
-          return;
+      const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
+        if (remote) {
+          const { completed, error, loading, response } = $userStore;
+          set({
+            completed,
+            error,
+            loading,
+            authorized: !!response,
+          });
+        } else {
+          const { completed, error, loading, response } = $oauthStore;
+          set({
+            completed,
+            error,
+            loading,
+            authorized: !!response?.accessToken,
+          });
         }
+      });
+      if (remote) {
+        userStore.get();
       }
-      return !!(await TokenManager.getTokens());
+      return subscribe;
     },
     async info(remote = false) {
-      userStore = userStore as UserStore;
-      if (remote) {
-        try {
-          return await UserManager.getCurrentUser();
-        } catch (err) {
-          console.warn(err);
-          return;
+      const { subscribe } = derived(userStore, ($userStore, set) => {
+        if (remote) {
+          const { completed, error, loading, response } = $userStore;
+          set({
+            completed,
+            error,
+            loading,
+            response,
+          });
         }
+      });
+      if (remote) {
+        userStore.get();
       }
-      return get(userStore).response;
+      return subscribe;
     },
-    logout: async () => {
+    async logout() {
+      let error = false;
+      const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
+        if (!$oauthStore.response && !$userStore.response) {
+          set({
+            ...userStore,
+            error: error ? 'Error: logout did not complete. Please try again.' : null,
+            completed: true,
+          });
+        }
+      });
       const { clientId } = Config.get();
 
-      userStore = userStore as UserStore;
+      function storeReset() {
+        // Reset stores
+        journeyStore && journeyStore.reset();
+        oauthStore && oauthStore.reset();
+        userStore && userStore.reset();
+
+        // Fetch fresh journey step
+        journey && journey.start();
+      }
 
       /**
        * If configuration has a clientId, then use FRUser to logout to ensure
@@ -201,27 +228,31 @@ export function widgetApiFactory(modal?: Modal) {
        */
       if (clientId) {
         // Call SDK logout
-        await FRUser.logout();
+        FRUser.logout()
+          .then(storeReset)
+          .catch(() => {
+            error = true;
+            storeReset();
+          });
       } else {
-        await SessionManager.logout();
+        SessionManager.logout()
+          .then(storeReset)
+          .catch(() => {
+            error = true;
+            storeReset();
+          });
       }
 
-      // Reset stores
-      journeyStore && journeyStore.reset();
-      oauthStore && oauthStore.reset();
-      userStore && userStore.reset();
-
-      // Fetch fresh journey step
-      journey && journey.start();
+      return subscribe;
     },
     async tokens(options?: GetTokensOptions) {
-      // `getTokens` throws if no tokens, so catch and just return with `undefined`
-      try {
-        return await TokenManager.getTokens(options);
-      } catch (err) {
-        console.warn(err);
-        return;
-      }
+      const { subscribe } = derived(oauthStore, ($oauthStore, set) => {
+        set({
+          ...$oauthStore
+        });
+      });
+      oauthStore.get(options);
+      return subscribe;
     },
   };
 

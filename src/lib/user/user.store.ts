@@ -37,6 +37,14 @@ export function initialize(initOptions?: ConfigOptions) {
       ...getOptions,
     };
 
+    set({
+      completed: false,
+      error: null,
+      loading: true,
+      successful: false,
+      response: null,
+    });
+
     try {
       const user = await UserManager.getCurrentUser(options);
 
