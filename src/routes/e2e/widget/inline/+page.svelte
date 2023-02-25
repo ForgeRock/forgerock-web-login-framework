@@ -28,7 +28,7 @@
       const response = await fetch(`${window.location.origin}/api/locale`);
       content = response.ok && (await response.json());
     }
-    // TODO: Add method to refresh form
+
     new Widget({
       target: formEl,
       props: {
@@ -49,12 +49,15 @@
       },
     });
 
-    journey.subscribe((response) => (userResponse = response?.user));
-
     // Start the  journey after initialization or within the form.onMount event
-    journey.start({
+    const subscribe = journey.start({
       journey: journeyParam || authIndexValue || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
+    });
+
+    subscribe((response: any) => {
+      console.log(response);
+      userResponse = response?.user;
     });
   });
 </script>

@@ -17827,8 +17827,6 @@ function widgetApiFactory(modal) {
   let userStore;
   const configuration = {
     set(options) {
-      // Set base config to SDK
-      // TODO: Move to a shared utility
       configure({
         // Set some basics by default
         ...{
@@ -17849,133 +17847,72 @@ function widgetApiFactory(modal) {
       });
     },
   };
-  const journey = (() => {
-    const { set, subscribe } = writable(null);
-    return {
-      start(options) {
-        const requestsOauth = options?.oauth || true;
-        const requestsUser = options?.user || true;
-        let journey;
-        let oauth;
-        const journeyStoreUnsub = journeyStore.subscribe((response) => {
-          if (!requestsOauth && response.successful) {
-            set({
-              journey: response,
-            });
-            if (modal) {
-              modal.close({ reason: 'auto' });
-            }
-          } else if (requestsOauth && response.successful) {
-            journey = response;
-            oauthStore?.get({ forceRenew: true });
-          } else if (response.error) {
-            journey = response;
-            set({
-              journey: response,
-            });
-          }
-          /**
-           * Clean up unneeded subscription, but only when it's successful
-           * Leaving the subscription allows for the journey to be
-           * restarted internally.
-           */
-          if (response.successful) {
-            journeyStoreUnsub();
-          }
-        });
-        const oauthStoreUnsub = oauthStore.subscribe((response) => {
-          if (!requestsUser && response.successful) {
-            set({
-              journey,
-              oauth: response,
-            });
-            if (modal) {
-              modal.close({ reason: 'auto' });
-            }
-          } else if (requestsUser && response.successful) {
-            oauth = response;
-            userStore?.get();
-          } else if (response.error) {
-            oauth = response;
-            set({
-              journey,
-              oauth: response,
-            });
-          }
-          /**
-           * Clean up unneeded subscription, but only when it's successful
-           * Leaving the subscription allows for the journey to be
-           * restarted internally.
-           */
-          if (response.successful) {
-            oauthStoreUnsub();
-          }
-        });
-        const userStoreUnsub = userStore.subscribe((response) => {
-          if (response.successful) {
-            set({
-              journey,
-              oauth,
-              user: response,
-            });
-            if (modal) {
-              modal.close({ reason: 'auto' });
-            }
-          } else if (response.error) {
-            set({
-              journey,
-              oauth,
-              user: response,
-            });
-          }
-          /**
-           * Clean up unneeded subscription, but only when it's successful
-           * Leaving the subscription allows for the journey to be
-           * restarted internally.
-           */
-          if (response.successful) {
-            userStoreUnsub();
-          }
-        });
-        if (options?.resumeUrl) {
-          journeyStore.resume(options.resumeUrl);
-        } else {
-          journeyStore.start({
-            ...options?.config,
-            tree: options?.journey,
+  const journey = {
+    start(options) {
+      const requestsOauth = options?.oauth || true;
+      const requestsUser = options?.user || true;
+      const { subscribe } = derived(
+        [journeyStore, oauthStore, userStore],
+        ([$journeyStore, $oauthStore, $userStore], set) => {
+          set({
+            journey: $journeyStore,
+            oauth: $oauthStore,
+            user: $userStore,
           });
-        }
-      },
-      subscribe,
-    };
-  })();
+          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+            modal && modal.close({ reason: 'auto' });
+          } else if ($journeyStore.successful && $oauthStore.successful) {
+            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+              userStore.get();
+            } else if (!requestsUser) {
+              modal && modal.close({ reason: 'auto' });
+            }
+          } else if ($journeyStore.successful) {
+            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+              oauthStore.get();
+            } else if (!requestsOauth) {
+              modal && modal.close({ reason: 'auto' });
+            }
+          }
+        },
+      );
+      if (options?.resumeUrl) {
+        journeyStore.resume(options.resumeUrl);
+      } else {
+        journeyStore.start({
+          ...options?.config,
+          tree: options?.journey,
+        });
+      }
+      return subscribe;
+    },
+  };
   const user = {
-    async authorized(remote = false) {
+    // TODO: Add `scopes` parameter to add more granular authorization check
+    authorized(remote = false) {
       const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
+        let userAuthorized;
+        let store;
         if (remote) {
-          const { completed, error, loading, response } = $userStore;
-          set({
-            completed,
-            error,
-            loading,
-            authorized: !!response,
-          });
+          store = $userStore;
+          userAuthorized = !!store.response;
         } else {
-          const { completed, error, loading, response } = $oauthStore;
-          set({
-            completed,
-            error,
-            loading,
-            authorized: !!response?.accessToken,
-          });
+          store = $oauthStore;
+          userAuthorized = !!store.response?.accessToken;
         }
+        set({
+          completed: store.completed,
+          error: store.error,
+          loading: store.loading,
+          authorized: userAuthorized,
+        });
       });
       if (remote) {
         userStore.get();
       }
       return subscribe;
     },
-    async info(remote = false) {
+    info(remote = false) {
       const { subscribe } = derived(userStore, ($userStore, set) => {
         if (remote) {
           const { completed, error, loading, response } = $userStore;
@@ -17993,18 +17930,9 @@ function widgetApiFactory(modal) {
       return subscribe;
     },
     async logout() {
-      let error = false;
-      const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
-        if (!$oauthStore.response && !$userStore.response) {
-          set({
-            ...userStore,
-            error: error ? 'Error: logout did not complete. Please try again.' : null,
-            completed: true,
-          });
-        }
-      });
+      let obj;
       const { clientId } = Config.get();
-      function storeReset() {
+      function resetAndRestart() {
         // Reset stores
         journeyStore && journeyStore.reset();
         oauthStore && oauthStore.reset();
@@ -18017,24 +17945,19 @@ function widgetApiFactory(modal) {
        * token revoking and removal; else, just end the session.
        */
       if (clientId) {
-        // Call SDK logout
-        FRUser.logout()
-          .then(storeReset)
-          .catch(() => {
-            error = true;
-            storeReset();
-          });
+        obj = FRUser;
       } else {
-        SessionManager.logout()
-          .then(storeReset)
-          .catch(() => {
-            error = true;
-            storeReset();
-          });
+        obj = SessionManager;
       }
-      return subscribe;
+      try {
+        await obj.logout();
+        resetAndRestart();
+      } catch (err) {
+        resetAndRestart();
+        throw err;
+      }
     },
-    async tokens(options) {
+    tokens(options) {
       const { subscribe } = derived(oauthStore, ($oauthStore, set) => {
         set({
           ...$oauthStore,
@@ -18050,24 +17973,11 @@ function widgetApiFactory(modal) {
     async request(options) {
       return await _default$2.request(options);
     },
-    getJourneyStore() {
-      return journeyStore;
-    },
-    getOAuthStore() {
-      return oauthStore;
-    },
-    getUserStore() {
-      return userStore;
-    },
     ...(modal && { modal }),
-    setJourneyStore(store) {
-      journeyStore = store;
-    },
-    setOAuthStore(store) {
-      oauthStore = store;
-    },
-    setUserStore(store) {
-      userStore = store;
+    setStores(journeyStoreRef, oauthStoreRef, userStoreRef) {
+      journeyStore = journeyStoreRef;
+      oauthStore = oauthStoreRef;
+      userStore = userStoreRef;
     },
     user,
   };
@@ -46777,19 +46687,19 @@ function initialize(initOptions) {
 /* src/lib/widget/modal.svelte generated by Svelte v3.55.1 */
 const file = 'src/lib/widget/modal.svelte';
 
-// (110:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId="sampleDialog"     withHeader= {style?.sections?.header}   >
+// (107:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId="sampleDialog"     withHeader= {style?.sections?.header}   >
 function create_default_slot(ctx) {
   let journey_1;
   let updating_formEl;
   let current;
 
   function journey_1_formEl_binding(value) {
-    /*journey_1_formEl_binding*/ ctx[9](value);
+    /*journey_1_formEl_binding*/ ctx[10](value);
   }
 
   let journey_1_props = {
     displayIcon: /*style*/ ctx[0]?.stage?.icon ?? !(/*style*/ ctx[0]?.logo),
-    journeyStore: api.getJourneyStore(),
+    journeyStore: /*journeyStore*/ ctx[5],
   };
 
   if (/*formEl*/ ctx[3] !== void 0) {
@@ -46839,7 +46749,7 @@ function create_default_slot(ctx) {
     id: create_default_slot.name,
     type: 'slot',
     source:
-      '(110:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId=\\"sampleDialog\\"     withHeader= {style?.sections?.header}   >',
+      '(107:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId=\\"sampleDialog\\"     withHeader= {style?.sections?.header}   >',
     ctx,
   });
 
@@ -46853,7 +46763,7 @@ function create_fragment(ctx) {
   let current;
 
   function dialog_dialogEl_binding(value) {
-    /*dialog_dialogEl_binding*/ ctx[10](value);
+    /*dialog_dialogEl_binding*/ ctx[11](value);
   }
 
   let dialog_props = {
@@ -46870,14 +46780,14 @@ function create_fragment(ctx) {
 
   dialog = new Dialog({ props: dialog_props, $$inline: true });
   binding_callbacks.push(() => bind(dialog, 'dialogEl', dialog_dialogEl_binding));
-  /*dialog_binding*/ ctx[11](dialog);
+  /*dialog_binding*/ ctx[12](dialog);
 
   const block = {
     c: function create() {
       div = element('div');
       create_component(dialog.$$.fragment);
       attr_dev(div, 'class', 'fr_widget-root');
-      add_location(div, file, 108, 0, 4110);
+      add_location(div, file, 105, 0, 3999);
     },
     l: function claim(nodes) {
       throw new Error(
@@ -46893,7 +46803,7 @@ function create_fragment(ctx) {
       const dialog_changes = {};
       if (dirty & /*style*/ 1) dialog_changes.withHeader = /*style*/ ctx[0]?.sections?.header;
 
-      if (dirty & /*$$scope, style, formEl*/ 8201) {
+      if (dirty & /*$$scope, style, formEl*/ 65545) {
         dialog_changes.$$scope = { dirty, ctx };
       }
 
@@ -46916,7 +46826,7 @@ function create_fragment(ctx) {
     },
     d: function destroy(detaching) {
       if (detaching) detach_dev(div);
-      /*dialog_binding*/ ctx[11](null);
+      /*dialog_binding*/ ctx[12](null);
       destroy_component(dialog);
     },
   };
@@ -46947,12 +46857,7 @@ const api = widgetApiFactory({
   onMount(fn) {
     callMounted = (dialog, form) => fn(dialog, form);
   },
-  open(options) {
-    // If journey does not have a step, start the journey
-    if (!get_store_value(api.getJourneyStore()).step) {
-      journey.start(options);
-    }
-
+  open() {
     dialogEl.showModal();
   },
 });
@@ -47012,10 +46917,11 @@ function instance($$self, $$props, $$invalidate) {
    * Initialize the stores and ensure both variables point to the same reference.
    * Variables with _ are the reactive version of the original variable from above.
    */
-  api.setJourneyStore(initialize$4(config));
+  const journeyStore = initialize$4(config);
 
-  api.setOAuthStore(initialize$1(config));
-  api.setUserStore(initialize(config));
+  const oauthStore = initialize$1(config);
+  const userStore = initialize(config);
+  api.setStores(journeyStore, oauthStore, userStore);
   initialize$6(content);
   initialize$3(journeys);
   initialize$2(links);
@@ -47066,10 +46972,10 @@ function instance($$self, $$props, $$invalidate) {
   }
 
   $$self.$$set = ($$props) => {
-    if ('config' in $$props) $$invalidate(5, (config = $$props.config));
-    if ('content' in $$props) $$invalidate(6, (content = $$props.content));
-    if ('journeys' in $$props) $$invalidate(7, (journeys = $$props.journeys));
-    if ('links' in $$props) $$invalidate(8, (links = $$props.links));
+    if ('config' in $$props) $$invalidate(6, (config = $$props.config));
+    if ('content' in $$props) $$invalidate(7, (content = $$props.content));
+    if ('journeys' in $$props) $$invalidate(8, (journeys = $$props.journeys));
+    if ('links' in $$props) $$invalidate(9, (links = $$props.links));
     if ('style' in $$props) $$invalidate(0, (style = $$props.style));
   };
 
@@ -47110,13 +47016,16 @@ function instance($$self, $$props, $$invalidate) {
     _dialogComp,
     _dialogEl,
     formEl,
+    journeyStore,
+    oauthStore,
+    userStore,
   });
 
   $$self.$inject_state = ($$props) => {
-    if ('config' in $$props) $$invalidate(5, (config = $$props.config));
-    if ('content' in $$props) $$invalidate(6, (content = $$props.content));
-    if ('journeys' in $$props) $$invalidate(7, (journeys = $$props.journeys));
-    if ('links' in $$props) $$invalidate(8, (links = $$props.links));
+    if ('config' in $$props) $$invalidate(6, (config = $$props.config));
+    if ('content' in $$props) $$invalidate(7, (content = $$props.content));
+    if ('journeys' in $$props) $$invalidate(8, (journeys = $$props.journeys));
+    if ('links' in $$props) $$invalidate(9, (links = $$props.links));
     if ('style' in $$props) $$invalidate(0, (style = $$props.style));
     if ('_closeCallback' in $$props) $$invalidate(4, (_closeCallback = $$props._closeCallback));
     if ('_dialogComp' in $$props) $$invalidate(1, (_dialogComp = $$props._dialogComp));
@@ -47134,6 +47043,7 @@ function instance($$self, $$props, $$invalidate) {
     _dialogEl,
     formEl,
     _closeCallback,
+    journeyStore,
     config,
     content,
     journeys,
@@ -47149,10 +47059,10 @@ class Modal extends SvelteComponentDev {
     super(options);
 
     init(this, options, instance, create_fragment, safe_not_equal, {
-      config: 5,
-      content: 6,
-      journeys: 7,
-      links: 8,
+      config: 6,
+      content: 7,
+      journeys: 8,
+      links: 9,
       style: 0,
     });
 

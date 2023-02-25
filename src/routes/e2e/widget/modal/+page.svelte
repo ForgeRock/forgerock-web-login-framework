@@ -9,6 +9,7 @@
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
   // TODO: Use a more specific type
+  let journeyStore;
   let userResponse: any | null;
   let widget: Widget;
   let widgetEl: HTMLDivElement;
@@ -22,14 +23,6 @@
   modal.onMount((dialog: HTMLDialogElement, form: HTMLFormElement) => {
     console.log(dialog);
     console.log(form);
-
-    // Calling this on mount is not good if using HMR as it results in a ton of requests on change
-    // journey.start();
-  });
-  // TODO: Use a more specific type
-  journey.subscribe((response) => {
-    console.log(response);
-    userResponse = response?.user;
   });
 
   modal.onClose((args: { reason: string }) =>
@@ -77,6 +70,15 @@
         },
       },
     });
+
+    const subscribe = journey.start({
+      journey: journeyParam || authIndexValue || undefined,
+      resumeUrl: suspendedIdParam ? location.href : undefined,
+    });
+    subscribe((response: any) => {
+      console.log(response);
+      userResponse = response?.user;
+    });
   });
 </script>
 
@@ -90,13 +92,7 @@
     </ul>
     <button on:click={logout}>Logout</button>
   {:else}
-    <button
-      on:click={() =>
-        modal.open({
-          journey: journeyParam || authIndexValue || undefined,
-          resumeUrl: suspendedIdParam ? location.href : undefined,
-        })}
-    >
+    <button on:click={ modal.open }>
       Open Login Modal
     </button>
   {/if}

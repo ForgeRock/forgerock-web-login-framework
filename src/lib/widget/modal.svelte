@@ -25,11 +25,7 @@
     onMount(fn: (dialog: HTMLDialogElement, form: HTMLFormElement) => void) {
       callMounted = (dialog, form) => fn(dialog, form);
     },
-    open(options?: JourneyOptions): void {
-      // If journey does not have a step, start the journey
-      if (!get(api.getJourneyStore()).step) {
-        journey.start(options);
-      }
+    open() {
       dialogEl.showModal();
     },
   });
@@ -106,9 +102,10 @@
    * Initialize the stores and ensure both variables point to the same reference.
    * Variables with _ are the reactive version of the original variable from above.
    */
-  api.setJourneyStore(initializeJourney(config));
-  api.setOAuthStore(initializeOauth(config));
-  api.setUserStore(initializeUser(config));
+  const journeyStore = initializeJourney(config);
+  const oauthStore = initializeOauth(config);
+  const userStore = initializeUser(config)
+  api.setStores(journeyStore, oauthStore, userStore);
 
   initializeContent(content);
   initializeJourneys(journeys);
@@ -150,7 +147,7 @@
     <Journey
       bind:formEl
       displayIcon={style?.stage?.icon ?? !style?.logo}
-      journeyStore={api.getJourneyStore()}
+      journeyStore={journeyStore}
     />
   </Dialog>
 </div>

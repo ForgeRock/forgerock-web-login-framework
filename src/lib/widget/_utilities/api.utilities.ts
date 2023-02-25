@@ -1,24 +1,16 @@
-import {
-  Config,
-  FRUser,
-  SessionManager,
-  TokenManager,
-  UserManager,
-  type GetTokensOptions,
-} from '@forgerock/javascript-sdk';
+import { Config, FRUser, SessionManager, type GetTokensOptions } from '@forgerock/javascript-sdk';
 import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
-import { derived, get, writable, type Writable } from 'svelte/store';
+import { derived } from 'svelte/store';
 import type { z } from 'zod';
+
+import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';
 
 // Import the stores for initialization
 import configure from '$lib/sdk.config';
 
-import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';
-
-import type { JourneyOptions, Modal, Response } from '../interfaces';
-import type { Maybe } from '$lib/interfaces';
-import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
-import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
+import type { JourneyOptions, Modal } from '../interfaces';
+import type { JourneyStore } from '$journey/journey.interfaces';
+import type { OAuthStore } from '$lib/oauth/oauth.store';
 import type { partialConfigSchema } from '$lib/sdk.config';
 import type { UserStore } from '$lib/user/user.store';
 
@@ -29,8 +21,6 @@ export function widgetApiFactory(modal?: Modal) {
 
   const configuration = {
     set(options: z.infer<typeof partialConfigSchema>): void {
-      // Set base config to SDK
-      // TODO: Move to a shared utility
       configure({
         // Set some basics by default
         ...{
@@ -51,138 +41,75 @@ export function widgetApiFactory(modal?: Modal) {
       });
     },
   };
-  const journey = (() => {
-    const { set, subscribe }: Writable<Maybe<Response>> = writable(null);
-
-    return {
-      start(options?: JourneyOptions): void {
-        const requestsOauth = options?.oauth || true;
-        const requestsUser = options?.user || true;
-
-        let journey: JourneyStoreValue;
-        let oauth: OAuthTokenStoreValue;
-
-        const journeyStoreUnsub = journeyStore.subscribe((response) => {
-          if (!requestsOauth && response.successful) {
-            set({
-              journey: response,
-            });
-            if (modal) {
-              modal.close({ reason: 'auto' });
-            }
-          } else if (requestsOauth && response.successful) {
-            journey = response;
-            oauthStore?.get({ forceRenew: true });
-          } else if (response.error) {
-            journey = response;
-            set({
-              journey: response,
-            });
-          }
-          /**
-           * Clean up unneeded subscription, but only when it's successful
-           * Leaving the subscription allows for the journey to be
-           * restarted internally.
-           */
-          if (response.successful) {
-            journeyStoreUnsub();
-          }
-        });
-
-        const oauthStoreUnsub = oauthStore.subscribe((response) => {
-          if (!requestsUser && response.successful) {
-            set({
-              journey,
-              oauth: response,
-            });
-            if (modal) {
-              modal.close({ reason: 'auto' });
-            }
-          } else if (requestsUser && response.successful) {
-            oauth = response;
-            userStore?.get();
-          } else if (response.error) {
-            oauth = response;
-            set({
-              journey,
-              oauth: response,
-            });
-          }
-          /**
-           * Clean up unneeded subscription, but only when it's successful
-           * Leaving the subscription allows for the journey to be
-           * restarted internally.
-           */
-          if (response.successful) {
-            oauthStoreUnsub();
-          }
-        });
-        const userStoreUnsub = userStore.subscribe((response) => {
-          if (response.successful) {
-            set({
-              journey,
-              oauth,
-              user: response,
-            });
-            if (modal) {
-              modal.close({ reason: 'auto' });
-            }
-          } else if (response.error) {
-            set({
-              journey,
-              oauth,
-              user: response,
-            });
-          }
-          /**
-           * Clean up unneeded subscription, but only when it's successful
-           * Leaving the subscription allows for the journey to be
-           * restarted internally.
-           */
-          if (response.successful) {
-            userStoreUnsub();
-          }
-        });
-
-        if (options?.resumeUrl) {
-          journeyStore.resume(options.resumeUrl);
-        } else {
-          journeyStore.start({
-            ...options?.config,
-            tree: options?.journey,
+  const journey = {
+    start(options?: JourneyOptions) {
+      const requestsOauth = options?.oauth || true;
+      const requestsUser = options?.user || true;
+      const { subscribe } = derived(
+        [journeyStore, oauthStore, userStore],
+        ([$journeyStore, $oauthStore, $userStore], set) => {
+          set({
+            journey: $journeyStore,
+            oauth: $oauthStore,
+            user: $userStore,
           });
-        }
-      },
-      subscribe,
-    };
-  })();
+
+          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+            modal && modal.close({ reason: 'auto' });
+          } else if ($journeyStore.successful && $oauthStore.successful) {
+            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+              userStore.get();
+            } else if (!requestsUser) {
+              modal && modal.close({ reason: 'auto' });
+            }
+          } else if ($journeyStore.successful) {
+            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+              oauthStore.get();
+            } else if (!requestsOauth) {
+              modal && modal.close({ reason: 'auto' });
+            }
+          }
+        },
+      );
+
+      if (options?.resumeUrl) {
+        journeyStore.resume(options.resumeUrl);
+      } else {
+        journeyStore.start({
+          ...options?.config,
+          tree: options?.journey,
+        });
+      }
+      return subscribe;
+    },
+  };
   const user = {
-    async authorized(remote = false) {
+    // TODO: Add `scopes` parameter to add more granular authorization check
+    authorized(remote = false) {
       const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
+        let userAuthorized;
+        let store;
+
         if (remote) {
-          const { completed, error, loading, response } = $userStore;
-          set({
-            completed,
-            error,
-            loading,
-            authorized: !!response,
-          });
+          store = $userStore;
+          userAuthorized = !!store.response;
         } else {
-          const { completed, error, loading, response } = $oauthStore;
-          set({
-            completed,
-            error,
-            loading,
-            authorized: !!response?.accessToken,
-          });
+          store = $oauthStore;
+          userAuthorized = !!store.response?.accessToken;
         }
+        set({
+          completed: store.completed,
+          error: store.error,
+          loading: store.loading,
+          authorized: userAuthorized,
+        });
       });
       if (remote) {
         userStore.get();
       }
       return subscribe;
     },
-    async info(remote = false) {
+    info(remote = false) {
       const { subscribe } = derived(userStore, ($userStore, set) => {
         if (remote) {
           const { completed, error, loading, response } = $userStore;
@@ -200,19 +127,11 @@ export function widgetApiFactory(modal?: Modal) {
       return subscribe;
     },
     async logout() {
-      let error = false;
-      const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
-        if (!$oauthStore.response && !$userStore.response) {
-          set({
-            ...userStore,
-            error: error ? 'Error: logout did not complete. Please try again.' : null,
-            completed: true,
-          });
-        }
-      });
+      let obj;
+
       const { clientId } = Config.get();
 
-      function storeReset() {
+      function resetAndRestart() {
         // Reset stores
         journeyStore && journeyStore.reset();
         oauthStore && oauthStore.reset();
@@ -227,28 +146,23 @@ export function widgetApiFactory(modal?: Modal) {
        * token revoking and removal; else, just end the session.
        */
       if (clientId) {
-        // Call SDK logout
-        FRUser.logout()
-          .then(storeReset)
-          .catch(() => {
-            error = true;
-            storeReset();
-          });
+        obj = FRUser;
       } else {
-        SessionManager.logout()
-          .then(storeReset)
-          .catch(() => {
-            error = true;
-            storeReset();
-          });
+        obj = SessionManager;
       }
 
-      return subscribe;
+      try {
+        await obj.logout();
+        resetAndRestart();
+      } catch (err) {
+        resetAndRestart();
+        throw err;
+      }
     },
-    async tokens(options?: GetTokensOptions) {
+    tokens(options?: GetTokensOptions) {
       const { subscribe } = derived(oauthStore, ($oauthStore, set) => {
         set({
-          ...$oauthStore
+          ...$oauthStore,
         });
       });
       oauthStore.get(options);
@@ -262,24 +176,11 @@ export function widgetApiFactory(modal?: Modal) {
     async request(options: HttpClientRequestOptions) {
       return await HttpClient.request(options);
     },
-    getJourneyStore() {
-      return journeyStore;
-    },
-    getOAuthStore() {
-      return oauthStore;
-    },
-    getUserStore() {
-      return userStore;
-    },
     ...(modal && { modal }),
-    setJourneyStore(store: JourneyStore) {
-      journeyStore = store;
-    },
-    setOAuthStore(store: OAuthStore) {
-      oauthStore = store;
-    },
-    setUserStore(store: UserStore) {
-      userStore = store;
+    setStores(journeyStoreRef: JourneyStore, oauthStoreRef: OAuthStore, userStoreRef: UserStore) {
+      journeyStore = journeyStoreRef;
+      oauthStore = oauthStoreRef;
+      userStore = userStoreRef;
     },
     user,
   };
