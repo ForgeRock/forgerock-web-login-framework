@@ -11,7 +11,7 @@ test('Modal widget with login in US Spanish', async ({ page }) => {
   await clickButton('Open Login Modal', '/authenticate');
 
   await page.getByLabel('Nombre de usuario').fill('demouser');
-  await page.getByLabel('ontraseña').fill('j56eKtae*1');
+  await page.getByLabel('Contraseña').fill('j56eKtae*1');
 
   await clickButton('Iniciar sesion', '/authenticate');
 

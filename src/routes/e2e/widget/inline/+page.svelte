@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { form, journey, user } from '$package/inline';
+  import Widget, { configuration, form, journey, user } from '$package/inline';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -17,7 +17,7 @@
     userResponse = null;
   }
 
-  form.onMount((component) => console.log(component));
+  form.onMount((component: any) => console.log(component));
 
   onMount(async () => {
     let content;
@@ -29,35 +29,34 @@
       content = response.ok && (await response.json());
     }
 
-    new Widget({
-      target: formEl,
-      props: {
-        config: {
-          clientId: 'WebOAuthClient',
-          redirectUri: `${window.location.origin}/callback`,
-          scope: 'openid profile email me.read',
-          serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-            timeout: 5000,
-          },
-          realmPath: 'alpha',
+    configuration().set({
+      config: {
+        clientId: 'WebOAuthClient',
+        redirectUri: `${window.location.origin}/callback`,
+        scope: 'openid profile email me.read',
+        serverConfig: {
+          baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+          timeout: 5000,
         },
-        content,
-        links: {
-          termsAndConditions: 'https://www.forgerock.com/terms',
-        },
+        realmPath: 'alpha',
+      },
+      content,
+      links: {
+        termsAndConditions: 'https://www.forgerock.com/terms',
       },
     });
 
+    new Widget({ target: formEl });
+
     // Start the  journey after initialization or within the form.onMount event
-    const subscribe = journey.start({
+    const { start, subscribe } = journey();
+    start({
       journey: journeyParam || authIndexValue || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
     });
-
-    subscribe((response: any) => {
-      console.log(response);
-      userResponse = response?.user;
+    subscribe((event: any) => {
+      console.log(event);
+      userResponse = event?.user;
     });
   });
 </script>

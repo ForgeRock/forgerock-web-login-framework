@@ -1,17 +1,26 @@
-import { Config, FRUser, SessionManager, type GetTokensOptions } from '@forgerock/javascript-sdk';
+import { Config, FRUser, SessionManager, type ConfigOptions } from '@forgerock/javascript-sdk';
 import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
 import { derived } from 'svelte/store';
 import type { z } from 'zod';
 
-import type { HttpClientRequestOptions } from '@forgerock/javascript-sdk/lib/http-client';
-
 // Import the stores for initialization
 import configure from '$lib/sdk.config';
 
-import type { JourneyOptions, Modal } from '../interfaces';
+import { initialize as initializeJourneys } from '$journey/config.store';
+import { initialize as initializeJourney } from '$journey/journey.store';
+import { initialize as initializeContent } from '$lib/locale.store';
+import { initialize as initializeLinks, partialLinksSchema } from '$lib/links.store';
+import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
+import { initialize as initializeUser } from '$lib/user/user.store';
+import { initialize as initializeStyle } from '$lib/style.store';
+
+import type { partialConfigSchema } from '$lib/sdk.config';
+import type { journeyConfigSchema } from '$journey/config.store';
+import type { partialStringsSchema } from '$lib/locale.store';
+import type { partialStyleSchema } from '$lib/style.store';
+import type { JourneyOptions, JourneyOptionsStart, Modal } from '../interfaces';
 import type { JourneyStore } from '$journey/journey.interfaces';
 import type { OAuthStore } from '$lib/oauth/oauth.store';
-import type { partialConfigSchema } from '$lib/sdk.config';
 import type { UserStore } from '$lib/user/user.store';
 
 export function widgetApiFactory(modal?: Modal) {
@@ -19,127 +28,134 @@ export function widgetApiFactory(modal?: Modal) {
   let oauthStore: OAuthStore;
   let userStore: UserStore;
 
-  const configuration = {
-    set(options: z.infer<typeof partialConfigSchema>): void {
-      configure({
-        // Set some basics by default
-        ...{
-          // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-          clientId: 'WebLoginWidgetClient',
-          // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-          // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-          realmPath: 'alpha',
-          // TODO: Once we move to SSR, this default should be more intelligent
-          redirectUri:
-            typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
-          scope: 'openid email',
-        },
-        // Let user provided config override defaults
-        ...options,
-        // Force 'legacy' to remove confusion
-        ...{ support: 'legacy' },
-      });
-    },
+  function resetAndRestartStores() {
+    // Reset stores
+    journeyStore && journeyStore.reset();
+    oauthStore && oauthStore.reset();
+    userStore && userStore.reset();
+
+    // Fetch fresh journey step
+    journey && journey().start();
+  }
+
+  interface widgetConfigOptions {
+    config: z.infer<typeof partialConfigSchema> | undefined;
+    content: z.infer<typeof partialStringsSchema> | undefined;
+    journeys: z.infer<typeof journeyConfigSchema> | undefined;
+    links: z.infer<typeof partialLinksSchema> | undefined;
+    style: z.infer<typeof partialStyleSchema> | undefined;
+  }
+
+  const configuration = () => {
+    return {
+      set(options: widgetConfigOptions): void {
+        configure({
+          // Set some basics by default
+          ...{
+            // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
+            clientId: 'WebLoginWidgetClient',
+            // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
+            // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
+            realmPath: 'alpha',
+            // TODO: Once we move to SSR, this default should be more intelligent
+            redirectUri:
+              typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+            scope: 'openid email',
+          },
+          // Let user provided config override defaults
+          ...options.config,
+          // Force 'legacy' to remove confusion
+          ...{ support: 'legacy' },
+        });
+
+        /**
+         * Initialize the stores and ensure both variables point to the same reference.
+         * Variables with _ are the reactive version of the original variable from above.
+         */
+        journeyStore = initializeJourney(options.config);
+        oauthStore = initializeOauth(options.config);
+        userStore = initializeUser(options.config);
+
+        initializeContent(options.content);
+        initializeJourneys(options.journeys);
+        initializeLinks(options.links);
+        initializeStyle(options.style);
+      },
+    };
   };
-  const journey = {
-    start(options?: JourneyOptions) {
-      const requestsOauth = options?.oauth || true;
-      const requestsUser = options?.user || true;
-      const { subscribe } = derived(
-        [journeyStore, oauthStore, userStore],
-        ([$journeyStore, $oauthStore, $userStore], set) => {
-          set({
-            journey: $journeyStore,
-            oauth: $oauthStore,
-            user: $userStore,
-          });
+  const journey = (options?: JourneyOptions) => {
+    const requestsOauth = options?.oauth || true;
+    const requestsUser = options?.user || true;
+    const { subscribe } = derived(
+      [journeyStore, oauthStore, userStore],
+      ([$journeyStore, $oauthStore, $userStore], set) => {
+        set({
+          journey: $journeyStore,
+          oauth: $oauthStore,
+          user: $userStore,
+        });
 
-          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+        if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+          modal && modal.close({ reason: 'auto' });
+        } else if ($journeyStore.successful && $oauthStore.successful) {
+          if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+            userStore.get();
+          } else if (!requestsUser) {
             modal && modal.close({ reason: 'auto' });
-          } else if ($journeyStore.successful && $oauthStore.successful) {
-            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
-              userStore.get();
-            } else if (!requestsUser) {
-              modal && modal.close({ reason: 'auto' });
-            }
-          } else if ($journeyStore.successful) {
-            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
-              oauthStore.get();
-            } else if (!requestsOauth) {
-              modal && modal.close({ reason: 'auto' });
-            }
           }
-        },
-      );
+        } else if ($journeyStore.successful) {
+          if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+            oauthStore.get();
+          } else if (!requestsOauth) {
+            modal && modal.close({ reason: 'auto' });
+          }
+        }
+      },
+    );
 
-      if (options?.resumeUrl) {
-        journeyStore.resume(options.resumeUrl);
+    function start(startOptions?: JourneyOptionsStart) {
+      if (startOptions?.resumeUrl) {
+        journeyStore.resume(startOptions.resumeUrl);
       } else {
         journeyStore.start({
-          ...options?.config,
-          tree: options?.journey,
+          ...startOptions?.config,
+          tree: startOptions?.journey,
         });
       }
-      return subscribe;
-    },
+      return new Promise((resolve) => {
+        const unsubscribe = journeyStore.subscribe((event) => {
+          if (event.completed) {
+            resolve(event);
+            unsubscribe();
+          }
+        });
+      });
+    }
+
+    return { start, subscribe };
   };
   const user = {
-    // TODO: Add `scopes` parameter to add more granular authorization check
-    authorized(remote = false) {
-      const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
-        let userAuthorized;
-        let store;
+    info() {
+      const { get, subscribe } = userStore;
 
-        if (remote) {
-          store = $userStore;
-          userAuthorized = !!store.response;
-        } else {
-          store = $oauthStore;
-          userAuthorized = !!store.response?.accessToken;
-        }
-        set({
-          completed: store.completed,
-          error: store.error,
-          loading: store.loading,
-          authorized: userAuthorized,
-        });
-      });
-      if (remote) {
-        userStore.get();
-      }
-      return subscribe;
-    },
-    info(remote = false) {
-      const { subscribe } = derived(userStore, ($userStore, set) => {
-        if (remote) {
-          const { completed, error, loading, response } = $userStore;
-          set({
-            completed,
-            error,
-            loading,
-            response,
+      function wrappedGet(options: ConfigOptions) {
+        get(options);
+        return new Promise((resolve) => {
+          const unsubscribe = userStore.subscribe((event) => {
+            if (event.completed) {
+              resolve(event);
+              unsubscribe();
+            }
           });
-        }
-      });
-      if (remote) {
-        userStore.get();
+        });
       }
-      return subscribe;
+
+      return { get: wrappedGet, subscribe };
     },
     async logout() {
-      let obj;
-
       const { clientId } = Config.get();
 
-      function resetAndRestart() {
-        // Reset stores
-        journeyStore && journeyStore.reset();
-        oauthStore && oauthStore.reset();
-        userStore && userStore.reset();
-
-        // Fetch fresh journey step
-        journey && journey.start();
-      }
+      let obj;
 
       /**
        * If configuration has a clientId, then use FRUser to logout to ensure
@@ -153,34 +169,45 @@ export function widgetApiFactory(modal?: Modal) {
 
       try {
         await obj.logout();
-        resetAndRestart();
+        resetAndRestartStores();
       } catch (err) {
-        resetAndRestart();
+        // Regardless of errors, reset all stores and restart journey
+        resetAndRestartStores();
         throw err;
       }
+      // Return undefined as there's no response information to share
+      return;
     },
-    tokens(options?: GetTokensOptions) {
-      const { subscribe } = derived(oauthStore, ($oauthStore, set) => {
-        set({
-          ...$oauthStore,
+    tokens() {
+      const { get, subscribe } = oauthStore;
+
+      function wrappedGet(options: ConfigOptions) {
+        get(options);
+        return new Promise((resolve) => {
+          const unsubscribe = oauthStore.subscribe((event) => {
+            if (event.completed) {
+              resolve(event);
+              unsubscribe();
+            }
+          });
         });
-      });
-      oauthStore.get(options);
-      return subscribe;
+      }
+
+      return { get: wrappedGet, subscribe };
     },
   };
 
   return {
     configuration,
     journey,
-    async request(options: HttpClientRequestOptions) {
-      return await HttpClient.request(options);
-    },
+    request: HttpClient.request,
     ...(modal && { modal }),
-    setStores(journeyStoreRef: JourneyStore, oauthStoreRef: OAuthStore, userStoreRef: UserStore) {
-      journeyStore = journeyStoreRef;
-      oauthStore = oauthStoreRef;
-      userStore = userStoreRef;
+    getStores() {
+      return {
+        journeyStore,
+        oauthStore,
+        userStore,
+      };
     },
     user,
   };

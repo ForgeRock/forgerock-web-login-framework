@@ -56,7 +56,6 @@ export function initialize(initOptions?: ConfigOptions) {
         response: user,
       });
     } catch (err: unknown) {
-      console.error(`Get current user | ${err}`);
       if (err instanceof Error) {
         set({
           completed: true,

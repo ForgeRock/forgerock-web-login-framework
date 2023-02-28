@@ -3,7 +3,7 @@
 
   import { configuration, user } from '$package/modal';
 
-  let fetchedTokens: any;
+  let loading: any;
   let userInfo: any;
 
   async function logout() {
@@ -12,30 +12,38 @@
   }
 
   onMount(async () => {
-    configuration.set({
-      clientId: 'WebOAuthClient',
-      redirectUri: `${window.location.origin}/callback`,
-      scope: 'openid profile email me.read',
-      serverConfig: {
-        baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-        timeout: 5000,
-      },
-      realmPath: 'alpha',
+    configuration().set({
+      config: {
+        clientId: 'WebOAuthClient',
+        redirectUri: `${window.location.origin}/callback`,
+        scope: 'openid profile email me.read',
+        serverConfig: {
+          baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+          timeout: 5000,
+        },
+        realmPath: 'alpha',
+      }
     });
 
-    // Fetch tokens locally to see if the user has tokens
-    if (await user.tokens()) {
-      fetchedTokens = true;
-      userInfo = await user.info(true);
-    } else {
-      // Set fetched tokens to true so the links render to login
-      fetchedTokens = true;
-    }
+    // Using observable method:
+    const { get, subscribe } = user.info();
+    get();
+    subscribe((event: any) => {
+      console.log(event);
+      loading = event.loading;
+      userInfo = event.response;
+    });
+
+    // Using Promise method
+    // const { get } = user.info();
+    // const event = await get();
+    // console.log(event);
+    // userInfo = event.response;
   });
 </script>
 
 
-{#if fetchedTokens}
+{#if !loading}
   {#if userInfo}
     <ul>
       <li id="fullName">

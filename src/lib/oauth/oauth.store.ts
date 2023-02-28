@@ -46,12 +46,11 @@ export function initialize(initOptions?: GetTokensOptions) {
       loading: true,
       successful: false,
       response: null,
-    })
+    });
 
     try {
       tokens = await TokenManager.getTokens(options);
     } catch (err: unknown) {
-      console.error(`Get tokens | ${err}`);
       if (err instanceof Error) {
         set({
           completed: true,
