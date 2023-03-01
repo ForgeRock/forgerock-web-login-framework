@@ -14,7 +14,7 @@ const selfSubmittingCallbacks = [
   CallbackType.SelectIdPCallback,
 ] as const;
 
-export type SelfSubmittingCallbacks = typeof selfSubmittingCallbacks[number];
+export type SelfSubmittingCallbacks = (typeof selfSubmittingCallbacks)[number];
 
 const userInputCallbacks = [
   CallbackType.BooleanAttributeInputCallback,
@@ -32,7 +32,7 @@ const userInputCallbacks = [
   CallbackType.ValidatedCreateUsernameCallback,
 ] as const;
 
-export type UserInputCallbacks = typeof userInputCallbacks[number];
+export type UserInputCallbacks = (typeof userInputCallbacks)[number];
 
 // This eventually will be overridable by user of framework
 const forceUserInputOptionalityCallbacks = {
