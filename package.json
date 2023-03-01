@@ -68,7 +68,7 @@
     "@storybook/test-runner": "^0.10.0--canary.210.8666bd0.0",
     "@storybook/testing-library": "^0.0.14--canary.30.5f44d14.0",
     "@storybook/theming": "^7.0.0-beta.20",
-    "@sveltejs/adapter-auto": "^1.0.2",
+    "@sveltejs/adapter-auto": "^2.0.0",
     "@sveltejs/adapter-node": "^1.1.7",
     "@sveltejs/kit": "1.0.5",
     "@sveltejs/package": "^1.0.2",
