@@ -28,7 +28,7 @@
     // Using observable method:
     const { get, subscribe } = user.info();
     get();
-    subscribe((event: any) => {
+    subscribe((event) => {
       console.log(event);
       loading = event.loading;
       userInfo = event.response;

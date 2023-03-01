@@ -16,6 +16,11 @@
   export const journey = api.journey;
   export const request = api.request;
   export const user = api.user;
+
+  export type ConfigurationApi = ReturnType<typeof api.configuration>;
+  export type JourneyApi = ReturnType<typeof api.journey>;
+  export type UserInfoApi = ReturnType<typeof api.user.info>;
+  export type UserTokensApi = ReturnType<typeof api.user.tokens>;
 </script>
 
 <script lang="ts">

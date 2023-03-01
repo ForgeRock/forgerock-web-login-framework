@@ -1,7 +1,6 @@
 import { Config, FRUser, SessionManager, type ConfigOptions } from '@forgerock/javascript-sdk';
 import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
-import { derived } from 'svelte/store';
-import type { z } from 'zod';
+import { derived, type Readable } from 'svelte/store';
 
 // Import the stores for initialization
 import configure from '$lib/sdk.config';
@@ -9,21 +8,22 @@ import configure from '$lib/sdk.config';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { initialize as initializeJourney } from '$journey/journey.store';
 import { initialize as initializeContent } from '$lib/locale.store';
-import { initialize as initializeLinks, partialLinksSchema } from '$lib/links.store';
-import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
-import { initialize as initializeUser } from '$lib/user/user.store';
+import { initialize as initializeLinks } from '$lib/links.store';
+import { initialize as initializeOauth, type OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
+import { initialize as initializeUser, type UserStoreValue } from '$lib/user/user.store';
 import { initialize as initializeStyle } from '$lib/style.store';
 
-import type { partialConfigSchema } from '$lib/sdk.config';
-import type { journeyConfigSchema } from '$journey/config.store';
-import type { partialStringsSchema } from '$lib/locale.store';
-import type { partialStyleSchema } from '$lib/style.store';
-import type { JourneyOptions, JourneyOptionsStart, Modal } from '../interfaces';
-import type { JourneyStore } from '$journey/journey.interfaces';
+import type {
+  JourneyOptions,
+  JourneyOptionsStart,
+  ModalApi,
+  WidgetConfigOptions,
+} from '../interfaces';
+import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 import type { OAuthStore } from '$lib/oauth/oauth.store';
 import type { UserStore } from '$lib/user/user.store';
 
-export function widgetApiFactory(modal?: Modal) {
+export function widgetApiFactory(modal?: ModalApi) {
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let userStore: UserStore;
@@ -38,17 +38,9 @@ export function widgetApiFactory(modal?: Modal) {
     journey && journey().start();
   }
 
-  interface widgetConfigOptions {
-    config: z.infer<typeof partialConfigSchema> | undefined;
-    content: z.infer<typeof partialStringsSchema> | undefined;
-    journeys: z.infer<typeof journeyConfigSchema> | undefined;
-    links: z.infer<typeof partialLinksSchema> | undefined;
-    style: z.infer<typeof partialStyleSchema> | undefined;
-  }
-
   const configuration = () => {
     return {
-      set(options: widgetConfigOptions): void {
+      set(options: WidgetConfigOptions): void {
         configure({
           // Set some basics by default
           ...{
@@ -86,32 +78,35 @@ export function widgetApiFactory(modal?: Modal) {
   const journey = (options?: JourneyOptions) => {
     const requestsOauth = options?.oauth || true;
     const requestsUser = options?.user || true;
-    const { subscribe } = derived(
-      [journeyStore, oauthStore, userStore],
-      ([$journeyStore, $oauthStore, $userStore], set) => {
-        set({
-          journey: $journeyStore,
-          oauth: $oauthStore,
-          user: $userStore,
-        });
+    const {
+      subscribe,
+    }: Readable<{ journey: JourneyStoreValue; oauth: OAuthTokenStoreValue; user: UserStoreValue }> =
+      derived(
+        [journeyStore, oauthStore, userStore],
+        ([$journeyStore, $oauthStore, $userStore], set) => {
+          set({
+            journey: $journeyStore,
+            oauth: $oauthStore,
+            user: $userStore,
+          });
 
-        if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
-          modal && modal.close({ reason: 'auto' });
-        } else if ($journeyStore.successful && $oauthStore.successful) {
-          if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
-            userStore.get();
-          } else if (!requestsUser) {
+          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
             modal && modal.close({ reason: 'auto' });
+          } else if ($journeyStore.successful && $oauthStore.successful) {
+            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+              userStore.get();
+            } else if (!requestsUser) {
+              modal && modal.close({ reason: 'auto' });
+            }
+          } else if ($journeyStore.successful) {
+            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+              oauthStore.get();
+            } else if (!requestsOauth) {
+              modal && modal.close({ reason: 'auto' });
+            }
           }
-        } else if ($journeyStore.successful) {
-          if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
-            oauthStore.get();
-          } else if (!requestsOauth) {
-            modal && modal.close({ reason: 'auto' });
-          }
-        }
-      },
-    );
+        },
+      );
 
     function start(startOptions?: JourneyOptionsStart) {
       if (startOptions?.resumeUrl) {
@@ -123,10 +118,20 @@ export function widgetApiFactory(modal?: Modal) {
         });
       }
       return new Promise((resolve) => {
-        const unsubscribe = journeyStore.subscribe((event) => {
-          if (event.completed) {
+        const unsubscribe = subscribe((event) => {
+          if (event.journey.successful && event.oauth.successful && event.user.completed) {
             resolve(event);
             unsubscribe();
+          } else if (event.journey.successful && event.oauth.successful) {
+            if (!requestsUser) {
+              resolve(event);
+              unsubscribe();
+            }
+          } else if (event.journey.successful) {
+            if (!requestsOauth) {
+              resolve(event);
+              unsubscribe();
+            }
           }
         });
       });
@@ -138,7 +143,7 @@ export function widgetApiFactory(modal?: Modal) {
     info() {
       const { get, subscribe } = userStore;
 
-      function wrappedGet(options: ConfigOptions) {
+      function wrappedGet(options?: ConfigOptions) {
         get(options);
         return new Promise((resolve) => {
           const unsubscribe = userStore.subscribe((event) => {
@@ -181,7 +186,7 @@ export function widgetApiFactory(modal?: Modal) {
     tokens() {
       const { get, subscribe } = oauthStore;
 
-      function wrappedGet(options: ConfigOptions) {
+      function wrappedGet(options?: ConfigOptions) {
         get(options);
         return new Promise((resolve) => {
           const unsubscribe = oauthStore.subscribe((event) => {

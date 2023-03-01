@@ -17,7 +17,7 @@
     userResponse = null;
   }
 
-  form.onMount((component: any) => console.log(component));
+  form.onMount((component) => console.log(component));
 
   onMount(async () => {
     let content;
@@ -54,7 +54,7 @@
       journey: journeyParam || authIndexValue || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
     });
-    subscribe((event: any) => {
+    subscribe((event) => {
       console.log(event);
       userResponse = event?.user;
     });

@@ -2,7 +2,7 @@
   import { widgetApiFactory } from './_utilities/api.utilities';
 
   // Import store types
-  import type { Modal } from './interfaces';
+  import type { ModalApi } from './interfaces';
 
   import './main.css';
 
@@ -28,9 +28,14 @@
 
   export const configuration = api.configuration;
   export const journey = api.journey;
-  export const modal = api.modal as Modal;
+  export const modal = api.modal as ModalApi;
   export const request = api.request;
   export const user = api.user;
+
+  export type ConfigurationApi = ReturnType<typeof api.configuration>;
+  export type JourneyApi = ReturnType<typeof api.journey>;
+  export type UserInfoApi = ReturnType<typeof api.user.info>;
+  export type UserTokensApi = ReturnType<typeof api.user.tokens>;
 </script>
 
 <script lang="ts">

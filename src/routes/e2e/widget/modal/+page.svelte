@@ -4,17 +4,16 @@
 
   import Widget, { configuration, modal, journey, user } from '$package/modal';
 
+  import type { JourneyApi } from '$package/modal';
   import type { Maybe } from '$lib/interfaces';
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
-  // TODO: Use a more specific type
-  let journeyStore;
+  // TODO: Use a more specific types
   let userResponse: any | null;
-  let journeyEvents: Maybe<any> = null;
-  let widget: Widget;
+  let journeyEvents: Maybe<JourneyApi> = null;
   let widgetEl: HTMLDivElement;
 
   async function logout() {
@@ -23,12 +22,12 @@
   }
 
   // TODO: Investigate why the parameter types are needed here
-  modal.onMount((dialog: HTMLDialogElement, form: HTMLFormElement) => {
+  modal.onMount((dialog, form) => {
     console.log(dialog);
     console.log(form);
   });
 
-  modal.onClose((args: { reason: string }) =>
+  modal.onClose((args) =>
     console.log(`Modal closed due to ${args && args.reason}`),
   );
 
@@ -70,11 +69,11 @@
       }
     });
 
-    widget = new Widget({ target: widgetEl });
+    new Widget({ target: widgetEl });
 
     // Start the  journey after initialization or within the form.onMount event
     journeyEvents = journey();
-    journeyEvents.subscribe((event: any) => {
+    journeyEvents.subscribe((event) => {
       console.log(event);
       userResponse = event?.user;
     });
