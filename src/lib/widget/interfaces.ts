@@ -24,7 +24,7 @@ export interface JourneyOptionsStart {
 export interface ModalApi {
   close(args?: { reason: 'auto' | 'external' | 'user' }): void;
   onClose(fn: (args: { reason: 'auto' | 'external' | 'user' }) => void): void;
-  onMount(fn: (dialog: HTMLDialogElement, form: HTMLFormElement) => void): void;
+  onMount(fn: () => void): void;
   open(options?: JourneyOptions): void;
 }
 export interface Response {

@@ -1,32 +1,17 @@
 <script context="module" lang="ts">
-  import { widgetApiFactory } from './_utilities/api.utilities';
+  import { widgetApiFactory } from './_utilities/_api.utilities';
+  import { componentApi } from './_utilities/component.utilities';
 
   // Import store types
-  import type { ModalApi } from './interfaces';
+  import type { ComponentApi } from './_utilities/component.utilities';
 
   import './main.css';
 
-  let dialogComp: SvelteComponent;
-  let dialogEl: HTMLDialogElement;
-  let callMounted: () => void;
-  let closeCallback: (arg: { reason: 'auto' | 'external' | 'user' }) => void;
-
-  const api = widgetApiFactory({
-    close(args?: { reason: 'auto' | 'external' | 'user' }) {
-      dialogComp.closeDialog(args);
-    },
-    onClose(fn: (args: { reason: 'auto' | 'external' | 'user' }) => void) {
-      closeCallback = (args) => fn(args);
-    },
-    onMount(fn: () => void) { callMounted = () => fn(); },
-    open() {
-      dialogEl.showModal();
-    },
-  });
+  const api = widgetApiFactory(componentApi());
 
   export const configuration = api.configuration;
   export const journey = api.journey;
-  export const modal = api.modal as ModalApi;
+  export const modal = api.modal as ComponentApi;
   export const request = api.request;
   export const user = api.user;
 
@@ -43,27 +28,19 @@
   import Journey from '$journey/journey.svelte';
   import { style } from '$lib/style.store';
 
+  const componentEvents = componentApi();
   const dispatch = createEventDispatcher();
   const { journeyStore } = api.getStores();
 
-  // Reference to the closeCallback from the above module context
-  let _closeCallback = closeCallback;
-
   // Variables that reference the Svelte component and the DOM element
   // Variables with `_` reference points to the same variables from the `context="module"`
-  let _dialogComp: SvelteComponent;
-  let _dialogEl: HTMLDialogElement;
+  let dialogComp: SvelteComponent;
+  let dialogEl: HTMLDialogElement;
   // The single reference to the `form` DOM element
   let formEl: HTMLFormElement;
 
   onMount(() => {
-    dialogComp = _dialogComp;
-    dialogEl = _dialogEl;
-
-    /**
-     * Call mounted event for Singleton users
-     */
-    callMounted && callMounted();
+    componentEvents.mount(dialogComp, dialogEl);
     /**
      * Call mounted event for Instance users
      * NOTE: needs to be wrapped in setTimeout. Asked in Svelte Discord
@@ -78,9 +55,9 @@
 
 <div class="fr_widget-root">
   <Dialog
-    bind:dialogEl={_dialogEl}
-    bind:this={_dialogComp}
-    closeCallback={_closeCallback}
+    bind:dialogEl={dialogEl}
+    bind:this={dialogComp}
+    closeCallback={componentApi().close}
     dialogId="sampleDialog"
     withHeader= {$style?.sections?.header}
   >

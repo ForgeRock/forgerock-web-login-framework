@@ -3,15 +3,13 @@
 
   import './main.css';
 
-  let callMounted: (form: HTMLFormElement) => void;
+  let callMounted: () => void;
 
   const api = widgetApiFactory();
 
   export const configuration = api.configuration;
   export const form = {
-    onMount(fn: (form: HTMLFormElement) => void) {
-      callMounted = (form: HTMLFormElement) => fn(form);
-    },
+    onMount(fn: () => void) { callMounted = () => fn(); },
   };
   export const journey = api.journey;
   export const request = api.request;
@@ -30,17 +28,16 @@
   import { style } from '$lib/style.store';
 
   const dispatch = createEventDispatcher();
+  const { journeyStore } = api.getStores();
 
   // A reference to the `form` DOM element
   let formEl: HTMLFormElement;
-
-  const { journeyStore } = api.getStores();
 
   onMount(() => {
     /**
      * Call mounted event for Singleton users
      */
-    callMounted && callMounted(formEl);
+    callMounted && callMounted();
     /**
      * Call mounted event for Instance users
      * NOTE: needs to be wrapped in setTimeout. Asked in Svelte Discord
