@@ -2,7 +2,11 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { configuration, form, journey, user } from '$package/inline';
+  import Widget, { configuration, component, journey, user } from '$package/index';
+
+  const config = configuration();
+  const componentEvents = component();
+  const journeyEvents = journey();
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -17,7 +21,15 @@
     userResponse = null;
   }
 
-  form.onMount((component) => console.log(component));
+  componentEvents.subscribe((event) => {
+    console.log(`Form mounted`);
+  });
+  journeyEvents.subscribe((event) => {
+    console.log(event);
+    if (event?.user?.successful) {
+      userResponse = event?.user;
+    }
+  });
 
   onMount(async () => {
     let content;
@@ -29,7 +41,7 @@
       content = response.ok && (await response.json());
     }
 
-    configuration().set({
+    config.set({
       config: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
@@ -46,17 +58,12 @@
       },
     });
 
-    new Widget({ target: formEl });
+    new Widget({ target: formEl, props: { type: 'inline' }});
 
     // Start the  journey after initialization or within the form.onMount event
-    const { start, subscribe } = journey();
-    start({
+    journeyEvents.start({
       journey: journeyParam || authIndexValue || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
-    });
-    subscribe((event) => {
-      console.log(event);
-      userResponse = event?.user;
     });
   });
 </script>

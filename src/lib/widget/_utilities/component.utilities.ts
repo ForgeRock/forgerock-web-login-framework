@@ -3,50 +3,51 @@ import { writable, type Writable } from 'svelte/store';
 
 import type { SvelteComponent } from 'svelte';
 
-export interface ComponentApi {
-  close(args?: { reason: 'auto' | 'external' | 'user' }): void;
-  mount(component: SvelteComponent, element: HTMLDialogElement): void;
-  open(): void;
-}
 export interface ComponentStoreValue {
+  error: { code: string, message: string } | null;
   modal: {
     component: SvelteComponent;
     element: HTMLDialogElement;
   } | null;
-  form: {
-    element: HTMLFormElement;
-  }| null;
-  error: { code: string, message: string } | null;
   mounted: boolean;
   open: boolean | null;
   reason: string;
-  type: 'inline' | 'modal';
+  type: 'inline' | 'modal' | null;
 }
 
-const componentStore: Writable<ComponentStoreValue> = writable({
+export const componentStore: Writable<ComponentStoreValue> = writable({
   modal: null,
   form: null,
   error: null,
   mounted: false,
   open: null,
   reason: '',
-  type: 'modal',
+  type: null,
 });
+
 export const componentApi = () => {
   const { update, subscribe } = componentStore;
 
   return {
-    close: (arg?: { reason: 'auto' | 'external' | 'user' }) => {
+    close: (args?: { reason: 'auto' | 'external' | 'user' }) => {
       update((state) => {
         if (state.type === 'inline') {
           console.warn('Component type of "inline" has no `close` method');
           // There's nothing to do, so just return existing state
           return state;
         }
+        if (!state.modal) {
+          console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
+          // There's nothing to do, so just return existing state
+          return state;
+        }
+
+        state.modal?.component.closeDialog();
+
         return {
           ...state,
           open: false,
-          reason: arg?.reason || '',
+          reason: args?.reason || '',
         }
       });
     },
@@ -54,9 +55,11 @@ export const componentApi = () => {
       update((state) => {
         return {
           ...state,
-          component,
-          element,
+          modal: {
+            ...(component && { component, element }),
+          },
           mounted: true,
+          type: component ? 'modal' : 'inline',
         }
       });
     },
@@ -67,6 +70,14 @@ export const componentApi = () => {
           // There's nothing to do, so just return existing state
           return state;
         }
+        if (!state.modal) {
+          console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
+          // There's nothing to do, so just return existing state
+          return state;
+        }
+
+        state.modal.element.showModal();
+
         return {
           ...state,
           open: true,

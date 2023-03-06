@@ -8915,7 +8915,7 @@ enums$2.PolicyKey = PolicyKey;
 
 var messageCreator = {};
 
-var strings$1 = {};
+var strings = {};
 
 /*
  * @forgerock/javascript-sdk
@@ -8926,8 +8926,8 @@ var strings$1 = {};
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-Object.defineProperty(strings$1, '__esModule', { value: true });
-strings$1.plural = void 0;
+Object.defineProperty(strings, '__esModule', { value: true });
+strings.plural = void 0;
 /**
  * @module
  * @ignore
@@ -8939,7 +8939,7 @@ function plural(n, singularText, pluralText) {
   }
   return pluralText !== undefined ? pluralText : singularText + 's';
 }
-strings$1.plural = plural;
+strings.plural = plural;
 
 var helpers$2 = {};
 
@@ -8973,7 +8973,7 @@ helpers$2.getProp = getProp;
  */
 var _a;
 Object.defineProperty(messageCreator, '__esModule', { value: true });
-var strings_1 = strings$1;
+var strings_1 = strings;
 var enums_1$7 = enums$2;
 var helpers_1$2 = helpers$2;
 var defaultMessageCreator =
@@ -17821,166 +17821,84 @@ function configure(config) {
   Config.set(config);
 }
 
-function widgetApiFactory(modal) {
-  let journeyStore;
-  let oauthStore;
-  let userStore;
-  const configuration = {
-    set(options) {
-      configure({
-        // Set some basics by default
-        ...{
-          // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-          clientId: 'WebLoginWidgetClient',
-          // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-          // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-          realmPath: 'alpha',
-          // TODO: Once we move to SSR, this default should be more intelligent
-          redirectUri:
-            typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
-          scope: 'openid email',
-        },
-        // Let user provided config override defaults
-        ...options,
-        // Force 'legacy' to remove confusion
-        ...{ support: 'legacy' },
-      });
-    },
-  };
-  const journey = {
-    start(options) {
-      const requestsOauth = options?.oauth || true;
-      const requestsUser = options?.user || true;
-      const { subscribe } = derived(
-        [journeyStore, oauthStore, userStore],
-        ([$journeyStore, $oauthStore, $userStore], set) => {
-          set({
-            journey: $journeyStore,
-            oauth: $oauthStore,
-            user: $userStore,
-          });
-          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
-            modal && modal.close({ reason: 'auto' });
-          } else if ($journeyStore.successful && $oauthStore.successful) {
-            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
-              userStore.get();
-            } else if (!requestsUser) {
-              modal && modal.close({ reason: 'auto' });
-            }
-          } else if ($journeyStore.successful) {
-            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
-              oauthStore.get();
-            } else if (!requestsOauth) {
-              modal && modal.close({ reason: 'auto' });
-            }
-          }
-        },
-      );
-      if (options?.resumeUrl) {
-        journeyStore.resume(options.resumeUrl);
-      } else {
-        journeyStore.start({
-          ...options?.config,
-          tree: options?.journey,
-        });
-      }
-      return subscribe;
-    },
-  };
-  const user = {
-    // TODO: Add `scopes` parameter to add more granular authorization check
-    authorized(remote = false) {
-      const { subscribe } = derived([oauthStore, userStore], ([$oauthStore, $userStore], set) => {
-        let userAuthorized;
-        let store;
-        if (remote) {
-          store = $userStore;
-          userAuthorized = !!store.response;
-        } else {
-          store = $oauthStore;
-          userAuthorized = !!store.response?.accessToken;
-        }
-        set({
-          completed: store.completed,
-          error: store.error,
-          loading: store.loading,
-          authorized: userAuthorized,
-        });
-      });
-      if (remote) {
-        userStore.get();
-      }
-      return subscribe;
-    },
-    info(remote = false) {
-      const { subscribe } = derived(userStore, ($userStore, set) => {
-        if (remote) {
-          const { completed, error, loading, response } = $userStore;
-          set({
-            completed,
-            error,
-            loading,
-            response,
-          });
-        }
-      });
-      if (remote) {
-        userStore.get();
-      }
-      return subscribe;
-    },
-    async logout() {
-      let obj;
-      const { clientId } = Config.get();
-      function resetAndRestart() {
-        // Reset stores
-        journeyStore && journeyStore.reset();
-        oauthStore && oauthStore.reset();
-        userStore && userStore.reset();
-        // Fetch fresh journey step
-        journey && journey.start();
-      }
-      /**
-       * If configuration has a clientId, then use FRUser to logout to ensure
-       * token revoking and removal; else, just end the session.
-       */
-      if (clientId) {
-        obj = FRUser;
-      } else {
-        obj = SessionManager;
-      }
-      try {
-        await obj.logout();
-        resetAndRestart();
-      } catch (err) {
-        resetAndRestart();
-        throw err;
-      }
-    },
-    tokens(options) {
-      const { subscribe } = derived(oauthStore, ($oauthStore, set) => {
-        set({
-          ...$oauthStore,
-        });
-      });
-      oauthStore.get(options);
-      return subscribe;
-    },
-  };
-  return {
-    configuration,
-    journey,
-    async request(options) {
-      return await _default$2.request(options);
-    },
-    ...(modal && { modal }),
-    setStores(journeyStoreRef, oauthStoreRef, userStoreRef) {
-      journeyStore = journeyStoreRef;
-      oauthStore = oauthStoreRef;
-      userStore = userStoreRef;
-    },
-    user,
-  };
+const journeyConfigItemSchema = mod.object({
+  journey: mod.string().optional(),
+  match: mod
+    .string()
+    .regex(/^(#\/service|\?journey)/, {
+      message: 'HREF string must start with `?journey` or `#/service`',
+    })
+    .array(),
+});
+const journeyConfigSchema = mod.object({
+  forgotPassword: journeyConfigItemSchema,
+  forgotUsername: journeyConfigItemSchema,
+  login: journeyConfigItemSchema,
+  register: journeyConfigItemSchema,
+});
+const defaultJourneys = {
+  forgotPassword: {
+    journey: 'ResetPassword',
+    match: ['#/service/ResetPassword', '?journey=ResetPassword'],
+  },
+  forgotUsername: {
+    journey: 'ForgottenUsername',
+    match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
+  },
+  login: {
+    journey: undefined,
+    match: ['#/service/Login', '?journey'],
+  },
+  register: {
+    journey: 'Registration',
+    match: ['#/service/Registration', '?journey=Registration'],
+  },
+};
+// Ensure default follows schema
+journeyConfigSchema.parse(defaultJourneys);
+let configuredJourneysStore = writable(
+  Object.keys(defaultJourneys).map((key) => ({
+    ...defaultJourneys[key],
+    key,
+  })),
+);
+function initialize$6(customJourneys) {
+  if (customJourneys) {
+    // Provide developer feedback if customized
+    journeyConfigSchema.parse(customJourneys);
+    const arr = Object.keys(customJourneys);
+    configuredJourneysStore = writable(
+      arr.map((key) => ({
+        ...customJourneys[key],
+        key,
+      })),
+    );
+  }
+  return configuredJourneysStore;
+}
+
+/*
+ * forgerock-sample-web-react
+ *
+ * decode.js
+ *
+ * Copyright (c) 2021 ForgeRock. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+/**
+ * @function htmlDecode - Decodes HTML encoded strings
+ * @param {string} input - string that needs to be HTML decoded
+ * @returns {string} - decoded string
+ */
+function htmlDecode(input) {
+  // Check if running in server before using the document object
+  if (typeof document !== 'object') {
+    return null;
+  }
+  const e = document.createElement('div');
+  e.innerHTML = input;
+  return e.childNodes.length === 0 ? '' : e.childNodes[0].nodeValue;
 }
 
 var libExports$1 = {};
@@ -19873,16 +19791,17 @@ const stringsSchema = mod
 stringsSchema.partial();
 // Ensure fallback follows schema
 stringsSchema.parse(fallback);
-let strings;
-function initialize$6(userLocale) {
+const stringsStore = writable(null);
+function initialize$5(userLocale) {
   if (userLocale) {
     /**
      * Allow widgets to overwrite select portions of the content
      */
-    strings = readable({ ...fallback, ...userLocale });
+    stringsStore.set({ ...fallback, ...userLocale });
   } else {
-    strings = readable(fallback);
+    stringsStore.set(fallback);
   }
+  return stringsSchema;
 }
 
 /**
@@ -19896,7 +19815,7 @@ function interpolate(key, values, externalText) {
   // We could improve this by using Typescript and/or fallback values.
   if (!key) throw new Error('No key provided to t()');
   // Grab the text from the translations store.
-  const contentObj = get_store_value(strings);
+  const contentObj = get_store_value(stringsStore);
   const string = (contentObj && contentObj[key]) || '';
   let messageDirty = '';
   if (values) {
@@ -19997,6 +19916,953 @@ function textToKey(text) {
     })
     .replace(/(\W)/g, '');
   return transformedString.charAt(0).toLowerCase() + transformedString.slice(1);
+}
+
+const authIdTimeoutErrorCode = '110';
+const constrainedViolationMessage = 'constraint violation';
+/**
+ * @function convertStringToKey -
+ * @param {string} string
+ * @returns {string}
+ */
+function convertStringToKey(string) {
+  if (!string) {
+    return '';
+  }
+  if (string.toLocaleLowerCase().includes('constraint violation')) {
+    console.error(
+      'Delta Sierra error has occurred. Please communicate this to your system administrator.',
+    );
+    if (string.toLocaleLowerCase().includes('password')) {
+      return 'constraintViolationForPassword';
+    }
+    return 'constraintViolationForValue';
+  }
+  const replaceFunction = (_, char) => `${char.toLowerCase()}`;
+  const normalizedString = string
+    .replace(/^([A-Z])/g, replaceFunction)
+    .replace(/\s([a-z])/g, (_, char) => `${char.toUpperCase()}`);
+  const key = normalizedString.replace(/\W/g, '');
+  return key;
+}
+/**
+ * @function initCheckValidation -
+ * @returns {boolean}
+ */
+function initCheckValidation() {
+  let hasPrevError = false;
+  return function checkValidation(callback) {
+    const failedPolices = callback.getOutputByName('failedPolicies', []);
+    if (failedPolices.length && !hasPrevError) {
+      hasPrevError = true;
+      return true;
+    }
+    return false;
+  };
+}
+/**
+ * @function shouldRedirectFromStep -
+ * @returns {boolean}
+ */
+function shouldRedirectFromStep(step) {
+  return step.getCallbacksOfType(CallbackType$1.RedirectCallback).length > 0;
+}
+/**
+ * @function shouldPopulateWithPreviousCallbacks -
+ * @param {object} nextStep
+ * @param {array} previousCallbacks
+ * @param {object} restartedStep
+ * @param {number} stepNumber
+ * @returns {boolean}
+ */
+function shouldPopulateWithPreviousCallbacks(
+  nextStep,
+  previousCallbacks,
+  restartedStep,
+  stepNumber,
+) {
+  if (!Array.isArray(previousCallbacks)) {
+    return false;
+  }
+  if (restartedStep.type !== StepType$1.Step) {
+    return false;
+  }
+  if (stepNumber !== 1) {
+    return false;
+  }
+  const details = nextStep.payload.detail;
+  const message = nextStep.payload.message?.toLowerCase();
+  /**
+   * Now that we know we have previous callbacks, this is of type "Step",
+   * it has payload detail or payload message, and it's just the first step,
+   * we can populate the new step with old callbacks.
+   */
+  if (
+    details?.errorCode === authIdTimeoutErrorCode ||
+    message?.includes(constrainedViolationMessage)
+  ) {
+    return true;
+  }
+  // Fallback to false
+  return false;
+}
+
+const selfSubmittingCallbacks = [
+  CallbackType$1.ConfirmationCallback,
+  CallbackType$1.DeviceProfileCallback,
+  CallbackType$1.PollingWaitCallback,
+  CallbackType$1.SelectIdPCallback,
+];
+const userInputCallbacks = [
+  CallbackType$1.BooleanAttributeInputCallback,
+  CallbackType$1.ChoiceCallback,
+  CallbackType$1.ConfirmationCallback,
+  CallbackType$1.KbaCreateCallback,
+  CallbackType$1.NameCallback,
+  CallbackType$1.NumberAttributeInputCallback,
+  CallbackType$1.PasswordCallback,
+  CallbackType$1.ReCaptchaCallback,
+  CallbackType$1.SelectIdPCallback,
+  CallbackType$1.StringAttributeInputCallback,
+  CallbackType$1.TermsAndConditionsCallback,
+  CallbackType$1.ValidatedCreatePasswordCallback,
+  CallbackType$1.ValidatedCreateUsernameCallback,
+];
+// This eventually will be overridable by user of framework
+const forceUserInputOptionalityCallbacks = {
+  SelectIdPCallback: (callback) => {
+    const selectIdpCb = callback;
+    return !!selectIdpCb
+      .getProviders()
+      .find((provider) => provider.provider === 'localAuthentication');
+  },
+};
+function isCbReadyByDefault(callback) {
+  if (callback.getType() === CallbackType$1.ConfirmationCallback) {
+    const cb = callback;
+    if (cb.getOptions().length === 1) {
+      return true;
+    }
+  }
+  return false;
+}
+function canForceUserInputOptionality(callback) {
+  // See if a callback function exists within this collection
+  const fn = forceUserInputOptionalityCallbacks[callback.getType()];
+  // If there is a function, run it and it will return a boolean
+  return fn ? fn(callback) : false;
+}
+/**
+ * @function isSelfSubmitting -
+ * @param {object} callback - generic FRCallback from JavaScript SDK
+ * @returns
+ */
+function isSelfSubmitting(callback) {
+  return selfSubmittingCallbacks.includes(callback.getType());
+}
+/**
+ * @function isStepSelfSubmittable -
+ * @param {array} callbacks - CallbackMetadata
+ * @returns
+ */
+function isStepSelfSubmittable(callbacks, userInputOptional) {
+  if (userInputOptional) {
+    return true;
+  }
+  const unsubmittableCallbacks = callbacks.filter(
+    (callback) => callback.derived.isUserInputRequired && !callback.derived.isSelfSubmitting,
+  );
+  return !unsubmittableCallbacks.length;
+}
+/**
+ *
+ * @param  {object} callback - Generic callback provided by JavaScript SDK
+ * @returns
+ */
+function requiresUserInput(callback) {
+  if (callback.getType() === CallbackType$1.SelectIdPCallback) {
+    return false;
+  }
+  if (callback.getType() === CallbackType$1.ConfirmationCallback) {
+    const cb = callback;
+    if (cb.getOptions().length === 1) {
+      return false;
+    }
+  }
+  return userInputCallbacks.includes(callback.getType());
+}
+// Notice this function can take a user provided argument function to
+// override behavior (this doesn't have to be well defined)
+function isUserInputOptional(callbackMetadataArray, numOfUserInputCbs, fn) {
+  // default reducer function to check if both overriding callback exists
+  // along with user input required callbacks
+  const fallbackFn = (prev, curr) => {
+    if (curr.derived.canForceUserInputOptionality && numOfUserInputCbs > 0) {
+      prev = true;
+    }
+    return prev;
+  };
+  // Call reduce function with either fallback or user provided function
+  return callbackMetadataArray.reduce(fn || fallbackFn, false);
+}
+
+/**
+ * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
+ * @param {object} step - The modified Widget step object
+ * @param checkValidation - function that checks if current callback is the first invalid callback
+ * @returns {array}
+ */
+function buildCallbackMetadata(step, checkValidation, stageJson) {
+  const callbackCount = {};
+  return step?.callbacks.map((callback, idx) => {
+    const cb = callback;
+    const callbackType = cb.getType();
+    let stageCbMetadata;
+    if (callbackCount[callbackType]) {
+      callbackCount[callbackType] = callbackCount[callbackType] + 1;
+    } else {
+      callbackCount[callbackType] = 1;
+    }
+    if (stageJson && stageJson[callbackType]) {
+      const stageCbArray = stageJson[callbackType];
+      stageCbMetadata = stageCbArray[callbackCount[callbackType] - 1];
+    }
+    return {
+      derived: {
+        canForceUserInputOptionality: canForceUserInputOptionality(callback),
+        isFirstInvalidInput: checkValidation(callback),
+        isReadyForSubmission: isCbReadyByDefault(callback),
+        isSelfSubmitting: isSelfSubmitting(callback),
+        isUserInputRequired: requiresUserInput(callback),
+      },
+      idx,
+      // Only use the `platform` prop if there's metadata to add
+      ...(stageCbMetadata && {
+        platform: {
+          ...stageCbMetadata,
+        },
+      }),
+    };
+  });
+}
+/**
+ * @function buildStepMetadata - Constructs a metadata object that summarizes the step from AM
+ * @param {array} callbackMetadataArray - The array returned from buildCallbackMetadata
+ * @returns {object}
+ */
+function buildStepMetadata(callbackMetadataArray, stageJson) {
+  const numOfUserInputCbs = callbackMetadataArray.filter(
+    (cb) => !!cb.derived.isUserInputRequired,
+  ).length;
+  const userInputOptional = isUserInputOptional(callbackMetadataArray, numOfUserInputCbs);
+  let stageMetadata;
+  if (stageJson) {
+    stageMetadata = Object.keys(stageJson).reduce((prev, curr) => {
+      // Filter out objects or arrays as those are for the callbacks
+      if (typeof stageJson[curr] !== 'object') {
+        prev[curr] = stageJson[curr];
+      }
+      return prev;
+    }, {});
+  }
+  return {
+    derived: {
+      isStepSelfSubmittable: isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
+      isUserInputOptional: userInputOptional,
+      numOfCallbacks: callbackMetadataArray.length,
+      numOfSelfSubmittableCbs: callbackMetadataArray.filter((cb) => !!cb.derived.isSelfSubmitting)
+        .length,
+      numOfUserInputCbs: numOfUserInputCbs,
+    },
+    // Only use the `platform` prop if there's metadata to add
+    ...(stageMetadata && {
+      platform: {
+        ...stageMetadata,
+      },
+    }),
+  };
+}
+
+function initializeStack(initOptions) {
+  const initialValue = initOptions ? [initOptions] : [];
+  const { update, set, subscribe } = writable(initialValue);
+  // Assign to exported variable (see bottom of file)
+  stack = {
+    pop: async () => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+          if (current.length) {
+            state = current.slice(0, -1);
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
+      });
+    },
+    push: async (options) => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+          if (!current.length) {
+            state = [{ ...options }];
+          } else if (options && options?.tree !== current[current.length - 1]?.tree) {
+            state = [...current, options];
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
+      });
+    },
+    reset: () => {
+      set([]);
+    },
+    subscribe,
+  };
+  return stack;
+}
+const journeyStore = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  metadata: null,
+  step: null,
+  successful: false,
+  response: null,
+});
+function initialize$4(initOptions) {
+  const stack = initializeStack();
+  let stepNumber = 0;
+  async function next(prevStep = null, nextOptions, resumeUrl) {
+    /**
+     * Create an options object with nextOptions overriding anything from initOptions
+     * TODO: Does this object merge need to be more granular?
+     */
+    const options = {
+      ...initOptions,
+      ...nextOptions,
+    };
+    /**
+     * Save previous step information just in case we have a total
+     * form failure due to 400 response from ForgeRock.
+     */
+    let previousCallbacks;
+    if (prevStep && prevStep.type === StepType$1.Step) {
+      previousCallbacks = prevStep?.callbacks;
+    }
+    const previousPayload = prevStep?.payload;
+    let nextStep;
+    journeyStore.set({
+      completed: false,
+      error: null,
+      loading: true,
+      metadata: null,
+      step: prevStep,
+      successful: false,
+      response: null,
+    });
+    try {
+      if (resumeUrl) {
+        // If resuming an unknown journey remove the tree from the options
+        options.tree = undefined;
+        /**
+         * Attempt to resume journey
+         */
+        nextStep = await FRAuth$1.resume(resumeUrl, options);
+      } else if (prevStep) {
+        // If continuing on a tree remove it from the options
+        options.tree = undefined;
+        /**
+         * Initial attempt to retrieve next step
+         */
+        nextStep = await FRAuth$1.next(prevStep, options);
+      } else {
+        nextStep = await FRAuth$1.next(undefined, options);
+      }
+    } catch (err) {
+      console.error(`Next step request | ${err}`);
+      /**
+       * Setup an object to display failure message
+       */
+      nextStep = new FRLoginFailure$1({
+        message: interpolate('unknownNetworkError'),
+      });
+    }
+    if (nextStep.type === StepType$1.Step) {
+      const stageAttribute = nextStep.getStage();
+      let stageJson = null;
+      // Check if stage attribute is serialized JSON
+      if (stageAttribute && stageAttribute.includes('{')) {
+        try {
+          stageJson = JSON.parse(stageAttribute);
+        } catch (err) {
+          console.warn('Stage attribute value was not parsable');
+        }
+      }
+      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+      // Iterate on a successful progression
+      stepNumber = stepNumber + 1;
+      journeyStore.set({
+        completed: false,
+        error: null,
+        loading: false,
+        metadata: {
+          callbacks: callbackMetadata,
+          step: stepMetadata,
+        },
+        step: nextStep,
+        successful: false,
+        response: null,
+      });
+    } else if (nextStep.type === StepType$1.LoginSuccess) {
+      /**
+       * SUCCESSFUL COMPLETION BLOCK
+       */
+      // Set final state
+      journeyStore.set({
+        completed: true,
+        error: null,
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: true,
+        response: nextStep.payload,
+      });
+    } else if (nextStep.type === StepType$1.LoginFailure) {
+      /**
+       * FAILURE COMPLETION BLOCK
+       *
+       * Grab failure message, which may contain encoded HTML
+       */
+      const failureMessageStr = htmlDecode(nextStep.payload.message || '');
+      let restartedStep = null;
+      try {
+        /**
+         * Restart tree to get fresh step
+         */
+        restartedStep = await FRAuth$1.next(undefined, options);
+      } catch (err) {
+        console.error(`Restart failed step request | ${err}`);
+        /**
+         * Setup an object to display failure message
+         */
+        restartedStep = new FRLoginFailure$1({
+          message: interpolate('unknownNetworkError'),
+        });
+      }
+      /**
+       * Now that we have a new authId (the identification of the
+       * fresh step) let's populate this new step with old callback data if
+       * this is step one and meets a few criteria.
+       *
+       * If error code is 110 or error message includes "Constrained Violation",
+       * then the issue needs special handling.
+       *
+       * If this is the first step in the journey, replace the callbacks with
+       * existing callbacks to resubmit with a fresh authId.
+       ******************************************************************* */
+      if (
+        shouldPopulateWithPreviousCallbacks(nextStep, previousCallbacks, restartedStep, stepNumber)
+      ) {
+        /**
+         * TypeScript notes:
+         *
+         * Assert that restartedStep is FRStep as that is required for the above condition to be true.
+         * Also, assert that previousCallbacks is FRCallback[] as that too is required for above to be true.
+         *
+         * Attempt a refactor using Ryan's suggestion found here: https://www.typescriptlang.org/play?#code/PTAEHUFMBsGMHsC2lQBd5oBYoCoE8AHSAZVgCcBLA1UABWgEM8BzM+AVwDsATAGiwoBnUENANQAd0gAjQRVSQAUCEmYKsTKGYUAbpGF4OY0BoadYKdJMoL+gzAzIoz3UNEiPOofEVKVqAHSKymAAmkYI7NCuqGqcANag8ABmIjQUXrFOKBJMggBcISGgoAC0oACCbvCwDKgU8JkY7p7ehCTkVDQS2E6gnPCxGcwmZqDSTgzxxWWVoASMFmgYkAAeRJTInN3ymj4d-jSCeNsMq-wuoPaOltigAKoASgAywhK7SbGQZIIz5VWCFzSeCrZagNYbChbHaxUDcCjJZLfSDbExIAgUdxkUBIursJzCFJtXydajBZJcWD1RqgJyofGcABqDGg7EgAB4cAA+AAUq3y3nBqwUPGEglQlE4IwA-FcJcNQALOOxENJvgBKUAAb0UJT1CNAPNQ7SJoIAvBbQAAiZWq75WzV0hmgUG6vXg6CCFBOsheVZukoB0CKAC+incNCGUtAZtpkHpvuZrI54slzF5VoAjA6ANzkynUrxCYjyqV8gWphUAH36KrVZHVAuB8BaXh17oNRpNqXNloA5JWpX3Ne33XqfZkyGy8+6w0GJziWV683PO8XS8wjXFmOqR0Go8wAhlYKzuPoeVbsNBoPBc6HgiocM0PL7QIh4H0GMD2JG7owpewDDMJA-AnuoiRfvAegiF4VoAKKrAwiALPoVpJNiVrgA4qADqAABykASFaQQqAA8l8ZDvF6-DAUcqCOAorjSHgcbvjoCpfF6aKINCwiXF8kgftEIgGBw2ILEwrAcDwQQlEAA
+         */
+        restartedStep = restartedStep;
+        // Rebuild callbacks onto restartedStep
+        restartedStep.callbacks = previousCallbacks;
+        // Rebuild payload onto restartedStep ensuring the use of the NEW authId
+        restartedStep.payload = {
+          ...previousPayload,
+          authId: restartedStep.payload.authId,
+        };
+        const details = nextStep.payload.detail;
+        /**
+         * Only if the authId expires do we resubmit with same callback values
+         */
+        if (details?.errorCode === authIdTimeoutErrorCode) {
+          restartedStep = await FRAuth$1.next(restartedStep, options);
+        }
+      }
+      /**
+       * SET RESULT OF SUBSEQUENT REQUEST
+       *
+       * After the above attempts to salvage the form submission, let's return
+       * the final result to the user.
+       */
+      if (restartedStep.type === StepType$1.Step) {
+        const stageAttribute = restartedStep.getStage();
+        let stageJson = null;
+        // Check if stage attribute is serialized JSON
+        if (stageAttribute && stageAttribute.includes('{')) {
+          try {
+            stageJson = JSON.parse(stageAttribute);
+          } catch (err) {
+            console.warn('Stage attribute value was not parsable');
+          }
+        }
+        const callbackMetadata = buildCallbackMetadata(
+          restartedStep,
+          initCheckValidation(),
+          stageJson,
+        );
+        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+        journeyStore.set({
+          completed: false,
+          error: {
+            code: nextStep.getCode(),
+            message: failureMessageStr,
+            // TODO: Should we remove the callbacks for PII info?
+            step: prevStep?.payload,
+          },
+          loading: false,
+          metadata: {
+            callbacks: callbackMetadata,
+            step: stepMetadata,
+          },
+          step: restartedStep,
+          successful: false,
+          response: null,
+        });
+      } else if (restartedStep.type === StepType$1.LoginSuccess) {
+        journeyStore.set({
+          completed: true,
+          error: null,
+          loading: false,
+          metadata: null,
+          step: null,
+          successful: true,
+          response: restartedStep.payload,
+        });
+      } else {
+        journeyStore.set({
+          completed: true,
+          error: {
+            code: nextStep.getCode(),
+            message: failureMessageStr,
+            // TODO: Should we remove the callbacks for PII info?
+            step: prevStep?.payload,
+          },
+          loading: false,
+          metadata: null,
+          step: null,
+          successful: false,
+          response: restartedStep.payload,
+        });
+      }
+    }
+  }
+  async function pop() {
+    reset();
+    const updatedStack = await stack.pop();
+    const currentJourney = updatedStack[updatedStack.length - 1];
+    await start(currentJourney);
+  }
+  async function push(newOptions) {
+    reset();
+    await stack.push(newOptions);
+    await start(newOptions);
+  }
+  async function resume(url, resumeOptions) {
+    await next(undefined, resumeOptions, url);
+  }
+  async function start(startOptions) {
+    await stack.push(startOptions);
+    await next(undefined, startOptions);
+  }
+  function reset() {
+    journeyStore.set({
+      completed: false,
+      error: null,
+      loading: false,
+      metadata: null,
+      step: null,
+      successful: false,
+      response: null,
+    });
+  }
+  return {
+    next,
+    pop,
+    push,
+    reset,
+    resume,
+    start,
+    subscribe: journeyStore.subscribe,
+  };
+}
+let stack;
+
+const linksSchema = mod
+  .object({
+    termsAndConditions: mod.string(),
+  })
+  .strict();
+linksSchema.partial();
+const linksStore = writable();
+function initialize$3(customLinks) {
+  // If customLinks is provided, provide feedback for object
+  if (customLinks) {
+    // Provide developer feedback for custom links
+    linksSchema.parse(customLinks);
+    linksStore.set(customLinks);
+  }
+  return linksStore;
+}
+
+const oauthStore = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+});
+function initialize$2(initOptions) {
+  async function get(getOptions) {
+    /**
+     * Create an options object with getOptions overriding anything from initOptions
+     * TODO: Does this object merge need to be more granular?
+     */
+    const options = {
+      ...{ query: { prompt: 'none' } },
+      ...initOptions,
+      ...getOptions,
+    };
+    let tokens;
+    oauthStore.set({
+      completed: false,
+      error: null,
+      loading: true,
+      successful: false,
+      response: null,
+    });
+    try {
+      tokens = await TokenManager$1.getTokens(options);
+    } catch (err) {
+      if (err instanceof Error) {
+        oauthStore.set({
+          completed: true,
+          error: {
+            message: err.message,
+          },
+          loading: false,
+          successful: false,
+          response: null,
+        });
+      }
+      return;
+    }
+    oauthStore.set({
+      completed: true,
+      error: null,
+      loading: false,
+      successful: true,
+      response: tokens,
+    });
+  }
+  function reset() {
+    oauthStore.set({
+      completed: false,
+      error: null,
+      loading: false,
+      successful: false,
+      response: null,
+    });
+  }
+  return {
+    get,
+    reset,
+    subscribe: oauthStore.subscribe,
+  };
+}
+
+const userStore = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+});
+function initialize$1(initOptions) {
+  async function get(getOptions) {
+    /**
+     * Create an options object with getOptions overriding anything from initOptions
+     * TODO: Does this object merge need to be more granular?
+     */
+    const options = {
+      ...initOptions,
+      ...getOptions,
+    };
+    userStore.set({
+      completed: false,
+      error: null,
+      loading: true,
+      successful: false,
+      response: null,
+    });
+    try {
+      const user = await UserManager.getCurrentUser(options);
+      userStore.set({
+        completed: true,
+        error: null,
+        loading: false,
+        successful: true,
+        response: user,
+      });
+    } catch (err) {
+      if (err instanceof Error) {
+        userStore.set({
+          completed: true,
+          error: {
+            message: err.message,
+          },
+          loading: false,
+          successful: false,
+          response: null,
+        });
+      }
+    }
+  }
+  function reset() {
+    userStore.set({
+      completed: false,
+      error: null,
+      loading: false,
+      successful: false,
+      response: null,
+    });
+  }
+  return {
+    get,
+    reset,
+    subscribe: userStore.subscribe,
+  };
+}
+
+const logoSchema = mod
+  .object({
+    dark: mod.string().optional(),
+    height: mod.number().optional(),
+    light: mod.string().optional(),
+    width: mod.number().optional(),
+  })
+  .strict();
+const styleSchema = mod
+  .object({
+    checksAndRadios: mod.union([mod.literal('animated'), mod.literal('standard')]).optional(),
+    labels: mod.union([mod.literal('floating').optional(), mod.literal('stacked')]).optional(),
+    logo: logoSchema.optional(),
+    sections: mod
+      .object({
+        header: mod.boolean().optional(),
+      })
+      .optional(),
+    stage: mod
+      .object({
+        icon: mod.boolean().optional(),
+      })
+      .optional(),
+  })
+  .strict();
+styleSchema.partial();
+const styleStore = writable({
+  checksAndRadios: 'animated',
+  labels: 'floating',
+  logo: {},
+  sections: {},
+  stage: {},
+});
+function initialize(customStyle) {
+  if (customStyle) {
+    styleSchema.parse(customStyle);
+    styleStore.set(customStyle);
+  }
+  return styleStore;
+}
+
+function widgetApiFactory(modal) {
+  let journeyStore;
+  let oauthStore;
+  let userStore;
+  function resetAndRestartStores() {
+    // Reset stores
+    journeyStore && journeyStore.reset();
+    oauthStore && oauthStore.reset();
+    userStore && userStore.reset();
+    // Fetch fresh journey step
+    journey && journey().start();
+  }
+  const configuration = () => {
+    return {
+      set(options) {
+        configure({
+          // Set some basics by default
+          ...{
+            // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
+            clientId: 'WebLoginWidgetClient',
+            // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
+            // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
+            realmPath: 'alpha',
+            // TODO: Once we move to SSR, this default should be more intelligent
+            redirectUri:
+              typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+            scope: 'openid email',
+          },
+          // Let user provided config override defaults
+          ...options.config,
+          // Force 'legacy' to remove confusion
+          ...{ support: 'legacy' },
+        });
+        /**
+         * Initialize the stores and ensure both variables point to the same reference.
+         * Variables with _ are the reactive version of the original variable from above.
+         */
+        journeyStore = initialize$4(options.config);
+        oauthStore = initialize$2(options.config);
+        userStore = initialize$1(options.config);
+        initialize$5(options.content);
+        initialize$6(options.journeys);
+        initialize$3(options.links);
+        initialize(options.style);
+      },
+    };
+  };
+  const journey = (options) => {
+    const requestsOauth = options?.oauth || true;
+    const requestsUser = options?.user || true;
+    const { subscribe } = derived(
+      [journeyStore, oauthStore, userStore],
+      ([$journeyStore, $oauthStore, $userStore], set) => {
+        set({
+          journey: $journeyStore,
+          oauth: $oauthStore,
+          user: $userStore,
+        });
+        if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+          modal && modal.close({ reason: 'auto' });
+        } else if ($journeyStore.successful && $oauthStore.successful) {
+          if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+            userStore.get();
+          } else if (!requestsUser) {
+            modal && modal.close({ reason: 'auto' });
+          }
+        } else if ($journeyStore.successful) {
+          if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+            oauthStore.get();
+          } else if (!requestsOauth) {
+            modal && modal.close({ reason: 'auto' });
+          }
+        }
+      },
+    );
+    function start(startOptions) {
+      if (startOptions?.resumeUrl) {
+        journeyStore.resume(startOptions.resumeUrl);
+      } else {
+        journeyStore.start({
+          ...startOptions?.config,
+          tree: startOptions?.journey,
+        });
+      }
+      return new Promise((resolve) => {
+        const unsubscribe = subscribe((event) => {
+          if (event.journey.successful && event.oauth.successful && event.user.completed) {
+            resolve(event);
+            unsubscribe();
+          } else if (event.journey.successful && event.oauth.successful) {
+            if (!requestsUser) {
+              resolve(event);
+              unsubscribe();
+            }
+          } else if (event.journey.successful) {
+            if (!requestsOauth) {
+              resolve(event);
+              unsubscribe();
+            }
+          }
+        });
+      });
+    }
+    return { start, subscribe };
+  };
+  const user = {
+    info() {
+      const { get, subscribe } = userStore;
+      function wrappedGet(options) {
+        get(options);
+        return new Promise((resolve) => {
+          const unsubscribe = userStore.subscribe((event) => {
+            if (event.completed) {
+              resolve(event);
+              unsubscribe();
+            }
+          });
+        });
+      }
+      return { get: wrappedGet, subscribe };
+    },
+    async logout() {
+      const { clientId } = Config.get();
+      let obj;
+      /**
+       * If configuration has a clientId, then use FRUser to logout to ensure
+       * token revoking and removal; else, just end the session.
+       */
+      if (clientId) {
+        obj = FRUser;
+      } else {
+        obj = SessionManager;
+      }
+      try {
+        await obj.logout();
+        resetAndRestartStores();
+      } catch (err) {
+        // Regardless of errors, reset all stores and restart journey
+        resetAndRestartStores();
+        throw err;
+      }
+      // Return undefined as there's no response information to share
+      return;
+    },
+    tokens() {
+      const { get, subscribe } = oauthStore;
+      function wrappedGet(options) {
+        get(options);
+        return new Promise((resolve) => {
+          const unsubscribe = oauthStore.subscribe((event) => {
+            if (event.completed) {
+              resolve(event);
+              unsubscribe();
+            }
+          });
+        });
+      }
+      return { get: wrappedGet, subscribe };
+    },
+  };
+  return {
+    configuration,
+    journey,
+    request: _default$2.request,
+    ...(modal && { modal }),
+    getStores() {
+      return {
+        journeyStore,
+        oauthStore,
+        userStore,
+      };
+    },
+    user,
+  };
 }
 
 /* src/lib/components/_utilities/locale-strings.svelte generated by Svelte v3.55.1 */
@@ -20563,53 +21429,10 @@ class X_icon extends SvelteComponentDev {
   }
 }
 
-const logoSchema = mod
-  .object({
-    dark: mod.string().optional(),
-    height: mod.number().optional(),
-    light: mod.string().optional(),
-    width: mod.number().optional(),
-  })
-  .strict();
-const styleSchema = mod
-  .object({
-    checksAndRadios: mod.union([mod.literal('animated'), mod.literal('standard')]).optional(),
-    labels: mod.union([mod.literal('floating').optional(), mod.literal('stacked')]).optional(),
-    logo: logoSchema.optional(),
-    sections: mod
-      .object({
-        header: mod.boolean().optional(),
-      })
-      .optional(),
-    stage: mod
-      .object({
-        icon: mod.boolean().optional(),
-      })
-      .optional(),
-  })
-  .strict();
-styleSchema.partial();
-let style;
-const fallbackStyle = {
-  checksAndRadios: 'animated',
-  labels: 'floating',
-  logo: {},
-  sections: {},
-  stage: {},
-};
-function initialize$5(customStyle) {
-  if (customStyle) {
-    styleSchema.parse(customStyle);
-    style = readable(customStyle);
-  } else {
-    style = readable(fallbackStyle);
-  }
-}
-
 /* src/lib/components/compositions/dialog/dialog.svelte generated by Svelte v3.55.1 */
 const file$I = 'src/lib/components/compositions/dialog/dialog.svelte';
 
-// (60:2) {:else}
+// (58:2) {:else}
 function create_else_block$8(ctx) {
   let div;
   let button;
@@ -20630,7 +21453,7 @@ function create_else_block$8(ctx) {
     $$inline: true,
   });
 
-  let if_block = /*$style*/ ctx[5]?.logo && create_if_block_1$b(ctx);
+  let if_block = /*$styleStore*/ ctx[5]?.logo && create_if_block_1$b(ctx);
 
   const block = {
     c: function create() {
@@ -20644,18 +21467,18 @@ function create_else_block$8(ctx) {
         'class',
         'tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark',
       );
-      attr_dev(button, 'aria-controls', /*dialogId*/ ctx[1]);
-      add_location(button, file$I, 65, 6, 2448);
+      attr_dev(button, 'aria-controls', /*dialogId*/ ctx[2]);
+      add_location(button, file$I, 63, 6, 2350);
 
       attr_dev(
         div,
         'class',
         (div_class_value = `tw_pt-10 md:tw_pt-10 tw_text-right ${
-          /*$style*/ ctx[5]?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
+          /*$styleStore*/ ctx[5]?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
         }`),
       );
 
-      add_location(div, file$I, 60, 4, 2311);
+      add_location(div, file$I, 58, 4, 2208);
     },
     m: function mount(target, anchor) {
       insert_dev(target, div, anchor);
@@ -20679,11 +21502,11 @@ function create_else_block$8(ctx) {
 
       xicon.$set(xicon_changes);
 
-      if (!current || dirty & /*dialogId*/ 2) {
-        attr_dev(button, 'aria-controls', /*dialogId*/ ctx[1]);
+      if (!current || dirty & /*dialogId*/ 4) {
+        attr_dev(button, 'aria-controls', /*dialogId*/ ctx[2]);
       }
 
-      if (/*$style*/ ctx[5]?.logo) {
+      if (/*$styleStore*/ ctx[5]?.logo) {
         if (if_block) {
           if_block.p(ctx, dirty);
         } else {
@@ -20698,10 +21521,10 @@ function create_else_block$8(ctx) {
 
       if (
         !current ||
-        (dirty & /*$style*/ 32 &&
+        (dirty & /*$styleStore*/ 32 &&
           div_class_value !==
             (div_class_value = `tw_pt-10 md:tw_pt-10 tw_text-right ${
-              /*$style*/ ctx[5]?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
+              /*$styleStore*/ ctx[5]?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
             }`))
       ) {
         attr_dev(div, 'class', div_class_value);
@@ -20729,14 +21552,14 @@ function create_else_block$8(ctx) {
     block,
     id: create_else_block$8.name,
     type: 'else',
-    source: '(60:2) {:else}',
+    source: '(58:2) {:else}',
     ctx,
   });
 
   return block;
 }
 
-// (39:2) {#if withHeader}
+// (37:2) {#if withHeader}
 function create_if_block$k(ctx) {
   let div1;
   let div0;
@@ -20771,22 +21594,28 @@ function create_if_block$k(ctx) {
         div0,
         'style',
         (div0_style_value = `--logo-dark: url("${
-          /*$style*/ ctx[5]?.logo?.dark
-        }"); --logo-light: url("${/*$style*/ ctx[5]?.logo?.light}"); ${
-          /*$style*/ ctx[5]?.logo?.height ? `height: ${/*$style*/ ctx[5]?.logo.height}px;` : ''
-        } ${/*$style*/ ctx[5]?.logo?.width ? `width: ${/*$style*/ ctx[5]?.logo.width}px;` : ''}`),
+          /*$styleStore*/ ctx[5]?.logo?.dark
+        }"); --logo-light: url("${/*$styleStore*/ ctx[5]?.logo?.light}"); ${
+          /*$styleStore*/ ctx[5]?.logo?.height
+            ? `height: ${/*$styleStore*/ ctx[5]?.logo.height}px;`
+            : ''
+        } ${
+          /*$styleStore*/ ctx[5]?.logo?.width
+            ? `width: ${/*$styleStore*/ ctx[5]?.logo.width}px;`
+            : ''
+        }`),
       );
 
-      add_location(div0, file$I, 40, 6, 1539);
+      add_location(div0, file$I, 38, 6, 1404);
       attr_dev(
         button,
         'class',
         'tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark',
       );
-      attr_dev(button, 'aria-controls', /*dialogId*/ ctx[1]);
-      add_location(button, file$I, 48, 6, 1892);
+      attr_dev(button, 'aria-controls', /*dialogId*/ ctx[2]);
+      add_location(button, file$I, 46, 6, 1787);
       attr_dev(div1, 'class', 'tw_dialog-header dark:tw_dialog-header_dark');
-      add_location(div1, file$I, 39, 4, 1475);
+      add_location(div1, file$I, 37, 4, 1340);
     },
     m: function mount(target, anchor) {
       insert_dev(target, div1, anchor);
@@ -20804,14 +21633,18 @@ function create_if_block$k(ctx) {
     p: function update(ctx, dirty) {
       if (
         !current ||
-        (dirty & /*$style*/ 32 &&
+        (dirty & /*$styleStore*/ 32 &&
           div0_style_value !==
             (div0_style_value = `--logo-dark: url("${
-              /*$style*/ ctx[5]?.logo?.dark
-            }"); --logo-light: url("${/*$style*/ ctx[5]?.logo?.light}"); ${
-              /*$style*/ ctx[5]?.logo?.height ? `height: ${/*$style*/ ctx[5]?.logo.height}px;` : ''
+              /*$styleStore*/ ctx[5]?.logo?.dark
+            }"); --logo-light: url("${/*$styleStore*/ ctx[5]?.logo?.light}"); ${
+              /*$styleStore*/ ctx[5]?.logo?.height
+                ? `height: ${/*$styleStore*/ ctx[5]?.logo.height}px;`
+                : ''
             } ${
-              /*$style*/ ctx[5]?.logo?.width ? `width: ${/*$style*/ ctx[5]?.logo.width}px;` : ''
+              /*$styleStore*/ ctx[5]?.logo?.width
+                ? `width: ${/*$styleStore*/ ctx[5]?.logo.width}px;`
+                : ''
             }`))
       ) {
         attr_dev(div0, 'style', div0_style_value);
@@ -20825,8 +21658,8 @@ function create_if_block$k(ctx) {
 
       xicon.$set(xicon_changes);
 
-      if (!current || dirty & /*dialogId*/ 2) {
-        attr_dev(button, 'aria-controls', /*dialogId*/ ctx[1]);
+      if (!current || dirty & /*dialogId*/ 4) {
+        attr_dev(button, 'aria-controls', /*dialogId*/ ctx[2]);
       }
     },
     i: function intro(local) {
@@ -20850,14 +21683,14 @@ function create_if_block$k(ctx) {
     block,
     id: create_if_block$k.name,
     type: 'if',
-    source: '(39:2) {#if withHeader}',
+    source: '(37:2) {#if withHeader}',
     ctx,
   });
 
   return block;
 }
 
-// (71:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (69:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot_1$b(ctx) {
   let t;
   let current;
@@ -20895,14 +21728,14 @@ function create_default_slot_1$b(ctx) {
     id: create_default_slot_1$b.name,
     type: 'slot',
     source:
-      '(71:8) <XIcon           classes=\\"tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light\\"           >',
+      '(69:8) <XIcon           classes=\\"tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light\\"           >',
     ctx,
   });
 
   return block;
 }
 
-// (76:6) {#if $style?.logo}
+// (74:6) {#if $styleStore?.logo}
 function create_if_block_1$b(ctx) {
   let div;
   let div_style_value;
@@ -20915,21 +21748,21 @@ function create_if_block_1$b(ctx) {
         div,
         'style',
         (div_style_value = `--logo-dark: url("${
-          /*$style*/ ctx[5]?.logo?.dark
-        }"); --logo-light: url("${/*$style*/ ctx[5]?.logo?.light}")`),
+          /*$styleStore*/ ctx[5]?.logo?.dark
+        }"); --logo-light: url("${/*$styleStore*/ ctx[5]?.logo?.light}")`),
       );
-      add_location(div, file$I, 76, 8, 2875);
+      add_location(div, file$I, 74, 8, 2784);
     },
     m: function mount(target, anchor) {
       insert_dev(target, div, anchor);
     },
     p: function update(ctx, dirty) {
       if (
-        dirty & /*$style*/ 32 &&
+        dirty & /*$styleStore*/ 32 &&
         div_style_value !==
           (div_style_value = `--logo-dark: url("${
-            /*$style*/ ctx[5]?.logo?.dark
-          }"); --logo-light: url("${/*$style*/ ctx[5]?.logo?.light}")`)
+            /*$styleStore*/ ctx[5]?.logo?.dark
+          }"); --logo-light: url("${/*$styleStore*/ ctx[5]?.logo?.light}")`)
       ) {
         attr_dev(div, 'style', div_style_value);
       }
@@ -20943,14 +21776,14 @@ function create_if_block_1$b(ctx) {
     block,
     id: create_if_block_1$b.name,
     type: 'if',
-    source: '(76:6) {#if $style?.logo}',
+    source: '(74:6) {#if $styleStore?.logo}',
     ctx,
   });
 
   return block;
 }
 
-// (54:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (52:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot$n(ctx) {
   let t;
   let current;
@@ -20988,7 +21821,7 @@ function create_default_slot$n(ctx) {
     id: create_default_slot$n.name,
     type: 'slot',
     source:
-      '(54:8) <XIcon           classes=\\"tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light\\"           >',
+      '(52:8) <XIcon           classes=\\"tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light\\"           >',
     ctx,
   });
 
@@ -21007,7 +21840,7 @@ function create_fragment$U(ctx) {
   const if_blocks = [];
 
   function select_block_type(ctx, dirty) {
-    if (/*withHeader*/ ctx[3]) return 0;
+    if (/*withHeader*/ ctx[4]) return 0;
     return 1;
   }
 
@@ -21024,17 +21857,17 @@ function create_fragment$U(ctx) {
       div = element('div');
       if (default_slot) default_slot.c();
       attr_dev(div, 'class', 'tw_dialog-body');
-      add_location(div, file$I, 83, 2, 3089);
-      attr_dev(dialog, 'id', /*dialogId*/ ctx[1]);
+      add_location(div, file$I, 81, 2, 3008);
+      attr_dev(dialog, 'id', /*dialogId*/ ctx[2]);
       attr_dev(
         dialog,
         'class',
         (dialog_class_value = `tw_dialog-box dark:tw_dialog-box_dark md:tw_dialog-box_medium ${
-          /*forceOpen*/ ctx[2] ? '' : 'tw_dialog-box_animate'
+          /*forceOpen*/ ctx[3] ? '' : 'tw_dialog-box_animate'
         }`),
       );
-      dialog.open = /*forceOpen*/ ctx[2];
-      add_location(dialog, file$I, 30, 0, 1258);
+      dialog.open = /*forceOpen*/ ctx[3];
+      add_location(dialog, file$I, 28, 0, 1123);
     },
     l: function claim(nodes) {
       throw new Error(
@@ -21097,23 +21930,23 @@ function create_fragment$U(ctx) {
         }
       }
 
-      if (!current || dirty & /*dialogId*/ 2) {
-        attr_dev(dialog, 'id', /*dialogId*/ ctx[1]);
+      if (!current || dirty & /*dialogId*/ 4) {
+        attr_dev(dialog, 'id', /*dialogId*/ ctx[2]);
       }
 
       if (
         !current ||
-        (dirty & /*forceOpen*/ 4 &&
+        (dirty & /*forceOpen*/ 8 &&
           dialog_class_value !==
             (dialog_class_value = `tw_dialog-box dark:tw_dialog-box_dark md:tw_dialog-box_medium ${
-              /*forceOpen*/ ctx[2] ? '' : 'tw_dialog-box_animate'
+              /*forceOpen*/ ctx[3] ? '' : 'tw_dialog-box_animate'
             }`))
       ) {
         attr_dev(dialog, 'class', dialog_class_value);
       }
 
-      if (!current || dirty & /*forceOpen*/ 4) {
-        prop_dev(dialog, 'open', /*forceOpen*/ ctx[2]);
+      if (!current || dirty & /*forceOpen*/ 8) {
+        prop_dev(dialog, 'open', /*forceOpen*/ ctx[3]);
       }
     },
     i: function intro(local) {
@@ -21147,9 +21980,9 @@ function create_fragment$U(ctx) {
 }
 
 function instance$U($$self, $$props, $$invalidate) {
-  let $style;
-  validate_store(style, 'style');
-  component_subscribe($$self, style, ($$value) => $$invalidate(5, ($style = $$value)));
+  let $styleStore;
+  validate_store(styleStore, 'styleStore');
+  component_subscribe($$self, styleStore, ($$value) => $$invalidate(5, ($styleStore = $$value)));
   let { $$slots: slots = {}, $$scope } = $$props;
   validate_slots('Dialog', slots, ['default']);
   let { closeCallback } = $$props;
@@ -21158,15 +21991,10 @@ function instance$U($$self, $$props, $$invalidate) {
   let { forceOpen = false } = $$props;
   let { withHeader = false } = $$props;
 
-  function closeDialog(args) {
-    const { reason } = args || { reason: 'external' };
-
+  function closeDialog() {
     function completeClose() {
       dialogEl?.close();
       dialogEl?.classList.remove('tw_dialog-closing');
-
-      // Call dev provided callback function for event hook
-      closeCallback && closeCallback({ reason });
     }
 
     // Create timer in case the CSS is not loaded
@@ -21211,8 +22039,8 @@ function instance$U($$self, $$props, $$invalidate) {
       console.warn(`<Dialog> was created with unknown prop '${key}'`);
   });
 
-  const click_handler = () => closeDialog({ reason: 'user' });
-  const click_handler_1 = () => closeDialog({ reason: 'user' });
+  const click_handler = () => closeCallback({ reason: 'user' });
+  const click_handler_1 = () => closeCallback({ reason: 'user' });
 
   function dialog_binding($$value) {
     binding_callbacks[$$value ? 'unshift' : 'push'](() => {
@@ -21222,33 +22050,33 @@ function instance$U($$self, $$props, $$invalidate) {
   }
 
   $$self.$$set = ($$props) => {
-    if ('closeCallback' in $$props) $$invalidate(6, (closeCallback = $$props.closeCallback));
+    if ('closeCallback' in $$props) $$invalidate(1, (closeCallback = $$props.closeCallback));
     if ('dialogEl' in $$props) $$invalidate(0, (dialogEl = $$props.dialogEl));
-    if ('dialogId' in $$props) $$invalidate(1, (dialogId = $$props.dialogId));
-    if ('forceOpen' in $$props) $$invalidate(2, (forceOpen = $$props.forceOpen));
-    if ('withHeader' in $$props) $$invalidate(3, (withHeader = $$props.withHeader));
+    if ('dialogId' in $$props) $$invalidate(2, (dialogId = $$props.dialogId));
+    if ('forceOpen' in $$props) $$invalidate(3, (forceOpen = $$props.forceOpen));
+    if ('withHeader' in $$props) $$invalidate(4, (withHeader = $$props.withHeader));
     if ('$$scope' in $$props) $$invalidate(11, ($$scope = $$props.$$scope));
   };
 
   $$self.$capture_state = () => ({
     T: Locale_strings,
     XIcon: X_icon,
-    style,
+    styleStore,
     closeCallback,
     dialogEl,
     dialogId,
     forceOpen,
     withHeader,
     closeDialog,
-    $style,
+    $styleStore,
   });
 
   $$self.$inject_state = ($$props) => {
-    if ('closeCallback' in $$props) $$invalidate(6, (closeCallback = $$props.closeCallback));
+    if ('closeCallback' in $$props) $$invalidate(1, (closeCallback = $$props.closeCallback));
     if ('dialogEl' in $$props) $$invalidate(0, (dialogEl = $$props.dialogEl));
-    if ('dialogId' in $$props) $$invalidate(1, (dialogId = $$props.dialogId));
-    if ('forceOpen' in $$props) $$invalidate(2, (forceOpen = $$props.forceOpen));
-    if ('withHeader' in $$props) $$invalidate(3, (withHeader = $$props.withHeader));
+    if ('dialogId' in $$props) $$invalidate(2, (dialogId = $$props.dialogId));
+    if ('forceOpen' in $$props) $$invalidate(3, (forceOpen = $$props.forceOpen));
+    if ('withHeader' in $$props) $$invalidate(4, (withHeader = $$props.withHeader));
   };
 
   if ($$props && '$$inject' in $$props) {
@@ -21257,12 +22085,12 @@ function instance$U($$self, $$props, $$invalidate) {
 
   return [
     dialogEl,
+    closeCallback,
     dialogId,
     forceOpen,
     withHeader,
+    $styleStore,
     closeDialog,
-    $style,
-    closeCallback,
     slots,
     click_handler,
     click_handler_1,
@@ -21276,12 +22104,12 @@ class Dialog extends SvelteComponentDev {
     super(options);
 
     init(this, options, instance$U, create_fragment$U, safe_not_equal, {
-      closeCallback: 6,
+      closeCallback: 1,
       dialogEl: 0,
-      dialogId: 1,
-      forceOpen: 2,
-      withHeader: 3,
-      closeDialog: 4,
+      dialogId: 2,
+      forceOpen: 3,
+      withHeader: 4,
+      closeDialog: 6,
     });
 
     dispatch_dev('SvelteRegisterComponent', {
@@ -21353,7 +22181,7 @@ class Dialog extends SvelteComponentDev {
   }
 
   get closeDialog() {
-    return this.$$.ctx[4];
+    return this.$$.ctx[6];
   }
 
   set closeDialog(value) {
@@ -22852,614 +23680,6 @@ class Button extends SvelteComponentDev {
   }
 }
 
-/*
- * forgerock-sample-web-react
- *
- * decode.js
- *
- * Copyright (c) 2021 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-/**
- * @function htmlDecode - Decodes HTML encoded strings
- * @param {string} input - string that needs to be HTML decoded
- * @returns {string} - decoded string
- */
-function htmlDecode(input) {
-  // Check if running in server before using the document object
-  if (typeof document !== 'object') {
-    return null;
-  }
-  const e = document.createElement('div');
-  e.innerHTML = input;
-  return e.childNodes.length === 0 ? '' : e.childNodes[0].nodeValue;
-}
-
-const authIdTimeoutErrorCode = '110';
-const constrainedViolationMessage = 'constraint violation';
-/**
- * @function convertStringToKey -
- * @param {string} string
- * @returns {string}
- */
-function convertStringToKey(string) {
-  if (!string) {
-    return '';
-  }
-  if (string.toLocaleLowerCase().includes('constraint violation')) {
-    console.error(
-      'Delta Sierra error has occurred. Please communicate this to your system administrator.',
-    );
-    if (string.toLocaleLowerCase().includes('password')) {
-      return 'constraintViolationForPassword';
-    }
-    return 'constraintViolationForValue';
-  }
-  const replaceFunction = (_, char) => `${char.toLowerCase()}`;
-  const normalizedString = string
-    .replace(/^([A-Z])/g, replaceFunction)
-    .replace(/\s([a-z])/g, (_, char) => `${char.toUpperCase()}`);
-  const key = normalizedString.replace(/\W/g, '');
-  return key;
-}
-/**
- * @function initCheckValidation -
- * @returns {boolean}
- */
-function initCheckValidation() {
-  let hasPrevError = false;
-  return function checkValidation(callback) {
-    const failedPolices = callback.getOutputByName('failedPolicies', []);
-    if (failedPolices.length && !hasPrevError) {
-      hasPrevError = true;
-      return true;
-    }
-    return false;
-  };
-}
-/**
- * @function shouldRedirectFromStep -
- * @returns {boolean}
- */
-function shouldRedirectFromStep(step) {
-  return step.getCallbacksOfType(CallbackType$1.RedirectCallback).length > 0;
-}
-/**
- * @function shouldPopulateWithPreviousCallbacks -
- * @param {object} nextStep
- * @param {array} previousCallbacks
- * @param {object} restartedStep
- * @param {number} stepNumber
- * @returns {boolean}
- */
-function shouldPopulateWithPreviousCallbacks(
-  nextStep,
-  previousCallbacks,
-  restartedStep,
-  stepNumber,
-) {
-  if (!Array.isArray(previousCallbacks)) {
-    return false;
-  }
-  if (restartedStep.type !== StepType$1.Step) {
-    return false;
-  }
-  if (stepNumber !== 1) {
-    return false;
-  }
-  const details = nextStep.payload.detail;
-  const message = nextStep.payload.message?.toLowerCase();
-  /**
-   * Now that we know we have previous callbacks, this is of type "Step",
-   * it has payload detail or payload message, and it's just the first step,
-   * we can populate the new step with old callbacks.
-   */
-  if (
-    details?.errorCode === authIdTimeoutErrorCode ||
-    message?.includes(constrainedViolationMessage)
-  ) {
-    return true;
-  }
-  // Fallback to false
-  return false;
-}
-
-const selfSubmittingCallbacks = [
-  CallbackType$1.ConfirmationCallback,
-  CallbackType$1.DeviceProfileCallback,
-  CallbackType$1.PollingWaitCallback,
-  CallbackType$1.SelectIdPCallback,
-];
-const userInputCallbacks = [
-  CallbackType$1.BooleanAttributeInputCallback,
-  CallbackType$1.ChoiceCallback,
-  CallbackType$1.ConfirmationCallback,
-  CallbackType$1.KbaCreateCallback,
-  CallbackType$1.NameCallback,
-  CallbackType$1.NumberAttributeInputCallback,
-  CallbackType$1.PasswordCallback,
-  CallbackType$1.ReCaptchaCallback,
-  CallbackType$1.SelectIdPCallback,
-  CallbackType$1.StringAttributeInputCallback,
-  CallbackType$1.TermsAndConditionsCallback,
-  CallbackType$1.ValidatedCreatePasswordCallback,
-  CallbackType$1.ValidatedCreateUsernameCallback,
-];
-// This eventually will be overridable by user of framework
-const forceUserInputOptionalityCallbacks = {
-  SelectIdPCallback: (callback) => {
-    const selectIdpCb = callback;
-    return !!selectIdpCb
-      .getProviders()
-      .find((provider) => provider.provider === 'localAuthentication');
-  },
-};
-function isCbReadyByDefault(callback) {
-  if (callback.getType() === CallbackType$1.ConfirmationCallback) {
-    const cb = callback;
-    if (cb.getOptions().length === 1) {
-      return true;
-    }
-  }
-  return false;
-}
-function canForceUserInputOptionality(callback) {
-  // See if a callback function exists within this collection
-  const fn = forceUserInputOptionalityCallbacks[callback.getType()];
-  // If there is a function, run it and it will return a boolean
-  return fn ? fn(callback) : false;
-}
-/**
- * @function isSelfSubmitting -
- * @param {object} callback - generic FRCallback from JavaScript SDK
- * @returns
- */
-function isSelfSubmitting(callback) {
-  return selfSubmittingCallbacks.includes(callback.getType());
-}
-/**
- * @function isStepSelfSubmittable -
- * @param {array} callbacks - CallbackMetadata
- * @returns
- */
-function isStepSelfSubmittable(callbacks, userInputOptional) {
-  if (userInputOptional) {
-    return true;
-  }
-  const unsubmittableCallbacks = callbacks.filter(
-    (callback) => callback.derived.isUserInputRequired && !callback.derived.isSelfSubmitting,
-  );
-  return !unsubmittableCallbacks.length;
-}
-/**
- *
- * @param  {object} callback - Generic callback provided by JavaScript SDK
- * @returns
- */
-function requiresUserInput(callback) {
-  if (callback.getType() === CallbackType$1.SelectIdPCallback) {
-    return false;
-  }
-  if (callback.getType() === CallbackType$1.ConfirmationCallback) {
-    const cb = callback;
-    if (cb.getOptions().length === 1) {
-      return false;
-    }
-  }
-  return userInputCallbacks.includes(callback.getType());
-}
-// Notice this function can take a user provided argument function to
-// override behavior (this doesn't have to be well defined)
-function isUserInputOptional(callbackMetadataArray, numOfUserInputCbs, fn) {
-  // default reducer function to check if both overriding callback exists
-  // along with user input required callbacks
-  const fallbackFn = (prev, curr) => {
-    if (curr.derived.canForceUserInputOptionality && numOfUserInputCbs > 0) {
-      prev = true;
-    }
-    return prev;
-  };
-  // Call reduce function with either fallback or user provided function
-  return callbackMetadataArray.reduce(fn || fallbackFn, false);
-}
-
-/**
- * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
- * @param {object} step - The modified Widget step object
- * @param checkValidation - function that checks if current callback is the first invalid callback
- * @returns {array}
- */
-function buildCallbackMetadata(step, checkValidation, stageJson) {
-  const callbackCount = {};
-  return step?.callbacks.map((callback, idx) => {
-    const cb = callback;
-    const callbackType = cb.getType();
-    let stageCbMetadata;
-    if (callbackCount[callbackType]) {
-      callbackCount[callbackType] = callbackCount[callbackType] + 1;
-    } else {
-      callbackCount[callbackType] = 1;
-    }
-    if (stageJson && stageJson[callbackType]) {
-      const stageCbArray = stageJson[callbackType];
-      stageCbMetadata = stageCbArray[callbackCount[callbackType] - 1];
-    }
-    return {
-      derived: {
-        canForceUserInputOptionality: canForceUserInputOptionality(callback),
-        isFirstInvalidInput: checkValidation(callback),
-        isReadyForSubmission: isCbReadyByDefault(callback),
-        isSelfSubmitting: isSelfSubmitting(callback),
-        isUserInputRequired: requiresUserInput(callback),
-      },
-      idx,
-      // Only use the `platform` prop if there's metadata to add
-      ...(stageCbMetadata && {
-        platform: {
-          ...stageCbMetadata,
-        },
-      }),
-    };
-  });
-}
-/**
- * @function buildStepMetadata - Constructs a metadata object that summarizes the step from AM
- * @param {array} callbackMetadataArray - The array returned from buildCallbackMetadata
- * @returns {object}
- */
-function buildStepMetadata(callbackMetadataArray, stageJson) {
-  const numOfUserInputCbs = callbackMetadataArray.filter(
-    (cb) => !!cb.derived.isUserInputRequired,
-  ).length;
-  const userInputOptional = isUserInputOptional(callbackMetadataArray, numOfUserInputCbs);
-  let stageMetadata;
-  if (stageJson) {
-    stageMetadata = Object.keys(stageJson).reduce((prev, curr) => {
-      // Filter out objects or arrays as those are for the callbacks
-      if (typeof stageJson[curr] !== 'object') {
-        prev[curr] = stageJson[curr];
-      }
-      return prev;
-    }, {});
-  }
-  return {
-    derived: {
-      isStepSelfSubmittable: isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
-      isUserInputOptional: userInputOptional,
-      numOfCallbacks: callbackMetadataArray.length,
-      numOfSelfSubmittableCbs: callbackMetadataArray.filter((cb) => !!cb.derived.isSelfSubmitting)
-        .length,
-      numOfUserInputCbs: numOfUserInputCbs,
-    },
-    // Only use the `platform` prop if there's metadata to add
-    ...(stageMetadata && {
-      platform: {
-        ...stageMetadata,
-      },
-    }),
-  };
-}
-
-function initializeStack(initOptions) {
-  const initialValue = initOptions ? [initOptions] : [];
-  const { update, set, subscribe } = writable(initialValue);
-  // Assign to exported variable (see bottom of file)
-  stack = {
-    pop: async () => {
-      return new Promise((resolve) => {
-        update((current) => {
-          let state;
-          if (current.length) {
-            state = current.slice(0, -1);
-          } else {
-            state = current;
-          }
-          resolve([...state]);
-          return state;
-        });
-      });
-    },
-    push: async (options) => {
-      return new Promise((resolve) => {
-        update((current) => {
-          let state;
-          if (!current.length) {
-            state = [{ ...options }];
-          } else if (options && options?.tree !== current[current.length - 1]?.tree) {
-            state = [...current, options];
-          } else {
-            state = current;
-          }
-          resolve([...state]);
-          return state;
-        });
-      });
-    },
-    reset: () => {
-      set([]);
-    },
-    subscribe,
-  };
-  return stack;
-}
-function initialize$4(initOptions) {
-  const { set, subscribe } = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    metadata: null,
-    step: null,
-    successful: false,
-    response: null,
-  });
-  const stack = initializeStack();
-  let stepNumber = 0;
-  async function next(prevStep = null, nextOptions, resumeUrl) {
-    /**
-     * Create an options object with nextOptions overriding anything from initOptions
-     * TODO: Does this object merge need to be more granular?
-     */
-    const options = {
-      ...initOptions,
-      ...nextOptions,
-    };
-    /**
-     * Save previous step information just in case we have a total
-     * form failure due to 400 response from ForgeRock.
-     */
-    let previousCallbacks;
-    if (prevStep && prevStep.type === StepType$1.Step) {
-      previousCallbacks = prevStep?.callbacks;
-    }
-    const previousPayload = prevStep?.payload;
-    let nextStep;
-    set({
-      completed: false,
-      error: null,
-      loading: true,
-      metadata: null,
-      step: prevStep,
-      successful: false,
-      response: null,
-    });
-    try {
-      if (resumeUrl) {
-        // If resuming an unknown journey remove the tree from the options
-        options.tree = undefined;
-        /**
-         * Attempt to resume journey
-         */
-        nextStep = await FRAuth$1.resume(resumeUrl, options);
-      } else if (prevStep) {
-        // If continuing on a tree remove it from the options
-        options.tree = undefined;
-        /**
-         * Initial attempt to retrieve next step
-         */
-        nextStep = await FRAuth$1.next(prevStep, options);
-      } else {
-        nextStep = await FRAuth$1.next(undefined, options);
-      }
-    } catch (err) {
-      console.error(`Next step request | ${err}`);
-      /**
-       * Setup an object to display failure message
-       */
-      nextStep = new FRLoginFailure$1({
-        message: interpolate('unknownNetworkError'),
-      });
-    }
-    if (nextStep.type === StepType$1.Step) {
-      const stageAttribute = nextStep.getStage();
-      let stageJson = null;
-      // Check if stage attribute is serialized JSON
-      if (stageAttribute && stageAttribute.includes('{')) {
-        try {
-          stageJson = JSON.parse(stageAttribute);
-        } catch (err) {
-          console.warn('Stage attribute value was not parsable');
-        }
-      }
-      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
-      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
-      // Iterate on a successful progression
-      stepNumber = stepNumber + 1;
-      set({
-        completed: false,
-        error: null,
-        loading: false,
-        metadata: {
-          callbacks: callbackMetadata,
-          step: stepMetadata,
-        },
-        step: nextStep,
-        successful: false,
-        response: null,
-      });
-    } else if (nextStep.type === StepType$1.LoginSuccess) {
-      /**
-       * SUCCESSFUL COMPLETION BLOCK
-       */
-      // Set final state
-      set({
-        completed: true,
-        error: null,
-        loading: false,
-        metadata: null,
-        step: null,
-        successful: true,
-        response: nextStep.payload,
-      });
-    } else if (nextStep.type === StepType$1.LoginFailure) {
-      /**
-       * FAILURE COMPLETION BLOCK
-       *
-       * Grab failure message, which may contain encoded HTML
-       */
-      const failureMessageStr = htmlDecode(nextStep.payload.message || '');
-      let restartedStep = null;
-      try {
-        /**
-         * Restart tree to get fresh step
-         */
-        restartedStep = await FRAuth$1.next(undefined, options);
-      } catch (err) {
-        console.error(`Restart failed step request | ${err}`);
-        /**
-         * Setup an object to display failure message
-         */
-        restartedStep = new FRLoginFailure$1({
-          message: interpolate('unknownNetworkError'),
-        });
-      }
-      /**
-       * Now that we have a new authId (the identification of the
-       * fresh step) let's populate this new step with old callback data if
-       * this is step one and meets a few criteria.
-       *
-       * If error code is 110 or error message includes "Constrained Violation",
-       * then the issue needs special handling.
-       *
-       * If this is the first step in the journey, replace the callbacks with
-       * existing callbacks to resubmit with a fresh authId.
-       ******************************************************************* */
-      if (
-        shouldPopulateWithPreviousCallbacks(nextStep, previousCallbacks, restartedStep, stepNumber)
-      ) {
-        /**
-         * TypeScript notes:
-         *
-         * Assert that restartedStep is FRStep as that is required for the above condition to be true.
-         * Also, assert that previousCallbacks is FRCallback[] as that too is required for above to be true.
-         *
-         * Attempt a refactor using Ryan's suggestion found here: https://www.typescriptlang.org/play?#code/PTAEHUFMBsGMHsC2lQBd5oBYoCoE8AHSAZVgCcBLA1UABWgEM8BzM+AVwDsATAGiwoBnUENANQAd0gAjQRVSQAUCEmYKsTKGYUAbpGF4OY0BoadYKdJMoL+gzAzIoz3UNEiPOofEVKVqAHSKymAAmkYI7NCuqGqcANag8ABmIjQUXrFOKBJMggBcISGgoAC0oACCbvCwDKgU8JkY7p7ehCTkVDQS2E6gnPCxGcwmZqDSTgzxxWWVoASMFmgYkAAeRJTInN3ymj4d-jSCeNsMq-wuoPaOltigAKoASgAywhK7SbGQZIIz5VWCFzSeCrZagNYbChbHaxUDcCjJZLfSDbExIAgUdxkUBIursJzCFJtXydajBZJcWD1RqgJyofGcABqDGg7EgAB4cAA+AAUq3y3nBqwUPGEglQlE4IwA-FcJcNQALOOxENJvgBKUAAb0UJT1CNAPNQ7SJoIAvBbQAAiZWq75WzV0hmgUG6vXg6CCFBOsheVZukoB0CKAC+incNCGUtAZtpkHpvuZrI54slzF5VoAjA6ANzkynUrxCYjyqV8gWphUAH36KrVZHVAuB8BaXh17oNRpNqXNloA5JWpX3Ne33XqfZkyGy8+6w0GJziWV683PO8XS8wjXFmOqR0Go8wAhlYKzuPoeVbsNBoPBc6HgiocM0PL7QIh4H0GMD2JG7owpewDDMJA-AnuoiRfvAegiF4VoAKKrAwiALPoVpJNiVrgA4qADqAABykASFaQQqAA8l8ZDvF6-DAUcqCOAorjSHgcbvjoCpfF6aKINCwiXF8kgftEIgGBw2ILEwrAcDwQQlEAA
-         */
-        restartedStep = restartedStep;
-        // Rebuild callbacks onto restartedStep
-        restartedStep.callbacks = previousCallbacks;
-        // Rebuild payload onto restartedStep ensuring the use of the NEW authId
-        restartedStep.payload = {
-          ...previousPayload,
-          authId: restartedStep.payload.authId,
-        };
-        const details = nextStep.payload.detail;
-        /**
-         * Only if the authId expires do we resubmit with same callback values
-         */
-        if (details?.errorCode === authIdTimeoutErrorCode) {
-          restartedStep = await FRAuth$1.next(restartedStep, options);
-        }
-      }
-      /**
-       * SET RESULT OF SUBSEQUENT REQUEST
-       *
-       * After the above attempts to salvage the form submission, let's return
-       * the final result to the user.
-       */
-      if (restartedStep.type === StepType$1.Step) {
-        const stageAttribute = restartedStep.getStage();
-        let stageJson = null;
-        // Check if stage attribute is serialized JSON
-        if (stageAttribute && stageAttribute.includes('{')) {
-          try {
-            stageJson = JSON.parse(stageAttribute);
-          } catch (err) {
-            console.warn('Stage attribute value was not parsable');
-          }
-        }
-        const callbackMetadata = buildCallbackMetadata(
-          restartedStep,
-          initCheckValidation(),
-          stageJson,
-        );
-        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
-        set({
-          completed: false,
-          error: {
-            code: nextStep.getCode(),
-            message: failureMessageStr,
-            // TODO: Should we remove the callbacks for PII info?
-            step: prevStep?.payload,
-          },
-          loading: false,
-          metadata: {
-            callbacks: callbackMetadata,
-            step: stepMetadata,
-          },
-          step: restartedStep,
-          successful: false,
-          response: null,
-        });
-      } else if (restartedStep.type === StepType$1.LoginSuccess) {
-        set({
-          completed: true,
-          error: null,
-          loading: false,
-          metadata: null,
-          step: null,
-          successful: true,
-          response: restartedStep.payload,
-        });
-      } else {
-        set({
-          completed: true,
-          error: {
-            code: nextStep.getCode(),
-            message: failureMessageStr,
-            // TODO: Should we remove the callbacks for PII info?
-            step: prevStep?.payload,
-          },
-          loading: false,
-          metadata: null,
-          step: null,
-          successful: false,
-          response: restartedStep.payload,
-        });
-      }
-    }
-  }
-  async function pop() {
-    reset();
-    const updatedStack = await stack.pop();
-    const currentJourney = updatedStack[updatedStack.length - 1];
-    await start(currentJourney);
-  }
-  async function push(newOptions) {
-    reset();
-    await stack.push(newOptions);
-    await start(newOptions);
-  }
-  async function resume(url, resumeOptions) {
-    await next(undefined, resumeOptions, url);
-  }
-  async function start(startOptions) {
-    await stack.push(startOptions);
-    await next(undefined, startOptions);
-  }
-  function reset() {
-    set({
-      completed: false,
-      error: null,
-      loading: false,
-      metadata: null,
-      step: null,
-      successful: false,
-      response: null,
-    });
-  }
-  return {
-    next,
-    pop,
-    push,
-    reset,
-    resume,
-    start,
-    subscribe,
-  };
-}
-let stack;
-
 /* src/lib/components/primitives/form/form.svelte generated by Svelte v3.55.1 */
 
 const file$B = 'src/lib/components/primitives/form/form.svelte';
@@ -24385,64 +24605,6 @@ class Shield_icon extends SvelteComponentDev {
   }
 }
 
-const journeyConfigItemSchema = mod.object({
-  journey: mod.string().optional(),
-  match: mod
-    .string()
-    .regex(/^(#\/service|\?journey)/, {
-      message: 'HREF string must start with `?journey` or `#/service`',
-    })
-    .array(),
-});
-const journeyConfigSchema = mod.object({
-  forgotPassword: journeyConfigItemSchema,
-  forgotUsername: journeyConfigItemSchema,
-  login: journeyConfigItemSchema,
-  register: journeyConfigItemSchema,
-});
-const defaultJourneys = {
-  forgotPassword: {
-    journey: 'ResetPassword',
-    match: ['#/service/ResetPassword', '?journey=ResetPassword'],
-  },
-  forgotUsername: {
-    journey: 'ForgottenUsername',
-    match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
-  },
-  login: {
-    journey: undefined,
-    match: ['#/service/Login', '?journey'],
-  },
-  register: {
-    journey: 'Registration',
-    match: ['#/service/Registration', '?journey=Registration'],
-  },
-};
-// Ensure default follows schema
-journeyConfigSchema.parse(defaultJourneys);
-let configuredJourneys;
-function initialize$3(customJourneys) {
-  if (customJourneys) {
-    // Provide developer feedback if customized
-    journeyConfigSchema.parse(customJourneys);
-    const arr = Object.keys(customJourneys);
-    configuredJourneys = readable(
-      arr.map((key) => ({
-        ...customJourneys[key],
-        key,
-      })),
-    );
-  } else {
-    const arr = Object.keys(defaultJourneys);
-    configuredJourneys = readable(
-      arr.map((key) => ({
-        ...defaultJourneys[key],
-        key,
-      })),
-    );
-  }
-}
-
 /* src/lib/journey/stages/_utilities/back-to.svelte generated by Svelte v3.55.1 */
 const file$z = 'src/lib/journey/stages/_utilities/back-to.svelte';
 
@@ -24460,13 +24622,13 @@ function create_if_block$g(ctx) {
       p = element('p');
       button = element('button');
       t = text(t_value);
-      add_location(button, file$z, 20, 4, 758);
+      add_location(button, file$z, 20, 4, 768);
       attr_dev(
         p,
         'class',
         'tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light',
       );
-      add_location(p, file$z, 19, 2, 663);
+      add_location(p, file$z, 19, 2, 673);
     },
     m: function mount(target, anchor) {
       insert_dev(target, p, anchor);
@@ -24560,10 +24722,10 @@ function create_fragment$K(ctx) {
 
 function instance$K($$self, $$props, $$invalidate) {
   let $stack;
-  let $configuredJourneys;
-  validate_store(configuredJourneys, 'configuredJourneys');
-  component_subscribe($$self, configuredJourneys, ($$value) =>
-    $$invalidate(5, ($configuredJourneys = $$value)),
+  let $configuredJourneysStore;
+  validate_store(configuredJourneysStore, 'configuredJourneysStore');
+  component_subscribe($$self, configuredJourneysStore, ($$value) =>
+    $$invalidate(5, ($configuredJourneysStore = $$value)),
   );
   let { $$slots: slots = {}, $$scope } = $$props;
   validate_slots('Back_to', slots, []);
@@ -24574,7 +24736,7 @@ function instance$K($$self, $$props, $$invalidate) {
   let string = '';
 
   function constructString() {
-    const currentJourney = $configuredJourneys.find((journey) => {
+    const currentJourney = $configuredJourneysStore.find((journey) => {
       return journey.journey === $stack[$stack.length - 2]?.tree;
     });
 
@@ -24612,13 +24774,13 @@ function instance$K($$self, $$props, $$invalidate) {
 
   $$self.$capture_state = () => ({
     interpolate,
-    configuredJourneys,
+    configuredJourneysStore,
     journey,
     stack,
     string,
     constructString,
     $stack,
-    $configuredJourneys,
+    $configuredJourneysStore,
   });
 
   $$self.$inject_state = ($$props) => {
@@ -24670,7 +24832,7 @@ class Back_to extends SvelteComponentDev {
  * @param {object} currentJourney - The current stage's journey object
  */
 function captureLinks(linkWrapper, currentJourney) {
-  const journeys = get_store_value(configuredJourneys);
+  const journeys = get_store_value(configuredJourneysStore);
   const stack = get_store_value(currentJourney.stack);
   linkWrapper.addEventListener('click', (event) => {
     const target = event.target;
@@ -39411,24 +39573,6 @@ class Link extends SvelteComponentDev {
   }
 }
 
-const linksSchema = mod
-  .object({
-    termsAndConditions: mod.string(),
-  })
-  .strict();
-const partialLinksSchema = linksSchema.partial();
-let links;
-function initialize$2(customLinks) {
-  // If customLinks is provided, provide feedback for object
-  if (customLinks) {
-    // Provide developer feedback for custom links
-    linksSchema.parse(customLinks);
-    links = readable(customLinks);
-  } else {
-    links = readable();
-  }
-}
-
 /* src/lib/journey/callbacks/terms-and-conditions/terms-conditions.svelte generated by Svelte v3.55.1 */
 const file$8 = 'src/lib/journey/callbacks/terms-and-conditions/terms-conditions.svelte';
 
@@ -39446,9 +39590,9 @@ function create_else_block$2(ctx) {
       code = element('code');
       code.textContent = 'termsAndConditions';
       t2 = text(' URL.');
-      add_location(code, file$8, 56, 36, 2487);
+      add_location(code, file$8, 56, 36, 2502);
       attr_dev(p, 'class', 'tw_text-error-dark dark:tw_text-error-light tw_input-spacing');
-      add_location(p, file$8, 55, 2, 2377);
+      add_location(p, file$8, 55, 2, 2392);
     },
     m: function mount(target, anchor) {
       insert_dev(target, p, anchor);
@@ -39475,7 +39619,7 @@ function create_else_block$2(ctx) {
   return block;
 }
 
-// (43:0) {#if $links?.termsAndConditions}
+// (43:0) {#if $linksStore?.termsAndConditions}
 function create_if_block$5(ctx) {
   let link;
   let t;
@@ -39485,7 +39629,7 @@ function create_if_block$5(ctx) {
   link = new Link({
     props: {
       classes: 'tw_block tw_mb-4',
-      href: /*$links*/ ctx[2]?.termsAndConditions,
+      href: /*$linksStore*/ ctx[2]?.termsAndConditions,
       target: '_blank',
       $$slots: { default: [create_default_slot_1$4] },
       $$scope: { ctx },
@@ -39519,7 +39663,7 @@ function create_if_block$5(ctx) {
     },
     p: function update(ctx, dirty) {
       const link_changes = {};
-      if (dirty & /*$links*/ 4) link_changes.href = /*$links*/ ctx[2]?.termsAndConditions;
+      if (dirty & /*$linksStore*/ 4) link_changes.href = /*$linksStore*/ ctx[2]?.termsAndConditions;
 
       if (dirty & /*$$scope*/ 1024) {
         link_changes.$$scope = { dirty, ctx };
@@ -39560,14 +39704,14 @@ function create_if_block$5(ctx) {
     block,
     id: create_if_block$5.name,
     type: 'if',
-    source: '(43:0) {#if $links?.termsAndConditions}',
+    source: '(43:0) {#if $linksStore?.termsAndConditions}',
     ctx,
   });
 
   return block;
 }
 
-// (44:2) <Link classes="tw_block tw_mb-4" href={$links?.termsAndConditions} target="_blank">
+// (44:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
 function create_default_slot_1$4(ctx) {
   let t_value = interpolate('termsAndConditionsLinkText') + '';
   let t;
@@ -39590,7 +39734,7 @@ function create_default_slot_1$4(ctx) {
     id: create_default_slot_1$4.name,
     type: 'slot',
     source:
-      '(44:2) <Link classes=\\"tw_block tw_mb-4\\" href={$links?.termsAndConditions} target=\\"_blank\\">',
+      '(44:2) <Link classes=\\"tw_block tw_mb-4\\" href={$linksStore?.termsAndConditions} target=\\"_blank\\">',
     ctx,
   });
 
@@ -39651,7 +39795,7 @@ function create_fragment$c(ctx) {
   const if_blocks = [];
 
   function select_block_type(ctx, dirty) {
-    if (/*$links*/ ctx[2]?.termsAndConditions) return 0;
+    if (/*$linksStore*/ ctx[2]?.termsAndConditions) return 0;
     return 1;
   }
 
@@ -39728,9 +39872,9 @@ function create_fragment$c(ctx) {
 }
 
 function instance$c($$self, $$props, $$invalidate) {
-  let $links;
-  validate_store(links, 'links');
-  component_subscribe($$self, links, ($$value) => $$invalidate(2, ($links = $$value)));
+  let $linksStore;
+  validate_store(linksStore, 'linksStore');
+  component_subscribe($$self, linksStore, ($$value) => $$invalidate(2, ($linksStore = $$value)));
   let { $$slots: slots = {}, $$scope } = $$props;
   validate_slots('Terms_conditions', slots, []);
   const selfSubmitFunction = null;
@@ -39801,7 +39945,7 @@ function instance$c($$self, $$props, $$invalidate) {
     Animated: Animated$1,
     interpolate,
     Link,
-    links,
+    linksStore,
     Standard,
     T: Locale_strings,
     derived,
@@ -39814,7 +39958,7 @@ function instance$c($$self, $$props, $$invalidate) {
     Checkbox,
     inputName,
     setValue,
-    $links,
+    $linksStore,
   });
 
   $$self.$inject_state = ($$props) => {
@@ -39844,7 +39988,7 @@ function instance$c($$self, $$props, $$invalidate) {
   return [
     callbackMetadata,
     inputName,
-    $links,
+    $linksStore,
     Checkbox,
     setValue,
     selfSubmitFunction,
@@ -42605,7 +42749,7 @@ function create_if_block_2$3(ctx) {
       div = element('div');
       create_component(shieldicon.$$.fragment);
       attr_dev(div, 'class', 'tw_flex tw_justify-center');
-      add_location(div, file$6, 71, 4, 2526);
+      add_location(div, file$6, 71, 4, 2531);
     },
     m: function mount(target, anchor) {
       insert_dev(target, div, anchor);
@@ -42746,7 +42890,7 @@ function create_each_block$2(ctx) {
         callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[17]],
         selfSubmitFunction: /*determineSubmission*/ ctx[11],
         stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-        style: /*$style*/ ctx[10],
+        style: /*$styleStore*/ ctx[10],
       },
     },
     $$inline: true,
@@ -42763,13 +42907,13 @@ function create_each_block$2(ctx) {
     p: function update(ctx, dirty) {
       const callbackmapper_changes = {};
 
-      if (dirty & /*step, metadata, $style*/ 1048)
+      if (dirty & /*step, metadata, $styleStore*/ 1048)
         callbackmapper_changes.props = {
           callback: /*callback*/ ctx[15],
           callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[17]],
           selfSubmitFunction: /*determineSubmission*/ ctx[11],
           stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-          style: /*$style*/ ctx[10],
+          style: /*$styleStore*/ ctx[10],
         };
 
       callbackmapper.$set(callbackmapper_changes);
@@ -42985,15 +43129,15 @@ function create_default_slot$4(ctx) {
       t5 = space();
       create_component(backto.$$.fragment);
       attr_dev(h1, 'class', 'tw_primary-header dark:tw_primary-header_dark');
-      add_location(h1, file$6, 76, 4, 2718);
+      add_location(h1, file$6, 76, 4, 2723);
       attr_dev(
         p,
         'class',
         'tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light',
       );
-      add_location(p, file$6, 79, 4, 2855);
+      add_location(p, file$6, 79, 4, 2860);
       attr_dev(header, 'id', formHeaderId);
-      add_location(header, file$6, 75, 2, 2663);
+      add_location(header, file$6, 75, 2, 2668);
     },
     m: function mount(target, anchor) {
       if (if_block0) if_block0.m(target, anchor);
@@ -43071,7 +43215,7 @@ function create_default_slot$4(ctx) {
         check_outros();
       }
 
-      if (dirty & /*step, metadata, determineSubmission, $style*/ 3096) {
+      if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 3096) {
         each_value = /*step*/ ctx[4]?.callbacks;
         validate_each_argument(each_value);
         let i;
@@ -43235,7 +43379,7 @@ function create_fragment$6(ctx) {
 
       if (
         dirty &
-        /*$$scope, journey, metadata, step, $style, alertNeedsFocus, formMessageKey, form, linkWrapper*/ 263806
+        /*$$scope, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form, linkWrapper*/ 263806
       ) {
         form_1_changes.$$scope = { dirty, ctx };
       }
@@ -43278,9 +43422,9 @@ const formHeaderId = 'genericStepHeader';
 const formElementId = 'genericStepForm';
 
 function instance$6($$self, $$props, $$invalidate) {
-  let $style;
-  validate_store(style, 'style');
-  component_subscribe($$self, style, ($$value) => $$invalidate(10, ($style = $$value)));
+  let $styleStore;
+  validate_store(styleStore, 'styleStore');
+  component_subscribe($$self, styleStore, ($$value) => $$invalidate(10, ($styleStore = $$value)));
   let { $$slots: slots = {}, $$scope } = $$props;
   validate_slots('Generic', slots, []);
   let { form } = $$props;
@@ -43388,7 +43532,7 @@ function instance$6($$self, $$props, $$invalidate) {
     Form,
     Sanitize: Server_strings,
     ShieldIcon: Shield_icon,
-    style,
+    styleStore,
     BackTo: Back_to,
     captureLinks,
     CallbackMapper: Callback_mapper,
@@ -43407,7 +43551,7 @@ function instance$6($$self, $$props, $$invalidate) {
     linkWrapper,
     determineSubmission,
     submitFormWrapper,
-    $style,
+    $styleStore,
   });
 
   $$self.$inject_state = ($$props) => {
@@ -43448,7 +43592,7 @@ function instance$6($$self, $$props, $$invalidate) {
     formAriaDescriptor,
     formNeedsFocus,
     linkWrapper,
-    $style,
+    $styleStore,
     determineSubmission,
     submitFormWrapper,
     header_binding,
@@ -43744,7 +43888,7 @@ function create_if_block_2$2(ctx) {
       div = element('div');
       create_component(newusericon.$$.fragment);
       attr_dev(div, 'class', 'tw_flex tw_justify-center');
-      add_location(div, file$4, 44, 4, 1679);
+      add_location(div, file$4, 44, 4, 1684);
     },
     m: function mount(target, anchor) {
       insert_dev(target, div, anchor);
@@ -43885,7 +44029,7 @@ function create_each_block$1(ctx) {
         callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[14]],
         selfSubmitFunction: /*determineSubmission*/ ctx[9],
         stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-        style: /*$style*/ ctx[8],
+        style: /*$styleStore*/ ctx[8],
       },
     },
     $$inline: true,
@@ -43902,13 +44046,13 @@ function create_each_block$1(ctx) {
     p: function update(ctx, dirty) {
       const callbackmapper_changes = {};
 
-      if (dirty & /*step, metadata, $style*/ 280)
+      if (dirty & /*step, metadata, $styleStore*/ 280)
         callbackmapper_changes.props = {
           callback: /*callback*/ ctx[12],
           callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[14]],
           selfSubmitFunction: /*determineSubmission*/ ctx[9],
           stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-          style: /*$style*/ ctx[8],
+          style: /*$styleStore*/ ctx[8],
         };
 
       callbackmapper.$set(callbackmapper_changes);
@@ -44109,13 +44253,13 @@ function create_default_slot$3(ctx) {
       if (if_block2) if_block2.c();
       if_block2_anchor = empty();
       attr_dev(h1, 'class', 'tw_primary-header dark:tw_primary-header_dark');
-      add_location(h1, file$4, 48, 2, 1817);
+      add_location(h1, file$4, 48, 2, 1822);
       attr_dev(
         p,
         'class',
         'tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light',
       );
-      add_location(p, file$4, 51, 2, 1917);
+      add_location(p, file$4, 51, 2, 1922);
     },
     m: function mount(target, anchor) {
       if (if_block0) if_block0.m(target, anchor);
@@ -44184,7 +44328,7 @@ function create_default_slot$3(ctx) {
         check_outros();
       }
 
-      if (dirty & /*step, metadata, determineSubmission, $style*/ 792) {
+      if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 792) {
         each_value = /*step*/ ctx[4]?.callbacks;
         validate_each_argument(each_value);
         let i;
@@ -44339,7 +44483,7 @@ function create_fragment$4(ctx) {
 
       if (
         dirty &
-        /*$$scope, journey, metadata, step, $style, alertNeedsFocus, formMessageKey, form, linkWrapper*/ 33278
+        /*$$scope, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form, linkWrapper*/ 33278
       ) {
         form_1_changes.$$scope = { dirty, ctx };
       }
@@ -44382,9 +44526,9 @@ function returnCallback$1(callback) {
 }
 
 function instance$4($$self, $$props, $$invalidate) {
-  let $style;
-  validate_store(style, 'style');
-  component_subscribe($$self, style, ($$value) => $$invalidate(8, ($style = $$value)));
+  let $styleStore;
+  validate_store(styleStore, 'styleStore');
+  component_subscribe($$self, styleStore, ($$value) => $$invalidate(8, ($styleStore = $$value)));
   let { $$slots: slots = {}, $$scope } = $$props;
   validate_slots('Registration', slots, []);
   let { form } = $$props;
@@ -44472,7 +44616,7 @@ function instance$4($$self, $$props, $$invalidate) {
     convertStringToKey,
     Form,
     NewUserIcon: New_user_icon,
-    style,
+    styleStore,
     captureLinks,
     CallbackMapper: Callback_mapper,
     form,
@@ -44485,7 +44629,7 @@ function instance$4($$self, $$props, $$invalidate) {
     linkWrapper,
     determineSubmission,
     returnCallback: returnCallback$1,
-    $style,
+    $styleStore,
   });
 
   $$self.$inject_state = ($$props) => {
@@ -44520,7 +44664,7 @@ function instance$4($$self, $$props, $$invalidate) {
     alertNeedsFocus,
     formMessageKey,
     linkWrapper,
-    $style,
+    $styleStore,
     determineSubmission,
     p_binding,
     form_1_formEl_binding,
@@ -44815,7 +44959,7 @@ function create_if_block_2$1(ctx) {
       div = element('div');
       create_component(keyicon.$$.fragment);
       attr_dev(div, 'class', 'tw_flex tw_justify-center');
-      add_location(div, file$2, 44, 4, 1670);
+      add_location(div, file$2, 44, 4, 1675);
     },
     m: function mount(target, anchor) {
       insert_dev(target, div, anchor);
@@ -44956,7 +45100,7 @@ function create_each_block(ctx) {
         callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[16]],
         selfSubmitFunction: /*determineSubmission*/ ctx[9],
         stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-        style: /*$style*/ ctx[8],
+        style: /*$styleStore*/ ctx[8],
       },
     },
     $$inline: true,
@@ -44973,13 +45117,13 @@ function create_each_block(ctx) {
     p: function update(ctx, dirty) {
       const callbackmapper_changes = {};
 
-      if (dirty & /*step, metadata, $style*/ 280)
+      if (dirty & /*step, metadata, $styleStore*/ 280)
         callbackmapper_changes.props = {
           callback: /*callback*/ ctx[14],
           callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[16]],
           selfSubmitFunction: /*determineSubmission*/ ctx[9],
           stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-          style: /*$style*/ ctx[8],
+          style: /*$styleStore*/ ctx[8],
         };
 
       callbackmapper.$set(callbackmapper_changes);
@@ -45196,27 +45340,27 @@ function create_default_slot$2(ctx) {
       p1 = element('p');
       create_component(t11.$$.fragment);
       attr_dev(h1, 'class', 'tw_primary-header dark:tw_primary-header_dark');
-      add_location(h1, file$2, 48, 2, 1804);
-      add_location(button0, file$2, 77, 4, 2725);
-      add_location(button1, file$2, 85, 4, 2929);
+      add_location(h1, file$2, 48, 2, 1809);
+      add_location(button0, file$2, 77, 4, 2735);
+      add_location(button1, file$2, 85, 4, 2939);
       attr_dev(
         p0,
         'class',
         'tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light',
       );
-      add_location(p0, file$2, 76, 2, 2630);
+      add_location(p0, file$2, 76, 2, 2640);
       attr_dev(
         hr,
         'class',
         'tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark',
       );
-      add_location(hr, file$2, 94, 2, 3132);
+      add_location(hr, file$2, 94, 2, 3142);
       attr_dev(
         p1,
         'class',
         'tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light',
       );
-      add_location(p1, file$2, 96, 2, 3230);
+      add_location(p1, file$2, 96, 2, 3240);
     },
     m: function mount(target, anchor) {
       if (if_block0) if_block0.m(target, anchor);
@@ -45314,7 +45458,7 @@ function create_default_slot$2(ctx) {
         check_outros();
       }
 
-      if (dirty & /*step, metadata, determineSubmission, $style*/ 792) {
+      if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 792) {
         each_value = /*step*/ ctx[4]?.callbacks;
         validate_each_argument(each_value);
         let i;
@@ -45474,7 +45618,7 @@ function create_fragment$2(ctx) {
 
       if (
         dirty &
-        /*$$scope, linkWrapper, journey, metadata, step, $style, alertNeedsFocus, formMessageKey, form*/ 131582
+        /*$$scope, linkWrapper, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form*/ 131582
       ) {
         form_1_changes.$$scope = { dirty, ctx };
       }
@@ -45517,9 +45661,9 @@ function returnCallback(callback) {
 }
 
 function instance$2($$self, $$props, $$invalidate) {
-  let $style;
-  validate_store(style, 'style');
-  component_subscribe($$self, style, ($$value) => $$invalidate(8, ($style = $$value)));
+  let $styleStore;
+  validate_store(styleStore, 'styleStore');
+  component_subscribe($$self, styleStore, ($$value) => $$invalidate(8, ($styleStore = $$value)));
   let { $$slots: slots = {}, $$scope } = $$props;
   validate_slots('Username_password', slots, []);
   let { form } = $$props;
@@ -45615,7 +45759,7 @@ function instance$2($$self, $$props, $$invalidate) {
     convertStringToKey,
     Form,
     KeyIcon: Key_icon,
-    style,
+    styleStore,
     captureLinks,
     CallbackMapper: Callback_mapper,
     form,
@@ -45628,7 +45772,7 @@ function instance$2($$self, $$props, $$invalidate) {
     linkWrapper,
     determineSubmission,
     returnCallback,
-    $style,
+    $styleStore,
   });
 
   $$self.$inject_state = ($$props) => {
@@ -45663,7 +45807,7 @@ function instance$2($$self, $$props, $$invalidate) {
     alertNeedsFocus,
     formMessageKey,
     linkWrapper,
-    $style,
+    $styleStore,
     determineSubmission,
     click_handler,
     click_handler_1,
@@ -46553,157 +46697,26 @@ class Journey extends SvelteComponentDev {
   }
 }
 
-function initialize$1(initOptions) {
-  const { set, subscribe } = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    successful: false,
-    response: null,
-  });
-  async function get(getOptions) {
-    /**
-     * Create an options object with getOptions overriding anything from initOptions
-     * TODO: Does this object merge need to be more granular?
-     */
-    const options = {
-      ...{ query: { prompt: 'none' } },
-      ...initOptions,
-      ...getOptions,
-    };
-    let tokens;
-    set({
-      completed: false,
-      error: null,
-      loading: true,
-      successful: false,
-      response: null,
-    });
-    try {
-      tokens = await TokenManager$1.getTokens(options);
-    } catch (err) {
-      console.error(`Get tokens | ${err}`);
-      if (err instanceof Error) {
-        set({
-          completed: true,
-          error: {
-            message: err.message,
-          },
-          loading: false,
-          successful: false,
-          response: null,
-        });
-      }
-      return;
-    }
-    set({
-      completed: true,
-      error: null,
-      loading: false,
-      successful: true,
-      response: tokens,
-    });
-  }
-  function reset() {
-    set({
-      completed: false,
-      error: null,
-      loading: false,
-      successful: false,
-      response: null,
-    });
-  }
-  return {
-    get,
-    reset,
-    subscribe,
-  };
-}
-
-function initialize(initOptions) {
-  const { set, subscribe } = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    successful: false,
-    response: null,
-  });
-  async function get(getOptions) {
-    /**
-     * Create an options object with getOptions overriding anything from initOptions
-     * TODO: Does this object merge need to be more granular?
-     */
-    const options = {
-      ...initOptions,
-      ...getOptions,
-    };
-    set({
-      completed: false,
-      error: null,
-      loading: true,
-      successful: false,
-      response: null,
-    });
-    try {
-      const user = await UserManager.getCurrentUser(options);
-      set({
-        completed: true,
-        error: null,
-        loading: false,
-        successful: true,
-        response: user,
-      });
-    } catch (err) {
-      console.error(`Get current user | ${err}`);
-      if (err instanceof Error) {
-        set({
-          completed: true,
-          error: {
-            message: err.message,
-          },
-          loading: false,
-          successful: false,
-          response: null,
-        });
-      }
-    }
-  }
-  function reset() {
-    set({
-      completed: false,
-      error: null,
-      loading: false,
-      successful: false,
-      response: null,
-    });
-  }
-  return {
-    get,
-    reset,
-    subscribe,
-  };
-}
-
 /* src/lib/widget/modal.svelte generated by Svelte v3.55.1 */
 const file = 'src/lib/widget/modal.svelte';
 
-// (107:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId="sampleDialog"     withHeader= {style?.sections?.header}   >
+// (60:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId="sampleDialog"     withHeader= {$styleStore?.sections?.header}   >
 function create_default_slot(ctx) {
   let journey_1;
   let updating_formEl;
   let current;
 
   function journey_1_formEl_binding(value) {
-    /*journey_1_formEl_binding*/ ctx[10](value);
+    /*journey_1_formEl_binding*/ ctx[6](value);
   }
 
   let journey_1_props = {
-    displayIcon: /*style*/ ctx[0]?.stage?.icon ?? !(/*style*/ ctx[0]?.logo),
-    journeyStore: /*journeyStore*/ ctx[5],
+    displayIcon: /*$styleStore*/ ctx[3]?.stage?.icon ?? !(/*$styleStore*/ ctx[3]?.logo),
+    journeyStore: /*journeyStore*/ ctx[4],
   };
 
-  if (/*formEl*/ ctx[3] !== void 0) {
-    journey_1_props.formEl = /*formEl*/ ctx[3];
+  if (/*formEl*/ ctx[2] !== void 0) {
+    journey_1_props.formEl = /*formEl*/ ctx[2];
   }
 
   journey_1 = new Journey({ props: journey_1_props, $$inline: true });
@@ -46719,12 +46732,13 @@ function create_default_slot(ctx) {
     },
     p: function update(ctx, dirty) {
       const journey_1_changes = {};
-      if (dirty & /*style*/ 1)
-        journey_1_changes.displayIcon = /*style*/ ctx[0]?.stage?.icon ?? !(/*style*/ ctx[0]?.logo);
+      if (dirty & /*$styleStore*/ 8)
+        journey_1_changes.displayIcon =
+          /*$styleStore*/ ctx[3]?.stage?.icon ?? !(/*$styleStore*/ ctx[3]?.logo);
 
-      if (!updating_formEl && dirty & /*formEl*/ 8) {
+      if (!updating_formEl && dirty & /*formEl*/ 4) {
         updating_formEl = true;
-        journey_1_changes.formEl = /*formEl*/ ctx[3];
+        journey_1_changes.formEl = /*formEl*/ ctx[2];
         add_flush_callback(() => (updating_formEl = false));
       }
 
@@ -46749,7 +46763,7 @@ function create_default_slot(ctx) {
     id: create_default_slot.name,
     type: 'slot',
     source:
-      '(107:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId=\\"sampleDialog\\"     withHeader= {style?.sections?.header}   >',
+      '(60:2) <Dialog     bind:dialogEl={_dialogEl}     bind:this={_dialogComp}     closeCallback={_closeCallback}     dialogId=\\"sampleDialog\\"     withHeader= {$styleStore?.sections?.header}   >',
     ctx,
   });
 
@@ -46763,31 +46777,31 @@ function create_fragment(ctx) {
   let current;
 
   function dialog_dialogEl_binding(value) {
-    /*dialog_dialogEl_binding*/ ctx[11](value);
+    /*dialog_dialogEl_binding*/ ctx[7](value);
   }
 
   let dialog_props = {
-    closeCallback: /*_closeCallback*/ ctx[4],
+    closeCallback: /*_closeCallback*/ ctx[5],
     dialogId: 'sampleDialog',
-    withHeader: /*style*/ ctx[0]?.sections?.header,
+    withHeader: /*$styleStore*/ ctx[3]?.sections?.header,
     $$slots: { default: [create_default_slot] },
     $$scope: { ctx },
   };
 
-  if (/*_dialogEl*/ ctx[2] !== void 0) {
-    dialog_props.dialogEl = /*_dialogEl*/ ctx[2];
+  if (/*_dialogEl*/ ctx[1] !== void 0) {
+    dialog_props.dialogEl = /*_dialogEl*/ ctx[1];
   }
 
   dialog = new Dialog({ props: dialog_props, $$inline: true });
   binding_callbacks.push(() => bind(dialog, 'dialogEl', dialog_dialogEl_binding));
-  /*dialog_binding*/ ctx[12](dialog);
+  /*dialog_binding*/ ctx[8](dialog);
 
   const block = {
     c: function create() {
       div = element('div');
       create_component(dialog.$$.fragment);
       attr_dev(div, 'class', 'fr_widget-root');
-      add_location(div, file, 105, 0, 3999);
+      add_location(div, file, 58, 0, 1882);
     },
     l: function claim(nodes) {
       throw new Error(
@@ -46801,15 +46815,16 @@ function create_fragment(ctx) {
     },
     p: function update(ctx, [dirty]) {
       const dialog_changes = {};
-      if (dirty & /*style*/ 1) dialog_changes.withHeader = /*style*/ ctx[0]?.sections?.header;
+      if (dirty & /*$styleStore*/ 8)
+        dialog_changes.withHeader = /*$styleStore*/ ctx[3]?.sections?.header;
 
-      if (dirty & /*$$scope, style, formEl*/ 65545) {
+      if (dirty & /*$$scope, $styleStore, formEl*/ 1036) {
         dialog_changes.$$scope = { dirty, ctx };
       }
 
-      if (!updating_dialogEl && dirty & /*_dialogEl*/ 4) {
+      if (!updating_dialogEl && dirty & /*_dialogEl*/ 2) {
         updating_dialogEl = true;
-        dialog_changes.dialogEl = /*_dialogEl*/ ctx[2];
+        dialog_changes.dialogEl = /*_dialogEl*/ ctx[1];
         add_flush_callback(() => (updating_dialogEl = false));
       }
 
@@ -46826,7 +46841,7 @@ function create_fragment(ctx) {
     },
     d: function destroy(detaching) {
       if (detaching) detach_dev(div);
-      /*dialog_binding*/ ctx[12](null);
+      /*dialog_binding*/ ctx[8](null);
       destroy_component(dialog);
     },
   };
@@ -46855,7 +46870,7 @@ const api = widgetApiFactory({
     closeCallback = (args) => fn(args);
   },
   onMount(fn) {
-    callMounted = (dialog, form) => fn(dialog, form);
+    callMounted = () => fn();
   },
   open() {
     dialogEl.showModal();
@@ -46869,14 +46884,13 @@ const request = api.request;
 const user = api.user;
 
 function instance($$self, $$props, $$invalidate) {
+  let $styleStore;
+  validate_store(styleStore, 'styleStore');
+  component_subscribe($$self, styleStore, ($$value) => $$invalidate(3, ($styleStore = $$value)));
   let { $$slots: slots = {}, $$scope } = $$props;
   validate_slots('Modal', slots, []);
-  let { config = undefined } = $$props;
-  let { content = undefined } = $$props;
-  let { journeys = undefined } = $$props;
-  let { links = undefined } = $$props;
-  let { style = undefined } = $$props;
   const dispatch = createEventDispatcher();
+  const { journeyStore } = api.getStores();
 
   // Reference to the closeCallback from the above module context
   let _closeCallback = closeCallback;
@@ -46890,43 +46904,6 @@ function instance($$self, $$props, $$invalidate) {
   // The single reference to the `form` DOM element
   let formEl;
 
-  if (config) {
-    // Set base config to SDK
-    // TODO: Move to a shared utility
-    configure({
-      // Set some basics by default
-      ...{
-        // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-        clientId: 'WebLoginWidgetClient',
-        // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-        // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-        realmPath: 'alpha',
-        // TODO: Once we move to SSR, this default should be more intelligent
-        redirectUri:
-          typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
-        scope: 'openid email',
-      },
-      // Let user provided config override defaults
-      ...config,
-      // Force 'legacy' to remove confusion
-      ...{ support: 'legacy' },
-    });
-  }
-
-  /**
-   * Initialize the stores and ensure both variables point to the same reference.
-   * Variables with _ are the reactive version of the original variable from above.
-   */
-  const journeyStore = initialize$4(config);
-
-  const oauthStore = initialize$1(config);
-  const userStore = initialize(config);
-  api.setStores(journeyStore, oauthStore, userStore);
-  initialize$6(content);
-  initialize$3(journeys);
-  initialize$2(links);
-  initialize$5(style);
-
   onMount(() => {
     dialogComp = _dialogComp;
     dialogEl = _dialogEl;
@@ -46934,7 +46911,7 @@ function instance($$self, $$props, $$invalidate) {
     /**
      * Call mounted event for Singleton users
      */
-    callMounted && callMounted(_dialogEl, formEl);
+    callMounted && callMounted();
 
     /**
      * Call mounted event for Instance users
@@ -46947,7 +46924,7 @@ function instance($$self, $$props, $$invalidate) {
     }, 0);
   });
 
-  const writable_props = ['config', 'content', 'journeys', 'links', 'style'];
+  const writable_props = [];
 
   Object.keys($$props).forEach((key) => {
     if (!~writable_props.indexOf(key) && key.slice(0, 2) !== '$$' && key !== 'slot')
@@ -46956,31 +46933,22 @@ function instance($$self, $$props, $$invalidate) {
 
   function journey_1_formEl_binding(value) {
     formEl = value;
-    $$invalidate(3, formEl);
+    $$invalidate(2, formEl);
   }
 
   function dialog_dialogEl_binding(value) {
     _dialogEl = value;
-    $$invalidate(2, _dialogEl);
+    $$invalidate(1, _dialogEl);
   }
 
   function dialog_binding($$value) {
     binding_callbacks[$$value ? 'unshift' : 'push'](() => {
       _dialogComp = $$value;
-      $$invalidate(1, _dialogComp);
+      $$invalidate(0, _dialogComp);
     });
   }
 
-  $$self.$$set = ($$props) => {
-    if ('config' in $$props) $$invalidate(6, (config = $$props.config));
-    if ('content' in $$props) $$invalidate(7, (content = $$props.content));
-    if ('journeys' in $$props) $$invalidate(8, (journeys = $$props.journeys));
-    if ('links' in $$props) $$invalidate(9, (links = $$props.links));
-    if ('style' in $$props) $$invalidate(0, (style = $$props.style));
-  };
-
   $$self.$capture_state = () => ({
-    get: get_store_value,
     widgetApiFactory,
     dialogComp,
     dialogEl,
@@ -46997,40 +46965,21 @@ function instance($$self, $$props, $$invalidate) {
     SvelteComponent: SvelteComponentDev,
     Dialog,
     Journey,
-    configure,
-    initializeJourneys: initialize$3,
-    initializeJourney: initialize$4,
-    initializeContent: initialize$6,
-    initializeLinks: initialize$2,
-    partialLinksSchema,
-    initializeOauth: initialize$1,
-    initializeUser: initialize,
-    initializeStyle: initialize$5,
-    config,
-    content,
-    journeys,
-    links,
-    style,
+    styleStore,
     dispatch,
+    journeyStore,
     _closeCallback,
     _dialogComp,
     _dialogEl,
     formEl,
-    journeyStore,
-    oauthStore,
-    userStore,
+    $styleStore,
   });
 
   $$self.$inject_state = ($$props) => {
-    if ('config' in $$props) $$invalidate(6, (config = $$props.config));
-    if ('content' in $$props) $$invalidate(7, (content = $$props.content));
-    if ('journeys' in $$props) $$invalidate(8, (journeys = $$props.journeys));
-    if ('links' in $$props) $$invalidate(9, (links = $$props.links));
-    if ('style' in $$props) $$invalidate(0, (style = $$props.style));
-    if ('_closeCallback' in $$props) $$invalidate(4, (_closeCallback = $$props._closeCallback));
-    if ('_dialogComp' in $$props) $$invalidate(1, (_dialogComp = $$props._dialogComp));
-    if ('_dialogEl' in $$props) $$invalidate(2, (_dialogEl = $$props._dialogEl));
-    if ('formEl' in $$props) $$invalidate(3, (formEl = $$props.formEl));
+    if ('_closeCallback' in $$props) $$invalidate(5, (_closeCallback = $$props._closeCallback));
+    if ('_dialogComp' in $$props) $$invalidate(0, (_dialogComp = $$props._dialogComp));
+    if ('_dialogEl' in $$props) $$invalidate(1, (_dialogEl = $$props._dialogEl));
+    if ('formEl' in $$props) $$invalidate(2, (formEl = $$props.formEl));
   };
 
   if ($$props && '$$inject' in $$props) {
@@ -47038,16 +46987,12 @@ function instance($$self, $$props, $$invalidate) {
   }
 
   return [
-    style,
     _dialogComp,
     _dialogEl,
     formEl,
-    _closeCallback,
+    $styleStore,
     journeyStore,
-    config,
-    content,
-    journeys,
-    links,
+    _closeCallback,
     journey_1_formEl_binding,
     dialog_dialogEl_binding,
     dialog_binding,
@@ -47057,14 +47002,7 @@ function instance($$self, $$props, $$invalidate) {
 class Modal extends SvelteComponentDev {
   constructor(options) {
     super(options);
-
-    init(this, options, instance, create_fragment, safe_not_equal, {
-      config: 6,
-      content: 7,
-      journeys: 8,
-      links: 9,
-      style: 0,
-    });
+    init(this, options, instance, create_fragment, safe_not_equal, {});
 
     dispatch_dev('SvelteRegisterComponent', {
       component: this,
@@ -47072,66 +47010,6 @@ class Modal extends SvelteComponentDev {
       options,
       id: create_fragment.name,
     });
-  }
-
-  get config() {
-    throw new Error(
-      "<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  set config(value) {
-    throw new Error(
-      "<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  get content() {
-    throw new Error(
-      "<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  set content(value) {
-    throw new Error(
-      "<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  get journeys() {
-    throw new Error(
-      "<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  set journeys(value) {
-    throw new Error(
-      "<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  get links() {
-    throw new Error(
-      "<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  set links(value) {
-    throw new Error(
-      "<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  get style() {
-    throw new Error(
-      "<Modal>: Props cannot be read directly from the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
-  }
-
-  set style(value) {
-    throw new Error(
-      "<Modal>: Props cannot be set directly on the component instance unless compiling with 'accessors: true' or '<svelte:options accessors/>'",
-    );
   }
 }
 

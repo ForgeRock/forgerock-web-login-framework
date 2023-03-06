@@ -2,16 +2,13 @@
   import { widgetApiFactory } from './_utilities/_api.utilities';
   import { componentApi } from './_utilities/component.utilities';
 
-  // Import store types
-  import type { ComponentApi } from './_utilities/component.utilities';
-
   import './main.css';
 
   const api = widgetApiFactory(componentApi());
 
   export const configuration = api.configuration;
   export const journey = api.journey;
-  export const modal = api.modal as ComponentApi;
+  export const component = componentApi;
   export const request = api.request;
   export const user = api.user;
 
@@ -22,53 +19,51 @@
 </script>
 
 <script lang="ts">
-  import { createEventDispatcher, onMount, SvelteComponent } from 'svelte';
+  import { onMount, SvelteComponent } from 'svelte';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import Journey from '$journey/journey.svelte';
-  import { style } from '$lib/style.store';
+  import { styleStore } from '$lib/style.store';
+
+  export let type: 'modal' | 'inline' = 'modal';
 
   const componentEvents = componentApi();
-  const dispatch = createEventDispatcher();
   const { journeyStore } = api.getStores();
 
-  // Variables that reference the Svelte component and the DOM element
-  // Variables with `_` reference points to the same variables from the `context="module"`
+  // Variables that reference the Svelte component and the DOM elements
   let dialogComp: SvelteComponent;
   let dialogEl: HTMLDialogElement;
-  // The single reference to the `form` DOM element
   let formEl: HTMLFormElement;
 
   onMount(() => {
     componentEvents.mount(dialogComp, dialogEl);
-    /**
-     * Call mounted event for Instance users
-     * NOTE: needs to be wrapped in setTimeout. Asked in Svelte Discord
-     * if this is an issue or expected. Answer: Object instantiation seems
-     * to be synchronous, so this doesn't get called without `setTimeout`.
-     */
-    setTimeout(() => {
-      dispatch('modal-mount', 'Modal mounted');
-    }, 0);
   });
 </script>
 
-<div class="fr_widget-root">
-  <Dialog
-    bind:dialogEl={dialogEl}
-    bind:this={dialogComp}
-    closeCallback={componentApi().close}
-    dialogId="sampleDialog"
-    withHeader= {$style?.sections?.header}
-  >
-    <!--
-      `displayIcon` prioritizes the direct configuration with `style.stages.icon`,
-      but falls back to the existence of the logo with `style.logo`
-    -->
+{#if type === 'modal'}
+  <div class="fr_widget-root">
+    <Dialog
+      bind:dialogEl={dialogEl}
+      bind:this={dialogComp}
+      closeCallback={componentApi().close}
+      dialogId="sampleDialog"
+      withHeader= {$styleStore?.sections?.header}
+    >
+      <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
+      <Journey
+        bind:formEl
+        displayIcon={$styleStore?.stage?.icon ?? !$styleStore?.logo}
+        journeyStore={journeyStore}
+      />
+    </Dialog>
+  </div>
+{:else}
+  <div class="fr_widget-root">
+    <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
     <Journey
       bind:formEl
-      displayIcon={$style?.stage?.icon ?? !$style?.logo}
+      displayIcon={$styleStore?.stage?.icon ?? true}
       journeyStore={journeyStore}
     />
-  </Dialog>
-</div>
+  </div>
+{/if}

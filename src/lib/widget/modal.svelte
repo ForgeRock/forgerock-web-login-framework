@@ -41,7 +41,7 @@
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import Journey from '$journey/journey.svelte';
-  import { style } from '$lib/style.store';
+  import { styleStore } from '$lib/style.store';
 
   const dispatch = createEventDispatcher();
   const { journeyStore } = api.getStores();
@@ -82,7 +82,7 @@
     bind:this={_dialogComp}
     closeCallback={_closeCallback}
     dialogId="sampleDialog"
-    withHeader= {$style?.sections?.header}
+    withHeader= {$styleStore?.sections?.header}
   >
     <!--
       `displayIcon` prioritizes the direct configuration with `style.stages.icon`,
@@ -90,7 +90,7 @@
     -->
     <Journey
       bind:formEl
-      displayIcon={$style?.stage?.icon ?? !$style?.logo}
+      displayIcon={$styleStore?.stage?.icon ?? !$styleStore?.logo}
       journeyStore={journeyStore}
     />
   </Dialog>

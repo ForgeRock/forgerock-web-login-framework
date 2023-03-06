@@ -2,18 +2,17 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { configuration, modal, journey, user } from '$package/modal';
+  import Widget, { configuration, component, journey, user } from '$package/index';
 
-  import type { JourneyApi } from '$package/modal';
-  import type { Maybe } from '$lib/interfaces';
+  const config = configuration();
+  const componentEvents = component();
+  const journeyEvents = journey();
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
-  // TODO: Use a more specific types
   let userResponse: any | null;
-  let journeyEvents: Maybe<JourneyApi> = null;
   let widgetEl: HTMLDivElement;
 
   async function logout() {
@@ -21,15 +20,15 @@
     userResponse = null;
   }
 
-  // TODO: Investigate why the parameter types are needed here
-  modal.onMount((dialog, form) => {
-    console.log(dialog);
-    console.log(form);
+  componentEvents.subscribe((event) => {
+    console.log(`Modal closed due to ${event && event.reason}`);
   });
-
-  modal.onClose((args) =>
-    console.log(`Modal closed due to ${args && args.reason}`),
-  );
+  journeyEvents.subscribe((event) => {
+    console.log(event);
+    if (event?.user?.successful) {
+      userResponse = event?.user;
+    }
+  });
 
   onMount(async () => {
     let content;
@@ -42,7 +41,7 @@
       content = response.ok && (await response.json());
     }
 
-    configuration().set({
+    config.set({
       config: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
@@ -70,18 +69,11 @@
     });
 
     new Widget({ target: widgetEl });
-
-    // Start the  journey after initialization or within the form.onMount event
-    journeyEvents = journey();
-    journeyEvents.subscribe((event) => {
-      console.log(event);
-      userResponse = event?.user;
-    });
   });
 </script>
 
 <div class="tw_p-6">
-  {#if userResponse?.successful}
+  {#if userResponse}
     <ul>
       <li id="fullName">
         <strong>Full name</strong>: {`${userResponse.response?.given_name} ${userResponse.response?.family_name}`}
@@ -91,11 +83,11 @@
     <button on:click={logout}>Logout</button>
   {:else}
     <button on:click={() => {
-        journeyEvents?.start({
+        journeyEvents.start({
           journey: journeyParam || authIndexValue || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
         });
-        modal.open();
+        componentEvents.open();
       }
       }> Open Login Modal </button>
   {/if}

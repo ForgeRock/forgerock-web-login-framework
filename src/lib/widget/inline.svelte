@@ -25,7 +25,7 @@
   import { createEventDispatcher, onMount } from 'svelte';
 
   import Journey from '$journey/journey.svelte';
-  import { style } from '$lib/style.store';
+  import { styleStore } from '$lib/style.store';
 
   const dispatch = createEventDispatcher();
   const { journeyStore } = api.getStores();
@@ -53,7 +53,7 @@
   <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
   <Journey
     bind:formEl
-    displayIcon={$style?.stage?.icon ?? true}
+    displayIcon={$styleStore?.stage?.icon ?? true}
     journeyStore={journeyStore}
   />
 </div>

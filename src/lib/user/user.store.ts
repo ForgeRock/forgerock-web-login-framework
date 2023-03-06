@@ -18,14 +18,14 @@ export interface UserStoreValue {
   response: unknown;
 }
 
+export const userStore: Writable<UserStoreValue> = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+});
 export function initialize(initOptions?: ConfigOptions) {
-  const { set, subscribe }: Writable<UserStoreValue> = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    successful: false,
-    response: null,
-  });
 
   async function get(getOptions?: ConfigOptions) {
     /**
@@ -37,7 +37,7 @@ export function initialize(initOptions?: ConfigOptions) {
       ...getOptions,
     };
 
-    set({
+    userStore.set({
       completed: false,
       error: null,
       loading: true,
@@ -48,7 +48,7 @@ export function initialize(initOptions?: ConfigOptions) {
     try {
       const user = await UserManager.getCurrentUser(options);
 
-      set({
+      userStore.set({
         completed: true,
         error: null,
         loading: false,
@@ -57,7 +57,7 @@ export function initialize(initOptions?: ConfigOptions) {
       });
     } catch (err: unknown) {
       if (err instanceof Error) {
-        set({
+        userStore.set({
           completed: true,
           error: {
             message: err.message,
@@ -71,7 +71,7 @@ export function initialize(initOptions?: ConfigOptions) {
   }
 
   function reset() {
-    set({
+    userStore.set({
       completed: false,
       error: null,
       loading: false,
@@ -83,6 +83,6 @@ export function initialize(initOptions?: ConfigOptions) {
   return {
     get,
     reset,
-    subscribe,
+    subscribe: userStore.subscribe,
   };
 }

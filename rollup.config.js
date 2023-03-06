@@ -95,6 +95,17 @@ export default [
    * ES Module Bundling
    */
   {
+    input: 'src/lib/widget/index.svelte',
+    onwarn: warningHandler,
+    output: {
+      file: path.join(packageFolder, 'index.js'),
+      format: 'es',
+      sourcemap: true,
+      inlineDynamicImports: true,
+    },
+    plugins,
+  },
+  {
     input: 'src/lib/widget/inline.svelte',
     onwarn: warningHandler,
     output: {
@@ -120,6 +131,19 @@ export default [
   /** ****************************
    * CJS Module Bundling
    */
+  CI
+    ? {
+        input: 'src/lib/widget/index.svelte',
+        onwarn: warningHandler,
+        output: {
+          file: path.join(packageFolder, 'index.cjs'),
+          format: 'cjs',
+          sourcemap: true,
+          inlineDynamicImports: true,
+        },
+        plugins,
+      }
+    : undefined,
   CI
     ? {
         input: 'src/lib/widget/inline.svelte',

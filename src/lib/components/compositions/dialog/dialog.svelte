@@ -1,7 +1,7 @@
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
   import XIcon from '../../icons/x-icon.svelte';
-  import { style } from '$lib/style.store';
+  import { styleStore } from '$lib/style.store';
 
   export let closeCallback: (args: { reason: 'auto' | 'external' | 'user' }) => void;
   export let dialogEl: HTMLDialogElement | null = null;
@@ -9,19 +9,11 @@
   export let forceOpen = false;
   export let withHeader = false;
 
-  interface CloseOptions {
-    reason: 'auto' | 'external' | 'user';
-  }
-
-  export function closeDialog(args?: CloseOptions) {
-    const { reason } = args || { reason: 'external' };
-
+  // TODO: Add a keyboard listener
+  export function closeDialog() {
     function completeClose() {
       dialogEl?.close();
       dialogEl?.classList.remove('tw_dialog-closing');
-
-      // Call dev provided callback function for event hook
-      closeCallback && closeCallback({ reason });
     }
 
     // Create timer in case the CSS is not loaded
@@ -56,15 +48,15 @@
     <div class="tw_dialog-header dark:tw_dialog-header_dark">
       <div
         class="tw_dialog-logo dark:tw_dialog-logo_dark"
-        style={`--logo-dark: url("${$style?.logo?.dark}"); --logo-light: url("${
-          $style?.logo?.light
-        }"); ${$style?.logo?.height ? `height: ${$style?.logo.height}px;` : ''} ${
-          $style?.logo?.width ? `width: ${$style?.logo.width}px;` : ''
+        style={`--logo-dark: url("${$styleStore?.logo?.dark}"); --logo-light: url("${
+          $styleStore?.logo?.light
+        }"); ${$styleStore?.logo?.height ? `height: ${$styleStore?.logo.height}px;` : ''} ${
+          $styleStore?.logo?.width ? `width: ${$styleStore?.logo.width}px;` : ''
         }`}
       />
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
-        on:click={() => closeDialog({ reason: 'user' })}
+        on:click={() => closeCallback({ reason: 'user' })}
         aria-controls={dialogId}
       >
         <XIcon
@@ -76,12 +68,12 @@
   {:else}
     <div
       class={`tw_pt-10 md:tw_pt-10 tw_text-right ${
-        $style?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
+        $styleStore?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
       }`}
     >
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
-        on:click={() => closeDialog({ reason: 'user' })}
+        on:click={() => closeCallback({ reason: 'user' })}
         aria-controls={dialogId}
       >
         <XIcon
@@ -89,10 +81,10 @@
           ><T key="closeModal" /></XIcon
         >
       </button>
-      {#if $style?.logo}
+      {#if $styleStore?.logo}
         <div
           class="tw_dialog-logo dark:tw_dialog-logo_dark"
-          style={`--logo-dark: url("${$style?.logo?.dark}"); --logo-light: url("${$style?.logo?.light}")`}
+          style={`--logo-dark: url("${$styleStore?.logo?.dark}"); --logo-light: url("${$styleStore?.logo?.light}")`}
         />
       {/if}
     </div>

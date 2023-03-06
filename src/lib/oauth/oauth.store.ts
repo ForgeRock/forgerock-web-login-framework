@@ -18,14 +18,14 @@ export interface OAuthTokenStoreValue {
   response: Maybe<OAuth2Tokens> | void;
 }
 
+export const oauthStore: Writable<OAuthTokenStoreValue> = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+});
 export function initialize(initOptions?: GetTokensOptions) {
-  const { set, subscribe }: Writable<OAuthTokenStoreValue> = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    successful: false,
-    response: null,
-  });
 
   async function get(getOptions?: GetTokensOptions) {
     /**
@@ -40,7 +40,7 @@ export function initialize(initOptions?: GetTokensOptions) {
 
     let tokens: OAuth2Tokens | void;
 
-    set({
+    oauthStore.set({
       completed: false,
       error: null,
       loading: true,
@@ -52,7 +52,7 @@ export function initialize(initOptions?: GetTokensOptions) {
       tokens = await TokenManager.getTokens(options);
     } catch (err: unknown) {
       if (err instanceof Error) {
-        set({
+        oauthStore.set({
           completed: true,
           error: {
             message: err.message,
@@ -65,7 +65,7 @@ export function initialize(initOptions?: GetTokensOptions) {
       return;
     }
 
-    set({
+    oauthStore.set({
       completed: true,
       error: null,
       loading: false,
@@ -75,7 +75,7 @@ export function initialize(initOptions?: GetTokensOptions) {
   }
 
   function reset() {
-    set({
+    oauthStore.set({
       completed: false,
       error: null,
       loading: false,
@@ -87,6 +87,6 @@ export function initialize(initOptions?: GetTokensOptions) {
   return {
     get,
     reset,
-    subscribe,
+    subscribe: oauthStore.subscribe,
   };
 }

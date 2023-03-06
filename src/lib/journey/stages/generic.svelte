@@ -16,7 +16,7 @@
   import Form from '$components/primitives/form/form.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
   import ShieldIcon from '$components/icons/shield-icon.svelte';
-  import { style } from '$lib/style.store';
+  import { styleStore } from '$lib/style.store';
 
   // Types
   import type {
@@ -124,7 +124,7 @@
         callbackMetadata: metadata?.callbacks[idx],
         selfSubmitFunction: determineSubmission,
         stepMetadata: metadata?.step && { ...metadata.step },
-        style: $style,
+        style: $styleStore,
       }}
     />
   {/each}

@@ -1,10 +1,10 @@
 import { Config, FRUser, SessionManager, type ConfigOptions } from '@forgerock/javascript-sdk';
 import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
-import { derived, type Readable } from 'svelte/store';
+import { derived, get, type Readable } from 'svelte/store';
 
-// Import the stores for initialization
 import configure from '$lib/sdk.config';
 
+// Import the stores for initialization
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { initialize as initializeJourney } from '$journey/journey.store';
 import { initialize as initializeContent } from '$lib/locale.store';
@@ -13,66 +13,105 @@ import { initialize as initializeOauth, type OAuthTokenStoreValue } from '$lib/o
 import { initialize as initializeUser, type UserStoreValue } from '$lib/user/user.store';
 import { initialize as initializeStyle } from '$lib/style.store';
 
-import type {
-  ComponentApi,
-  JourneyOptions,
-  JourneyOptionsStart,
-  WidgetConfigOptions,
-} from '../interfaces';
+import { componentStore, type componentApi as _componentApi } from './component.utilities';
+import type { JourneyOptions, JourneyOptionsStart, WidgetConfigOptions } from '../interfaces';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 import type { OAuthStore } from '$lib/oauth/oauth.store';
 import type { UserStore } from '$lib/user/user.store';
 
-export function widgetApiFactory(modal?: ComponentApi) {
+export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>) {
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let userStore: UserStore;
 
+  function getStores() {
+    return {
+      journeyStore,
+      oauthStore,
+      userStore,
+    };
+  }
   function resetAndRestartStores() {
     // Reset stores
-    journeyStore && journeyStore.reset();
-    oauthStore && oauthStore.reset();
-    userStore && userStore.reset();
+    journeyStore.reset();
+    oauthStore.reset();
+    userStore.reset();
 
     // Fetch fresh journey step
-    journey && journey().start();
+    journey().start();
   }
 
-  const configuration = () => {
+  const configuration = (options?: WidgetConfigOptions) => {
+    if (options?.config) {
+      configure({
+        // Set some basics by default
+        ...{
+          // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
+          clientId: 'WebLoginWidgetClient',
+          // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
+          // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
+          realmPath: 'alpha',
+          // TODO: Once we move to SSR, this default should be more intelligent
+          redirectUri:
+            typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+          scope: 'openid email',
+        },
+        // Let user provided config override defaults
+        ...options?.config,
+        // Force 'legacy' to remove confusion
+        ...{ support: 'legacy' },
+      });
+    }
+
+    /**
+     * Initialize the stores and ensure both variables point to the same reference.
+     * Variables with _ are the reactive version of the original variable from above.
+     */
+    journeyStore = initializeJourney(options?.config);
+    oauthStore = initializeOauth(options?.config);
+    userStore = initializeUser(options?.config);
+
+    initializeContent(options?.content);
+    initializeJourneys(options?.journeys);
+    initializeLinks(options?.links);
+    initializeStyle(options?.style);
+
     return {
-      set(options: WidgetConfigOptions): void {
-        configure({
-          // Set some basics by default
-          ...{
-            // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-            clientId: 'WebLoginWidgetClient',
-            // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-            // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-            realmPath: 'alpha',
-            // TODO: Once we move to SSR, this default should be more intelligent
-            redirectUri:
-              typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
-            scope: 'openid email',
-          },
-          // Let user provided config override defaults
-          ...options.config,
-          // Force 'legacy' to remove confusion
-          ...{ support: 'legacy' },
-        });
+      set(setOptions?: WidgetConfigOptions): void {
+        if (setOptions?.config) {
+          configure({
+            // Set some basics by default
+            ...{
+              // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
+              clientId: 'WebLoginWidgetClient',
+              // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
+              // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
+              realmPath: 'alpha',
+              // TODO: Once we move to SSR, this default should be more intelligent
+              redirectUri:
+                typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+              scope: 'openid email',
+            },
+            // Let user provided config override defaults
+            ...setOptions?.config,
+            // Force 'legacy' to remove confusion
+            ...{ support: 'legacy' },
+          });
+        }
 
         /**
          * Initialize the stores and ensure both variables point to the same reference.
          * Variables with _ are the reactive version of the original variable from above.
          */
-        journeyStore = initializeJourney(options.config);
-        oauthStore = initializeOauth(options.config);
-        userStore = initializeUser(options.config);
+        journeyStore = initializeJourney(setOptions?.config);
+        oauthStore = initializeOauth(setOptions?.config);
+        userStore = initializeUser(setOptions?.config);
 
-        initializeContent(options.content);
-        initializeJourneys(options.journeys);
-        initializeLinks(options.links);
-        initializeStyle(options.style);
-      },
+        initializeContent(setOptions?.content);
+        initializeJourneys(setOptions?.journeys);
+        initializeLinks(setOptions?.links);
+        initializeStyle(setOptions?.style);
+      }
     };
   };
   const journey = (options?: JourneyOptions) => {
@@ -90,25 +129,29 @@ export function widgetApiFactory(modal?: ComponentApi) {
             user: $userStore,
           });
 
-          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
-            modal && modal.close({ reason: 'auto' });
-          } else if ($journeyStore.successful && $oauthStore.successful) {
-            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
-              userStore.get();
-            } else if (!requestsUser) {
-              modal && modal.close({ reason: 'auto' });
-            }
-          } else if ($journeyStore.successful) {
-            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
-              oauthStore.get();
-            } else if (!requestsOauth) {
-              modal && modal.close({ reason: 'auto' });
+          if ($journeyStore) {
+            if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+              formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+            } else if ($journeyStore.successful && $oauthStore.successful) {
+              if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+                userStore.get();
+              } else if (!requestsUser) {
+                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+              }
+            } else if ($journeyStore.successful) {
+              if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+                oauthStore.get();
+              } else if (!requestsOauth) {
+                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+              }
             }
           }
         },
       );
+    let formFactor: 'modal' | 'inline' | null = null;
 
     function start(startOptions?: JourneyOptionsStart) {
+      formFactor = get(componentStore).type;
       if (startOptions?.resumeUrl) {
         journeyStore.resume(startOptions.resumeUrl);
       } else {
@@ -203,17 +246,11 @@ export function widgetApiFactory(modal?: ComponentApi) {
   };
 
   return {
+    component: componentApi,
     configuration,
+    getStores,
     journey,
     request: HttpClient.request,
-    ...(modal && { modal }),
-    getStores() {
-      return {
-        journeyStore,
-        oauthStore,
-        userStore,
-      };
-    },
     user,
   };
 }
