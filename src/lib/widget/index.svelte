@@ -1,5 +1,5 @@
 <script context="module" lang="ts">
-  import { widgetApiFactory } from './_utilities/_api.utilities';
+  import { widgetApiFactory } from './_utilities/api.utilities';
   import { componentApi } from './_utilities/component.utilities';
 
   import './main.css';
@@ -45,7 +45,6 @@
     <Dialog
       bind:dialogEl={dialogEl}
       bind:this={dialogComp}
-      closeCallback={componentApi().close}
       dialogId="sampleDialog"
       withHeader= {$styleStore?.sections?.header}
     >

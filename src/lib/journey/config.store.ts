@@ -47,8 +47,8 @@ export let configuredJourneysStore: Writable<StoreItem[]> = writable(
   (Object.keys(defaultJourneys) as JourneyKeys[]).map((key) => ({
     ...defaultJourneys[key],
     key,
-  })
-));
+  })),
+);
 
 export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> | null) {
   if (customJourneys) {

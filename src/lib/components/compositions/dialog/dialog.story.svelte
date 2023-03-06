@@ -22,8 +22,6 @@
   }
 
   function submitForm(event: SubmitEvent, isFormValid: boolean) {
-    console.log(`Is form valid: ${isFormValid}`);
-
     if (isFormValid) {
       dialogEl.close();
     }
@@ -40,7 +38,7 @@
   />
 {/if}
 
-<Dialog bind:dialogEl closeCallback={(args) => {}} dialogId="myDialog" {forceOpen} {withHeader}>
+<Dialog bind:dialogEl dialogId="myDialog" {forceOpen} {withHeader}>
   <h2
     class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray dark:tw_text-white"
   >

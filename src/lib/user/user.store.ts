@@ -26,7 +26,6 @@ export const userStore: Writable<UserStoreValue> = writable({
   response: null,
 });
 export function initialize(initOptions?: ConfigOptions) {
-
   async function get(getOptions?: ConfigOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions

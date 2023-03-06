@@ -1,17 +1,16 @@
-
 import { writable, type Writable } from 'svelte/store';
 
 import type { SvelteComponent } from 'svelte';
 
 export interface ComponentStoreValue {
-  error: { code: string, message: string } | null;
+  error: { code: string; message: string } | null;
   modal: {
     component: SvelteComponent;
     element: HTMLDialogElement;
   } | null;
   mounted: boolean;
   open: boolean | null;
-  reason: string;
+  reason: 'auto' | 'external' | 'user' | null;
   type: 'inline' | 'modal' | null;
 }
 
@@ -21,7 +20,7 @@ export const componentStore: Writable<ComponentStoreValue> = writable({
   error: null,
   mounted: false,
   open: null,
-  reason: '',
+  reason: null,
   type: null,
 });
 
@@ -47,8 +46,8 @@ export const componentApi = () => {
         return {
           ...state,
           open: false,
-          reason: args?.reason || '',
-        }
+          reason: args?.reason || null,
+        };
       });
     },
     mount: (component: SvelteComponent, element: HTMLDialogElement) => {
@@ -60,7 +59,7 @@ export const componentApi = () => {
           },
           mounted: true,
           type: component ? 'modal' : 'inline',
-        }
+        };
       });
     },
     open: () => {
@@ -81,9 +80,9 @@ export const componentApi = () => {
         return {
           ...state,
           open: true,
-        }
+        };
       });
     },
     subscribe,
-  }
+  };
 };

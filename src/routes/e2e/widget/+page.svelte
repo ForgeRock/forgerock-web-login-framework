@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { configuration, user } from '$package/modal';
+  import { configuration, user } from '$package/index';
 
   let loading: any;
   let userInfo: any;

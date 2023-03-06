@@ -26,7 +26,6 @@ export const oauthStore: Writable<OAuthTokenStoreValue> = writable({
   response: null,
 });
 export function initialize(initOptions?: GetTokensOptions) {
-
   async function get(getOptions?: GetTokensOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions

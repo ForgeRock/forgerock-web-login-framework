@@ -18,25 +18,16 @@ const declareModuleSection = `declare module '*.svelte' {
 `;
 const importMetaPath = fileURLToPath(import.meta.url);
 const importMetaDirectoryPath = dirname(importMetaPath);
-const modal = join(importMetaDirectoryPath, '../', 'package', 'modal.d.ts');
-const inline = join(importMetaDirectoryPath, '../', 'package', 'inline.d.ts');
+const index = join(importMetaDirectoryPath, '../', 'package', 'index.d.ts');
 
-const inlineContents = String(readFileSync(inline));
-const modalContents = String(readFileSync(modal));
+const indexContents = String(readFileSync(index));
 
-const inlineIndex = inlineContents.indexOf(declareModuleSection);
-if (inlineIndex === -1) {
+const declareModuleIdx = indexContents.indexOf(declareModuleSection);
+if (declareModuleIdx === -1) {
   console.error(`Failed to remove the Svelte declare module section from ${inline}`);
   process.exit(1);
 }
-const modalIndex = modalContents.indexOf(declareModuleSection);
-if (modalIndex === -1) {
-  console.error(`Failed to remove the Svelte declare module section from ${modal}`);
-  process.exit(1);
-}
 
-const inlineCleaned = inlineContents.replace(declareModuleSection, '');
-const modalCleaned = modalContents.replace(declareModuleSection, '');
+const indexCleaned = indexContents.replace(declareModuleSection, '');
 
-writeFileSync(inline, inlineCleaned);
-writeFileSync(modal, modalCleaned);
+writeFileSync(index, indexCleaned);

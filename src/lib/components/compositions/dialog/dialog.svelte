@@ -2,18 +2,29 @@
   import T from '$components/_utilities/locale-strings.svelte';
   import XIcon from '../../icons/x-icon.svelte';
   import { styleStore } from '$lib/style.store';
+  import { componentStore } from '$lib/widget/_utilities/component.utilities';
 
-  export let closeCallback: (args: { reason: 'auto' | 'external' | 'user' }) => void;
+  import type { ComponentStoreValue } from '$lib/widget/_utilities/component.utilities';
+
   export let dialogEl: HTMLDialogElement | null = null;
   export let dialogId: string;
   export let forceOpen = false;
   export let withHeader = false;
 
   // TODO: Add a keyboard listener
-  export function closeDialog() {
+  export function closeDialog(reason: ComponentStoreValue['reason']) {
     function completeClose() {
       dialogEl?.close();
       dialogEl?.classList.remove('tw_dialog-closing');
+
+      // Ensure we have a store and it has an update method on it
+      componentStore?.update((state) => {
+        if (state.open === false) {
+          // If state is already correct, just return the same reference
+          return state;
+        }
+        return { ...state, open: false, reason };
+      });
     }
 
     // Create timer in case the CSS is not loaded
@@ -56,7 +67,7 @@
       />
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
-        on:click={() => closeCallback({ reason: 'user' })}
+        on:click={() => closeDialog('user')}
         aria-controls={dialogId}
       >
         <XIcon
@@ -73,7 +84,7 @@
     >
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
-        on:click={() => closeCallback({ reason: 'user' })}
+        on:click={() => closeDialog('user')}
         aria-controls={dialogId}
       >
         <XIcon
