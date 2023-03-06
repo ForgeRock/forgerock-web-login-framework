@@ -41,7 +41,7 @@
     "@forgerock/javascript-sdk": "^3.4.0",
     "uuid": "^9.0.0",
     "xss": "^1.0.14",
-    "zod": "^3.19.1"
+    "zod": "^3.21.2"
   },
   "devDependencies": {
     "@babel/core": "^7.21.0",
