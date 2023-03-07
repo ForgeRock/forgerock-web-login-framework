@@ -2,7 +2,7 @@ import sanitize from 'xss';
 import { get } from 'svelte/store';
 import { z } from 'zod';
 
-import { strings } from '$lib/locale.store';
+import { stringsStore } from '$lib/locale.store';
 
 /**
  * Do not allow strings with angle brackets, just to be extra safe
@@ -57,7 +57,7 @@ export function interpolate(
   if (!key) throw new Error('No key provided to t()');
 
   // Grab the text from the translations store.
-  const contentObj = get<Record<string, string> | null>(strings);
+  const contentObj = get<Record<string, string> | null>(stringsStore);
   const string = (contentObj && contentObj[key]) || '';
 
   let messageDirty = '';

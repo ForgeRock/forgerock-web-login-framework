@@ -12,11 +12,11 @@
   import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import KeyIcon from '$components/icons/key-icon.svelte';
-  import { style } from '$lib/style.store';
+  import { styleStore as style } from '$lib/style.store';
 
   // Types
   import type {
-  CallbackMetadata,
+    CallbackMetadata,
     StageFormObject,
     StageJourneyObject,
     StepMetadata,

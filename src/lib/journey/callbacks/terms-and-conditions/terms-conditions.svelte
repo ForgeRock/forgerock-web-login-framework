@@ -5,7 +5,7 @@
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import Link from '$components/primitives/link/link.svelte';
-  import { links } from '$lib/links.store';
+  import { linksStore } from '$lib/links.store';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
 
@@ -58,8 +58,8 @@
   }
 </script>
 
-{#if $links?.termsAndConditions}
-  <Link classes="tw_block tw_mb-4" href={$links?.termsAndConditions} target="_blank">
+{#if $linksStore?.termsAndConditions}
+  <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
     {interpolate('termsAndConditionsLinkText')}
   </Link>
   <Checkbox

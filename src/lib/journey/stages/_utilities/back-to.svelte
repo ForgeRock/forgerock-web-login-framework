@@ -2,7 +2,7 @@
   import { interpolate } from '$lib/_utilities/i18n.utilities';
 
   import type { StageJourneyObject } from '$journey/journey.interfaces';
-  import { configuredJourneys } from '$journey/config.store';
+  import { configuredJourneysStore } from '$journey/config.store';
 
   export let journey: StageJourneyObject;
 
@@ -10,7 +10,7 @@
   let string = '';
 
   function constructString() {
-    const currentJourney = $configuredJourneys.find((journey) => {
+    const currentJourney = $configuredJourneysStore.find((journey) => {
       return journey.journey === $stack[$stack.length - 2]?.tree;
     });
 

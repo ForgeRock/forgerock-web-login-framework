@@ -8,7 +8,7 @@
     "build:dev:svelte-package": "svelte-package",
     "build:dev:types": "rollup -c ./rollup.types.config.js",
     "build:widget": "npm-run-all build:dev:*",
-    "build:storybook": "storybook build",
+    "build:storybook": "storybook build --webpack-stats-json",
     "build:release": "npm-run-all build:release:*",
     "build:release:widget": "rollup -c",
     "build:release:package": "svelte-package",

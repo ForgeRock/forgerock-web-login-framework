@@ -1,7 +1,7 @@
 import { get } from 'svelte/store';
 import type { z } from 'zod';
 
-import { configuredJourneys } from '$journey/config.store';
+import { configuredJourneysStore } from '$journey/config.store';
 
 import type { StageJourneyObject } from '$journey/journey.interfaces';
 import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
@@ -13,7 +13,7 @@ import type { StoreItem } from '$journey/config.store';
  * @param {object} currentJourney - The current stage's journey object
  */
 export function captureLinks(linkWrapper: HTMLElement, currentJourney: StageJourneyObject) {
-  const journeys = get(configuredJourneys);
+  const journeys = get(configuredJourneysStore);
   const stack = get(currentJourney.stack);
 
   linkWrapper.addEventListener('click', (event: Event) => {
