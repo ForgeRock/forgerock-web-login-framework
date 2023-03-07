@@ -1,3 +1,15 @@
+# [1.0.0-beta.5](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2023-03-07)
+
+
+### Bug Fixes
+
+* fixes journey persistence, authorize throwing error, font issue ([6923699](https://github.com/forgerock/forgerock-web-login-framework/commit/69236995211c61b14aad3e1220fe156fc64bdaa5))
+
+
+### Features
+
+* add support to e2e for social login and otp ([11c4153](https://github.com/forgerock/forgerock-web-login-framework/commit/11c41530878e28fe44023e147905ec73fd3f5b04))
+
 # [1.0.0-beta.4](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2023-02-22)
 
 
