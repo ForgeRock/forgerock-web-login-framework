@@ -7,6 +7,10 @@
 
 **This is a early preview (beta) of a development framework for generating a JavaScript Widget into an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a ForgeRock Login App for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
 
+## These Docs are out of date - update coming
+
+Please note we are pushing an update to these docs and the current version here is not aligned with this API.
+
 ## Table of Contents
 
 - [Overview](#overview)
