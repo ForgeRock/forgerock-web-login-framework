@@ -167,6 +167,7 @@ export function widgetApiFactory(modal?: Modal) {
     },
   };
   const user = {
+    // TODO: add "scopes" to parameters for "true" authorization
     async authorized(remote = false) {
       if (remote) {
         try {
@@ -176,7 +177,11 @@ export function widgetApiFactory(modal?: Modal) {
           return;
         }
       }
-      return !!(await TokenManager.getTokens());
+      try {
+        return !!(await TokenManager.getTokens());
+      } catch (err) {
+        return;
+      }
     },
     async info(remote = false) {
       userStore = userStore as UserStore;

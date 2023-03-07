@@ -44,7 +44,7 @@
 <Input
   isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   key={inputName}
-  label={interpolate(textToKey(callbackType), null, textInputLabel)}
+  label={interpolate(textToKey(textInputLabel || callbackType), null, textInputLabel)}
   onChange={setValue}
   type="text"
   showMessage={false}

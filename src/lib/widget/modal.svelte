@@ -25,9 +25,9 @@
     onMount(fn: (dialog: HTMLDialogElement, form: HTMLFormElement) => void) {
       callMounted = (dialog, form) => fn(dialog, form);
     },
-    open(options?: JourneyOptions): void {
+    open(options?: JourneyOptions, forceRestart?: boolean): void {
       // If journey does not have a step, start the journey
-      if (!get(api.getJourneyStore()).step) {
+      if (!get(api.getJourneyStore()).step || forceRestart) {
         journey.start(options);
       }
       dialogEl.showModal();
@@ -141,7 +141,7 @@
     bind:this={_dialogComp}
     closeCallback={_closeCallback}
     dialogId="sampleDialog"
-    withHeader= {style?.sections?.header}
+    withHeader={style?.sections?.header}
   >
     <!--
       `displayIcon` prioritizes the direct configuration with `style.stages.icon`,
@@ -149,7 +149,7 @@
     -->
     <Journey
       bind:formEl
-      displayIcon={style?.stage?.icon ?? !style?.logo}
+      displayIcon={style?.stage?.icon || !style?.logo}
       journeyStore={api.getJourneyStore()}
     />
   </Dialog>

@@ -79,30 +79,29 @@
     }
   }
 
-  if (callback.getInputValue() === 0) {
-    /**
-     * If input value is 0 (falsy value), then let's make sure it's set to the default value
-     * There's a case when the input value is 100, and for that we leave it 100
-     */
-    callback.setOptionIndex(defaultChoice);
-  }
-
   // TODO: use selfSubmitFunction to communicate to step component that this callback is ready
 
   $: {
     inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
     options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
-
-    if (callbackMetadata?.platform?.showOnlyPositiveAnswer) {
-      // The positive option is always first in the options array
-      options = options.slice(0, 1);
-    }
-
     defaultChoice = callback.getDefaultOption();
     label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm');
 
+    if (callbackMetadata?.platform?.showOnlyPositiveAnswer) {
+      // The positive option is always first in the `options` array
+      options = options.slice(0, 1);
+    }
+
+    if (callback.getInputValue() === 0) {
+      /**
+       * If input value is 0 (falsy value), then let's make sure it's set to the default value
+       * There's a case when the input value is 100, and for that we leave it at 100
+       */
+      callback.setOptionIndex(defaultChoice);
+    }
+
     if (!stepMetadata?.derived.isStepSelfSubmittable && options.length > 1) {
-      // Since the user needs to confirm, add this non-value to force selection
+      // Since the user needs to confirm, add this empty `value` to force selection
       options.unshift({ value: '', text: label });
     } else if (options.length === 1) {
       buttonStyle = 'outline';
@@ -112,38 +111,41 @@
   }
 </script>
 
-{#if !stepMetadata?.derived.isStepSelfSubmittable}
-  {#if options.length > 1}
-    <Select
-      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-      isRequired={false}
-      key={inputName}
-      {label}
-      onChange={setOptionValue}
-      {options}
-    />
-  {:else}
-    <Checkbox
-      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-      isInvalid={false}
-      key={inputName}
-      onChange={setCheckboxValue}
-      value={false}
-    >
-      {options[0].text}
-  </Checkbox>
-  {/if}
-{:else}
-  <Grid num={options.length}>
-    {#each options as opt}
-      <Button
-        style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}
-        type="button"
-        width="auto"
-        onClick={() => setBtnValue(Number(opt.value))}
+<!-- Only render confirmation if NOT currently on 'OneTimePassword' stage -->
+{#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
+  {#if !stepMetadata?.derived.isStepSelfSubmittable}
+    {#if options.length > 1}
+      <Select
+        isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+        isRequired={false}
+        key={inputName}
+        {label}
+        onChange={setOptionValue}
+        {options}
+      />
+    {:else}
+      <Checkbox
+        isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+        isInvalid={false}
+        key={inputName}
+        onChange={setCheckboxValue}
+        value={false}
       >
-        {opt.text}
-      </Button>
-    {/each}
-  </Grid>
+        {options[0].text}
+    </Checkbox>
+    {/if}
+  {:else}
+    <Grid num={options.length}>
+      {#each options as opt}
+        <Button
+          style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}
+          type="button"
+          width="auto"
+          onClick={() => setBtnValue(Number(opt.value))}
+        >
+          {opt.text}
+        </Button>
+      {/each}
+    </Grid>
+  {/if}
 {/if}

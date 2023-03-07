@@ -8,6 +8,7 @@ import Step from './stages.story.svelte';
 import {
   confirmPasswordStep,
   loginStep,
+  oneTimePasswordStep,
   registrationStep,
   usernamePasswordStep,
 } from './step.mock';
@@ -20,6 +21,7 @@ import {
 } from '../callbacks/select-idp/select-idp.mock';
 
 const frConfirmPassword = new FRStep(confirmPasswordStep);
+const frOneTimePassword = new FRStep(oneTimePasswordStep);
 const frRegistrationStep = new FRStep(registrationStep);
 const frLoginStep = new FRStep(loginStep);
 const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
@@ -62,6 +64,24 @@ export const Generic = {
     },
     stage: frLoginStep.getStage(),
     step: frLoginStep,
+  },
+};
+export const OneTimePassword = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frOneTimePassword.getStage(),
+    step: frOneTimePassword,
   },
 };
 export const Registration = {
@@ -222,45 +242,6 @@ const Template = (args) => ({
   props: args,
 });
 
-export const LoginInteraction = Template.bind({});
-
-LoginInteraction.args = {
-  ...UsernamePassword.argTypes,
-  ...UsernamePassword.args,
-};
-
-LoginInteraction.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  await userEvent.tab();
-
-  const nameCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.NameCallback)[0];
-  const passwordCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.PasswordCallback)[0];
-
-  const username = canvas.getByLabelText('Username');
-  const password = canvas.getByLabelText('Password');
-  await expect(username).toHaveFocus();
-  await userEvent.type(username, 'username01');
-  await expect(canvas.getByLabelText('Username').value).toEqual('username01');
-
-  await userEvent.tab();
-
-  await expect(password).toHaveFocus();
-  await userEvent.type(password, 'Password123');
-
-  await expect(canvas.getByLabelText('Password').value).toEqual('Password123');
-
-  await userEvent.tab();
-  await userEvent.tab();
-  const signin = canvas.getByRole('button', { name: 'Sign in' });
-  await expect(signin).toHaveFocus();
-  await fireEvent.click(signin);
-
-  await expect(UsernamePassword.args.form.submit).toHaveBeenCalled();
-
-  await expect(nameCb.getInputValue()).toBe('username01');
-  await expect(passwordCb.getInputValue()).toBe('Password123');
-};
-
 export const ConfirmPasswordInteraction = Template.bind({});
 
 ConfirmPasswordInteraction.args = {
@@ -311,6 +292,57 @@ ConfirmPasswordInteraction.play = async ({ canvasElement }) => {
 
   await expect(nameCb.getInputValue()).toBe('username01');
   await expect(passwordCb.getInputValue()).toBe('Password123');
+};
+
+export const LoginInteraction = Template.bind({});
+
+LoginInteraction.args = {
+  ...UsernamePassword.argTypes,
+  ...UsernamePassword.args,
+};
+
+LoginInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  await userEvent.tab();
+
+  const nameCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.NameCallback)[0];
+  const passwordCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.PasswordCallback)[0];
+
+  const username = canvas.getByLabelText('Username');
+  const password = canvas.getByLabelText('Password');
+  await expect(username).toHaveFocus();
+  await userEvent.type(username, 'username01');
+  await expect(canvas.getByLabelText('Username').value).toEqual('username01');
+
+  await userEvent.tab();
+
+  await expect(password).toHaveFocus();
+  await userEvent.type(password, 'Password123');
+
+  await expect(canvas.getByLabelText('Password').value).toEqual('Password123');
+
+  await userEvent.tab();
+  await userEvent.tab();
+  const signin = canvas.getByRole('button', { name: 'Sign in' });
+  await expect(signin).toHaveFocus();
+  await fireEvent.click(signin);
+
+  await expect(UsernamePassword.args.form.submit).toHaveBeenCalled();
+
+  await expect(nameCb.getInputValue()).toBe('username01');
+  await expect(passwordCb.getInputValue()).toBe('Password123');
+};
+
+export const OneTimePasswordInteraction = Template.bind({});
+
+OneTimePasswordInteraction.args = {
+  ...OneTimePassword.argTypes,
+  ...OneTimePassword.args,
+};
+
+OneTimePasswordInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  expect(canvas.queryByRole('checkbox', 'Submit')).not.toBeInTheDocument();
 };
 
 export const RegistrationInteraction = Template.bind({});

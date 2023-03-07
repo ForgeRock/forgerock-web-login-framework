@@ -1,6 +1,6 @@
 import { FRAuth, FRStep, FRLoginFailure, StepType, FRCallback } from '@forgerock/javascript-sdk';
 import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
-import { writable, type Writable } from 'svelte/store';
+import { get, writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
 import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
@@ -60,7 +60,7 @@ function initializeStack(initOptions?: StepOptions) {
 }
 
 export function initialize(initOptions?: StepOptions): JourneyStore {
-  const { set, subscribe }: Writable<JourneyStoreValue> = writable({
+  const journeyStore: Writable<JourneyStoreValue> = writable({
     completed: false,
     error: null,
     loading: false,
@@ -69,8 +69,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     successful: false,
     response: null,
   });
+  const { set, subscribe } = journeyStore;
   const stack = initializeStack();
 
+  let restartOptions: StepOptions;
   let stepNumber = 0;
 
   async function next(prevStep: StepTypes = null, nextOptions?: StepOptions, resumeUrl?: string) {
@@ -82,6 +84,15 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       ...initOptions,
       ...nextOptions,
     };
+
+    // These options are reserved only for restarting a journey after failure
+    if (initOptions || nextOptions) {
+      restartOptions = {
+        // Prioritize next options over initialize options
+        ...initOptions,
+        ...nextOptions,
+      };
+    }
 
     /**
      * Save previous step information just in case we have a total
@@ -99,7 +110,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       completed: false,
       error: null,
       loading: true,
-      metadata: null,
+      metadata: get(journeyStore).metadata,
       step: prevStep,
       successful: false,
       response: null,
@@ -140,6 +151,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       const stageAttribute = nextStep.getStage();
 
       let stageJson: Maybe<Record<string, unknown>> = null;
+      let stageName: Maybe<string> = null;
 
       // Check if stage attribute is serialized JSON
       if (stageAttribute && stageAttribute.includes('{')) {
@@ -148,10 +160,12 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         } catch (err) {
           console.warn('Stage attribute value was not parsable');
         }
+      } else if (stageAttribute) {
+        stageName = stageAttribute;
       }
 
       const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
-      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
@@ -196,7 +210,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         /**
          * Restart tree to get fresh step
          */
-        restartedStep = await FRAuth.next(undefined, options);
+        restartedStep = await FRAuth.next(undefined, restartOptions);
       } catch (err) {
         console.error(`Restart failed step request | ${err}`);
 
@@ -260,6 +274,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         const stageAttribute = restartedStep.getStage();
 
         let stageJson: Maybe<Record<string, unknown>> = null;
+        let stageName: Maybe<string> = null;
 
         // Check if stage attribute is serialized JSON
         if (stageAttribute && stageAttribute.includes('{')) {
@@ -268,6 +283,8 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           } catch (err) {
             console.warn('Stage attribute value was not parsable');
           }
+        } else if (stageAttribute) {
+          stageName = stageAttribute;
         }
 
         const callbackMetadata = buildCallbackMetadata(
@@ -275,7 +292,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           initCheckValidation(),
           stageJson,
         );
-        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson);
+        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
         set({
           completed: false,
