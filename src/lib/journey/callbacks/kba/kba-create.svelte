@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { KbaCreateCallback, NameValue } from '@forgerock/javascript-sdk';
   import { writable } from 'svelte/store';
+  import type { z } from 'zod';
 
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
@@ -14,7 +15,7 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   // Unused props. Setting to const prevents errors in console
@@ -23,7 +24,7 @@
 
   export let callback: KbaCreateCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: Style = {};
+  export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 

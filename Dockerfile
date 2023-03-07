@@ -15,15 +15,12 @@ COPY bashrc /root/.bashrc
 
 WORKDIR /usr/src/app
 
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=0
 COPY package.json package-lock.json* ./
 RUN npm install --legacy-peer-deps
 
 COPY . .
 EXPOSE 8443 443
-
-CMD [ "npm", "run", "dev" ]
-
-# Copy all local files into the image
 
 FROM builder as deploy 
 
@@ -31,7 +28,9 @@ WORKDIR /usr/src/app
 ENV NODE_ENV=production
 ARG PREVIEW="true"
 ENV PREVIEW $PREVIEW
+
 EXPOSE 3000
+
 RUN ["npm", "run", "build"]
 CMD ["node", "./build"]
 

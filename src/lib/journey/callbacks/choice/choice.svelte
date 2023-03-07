@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ChoiceCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import Radio from '$components/compositions/radio/animated.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
@@ -10,13 +11,13 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: Style = {};
+  export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: ChoiceCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;

@@ -1,4 +1,4 @@
-import { readable, writable, type Readable, type Writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 import { z } from 'zod';
 
 // TODO: Reevaluate use of JS versus JSON without breaking type generation for lib
@@ -81,15 +81,16 @@ export const partialStringsSchema = stringsSchema.partial();
 stringsSchema.parse(fallback);
 
 export const locale: Writable<string | null> = writable('en-US');
-export let strings: Readable<Record<string, string> | null>;
+export const stringsStore: Writable<Record<string, string> | null> = writable(null);
 
 export function initialize(userLocale?: z.infer<typeof partialStringsSchema>) {
   if (userLocale) {
     /**
      * Allow widgets to overwrite select portions of the content
      */
-    strings = readable({ ...fallback, ...userLocale });
+    stringsStore.set({ ...fallback, ...userLocale });
   } else {
-    strings = readable(fallback);
+    stringsStore.set(fallback);
   }
+  return stringsSchema;
 }

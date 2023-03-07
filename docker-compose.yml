@@ -11,14 +11,3 @@ services:
         VITE_FR_REALM_PATH: $VITE_FR_REALM_PATH
     ports:
       - 3000:3000
-  dev:
-    command: npm run dev
-    build:
-      context: .
-      target: builder
-      dockerfile: Dockerfile
-    ports:
-      - 8443:8443
-      - 443:443
-    volumes:
-      - .:/usr/src/app

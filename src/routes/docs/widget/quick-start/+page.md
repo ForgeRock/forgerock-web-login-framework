@@ -2,14 +2,13 @@
 
 Using the Login Widget within your JavaScript SPA.
 
-_Note: This project is currently in Beta, so this is not available via public npm. Because of this, it's worth noting what's not [currently supported](/docs/widget/roadmap#currently-unsupported)._
+## Installing the package
 
-1. `git clone https://github.com/cerebrl/forgerock-web-login-framework`
-2. `cd forgerock-web-login-framework`
-3. `npm install` (or simply `npm i`)
-4. `npm run build:widget`
-5. Copy the built `package/` directory with its contents and paste (or drag-n-drop) it into your project
-6. Import the Widget by directory reference, since it's local to your project (e.g.: `import Widget from '../path/to/package/modal';`)
+Note: **This project is currently in Alpha**, so importing the widget from npm requires the `alpha` tag. Because of this, it's worth noting what's not [currently supported](../roadmap/#currently-unsupported).
+
+```shell
+npm install @forgerock/login-widget@alpha
+```
 
 ## Adding the Widget's CSS
 
@@ -17,7 +16,7 @@ There are a few ways to add the Widget's CSS to your product:
 
 1. Import it into your JavaScript project as a module
 2. Import it using a CSS preprocessor, like Sass, Less or PostCSS
-3. Copy and paste the CSS file from the Widget and link it into your HTML
+3. Copy the CSS file from the package and link it into your HTML
 
 If you decide to import the CSS into your JavaScript, make sure your bundler knows how to import and process the CSS as a module. If using a CSS preprocessor, ensure you configure your preprocessor to access files from within your `package/` directory.
 
@@ -26,23 +25,26 @@ Copying the file and pasting it into your project for linking in the HTML is the
 Importing into your JavaScript:
 
 ```js
-import '../path/to/package/widget.css';
+// app.js
+import '@forgerock/login-widget/widget.css';
 ```
 
 Importing into your CSS:
 
 ```css
-@import '../path/to/package/widget.css';
+/* style.css */
+@import '@forgerock/login-widget/widget.css';
 ```
 
-Linking CSS in HTML example:
+Linking CSS in HTML example (you may have to copy the CSS file out of the npm module and into your static files directory):
 
 ```html
+<!-- index.html -->
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <!-- ... -->
-    <link rel="stylesheet" href="/path/to/package/widget.css" />
+    <link rel="stylesheet" href="/path/to/file/widget.css" />
   </head>
   <body>
     <!-- ... -->
@@ -52,7 +54,7 @@ Linking CSS in HTML example:
 
 ### Controlling the CSS cascade
 
-To ensure the proper CSS cascade, you can use `@layer` to ensure the browser applies the CSS in the way you intend regardless of the order you import or declare the CSS in your project. You can [read more about this new browser feature in the Mozilla docs](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer).
+Though not required, this helps solve common style issues that may pop up related to the CSS cascade. Using `@layer` will ensure the browser applies the CSS in the way you intend, regardless of the order you import or declare the CSS in your project. You can [read more about this new browser feature in the Mozilla docs](https://developer.mozilla.org/en-US/docs/Web/CSS/@layer).
 
 Steps recommended:
 
@@ -64,15 +66,13 @@ Steps recommended:
    }
    ```
 
-   The Widget's multiple `@layer` declarations are contained within the Widget's CSS.
+   Widget layers are already declared within the Widget's CSS.
 
 2. Declare the order of layers in your index HTML file before any CSS is loaded:
 
    ```html
    <style type="text/css">
-     /* Your app CSS first */
      @layer app;
-
      /* List the Widget layers last */
      @layer 'fr-widget.base';
      @layer 'fr-widget.utilities';
@@ -81,7 +81,7 @@ Steps recommended:
    </style>
    ```
 
-   It's important to note that _none_ of the CSS imported for the Widget will overwrite any of your app's CSS. It's all namespaced to ensure there are no collisions. Unless, that is, you use the exact same selector naming convention we use: `tw_` prefix.
+   It's important to note that none of the CSS imported for the Widget will overwrite any of your app's CSS. It's all namespaced to ensure there are no collisions. Unless, that is, you use the exact same selector naming convention we use.
 
 ## Using the Modal component
 
@@ -100,16 +100,14 @@ Example:
   <body>
     <!-- Root element for main app -->
     <div id="root"></div>
-
     <!-- Root element for Widget -->
     <div id="widget-root"></div>
-
     <!-- scripts ... -->
   </body>
 </html>
 ```
 
-NOTE: We do not recommend injecting the element on which you will mount the Modal component within your main application. This can cause Virtual DOM issues, so manually adding it within your static HTML file is best.
+NOTE: We do not recommend injecting the element on which you will mount the widget within your main application. This can cause Virtual DOM issues, so manually adding it within your static HTML file is best.
 
 ### Instantiate the Widget (Modal)
 
@@ -117,7 +115,7 @@ Now, you can import the Widget into your app wherever you would like as a modal 
 
 ```js
 // As modal dialog
-import Widget from 'forgerock-web-login-widget/modal';
+import Widget from '@forgerock/login-widget/modal';
 
 // ...
 
@@ -138,7 +136,7 @@ Note: [See additional documentation about configuring the JS SDK](https://backst
 The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
 
 ```js
-import Widget, { journey } from 'forgerock-web-login-widget/modal';
+import Widget, { journey } from '@forgerock/login-widget/modal';
 
 new Widget({
   target: document.getElementById('login-widget'), // Any existing element in the DOM
@@ -175,7 +173,7 @@ And, that's it. You now can mount, display, and authenticate users through the F
 To show the modal, you will need to import the `modal` object, and use the `modal.open` method. It's common to execute this within a button's click handler.
 
 ```js
-import Widget, { modal } from 'forgerock-web-login-widget/modal';
+import Widget, { modal } from '@forgerock/login-widget/modal';
 
 // ...
 
@@ -193,7 +191,7 @@ Opening the modal will display the Widget in a "Lightbox" or modal dialog and ma
 
 The Widget requires a real DOM element on which to mount. Since the Inline component will be mounted within your application's controlled DOM, it's important to understand the lifecycle of how your framework mounts elements to the DOM.
 
-React, for example, uses the Virtual DOM, and the Inline component cannot mount to a Virtual DOM element. So, you will need to wait until the element has been property mounted to the real DOM before instantiating the Widget. For more information about this, please [see our tutorial using React with the Inline component](/docs/widget/tutorials#inline-with-react-and-webpack).
+React, for example, uses the Virtual DOM, and the Inline component cannot mount to a Virtual DOM element. So, you will need to wait until the element has been property mounted to the real DOM before instantiating the Widget.
 
 ### Instantiate the Widget (Inline)
 
@@ -201,7 +199,7 @@ Now, import the Widget where you'd like to mount it. In whatever way your framew
 
 ```js
 // As inline
-import Widget from 'forgerock-web-login-widget/inline';
+import Widget from '@forgerock/login-widget/inline';
 
 // ...
 
@@ -222,7 +220,7 @@ Note: [See additional documentation about configuring the JS SDK](https://backst
 The Widget will be mounted to the DOM, but it will not display the first step of the journey. To render the first step, you'll need to import the `journey` object and call the `journey.start` method. This makes the initial request to the ForgeRock server for the initial step.
 
 ```js
-import Widget, { journey } from 'forgerock-web-login-widget/inline';
+import Widget, { journey } from '@forgerock/login-widget/inline';
 
 // Call after instantiating the Widget
 new Widget({
@@ -252,3 +250,37 @@ journey.onSuccess((response) => {
 ```
 
 And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented within the [Full API section here](/docs/widget/full-api). For more about Widget events, [see the Widget Events section](/docs/widget/full-api#widget-events).
+
+## Checking user information
+
+There are many reasons why you may need user information throughout your application. It may be to display the user's first name or email, it may be to use tokens for protected resources, or to validate an Access Token with the ForgeRock server. Any of these will require the underlying SDK to be configured. To do this, you have two choices:
+
+1. Configure the SDK through `Widget` instantiation
+2. Configure the SDK through the `configuration` object
+
+We've seen [configuring the SDK through `Widget` instantiation](#instantiate-the-widget-modal), but that may not always be preferable as the Widget may not be relevant in all parts of your app. Let's see how we can use the second option instead.
+
+```js
+let userInfo;
+
+// Configure the underlying SDK, so it can communicate with the ForgeRock platform
+configuration.set({
+  clientId: 'WebOAuthClient',
+  redirectUri: `${window.location.origin}/callback`,
+  scope: 'openid profile email me.read',
+  serverConfig: {
+    baseUrl: 'https://example.forgeblocks.com/am/',
+    timeout: 5000,
+  },
+  realmPath: 'alpha',
+});
+
+// Do we have stored tokens
+if (await user.tokens()) {
+  // User has tokens, so attempt call to /userinfo
+  userInfo = await user.info(true);
+} else {
+  // If no tokens, assign null
+  userInfo = null;
+}
+```

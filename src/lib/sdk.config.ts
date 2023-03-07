@@ -83,16 +83,6 @@ const configSchema = z
   .strict();
 export const partialConfigSchema = configSchema.partial();
 
-// const defaultPaths = {
-//   authenticate: 'authenticate',
-//   authorize: 'authorize',
-//   accessToken: 'tokens',
-//   endSession: 'end-session',
-//   userInfo: 'userinfo',
-//   revoke: 'revoke',
-//   sessions: 'sessions',
-// };
-
 export default function (config: z.infer<typeof partialConfigSchema>) {
   configSchema.parse(config);
   Config.set(config);

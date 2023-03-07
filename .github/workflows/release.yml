@@ -30,6 +30,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node }}
+      - name: Set git config username and email
+        run: git config user.email "ryan.basmajian@forgerock.com" && git config user.name "ryanbas21"
+      - name: Import bot's GPG key for signing commits
+        id: import-gpg
+        uses: crazy-max/ghaction-import-gpg@v5.2.0
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          git_config_global: true
+          git_user_signingkey: true
+          git_commit_gpgsign: true
       - name: Install dependencies
         run: npm ci
       - name: Build
@@ -40,7 +50,6 @@ jobs:
           VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
           VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
           VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
-      - uses: chainguard-dev/actions/setup-gitsign@main
       - name: Release
         run: npx semantic-release
         env:

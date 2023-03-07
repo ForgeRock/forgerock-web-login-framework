@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import {
     getValidationFailures,
@@ -16,7 +17,7 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
   // Unused props. Setting to const prevents errors in console
@@ -25,7 +26,7 @@
 
   export let callback: ValidatedCreateUsernameCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: Style = {};
+  export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 

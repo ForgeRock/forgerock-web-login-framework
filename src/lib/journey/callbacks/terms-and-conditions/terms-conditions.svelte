@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import Link from '$components/primitives/link/link.svelte';
-  import { links } from '$lib/links.store';
+  import { linksStore } from '$lib/links.store';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
 
@@ -13,14 +14,14 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
   import { derived } from 'svelte/store';
 
   // Unused props. Setting to const` prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: Style = {};
+  export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: TermsAndConditionsCallback;
   export let checkAndRadioType: 'animated' | 'standard' = 'animated';
@@ -57,8 +58,8 @@
   }
 </script>
 
-{#if $links?.termsAndConditions}
-  <Link classes="tw_block tw_mb-4" href={$links?.termsAndConditions} target="_blank">
+{#if $linksStore?.termsAndConditions}
+  <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
     {interpolate('termsAndConditionsLinkText')}
   </Link>
   <Checkbox

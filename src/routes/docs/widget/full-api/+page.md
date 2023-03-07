@@ -6,10 +6,10 @@ The Widget comes with methods and event handlers used to control the lifecycle o
 
 ```js
 // As modal dialog
-import Widget from 'forgerock-web-login-widget/modal';
+import Widget from '@forgerock/login-widget/modal';
 
 // OR, as embedded
-import Widget from 'forgerock-web-login-widget/inline';
+import Widget from '@forgerock/login-widget/inline';
 
 // Instantiate Widget
 const widget = new Widget({
@@ -54,13 +54,85 @@ NOTE: For more SDK configuration options, please [see our SDK's configuration do
 1. For content schema, please [use the example en-US locale file](/src/locales/us/en/index.ts)
 2. For `style` schema and more information, please [see the Style section below](#styling-api)
 
+### Configuration
+
+This object can be useful when you want to leverage APIs that require interaction with the ForgeRock platform or access stored tokens in a location of your app that may not directly use the `Widget`. When the `configuration.set` method is used, it removes the need to set the `config` property within the `Widget` class instantiation.
+
+For example, these would be equivalent:
+
+```js
+import Widget, { configuration } from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget, { configuration } from 'forgerock-web-login-widget/inline';
+
+// Configuration within Widget instantiation
+const widget = new Widget({
+  target: document.getElementById('widget-root'),
+  props: {
+    config: {
+      /**
+       * REQUIRED; SDK configuration object
+       */
+      serverConfig: {
+        baseUrl: 'https://customer.forgeblocks.com/am',
+      },
+      /**
+       * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+       * Remaining config is optional with fallback values shown
+       */
+      clientId: 'WebLoginWidgetClient',
+      realmPath: 'alpha',
+      redirectUri: window.location.href,
+      scope: 'openid email',
+      tree: 'Login',
+    },
+  },
+});
+```
+
+```js
+import Widget, { configuration } from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget, { configuration } from 'forgerock-web-login-widget/inline';
+
+// Configuration outside Widget instantiation
+configuration.set({
+  /**
+   * REQUIRED; SDK configuration object
+   */
+  serverConfig: {
+    baseUrl: 'https://customer.forgeblocks.com/am',
+  },
+  /**
+   * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+   * Remaining config is optional with fallback values shown
+   */
+  clientId: 'WebLoginWidgetClient',
+  realmPath: 'alpha',
+  redirectUri: window.location.href,
+  scope: 'openid email',
+  tree: 'Login',
+});
+
+const widget = new Widget({
+  target: document.getElementById('widget-root'),
+});
+```
+
+Note: It's important to not that all methods of the `user` API imported from this module require configuration to be set. So, setting the configuration is best done at the top index or entry file of your application. Then you can use the all APIs without failure.
+
 ## Journey
 
 The `journey` object:
 
 ```js
-import { journey } from 'forgerock-web-login-widget/modal';
-// OR, import { journey } from 'forgerock-web-login-widget/inline';
+// As modal dialog
+import Widget from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget from '@forgerock/login-widget/inline';
 
 // Call to start the journey
 // Optional config can be passed in, see below for more details
@@ -81,9 +153,9 @@ NOTE: Optional `start` config:
 ```js
 journey.start({
   config: undefined, // OPTIONAL; defaults to undefined, mechanism to override base SDK config object
-  oauth: true, // OPTIONAL; defaults to true and uses OAuth flow for acquiring tokens
+  oauth: true, // OPTIONAL; defaults to true; if true, acquires OAuth tokens after successful authentication
   resumeUrl: location.href, // OPTIONAL; full URL of app to continue journey from a "magic link"
-  user: true, // OPTIONAL; default to true and returns user information from `userinfo` endpoint
+  user: true, // OPTIONAL; default to true; if true, returns user information from `userinfo` endpoint
 });
 ```
 
@@ -92,6 +164,7 @@ NOTE: Schema for `response`
 ```js
 // response
 {
+  // Will always be returned
   journey: {
     completed: false, // boolean
     error: null, // null or object with `code`, `message` and `step` that failed
@@ -100,6 +173,7 @@ NOTE: Schema for `response`
     successful: false, // boolean
     response: null, // null or object, if successful, it will contain the success response from AM
   },
+  // Is returned if `oauth` is NOT set to false
   oauth: {
     completed: false, // boolean
     error: null, // null or object with `code` and `message` properties
@@ -107,6 +181,7 @@ NOTE: Schema for `response`
     successful: false, // boolean
     response: null, // null or object with OAuth/OIDC tokens
   },
+  // Is returned if `user` is NOT set to false
   user: {
     completed: false, // boolean
     error: null, // null or object with `code` and `message` properties
@@ -122,8 +197,11 @@ NOTE: Schema for `response`
 The `user` object:
 
 ```js
-import { user } from 'forgerock-web-login-widget/modal';
-// OR, import { user } from 'forgerock-web-login-widget/inline';
+// As modal dialog
+import Widget from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget from '@forgerock/login-widget/inline';
 
 // Is user currently authorized
 await user.authorized(); // do they have OAuth tokens (local)?
@@ -142,8 +220,11 @@ await user.logout();
 The Widget has an alias to the JavaScript SDK's `HttpClient.request`, which is a convenience wrapper around the native `fetch`. All this does is auto-inject the Access Token into the `Authorization` header and manage some of the lifecycle around the token.
 
 ```js
-import { request } from 'forgerock-web-login-widget/modal';
-// OR, import { request } from 'forgerock-web-login-widget/inline';
+// As modal dialog
+import Widget from '@forgerock/login-widget/modal';
+
+// OR, as embedded
+import Widget from '@forgerock/login-widget/inline';
 
 // See below for more details on the options
 request({ init: { method: 'GET' }, url: 'https://protected.resource.com' });
@@ -173,7 +254,8 @@ For the full type definition of this, please [view our SDK API documentation](ht
 The named `modal` import provides controls of the modal component.
 
 ```js
-import { modal } from 'forgerock-web-login-widget/modal';
+// As modal dialog
+import Widget from '@forgerock/login-widget/modal';
 
 // Know when the modal auto-closes, not when the modal is
 // The property `reason` will be either "auto", "external", or "user" (see below)
@@ -217,7 +299,8 @@ modal.open({
 The named `form` import provides a simple `onMount` event.
 
 ```js
-import { form } from 'forgerock-web-login-widget/inline';
+// As embedded
+import Widget from '@forgerock/login-widget/inline';
 
 // Know when the inline form has mounted
 form.onMount((formElement) => {
@@ -258,7 +341,7 @@ const widget = new Widget({
       },
       sections: {
         // OPTIONAL; only used with modal form factor
-        header: false, // OPTIONAL; uses a modal "header" section that displays logo
+        header: false, // OPTIONAL; uses a modal "header" section see below
       },
       stage: {
         icon: true, // OPTIONAL; displays generic icons for the provided stages
@@ -267,5 +350,15 @@ const widget = new Widget({
   },
 });
 ```
+
+### Modal header
+
+This is a subtle style addition that separates the logo or branding from the journey form. By passing `header: true` within the `sections` property, the modal will look like this (notice the separate line and additional space):
+
+![Modal with header section](/img/modal-widget-with-header.png)
+
+By default, the header will be false and the modal will present like this:
+
+![Modal with header section](/img/modal-widget-without-header.png)
 
 Note that the `logo` and `section` property only apply to the "modal" form factor, and not the "inline".

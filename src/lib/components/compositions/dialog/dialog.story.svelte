@@ -1,4 +1,6 @@
 <script lang="ts">
+  import type { z } from 'zod';
+
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Button from '$components/primitives/button/button.svelte';
   import Dialog from './dialog.svelte';
@@ -6,11 +8,11 @@
   import Input from '$components/compositions/input-floating/floating-label.svelte';
   import { initialize } from '$lib/style.store';
 
-  import type { Logo } from '$lib/style.store';
+  import type { logoSchema } from '$lib/style.store';
 
   // TODO: Export controls for changing dialog context
   export let forceOpen: boolean;
-  export let logo: Logo;
+  export let logo: z.infer<typeof logoSchema>;
   export let withHeader: boolean;
 
   let dialogEl: HTMLDialogElement;
@@ -20,8 +22,6 @@
   }
 
   function submitForm(event: SubmitEvent, isFormValid: boolean) {
-    console.log(`Is form valid: ${isFormValid}`);
-
     if (isFormValid) {
       dialogEl.close();
     }
@@ -38,7 +38,7 @@
   />
 {/if}
 
-<Dialog bind:dialogEl closeCallback={(args) => {}} dialogId="myDialog" {forceOpen} {withHeader}>
+<Dialog bind:dialogEl dialogId="myDialog" {forceOpen} {withHeader}>
   <h2
     class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray dark:tw_text-white"
   >

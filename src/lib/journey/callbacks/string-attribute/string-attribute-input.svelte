@@ -5,6 +5,7 @@
     type FailedPolicy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import {
     getValidationFailures,
@@ -18,14 +19,14 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
   import type { StringDict } from '@forgerock/javascript-sdk/lib/shared/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: Style = {};
+  export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: AttributeInputCallback<string>;
   export let callbackMetadata: Maybe<CallbackMetadata>;

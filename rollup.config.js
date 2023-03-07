@@ -95,21 +95,10 @@ export default [
    * ES Module Bundling
    */
   {
-    input: 'src/lib/widget/inline.svelte',
+    input: 'src/lib/widget/index.svelte',
     onwarn: warningHandler,
     output: {
-      file: path.join(packageFolder, 'inline.js'),
-      format: 'es',
-      sourcemap: true,
-      inlineDynamicImports: true,
-    },
-    plugins,
-  },
-  {
-    input: 'src/lib/widget/modal.svelte',
-    onwarn: warningHandler,
-    output: {
-      file: path.join(packageFolder, 'modal.js'),
+      file: path.join(packageFolder, 'index.js'),
       format: 'es',
       sourcemap: true,
       inlineDynamicImports: true,
@@ -122,23 +111,10 @@ export default [
    */
   CI
     ? {
-        input: 'src/lib/widget/inline.svelte',
+        input: 'src/lib/widget/index.svelte',
         onwarn: warningHandler,
         output: {
-          file: path.join(packageFolder, 'inline.cjs'),
-          format: 'cjs',
-          sourcemap: true,
-          inlineDynamicImports: true,
-        },
-        plugins,
-      }
-    : undefined,
-  CI
-    ? {
-        input: 'src/lib/widget/modal.svelte',
-        onwarn: warningHandler,
-        output: {
-          file: path.join(packageFolder, 'modal.cjs'),
+          file: path.join(packageFolder, 'index.cjs'),
           format: 'cjs',
           sourcemap: true,
           inlineDynamicImports: true,

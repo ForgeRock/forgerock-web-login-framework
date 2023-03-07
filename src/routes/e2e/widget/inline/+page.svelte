@@ -2,7 +2,11 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { form, journey, user } from '$package/inline';
+  import Widget, { configuration, component, journey, user } from '$package/index';
+
+  const config = configuration();
+  const componentEvents = component();
+  const journeyEvents = journey();
 
   let authIndexValue = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -17,10 +21,15 @@
     userResponse = null;
   }
 
-  form.onMount((component: HTMLElement) => console.log(component));
-  // TODO: Use a more specific type
-  journey.onSuccess((response: any) => (userResponse = response?.user));
-  journey.onFailure((response) => console.log(response.journey?.error));
+  componentEvents.subscribe((event) => {
+    console.log(`Form mounted`);
+  });
+  journeyEvents.subscribe((event) => {
+    console.log(event);
+    if (event?.user?.successful) {
+      userResponse = event?.user;
+    }
+  });
 
   onMount(async () => {
     let content;
@@ -31,28 +40,28 @@
       const response = await fetch(`${window.location.origin}/api/locale`);
       content = response.ok && (await response.json());
     }
-    // TODO: Add method to refresh form
-    new Widget({
-      target: formEl,
-      props: {
-        config: {
-          clientId: 'WebOAuthClient',
-          redirectUri: `${window.location.origin}/callback`,
-          scope: 'openid profile email me.read',
-          serverConfig: {
-            baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-            timeout: 5000,
-          },
-          realmPath: 'alpha',
+
+    config.set({
+      config: {
+        clientId: 'WebOAuthClient',
+        redirectUri: `${window.location.origin}/callback`,
+        scope: 'openid profile email me.read',
+        serverConfig: {
+          baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+          timeout: 5000,
         },
-        content,
-        links: {
-          termsAndConditions: 'https://www.forgerock.com/terms',
-        },
+        realmPath: 'alpha',
+      },
+      content,
+      links: {
+        termsAndConditions: 'https://www.forgerock.com/terms',
       },
     });
+
+    new Widget({ target: formEl, props: { type: 'inline' }});
+
     // Start the  journey after initialization or within the form.onMount event
-    journey.start({
+    journeyEvents.start({
       journey: journeyParam || authIndexValue || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
     });
