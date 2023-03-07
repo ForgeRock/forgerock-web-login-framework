@@ -1,3 +1,10 @@
+# [1.0.0-beta.6](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2023-03-07)
+
+
+### Bug Fixes
+
+* **docs:** force-release ([c0b7219](https://github.com/forgerock/forgerock-web-login-framework/commit/c0b7219352aeb12276f15df676b961a8f4a55d80))
+
 # [1.0.0-beta.5](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2023-03-07)
 
 
