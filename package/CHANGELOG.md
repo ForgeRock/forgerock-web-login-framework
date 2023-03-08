@@ -1,3 +1,10 @@
+# [1.0.0-beta.7](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.6...v1.0.0-beta.7) (2023-03-08)
+
+
+### Bug Fixes
+
+* **add-back-css:** css was removed ona ccident ([ba024f3](https://github.com/forgerock/forgerock-web-login-framework/commit/ba024f338a978c60a965230d95defdc95c7a4b3b))
+
 # [1.0.0-beta.6](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2023-03-07)
 
 
