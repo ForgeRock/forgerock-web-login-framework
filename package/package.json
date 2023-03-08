@@ -2,8 +2,14 @@
   "name": "@forgerock/login-widget",
   "type": "module",
   "exports": {
-    "import": "./index.js",
-    "require": "./index.cjs"
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./widget.css": {
+      "import": "./widget.css",
+      "require": "./widget.css"
+    }
   },
   "types": "./index.d.ts",
   "typesVersions": {
