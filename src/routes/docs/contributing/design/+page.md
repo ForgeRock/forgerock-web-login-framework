@@ -1,3 +1,9 @@
+<script>
+  import Image from '../../image.svelte';
+
+  export let data;
+</script>
+
 # Design Principles
 
 ## Product goals

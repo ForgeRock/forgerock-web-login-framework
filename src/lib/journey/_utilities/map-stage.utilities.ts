@@ -1,5 +1,5 @@
 import Generic from '$journey/stages/generic.svelte';
-import OneTimePassword from '$journey/stages/one-time-password.svelte'
+import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import Registration from '$journey/stages/registration.svelte';
 import UsernamePassword from '$journey/stages/username-password.svelte';
 

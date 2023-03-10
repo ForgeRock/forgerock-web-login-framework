@@ -42,7 +42,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   }
 
   const configuration = (options?: WidgetConfigOptions) => {
-    if (options?.config) {
+    if (options?.forgerock) {
       configure({
         // Set some basics by default
         ...{
@@ -57,7 +57,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
           scope: 'openid email',
         },
         // Let user provided config override defaults
-        ...options?.config,
+        ...options?.forgerock,
         // Force 'legacy' to remove confusion
         ...{ support: 'legacy' },
       });
@@ -67,9 +67,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
      * Initialize the stores and ensure both variables point to the same reference.
      * Variables with _ are the reactive version of the original variable from above.
      */
-    journeyStore = initializeJourney(options?.config);
-    oauthStore = initializeOauth(options?.config);
-    userStore = initializeUser(options?.config);
+    journeyStore = initializeJourney(options?.forgerock);
+    oauthStore = initializeOauth(options?.forgerock);
+    userStore = initializeUser(options?.forgerock);
 
     initializeContent(options?.content);
     initializeJourneys(options?.journeys);
@@ -78,7 +78,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
 
     return {
       set(setOptions?: WidgetConfigOptions): void {
-        if (setOptions?.config) {
+        if (setOptions?.forgerock) {
           configure({
             // Set some basics by default
             ...{
@@ -95,7 +95,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
               scope: 'openid email',
             },
             // Let user provided config override defaults
-            ...setOptions?.config,
+            ...setOptions?.forgerock,
             // Force 'legacy' to remove confusion
             ...{ support: 'legacy' },
           });
@@ -105,9 +105,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
          * Initialize the stores and ensure both variables point to the same reference.
          * Variables with _ are the reactive version of the original variable from above.
          */
-        journeyStore = initializeJourney(setOptions?.config);
-        oauthStore = initializeOauth(setOptions?.config);
-        userStore = initializeUser(setOptions?.config);
+        journeyStore = initializeJourney(setOptions?.forgerock);
+        oauthStore = initializeOauth(setOptions?.forgerock);
+        userStore = initializeUser(setOptions?.forgerock);
 
         initializeContent(setOptions?.content);
         initializeJourneys(setOptions?.journeys);
@@ -131,25 +131,25 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
             user: $userStore,
           });
 
-          if ($journeyStore) {
-            if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+          if ($journeyStore.error || $oauthStore.error || $userStore.error) {
+            // If we get any errors from the stores, close the modal
+            formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+            return;
+          }
+
+          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+            formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+          } else if ($journeyStore.successful && $oauthStore.successful) {
+            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+              userStore.get();
+            } else if (!requestsUser) {
               formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-            } else if ($journeyStore.successful && $oauthStore.successful) {
-              if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
-                userStore.get();
-              } else if (!requestsUser) {
-                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-              }
-            } else if ($journeyStore.successful) {
-              if (
-                requestsOauth &&
-                $oauthStore.loading === false &&
-                $oauthStore.completed === false
-              ) {
-                oauthStore.get();
-              } else if (!requestsOauth) {
-                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-              }
+            }
+          } else if ($journeyStore.successful) {
+            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+              oauthStore.get();
+            } else if (!requestsOauth) {
+              formFactor === 'modal' && componentApi.close({ reason: 'auto' });
             }
           }
         },
@@ -164,8 +164,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         journeyStore.resume(startOptions.resumeUrl);
       } else {
         journeyStore.start({
-          ...startOptions?.config,
-          tree: startOptions?.journey,
+          ...startOptions?.forgerock,
+          // Only include a `tree` property if the `journey` options prop is truthy
+          ...(startOptions?.journey && { tree: startOptions?.journey }),
         });
       }
       return new Promise((resolve) => {

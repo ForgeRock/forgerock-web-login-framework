@@ -10,7 +10,9 @@
   import {
     getValidationFailures,
   } from '$journey/callbacks/_utilities/callback.utilities';
-  import Input from '$components/compositions/input-floating/floating-label.svelte';
+
+  import Floating from '$components/compositions/input-floating/floating-label.svelte';
+  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
@@ -26,7 +28,9 @@
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: z.infer<typeof styleSchema> = {};
+  export let style: z.infer<typeof styleSchema> = {};
+
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   export let callback: AttributeInputCallback<string>;
   export let callbackMetadata: Maybe<CallbackMetadata>;

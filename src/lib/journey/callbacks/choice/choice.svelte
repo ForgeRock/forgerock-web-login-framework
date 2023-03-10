@@ -2,8 +2,10 @@
   import type { ChoiceCallback } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
 
-  import Radio from '$components/compositions/radio/animated.svelte';
-  import Select from '$components/compositions/select-floating/floating-label.svelte';
+  import RadioAnimated from '$components/compositions/radio/animated.svelte';
+  import RadioStandard from '$components/compositions/radio/standard.svelte';
+  import SelectFloating from '$components/compositions/select-floating/floating-label.svelte';
+  import SelectStacked from '$components/compositions/select-stacked/stacked-label.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
 
   import type {
@@ -17,7 +19,10 @@
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: z.infer<typeof styleSchema> = {};
+  export let style: z.infer<typeof styleSchema> = {};
+
+  const Radio = style.checksAndRadios === 'standard' ? RadioStandard : RadioAnimated;
+  const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
   export let callback: ChoiceCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;

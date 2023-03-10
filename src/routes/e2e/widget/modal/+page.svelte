@@ -52,7 +52,7 @@
     }
 
     config.set({
-      config: {
+      forgerock: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',

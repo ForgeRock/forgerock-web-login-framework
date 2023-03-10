@@ -133,7 +133,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
          */
         nextStep = await FRAuth.next(prevStep as FRStep, options);
       } else {
-        nextStep = await FRAuth.next(undefined, options);
+        nextStep = await FRAuth.start(options);
       }
     } catch (err) {
       console.error(`Next step request | ${err}`);

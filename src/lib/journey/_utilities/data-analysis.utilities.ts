@@ -128,7 +128,7 @@ export function requiresUserInput(callback: FRCallback) {
 export function isUserInputOptional(
   callbackMetadataArray: CallbackMetadata[],
   numOfUserInputCbs: number,
-  fn?: any,
+  fn?: any, // TODO: replace this any with a narrow type
 ) {
   // default reducer function to check if both overriding callback exists
   // along with user input required callbacks

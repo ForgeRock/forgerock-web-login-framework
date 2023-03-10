@@ -3,9 +3,10 @@
   import { writable } from 'svelte/store';
   import type { z } from 'zod';
 
-  import Floating from '$components/compositions/input-floating/floating-label.svelte';
-  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
-  import Select from '$components/compositions/select-floating/floating-label.svelte';
+  import InputFloating from '$components/compositions/input-floating/floating-label.svelte';
+  import InputStacked from '$components/compositions/input-stacked/stacked-label.svelte';
+  import SelectFloating from '$components/compositions/select-floating/floating-label.svelte';
+  import SelectStacked from '$components/compositions/select-stacked/stacked-label.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
@@ -26,7 +27,8 @@
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: z.infer<typeof styleSchema> = {};
 
-  const Input = style.labels === 'stacked' ? Stacked : Floating;
+  const Input = style.labels === 'stacked' ? InputStacked : InputFloating;
+  const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
   /** *************************************************************************
    * SDK INTEGRATION POINT
@@ -170,6 +172,7 @@
 
   <Select
     isFirstInvalidInput={false}
+    isRequired={true}
     key={inputNameQuestion}
     label={prompt}
     onChange={selectQuestion}
@@ -179,6 +182,7 @@
   {#if displayCustomQuestionInput}
     <Input
       isFirstInvalidInput={false}
+      isRequired={true}
       key={`kba-custom-question-${callbackMetadata?.idx}`}
       label={interpolate('customSecurityQuestion')}
       showMessage={false}
@@ -190,6 +194,7 @@
 
   <Input
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    isRequired={true}
     key={inputNameAnswer || `kba-answer-${callbackMetadata?.idx}`}
     label={interpolate('securityAnswer')}
     showMessage={false}

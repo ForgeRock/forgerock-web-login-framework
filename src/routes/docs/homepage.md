@@ -8,7 +8,9 @@
 
 ## WARNING: BETA VERSION
 
-**This is a early preview ({ data.package.version }) of a development framework for generating a JavaScript { data.package.name } into an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a ForgeRock { data.app.name} for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
+**This is a early preview ({ data.package.version }) of a development framework for generating a JavaScript { data.package.name } for use within an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a standalone ForgeRock { data.app.name} for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
+
+Note: As of Beta.6, the API has gone under a dramatic refactoring. Please pay close attention to the API changes if you were using Beta.5 or earlier.
 
 <Image>
 
