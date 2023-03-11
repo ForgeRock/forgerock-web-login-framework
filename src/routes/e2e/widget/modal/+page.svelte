@@ -23,12 +23,16 @@
   }
 
   componentEvents.subscribe((event) => {
-    console.log(`Modal closed due to ${event && event.reason}`);
+    if (event.lastAction === 'mount') {
+      console.log(`Form mounted`);
+    } else if (event.lastAction === 'close') {
+      console.log('Modal is closed');
+    }
   });
   journeyEvents.subscribe((event) => {
-    console.log(event);
     if (event?.user?.successful) {
-      userResponse = event?.user;
+      console.log(event.user);
+      userResponse = event.user;
     }
   });
 

@@ -15,10 +15,11 @@
   import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: AttributeInputCallback<boolean>;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+
+  export let callback: AttributeInputCallback<boolean>;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: z.infer<typeof styleSchema> = {};
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;

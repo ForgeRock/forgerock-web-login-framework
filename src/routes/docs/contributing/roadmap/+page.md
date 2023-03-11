@@ -1,5 +1,5 @@
 <script>
-  import Image from '../../image.svelte';
+  // import Image from '../../image.svelte';
 
   export let data;
 </script>

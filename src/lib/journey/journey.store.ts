@@ -1,8 +1,16 @@
-import { FRAuth, FRStep, FRLoginFailure, StepType, FRCallback } from '@forgerock/javascript-sdk';
+import {
+  Config,
+  FRAuth,
+  FRStep,
+  FRLoginFailure,
+  StepType,
+  FRCallback,
+} from '@forgerock/javascript-sdk';
 import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
 import { get, writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
+import { logErrorAndThrow } from '$lib/_utilities/errors.utilities';
 import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
 import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
@@ -75,6 +83,10 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
   let stepNumber = 0;
 
   async function next(prevStep: StepTypes = null, nextOptions?: StepOptions, resumeUrl?: string) {
+    if (!Config.get().serverConfig?.baseUrl) {
+      logErrorAndThrow('missingBaseUrl');
+    }
+
     /**
      * Create an options object with nextOptions overriding anything from initOptions
      * TODO: Does this object merge need to be more granular?
@@ -300,6 +312,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             message: failureMessageStr,
             // TODO: Should we remove the callbacks for PII info?
             step: prevStep?.payload,
+            troubleshoot: null,
           },
           loading: false,
           metadata: {
@@ -328,6 +341,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             message: failureMessageStr,
             // TODO: Should we remove the callbacks for PII info?
             step: prevStep?.payload,
+            troubleshoot: null,
           },
           loading: false,
           metadata: null,
