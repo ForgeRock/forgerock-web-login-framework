@@ -12,10 +12,19 @@ Note: As of Beta 6, the API has gone under a dramatic refactoring. Please pay cl
 ## Table of Contents
 
 - [Overview](#overview)
+- [Requirements](#requirements)
 - [Quick Start: Using the Widget in Your App](#quick-start-using-the-widget-in-your-app)
   - [Installing the package](#installing-the-package)
   - [Adding the Widget's CSS](#adding-the-widgets-css)
   - [Using the Widget component](#using-the-widget-component)
+- [What you need to know](#what-you-need-to-know)
+  - [Import the API Object](#import-the-api-object)
+  - [Call API method to initiate observable](#call-api-method-to-initiate-observable)
+  - [Use the subscribe method](#use-the-subscribe-method)
+  - [Unsubscribing from an Observable](#unsubscribing-from-an-observable)
+  - [Getting the current, local value](#getting-the-current-local-value)
+  - [Requesting values from the ForgeRock platform](#requesting-values-from-the-forgerock-platform)
+  - [User Promises](#using-promises)
 - [Complete Widget API](#complete-widget-api)
   - [Widget](#widget)
   - [Configuration](#configuration)
@@ -44,6 +53,13 @@ This Widget can be rendered in two different types (or "form factors"):
 Both components provide the same authentication, OAuth/OIDC and user features. The only difference is how the component is rendered within your app.
 
 It is highly recommended to start with the Modal form factor when in the experimenting or prototyping phase. It provides the quickest development experience for providing login and registration flows into your app with the least disruption to your existing codebase. The Modal will be controlled within your app, but rendered in its own DOM root node and visual layer.
+
+## Requirements
+
+1. A EcmaScript Module or CommonJS enable client-side JavaScript app
+2. A "modern", fully-supported browser: Chrome, Firefox, Safari, Chromium Edge (see below for example of what's not supported)
+
+What's not supported? Internet Explorer, Legacy Edge, WebView, Electron and other modified, browser-like environments are _not_ supported.
 
 ## Quick Start: Using the Widget in Your App
 
@@ -167,7 +183,7 @@ import Widget from '@forgerock/login-widget';
 // ...
 
 // Grab the root element added to your HTML file
-document.getElementById('widget-root');
+const widgetRootEl = document.getElementById('widget-root');
 
 // Instantiate Widget with the `new` keyword
 new Widget({
@@ -184,7 +200,7 @@ Note: [See additional documentation about configuring the JS SDK](https://backst
 When using the default Modal form factor, the first thing you'll want to do is open it. To do this, you need to import the `component` function. Executing this function will return a `componentEvents` object, you can name this whatever you'd like. Calling the `componentEvents.open` method will trigger the modal to animate into view.
 
 ```js
-import Widget, { component } from '@forgerock/login-widget/modal';
+import Widget, { component } from '@forgerock/login-widget';
 
 // ...
 
@@ -192,7 +208,7 @@ const componentEvents = component();
 
 new Widget({ target: widgetRootEl }); // Instantiate the Widget
 
-componentEvent.open(); // Ensure this is called after the Widget has been instantiated
+componentEvents.open(); // Ensure this is called after the Widget has been instantiated
 
 // A more realistic pattern is calling this within a button click
 const loginButton = document.getElementById('loginButton');
@@ -227,7 +243,7 @@ componentEvents.subscribe((event) => {
 });
 ```
 
-If you'd like to close the widget programmatically, you can via the `componentEvents.close` method.
+If you'd like to close the modal programmatically, you can via the `componentEvents.close` method.
 
 #### Configuring the Widget
 
@@ -243,7 +259,7 @@ config.set({
   forgerock: {
     serverConfig: {
       baseUrl: 'https://example.forgeblocks.com/am/', // This needs to be your AM URL
-      timeout: 3000, // 3 to 5 seconds should be fine
+      timeout: 3000, // In milliseconds; 3 to 5 seconds should be fine
     },
   },
 });
@@ -307,7 +323,7 @@ journeyEvents.subscribe((event) => {
 });
 ```
 
-And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation. For more about Widget events, [see the Widget Events section](#widget-events).
+And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation.
 
 ### Want to inline the Widget into your app (no modal)?
 
@@ -321,7 +337,7 @@ Now, import the Widget where you'd like to mount it. In whatever way your framew
 
 ```js
 // As inline
-import Widget from '@forgerock/login-widget/inline';
+import Widget from '@forgerock/login-widget';
 
 // ...
 
@@ -336,6 +352,107 @@ new Widget({
 This mounts your Widget into the DOM. If you choose the modal version, it will be hidden at first.
 
 Note: [See additional documentation about configuring the JS SDK](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html).
+
+## What you need to know
+
+Most of this Widget's APIs are asynchronous. As with many things in the JavaScript world, there are multiple patterns to handle asynchronous behavior. We've decided to centralize the Widget's APIs around the event-centric, Observable pattern. Since this Widget is powered by Svelte's compiler, we use Svelte's simplified, but standard Observable implementation called a "store". You can [read more about the Svelte store contract in their docs](https://svelte.dev/docs#component-format-script-4-prefix-stores-with-$-to-access-their-values-store-contract).
+
+We believe this is an optimal pattern for UI development as it allows for a more dynamic, user experience. Your application will be updated with each event from emitted from within the Widget. These events could be "loading", "completed", "success" or "failure". To help illustrate this, let's take a look at one of the `user` APIs:
+
+### Import the API object
+
+```js
+import { user } from '@forgerock/login-widget';
+```
+
+### Call API method to initiate observable
+
+Create a variable and assign the created observable:
+
+```js
+const userInfoEvents = user.info();
+```
+
+### Use the subscribe method
+
+It's important to note that an observable is a "stream" of events over time. This means that the callback function in a subscribe will be called for each and every event until you unsubscribe from it (more on this later).
+
+```js
+userInfoEvents.subscribe((event) => {
+  if (event.loading) {
+    console.log('User info is being requested from server');
+  } else if (event.success) {
+    console.log('User info request was successful');
+    console.log(event.response);
+  } else if (event.error) {
+    console.error('User info request failed');
+    console.error(event.error.message);
+  }
+});
+```
+
+### Unsubscribing from an Observable
+
+Observables are not like a Promise in that Observables don't resolve and get "torn-down" after completion. Observables need to be unsubscribed from if they are no longer needed. This is especially important if you are subscribing to Observables in a component that gets created and destroyed many times over. Subscribing to an Observable over and over without unsubscribing will create a memory leak.
+
+To unsubscribe, you assign a function that is returned from calling the subscribe method to a variable that can be called at a later time.
+
+```js
+const unsubUserInfoEvents = userInfoEvents.subscribe((event) => console.log(event));
+
+// ...
+
+// Unsubscribe when no longer needed
+unsubUserInfoEvents();
+```
+
+NOTE: If you're subscribing at a top-level component in your app that's initiated once and is retained over the lifetime of your application, then unsubscribing is not needed. A good example of this would be your app's central, state management component/module. This is a perfect place to `subscribe` to an Observable and preserve that subscription.
+
+### Getting the current, local value
+
+Sometimes you just want the current value stored within the Widget and are not interested in future events and their resulting state changes. To do this, you can call `subscribe` and then immediately call the unsubscribe method.
+
+```js
+// Create variable for user info
+let userInfo;
+// Call subscribe, grab the current, local value, and then immediately call the returned function
+userInfoEvents.subscribe((event) => (userinfo = event.response))(); // <-- notice the second pair of parentheses
+```
+
+What does "current, local value" mean? Good question. The Widget internally stores a lot of these important values, so you can ask the Widget for the values that it already has stored.
+
+### Requesting values from the ForgeRock platform
+
+You can ask the Widget to request new, fresh values from the ForgeRock server, rather than just what it has stored locally. This is done by calling the Observables action methods, like `get`.
+
+```js
+userInfoEvents.get();
+```
+
+If you're using the Observable pattern, you can call this method and forget about it. The `subscribe` callback function you have for this Observable will receive the events and new state from this `get` call. The `subscribe` can exist before or after this `get` call, and it will still capture the resulting events.
+
+### Using Promises
+
+We recommend Observables, but the choice is up to you. All of the Widget's APIs that involve network calls have an alternative Promise implementation that can be used. Let's take the `get` method on `userInfoEvents` we saw above as a way to fetch new user info, and convert it into a Promise.
+
+```js
+// async-await
+let userInfo;
+async function example() {
+  try {
+    userInfo = await userInfoEvents.get();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+// Promise
+let userInfo;
+userInfoEvents
+  .get()
+  .then((data) => (userInfo = data))
+  .catch((err) => console.log(err));
+```
 
 ## Complete Widget API
 
@@ -430,6 +547,12 @@ journeyEvents.start({
   resumeUrl: window.location.href, // OPTIONAL; the full URL for resuming a tree (see resuming a journey section)
 });
 
+// Change a journey
+journeyEvents.change({
+  forgerock: {}, // OPTIONAL; configuration overrides
+  journey: 'Registration', // OPTIONAL; choice the journey or tree you want to start
+});
+
 // Listeners for journey events
 // See below for more details on `event`
 journey.subscribe((event) => {
@@ -469,15 +592,16 @@ Schema for user `event`:
 
 ### Component
 
-The named `component` import provides controls of the modal component.
+The named `component` import provides methods for both listening (modal and inline type) as well as controlling (modal type only) the widget component. After initializing the component API via `component()`, you will receive an observable. Subscribing to this observable will allow you to listen and react to the state of the component.
 
 ```js
-import { component } from 'forgerock-login-widget';
+import { component } from '@forgerock/login-widget';
 
 // Initiate the component API
 const componentEvents = component();
 
-// Know when the model has been mounted or closed to run your own logic
+// Know when the component, both modal and inline has been mounted.
+// When using the modal type, you will also receive open and close events.
 // The property `reason` will be either "auto", "external", or "user" (see below)
 componentEvents.subscribe((event) => {
   /* Run anything you want */
@@ -509,8 +633,6 @@ The `reason` value is used for communicating why the modal has closed. The below
 3. `"external"`: the application itself called the `modal.close` function
 
 ### User
-
-As with almost all of our APIs, there's a choice between using Observables or Promises. We recommend Observables, but the choice is up to you. We will cover the Promise alternative in a different section.
 
 ```js
 import { user } from '@forgerock/login-widget';
@@ -619,8 +741,8 @@ config.set({
       // OPTIONAL; only used with modal form factor
       dark: 'https://example.com/img/white-logo.png', // OPTIONAL; used if theme has a dark variant
       light: 'https://example.com/img/black-logo.png', // REQUIRED if logo property is provided; full URL
-      height: '300px', // OPTIONAL; provides additional controls to logo display
-      width: '400px', // OPTIONAL; provides additional controls to logo display
+      height: 300, // OPTIONAL; number of pixels for providing additional controls to logo display
+      width: 400, // OPTIONAL; number of pixels for providing additional controls to logo display
     },
     sections: {
       // OPTIONAL; only used with modal form factor
@@ -665,17 +787,22 @@ config.set({
 });
 ```
 
-## Currently **unsupported**
+## Future Support (not yet implemented)
+
+### Planned for a future, minor release
 
 1. WebAuthn
-2. Push Authentication
-3. ReCAPTCHA
-4. QR Code display
-5. TextOutputCallback with scripts
-6. Device Profile
-7. Central Login
-8. SAML
-9. NumberAttributeInputCallback
+2. Device Profile
+
+### Planned for a future, major release
+
+1. Push Authentication
+2. ReCAPTCHA
+3. QR Code display
+4. TextOutputCallback with scripts
+5. Central Login
+6. SAML
+7. NumberAttributeInputCallback
 
 ## Disclaimer
 

@@ -1,4 +1,6 @@
 <script>
+  // import Image from '../../image.svelte';
+
   export let data;
 </script>
 
@@ -20,3 +22,10 @@ Both components provide the same authentication, OAuth/OIDC and user features. T
 **Start with the modal type!** It is highly recommended to start with the Modal form factor when in the experimenting or prototyping phase. It provides the quickest development experience for providing login and registration flows into your app with the least disruption to your existing codebase. The Modal will be controlled within your app, but rendered in its own DOM root node and visual layer.
 
 View our ["Quick Start" section if you'd like a quick introduction](/docs/widget/quick-start). Or, visit our ["Full API" section for in-depth docs](/docs/widget/full-api) on the Widget's feature set.
+
+## Requirements
+
+1. A EcmaScript Module or CommonJS enable client-side JavaScript app
+2. A "modern", fully-supported browser: Chrome, Firefox, Safari, Chromium Edge (see below for example of what's not supported)
+
+What's not supported? Internet Explorer, Legacy Edge, WebView, Electron and other modified, browser-like environments are _not_ supported.

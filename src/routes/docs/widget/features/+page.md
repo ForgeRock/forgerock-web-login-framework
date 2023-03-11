@@ -1,7 +1,7 @@
 <script>
   import Image from '../../image.svelte';
 
-  export let data;
+  // export let data;
 </script>
 
 # Supported Features
@@ -83,3 +83,7 @@ if (formPostEntryParam || (codeParam && stateParam)) {
 ```
 
 As with the Suspended Authentication example, it's important that you pass the full URL and all query parameters from the magic link as the `resumeUrl`. Without all the parameters, the Widget may not be able to rehydrate the journey as needed.
+
+## One-time password (OTP)
+
+This common method of second-factor authentication is currently supported as an input, but not for registration, which will be released in an upcoming version. The node that is supported is the "OATH Token Verifier". To ensure it renders correctly within the Widget, place this node as a child node within a Page Node. Using the Page Node's "Stage" attribute, add the following value: `OneTimePassword`. The Widget will recognize this stage and optimally render this verification step.

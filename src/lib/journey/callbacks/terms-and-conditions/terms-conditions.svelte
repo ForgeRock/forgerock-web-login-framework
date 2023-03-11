@@ -20,12 +20,9 @@
   // Unused props. Setting to const` prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let style: z.infer<typeof styleSchema> = {};
-
-  console.log(style);
-
   export let callback: TermsAndConditionsCallback;
-  export let checkAndRadioType: 'animated' | 'standard' = 'animated';
   export let callbackMetadata: Maybe<CallbackMetadata>;
 
   /** *************************************************************************

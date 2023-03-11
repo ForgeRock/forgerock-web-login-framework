@@ -1,7 +1,7 @@
 <script>
-  import Image from '../../image.svelte';
+  // import Image from '../../image.svelte';
 
-  export let data;
+  // export let data;
 </script>
 
 # Future Support (not yet implemented)

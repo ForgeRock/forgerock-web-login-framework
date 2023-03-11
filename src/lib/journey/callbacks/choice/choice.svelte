@@ -19,13 +19,13 @@
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
+
+  export let callback: ChoiceCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: z.infer<typeof styleSchema> = {};
 
   const Radio = style.checksAndRadios === 'standard' ? RadioStandard : RadioAnimated;
   const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
-
-  export let callback: ChoiceCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
 
   let choiceOptions: { value: string; text: string }[];
   let inputName: string;

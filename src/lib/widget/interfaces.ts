@@ -16,6 +16,10 @@ export interface JourneyOptions {
   oauth?: boolean; // defaults to true
   user?: boolean; // defaults to true
 }
+export interface JourneyOptionsChange {
+  forgerock?: StepOptions;
+  journey: string;
+}
 export interface JourneyOptionsStart {
   forgerock?: StepOptions;
   journey?: string;

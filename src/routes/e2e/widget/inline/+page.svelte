@@ -24,14 +24,14 @@
   }
 
   componentEvents.subscribe((event) => {
-    if (event.mounted) {
+    if (event.lastAction === 'mount') {
       console.log('Form mounted');
     }
   });
   journeyEvents.subscribe((event) => {
-    console.log(event);
     if (event?.user?.successful) {
-      userResponse = event?.user;
+      console.log(event.user);
+      userResponse = event.user;
     }
     if (event.journey.error || event.oauth.error || event.user.error) {
       console.log('Login failure event fired');

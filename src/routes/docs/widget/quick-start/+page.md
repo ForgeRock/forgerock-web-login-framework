@@ -1,7 +1,7 @@
 <script>
-  import Image from '../../image.svelte';
+  // import Image from '../../image.svelte';
 
-  export let data;
+  // export let data;
 </script>
 
 # Quick Start
@@ -126,7 +126,7 @@ import Widget from '@forgerock/login-widget';
 // ...
 
 // Grab the root element added to your HTML file
-document.getElementById('widget-root');
+const widgetRootEl = document.getElementById('widget-root');
 
 // Instantiate Widget with the `new` keyword
 new Widget({
@@ -143,7 +143,7 @@ Note: [See additional documentation about configuring the JS SDK](https://backst
 When using the default Modal form factor, the first thing you'll want to do is open it. To do this, you need to import the `component` function. Executing this function will return a `componentEvents` object, you can name this whatever you'd like. Calling the `componentEvents.open` method will trigger the modal to animate into view.
 
 ```js
-import Widget, { component } from '@forgerock/login-widget/modal';
+import Widget, { component } from '@forgerock/login-widget';
 
 // ...
 
@@ -151,7 +151,7 @@ const componentEvents = component();
 
 new Widget({ target: widgetRootEl }); // Instantiate the Widget
 
-componentEvent.open(); // Ensure this is called after the Widget has been instantiated
+componentEvents.open(); // Ensure this is called after the Widget has been instantiated
 
 // A more realistic pattern is calling this within a button click
 const loginButton = document.getElementById('loginButton');
@@ -160,9 +160,11 @@ loginButton.addEventListener('click', () => {
 });
 ```
 
-NOTE: Opening the modal by itself will just reveal the modal with a loading spinner. This is because the Widget has no data to inform it on what to render. We will solve this in the "Starting a journey" section.
+Opening the modal by itself will just reveal the modal with a loading spinner. This is because the Widget has no data to inform it on what to render. [We will solve this in the "Starting a journey" section](#starting-a-journey).
 
 In addition to being able to open the modal, you'll likely want to know when it's mounted, or closed by the user or upon completed authentication. This is done via the same API. A `subscribe` method will be on this `componentEvents` object (which technically makes this an observable), and all component related events will trigger the `subscribe` function to be called passing the `event` state to your callback function.
+
+NOTE: For more information about Observables, [please see our section on this pattern and available alternatives](/docs/full-api#what-you-need-to-know).
 
 ```js
 componentEvents.subscribe((event) => {
@@ -186,7 +188,7 @@ componentEvents.subscribe((event) => {
 });
 ```
 
-If you'd like to close the widget programmatically, you can via the `componentEvents.close` method.
+If you'd like to close the modal programmatically, you can via the `componentEvents.close` method.
 
 ### Configuring the Widget
 
@@ -202,7 +204,7 @@ config.set({
   forgerock: {
     serverConfig: {
       baseUrl: 'https://example.forgeblocks.com/am/', // This needs to be your AM URL
-      timeout: 3000, // 3 to 5 seconds should be fine
+      timeout: 3000, // In milliseconds; 3 to 5 seconds should be fine
     },
   },
 });
@@ -266,7 +268,9 @@ journeyEvents.subscribe((event) => {
 });
 ```
 
-And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation. For more about Widget events, [see the Widget Events section](#widget-events).
+NOTE: For more information about Observables, [please see our section on this pattern and available alternatives](/docs/full-api#what-you-need-to-know).
+
+And, that's it. You now can mount, display, and authenticate users through the ForgeRock Login Widget. There are addition features documented below for a more complete implementation.
 
 ## Want to inline the Widget into your app (no modal)?
 
@@ -280,7 +284,7 @@ Now, import the Widget where you'd like to mount it. In whatever way your framew
 
 ```js
 // As inline
-import Widget from '@forgerock/login-widget/inline';
+import Widget from '@forgerock/login-widget';
 
 // ...
 

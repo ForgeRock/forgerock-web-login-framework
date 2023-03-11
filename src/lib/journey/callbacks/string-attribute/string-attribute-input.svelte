@@ -28,13 +28,12 @@
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export let style: z.infer<typeof styleSchema> = {};
-
-  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   export let callback: AttributeInputCallback<string>;
   export let callbackMetadata: Maybe<CallbackMetadata>;
+  export let style: z.infer<typeof styleSchema> = {};
 
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   let inputName: string;
   let isRequired: boolean;

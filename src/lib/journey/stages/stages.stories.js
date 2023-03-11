@@ -38,6 +38,10 @@ initialize();
 
 export default {
   argTypes: {
+    form: { control: false },
+    journey: { control: false },
+    stage: { control: false },
+    labelType: { control: false },
     step: { control: false },
     submitForm: { control: false },
   },
@@ -363,7 +367,6 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
   const lastName = canvas.getByLabelText('Last name');
   const email = canvas.getByLabelText('Email address');
   const specialOffers = canvas.getByRole('checkbox', { name: /special/ });
-  const news = canvas.getByRole('checkbox', { name: /news/ });
   const securityQuestion = canvas.getByLabelText('Select a security question');
   const securityAnswer = canvas.getByLabelText('Security answer');
   const tocLink = canvas.getByRole('link', { name: 'View full Terms & Conditions' });
@@ -387,9 +390,6 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
   const specialOffersCb = frRegistrationStep.getCallbacksOfType(
     CallbackType.BooleanAttributeInputCallback,
   )[0];
-  const newsOffersCb = frRegistrationStep.getCallbacksOfType(
-    CallbackType.BooleanAttributeInputCallback,
-  )[1];
   const securityQuestions = frRegistrationStep.getCallbacksOfType(
     CallbackType.KbaCreateCallback,
   )[0];
@@ -414,10 +414,6 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
 
   await expect(specialOffers).toHaveFocus();
   await userEvent.click(specialOffers);
-  await userEvent.tab();
-
-  await expect(news).toHaveFocus();
-  await userEvent.click(news);
   await userEvent.tab();
 
   await userEvent.type(password, 'password');
@@ -450,7 +446,6 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
   await expect(firstNameCb.getInputValue()).toBe('my-name');
   await expect(lastNameCb.getInputValue()).toBe('last-name');
   await expect(emailCb.getInputValue()).toBe('myemail@email.com');
-  await expect(newsOffersCb.getInputValue()).toBe(true);
   await expect(specialOffersCb.getInputValue()).toBe(true);
   await expect(securityQuestions.payload.input[0].value).toBe('0');
   await expect(securityQuestions.payload.input[1].value).toBe('blue');

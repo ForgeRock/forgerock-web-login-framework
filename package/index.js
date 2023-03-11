@@ -667,48 +667,56 @@ function derived(stores, fn, initial_value) {
 }
 
 const componentStore = writable({
-    modal: null,
-    form: null,
+    lastAction: null,
     error: null,
+    form: null,
+    modal: null,
     mounted: false,
     open: null,
     reason: null,
     type: null,
 });
+/**
+ * @function closeComponent - this is a widget internal function not to be exposed to user
+ * @param {object} args - object containing  the reason for closing component
+ * @param {boolean} shouldCloseDialog - if true, the close command comes from outside of dialog component
+ */
+function closeComponent(args, shouldCloseDialog) {
+    componentStore.update((state) => {
+        if (state.type === 'inline') {
+            console.warn('Component type of "inline" has no `close` method');
+            // There's nothing to do, so just return existing state
+            return state;
+        }
+        if (!state.modal?.component) {
+            console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
+            // There's nothing to do, so just return existing state
+            return state;
+        }
+        shouldCloseDialog && state.modal.component.closeDialog();
+        return {
+            ...state,
+            lastAction: 'close',
+            open: false,
+            reason: args?.reason || null,
+        };
+    });
+}
 const componentApi = () => {
-    const { update, subscribe } = componentStore;
+    const { update } = componentStore;
+    // Create derived store to minimize what's exposed to the dev
+    const { subscribe, } = derived([componentStore], ([$componentStore], set) => {
+        set({
+            error: $componentStore.error,
+            lastAction: $componentStore.lastAction,
+            mounted: $componentStore.mounted,
+            open: $componentStore.open,
+            reason: $componentStore.reason,
+        });
+    });
     return {
         close: (args) => {
-            update((state) => {
-                if (state.type === 'inline') {
-                    console.warn('Component type of "inline" has no `close` method');
-                    // There's nothing to do, so just return existing state
-                    return state;
-                }
-                if (!state.modal) {
-                    console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
-                    // There's nothing to do, so just return existing state
-                    return state;
-                }
-                state.modal?.component.closeDialog();
-                return {
-                    ...state,
-                    open: false,
-                    reason: args?.reason || null,
-                };
-            });
-        },
-        mount: (component, element) => {
-            update((state) => {
-                return {
-                    ...state,
-                    modal: {
-                        ...(component && { component, element }),
-                    },
-                    mounted: true,
-                    type: component ? 'modal' : 'inline',
-                };
-            });
+            closeComponent(args, true);
         },
         open: () => {
             update((state) => {
@@ -717,7 +725,7 @@ const componentApi = () => {
                     // There's nothing to do, so just return existing state
                     return state;
                 }
-                if (!state.modal) {
+                if (!state.modal?.component) {
                     console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
                     // There's nothing to do, so just return existing state
                     return state;
@@ -725,13 +733,34 @@ const componentApi = () => {
                 state.modal.element.showModal();
                 return {
                     ...state,
+                    lastAction: 'open',
                     open: true,
+                    reason: null,
                 };
             });
         },
         subscribe,
     };
 };
+/**
+ * @function mount - this is a widget internal function not to be exposed to user
+ * @param {object} component - actual Svelte component representing the dialog
+ * @param {object} element - actual DOM element representing the dialog
+ */
+function mount(component, element) {
+    componentStore.update((state) => {
+        return {
+            ...state,
+            lastAction: 'mount',
+            modal: {
+                ...(component && { component, element }),
+            },
+            mounted: true,
+            type: component ? 'modal' : 'inline',
+            reason: null,
+        };
+    });
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -10844,6 +10873,21 @@ var HttpClient = /** @class */ (function (_super) {
 }(event_1.default));
 var _default$2 = httpClient.default = HttpClient;
 
+function logErrorAndThrow(type) {
+    if (type === 'missingStores') {
+        const errorMessage = 'Error: missing configuration.';
+        console.error(errorMessage);
+        console.error('Please configure Widget by importing `configuration` and calling `set` with your settings.');
+        throw new Error(errorMessage);
+    }
+    else if (type === 'missingBaseUrl') {
+        const errorMessage = 'Error: missing `serverConfig.baseUrl`.';
+        console.error(errorMessage);
+        console.error('Please configure Widget by importing `configuration` and calling `set` with your ForgeRock server URL.');
+        throw new Error(errorMessage);
+    }
+}
+
 var util$2;
 (function (util) {
     util.assertEqual = (val) => val;
@@ -13975,7 +14019,14 @@ const configSchema = mod
     redirectUri: mod.string().optional(),
     scope: mod.string().optional(),
     serverConfig: mod.object({
-        baseUrl: mod.string(),
+        baseUrl: mod
+            .string({
+            invalid_type_error: '`serverConfig.baseUrl` is a required URL string (this is generated by the Zod library).',
+            required_error: 'Setting the `serverConfig.baseUrl` is required (this is generated by the Zod library).',
+        })
+            .url({
+            message: '`serverConfig.baseUrl` must be a full URL (this is generated by the Zod library).',
+        }),
         paths: mod
             .object({
             authenticate: mod.string(),
@@ -13987,7 +14038,11 @@ const configSchema = mod
             sessions: mod.string(),
         })
             .optional(),
-        timeout: mod.number(), // TODO: Should be optional; fix in SDK
+        // TODO: timeout should be optional; fix in SDK
+        timeout: mod.number({
+            invalid_type_error: '`serverConfig.timeout` is a required number and in milliseconds (this is generated by the Zod library).',
+            required_error: 'Setting the `serverConfig.timeout` is required (this is generated by the Zod library).',
+        }),
     }),
     support: mod.union([mod.literal('legacy'), mod.literal('modern')]).optional(),
     tokenStore: mod
@@ -14056,19 +14111,22 @@ const defaultJourneys = {
 };
 // Ensure default follows schema
 journeyConfigSchema.parse(defaultJourneys);
-const configuredJourneysStore = writable(Object.keys(defaultJourneys).map((key) => ({
+const fallbackJourneyConfig = Object.keys(defaultJourneys).map((key) => ({
     ...defaultJourneys[key],
     key,
-})));
+}));
+const configuredJourneysStore = writable(fallbackJourneyConfig);
 function initialize$6(customJourneys) {
     if (customJourneys) {
         // Provide developer feedback if customized
         journeyConfigSchema.parse(customJourneys);
-        const arr = Object.keys(customJourneys);
-        configuredJourneysStore.set(arr.map((key) => ({
+        configuredJourneysStore.set(Object.keys(customJourneys).map((key) => ({
             ...customJourneys[key],
             key,
         })));
+    }
+    else {
+        configuredJourneysStore.set(fallbackJourneyConfig);
     }
     return configuredJourneysStore;
 }
@@ -16468,6 +16526,9 @@ function initialize$4(initOptions) {
     let restartOptions;
     let stepNumber = 0;
     async function next(prevStep = null, nextOptions, resumeUrl) {
+        if (!Config.get().serverConfig?.baseUrl) {
+            logErrorAndThrow('missingBaseUrl');
+        }
         /**
          * Create an options object with nextOptions overriding anything from initOptions
          * TODO: Does this object merge need to be more granular?
@@ -16671,6 +16732,7 @@ function initialize$4(initOptions) {
                         message: failureMessageStr,
                         // TODO: Should we remove the callbacks for PII info?
                         step: prevStep?.payload,
+                        troubleshoot: null,
                     },
                     loading: false,
                     metadata: {
@@ -16701,6 +16763,7 @@ function initialize$4(initOptions) {
                         message: failureMessageStr,
                         // TODO: Should we remove the callbacks for PII info?
                         step: prevStep?.payload,
+                        troubleshoot: null,
                     },
                     loading: false,
                     metadata: null,
@@ -16766,9 +16829,14 @@ function initialize$3(customLinks) {
         linksSchema.parse(customLinks);
         linksStore.set(customLinks);
     }
+    else {
+        linksStore.set(undefined);
+    }
     return linksStore;
 }
 
+const interactionNeeded = 'The request requires some interaction that is not allowed.';
+const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
 const oauthStore = writable({
     completed: false,
     error: null,
@@ -16804,6 +16872,7 @@ function initialize$2(initOptions) {
                     completed: true,
                     error: {
                         message: err.message,
+                        troubleshoot: err.message === interactionNeeded ? sessionCookieConsentMessage : '',
                     },
                     loading: false,
                     successful: false,
@@ -16876,6 +16945,7 @@ function initialize$1(initOptions) {
                     completed: true,
                     error: {
                         message: err.message,
+                        troubleshoot: null,
                     },
                     loading: false,
                     successful: false,
@@ -16926,17 +16996,21 @@ const styleSchema = mod
 })
     .strict();
 styleSchema.partial();
-const styleStore = writable({
+const fallbackStyles = {
     checksAndRadios: 'animated',
     labels: 'floating',
     logo: {},
     sections: {},
     stage: {},
-});
+};
+const styleStore = writable(fallbackStyles);
 function initialize(customStyle) {
     if (customStyle) {
         styleSchema.parse(customStyle);
         styleStore.set(customStyle);
+    }
+    else {
+        styleStore.set(fallbackStyles);
     }
     return styleStore;
 }
@@ -16981,8 +17055,7 @@ function widgetApiFactory(componentApi) {
             });
         }
         /**
-         * Initialize the stores and ensure both variables point to the same reference.
-         * Variables with _ are the reactive version of the original variable from above.
+         * Initialize all the stores.
          */
         journeyStore = initialize$4(options?.forgerock);
         oauthStore = initialize$2(options?.forgerock);
@@ -17029,6 +17102,9 @@ function widgetApiFactory(componentApi) {
         };
     };
     const journey = (options) => {
+        if (!journeyStore || !oauthStore || !userStore) {
+            logErrorAndThrow('missingStores');
+        }
         const requestsOauth = options?.oauth || true;
         const requestsUser = options?.user || true;
         const { subscribe, } = derived([journeyStore, oauthStore, userStore], ([$journeyStore, $oauthStore, $userStore], set) => {
@@ -17037,10 +17113,9 @@ function widgetApiFactory(componentApi) {
                 oauth: $oauthStore,
                 user: $userStore,
             });
-            if ($journeyStore.error || $oauthStore.error || $userStore.error) {
+            if ($oauthStore.error || $userStore.error) {
                 // If we get any errors from the stores, close the modal
                 formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-                return;
             }
             if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
                 formFactor === 'modal' && componentApi.close({ reason: 'auto' });
@@ -17064,7 +17139,13 @@ function widgetApiFactory(componentApi) {
         });
         // Create a simple reference to prevent repeated subscribing and unsubscribing
         let formFactor = null;
+        function change(changeOptions) {
+            return start(changeOptions);
+        }
         function start(startOptions) {
+            // If starting a journey, let's reset the stores in case they had previous state
+            oauthStore.reset();
+            userStore.reset();
             // Grab the form factor and cache it
             formFactor = get_store_value(componentStore).type;
             if (startOptions?.resumeUrl) {
@@ -17077,8 +17158,12 @@ function widgetApiFactory(componentApi) {
                     ...(startOptions?.journey && { tree: startOptions?.journey }),
                 });
             }
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const unsubscribe = subscribe((event) => {
+                    if (event.oauth.error || event.user.error) {
+                        reject(event);
+                        unsubscribe();
+                    }
                     if (event.journey.successful && event.oauth.successful && event.user.completed) {
                         resolve(event);
                         unsubscribe();
@@ -17098,17 +17183,24 @@ function widgetApiFactory(componentApi) {
                 });
             });
         }
-        return { start, subscribe };
+        return { change, start, subscribe };
     };
     const user = {
         info() {
+            if (!journeyStore || !oauthStore || !userStore) {
+                logErrorAndThrow('missingStores');
+            }
             const { get, subscribe } = userStore;
             function wrappedGet(options) {
                 get(options);
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     const unsubscribe = userStore.subscribe((event) => {
-                        if (event.completed) {
+                        if (event.successful) {
                             resolve(event);
+                            unsubscribe();
+                        }
+                        else if (event.error) {
+                            reject(event);
                             unsubscribe();
                         }
                     });
@@ -17117,6 +17209,9 @@ function widgetApiFactory(componentApi) {
             return { get: wrappedGet, subscribe };
         },
         async logout() {
+            if (!journeyStore || !oauthStore || !userStore) {
+                logErrorAndThrow('missingStores');
+            }
             const { clientId } = Config.get();
             let obj;
             /**
@@ -17142,13 +17237,20 @@ function widgetApiFactory(componentApi) {
             return;
         },
         tokens() {
+            if (!journeyStore || !oauthStore || !userStore) {
+                logErrorAndThrow('missingStores');
+            }
             const { get, subscribe } = oauthStore;
             function wrappedGet(options) {
                 get(options);
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     const unsubscribe = oauthStore.subscribe((event) => {
-                        if (event.completed) {
+                        if (event.successful) {
                             resolve(event);
+                            unsubscribe();
+                        }
+                        else if (event.error) {
+                            reject(event);
                             unsubscribe();
                         }
                     });
@@ -17619,7 +17721,7 @@ function create_else_block$9(ctx) {
 	};
 }
 
-// (45:2) {#if withHeader}
+// (39:2) {#if withHeader}
 function create_if_block$m(ctx) {
 	let div1;
 	let div0;
@@ -17711,7 +17813,7 @@ function create_if_block$m(ctx) {
 	};
 }
 
-// (78:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (72:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot_1$c(ctx) {
 	let t;
 	let current;
@@ -17741,7 +17843,7 @@ function create_default_slot_1$c(ctx) {
 	};
 }
 
-// (83:6) {#if $styleStore?.logo}
+// (77:6) {#if $styleStore?.logo}
 function create_if_block_1$c(ctx) {
 	let div;
 	let div_style_value;
@@ -17766,7 +17868,7 @@ function create_if_block_1$c(ctx) {
 	};
 }
 
-// (61:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (55:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot$q(ctx) {
 	let t;
 	let current;
@@ -17931,14 +18033,7 @@ function instance$Y($$self, $$props, $$invalidate) {
 			dialogEl?.classList.remove('tw_dialog-closing');
 
 			// Ensure we have a store and it has an update method on it
-			componentStore?.update(state => {
-				if (state.open === false) {
-					// If state is already correct, just return the same reference
-					return state;
-				}
-
-				return { ...state, open: false, reason };
-			});
+			closeComponent({ reason });
 		}
 
 		// Create timer in case the CSS is not loaded
@@ -20833,10 +20928,10 @@ function create_fragment$H(ctx) {
 }
 
 function instance$I($$self, $$props, $$invalidate) {
-	let { callback } = $$props;
-	let { callbackMetadata } = $$props;
 	const stepMetadata = null;
 	const selfSubmitFunction = null;
+	let { callback } = $$props;
+	let { callbackMetadata } = $$props;
 	let { style = {} } = $$props;
 
 	const Checkbox = style.checksAndRadios === 'standard'
@@ -20865,13 +20960,13 @@ function instance$I($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(8, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(10, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(0, callbackMetadata = $$props.callbackMetadata);
 		if ('style' in $$props) $$invalidate(11, style = $$props.style);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata*/ 257) {
+		if ($$self.$$.dirty & /*callback, callbackMetadata*/ 1025) {
 			{
 				$$invalidate(1, inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata?.idx}`);
 
@@ -20895,9 +20990,9 @@ function instance$I($$self, $$props, $$invalidate) {
 		validationFailure,
 		Checkbox,
 		setValue,
-		callback,
 		stepMetadata,
 		selfSubmitFunction,
+		callback,
 		style
 	];
 }
@@ -20907,20 +21002,20 @@ let Boolean$1 = class Boolean extends SvelteComponent {
 		super();
 
 		init(this, options, instance$I, create_fragment$H, safe_not_equal, {
-			callback: 8,
+			stepMetadata: 8,
+			selfSubmitFunction: 9,
+			callback: 10,
 			callbackMetadata: 0,
-			stepMetadata: 9,
-			selfSubmitFunction: 10,
 			style: 11
 		});
 	}
 
 	get stepMetadata() {
-		return this.$$.ctx[9];
+		return this.$$.ctx[8];
 	}
 
 	get selfSubmitFunction() {
-		return this.$$.ctx[10];
+		return this.$$.ctx[9];
 	}
 };
 
@@ -22752,6 +22847,8 @@ function create_fragment$A(ctx) {
 function instance$B($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
+	let { callback } = $$props;
+	let { callbackMetadata } = $$props;
 	let { style = {} } = $$props;
 
 	const Radio = style.checksAndRadios === 'standard'
@@ -22762,8 +22859,6 @@ function instance$B($$self, $$props, $$invalidate) {
 	? Stacked_label$1
 	: Floating_label$1;
 
-	let { callback } = $$props;
-	let { callbackMetadata } = $$props;
 	let choiceOptions;
 	let inputName;
 
@@ -22795,13 +22890,13 @@ function instance$B($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('style' in $$props) $$invalidate(11, style = $$props.style);
-		if ('callback' in $$props) $$invalidate(12, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(11, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(0, callbackMetadata = $$props.callbackMetadata);
+		if ('style' in $$props) $$invalidate(12, style = $$props.style);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata, prompt*/ 4099) {
+		if ($$self.$$.dirty & /*callback, callbackMetadata, prompt*/ 2051) {
 			{
 				/** *************************************************************************
  * SDK INTEGRATION POINT
@@ -22842,8 +22937,8 @@ function instance$B($$self, $$props, $$invalidate) {
 		setValue,
 		selfSubmitFunction,
 		stepMetadata,
-		style,
-		callback
+		callback,
+		style
 	];
 }
 
@@ -22854,9 +22949,9 @@ class Choice extends SvelteComponent {
 		init(this, options, instance$B, create_fragment$A, safe_not_equal, {
 			selfSubmitFunction: 9,
 			stepMetadata: 10,
-			style: 11,
-			callback: 12,
-			callbackMetadata: 0
+			callback: 11,
+			callbackMetadata: 0,
+			style: 12
 		});
 	}
 
@@ -23654,12 +23749,12 @@ class Confirmation extends SvelteComponent {
 /* src/lib/journey/callbacks/hidden-value/hidden-value.svelte generated by Svelte v3.55.1 */
 
 function instance$y($$self, $$props, $$invalidate) {
+	const callback = null;
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	const style = {};
-	const callback = null;
-	return [callbackMetadata, selfSubmitFunction, stepMetadata, style, callback];
+	return [callback, callbackMetadata, selfSubmitFunction, stepMetadata, style];
 }
 
 class Hidden_value extends SvelteComponent {
@@ -23667,31 +23762,31 @@ class Hidden_value extends SvelteComponent {
 		super();
 
 		init(this, options, instance$y, null, safe_not_equal, {
-			callbackMetadata: 0,
-			selfSubmitFunction: 1,
-			stepMetadata: 2,
-			style: 3,
-			callback: 4
+			callback: 0,
+			callbackMetadata: 1,
+			selfSubmitFunction: 2,
+			stepMetadata: 3,
+			style: 4
 		});
 	}
 
-	get callbackMetadata() {
+	get callback() {
 		return this.$$.ctx[0];
 	}
 
-	get selfSubmitFunction() {
+	get callbackMetadata() {
 		return this.$$.ctx[1];
 	}
 
-	get stepMetadata() {
+	get selfSubmitFunction() {
 		return this.$$.ctx[2];
 	}
 
-	get style() {
+	get stepMetadata() {
 		return this.$$.ctx[3];
 	}
 
-	get callback() {
+	get style() {
 		return this.$$.ctx[4];
 	}
 }
@@ -28787,10 +28882,10 @@ function create_fragment$f(ctx) {
 function instance$f($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
-	let { style = {} } = $$props;
-	const Input = style.labels === 'stacked' ? Stacked_label : Floating_label;
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
+	let { style = {} } = $$props;
+	const Input = style.labels === 'stacked' ? Stacked_label : Floating_label;
 	let inputName;
 	let isRequired;
 	let outputName;
@@ -28817,9 +28912,9 @@ function instance$f($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('style' in $$props) $$invalidate(13, style = $$props.style);
 		if ('callback' in $$props) $$invalidate(0, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(1, callbackMetadata = $$props.callbackMetadata);
+		if ('style' in $$props) $$invalidate(13, style = $$props.style);
 	};
 
 	$$self.$$.update = () => {
@@ -28870,9 +28965,9 @@ class String_attribute_input extends SvelteComponent {
 		init(this, options, instance$f, create_fragment$f, safe_not_equal, {
 			selfSubmitFunction: 11,
 			stepMetadata: 12,
-			style: 13,
 			callback: 0,
-			callbackMetadata: 1
+			callbackMetadata: 1,
+			style: 13
 		});
 	}
 
@@ -29001,7 +29096,7 @@ function create_else_block$3(ctx) {
 	};
 }
 
-// (43:0) {#if $linksStore?.termsAndConditions}
+// (41:0) {#if $linksStore?.termsAndConditions}
 function create_if_block$7(ctx) {
 	let link;
 	let t;
@@ -29045,7 +29140,7 @@ function create_if_block$7(ctx) {
 			const link_changes = {};
 			if (dirty & /*$linksStore*/ 4) link_changes.href = /*$linksStore*/ ctx[2]?.termsAndConditions;
 
-			if (dirty & /*$$scope*/ 1024) {
+			if (dirty & /*$$scope*/ 512) {
 				link_changes.$$scope = { dirty, ctx };
 			}
 
@@ -29054,7 +29149,7 @@ function create_if_block$7(ctx) {
 			if (dirty & /*callbackMetadata*/ 1) checkbox_changes.isFirstInvalidInput = /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false;
 			if (dirty & /*inputName*/ 2) checkbox_changes.key = /*inputName*/ ctx[1];
 
-			if (dirty & /*$$scope*/ 1024) {
+			if (dirty & /*$$scope*/ 512) {
 				checkbox_changes.$$scope = { dirty, ctx };
 			}
 
@@ -29079,7 +29174,7 @@ function create_if_block$7(ctx) {
 	};
 }
 
-// (44:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
+// (42:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
 function create_default_slot_1$5(ctx) {
 	let t_value = interpolate('termsAndConditionsLinkText') + "";
 	let t;
@@ -29098,7 +29193,7 @@ function create_default_slot_1$5(ctx) {
 	};
 }
 
-// (47:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
+// (45:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
 function create_default_slot$9(ctx) {
 	let t;
 	let current;
@@ -29203,9 +29298,7 @@ function instance$d($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { style = {} } = $$props;
-	console.log(style);
 	let { callback } = $$props;
-	let { checkAndRadioType = 'animated' } = $$props;
 	let { callbackMetadata } = $$props;
 
 	/** *************************************************************************
@@ -29239,7 +29332,6 @@ function instance$d($$self, $$props, $$invalidate) {
 	$$self.$$set = $$props => {
 		if ('style' in $$props) $$invalidate(7, style = $$props.style);
 		if ('callback' in $$props) $$invalidate(8, callback = $$props.callback);
-		if ('checkAndRadioType' in $$props) $$invalidate(9, checkAndRadioType = $$props.checkAndRadioType);
 		if ('callbackMetadata' in $$props) $$invalidate(0, callbackMetadata = $$props.callbackMetadata);
 	};
 
@@ -29260,8 +29352,7 @@ function instance$d($$self, $$props, $$invalidate) {
 		selfSubmitFunction,
 		stepMetadata,
 		style,
-		callback,
-		checkAndRadioType
+		callback
 	];
 }
 
@@ -29274,7 +29365,6 @@ class Terms_conditions extends SvelteComponent {
 			stepMetadata: 6,
 			style: 7,
 			callback: 8,
-			checkAndRadioType: 9,
 			callbackMetadata: 0
 		});
 	}
@@ -31049,7 +31139,7 @@ function get_each_context$3(ctx, list, i) {
 	return child_ctx;
 }
 
-// (71:2) {#if form?.icon}
+// (70:2) {#if form?.icon}
 function create_if_block_2$4(ctx) {
 	let div;
 	let shieldicon;
@@ -31089,7 +31179,7 @@ function create_if_block_2$4(ctx) {
 	};
 }
 
-// (87:2) {#if form?.message}
+// (86:2) {#if form?.message}
 function create_if_block_1$4(ctx) {
 	let alert;
 	let current;
@@ -31137,7 +31227,7 @@ function create_if_block_1$4(ctx) {
 	};
 }
 
-// (88:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$3(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
 	let t;
@@ -31158,7 +31248,7 @@ function create_default_slot_2$3(ctx) {
 	};
 }
 
-// (93:2) {#each step?.callbacks as callback, idx}
+// (92:2) {#each step?.callbacks as callback, idx}
 function create_each_block$3(ctx) {
 	let callbackmapper;
 	let current;
@@ -31211,7 +31301,7 @@ function create_each_block$3(ctx) {
 	};
 }
 
-// (105:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+// (104:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
 function create_if_block$5(ctx) {
 	let button;
 	let current;
@@ -31260,7 +31350,7 @@ function create_if_block$5(ctx) {
 	};
 }
 
-// (106:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (105:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$4(ctx) {
 	let t;
 	let current;
@@ -31290,7 +31380,7 @@ function create_default_slot_1$4(ctx) {
 	};
 }
 
-// (64:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
+// (63:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
 function create_default_slot$5(ctx) {
 	let t0;
 	let header;
@@ -34501,7 +34591,7 @@ function create_if_block(ctx) {
 			const dialog_changes = {};
 			if (dirty & /*$styleStore*/ 16) dialog_changes.withHeader = /*$styleStore*/ ctx[4]?.sections?.header;
 
-			if (dirty & /*$$scope, $styleStore, formEl*/ 2072) {
+			if (dirty & /*$$scope, $styleStore, formEl*/ 1048) {
 				dialog_changes.$$scope = { dirty, ctx };
 			}
 
@@ -34667,7 +34757,6 @@ function instance($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(4, $styleStore = $$value));
 	let { type = 'modal' } = $$props;
-	const componentEvents = componentApi();
 	const { journeyStore } = api.getStores();
 
 	// Variables that reference the Svelte component and the DOM elements
@@ -34677,7 +34766,7 @@ function instance($$self, $$props, $$invalidate) {
 	let formEl;
 
 	onMount(() => {
-		componentEvents.mount(dialogComp, dialogEl);
+		mount(dialogComp, dialogEl);
 	});
 
 	function journey_1_formEl_binding(value) {
