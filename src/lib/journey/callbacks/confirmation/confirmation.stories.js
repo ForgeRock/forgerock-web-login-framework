@@ -151,7 +151,7 @@ BaseInteraction.args = { ...Base.args };
 
 BaseInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0];
+  const cb = BaseInteraction.args.callback;
   const select = canvas.getByLabelText('Please confirm');
 
   await userEvent.selectOptions(select, '0');
@@ -165,19 +165,23 @@ BaseInteraction.play = async ({ canvasElement }) => {
 
 export const ButtonInteraction = Template.bind({});
 
-ButtonInteraction.args = { ...TwoOptSelfSubmit.args };
+ButtonInteraction.args = {
+  ...TwoOptSelfSubmit.args,
+  callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[3],
+};
 
 ButtonInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0];
-  const posButton = canvas.getByRole('button', { name: 'Yes' });
+  const cb = ButtonInteraction.args.callback;
+  const posButton = canvas.getByRole('button', { name: 'Yup' });
 
   await userEvent.click(posButton);
+
   await expect(cb.getInputValue()).toBe(0);
   await expect(TwoOptSelfSubmit.args.selfSubmitFunction).toBeCalled();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  const negButton = canvas.getByRole('button', { name: 'No' });
+  const negButton = canvas.getByRole('button', { name: 'Nope' });
 
   await userEvent.click(negButton);
   await expect(cb.getInputValue()).toBe(1);
@@ -189,7 +193,7 @@ CheckboxInteraction.args = { ...SingleOptNotSelfSubmit.args };
 
 CheckboxInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[2];
+  const cb = CheckboxInteraction.args.callback;
   const confirm = canvas.getByRole('checkbox', { name: 'I confirm' });
 
   // Check default choice

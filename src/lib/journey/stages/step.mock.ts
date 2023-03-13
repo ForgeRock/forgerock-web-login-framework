@@ -355,21 +355,27 @@ export const registrationStep: Step = {
       _id: 4,
     },
     {
-      type: CallbackType.BooleanAttributeInputCallback,
+      type: CallbackType.ChoiceCallback,
       output: [
-        { name: 'name', value: 'preferences/updates' },
-        { name: 'prompt', value: 'Send me news and updates' },
-        { name: 'required', value: true },
-        { name: 'policies', value: {} },
-        { name: 'failedPolicies', value: [] },
-        { name: 'validateOnly', value: false },
-        { name: 'value', value: false },
+        {
+          name: 'prompt',
+          value: 'Choose one',
+        },
+        {
+          name: 'choices',
+          value: ['Choice A', 'Choice B', 'Choice C'],
+        },
+        {
+          name: 'defaultChoice',
+          value: 2,
+        },
       ],
       input: [
-        { name: 'IDToken6', value: false },
-        { name: 'IDToken6validateOnly', value: false },
+        {
+          name: 'IDToken1',
+          value: 0,
+        },
       ],
-      _id: 5,
     },
     {
       type: CallbackType.ValidatedCreatePasswordCallback,

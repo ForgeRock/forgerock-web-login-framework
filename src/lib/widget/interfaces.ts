@@ -16,8 +16,12 @@ export interface JourneyOptions {
   oauth?: boolean; // defaults to true
   user?: boolean; // defaults to true
 }
+export interface JourneyOptionsChange {
+  forgerock?: StepOptions;
+  journey: string;
+}
 export interface JourneyOptionsStart {
-  config?: StepOptions;
+  forgerock?: StepOptions;
   journey?: string;
   resumeUrl?: string; // current URL if resuming a journey/tree
 }
@@ -33,7 +37,7 @@ export interface Response {
   user?: UserStoreValue;
 }
 export interface WidgetConfigOptions {
-  config?: z.infer<typeof partialConfigSchema>;
+  forgerock?: z.infer<typeof partialConfigSchema>;
   content?: z.infer<typeof partialStringsSchema>;
   journeys?: z.infer<typeof journeyConfigSchema>;
   links?: z.infer<typeof partialLinksSchema>;

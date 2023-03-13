@@ -1,3 +1,9 @@
+<script>
+  // import Image from '../../image.svelte';
+
+  // export let data;
+</script>
+
 # Testing
 
 The below is a technical brief on our testing within this framework, but if you are looking for more of a philosophy behind why and how we test, [see this article about the Layered Cake of Testing](https://cerebralideas.com/blog/layered-cake-of-testing).

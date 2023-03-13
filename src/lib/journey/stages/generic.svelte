@@ -40,8 +40,6 @@
   }>;
   export let step: FRStep;
 
-  // console.log(metadata);
-
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
   const formElementId = 'genericStepForm';

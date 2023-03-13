@@ -24,12 +24,14 @@
   }
 
   componentEvents.subscribe((event) => {
-    console.log(`Form mounted`);
+    if (event.mounted) {
+      console.log(`Form mounted`);
+    }
   });
   journeyEvents.subscribe((event) => {
-    console.log(event);
     if (event?.user?.successful) {
-      userResponse = event?.user;
+      console.log(event.user);
+      userResponse = event.user;
     }
   });
 
@@ -44,7 +46,7 @@
     }
 
     config.set({
-      config: {
+      forgerock: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',

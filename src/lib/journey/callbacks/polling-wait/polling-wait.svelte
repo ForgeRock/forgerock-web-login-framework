@@ -22,16 +22,16 @@
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
 
   let message: string;
-  let time: number;
+
+  // Ensure this is written outside of the Reactive blog, or it get's called multiple times
+  setTimeout(() => {
+    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
+    selfSubmitFunction && selfSubmitFunction();
+  }, callback.getWaitTime());
 
   $: {
     callback = callback as PollingWaitCallback;
     message = callback.getMessage();
-    time = callback.getWaitTime();
-    setTimeout(() => {
-      if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
-      selfSubmitFunction && selfSubmitFunction();
-    }, time);
   }
 </script>
 

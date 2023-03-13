@@ -16,15 +16,13 @@
   } from '$journey/journey.interfaces';
   import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
-  import { derived } from 'svelte/store';
 
   // Unused props. Setting to const` prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: z.infer<typeof styleSchema> = {};
 
+  export let style: z.infer<typeof styleSchema> = {};
   export let callback: TermsAndConditionsCallback;
-  export let checkAndRadioType: 'animated' | 'standard' = 'animated';
   export let callbackMetadata: Maybe<CallbackMetadata>;
 
   /** *************************************************************************
@@ -34,7 +32,7 @@
    * Details: Each callback is wrapped by the SDK to provide helper methods
    * for accessing values from the callbacks received from AM
    ************************************************************************* */
-  const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
+  const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
   let inputName: string;
 

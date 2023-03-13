@@ -36,7 +36,7 @@ export default {
       ],
     },
     {
-      type: 'ConfirmationCallback',
+      type: CallbackType.ConfirmationCallback,
       output: [
         {
           name: 'prompt',
@@ -80,6 +80,37 @@ export default {
         {
           name: 'options',
           value: ['I confirm', 'No, I do not confirm'],
+        },
+        {
+          name: 'optionType',
+          value: -1,
+        },
+        {
+          name: 'defaultOption',
+          value: 1,
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken2',
+          value: 0,
+        },
+      ],
+    },
+    {
+      type: CallbackType.ConfirmationCallback,
+      output: [
+        {
+          name: 'prompt',
+          value: '',
+        },
+        {
+          name: 'messageType',
+          value: 0,
+        },
+        {
+          name: 'options',
+          value: ['Yup', 'Nope'],
         },
         {
           name: 'optionType',

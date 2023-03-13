@@ -2,7 +2,7 @@
   import T from '$components/_utilities/locale-strings.svelte';
   import XIcon from '../../icons/x-icon.svelte';
   import { styleStore } from '$lib/style.store';
-  import { componentStore } from '$lib/widget/_utilities/component.utilities';
+  import { closeComponent } from '$lib/widget/_utilities/component.utilities';
 
   import type { ComponentStoreValue } from '$lib/widget/_utilities/component.utilities';
 
@@ -18,13 +18,7 @@
       dialogEl?.classList.remove('tw_dialog-closing');
 
       // Ensure we have a store and it has an update method on it
-      componentStore?.update((state) => {
-        if (state.open === false) {
-          // If state is already correct, just return the same reference
-          return state;
-        }
-        return { ...state, open: false, reason };
-      });
+      closeComponent({ reason });
     }
 
     // Create timer in case the CSS is not loaded

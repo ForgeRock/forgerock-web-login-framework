@@ -12,6 +12,7 @@ export interface UserStoreValue {
   error: Maybe<{
     code?: Maybe<number>;
     message: Maybe<string>;
+    troubleshoot: Maybe<string>;
   }>;
   loading: boolean;
   successful: boolean;
@@ -60,6 +61,7 @@ export function initialize(initOptions?: ConfigOptions) {
           completed: true,
           error: {
             message: err.message,
+            troubleshoot: null,
           },
           loading: false,
           successful: false,

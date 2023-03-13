@@ -43,25 +43,26 @@ const defaultJourneys = {
 // Ensure default follows schema
 journeyConfigSchema.parse(defaultJourneys);
 
-export const configuredJourneysStore: Writable<StoreItem[]> = writable(
-  (Object.keys(defaultJourneys) as JourneyKeys[]).map((key) => ({
-    ...defaultJourneys[key],
-    key,
-  })),
-);
+const fallbackJourneyConfig = (Object.keys(defaultJourneys) as JourneyKeys[]).map((key) => ({
+  ...defaultJourneys[key],
+  key,
+}));
+
+export const configuredJourneysStore: Writable<StoreItem[]> = writable(fallbackJourneyConfig);
 
 export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> | null) {
   if (customJourneys) {
     // Provide developer feedback if customized
     journeyConfigSchema.parse(customJourneys);
 
-    const arr = Object.keys(customJourneys) as JourneyKeys[];
     configuredJourneysStore.set(
-      arr.map((key) => ({
+      (Object.keys(customJourneys) as JourneyKeys[]).map((key) => ({
         ...customJourneys[key],
         key,
       })),
     );
+  } else {
+    configuredJourneysStore.set(fallbackJourneyConfig);
   }
   return configuredJourneysStore;
 }

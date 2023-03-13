@@ -3,6 +3,9 @@ import { writable, type Writable } from 'svelte/store';
 
 import type { Maybe } from '$lib/interfaces';
 
+const interactionNeeded = 'The request requires some interaction that is not allowed.';
+const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
+
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
   get: (getOptions?: GetTokensOptions) => void;
   reset: () => void;
@@ -12,6 +15,7 @@ export interface OAuthTokenStoreValue {
   error: Maybe<{
     code?: Maybe<number>;
     message: Maybe<string>;
+    troubleshoot: Maybe<string>;
   }>;
   loading: boolean;
   successful: boolean;
@@ -55,6 +59,7 @@ export function initialize(initOptions?: GetTokensOptions) {
           completed: true,
           error: {
             message: err.message,
+            troubleshoot: err.message === interactionNeeded ? sessionCookieConsentMessage : '',
           },
           loading: false,
           successful: false,

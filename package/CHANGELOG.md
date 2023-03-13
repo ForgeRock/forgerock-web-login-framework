@@ -7,36 +7,31 @@
 
 # [1.0.0-beta.6](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.5...v1.0.0-beta.6) (2023-03-07)
 
-
 ### Bug Fixes
 
-* **docs:** force-release ([c0b7219](https://github.com/forgerock/forgerock-web-login-framework/commit/c0b7219352aeb12276f15df676b961a8f4a55d80))
+- **docs:** force-release ([c0b7219](https://github.com/forgerock/forgerock-web-login-framework/commit/c0b7219352aeb12276f15df676b961a8f4a55d80))
 
 # [1.0.0-beta.5](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.4...v1.0.0-beta.5) (2023-03-07)
 
-
 ### Bug Fixes
 
-* fixes journey persistence, authorize throwing error, font issue ([6923699](https://github.com/forgerock/forgerock-web-login-framework/commit/69236995211c61b14aad3e1220fe156fc64bdaa5))
-
+- fixes journey persistence, authorize throwing error, font issue ([6923699](https://github.com/forgerock/forgerock-web-login-framework/commit/69236995211c61b14aad3e1220fe156fc64bdaa5))
 
 ### Features
 
-* add support to e2e for social login and otp ([11c4153](https://github.com/forgerock/forgerock-web-login-framework/commit/11c41530878e28fe44023e147905ec73fd3f5b04))
+- add support to e2e for social login and otp ([11c4153](https://github.com/forgerock/forgerock-web-login-framework/commit/11c41530878e28fe44023e147905ec73fd3f5b04))
 
 # [1.0.0-beta.4](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.3...v1.0.0-beta.4) (2023-02-22)
 
-
 ### Bug Fixes
 
-* **widget-css:** add css as export ([084854d](https://github.com/forgerock/forgerock-web-login-framework/commit/084854dfb8a8b4cce42800753caf6377ff8956c9))
+- **widget-css:** add css as export ([084854d](https://github.com/forgerock/forgerock-web-login-framework/commit/084854dfb8a8b4cce42800753caf6377ff8956c9))
 
 # [1.0.0-beta.3](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.2...v1.0.0-beta.3) (2023-02-21)
 
-
 ### Bug Fixes
 
-* **package.json:** fix-export-syntax ([a421492](https://github.com/forgerock/forgerock-web-login-framework/commit/a4214926531424013c151169727bb59bd7661a1b))
+- **package.json:** fix-export-syntax ([a421492](https://github.com/forgerock/forgerock-web-login-framework/commit/a4214926531424013c151169727bb59bd7661a1b))
 
 # [1.0.0-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.1...v1.0.0-beta.2) (2023-02-16)
 

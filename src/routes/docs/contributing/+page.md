@@ -1,3 +1,9 @@
+<script>
+  // import Image from '../../image.svelte';
+
+  // export let data;
+</script>
+
 # Overview
 
 If you'd like to contribute to the development of this framework, you'll need to be familiar with the following:

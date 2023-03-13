@@ -1,4 +1,3 @@
-import { FRStep } from '@forgerock/javascript-sdk';
 import { expect, jest } from '@storybook/jest';
 import { userEvent, within } from '@storybook/testing-library';
 
