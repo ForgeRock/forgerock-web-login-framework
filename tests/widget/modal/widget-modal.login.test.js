@@ -5,6 +5,13 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Modal widget with login', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
+  const messageArray = [];
+
+  // Listen for events on page
+  page.on('console', async (msg) => {
+    return messageArray.push(msg.text());
+  });
+
   // Navigate to page without Widget instantiation
   await navigate('widget');
 
@@ -16,10 +23,19 @@ test('Modal widget with login', async ({ page }) => {
 
   await expect(page.getByRole('dialog')).toBeHidden();
 
+  // Try failed login
   await clickButton('Open Login Modal', '/authenticate');
 
   await expect(page.getByRole('dialog')).toBeVisible();
 
+  await page.getByLabel('Username').fill('notauser');
+  await page.getByLabel('Password').fill('notapassword');
+
+  await clickButton('Sign In', '/authenticate');
+
+  await expect(page.getByText('Sign in failed')).toBeVisible();
+
+  // Try successful login
   await page.getByLabel('Username').fill('demouser');
   await page.getByLabel('Password').fill('j56eKtae*1');
 
@@ -35,4 +51,7 @@ test('Modal widget with login', async ({ page }) => {
 
   // Test the config and user API without Widget references
   await verifyUserInfo(page, expect);
+
+  // Journey onFailure()
+  expect(messageArray.includes('Login failure event fired')).toBe(true);
 });

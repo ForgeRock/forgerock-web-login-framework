@@ -17654,6 +17654,7 @@ function create_if_block$m(ctx) {
 
 			attr(button, "class", "tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark");
 			attr(button, "aria-controls", /*dialogId*/ ctx[1]);
+			attr(button, "aria-label", "Close");
 			attr(div1, "class", "tw_dialog-header dark:tw_dialog-header_dark");
 		},
 		m(target, anchor) {
@@ -17708,7 +17709,7 @@ function create_if_block$m(ctx) {
 	};
 }
 
-// (77:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (78:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot_1$c(ctx) {
 	let t;
 	let current;
@@ -17738,7 +17739,7 @@ function create_default_slot_1$c(ctx) {
 	};
 }
 
-// (82:6) {#if $styleStore?.logo}
+// (83:6) {#if $styleStore?.logo}
 function create_if_block_1$c(ctx) {
 	let div;
 	let div_style_value;
@@ -17763,7 +17764,7 @@ function create_if_block_1$c(ctx) {
 	};
 }
 
-// (60:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (61:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot$o(ctx) {
 	let t;
 	let current;
@@ -22297,7 +22298,7 @@ function get_each_context$6(ctx, list, i) {
 	return child_ctx;
 }
 
-// (96:0) {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
+// (95:0) {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
 function create_if_block$e(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -22367,14 +22368,14 @@ function create_if_block$e(ctx) {
 	};
 }
 
-// (118:2) {:else}
+// (117:2) {:else}
 function create_else_block_1(ctx) {
 	let grid;
 	let current;
 
 	grid = new Grid({
 			props: {
-				num: /*options*/ ctx[4].length,
+				num: /*options*/ ctx[3].length,
 				$$slots: { default: [create_default_slot_1$a] },
 				$$scope: { ctx }
 			}
@@ -22390,9 +22391,9 @@ function create_else_block_1(ctx) {
 		},
 		p(ctx, dirty) {
 			const grid_changes = {};
-			if (dirty & /*options*/ 16) grid_changes.num = /*options*/ ctx[4].length;
+			if (dirty & /*options*/ 8) grid_changes.num = /*options*/ ctx[3].length;
 
-			if (dirty & /*$$scope, options, defaultChoice, buttonStyle*/ 262196) {
+			if (dirty & /*$$scope, options, defaultChoice, buttonStyle*/ 262200) {
 				grid_changes.$$scope = { dirty, ctx };
 			}
 
@@ -22413,7 +22414,7 @@ function create_else_block_1(ctx) {
 	};
 }
 
-// (97:2) {#if !stepMetadata?.derived.isStepSelfSubmittable}
+// (96:2) {#if !stepMetadata?.derived.isStepSelfSubmittable}
 function create_if_block_1$9(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -22423,7 +22424,7 @@ function create_if_block_1$9(ctx) {
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
-		if (/*options*/ ctx[4].length > 1) return 0;
+		if (/*options*/ ctx[3].length > 1) return 0;
 		return 1;
 	}
 
@@ -22483,7 +22484,7 @@ function create_if_block_1$9(ctx) {
 	};
 }
 
-// (121:8) <Button           style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}           type="button"           width="auto"           onClick={() => setBtnValue(Number(opt.value))}         >
+// (120:8) <Button           style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}           type="button"           width="auto"           onClick={() => setBtnValue(Number(opt.value))}         >
 function create_default_slot_2$5(ctx) {
 	let t0_value = /*opt*/ ctx[15].text + "";
 	let t0;
@@ -22499,7 +22500,7 @@ function create_default_slot_2$5(ctx) {
 			insert(target, t1, anchor);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*options*/ 16 && t0_value !== (t0_value = /*opt*/ ctx[15].text + "")) set_data(t0, t0_value);
+			if (dirty & /*options*/ 8 && t0_value !== (t0_value = /*opt*/ ctx[15].text + "")) set_data(t0, t0_value);
 		},
 		d(detaching) {
 			if (detaching) detach(t0);
@@ -22508,7 +22509,7 @@ function create_default_slot_2$5(ctx) {
 	};
 }
 
-// (120:6) {#each options as opt}
+// (119:6) {#each options as opt}
 function create_each_block$6(ctx) {
 	let button;
 	let current;
@@ -22519,9 +22520,9 @@ function create_each_block$6(ctx) {
 
 	button = new Button({
 			props: {
-				style: /*options*/ ctx[4].length > 1 && /*defaultChoice*/ ctx[2] === Number(/*opt*/ ctx[15].value)
+				style: /*options*/ ctx[3].length > 1 && /*defaultChoice*/ ctx[5] === Number(/*opt*/ ctx[15].value)
 				? 'primary'
-				: /*buttonStyle*/ ctx[5],
+				: /*buttonStyle*/ ctx[4],
 				type: "button",
 				width: "auto",
 				onClick: func,
@@ -22542,13 +22543,13 @@ function create_each_block$6(ctx) {
 			ctx = new_ctx;
 			const button_changes = {};
 
-			if (dirty & /*options, defaultChoice, buttonStyle*/ 52) button_changes.style = /*options*/ ctx[4].length > 1 && /*defaultChoice*/ ctx[2] === Number(/*opt*/ ctx[15].value)
+			if (dirty & /*options, defaultChoice, buttonStyle*/ 56) button_changes.style = /*options*/ ctx[3].length > 1 && /*defaultChoice*/ ctx[5] === Number(/*opt*/ ctx[15].value)
 			? 'primary'
-			: /*buttonStyle*/ ctx[5];
+			: /*buttonStyle*/ ctx[4];
 
-			if (dirty & /*options*/ 16) button_changes.onClick = func;
+			if (dirty & /*options*/ 8) button_changes.onClick = func;
 
-			if (dirty & /*$$scope, options*/ 262160) {
+			if (dirty & /*$$scope, options*/ 262152) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -22569,11 +22570,11 @@ function create_each_block$6(ctx) {
 	};
 }
 
-// (119:4) <Grid num={options.length}>
+// (118:4) <Grid num={options.length}>
 function create_default_slot_1$a(ctx) {
 	let each_1_anchor;
 	let current;
-	let each_value = /*options*/ ctx[4];
+	let each_value = /*options*/ ctx[3];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
@@ -22601,8 +22602,8 @@ function create_default_slot_1$a(ctx) {
 			current = true;
 		},
 		p(ctx, dirty) {
-			if (dirty & /*options, defaultChoice, Number, buttonStyle, setBtnValue*/ 308) {
-				each_value = /*options*/ ctx[4];
+			if (dirty & /*options, defaultChoice, Number, buttonStyle, setBtnValue*/ 312) {
+				each_value = /*options*/ ctx[3];
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -22653,7 +22654,7 @@ function create_default_slot_1$a(ctx) {
 	};
 }
 
-// (107:4) {:else}
+// (106:4) {:else}
 function create_else_block$5(ctx) {
 	let checkbox;
 	let current;
@@ -22683,7 +22684,7 @@ function create_else_block$5(ctx) {
 			if (dirty & /*callbackMetadata*/ 1) checkbox_changes.isFirstInvalidInput = /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false;
 			if (dirty & /*inputName*/ 64) checkbox_changes.key = /*inputName*/ ctx[6];
 
-			if (dirty & /*$$scope, options*/ 262160) {
+			if (dirty & /*$$scope, options*/ 262152) {
 				checkbox_changes.$$scope = { dirty, ctx };
 			}
 
@@ -22704,7 +22705,7 @@ function create_else_block$5(ctx) {
 	};
 }
 
-// (98:4) {#if options.length > 1}
+// (97:4) {#if options.length > 1}
 function create_if_block_2$8(ctx) {
 	let select;
 	let current;
@@ -22714,9 +22715,9 @@ function create_if_block_2$8(ctx) {
 				isFirstInvalidInput: /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false,
 				isRequired: false,
 				key: /*inputName*/ ctx[6],
-				label: /*label*/ ctx[3],
+				label: /*label*/ ctx[2],
 				onChange: /*setOptionValue*/ ctx[9],
-				options: /*options*/ ctx[4]
+				options: /*options*/ ctx[3]
 			}
 		});
 
@@ -22732,8 +22733,8 @@ function create_if_block_2$8(ctx) {
 			const select_changes = {};
 			if (dirty & /*callbackMetadata*/ 1) select_changes.isFirstInvalidInput = /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false;
 			if (dirty & /*inputName*/ 64) select_changes.key = /*inputName*/ ctx[6];
-			if (dirty & /*label*/ 8) select_changes.label = /*label*/ ctx[3];
-			if (dirty & /*options*/ 16) select_changes.options = /*options*/ ctx[4];
+			if (dirty & /*label*/ 4) select_changes.label = /*label*/ ctx[2];
+			if (dirty & /*options*/ 8) select_changes.options = /*options*/ ctx[3];
 			select.$set(select_changes);
 		},
 		i(local) {
@@ -22751,9 +22752,9 @@ function create_if_block_2$8(ctx) {
 	};
 }
 
-// (108:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={inputName}         onChange={setCheckboxValue}         value={false}       >
+// (107:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={inputName}         onChange={setCheckboxValue}         value={false}       >
 function create_default_slot$h(ctx) {
-	let t_value = /*options*/ ctx[4][0].text + "";
+	let t_value = /*options*/ ctx[3][0].text + "";
 	let t;
 
 	return {
@@ -22764,7 +22765,7 @@ function create_default_slot$h(ctx) {
 			insert(target, t, anchor);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*options*/ 16 && t_value !== (t_value = /*options*/ ctx[4][0].text + "")) set_data(t, t_value);
+			if (dirty & /*options*/ 8 && t_value !== (t_value = /*options*/ ctx[3][0].text + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(t);
@@ -22895,6 +22896,14 @@ function instance$z($$self, $$props, $$invalidate) {
 		}
 	}
 
+	if (callback.getInputValue() === 0) {
+		/**
+ * If input value is 0 (falsy value), then let's make sure it's set to the default value
+ * There's a case when the input value is 100, and for that we leave it at 100
+ */
+		callback.setOptionIndex(defaultChoice);
+	}
+
 	const func = opt => setBtnValue(Number(opt.value));
 
 	$$self.$$set = $$props => {
@@ -22905,34 +22914,25 @@ function instance$z($$self, $$props, $$invalidate) {
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata, options, defaultChoice, stepMetadata, label*/ 4127) {
-			// TODO: use selfSubmitFunction to communicate to step component that this callback is ready
+		if ($$self.$$.dirty & /*callback, callbackMetadata, options, stepMetadata, label*/ 4111) {
 			{
 				$$invalidate(6, inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`);
-				$$invalidate(4, options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option })));
-				$$invalidate(2, defaultChoice = callback.getDefaultOption());
-				$$invalidate(3, label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm'));
+				$$invalidate(3, options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option })));
+				$$invalidate(5, defaultChoice = callback.getDefaultOption());
+				$$invalidate(2, label = interpolate(textToKey('pleaseConfirm'), null, 'Please Confirm'));
 
 				if (callbackMetadata?.platform?.showOnlyPositiveAnswer) {
 					// The positive option is always first in the `options` array
-					$$invalidate(4, options = options.slice(0, 1));
-				}
-
-				if (callback.getInputValue() === 0) {
-					/**
- * If input value is 0 (falsy value), then let's make sure it's set to the default value
- * There's a case when the input value is 100, and for that we leave it at 100
- */
-					callback.setOptionIndex(defaultChoice);
+					$$invalidate(3, options = options.slice(0, 1));
 				}
 
 				if (!stepMetadata?.derived.isStepSelfSubmittable && options.length > 1) {
 					// Since the user needs to confirm, add this empty `value` to force selection
 					options.unshift({ value: '', text: label });
 				} else if (options.length === 1) {
-					$$invalidate(5, buttonStyle = 'outline');
+					$$invalidate(4, buttonStyle = 'outline');
 				} else {
-					$$invalidate(5, buttonStyle = 'secondary');
+					$$invalidate(4, buttonStyle = 'secondary');
 				}
 			}
 		}
@@ -22941,10 +22941,10 @@ function instance$z($$self, $$props, $$invalidate) {
 	return [
 		callbackMetadata,
 		stepMetadata,
-		defaultChoice,
 		label,
 		options,
 		buttonStyle,
+		defaultChoice,
 		inputName,
 		Checkbox,
 		setBtnValue,

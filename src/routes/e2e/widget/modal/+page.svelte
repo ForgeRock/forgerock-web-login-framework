@@ -23,12 +23,20 @@
   }
 
   componentEvents.subscribe((event) => {
-    console.log(`Modal closed due to ${event && event.reason}`);
+    if (event.mounted) {
+      console.log('Modal mounted');
+    }
+    if (!event.open) {
+      console.log(`Modal closed due to ${event && event.reason}`);
+    }
   });
   journeyEvents.subscribe((event) => {
     console.log(event);
     if (event?.user?.successful) {
       userResponse = event?.user;
+    }
+    if (event.journey.error || event.oauth.error || event.user.error) {
+      console.log('Login failure event fired');
     }
   });
 
