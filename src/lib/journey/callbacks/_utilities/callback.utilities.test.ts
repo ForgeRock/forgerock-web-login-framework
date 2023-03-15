@@ -5,6 +5,7 @@ import {
   getAttributeValidationFailureText,
   getInputTypeFromPolicies,
   getPasswordValidationFailureText,
+  getUsernameValidationFailureText,
   getValidationFailureParams,
   getValidationFailures,
   getValidationPolicies,
@@ -509,9 +510,9 @@ describe('Username Validation Failure message getter', () => {
         },
       ],
     });
-    const errorMessage = getPasswordValidationFailureText(
+    const errorMessage = getUsernameValidationFailureText(
       step.getCallbackOfType(CallbackType.ValidatedCreateUsernameCallback),
-      'password',
+      'userName',
     );
     const expected = '';
 
@@ -618,11 +619,11 @@ describe('Username Validation Failure message getter', () => {
         },
       ],
     });
-    const errorMessage = getPasswordValidationFailureText(
+    const errorMessage = getUsernameValidationFailureText(
       step.getCallbackOfType(CallbackType.ValidatedCreateUsernameCallback),
-      'password',
+      'userName',
     );
-    const expected = 'Please Check Value ';
+    const expected = 'Choose Different Username ';
 
     expect(errorMessage).toBe(expected);
   });

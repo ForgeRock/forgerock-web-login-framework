@@ -79,7 +79,13 @@
     }
   }
 
-  // TODO: use selfSubmitFunction to communicate to step component that this callback is ready
+  if (callback.getInputValue() === 0) {
+    /**
+     * If input value is 0 (falsy value), then let's make sure it's set to the default value
+     * There's a case when the input value is 100, and for that we leave it at 100
+     */
+    callback.setOptionIndex(defaultChoice);
+  }
 
   $: {
     inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
@@ -90,14 +96,6 @@
     if (callbackMetadata?.platform?.showOnlyPositiveAnswer) {
       // The positive option is always first in the `options` array
       options = options.slice(0, 1);
-    }
-
-    if (callback.getInputValue() === 0) {
-      /**
-       * If input value is 0 (falsy value), then let's make sure it's set to the default value
-       * There's a case when the input value is 100, and for that we leave it at 100
-       */
-      callback.setOptionIndex(defaultChoice);
     }
 
     if (!stepMetadata?.derived.isStepSelfSubmittable && options.length > 1) {
