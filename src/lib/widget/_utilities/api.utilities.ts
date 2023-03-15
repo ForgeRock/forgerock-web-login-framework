@@ -2,22 +2,24 @@ import { Config, FRUser, SessionManager, type ConfigOptions } from '@forgerock/j
 import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
 import { derived, get, type Readable } from 'svelte/store';
 
+import { logErrorAndThrow } from '$lib/_utilities/errors.utilities';
 import configure from '$lib/sdk.config';
 
 // Import the stores for initialization
+import { componentStore } from './component.utilities';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { initialize as initializeJourney } from '$journey/journey.store';
 import { initialize as initializeContent } from '$lib/locale.store';
 import { initialize as initializeLinks } from '$lib/links.store';
-import { initialize as initializeOauth, type OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
-import { initialize as initializeUser, type UserStoreValue } from '$lib/user/user.store';
+import { initialize as initializeOauth } from '$lib/oauth/oauth.store';
+import { initialize as initializeUser } from '$lib/user/user.store';
 import { initialize as initializeStyle } from '$lib/style.store';
 
-import { componentStore, type componentApi as _componentApi } from './component.utilities';
-import type { JourneyOptions, JourneyOptionsStart, WidgetConfigOptions } from '../interfaces';
+import type { componentApi as _componentApi } from './component.utilities';
+import type { JourneyOptions, JourneyOptionsChange, JourneyOptionsStart, WidgetConfigOptions } from '../interfaces';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
-import type { OAuthStore } from '$lib/oauth/oauth.store';
-import type { UserStore } from '$lib/user/user.store';
+import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
+import type { UserStore, UserStoreValue } from '$lib/user/user.store';
 
 export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>) {
   let journeyStore: JourneyStore;
@@ -42,7 +44,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   }
 
   const configuration = (options?: WidgetConfigOptions) => {
-    if (options?.config) {
+    if (options?.forgerock) {
       configure({
         // Set some basics by default
         ...{
@@ -57,19 +59,18 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
           scope: 'openid email',
         },
         // Let user provided config override defaults
-        ...options?.config,
+        ...options?.forgerock,
         // Force 'legacy' to remove confusion
         ...{ support: 'legacy' },
       });
     }
 
     /**
-     * Initialize the stores and ensure both variables point to the same reference.
-     * Variables with _ are the reactive version of the original variable from above.
+     * Initialize all the stores.
      */
-    journeyStore = initializeJourney(options?.config);
-    oauthStore = initializeOauth(options?.config);
-    userStore = initializeUser(options?.config);
+    journeyStore = initializeJourney(options?.forgerock);
+    oauthStore = initializeOauth(options?.forgerock);
+    userStore = initializeUser(options?.forgerock);
 
     initializeContent(options?.content);
     initializeJourneys(options?.journeys);
@@ -78,7 +79,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
 
     return {
       set(setOptions?: WidgetConfigOptions): void {
-        if (setOptions?.config) {
+        if (setOptions?.forgerock) {
           configure({
             // Set some basics by default
             ...{
@@ -95,7 +96,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
               scope: 'openid email',
             },
             // Let user provided config override defaults
-            ...setOptions?.config,
+            ...setOptions?.forgerock,
             // Force 'legacy' to remove confusion
             ...{ support: 'legacy' },
           });
@@ -105,9 +106,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
          * Initialize the stores and ensure both variables point to the same reference.
          * Variables with _ are the reactive version of the original variable from above.
          */
-        journeyStore = initializeJourney(setOptions?.config);
-        oauthStore = initializeOauth(setOptions?.config);
-        userStore = initializeUser(setOptions?.config);
+        journeyStore = initializeJourney(setOptions?.forgerock);
+        oauthStore = initializeOauth(setOptions?.forgerock);
+        userStore = initializeUser(setOptions?.forgerock);
 
         initializeContent(setOptions?.content);
         initializeJourneys(setOptions?.journeys);
@@ -117,6 +118,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     };
   };
   const journey = (options?: JourneyOptions) => {
+    if (!journeyStore || !oauthStore || !userStore) {
+      logErrorAndThrow('missingStores');
+    }
+
     const requestsOauth = options?.oauth || true;
     const requestsUser = options?.user || true;
     const {
@@ -131,25 +136,24 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
             user: $userStore,
           });
 
-          if ($journeyStore) {
-            if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+          if ($oauthStore.error || $userStore.error) {
+            // If we get any errors from the stores, close the modal
+            formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+          }
+
+          if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+            formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+          } else if ($journeyStore.successful && $oauthStore.successful) {
+            if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+              userStore.get();
+            } else if (!requestsUser) {
               formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-            } else if ($journeyStore.successful && $oauthStore.successful) {
-              if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
-                userStore.get();
-              } else if (!requestsUser) {
-                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-              }
-            } else if ($journeyStore.successful) {
-              if (
-                requestsOauth &&
-                $oauthStore.loading === false &&
-                $oauthStore.completed === false
-              ) {
-                oauthStore.get();
-              } else if (!requestsOauth) {
-                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-              }
+            }
+          } else if ($journeyStore.successful) {
+            if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+              oauthStore.get();
+            } else if (!requestsOauth) {
+              formFactor === 'modal' && componentApi.close({ reason: 'auto' });
             }
           }
         },
@@ -157,19 +161,33 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     // Create a simple reference to prevent repeated subscribing and unsubscribing
     let formFactor: 'modal' | 'inline' | null = null;
 
+    function change(changeOptions: JourneyOptionsChange) {
+      return start(changeOptions);
+    }
+
     function start(startOptions?: JourneyOptionsStart) {
+      // If starting a journey, let's reset the stores in case they had previous state
+      oauthStore.reset();
+      userStore.reset();
+
       // Grab the form factor and cache it
       formFactor = get(componentStore).type;
+
       if (startOptions?.resumeUrl) {
         journeyStore.resume(startOptions.resumeUrl);
       } else {
         journeyStore.start({
-          ...startOptions?.config,
-          tree: startOptions?.journey,
+          ...startOptions?.forgerock,
+          // Only include a `tree` property if the `journey` options prop is truthy
+          ...(startOptions?.journey && { tree: startOptions?.journey }),
         });
       }
-      return new Promise((resolve) => {
+      return new Promise((resolve, reject) => {
         const unsubscribe = subscribe((event) => {
+          if (event.oauth.error || event.user.error) {
+            reject(event);
+            unsubscribe();
+          }
           if (event.journey.successful && event.oauth.successful && event.user.completed) {
             resolve(event);
             unsubscribe();
@@ -188,18 +206,25 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       });
     }
 
-    return { start, subscribe };
+    return { change, start, subscribe };
   };
   const user = {
     info() {
+      if (!journeyStore || !oauthStore || !userStore) {
+        logErrorAndThrow('missingStores');
+      }
+
       const { get, subscribe } = userStore;
 
       function wrappedGet(options?: ConfigOptions) {
         get(options);
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           const unsubscribe = userStore.subscribe((event) => {
-            if (event.completed) {
+            if (event.successful) {
               resolve(event);
+              unsubscribe();
+            } else if (event.error) {
+              reject(event);
               unsubscribe();
             }
           });
@@ -209,6 +234,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       return { get: wrappedGet, subscribe };
     },
     async logout() {
+      if (!journeyStore || !oauthStore || !userStore) {
+        logErrorAndThrow('missingStores');
+      }
+
       const { clientId } = Config.get();
 
       let obj;
@@ -235,14 +264,21 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       return;
     },
     tokens() {
+      if (!journeyStore || !oauthStore || !userStore) {
+        logErrorAndThrow('missingStores');
+      }
+
       const { get, subscribe } = oauthStore;
 
       function wrappedGet(options?: ConfigOptions) {
         get(options);
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
           const unsubscribe = oauthStore.subscribe((event) => {
-            if (event.completed) {
+            if (event.successful) {
               resolve(event);
+              unsubscribe();
+            } else if (event.error) {
+              reject(event);
               unsubscribe();
             }
           });

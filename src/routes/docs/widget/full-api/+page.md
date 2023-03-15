@@ -1,170 +1,221 @@
-# Complete Widget API
+<script>
+  // import Image from '../../image.svelte';
 
-The Widget comes with methods and event handlers used to control the lifecycle of user journeys/authentication.
+  // export let data;
+</script>
 
-## Widget
+# Complete Widget APIs
+
+## What you need to know
+
+Most of this Widget's APIs are asynchronous. As with many things in the JavaScript world, there are multiple patterns to handle asynchronous behavior. We've decided to centralize the Widget's APIs around the event-centric, Observable pattern. Since this Widget is powered by Svelte's compiler, we use Svelte's simplified, but standard Observable implementation called a "store". You can [read more about the Svelte store contract in their docs](https://svelte.dev/docs#component-format-script-4-prefix-stores-with-$-to-access-their-values-store-contract).
+
+We believe this is an optimal pattern for UI development as it allows for a more dynamic, user experience. Your application will be updated with each event from emitted from within the Widget. These events could be "loading", "completed", "success" or "failure". To help illustrate this, let's take a look at one of the `user` APIs:
+
+### Import the API object
+
+We'll use the `user` module as an example, but most of the APIs you'll use will follow this pattern.
 
 ```js
-// As modal dialog
-import Widget from '@forgerock/login-widget/modal';
+import { user } from '@forgerock/login-widget';
+```
 
-// OR, as embedded
-import Widget from '@forgerock/login-widget/inline';
+### Call API method to initiate observable
+
+Create a variable and assign the created observable:
+
+```js
+const userInfoEvents = user.info();
+```
+
+### Use the subscribe method
+
+It's important to note that an observable is a "stream" of events over time. This means that the callback function in a subscribe will be called for each and every event until you unsubscribe from it (more on this later).
+
+```js
+userInfoEvents.subscribe((event) => {
+  if (event.loading) {
+    console.log('User info is being requested from server');
+  } else if (event.successful) {
+    console.log('User info request was successful');
+    console.log(event.response);
+  } else if (event.error) {
+    console.error('User info request failed');
+    console.error(event.error.message);
+  }
+});
+```
+
+### Unsubscribing from an Observable
+
+Observables are not like a Promise in that Observables don't resolve and get "torn-down" after completion. Observables need to be unsubscribed from if they are no longer needed. This is especially important if you are subscribing to Observables in a component that gets created and destroyed many times over. Subscribing to an Observable over and over without unsubscribing will create a memory leak.
+
+To unsubscribe, you assign a function that is returned from calling the subscribe method to a variable that can be called at a later time.
+
+```js
+const unsubUserInfoEvents = userInfoEvents.subscribe((event) => console.log(event));
+
+// ...
+
+// Unsubscribe when no longer needed
+unsubUserInfoEvents();
+```
+
+NOTE: If you're subscribing at a top-level component in your app that's initiated once and is retained over the lifetime of your application, then unsubscribing is not needed. A good example of this would be your app's central, state management component/module. This is a perfect place to `subscribe` to an Observable and preserve that subscription.
+
+### Getting the current, local value
+
+Sometimes you just want the current value stored within the Widget and are not interested in future events and their resulting state changes. To do this, you can call `subscribe` and then immediately call the unsubscribe method.
+
+```js
+// Create variable for user info
+let userInfo;
+// Call subscribe, grab the current, local value, and then immediately call the returned function
+userInfoEvents.subscribe((event) => (userinfo = event.response))(); // <-- notice the second pair of parentheses
+```
+
+What does "current, local value" mean? Good question. The Widget internally stores a lot of these important values, so you can ask the Widget for the values that it already has stored.
+
+### Requesting values from the ForgeRock platform
+
+You can ask the Widget to request new, fresh values from the ForgeRock server, rather than just what it has stored locally. This is done by calling the Observables action methods, like `get`.
+
+```js
+userInfoEvents.get();
+```
+
+If you're using the Observable pattern, you can call this method and forget about it. The `subscribe` callback function you have for this Observable will receive the events and new state from this `get` call. The `subscribe` can exist before or after this `get` call, and it will still capture the resulting events.
+
+### Using Promises
+
+We recommend Observables, but the choice is up to you. All of the Widget's APIs that involve network calls have an alternative Promise implementation that can be used. Let's take the `get` method on `userInfoEvents` we saw above as a way to fetch new user info, and convert it into a Promise.
+
+```js
+// async-await
+let userInfo;
+async function example() {
+  try {
+    userInfo = await userInfoEvents.get();
+  } catch (err) {
+    console.log(err);
+  }
+}
+
+// Promise
+let userInfo;
+userInfoEvents
+  .get()
+  .then((data) => (userInfo = data))
+  .catch((err) => console.log(err));
+```
+
+## Login Widget API in detail
+
+Now that you have an idea of the general pattern of our APIs
+
+### The `Widget` class
+
+This is a compiled Svelte class. This is what instantiates the component, mounts it to the DOM and sets up all the event listeners.
+
+```js
+import Widget from '@forgerock/login-widget';
 
 // Instantiate Widget
 const widget = new Widget({
-  target: document.getElementById('widget-root'), // REQUIRED; Element available in DOM
+  target: widgetRootEl, // REQUIRED; Element mounted in DOM
   props: {
-    /**
-     * REQUIRED; SDK configuration object
-     */
-    config: {
-      serverConfig: {
-        baseUrl: 'https://customer.forgeblocks.com/am', // REQUIRED; URL to ForgeRock AM
-      },
-
-      /**
-       * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
-       * Remaining config is optional with fallback values shown
-       */
-      clientId: 'WebLoginWidgetClient', // OPTIONAL; Uses 'WebLoginWidgetClient', if not provided
-      realmPath: 'alpha', // OPTIONAL; Uses 'alpha', if not provided
-      redirectUri: window.location.href, // OPTIONAL; falls back to `window.location.href`
-      scope: 'openid email', // OPTIONAL; falls back to minimal 'openid email'
-    },
-
-    /**
-     * OPTIONAL; See below for the content object schema [1]
-     */
-    content: {},
-
-    /**
-     * OPTIONAL; See below for the style object schema [2]
-     */
-    style: {},
+    type: 'modal', // OPTIONAL; "modal" or "inline"; "modal" is default
   },
 });
 
-// OPTIONAL; Remove widget from DOM and destroy all listeners
+// OPTIONAL; Remove widget from DOM and destroy component listeners
 widget.$destroy();
+```
+
+NOTE: Calling `$destroy()` is important if the instantiation of the Widget is done within a portion of your application that is frequently created and destroyed. Though, we _strongly_ encourage developers to instantiate the Widget higher up in the application code closer to the top-level file, in a component that is created once and preserved.
+
+### Configuration API
+
+This configuration function produces a config API, and its `set` method is required for the underlying JavaScript SDK to interaction with the ForgeRock platform or access stored tokens.
+
+```js
+import { configuration } from '@forgerock/login-widget';
+
+const config = configuration();
+config.set({
+  forgerock: {
+    /**
+     * REQUIRED; SDK configuration object
+     */
+    serverConfig: {
+      baseUrl: 'https://customer.forgeblocks.com/am',
+      timeout: 3000, // Number (in milliseconds); 3 to 5 seconds should be fine
+    },
+    /**
+     * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
+     * Remaining config is optional with fallback values shown
+     */
+    clientId: 'WebLoginWidgetClient', // String; defaults to 'WebLoginWidgetClient'
+    realmPath: 'alpha', // String; defaults to 'alpha'
+    redirectUri: window.location.href, // URL string; defaults to `window.location.href`
+    scope: 'openid email', // String; defaults to 'openid email'
+    /**
+     * NOT RECOMMENDED
+     * Rather, configure a journey/tree through the `.start({ journey: 'Login' })` options object,
+     * avoid setting it here
+     */
+    tree: 'Login', // String, but NOT recommended.
+  },
+  /**
+   * OPTIONAL; See below for the Content Configuration section
+   */
+  content: {},
+  /**
+   * OPTIONAL; See below for the Links Configuration section
+   */
+  links: {},
+  /**
+   * OPTIONAL; See below for Styling Configuration section
+   */
+  style: {},
+});
 ```
 
 NOTE: For more SDK configuration options, please [see our SDK's configuration document](https://backstage.forgerock.com/docs/sdks/3.3/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html), or you can [see our API docs for more developer detail](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/configoptions.html).
 
-1. For content schema, please [use the example en-US locale file](/src/locales/us/en/index.ts)
-2. For `style` schema and more information, please [see the Style section below](#styling-api)
-
-### Configuration
-
-This object can be useful when you want to leverage APIs that require interaction with the ForgeRock platform or access stored tokens in a location of your app that may not directly use the `Widget`. When the `configuration.set` method is used, it removes the need to set the `config` property within the `Widget` class instantiation.
-
-For example, these would be equivalent:
-
-```js
-import Widget, { configuration } from '@forgerock/login-widget/modal';
-
-// OR, as embedded
-import Widget, { configuration } from 'forgerock-web-login-widget/inline';
-
-// Configuration within Widget instantiation
-const widget = new Widget({
-  target: document.getElementById('widget-root'),
-  props: {
-    config: {
-      /**
-       * REQUIRED; SDK configuration object
-       */
-      serverConfig: {
-        baseUrl: 'https://customer.forgeblocks.com/am',
-      },
-      /**
-       * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
-       * Remaining config is optional with fallback values shown
-       */
-      clientId: 'WebLoginWidgetClient',
-      realmPath: 'alpha',
-      redirectUri: window.location.href,
-      scope: 'openid email',
-      tree: 'Login',
-    },
-  },
-});
-```
-
-```js
-import Widget, { configuration } from '@forgerock/login-widget/modal';
-
-// OR, as embedded
-import Widget, { configuration } from 'forgerock-web-login-widget/inline';
-
-// Configuration outside Widget instantiation
-configuration.set({
-  /**
-   * REQUIRED; SDK configuration object
-   */
-  serverConfig: {
-    baseUrl: 'https://customer.forgeblocks.com/am',
-  },
-  /**
-   * OPTIONAL, *BUT ENCOURAGED*, CONFIGURATION
-   * Remaining config is optional with fallback values shown
-   */
-  clientId: 'WebLoginWidgetClient',
-  realmPath: 'alpha',
-  redirectUri: window.location.href,
-  scope: 'openid email',
-  tree: 'Login',
-});
-
-const widget = new Widget({
-  target: document.getElementById('widget-root'),
-});
-```
-
-Note: It's important to not that all methods of the `user` API imported from this module require configuration to be set. So, setting the configuration is best done at the top index or entry file of your application. Then you can use the all APIs without failure.
-
-## Journey
+### Journey API
 
 The `journey` object:
 
 ```js
-// As modal dialog
-import Widget from '@forgerock/login-widget/modal';
-
-// OR, as embedded
-import Widget from '@forgerock/login-widget/inline';
+import { journey } from '@forgerock/login-widget';
 
 // Call to start the journey
 // Optional config can be passed in, see below for more details
-journey.start();
+const journeyEvents = journey({
+  oauth: true, // OPTIONAL; defaults to true; uses OAuth flow for acquiring tokens
+  user: true, // OPTIONAL; default to true; returns user information from `userinfo` endpoint
+});
+
+// Start a journey
+journeyEvents.start({
+  forgerock: {}, // OPTIONAL; configuration overrides
+  journey: 'Login', // OPTIONAL; choice the journey or tree you want to start
+  resumeUrl: window.location.href, // OPTIONAL; the full URL for resuming a tree (see resuming a journey section)
+});
 
 // Listeners for journey events
-// See below for more details on `response`
-journey.onSuccess((response) => {
-  /* Run anything you want */
-});
-journey.onFailure((error) => {
+// See below for more details on `event`
+journey.subscribe((event) => {
   /* Run anything you want */
 });
 ```
 
-NOTE: Optional `start` config:
-
-```js
-journey.start({
-  config: undefined, // OPTIONAL; defaults to undefined, mechanism to override base SDK config object
-  oauth: true, // OPTIONAL; defaults to true; if true, acquires OAuth tokens after successful authentication
-  resumeUrl: location.href, // OPTIONAL; full URL of app to continue journey from a "magic link"
-  user: true, // OPTIONAL; default to true; if true, returns user information from `userinfo` endpoint
-});
-```
-
-NOTE: Schema for `response`
+Schema for user `event`:
 
 ```js
 // response
 {
-  // Will always be returned
   journey: {
     completed: false, // boolean
     error: null, // null or object with `code`, `message` and `step` that failed
@@ -173,7 +224,6 @@ NOTE: Schema for `response`
     successful: false, // boolean
     response: null, // null or object, if successful, it will contain the success response from AM
   },
-  // Is returned if `oauth` is NOT set to false
   oauth: {
     completed: false, // boolean
     error: null, // null or object with `code` and `message` properties
@@ -181,7 +231,6 @@ NOTE: Schema for `response`
     successful: false, // boolean
     response: null, // null or object with OAuth/OIDC tokens
   },
-  // Is returned if `user` is NOT set to false
   user: {
     completed: false, // boolean
     error: null, // null or object with `code` and `message` properties
@@ -192,42 +241,123 @@ NOTE: Schema for `response`
 }
 ```
 
-## User
+### Component API
 
-The `user` object:
+The named `component` import provides methods for both listening (modal and inline type) as well as controlling (modal type only) the widget component. After initializing the component API via `component()`, you will receive an observable. Subscribing to this observable will allow you to listen and react to the state of the component.
 
 ```js
-// As modal dialog
-import Widget from '@forgerock/login-widget/modal';
+import { component } from 'forgerock-login-widget';
 
-// OR, as embedded
-import Widget from '@forgerock/login-widget/inline';
+// Initiate the component API
+const componentEvents = component();
 
-// Is user currently authorized
-await user.authorized(); // do they have OAuth tokens (local)?
-await user.authorized({ remote: true }); // do we have valid tokens (remote)?
+// Know when the component, both modal and inline has been mounted.
+// When using the modal type, you will also receive open and close events.
+// The property `reason` will be either "auto", "external", or "user" (see below)
+componentEvents.subscribe((event) => {
+  /* Run anything you want */
+});
 
-// Get user information
-await user.info(); // what we have locally in-memory
-await user.info({ remote: true }); // request user info from server
+// Open the modal
+componentEvents.open();
 
-// Log user out
-await user.logout();
+// Close the modal
+componentEvents.close();
 ```
 
-## Request
+Schema for component `event`:
+
+```js
+{
+  error: null, // null or object with `code`, `message` and `step` that failed
+  mounted: false, // boolean
+  open: null, // boolean or null, depending on the Widget type: e.g. "modal" or "inline"
+  reason: null, // string to describe the reason for the event
+  type: null, // 'modal' or 'inline'
+}
+```
+
+The `reason` value is used for communicating why the modal has closed. The below are the potential values:
+
+1. `"user"`: user closed the dialog via UI
+2. `"auto"`: the modal was closed because user successfully authenticated
+3. `"external"`: the application itself called the `modal.close` function
+
+### User API
+
+This API provides access to three main methods for user related management: `user.info`, `user.tokens` and `user.logout`. Please note that `user.info` requires the use of OAuth and an OAuth scope of `openid`. `user.tokens` just requires the use of OAuth. Both of these, by default, the Widget is configured to support.
+
+The `user.logout` method can be used with OAuth based authentication or session based.
+
+```js
+import { user } from '@forgerock/login-widget';
+
+/**
+ * User info API
+ */
+const userEvents = user.info();
+// Subscribe to user info changes
+userEvents.subscribe((event) => {
+  // Will return current, *local*, user info and future state changes
+  console.log(event);
+});
+// Fetch/get fresh user info from ForgeRock server
+userEvents.get(); // New state will be returned in your `userEvents.subscribe` callback function
+
+/**
+ * User tokens API
+ */
+const tokenEvents = user.tokens();
+// Subscribe to user info changes
+tokenEvents.subscribe((event) => {
+  // Will return current, *local*, user tokens and future state changes
+  console.log(event);
+});
+// Fetch/get fresh user tokens from ForgeRock server
+tokenEvents.get(); // New state will be returned in your tokenEvents.subscribe` callback function
+
+/**
+ * Logout
+ * Log user out and clear user data (info and tokens)
+ */
+user.logout(); // Resets user and emits event to your info and tokens' `.subscribe` callback function
+```
+
+Schema for user info `event`:
+
+```js
+{
+  completed: false, // boolean
+  error: null,  // null or object with `code`, `message` and `step` that failed
+  loading: false, // boolean
+  successful: false, // boolean
+  response: null, // object returned from the `/userinfo` endpoint configured in ForgeRock
+}
+```
+
+Schema for token `event`:
+
+```js
+{
+  completed: false, // boolean
+  error: null,  // null or object with `code`, `message` and `step` that failed
+  loading: false, // boolean
+  successful: false, // boolean
+  response: null, // object returned from the `/access_token` endpoint configured in ForgeRock
+}
+```
+
+### Request API
 
 The Widget has an alias to the JavaScript SDK's `HttpClient.request`, which is a convenience wrapper around the native `fetch`. All this does is auto-inject the Access Token into the `Authorization` header and manage some of the lifecycle around the token.
 
-```js
-// As modal dialog
-import Widget from '@forgerock/login-widget/modal';
+NOTE: This request function is just a wrapper around the native `fetch` API. It's purely promise based and the [response object is the native `Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response). The response is not persisted locally within the Widget.
 
-// OR, as embedded
-import Widget from '@forgerock/login-widget/inline';
+```js
+import Widget from '@forgerock/login-widget';
 
 // See below for more details on the options
-request({ init: { method: 'GET' }, url: 'https://protected.resource.com' });
+const response = await request({ init: { method: 'GET' }, url: 'https://protected.resource.com' });
 ```
 
 The full `options` object:
@@ -249,116 +379,65 @@ The full `options` object:
 
 For the full type definition of this, please [view our SDK API documentation](https://backstage.forgerock.com/docs/sdks/3.3/_attachments/javascript/api-reference-core/interfaces/httpclientrequestoptions.html).
 
-## Modal
-
-The named `modal` import provides controls of the modal component.
-
-```js
-// As modal dialog
-import Widget from '@forgerock/login-widget/modal';
-
-// Know when the modal auto-closes, not when the modal is
-// The property `reason` will be either "auto", "external", or "user" (see below)
-modal.onClose(({ reason }) => {
-  /* Run anything you want */
-});
-// Know when the modal has mounted
-modal.onMount((dialogElement, formElement) => {
-  /* Run anything you want */
-});
-
-// "Open" the modal (this implicitly calls `journey.start()`)
-// Optional config can be passed in, see below for more details
-modal.open();
-
-// "Close" the modal
-modal.close();
-```
-
-It's worth noting that if the Widget has already mounted before the `onMount` statement, it will never run. It won't retroactively run the callback function.
-
-`onClose` and the `reason` value:
-
-1. `"user"`: user closed the dialog via UI
-2. `"auto"`: the modal was closed because user successfully authenticated
-3. `"external"`: the application itself called the `modal.close` function
-
-NOTE: Optional `open` config (same optional config of `journey.start`):
-
-```js
-modal.open({
-  config: undefined, // OPTIONAL; defaults to undefined, mechanism to override base SDK config object
-  oauth: true, // OPTIONAL; defaults to true and uses OAuth flow for acquiring tokens
-  resumeUrl: location.href, // OPTIONAL; full URL of app to continue journey from a "magic link"
-  user: true, // OPTIONAL; default to true and returns user information from `userinfo` endpoint
-});
-```
-
-## Inline
-
-The named `form` import provides a simple `onMount` event.
-
-```js
-// As embedded
-import Widget from '@forgerock/login-widget/inline';
-
-// Know when the inline form has mounted
-form.onMount((formElement) => {
-  /* Run anything you want */
-});
-```
-
-It's worth noting that if the Widget has already mounted before the `onMount` statement, it will never run. It won't retroactively run the callback function.
-
-## Styling API
+### Styling Configuration Options
 
 The Widget can be configured for styling purposes via the JavaScript API. This allows you to choose the type of labels used or providing a logo for the modal.
 
 Example:
 
 ```js
-const widget = new Widget({
-  target: document.getElementById('widget-root'),
-  props: {
-    config: {
-      /* ... */
+const config = configuration();
+
+config.set({
+  style: {
+    checksAndRadios: 'animated', // OPTIONAL; choices are 'animated' or 'standard'
+    labels: 'floating', // OPTIONAL; choices are 'floating' or 'stacked'
+    logo: {
+      // OPTIONAL; only used with modal form factor
+      dark: 'https://example.com/img/white-logo.png', // OPTIONAL; used if theme has a dark variant
+      light: 'https://example.com/img/black-logo.png', // REQUIRED if logo property is provided; full URL
+      height: 300, // OPTIONAL; number of pixels for providing additional controls to logo display
+      width: 400, // OPTIONAL; number of pixels for providing additional controls to logo display
     },
-    content: {
-      /* ... */
+    sections: {
+      // OPTIONAL; only used with modal form factor
+      header: false, // OPTIONAL; uses a modal "header" section that displays logo
     },
-    /**
-     * OPTIONAL
-     */
-    style: {
-      checksAndRadios: 'animated', // OPTIONAL; choices are 'animated' or 'standard'
-      labels: 'floating', // OPTIONAL; choices are 'floating' or 'stacked'
-      logo: {
-        // OPTIONAL; only used with modal form factor
-        dark: 'https://example.com/img/white-logo.png', // OPTIONAL; used if theme has a dark variant
-        light: 'https://example.com/img/black-logo.png', // REQUIRED if logo property is provided; full URL
-        height: '300px', // OPTIONAL; provides additional controls to logo display
-        width: '400px', // OPTIONAL; provides additional controls to logo display
-      },
-      sections: {
-        // OPTIONAL; only used with modal form factor
-        header: false, // OPTIONAL; uses a modal "header" section see below
-      },
-      stage: {
-        icon: true, // OPTIONAL; displays generic icons for the provided stages
-      },
+    stage: {
+      icon: true, // OPTIONAL; displays generic icons for the provided stages
     },
   },
 });
 ```
 
-### Modal header
-
-This is a subtle style addition that separates the logo or branding from the journey form. By passing `header: true` within the `sections` property, the modal will look like this (notice the separate line and additional space):
-
-![Modal with header section](/img/modal-widget-with-header.png)
-
-By default, the header will be false and the modal will present like this:
-
-![Modal with header section](/img/modal-widget-without-header.png)
-
 Note that the `logo` and `section` property only apply to the "modal" form factor, and not the "inline".
+
+### Links Configuration Options
+
+Use this configuration option to set the URL for your site or app's Terms & Conditions page. This supports the the `TermsAndConditionsCallback` that's commonly found in a registration flow.
+
+Example:
+
+```js
+const config = configuration();
+
+config.set({
+  links: {
+    termsAndConditions: 'https://example.com/terms', // Full canonical URL for your app's terms and conditions page
+  },
+});
+```
+
+### Content Configuration Options
+
+This configuration setting is for passing custom content to the Widget, replacing its default content. For the full content schema, please [use the example en-US locale file](/src/locales/us/en/index.ts).
+
+Example:
+
+```js
+const config = configuration();
+
+config.set({
+  content: {}, // Custom content that overrides Widget default content
+});
+```

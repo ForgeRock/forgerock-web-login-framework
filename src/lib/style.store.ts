@@ -29,18 +29,23 @@ export const styleSchema = z
   .strict();
 
 export const partialStyleSchema = styleSchema.partial();
-export const styleStore: Writable<z.infer<typeof partialStyleSchema>> = writable({
+
+const fallbackStyles = {
   checksAndRadios: 'animated',
   labels: 'floating',
   logo: {},
   sections: {},
   stage: {},
-});
+} as const;
+
+export const styleStore: Writable<z.infer<typeof partialStyleSchema>> = writable(fallbackStyles);
 
 export function initialize(customStyle?: z.infer<typeof partialStyleSchema>) {
   if (customStyle) {
     styleSchema.parse(customStyle);
     styleStore.set(customStyle);
+  } else {
+    styleStore.set(fallbackStyles);
   }
   return styleStore;
 }

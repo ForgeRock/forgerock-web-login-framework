@@ -16,6 +16,8 @@ export function initialize(customLinks?: z.infer<typeof partialLinksSchema>) {
     // Provide developer feedback for custom links
     linksSchema.parse(customLinks);
     linksStore.set(customLinks);
+  } else {
+    linksStore.set(undefined);
   }
   return linksStore;
 }

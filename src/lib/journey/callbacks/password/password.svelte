@@ -27,7 +27,6 @@
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: z.infer<typeof styleSchema> = {};
 
-
   let inputName: string;
 
   $: {

@@ -667,48 +667,56 @@ function derived(stores, fn, initial_value) {
 }
 
 const componentStore = writable({
-    modal: null,
-    form: null,
+    lastAction: null,
     error: null,
+    form: null,
+    modal: null,
     mounted: false,
     open: null,
     reason: null,
     type: null,
 });
+/**
+ * @function closeComponent - this is a widget internal function not to be exposed to user
+ * @param {object} args - object containing  the reason for closing component
+ * @param {boolean} shouldCloseDialog - if true, the close command comes from outside of dialog component
+ */
+function closeComponent(args, shouldCloseDialog) {
+    componentStore.update((state) => {
+        if (state.type === 'inline') {
+            console.warn('Component type of "inline" has no `close` method');
+            // There's nothing to do, so just return existing state
+            return state;
+        }
+        if (!state.modal?.component) {
+            console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
+            // There's nothing to do, so just return existing state
+            return state;
+        }
+        shouldCloseDialog && state.modal.component.closeDialog();
+        return {
+            ...state,
+            lastAction: 'close',
+            open: false,
+            reason: args?.reason || null,
+        };
+    });
+}
 const componentApi = () => {
-    const { update, subscribe } = componentStore;
+    const { update } = componentStore;
+    // Create derived store to minimize what's exposed to the dev
+    const { subscribe, } = derived([componentStore], ([$componentStore], set) => {
+        set({
+            error: $componentStore.error,
+            lastAction: $componentStore.lastAction,
+            mounted: $componentStore.mounted,
+            open: $componentStore.open,
+            reason: $componentStore.reason,
+        });
+    });
     return {
         close: (args) => {
-            update((state) => {
-                if (state.type === 'inline') {
-                    console.warn('Component type of "inline" has no `close` method');
-                    // There's nothing to do, so just return existing state
-                    return state;
-                }
-                if (!state.modal) {
-                    console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
-                    // There's nothing to do, so just return existing state
-                    return state;
-                }
-                state.modal?.component.closeDialog();
-                return {
-                    ...state,
-                    open: false,
-                    reason: args?.reason || null,
-                };
-            });
-        },
-        mount: (component, element) => {
-            update((state) => {
-                return {
-                    ...state,
-                    modal: {
-                        ...(component && { component, element }),
-                    },
-                    mounted: true,
-                    type: component ? 'modal' : 'inline',
-                };
-            });
+            closeComponent(args, true);
         },
         open: () => {
             update((state) => {
@@ -717,7 +725,7 @@ const componentApi = () => {
                     // There's nothing to do, so just return existing state
                     return state;
                 }
-                if (!state.modal) {
+                if (!state.modal?.component) {
                     console.warn('Modal component is not mounted. Please instantiate the Widget before use.');
                     // There's nothing to do, so just return existing state
                     return state;
@@ -725,13 +733,34 @@ const componentApi = () => {
                 state.modal.element.showModal();
                 return {
                     ...state,
+                    lastAction: 'open',
                     open: true,
+                    reason: null,
                 };
             });
         },
         subscribe,
     };
 };
+/**
+ * @function mount - this is a widget internal function not to be exposed to user
+ * @param {object} component - actual Svelte component representing the dialog
+ * @param {object} element - actual DOM element representing the dialog
+ */
+function mount(component, element) {
+    componentStore.update((state) => {
+        return {
+            ...state,
+            lastAction: 'mount',
+            modal: {
+                ...(component && { component, element }),
+            },
+            mounted: true,
+            type: component ? 'modal' : 'inline',
+            reason: null,
+        };
+    });
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -10844,6 +10873,21 @@ var HttpClient = /** @class */ (function (_super) {
 }(event_1.default));
 var _default$2 = httpClient.default = HttpClient;
 
+function logErrorAndThrow(type) {
+    if (type === 'missingStores') {
+        const errorMessage = 'Error: missing configuration.';
+        console.error(errorMessage);
+        console.error('Please configure Widget by importing `configuration` and calling `set` with your settings.');
+        throw new Error(errorMessage);
+    }
+    else if (type === 'missingBaseUrl') {
+        const errorMessage = 'Error: missing `serverConfig.baseUrl`.';
+        console.error(errorMessage);
+        console.error('Please configure Widget by importing `configuration` and calling `set` with your ForgeRock server URL.');
+        throw new Error(errorMessage);
+    }
+}
+
 var util$2;
 (function (util) {
     util.assertEqual = (val) => val;
@@ -13975,7 +14019,14 @@ const configSchema = mod
     redirectUri: mod.string().optional(),
     scope: mod.string().optional(),
     serverConfig: mod.object({
-        baseUrl: mod.string(),
+        baseUrl: mod
+            .string({
+            invalid_type_error: '`serverConfig.baseUrl` is a required URL string (this is generated by the Zod library).',
+            required_error: 'Setting the `serverConfig.baseUrl` is required (this is generated by the Zod library).',
+        })
+            .url({
+            message: '`serverConfig.baseUrl` must be a full URL (this is generated by the Zod library).',
+        }),
         paths: mod
             .object({
             authenticate: mod.string(),
@@ -13987,7 +14038,11 @@ const configSchema = mod
             sessions: mod.string(),
         })
             .optional(),
-        timeout: mod.number(), // TODO: Should be optional; fix in SDK
+        // TODO: timeout should be optional; fix in SDK
+        timeout: mod.number({
+            invalid_type_error: '`serverConfig.timeout` is a required number and in milliseconds (this is generated by the Zod library).',
+            required_error: 'Setting the `serverConfig.timeout` is required (this is generated by the Zod library).',
+        }),
     }),
     support: mod.union([mod.literal('legacy'), mod.literal('modern')]).optional(),
     tokenStore: mod
@@ -14056,19 +14111,22 @@ const defaultJourneys = {
 };
 // Ensure default follows schema
 journeyConfigSchema.parse(defaultJourneys);
-const configuredJourneysStore = writable(Object.keys(defaultJourneys).map((key) => ({
+const fallbackJourneyConfig = Object.keys(defaultJourneys).map((key) => ({
     ...defaultJourneys[key],
     key,
-})));
+}));
+const configuredJourneysStore = writable(fallbackJourneyConfig);
 function initialize$6(customJourneys) {
     if (customJourneys) {
         // Provide developer feedback if customized
         journeyConfigSchema.parse(customJourneys);
-        const arr = Object.keys(customJourneys);
-        configuredJourneysStore.set(arr.map((key) => ({
+        configuredJourneysStore.set(Object.keys(customJourneys).map((key) => ({
             ...customJourneys[key],
             key,
         })));
+    }
+    else {
+        configuredJourneysStore.set(fallbackJourneyConfig);
     }
     return configuredJourneysStore;
 }
@@ -16404,7 +16462,7 @@ function buildStepMetadata(callbackMetadataArray, stageJson, stageName) {
         ...(stageName && {
             platform: {
                 stageName,
-            }
+            },
         }),
     };
 }
@@ -16468,6 +16526,9 @@ function initialize$4(initOptions) {
     let restartOptions;
     let stepNumber = 0;
     async function next(prevStep = null, nextOptions, resumeUrl) {
+        if (!Config.get().serverConfig?.baseUrl) {
+            logErrorAndThrow('missingBaseUrl');
+        }
         /**
          * Create an options object with nextOptions overriding anything from initOptions
          * TODO: Does this object merge need to be more granular?
@@ -16521,7 +16582,7 @@ function initialize$4(initOptions) {
                 nextStep = await FRAuth$1.next(prevStep, options);
             }
             else {
-                nextStep = await FRAuth$1.next(undefined, options);
+                nextStep = await FRAuth$1.start(options);
             }
         }
         catch (err) {
@@ -16671,6 +16732,7 @@ function initialize$4(initOptions) {
                         message: failureMessageStr,
                         // TODO: Should we remove the callbacks for PII info?
                         step: prevStep?.payload,
+                        troubleshoot: null,
                     },
                     loading: false,
                     metadata: {
@@ -16701,6 +16763,7 @@ function initialize$4(initOptions) {
                         message: failureMessageStr,
                         // TODO: Should we remove the callbacks for PII info?
                         step: prevStep?.payload,
+                        troubleshoot: null,
                     },
                     loading: false,
                     metadata: null,
@@ -16766,9 +16829,14 @@ function initialize$3(customLinks) {
         linksSchema.parse(customLinks);
         linksStore.set(customLinks);
     }
+    else {
+        linksStore.set(undefined);
+    }
     return linksStore;
 }
 
+const interactionNeeded = 'The request requires some interaction that is not allowed.';
+const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
 const oauthStore = writable({
     completed: false,
     error: null,
@@ -16804,6 +16872,7 @@ function initialize$2(initOptions) {
                     completed: true,
                     error: {
                         message: err.message,
+                        troubleshoot: err.message === interactionNeeded ? sessionCookieConsentMessage : '',
                     },
                     loading: false,
                     successful: false,
@@ -16876,6 +16945,7 @@ function initialize$1(initOptions) {
                     completed: true,
                     error: {
                         message: err.message,
+                        troubleshoot: null,
                     },
                     loading: false,
                     successful: false,
@@ -16926,17 +16996,21 @@ const styleSchema = mod
 })
     .strict();
 styleSchema.partial();
-const styleStore = writable({
+const fallbackStyles = {
     checksAndRadios: 'animated',
     labels: 'floating',
     logo: {},
     sections: {},
     stage: {},
-});
+};
+const styleStore = writable(fallbackStyles);
 function initialize(customStyle) {
     if (customStyle) {
         styleSchema.parse(customStyle);
         styleStore.set(customStyle);
+    }
+    else {
+        styleStore.set(fallbackStyles);
     }
     return styleStore;
 }
@@ -16961,7 +17035,7 @@ function widgetApiFactory(componentApi) {
         journey().start();
     }
     const configuration = (options) => {
-        if (options?.config) {
+        if (options?.forgerock) {
             configure({
                 // Set some basics by default
                 ...{
@@ -16975,25 +17049,24 @@ function widgetApiFactory(componentApi) {
                     scope: 'openid email',
                 },
                 // Let user provided config override defaults
-                ...options?.config,
+                ...options?.forgerock,
                 // Force 'legacy' to remove confusion
                 ...{ support: 'legacy' },
             });
         }
         /**
-         * Initialize the stores and ensure both variables point to the same reference.
-         * Variables with _ are the reactive version of the original variable from above.
+         * Initialize all the stores.
          */
-        journeyStore = initialize$4(options?.config);
-        oauthStore = initialize$2(options?.config);
-        userStore = initialize$1(options?.config);
+        journeyStore = initialize$4(options?.forgerock);
+        oauthStore = initialize$2(options?.forgerock);
+        userStore = initialize$1(options?.forgerock);
         initialize$5(options?.content);
         initialize$6(options?.journeys);
         initialize$3(options?.links);
         initialize(options?.style);
         return {
             set(setOptions) {
-                if (setOptions?.config) {
+                if (setOptions?.forgerock) {
                     configure({
                         // Set some basics by default
                         ...{
@@ -17009,7 +17082,7 @@ function widgetApiFactory(componentApi) {
                             scope: 'openid email',
                         },
                         // Let user provided config override defaults
-                        ...setOptions?.config,
+                        ...setOptions?.forgerock,
                         // Force 'legacy' to remove confusion
                         ...{ support: 'legacy' },
                     });
@@ -17018,9 +17091,9 @@ function widgetApiFactory(componentApi) {
                  * Initialize the stores and ensure both variables point to the same reference.
                  * Variables with _ are the reactive version of the original variable from above.
                  */
-                journeyStore = initialize$4(setOptions?.config);
-                oauthStore = initialize$2(setOptions?.config);
-                userStore = initialize$1(setOptions?.config);
+                journeyStore = initialize$4(setOptions?.forgerock);
+                oauthStore = initialize$2(setOptions?.forgerock);
+                userStore = initialize$1(setOptions?.forgerock);
                 initialize$5(setOptions?.content);
                 initialize$6(setOptions?.journeys);
                 initialize$3(setOptions?.links);
@@ -17029,6 +17102,9 @@ function widgetApiFactory(componentApi) {
         };
     };
     const journey = (options) => {
+        if (!journeyStore || !oauthStore || !userStore) {
+            logErrorAndThrow('missingStores');
+        }
         const requestsOauth = options?.oauth || true;
         const requestsUser = options?.user || true;
         const { subscribe, } = derived([journeyStore, oauthStore, userStore], ([$journeyStore, $oauthStore, $userStore], set) => {
@@ -17037,33 +17113,39 @@ function widgetApiFactory(componentApi) {
                 oauth: $oauthStore,
                 user: $userStore,
             });
-            if ($journeyStore) {
-                if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+            if ($oauthStore.error || $userStore.error) {
+                // If we get any errors from the stores, close the modal
+                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+            }
+            if ($journeyStore.successful && $oauthStore.successful && $userStore.completed) {
+                formFactor === 'modal' && componentApi.close({ reason: 'auto' });
+            }
+            else if ($journeyStore.successful && $oauthStore.successful) {
+                if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
+                    userStore.get();
+                }
+                else if (!requestsUser) {
                     formFactor === 'modal' && componentApi.close({ reason: 'auto' });
                 }
-                else if ($journeyStore.successful && $oauthStore.successful) {
-                    if (requestsUser && $userStore.loading === false && $userStore.completed === false) {
-                        userStore.get();
-                    }
-                    else if (!requestsUser) {
-                        formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-                    }
+            }
+            else if ($journeyStore.successful) {
+                if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
+                    oauthStore.get();
                 }
-                else if ($journeyStore.successful) {
-                    if (requestsOauth &&
-                        $oauthStore.loading === false &&
-                        $oauthStore.completed === false) {
-                        oauthStore.get();
-                    }
-                    else if (!requestsOauth) {
-                        formFactor === 'modal' && componentApi.close({ reason: 'auto' });
-                    }
+                else if (!requestsOauth) {
+                    formFactor === 'modal' && componentApi.close({ reason: 'auto' });
                 }
             }
         });
         // Create a simple reference to prevent repeated subscribing and unsubscribing
         let formFactor = null;
+        function change(changeOptions) {
+            return start(changeOptions);
+        }
         function start(startOptions) {
+            // If starting a journey, let's reset the stores in case they had previous state
+            oauthStore.reset();
+            userStore.reset();
             // Grab the form factor and cache it
             formFactor = get_store_value(componentStore).type;
             if (startOptions?.resumeUrl) {
@@ -17071,12 +17153,17 @@ function widgetApiFactory(componentApi) {
             }
             else {
                 journeyStore.start({
-                    ...startOptions?.config,
-                    tree: startOptions?.journey,
+                    ...startOptions?.forgerock,
+                    // Only include a `tree` property if the `journey` options prop is truthy
+                    ...(startOptions?.journey && { tree: startOptions?.journey }),
                 });
             }
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const unsubscribe = subscribe((event) => {
+                    if (event.oauth.error || event.user.error) {
+                        reject(event);
+                        unsubscribe();
+                    }
                     if (event.journey.successful && event.oauth.successful && event.user.completed) {
                         resolve(event);
                         unsubscribe();
@@ -17096,17 +17183,24 @@ function widgetApiFactory(componentApi) {
                 });
             });
         }
-        return { start, subscribe };
+        return { change, start, subscribe };
     };
     const user = {
         info() {
+            if (!journeyStore || !oauthStore || !userStore) {
+                logErrorAndThrow('missingStores');
+            }
             const { get, subscribe } = userStore;
             function wrappedGet(options) {
                 get(options);
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     const unsubscribe = userStore.subscribe((event) => {
-                        if (event.completed) {
+                        if (event.successful) {
                             resolve(event);
+                            unsubscribe();
+                        }
+                        else if (event.error) {
+                            reject(event);
                             unsubscribe();
                         }
                     });
@@ -17115,6 +17209,9 @@ function widgetApiFactory(componentApi) {
             return { get: wrappedGet, subscribe };
         },
         async logout() {
+            if (!journeyStore || !oauthStore || !userStore) {
+                logErrorAndThrow('missingStores');
+            }
             const { clientId } = Config.get();
             let obj;
             /**
@@ -17140,13 +17237,20 @@ function widgetApiFactory(componentApi) {
             return;
         },
         tokens() {
+            if (!journeyStore || !oauthStore || !userStore) {
+                logErrorAndThrow('missingStores');
+            }
             const { get, subscribe } = oauthStore;
             function wrappedGet(options) {
                 get(options);
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
                     const unsubscribe = oauthStore.subscribe((event) => {
-                        if (event.completed) {
+                        if (event.successful) {
                             resolve(event);
+                            unsubscribe();
+                        }
+                        else if (event.error) {
+                            reject(event);
                             unsubscribe();
                         }
                     });
@@ -17317,7 +17421,7 @@ function fallback_block$2(ctx) {
 	};
 }
 
-function create_fragment$W(ctx) {
+function create_fragment$Z(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
@@ -17386,7 +17490,7 @@ function create_fragment$W(ctx) {
 	};
 }
 
-function instance$X($$self, $$props, $$invalidate) {
+function instance$_($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { html = false } = $$props;
 	let { key } = $$props;
@@ -17414,13 +17518,13 @@ function instance$X($$self, $$props, $$invalidate) {
 class Locale_strings extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$X, create_fragment$W, safe_not_equal, { html: 0, key: 2, values: 3 });
+		init(this, options, instance$_, create_fragment$Z, safe_not_equal, { html: 0, key: 2, values: 3 });
 	}
 }
 
 /* src/lib/components/icons/x-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$V(ctx) {
+function create_fragment$Y(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -17496,7 +17600,7 @@ function create_fragment$V(ctx) {
 	};
 }
 
-function instance$W($$self, $$props, $$invalidate) {
+function instance$Z($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -17513,7 +17617,7 @@ function instance$W($$self, $$props, $$invalidate) {
 class X_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$W, create_fragment$V, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$Z, create_fragment$Y, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
@@ -17617,7 +17721,7 @@ function create_else_block$9(ctx) {
 	};
 }
 
-// (45:2) {#if withHeader}
+// (39:2) {#if withHeader}
 function create_if_block$m(ctx) {
 	let div1;
 	let div0;
@@ -17632,7 +17736,7 @@ function create_if_block$m(ctx) {
 	xicon = new X_icon({
 			props: {
 				classes: "tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light",
-				$$slots: { default: [create_default_slot$o] },
+				$$slots: { default: [create_default_slot$q] },
 				$$scope: { ctx }
 			}
 		});
@@ -17709,7 +17813,7 @@ function create_if_block$m(ctx) {
 	};
 }
 
-// (78:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (72:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot_1$c(ctx) {
 	let t;
 	let current;
@@ -17739,7 +17843,7 @@ function create_default_slot_1$c(ctx) {
 	};
 }
 
-// (83:6) {#if $styleStore?.logo}
+// (77:6) {#if $styleStore?.logo}
 function create_if_block_1$c(ctx) {
 	let div;
 	let div_style_value;
@@ -17764,8 +17868,8 @@ function create_if_block_1$c(ctx) {
 	};
 }
 
-// (61:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
-function create_default_slot$o(ctx) {
+// (55:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+function create_default_slot$q(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "closeModal" } });
@@ -17794,7 +17898,7 @@ function create_default_slot$o(ctx) {
 	};
 }
 
-function create_fragment$U(ctx) {
+function create_fragment$X(ctx) {
 	let dialog;
 	let current_block_type_index;
 	let if_block;
@@ -17914,7 +18018,7 @@ function create_fragment$U(ctx) {
 	};
 }
 
-function instance$V($$self, $$props, $$invalidate) {
+function instance$Y($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(5, $styleStore = $$value));
 	let { $$slots: slots = {}, $$scope } = $$props;
@@ -17929,14 +18033,7 @@ function instance$V($$self, $$props, $$invalidate) {
 			dialogEl?.classList.remove('tw_dialog-closing');
 
 			// Ensure we have a store and it has an update method on it
-			componentStore?.update(state => {
-				if (state.open === false) {
-					// If state is already correct, just return the same reference
-					return state;
-				}
-
-				return { ...state, open: false, reason };
-			});
+			closeComponent({ reason });
 		}
 
 		// Create timer in case the CSS is not loaded
@@ -17995,7 +18092,7 @@ class Dialog extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$V, create_fragment$U, safe_not_equal, {
+		init(this, options, instance$Y, create_fragment$X, safe_not_equal, {
 			dialogEl: 0,
 			dialogId: 1,
 			forceOpen: 2,
@@ -18011,7 +18108,7 @@ class Dialog extends SvelteComponent {
 
 /* src/lib/components/icons/alert-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$T(ctx) {
+function create_fragment$W(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -18087,7 +18184,7 @@ function create_fragment$T(ctx) {
 	};
 }
 
-function instance$U($$self, $$props, $$invalidate) {
+function instance$X($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -18104,13 +18201,13 @@ function instance$U($$self, $$props, $$invalidate) {
 class Alert_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$U, create_fragment$T, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$X, create_fragment$W, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/info-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$S(ctx) {
+function create_fragment$V(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -18186,7 +18283,7 @@ function create_fragment$S(ctx) {
 	};
 }
 
-function instance$T($$self, $$props, $$invalidate) {
+function instance$W($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -18203,13 +18300,13 @@ function instance$T($$self, $$props, $$invalidate) {
 class Info_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$T, create_fragment$S, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$W, create_fragment$V, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/warning-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$R(ctx) {
+function create_fragment$U(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -18285,7 +18382,7 @@ function create_fragment$R(ctx) {
 	};
 }
 
-function instance$S($$self, $$props, $$invalidate) {
+function instance$V($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -18302,7 +18399,7 @@ function instance$S($$self, $$props, $$invalidate) {
 class Warning_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$S, create_fragment$R, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$V, create_fragment$U, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
@@ -18394,7 +18491,7 @@ function create_if_block$l(ctx) {
 	};
 }
 
-function create_fragment$Q(ctx) {
+function create_fragment$T(ctx) {
 	let div;
 	let p;
 	let current_block_type_index;
@@ -18530,7 +18627,7 @@ function generateClassString$3(...args) {
 	);
 }
 
-function instance$R($$self, $$props, $$invalidate) {
+function instance$U($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { id } = $$props;
 	let { needsFocus = false } = $$props;
@@ -18567,13 +18664,13 @@ function instance$R($$self, $$props, $$invalidate) {
 class Alert extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$R, create_fragment$Q, safe_not_equal, { id: 0, needsFocus: 3, type: 1 });
+		init(this, options, instance$U, create_fragment$T, safe_not_equal, { id: 0, needsFocus: 3, type: 1 });
 	}
 }
 
 /* src/lib/components/primitives/spinner/spinner.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$P(ctx) {
+function create_fragment$S(ctx) {
 	let div;
 	let span;
 	let t;
@@ -18617,7 +18714,7 @@ function create_fragment$P(ctx) {
 	};
 }
 
-function instance$Q($$self, $$props, $$invalidate) {
+function instance$T($$self, $$props, $$invalidate) {
 	let { colorClass } = $$props;
 	let { layoutClasses } = $$props;
 
@@ -18632,7 +18729,7 @@ function instance$Q($$self, $$props, $$invalidate) {
 class Spinner extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$Q, create_fragment$P, safe_not_equal, { colorClass: 0, layoutClasses: 1 });
+		init(this, options, instance$T, create_fragment$S, safe_not_equal, { colorClass: 0, layoutClasses: 1 });
 	}
 }
 
@@ -18689,7 +18786,7 @@ function fallback_block$1(ctx) {
 	};
 }
 
-function create_fragment$O(ctx) {
+function create_fragment$R(ctx) {
 	let button;
 	let t;
 	let button_class_value;
@@ -18819,7 +18916,7 @@ function generateClassString$2(...args) {
 	);
 }
 
-function instance$P($$self, $$props, $$invalidate) {
+function instance$S($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { busy = false } = $$props;
 	let { classes = '' } = $$props;
@@ -18849,7 +18946,7 @@ class Button extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$P, create_fragment$O, safe_not_equal, {
+		init(this, options, instance$S, create_fragment$R, safe_not_equal, {
 			busy: 0,
 			classes: 1,
 			onClick: 2,
@@ -18862,7 +18959,7 @@ class Button extends SvelteComponent {
 
 /* src/lib/components/primitives/form/form.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$N(ctx) {
+function create_fragment$Q(ctx) {
 	let form;
 	let form_class_value;
 	let current;
@@ -18949,7 +19046,7 @@ function create_fragment$N(ctx) {
 	};
 }
 
-function instance$O($$self, $$props, $$invalidate) {
+function instance$R($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { ariaDescribedBy } = $$props;
 	let { formEl = null } = $$props;
@@ -19077,7 +19174,7 @@ class Form extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$O, create_fragment$N, safe_not_equal, {
+		init(this, options, instance$R, create_fragment$Q, safe_not_equal, {
 			ariaDescribedBy: 1,
 			formEl: 0,
 			id: 2,
@@ -19239,7 +19336,7 @@ function fallback_block(ctx) {
 	};
 }
 
-function create_fragment$M(ctx) {
+function create_fragment$P(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
@@ -19308,7 +19405,7 @@ function create_fragment$M(ctx) {
 	};
 }
 
-function instance$N($$self, $$props, $$invalidate) {
+function instance$Q($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { html = false } = $$props;
 	let { string } = $$props;
@@ -19334,13 +19431,13 @@ function instance$N($$self, $$props, $$invalidate) {
 class Server_strings extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$N, create_fragment$M, safe_not_equal, { html: 0, string: 2 });
+		init(this, options, instance$Q, create_fragment$P, safe_not_equal, { html: 0, string: 2 });
 	}
 }
 
 /* src/lib/components/icons/shield-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$L(ctx) {
+function create_fragment$O(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -19416,7 +19513,7 @@ function create_fragment$L(ctx) {
 	};
 }
 
-function instance$M($$self, $$props, $$invalidate) {
+function instance$P($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -19433,7 +19530,7 @@ function instance$M($$self, $$props, $$invalidate) {
 class Shield_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$M, create_fragment$L, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$P, create_fragment$O, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
@@ -19475,7 +19572,7 @@ function create_if_block$i(ctx) {
 	};
 }
 
-function create_fragment$K(ctx) {
+function create_fragment$N(ctx) {
 	let if_block_anchor;
 	let if_block = /*$stack*/ ctx[2].length > 1 && create_if_block$i(ctx);
 
@@ -19511,7 +19608,7 @@ function create_fragment$K(ctx) {
 	};
 }
 
-function instance$L($$self, $$props, $$invalidate) {
+function instance$O($$self, $$props, $$invalidate) {
 	let $stack;
 	let $configuredJourneysStore;
 	component_subscribe($$self, configuredJourneysStore, $$value => $$invalidate(5, $configuredJourneysStore = $$value));
@@ -19552,7 +19649,7 @@ function instance$L($$self, $$props, $$invalidate) {
 class Back_to extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$L, create_fragment$K, safe_not_equal, { journey: 0 });
+		init(this, options, instance$O, create_fragment$N, safe_not_equal, { journey: 0 });
 	}
 }
 
@@ -19900,7 +19997,7 @@ function create_if_block$h(ctx) {
 	};
 }
 
-function create_fragment$J(ctx) {
+function create_fragment$M(ctx) {
 	let if_block_anchor;
 	let if_block = /*dirtyMessage*/ ctx[1] && create_if_block$h(ctx);
 
@@ -19950,7 +20047,7 @@ function generateClassString$1(...args) {
 	);
 }
 
-function instance$K($$self, $$props, $$invalidate) {
+function instance$N($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { dirtyMessage } = $$props;
 	let { key = undefined } = $$props;
@@ -19981,7 +20078,7 @@ class Input_message extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$K, create_fragment$J, safe_not_equal, {
+		init(this, options, instance$N, create_fragment$M, safe_not_equal, {
 			classes: 0,
 			dirtyMessage: 1,
 			key: 2,
@@ -19993,7 +20090,7 @@ class Input_message extends SvelteComponent {
 
 /* src/lib/components/primitives/label/label.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$I(ctx) {
+function create_fragment$L(ctx) {
 	let label;
 	let label_class_value;
 	let current;
@@ -20056,7 +20153,7 @@ function create_fragment$I(ctx) {
 	};
 }
 
-function instance$J($$self, $$props, $$invalidate) {
+function instance$M($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { key } = $$props;
 	let { classes = '' } = $$props;
@@ -20073,13 +20170,13 @@ function instance$J($$self, $$props, $$invalidate) {
 class Label extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$J, create_fragment$I, safe_not_equal, { key: 0, classes: 1 });
+		init(this, options, instance$M, create_fragment$L, safe_not_equal, { key: 0, classes: 1 });
 	}
 }
 
 /* src/lib/components/compositions/checkbox/animated.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$n(ctx) {
+function create_default_slot$p(ctx) {
 	let span;
 	let t;
 	let current;
@@ -20136,7 +20233,7 @@ function create_default_slot$n(ctx) {
 	};
 }
 
-function create_fragment$H(ctx) {
+function create_fragment$K(ctx) {
 	let div1;
 	let input;
 	let input_data_message_value;
@@ -20153,7 +20250,7 @@ function create_fragment$H(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: "tw_grid tw_grid-cols-[2.5em_1fr] tw_relative",
-				$$slots: { default: [create_default_slot$n] },
+				$$slots: { default: [create_default_slot$p] },
 				$$scope: { ctx }
 			}
 		});
@@ -20260,7 +20357,7 @@ function create_fragment$H(ctx) {
 	};
 }
 
-function instance$I($$self, $$props, $$invalidate) {
+function instance$L($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { message = '' } = $$props;
@@ -20329,7 +20426,7 @@ let Animated$1 = class Animated extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$I, create_fragment$H, safe_not_equal, {
+		init(this, options, instance$L, create_fragment$K, safe_not_equal, {
 			checkValidity: 8,
 			message: 1,
 			isFirstInvalidInput: 9,
@@ -20345,7 +20442,7 @@ let Animated$1 = class Animated extends SvelteComponent {
 
 /* src/lib/components/primitives/checkbox/checkbox.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$m(ctx) {
+function create_default_slot$o(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[7].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[9], null);
@@ -20392,7 +20489,7 @@ function create_default_slot$m(ctx) {
 	};
 }
 
-function create_fragment$G(ctx) {
+function create_fragment$J(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let t;
@@ -20404,7 +20501,7 @@ function create_fragment$G(ctx) {
 	label = new Label({
 			props: {
 				key: /*key*/ ctx[2],
-				$$slots: { default: [create_default_slot$m] },
+				$$slots: { default: [create_default_slot$o] },
 				$$scope: { ctx }
 			}
 		});
@@ -20489,7 +20586,7 @@ function create_fragment$G(ctx) {
 	};
 }
 
-function instance$H($$self, $$props, $$invalidate) {
+function instance$K($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { isFirstInvalidInput } = $$props;
 	let { isRequired = false } = $$props;
@@ -20540,7 +20637,7 @@ class Checkbox extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$H, create_fragment$G, safe_not_equal, {
+		init(this, options, instance$K, create_fragment$J, safe_not_equal, {
 			isFirstInvalidInput: 6,
 			isRequired: 0,
 			isInvalid: 1,
@@ -20553,7 +20650,7 @@ class Checkbox extends SvelteComponent {
 
 /* src/lib/components/compositions/checkbox/standard.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$l(ctx) {
+function create_default_slot$n(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[10].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[11], null);
@@ -20600,7 +20697,7 @@ function create_default_slot$l(ctx) {
 	};
 }
 
-function create_fragment$F(ctx) {
+function create_fragment$I(ctx) {
 	let div;
 	let checkbox;
 	let t;
@@ -20616,7 +20713,7 @@ function create_fragment$F(ctx) {
 				key: /*key*/ ctx[4],
 				onChange: /*onChangeWrapper*/ ctx[7],
 				value: /*value*/ ctx[6],
-				$$slots: { default: [create_default_slot$l] },
+				$$slots: { default: [create_default_slot$n] },
 				$$scope: { ctx }
 			}
 		});
@@ -20687,7 +20784,7 @@ function create_fragment$F(ctx) {
 	};
 }
 
-function instance$G($$self, $$props, $$invalidate) {
+function instance$J($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { message = '' } = $$props;
@@ -20736,11 +20833,11 @@ function instance$G($$self, $$props, $$invalidate) {
 	];
 }
 
-class Standard extends SvelteComponent {
+let Standard$1 = class Standard extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$G, create_fragment$F, safe_not_equal, {
+		init(this, options, instance$J, create_fragment$I, safe_not_equal, {
 			checkValidity: 8,
 			message: 1,
 			isFirstInvalidInput: 2,
@@ -20752,11 +20849,11 @@ class Standard extends SvelteComponent {
 			value: 6
 		});
 	}
-}
+};
 
 /* src/lib/journey/callbacks/boolean/boolean.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$k(ctx) {
+function create_default_slot$m(ctx) {
 	let t_value = interpolate(textToKey(/*outputName*/ ctx[2]), null, /*prompt*/ ctx[4]) + "";
 	let t;
 
@@ -20776,7 +20873,7 @@ function create_default_slot$k(ctx) {
 	};
 }
 
-function create_fragment$E(ctx) {
+function create_fragment$H(ctx) {
 	let checkbox;
 	let current;
 
@@ -20788,7 +20885,7 @@ function create_fragment$E(ctx) {
 				message: /*validationFailure*/ ctx[5],
 				onChange: /*setValue*/ ctx[7],
 				value: /*previousValue*/ ctx[3],
-				$$slots: { default: [create_default_slot$k] },
+				$$slots: { default: [create_default_slot$m] },
 				$$scope: { ctx }
 			}
 		});
@@ -20830,15 +20927,15 @@ function create_fragment$E(ctx) {
 	};
 }
 
-function instance$F($$self, $$props, $$invalidate) {
-	let { callback } = $$props;
-	let { callbackMetadata } = $$props;
+function instance$I($$self, $$props, $$invalidate) {
 	const stepMetadata = null;
 	const selfSubmitFunction = null;
+	let { callback } = $$props;
+	let { callbackMetadata } = $$props;
 	let { style = {} } = $$props;
 
 	const Checkbox = style.checksAndRadios === 'standard'
-	? Standard
+	? Standard$1
 	: Animated$1;
 
 	let inputName;
@@ -20863,13 +20960,13 @@ function instance$F($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(8, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(10, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(0, callbackMetadata = $$props.callbackMetadata);
 		if ('style' in $$props) $$invalidate(11, style = $$props.style);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata*/ 257) {
+		if ($$self.$$.dirty & /*callback, callbackMetadata*/ 1025) {
 			{
 				$$invalidate(1, inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata?.idx}`);
 
@@ -20893,9 +20990,9 @@ function instance$F($$self, $$props, $$invalidate) {
 		validationFailure,
 		Checkbox,
 		setValue,
-		callback,
 		stepMetadata,
 		selfSubmitFunction,
+		callback,
 		style
 	];
 }
@@ -20904,34 +21001,34 @@ let Boolean$1 = class Boolean extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$F, create_fragment$E, safe_not_equal, {
-			callback: 8,
+		init(this, options, instance$I, create_fragment$H, safe_not_equal, {
+			stepMetadata: 8,
+			selfSubmitFunction: 9,
+			callback: 10,
 			callbackMetadata: 0,
-			stepMetadata: 9,
-			selfSubmitFunction: 10,
 			style: 11
 		});
 	}
 
 	get stepMetadata() {
-		return this.$$.ctx[9];
+		return this.$$.ctx[8];
 	}
 
 	get selfSubmitFunction() {
-		return this.$$.ctx[10];
+		return this.$$.ctx[9];
 	}
 };
 
 /* src/lib/components/compositions/radio/animated.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$8(ctx, list, i) {
+function get_each_context$9(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[13] = list[i];
 	return child_ctx;
 }
 
 // (41:8) <Label           key={`${key}-${option.value}`}           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"         >
-function create_default_slot$j(ctx) {
+function create_default_slot$l(ctx) {
 	let span;
 	let t0;
 	let t1_value = /*option*/ ctx[13].text + "";
@@ -20961,7 +21058,7 @@ function create_default_slot$j(ctx) {
 }
 
 // (27:4) {#each options as option}
-function create_each_block$8(ctx) {
+function create_each_block$9(ctx) {
 	let div;
 	let input;
 	let input_checked_value;
@@ -20978,7 +21075,7 @@ function create_each_block$8(ctx) {
 			props: {
 				key: `${/*key*/ ctx[5]}-${/*option*/ ctx[13].value}`,
 				classes: "tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative",
-				$$slots: { default: [create_default_slot$j] },
+				$$slots: { default: [create_default_slot$l] },
 				$$scope: { ctx }
 			}
 		});
@@ -21072,7 +21169,7 @@ function create_each_block$8(ctx) {
 	};
 }
 
-function create_fragment$D(ctx) {
+function create_fragment$G(ctx) {
 	let fieldset;
 	let legend;
 	let t0;
@@ -21086,7 +21183,7 @@ function create_fragment$D(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -21144,13 +21241,13 @@ function create_fragment$D(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$8(ctx, each_value, i);
+					const child_ctx = get_each_context$9(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$8(child_ctx);
+						each_blocks[i] = create_each_block$9(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(div, t2);
@@ -21201,7 +21298,7 @@ function create_fragment$D(ctx) {
 	};
 }
 
-function instance$E($$self, $$props, $$invalidate) {
+function instance$H($$self, $$props, $$invalidate) {
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
 	let { groupLabel = '' } = $$props;
@@ -21263,7 +21360,7 @@ class Animated extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$E, create_fragment$D, safe_not_equal, {
+		init(this, options, instance$H, create_fragment$G, safe_not_equal, {
 			defaultOption: 0,
 			message: 1,
 			groupLabel: 2,
@@ -21275,6 +21372,517 @@ class Animated extends SvelteComponent {
 			onChange: 7,
 			options: 8,
 			showMessage: 9
+		});
+	}
+}
+
+/* src/lib/components/primitives/radio/radio.svelte generated by Svelte v3.55.1 */
+
+function create_default_slot$k(ctx) {
+	let current;
+	const default_slot_template = /*#slots*/ ctx[9].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[11], null);
+
+	return {
+		c() {
+			if (default_slot) default_slot.c();
+		},
+		m(target, anchor) {
+			if (default_slot) {
+				default_slot.m(target, anchor);
+			}
+
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (default_slot) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 2048)) {
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[11],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[11])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[11], dirty, null),
+						null
+					);
+				}
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(default_slot, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(default_slot, local);
+			current = false;
+		},
+		d(detaching) {
+			if (default_slot) default_slot.d(detaching);
+		}
+	};
+}
+
+function create_fragment$F(ctx) {
+	let input;
+	let input_aria_describedby_value;
+	let t;
+	let label;
+	let current;
+	let mounted;
+	let dispose;
+
+	label = new Label({
+			props: {
+				key: /*key*/ ctx[3],
+				$$slots: { default: [create_default_slot$k] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			input = element("input");
+			t = space();
+			create_component(label.$$.fragment);
+			attr(input, "aria-describedby", input_aria_describedby_value = `${/*key*/ ctx[3]}-message`);
+			attr(input, "aria-invalid", /*isInvalid*/ ctx[2]);
+			attr(input, "class", "tw_checkbox-input dark:tw_checkbox-input_dark tw_focusable-element dark:tw_focusable-element_dark");
+			input.checked = /*checked*/ ctx[0];
+			attr(input, "id", /*key*/ ctx[3]);
+			attr(input, "name", /*name*/ ctx[4]);
+			input.required = /*isRequired*/ ctx[1];
+			attr(input, "type", "radio");
+			input.value = /*value*/ ctx[6];
+		},
+		m(target, anchor) {
+			insert(target, input, anchor);
+			/*input_binding*/ ctx[10](input);
+			insert(target, t, anchor);
+			mount_component(label, target, anchor);
+			current = true;
+
+			if (!mounted) {
+				dispose = listen(input, "change", function () {
+					if (is_function(/*onChange*/ ctx[5])) /*onChange*/ ctx[5].apply(this, arguments);
+				});
+
+				mounted = true;
+			}
+		},
+		p(new_ctx, [dirty]) {
+			ctx = new_ctx;
+
+			if (!current || dirty & /*key*/ 8 && input_aria_describedby_value !== (input_aria_describedby_value = `${/*key*/ ctx[3]}-message`)) {
+				attr(input, "aria-describedby", input_aria_describedby_value);
+			}
+
+			if (!current || dirty & /*isInvalid*/ 4) {
+				attr(input, "aria-invalid", /*isInvalid*/ ctx[2]);
+			}
+
+			if (!current || dirty & /*checked*/ 1) {
+				input.checked = /*checked*/ ctx[0];
+			}
+
+			if (!current || dirty & /*key*/ 8) {
+				attr(input, "id", /*key*/ ctx[3]);
+			}
+
+			if (!current || dirty & /*name*/ 16) {
+				attr(input, "name", /*name*/ ctx[4]);
+			}
+
+			if (!current || dirty & /*isRequired*/ 2) {
+				input.required = /*isRequired*/ ctx[1];
+			}
+
+			if (!current || dirty & /*value*/ 64) {
+				input.value = /*value*/ ctx[6];
+			}
+
+			const label_changes = {};
+			if (dirty & /*key*/ 8) label_changes.key = /*key*/ ctx[3];
+
+			if (dirty & /*$$scope*/ 2048) {
+				label_changes.$$scope = { dirty, ctx };
+			}
+
+			label.$set(label_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(label.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(label.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(input);
+			/*input_binding*/ ctx[10](null);
+			if (detaching) detach(t);
+			destroy_component(label, detaching);
+			mounted = false;
+			dispose();
+		}
+	};
+}
+
+function instance$G($$self, $$props, $$invalidate) {
+	let { $$slots: slots = {}, $$scope } = $$props;
+	let { checked = false } = $$props;
+	let { isFirstInvalidInput } = $$props;
+	let { isRequired = false } = $$props;
+	let { isInvalid = false } = $$props;
+	let { key } = $$props;
+	let { name } = $$props;
+	let { onChange } = $$props;
+	let { value } = $$props;
+	let inputEl;
+
+	afterUpdate(() => {
+		if (isFirstInvalidInput) {
+			inputEl.focus();
+		}
+	});
+
+	function input_binding($$value) {
+		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+			inputEl = $$value;
+			$$invalidate(7, inputEl);
+		});
+	}
+
+	$$self.$$set = $$props => {
+		if ('checked' in $$props) $$invalidate(0, checked = $$props.checked);
+		if ('isFirstInvalidInput' in $$props) $$invalidate(8, isFirstInvalidInput = $$props.isFirstInvalidInput);
+		if ('isRequired' in $$props) $$invalidate(1, isRequired = $$props.isRequired);
+		if ('isInvalid' in $$props) $$invalidate(2, isInvalid = $$props.isInvalid);
+		if ('key' in $$props) $$invalidate(3, key = $$props.key);
+		if ('name' in $$props) $$invalidate(4, name = $$props.name);
+		if ('onChange' in $$props) $$invalidate(5, onChange = $$props.onChange);
+		if ('value' in $$props) $$invalidate(6, value = $$props.value);
+		if ('$$scope' in $$props) $$invalidate(11, $$scope = $$props.$$scope);
+	};
+
+	return [
+		checked,
+		isRequired,
+		isInvalid,
+		key,
+		name,
+		onChange,
+		value,
+		inputEl,
+		isFirstInvalidInput,
+		slots,
+		input_binding,
+		$$scope
+	];
+}
+
+class Radio extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$G, create_fragment$F, safe_not_equal, {
+			checked: 0,
+			isFirstInvalidInput: 8,
+			isRequired: 1,
+			isInvalid: 2,
+			key: 3,
+			name: 4,
+			onChange: 5,
+			value: 6
+		});
+	}
+}
+
+/* src/lib/components/compositions/radio/standard.svelte generated by Svelte v3.55.1 */
+
+function get_each_context$8(ctx, list, i) {
+	const child_ctx = ctx.slice();
+	child_ctx[11] = list[i];
+	return child_ctx;
+}
+
+// (21:6) <Radio         checked={defaultOption === option.value}         {isFirstInvalidInput}         {isRequired}         {isInvalid}         key={`${key}-${option.value}`}         {name}         {onChange}         value={option.value}       >
+function create_default_slot$j(ctx) {
+	let t_value = /*option*/ ctx[11].text + "";
+	let t;
+
+	return {
+		c() {
+			t = text(t_value);
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*options*/ 512 && t_value !== (t_value = /*option*/ ctx[11].text + "")) set_data(t, t_value);
+		},
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+// (19:2) {#each options as option}
+function create_each_block$8(ctx) {
+	let div;
+	let radio;
+	let t;
+	let current;
+
+	radio = new Radio({
+			props: {
+				checked: /*defaultOption*/ ctx[0] === /*option*/ ctx[11].value,
+				isFirstInvalidInput: /*isFirstInvalidInput*/ ctx[3],
+				isRequired: /*isRequired*/ ctx[4],
+				isInvalid: /*isInvalid*/ ctx[5],
+				key: `${/*key*/ ctx[6]}-${/*option*/ ctx[11].value}`,
+				name: /*name*/ ctx[7],
+				onChange: /*onChange*/ ctx[8],
+				value: /*option*/ ctx[11].value,
+				$$slots: { default: [create_default_slot$j] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(radio.$$.fragment);
+			t = space();
+			attr(div, "class", "tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(radio, div, null);
+			append(div, t);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const radio_changes = {};
+			if (dirty & /*defaultOption, options*/ 513) radio_changes.checked = /*defaultOption*/ ctx[0] === /*option*/ ctx[11].value;
+			if (dirty & /*isFirstInvalidInput*/ 8) radio_changes.isFirstInvalidInput = /*isFirstInvalidInput*/ ctx[3];
+			if (dirty & /*isRequired*/ 16) radio_changes.isRequired = /*isRequired*/ ctx[4];
+			if (dirty & /*isInvalid*/ 32) radio_changes.isInvalid = /*isInvalid*/ ctx[5];
+			if (dirty & /*key, options*/ 576) radio_changes.key = `${/*key*/ ctx[6]}-${/*option*/ ctx[11].value}`;
+			if (dirty & /*name*/ 128) radio_changes.name = /*name*/ ctx[7];
+			if (dirty & /*onChange*/ 256) radio_changes.onChange = /*onChange*/ ctx[8];
+			if (dirty & /*options*/ 512) radio_changes.value = /*option*/ ctx[11].value;
+
+			if (dirty & /*$$scope, options*/ 16896) {
+				radio_changes.$$scope = { dirty, ctx };
+			}
+
+			radio.$set(radio_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(radio.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(radio.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(radio);
+		}
+	};
+}
+
+function create_fragment$E(ctx) {
+	let fieldset;
+	let legend;
+	let t0;
+	let t1;
+	let t2;
+	let span;
+	let message_1;
+	let current;
+	let each_value = /*options*/ ctx[9];
+	let each_blocks = [];
+
+	for (let i = 0; i < each_value.length; i += 1) {
+		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+	}
+
+	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+		each_blocks[i] = null;
+	});
+
+	message_1 = new Input_message({
+			props: {
+				dirtyMessage: /*message*/ ctx[1],
+				key: /*key*/ ctx[6],
+				showMessage: /*showMessage*/ ctx[10],
+				type: /*isInvalid*/ ctx[5] ? 'error' : 'info'
+			}
+		});
+
+	return {
+		c() {
+			fieldset = element("fieldset");
+			legend = element("legend");
+			t0 = text(/*groupLabel*/ ctx[2]);
+			t1 = space();
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].c();
+			}
+
+			t2 = space();
+			span = element("span");
+			create_component(message_1.$$.fragment);
+			attr(legend, "class", "tw_input-label dark:tw_input-label_dark tw_font-bold tw_mb-4");
+			attr(span, "class", "tw_col-start-2 tw_row-start-2");
+		},
+		m(target, anchor) {
+			insert(target, fieldset, anchor);
+			append(fieldset, legend);
+			append(legend, t0);
+			append(fieldset, t1);
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].m(fieldset, null);
+			}
+
+			append(fieldset, t2);
+			append(fieldset, span);
+			mount_component(message_1, span, null);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			if (!current || dirty & /*groupLabel*/ 4) set_data(t0, /*groupLabel*/ ctx[2]);
+
+			if (dirty & /*defaultOption, options, isFirstInvalidInput, isRequired, isInvalid, key, name, onChange*/ 1017) {
+				each_value = /*options*/ ctx[9];
+				let i;
+
+				for (i = 0; i < each_value.length; i += 1) {
+					const child_ctx = get_each_context$8(ctx, each_value, i);
+
+					if (each_blocks[i]) {
+						each_blocks[i].p(child_ctx, dirty);
+						transition_in(each_blocks[i], 1);
+					} else {
+						each_blocks[i] = create_each_block$8(child_ctx);
+						each_blocks[i].c();
+						transition_in(each_blocks[i], 1);
+						each_blocks[i].m(fieldset, t2);
+					}
+				}
+
+				group_outros();
+
+				for (i = each_value.length; i < each_blocks.length; i += 1) {
+					out(i);
+				}
+
+				check_outros();
+			}
+
+			const message_1_changes = {};
+			if (dirty & /*message*/ 2) message_1_changes.dirtyMessage = /*message*/ ctx[1];
+			if (dirty & /*key*/ 64) message_1_changes.key = /*key*/ ctx[6];
+			if (dirty & /*showMessage*/ 1024) message_1_changes.showMessage = /*showMessage*/ ctx[10];
+			if (dirty & /*isInvalid*/ 32) message_1_changes.type = /*isInvalid*/ ctx[5] ? 'error' : 'info';
+			message_1.$set(message_1_changes);
+		},
+		i(local) {
+			if (current) return;
+
+			for (let i = 0; i < each_value.length; i += 1) {
+				transition_in(each_blocks[i]);
+			}
+
+			transition_in(message_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			each_blocks = each_blocks.filter(Boolean);
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				transition_out(each_blocks[i]);
+			}
+
+			transition_out(message_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(fieldset);
+			destroy_each(each_blocks, detaching);
+			destroy_component(message_1);
+		}
+	};
+}
+
+function instance$F($$self, $$props, $$invalidate) {
+	let { defaultOption = null } = $$props;
+	let { message = '' } = $$props;
+	let { groupLabel = '' } = $$props;
+	let { isFirstInvalidInput } = $$props;
+	let { isRequired = false } = $$props;
+	let { isInvalid = false } = $$props;
+	let { key } = $$props;
+	let { name } = $$props;
+	let { onChange } = $$props;
+	let { options } = $$props;
+	let { showMessage = undefined } = $$props;
+
+	$$self.$$set = $$props => {
+		if ('defaultOption' in $$props) $$invalidate(0, defaultOption = $$props.defaultOption);
+		if ('message' in $$props) $$invalidate(1, message = $$props.message);
+		if ('groupLabel' in $$props) $$invalidate(2, groupLabel = $$props.groupLabel);
+		if ('isFirstInvalidInput' in $$props) $$invalidate(3, isFirstInvalidInput = $$props.isFirstInvalidInput);
+		if ('isRequired' in $$props) $$invalidate(4, isRequired = $$props.isRequired);
+		if ('isInvalid' in $$props) $$invalidate(5, isInvalid = $$props.isInvalid);
+		if ('key' in $$props) $$invalidate(6, key = $$props.key);
+		if ('name' in $$props) $$invalidate(7, name = $$props.name);
+		if ('onChange' in $$props) $$invalidate(8, onChange = $$props.onChange);
+		if ('options' in $$props) $$invalidate(9, options = $$props.options);
+		if ('showMessage' in $$props) $$invalidate(10, showMessage = $$props.showMessage);
+	};
+
+	return [
+		defaultOption,
+		message,
+		groupLabel,
+		isFirstInvalidInput,
+		isRequired,
+		isInvalid,
+		key,
+		name,
+		onChange,
+		options,
+		showMessage
+	];
+}
+
+class Standard extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$F, create_fragment$E, safe_not_equal, {
+			defaultOption: 0,
+			message: 1,
+			groupLabel: 2,
+			isFirstInvalidInput: 3,
+			isRequired: 4,
+			isInvalid: 5,
+			key: 6,
+			name: 7,
+			onChange: 8,
+			options: 9,
+			showMessage: 10
 		});
 	}
 }
@@ -21469,7 +22077,7 @@ function create_default_slot$i(ctx) {
 	};
 }
 
-function create_fragment$C(ctx) {
+function create_fragment$D(ctx) {
 	let t0;
 	let select;
 	let select_aria_describedby_value;
@@ -21650,7 +22258,7 @@ function create_fragment$C(ctx) {
 	};
 }
 
-function instance$D($$self, $$props, $$invalidate) {
+function instance$E($$self, $$props, $$invalidate) {
 	let { selectClasses = '' } = $$props;
 	let { defaultOption = null } = $$props;
 	let { isFirstInvalidInput } = $$props;
@@ -21739,7 +22347,7 @@ class Select extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$D, create_fragment$C, safe_not_equal, {
+		init(this, options, instance$E, create_fragment$D, safe_not_equal, {
 			selectClasses: 0,
 			defaultOption: 1,
 			isFirstInvalidInput: 12,
@@ -21757,7 +22365,7 @@ class Select extends SvelteComponent {
 
 /* src/lib/components/compositions/select-floating/floating-label.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$B(ctx) {
+function create_fragment$C(ctx) {
 	let div;
 	let select;
 	let t;
@@ -21796,6 +22404,161 @@ function create_fragment$B(ctx) {
 			t = space();
 			create_component(message_1.$$.fragment);
 			attr(div, "class", `tw_input-spacing tw_relative`);
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(select, div, null);
+			append(div, t);
+			mount_component(message_1, div, null);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			const select_changes = {};
+			if (dirty & /*defaultOption*/ 2) select_changes.defaultOption = /*defaultOption*/ ctx[1];
+			if (dirty & /*isFirstInvalidInput*/ 8) select_changes.isFirstInvalidInput = /*isFirstInvalidInput*/ ctx[3];
+			if (dirty & /*isRequired*/ 16) select_changes.isRequired = /*isRequired*/ ctx[4];
+			if (dirty & /*isInvalid*/ 1) select_changes.isInvalid = /*isInvalid*/ ctx[0];
+			if (dirty & /*key*/ 32) select_changes.key = /*key*/ ctx[5];
+			if (dirty & /*label*/ 64) select_changes.label = /*label*/ ctx[6];
+			if (dirty & /*options*/ 128) select_changes.options = /*options*/ ctx[7];
+			select.$set(select_changes);
+			const message_1_changes = {};
+			if (dirty & /*message*/ 4) message_1_changes.dirtyMessage = /*message*/ ctx[2];
+			if (dirty & /*key*/ 32) message_1_changes.key = /*key*/ ctx[5];
+			if (dirty & /*showMessage*/ 256) message_1_changes.showMessage = /*showMessage*/ ctx[8];
+			if (dirty & /*isInvalid*/ 1) message_1_changes.type = /*isInvalid*/ ctx[0] ? 'error' : 'info';
+			message_1.$set(message_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(select.$$.fragment, local);
+			transition_in(message_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(select.$$.fragment, local);
+			transition_out(message_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(select);
+			destroy_component(message_1);
+		}
+	};
+}
+
+function instance$D($$self, $$props, $$invalidate) {
+	let { checkValidity = null } = $$props;
+	let { defaultOption = null } = $$props;
+	let { message = '' } = $$props;
+	let { isFirstInvalidInput } = $$props;
+	let { isRequired = false } = $$props;
+	let { isInvalid = false } = $$props;
+	let { key } = $$props;
+	let { label } = $$props;
+	let { onChange } = $$props;
+	let { options } = $$props;
+	let { showMessage = undefined } = $$props;
+
+	function onChangeWrapper(event) {
+		if (checkValidity) {
+			$$invalidate(0, isInvalid = !checkValidity(event));
+		}
+
+		onChange(event);
+	}
+
+	$$self.$$set = $$props => {
+		if ('checkValidity' in $$props) $$invalidate(10, checkValidity = $$props.checkValidity);
+		if ('defaultOption' in $$props) $$invalidate(1, defaultOption = $$props.defaultOption);
+		if ('message' in $$props) $$invalidate(2, message = $$props.message);
+		if ('isFirstInvalidInput' in $$props) $$invalidate(3, isFirstInvalidInput = $$props.isFirstInvalidInput);
+		if ('isRequired' in $$props) $$invalidate(4, isRequired = $$props.isRequired);
+		if ('isInvalid' in $$props) $$invalidate(0, isInvalid = $$props.isInvalid);
+		if ('key' in $$props) $$invalidate(5, key = $$props.key);
+		if ('label' in $$props) $$invalidate(6, label = $$props.label);
+		if ('onChange' in $$props) $$invalidate(11, onChange = $$props.onChange);
+		if ('options' in $$props) $$invalidate(7, options = $$props.options);
+		if ('showMessage' in $$props) $$invalidate(8, showMessage = $$props.showMessage);
+	};
+
+	return [
+		isInvalid,
+		defaultOption,
+		message,
+		isFirstInvalidInput,
+		isRequired,
+		key,
+		label,
+		options,
+		showMessage,
+		onChangeWrapper,
+		checkValidity,
+		onChange
+	];
+}
+
+let Floating_label$1 = class Floating_label extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$D, create_fragment$C, safe_not_equal, {
+			checkValidity: 10,
+			defaultOption: 1,
+			message: 2,
+			isFirstInvalidInput: 3,
+			isRequired: 4,
+			isInvalid: 0,
+			key: 5,
+			label: 6,
+			onChange: 11,
+			options: 7,
+			showMessage: 8
+		});
+	}
+};
+
+/* src/lib/components/compositions/select-stacked/stacked-label.svelte generated by Svelte v3.55.1 */
+
+function create_fragment$B(ctx) {
+	let div;
+	let select;
+	let t;
+	let message_1;
+	let current;
+
+	select = new Select({
+			props: {
+				defaultOption: /*defaultOption*/ ctx[1],
+				isFirstInvalidInput: /*isFirstInvalidInput*/ ctx[3],
+				isRequired: /*isRequired*/ ctx[4],
+				isInvalid: /*isInvalid*/ ctx[0],
+				key: /*key*/ ctx[5],
+				label: /*label*/ ctx[6],
+				labelClasses: "tw_input-stacked-label",
+				labelOrder: "first",
+				onChange: /*onChangeWrapper*/ ctx[9],
+				options: /*options*/ ctx[7]
+			}
+		});
+
+	message_1 = new Input_message({
+			props: {
+				dirtyMessage: /*message*/ ctx[2],
+				key: /*key*/ ctx[5],
+				showMessage: /*showMessage*/ ctx[8],
+				type: /*isInvalid*/ ctx[0] ? 'error' : 'info'
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(select.$$.fragment);
+			t = space();
+			create_component(message_1.$$.fragment);
+			attr(div, "class", "tw_input-spacing");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -21891,7 +22654,7 @@ function instance$C($$self, $$props, $$invalidate) {
 	];
 }
 
-let Floating_label$1 = class Floating_label extends SvelteComponent {
+let Stacked_label$1 = class Stacked_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
@@ -21917,14 +22680,14 @@ function create_else_block$6(ctx) {
 	let select;
 	let current;
 
-	select = new Floating_label$1({
+	select = new /*Select*/ ctx[7]({
 			props: {
 				isFirstInvalidInput: /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false,
 				defaultOption: /*defaultChoice*/ ctx[5],
 				isRequired: false,
 				key: /*inputName*/ ctx[3],
 				label: /*label*/ ctx[4],
-				onChange: /*setValue*/ ctx[6],
+				onChange: /*setValue*/ ctx[8],
 				options: /*choiceOptions*/ ctx[2]
 			}
 		});
@@ -21961,19 +22724,19 @@ function create_else_block$6(ctx) {
 	};
 }
 
-// (62:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
+// (66:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
 function create_if_block$f(ctx) {
 	let radio;
 	let current;
 
-	radio = new Animated({
+	radio = new /*Radio*/ ctx[6]({
 			props: {
 				isFirstInvalidInput: /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false,
 				defaultOption: /*defaultChoice*/ ctx[5],
 				isRequired: false,
 				key: /*inputName*/ ctx[3],
 				groupLabel: /*prompt*/ ctx[1],
-				onChange: /*setValue*/ ctx[6],
+				onChange: /*setValue*/ ctx[8],
 				name: /*inputName*/ ctx[3],
 				options: /*choiceOptions*/ ctx[2]
 			}
@@ -22084,9 +22847,18 @@ function create_fragment$A(ctx) {
 function instance$B($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
-	const style = {};
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
+	let { style = {} } = $$props;
+
+	const Radio = style.checksAndRadios === 'standard'
+	? Standard
+	: Animated;
+
+	const Select = style.labels === 'stacked'
+	? Stacked_label$1
+	: Floating_label$1;
+
 	let choiceOptions;
 	let inputName;
 
@@ -22118,12 +22890,13 @@ function instance$B($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(10, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(11, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(0, callbackMetadata = $$props.callbackMetadata);
+		if ('style' in $$props) $$invalidate(12, style = $$props.style);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata, prompt*/ 1027) {
+		if ($$self.$$.dirty & /*callback, callbackMetadata, prompt*/ 2051) {
 			{
 				/** *************************************************************************
  * SDK INTEGRATION POINT
@@ -22159,11 +22932,13 @@ function instance$B($$self, $$props, $$invalidate) {
 		inputName,
 		label,
 		defaultChoice,
+		Radio,
+		Select,
 		setValue,
 		selfSubmitFunction,
 		stepMetadata,
-		style,
-		callback
+		callback,
+		style
 	];
 }
 
@@ -22172,24 +22947,20 @@ class Choice extends SvelteComponent {
 		super();
 
 		init(this, options, instance$B, create_fragment$A, safe_not_equal, {
-			selfSubmitFunction: 7,
-			stepMetadata: 8,
-			style: 9,
-			callback: 10,
-			callbackMetadata: 0
+			selfSubmitFunction: 9,
+			stepMetadata: 10,
+			callback: 11,
+			callbackMetadata: 0,
+			style: 12
 		});
 	}
 
 	get selfSubmitFunction() {
-		return this.$$.ctx[7];
+		return this.$$.ctx[9];
 	}
 
 	get stepMetadata() {
-		return this.$$.ctx[8];
-	}
-
-	get style() {
-		return this.$$.ctx[9];
+		return this.$$.ctx[10];
 	}
 }
 
@@ -22836,7 +23607,7 @@ function instance$z($$self, $$props, $$invalidate) {
 	let { stepMetadata } = $$props;
 
 	const Checkbox = style.checksAndRadios === 'standard'
-	? Standard
+	? Standard$1
 	: Animated$1;
 
 	let buttonStyle;
@@ -22978,12 +23749,12 @@ class Confirmation extends SvelteComponent {
 /* src/lib/journey/callbacks/hidden-value/hidden-value.svelte generated by Svelte v3.55.1 */
 
 function instance$y($$self, $$props, $$invalidate) {
+	const callback = null;
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	const style = {};
-	const callback = null;
-	return [callbackMetadata, selfSubmitFunction, stepMetadata, style, callback];
+	return [callback, callbackMetadata, selfSubmitFunction, stepMetadata, style];
 }
 
 class Hidden_value extends SvelteComponent {
@@ -22991,31 +23762,31 @@ class Hidden_value extends SvelteComponent {
 		super();
 
 		init(this, options, instance$y, null, safe_not_equal, {
-			callbackMetadata: 0,
-			selfSubmitFunction: 1,
-			stepMetadata: 2,
-			style: 3,
-			callback: 4
+			callback: 0,
+			callbackMetadata: 1,
+			selfSubmitFunction: 2,
+			stepMetadata: 3,
+			style: 4
 		});
 	}
 
-	get callbackMetadata() {
+	get callback() {
 		return this.$$.ctx[0];
 	}
 
-	get selfSubmitFunction() {
+	get callbackMetadata() {
 		return this.$$.ctx[1];
 	}
 
-	get stepMetadata() {
+	get selfSubmitFunction() {
 		return this.$$.ctx[2];
 	}
 
-	get style() {
+	get stepMetadata() {
 		return this.$$.ctx[3];
 	}
 
-	get callback() {
+	get style() {
 		return this.$$.ctx[4];
 	}
 }
@@ -24670,11 +25441,12 @@ function create_if_block$c(ctx) {
 	input = new /*Input*/ ctx[7]({
 			props: {
 				isFirstInvalidInput: false,
+				isRequired: true,
 				key: `kba-custom-question-${/*callbackMetadata*/ ctx[0]?.idx}`,
 				label: interpolate('customSecurityQuestion'),
 				showMessage: false,
 				message: interpolate('inputRequiredError'),
-				onChange: /*setQuestion*/ ctx[11],
+				onChange: /*setQuestion*/ ctx[12],
 				type: "text"
 			}
 		});
@@ -24732,12 +25504,13 @@ function create_fragment$t(ctx) {
 
 	lockicon = new Lock_icon({ props: { size: "18" } });
 
-	select = new Floating_label$1({
+	select = new /*Select*/ ctx[8]({
 			props: {
 				isFirstInvalidInput: false,
+				isRequired: true,
 				key: /*inputNameQuestion*/ ctx[4],
 				label: /*prompt*/ ctx[1],
-				onChange: /*selectQuestion*/ ctx[10],
+				onChange: /*selectQuestion*/ ctx[11],
 				options: /*questions*/ ctx[2]
 			}
 		});
@@ -24745,16 +25518,17 @@ function create_fragment$t(ctx) {
 	let if_block = /*displayCustomQuestionInput*/ ctx[3] && create_if_block$c(ctx);
 
 	function input_value_binding(value) {
-		/*input_value_binding*/ ctx[20](value);
+		/*input_value_binding*/ ctx[21](value);
 	}
 
 	let input_props = {
 		isFirstInvalidInput: /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false,
+		isRequired: true,
 		key: /*inputNameAnswer*/ ctx[5] || `kba-answer-${/*callbackMetadata*/ ctx[0]?.idx}`,
 		label: interpolate('securityAnswer'),
 		showMessage: false,
 		message: interpolate('inputRequiredError'),
-		onChange: /*setAnswer*/ ctx[9],
+		onChange: /*setAnswer*/ ctx[10],
 		type: "text"
 	};
 
@@ -24885,7 +25659,14 @@ function instance$t($$self, $$props, $$invalidate) {
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
 	let { style = {} } = $$props;
-	const Input = style.labels === 'stacked' ? Stacked_label : Floating_label;
+
+	const Input = style.labels === 'stacked'
+	? Stacked_label
+	: Floating_label;
+
+	const Select = style.labels === 'stacked'
+	? Stacked_label$1
+	: Floating_label$1;
 
 	/** *************************************************************************
  * SDK INTEGRATION POINT
@@ -24981,16 +25762,16 @@ function instance$t($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(14, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(15, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(0, callbackMetadata = $$props.callbackMetadata);
-		if ('style' in $$props) $$invalidate(15, style = $$props.style);
+		if ('style' in $$props) $$invalidate(16, style = $$props.style);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata, inputName, inputArr, questions, prompt, shouldAllowCustomQuestion, customQuestionIndex*/ 999431) {
+		if ($$self.$$.dirty & /*callback, callbackMetadata, inputName, inputArr, questions, prompt, shouldAllowCustomQuestion, customQuestionIndex*/ 1998855) {
 			{
-				$$invalidate(17, inputArr = callback?.payload?.input);
-				$$invalidate(18, inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata?.idx}`);
+				$$invalidate(18, inputArr = callback?.payload?.input);
+				$$invalidate(19, inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata?.idx}`);
 				$$invalidate(4, inputNameQuestion = inputName);
 				$$invalidate(5, inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name);
 				$$invalidate(1, prompt = callback.getPrompt());
@@ -25002,7 +25783,7 @@ function instance$t($$self, $$props, $$invalidate) {
  * in case
  */
 				try {
-					$$invalidate(19, shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions'));
+					$$invalidate(20, shouldAllowCustomQuestion = callback.getOutputValue('allowUserDefinedQuestions'));
 				} catch(err) {
 					console.error('`allowUserDefinedQuestions` property is missing in callback `KbaCreateCallback`');
 				}
@@ -25017,7 +25798,7 @@ function instance$t($$self, $$props, $$invalidate) {
  * callback.setQuestion(questions[0].text);
  */
 				if (shouldAllowCustomQuestion) {
-					$$invalidate(16, customQuestionIndex = `${questions.length - 1}`);
+					$$invalidate(17, customQuestionIndex = `${questions.length - 1}`);
 
 					questions.push({
 						text: interpolate('provideCustomQuestion'),
@@ -25037,6 +25818,7 @@ function instance$t($$self, $$props, $$invalidate) {
 		inputNameAnswer,
 		$value,
 		Input,
+		Select,
 		value,
 		setAnswer,
 		selectQuestion,
@@ -25058,20 +25840,20 @@ class Kba_create extends SvelteComponent {
 		super();
 
 		init(this, options, instance$t, create_fragment$t, safe_not_equal, {
-			selfSubmitFunction: 12,
-			stepMetadata: 13,
-			callback: 14,
+			selfSubmitFunction: 13,
+			stepMetadata: 14,
+			callback: 15,
 			callbackMetadata: 0,
-			style: 15
+			style: 16
 		});
 	}
 
 	get selfSubmitFunction() {
-		return this.$$.ctx[12];
+		return this.$$.ctx[13];
 	}
 
 	get stepMetadata() {
-		return this.$$.ctx[13];
+		return this.$$.ctx[14];
 	}
 }
 
@@ -26400,7 +27182,7 @@ function create_fragment$m(ctx) {
 		p(ctx, [dirty]) {
 			const text_1_changes = {};
 
-			if (dirty & /*$$scope, message*/ 129) {
+			if (dirty & /*$$scope, message*/ 65) {
 				text_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -26432,7 +27214,18 @@ function instance$m($$self, $$props, $$invalidate) {
 	let { callbackMetadata } = $$props;
 	let { selfSubmitFunction = null } = $$props;
 	let message;
-	let time;
+
+	// Ensure this is written outside of the Reactive blog, or it get's called multiple times
+	setTimeout(
+		() => {
+			if (callbackMetadata) {
+				$$invalidate(2, callbackMetadata.derived.isReadyForSubmission = true, callbackMetadata);
+			}
+
+			selfSubmitFunction && selfSubmitFunction();
+		},
+		callback.getWaitTime()
+	);
 
 	$$self.$$set = $$props => {
 		if ('callback' in $$props) $$invalidate(1, callback = $$props.callback);
@@ -26441,35 +27234,15 @@ function instance$m($$self, $$props, $$invalidate) {
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata, selfSubmitFunction, time*/ 102) {
+		if ($$self.$$.dirty & /*callback*/ 2) {
 			{
-				((($$invalidate(1, callback), $$invalidate(2, callbackMetadata)), $$invalidate(5, selfSubmitFunction)), $$invalidate(6, time));
+				$$invalidate(1, callback);
 				$$invalidate(0, message = callback.getMessage());
-				$$invalidate(6, time = callback.getWaitTime());
-
-				setTimeout(
-					() => {
-						if (callbackMetadata) {
-							$$invalidate(2, callbackMetadata.derived.isReadyForSubmission = true, callbackMetadata);
-						}
-
-						selfSubmitFunction && selfSubmitFunction();
-					},
-					time
-				);
 			}
 		}
 	};
 
-	return [
-		message,
-		callback,
-		callbackMetadata,
-		stepMetadata,
-		style,
-		selfSubmitFunction,
-		time
-	];
+	return [message, callback, callbackMetadata, stepMetadata, style, selfSubmitFunction];
 }
 
 class Polling_wait extends SvelteComponent {
@@ -28042,7 +28815,7 @@ function create_fragment$f(ctx) {
 	let input;
 	let current;
 
-	input = new Floating_label({
+	input = new /*Input*/ ctx[9]({
 			props: {
 				isFirstInvalidInput: /*callbackMetadata*/ ctx[1]?.derived.isFirstInvalidInput || false,
 				key: /*inputName*/ ctx[3],
@@ -28050,7 +28823,7 @@ function create_fragment$f(ctx) {
 				message: /*isRequired*/ ctx[4]
 				? interpolate('inputRequiredError')
 				: undefined,
-				onChange: /*setValue*/ ctx[9],
+				onChange: /*setValue*/ ctx[10],
 				isRequired: /*isRequired*/ ctx[4],
 				isInvalid: /*isInvalid*/ ctx[8],
 				type: /*type*/ ctx[7],
@@ -28085,7 +28858,7 @@ function create_fragment$f(ctx) {
 			if (dirty & /*isInvalid*/ 256) input_changes.showMessage = !!/*isInvalid*/ ctx[8];
 			if (dirty & /*previousValue*/ 64) input_changes.value = /*previousValue*/ ctx[6];
 
-			if (dirty & /*$$scope, callback, inputName, prompt*/ 32781) {
+			if (dirty & /*$$scope, callback, inputName, prompt*/ 65549) {
 				input_changes.$$scope = { dirty, ctx };
 			}
 
@@ -28109,9 +28882,10 @@ function create_fragment$f(ctx) {
 function instance$f($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
-	const style = {};
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
+	let { style = {} } = $$props;
+	const Input = style.labels === 'stacked' ? Stacked_label : Floating_label;
 	let inputName;
 	let isRequired;
 	let outputName;
@@ -28140,10 +28914,11 @@ function instance$f($$self, $$props, $$invalidate) {
 	$$self.$$set = $$props => {
 		if ('callback' in $$props) $$invalidate(0, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(1, callbackMetadata = $$props.callbackMetadata);
+		if ('style' in $$props) $$invalidate(13, style = $$props.style);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata, policies, prompt, validationFailures*/ 24583) {
+		if ($$self.$$.dirty & /*callback, callbackMetadata, policies, prompt, validationFailures*/ 49159) {
 			{
 				/**
  * We need to wrap this in a reactive block, so it reruns the function
@@ -28153,11 +28928,11 @@ function instance$f($$self, $$props, $$invalidate) {
 
 				$$invalidate(4, isRequired = isInputRequired(callback));
 				$$invalidate(5, outputName = callback.getOutputByName('name', ''));
-				$$invalidate(13, policies = callback.getPolicies());
+				$$invalidate(14, policies = callback.getPolicies());
 				$$invalidate(6, previousValue = callback?.getInputValue());
 				$$invalidate(2, prompt = callback.getPrompt());
 				$$invalidate(7, type = getInputTypeFromPolicies(policies));
-				$$invalidate(14, validationFailures = getValidationFailures(callback, prompt));
+				$$invalidate(15, validationFailures = getValidationFailures(callback, prompt));
 				$$invalidate(8, isInvalid = !!validationFailures.length);
 			}
 		}
@@ -28173,6 +28948,7 @@ function instance$f($$self, $$props, $$invalidate) {
 		previousValue,
 		type,
 		isInvalid,
+		Input,
 		setValue,
 		selfSubmitFunction,
 		stepMetadata,
@@ -28187,23 +28963,19 @@ class String_attribute_input extends SvelteComponent {
 		super();
 
 		init(this, options, instance$f, create_fragment$f, safe_not_equal, {
-			selfSubmitFunction: 10,
-			stepMetadata: 11,
-			style: 12,
+			selfSubmitFunction: 11,
+			stepMetadata: 12,
 			callback: 0,
-			callbackMetadata: 1
+			callbackMetadata: 1,
+			style: 13
 		});
 	}
 
 	get selfSubmitFunction() {
-		return this.$$.ctx[10];
-	}
-
-	get stepMetadata() {
 		return this.$$.ctx[11];
 	}
 
-	get style() {
+	get stepMetadata() {
 		return this.$$.ctx[12];
 	}
 }
@@ -28324,7 +29096,7 @@ function create_else_block$3(ctx) {
 	};
 }
 
-// (43:0) {#if $linksStore?.termsAndConditions}
+// (41:0) {#if $linksStore?.termsAndConditions}
 function create_if_block$7(ctx) {
 	let link;
 	let t;
@@ -28368,7 +29140,7 @@ function create_if_block$7(ctx) {
 			const link_changes = {};
 			if (dirty & /*$linksStore*/ 4) link_changes.href = /*$linksStore*/ ctx[2]?.termsAndConditions;
 
-			if (dirty & /*$$scope*/ 1024) {
+			if (dirty & /*$$scope*/ 512) {
 				link_changes.$$scope = { dirty, ctx };
 			}
 
@@ -28377,7 +29149,7 @@ function create_if_block$7(ctx) {
 			if (dirty & /*callbackMetadata*/ 1) checkbox_changes.isFirstInvalidInput = /*callbackMetadata*/ ctx[0]?.derived.isFirstInvalidInput || false;
 			if (dirty & /*inputName*/ 2) checkbox_changes.key = /*inputName*/ ctx[1];
 
-			if (dirty & /*$$scope*/ 1024) {
+			if (dirty & /*$$scope*/ 512) {
 				checkbox_changes.$$scope = { dirty, ctx };
 			}
 
@@ -28402,7 +29174,7 @@ function create_if_block$7(ctx) {
 	};
 }
 
-// (44:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
+// (42:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
 function create_default_slot_1$5(ctx) {
 	let t_value = interpolate('termsAndConditionsLinkText') + "";
 	let t;
@@ -28421,7 +29193,7 @@ function create_default_slot_1$5(ctx) {
 	};
 }
 
-// (47:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
+// (45:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
 function create_default_slot$9(ctx) {
 	let t;
 	let current;
@@ -28525,9 +29297,8 @@ function instance$d($$self, $$props, $$invalidate) {
 	component_subscribe($$self, linksStore, $$value => $$invalidate(2, $linksStore = $$value));
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
-	const style = {};
+	let { style = {} } = $$props;
 	let { callback } = $$props;
-	let { checkAndRadioType = 'animated' } = $$props;
 	let { callbackMetadata } = $$props;
 
 	/** *************************************************************************
@@ -28537,7 +29308,9 @@ function instance$d($$self, $$props, $$invalidate) {
  * Details: Each callback is wrapped by the SDK to provide helper methods
  * for accessing values from the callbacks received from AM
  ************************************************************************* */
-	const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated$1;
+	const Checkbox = style.checksAndRadios === 'standard'
+	? Standard$1
+	: Animated$1;
 
 	let inputName;
 
@@ -28557,8 +29330,8 @@ function instance$d($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
+		if ('style' in $$props) $$invalidate(7, style = $$props.style);
 		if ('callback' in $$props) $$invalidate(8, callback = $$props.callback);
-		if ('checkAndRadioType' in $$props) $$invalidate(9, checkAndRadioType = $$props.checkAndRadioType);
 		if ('callbackMetadata' in $$props) $$invalidate(0, callbackMetadata = $$props.callbackMetadata);
 	};
 
@@ -28579,8 +29352,7 @@ function instance$d($$self, $$props, $$invalidate) {
 		selfSubmitFunction,
 		stepMetadata,
 		style,
-		callback,
-		checkAndRadioType
+		callback
 	];
 }
 
@@ -28593,7 +29365,6 @@ class Terms_conditions extends SvelteComponent {
 			stepMetadata: 6,
 			style: 7,
 			callback: 8,
-			checkAndRadioType: 9,
 			callbackMetadata: 0
 		});
 	}
@@ -28604,10 +29375,6 @@ class Terms_conditions extends SvelteComponent {
 
 	get stepMetadata() {
 		return this.$$.ctx[6];
-	}
-
-	get style() {
-		return this.$$.ctx[7];
 	}
 }
 
@@ -30372,7 +31139,7 @@ function get_each_context$3(ctx, list, i) {
 	return child_ctx;
 }
 
-// (71:2) {#if form?.icon}
+// (70:2) {#if form?.icon}
 function create_if_block_2$4(ctx) {
 	let div;
 	let shieldicon;
@@ -30412,7 +31179,7 @@ function create_if_block_2$4(ctx) {
 	};
 }
 
-// (87:2) {#if form?.message}
+// (86:2) {#if form?.message}
 function create_if_block_1$4(ctx) {
 	let alert;
 	let current;
@@ -30460,7 +31227,7 @@ function create_if_block_1$4(ctx) {
 	};
 }
 
-// (88:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$3(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
 	let t;
@@ -30481,7 +31248,7 @@ function create_default_slot_2$3(ctx) {
 	};
 }
 
-// (93:2) {#each step?.callbacks as callback, idx}
+// (92:2) {#each step?.callbacks as callback, idx}
 function create_each_block$3(ctx) {
 	let callbackmapper;
 	let current;
@@ -30534,7 +31301,7 @@ function create_each_block$3(ctx) {
 	};
 }
 
-// (105:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+// (104:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
 function create_if_block$5(ctx) {
 	let button;
 	let current;
@@ -30583,7 +31350,7 @@ function create_if_block$5(ctx) {
 	};
 }
 
-// (106:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (105:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$4(ctx) {
 	let t;
 	let current;
@@ -30613,7 +31380,7 @@ function create_default_slot_1$4(ctx) {
 	};
 }
 
-// (64:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
+// (63:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
 function create_default_slot$5(ctx) {
 	let t0;
 	let header;
@@ -33824,7 +34591,7 @@ function create_if_block(ctx) {
 			const dialog_changes = {};
 			if (dirty & /*$styleStore*/ 16) dialog_changes.withHeader = /*$styleStore*/ ctx[4]?.sections?.header;
 
-			if (dirty & /*$$scope, $styleStore, formEl*/ 2072) {
+			if (dirty & /*$$scope, $styleStore, formEl*/ 1048) {
 				dialog_changes.$$scope = { dirty, ctx };
 			}
 
@@ -33990,7 +34757,6 @@ function instance($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(4, $styleStore = $$value));
 	let { type = 'modal' } = $$props;
-	const componentEvents = componentApi();
 	const { journeyStore } = api.getStores();
 
 	// Variables that reference the Svelte component and the DOM elements
@@ -34000,7 +34766,7 @@ function instance($$self, $$props, $$invalidate) {
 	let formEl;
 
 	onMount(() => {
-		componentEvents.mount(dialogComp, dialogEl);
+		mount(dialogComp, dialogEl);
 	});
 
 	function journey_1_formEl_binding(value) {

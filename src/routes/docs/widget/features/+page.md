@@ -1,3 +1,9 @@
+<script>
+  import Image from '../../image.svelte';
+
+  // export let data;
+</script>
+
 # Supported Features
 
 ## Email suspend and "Magic links"
@@ -27,15 +33,10 @@ When the Widget encounters the Email Suspend Node, it will render a string of te
 When your app handles the request from this link, it needs to recognize this special condition and provide the Widget with the full URL that was used from the email.
 
 ```js
-// Using the "modal" form factor
-const url = new URL(location.href);
-const suspendedId = url.searchParams.get('suspendedId');
+import { journey } from '@forgerock/login-widget';
 
-if (suspendedId) {
-  modal.open({ resumeUrl: location.href });
-}
+const journeyEvents = journey();
 
-// Using the "inline" form factor
 const url = new URL(location.href);
 const suspendedId = url.searchParams.get('suspendedId');
 
@@ -52,7 +53,7 @@ Social Authentication provides your users with a choice of ways to sign in that 
 
 To enable this flow you will need to:
 
-- Firstly to offer your users a choice of social identity providers using the Select IDP node. You can optionally allow the user to instead skip social authentication and enter their credentials on the same form, provided that nodes such as a username collector are also present. It is also recommended to filter the social providers that are offered, so only the most relevenat ones to your user are shown.
+- Firstly to offer your users a choice of social identity providers using the Select IDP node. You can optionally allow the user to instead skip social authentication and enter their credentials on the same form, provided that nodes such as a username collector are also present. It is also recommended to filter the social providers that are offered, so only the most relevant ones to your user are shown.
 - Initiate the OAuth2.0 flow for your user using the Social Provider Handler Node
 - Finally, determine if the user signed in to the social provider maps to a user known to ForgeRock, using the Identify Existing User Node.
 
@@ -67,17 +68,10 @@ A detailed guide covering the creation of Social Authentication journeys can be 
 Using the Login Widget, the selection of social identity provider and redirection to initiate the flow will be taken care of, but your app needs to handle the return after redirection back from the provider, by detecting code, state and form_post_entry query parameters to instruct the widget to resume authentication using the current URL:
 
 ```js
-// Using the "modal" form factor
-const url = new URL(location.href);
-const codeParam = url.searchParams.get('code');
-const stateParam = url.searchParams.get('state');
-const formPostEntryParam = url.searchParams.get('form_post_entry');
+import { journey } from '@forgerock/login-widget';
 
-if (formPostEntryParam || (codeParam && stateParam)) {
-  modal.open({ resumeUrl: location.href });
-}
+const journeyEvents = journey();
 
-// Using the "inline" form factor
 const url = new URL(location.href);
 const codeParam = url.searchParams.get('code');
 const stateParam = url.searchParams.get('state');
@@ -89,3 +83,7 @@ if (formPostEntryParam || (codeParam && stateParam)) {
 ```
 
 As with the Suspended Authentication example, it's important that you pass the full URL and all query parameters from the magic link as the `resumeUrl`. Without all the parameters, the Widget may not be able to rehydrate the journey as needed.
+
+## One-time password (OTP)
+
+This common method of second-factor authentication is currently supported as an input, but not for registration, which will be released in an upcoming version. The node that is supported is the "OATH Token Verifier". To ensure it renders correctly within the Widget, place this node as a child node within a Page Node. Using the Page Node's "Stage" attribute, add the following value: `OneTimePassword`. The Widget will recognize this stage and optimally render this verification step.

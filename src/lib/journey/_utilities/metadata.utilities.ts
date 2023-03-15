@@ -105,7 +105,7 @@ export function buildStepMetadata<T = unknown>(
     ...(stageName && {
       platform: {
         stageName,
-      }
+      },
     }),
   };
 }

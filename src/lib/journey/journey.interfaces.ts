@@ -40,6 +40,7 @@ export interface JourneyStoreValue {
     code: Maybe<number>;
     message: Maybe<string>;
     step: Maybe<Step>;
+    troubleshoot: Maybe<string>;
   }>;
   loading: boolean;
   metadata: {

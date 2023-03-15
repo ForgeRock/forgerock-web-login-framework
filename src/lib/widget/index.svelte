@@ -21,13 +21,13 @@
 <script lang="ts">
   import { onMount, SvelteComponent } from 'svelte';
 
+  import { mount } from './_utilities/component.utilities';
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import Journey from '$journey/journey.svelte';
   import { styleStore } from '$lib/style.store';
 
   export let type: 'modal' | 'inline' = 'modal';
 
-  const componentEvents = componentApi();
   const { journeyStore } = api.getStores();
 
   // Variables that reference the Svelte component and the DOM elements
@@ -36,7 +36,7 @@
   let formEl: HTMLFormElement;
 
   onMount(() => {
-    componentEvents.mount(dialogComp, dialogEl);
+    mount(dialogComp, dialogEl);
   });
 </script>
 
