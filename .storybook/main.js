@@ -2,9 +2,8 @@ const { resolve } = require('path');
 const preprocess = require('svelte-preprocess');
 const { mergeConfig } = require('vite'); // use `mergeConfig` to recursively merge Vite options
 const turbosnap = require('vite-plugin-turbosnap');
-
 module.exports = {
-  stories: ['../src/**/*.stories.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
+  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
   staticDirs: ['../static'],
   addons: [
     '@storybook/addon-a11y',
@@ -23,15 +22,23 @@ module.exports = {
     // https://storybook.js.org/addons/storybook-addon-code-editor
     // 'storybook-addon-code-editor',
   ],
-  framework: '@storybook/sveltekit',
 
-  core: { builder: '@storybook/builder-vite' },
+  framework: {
+    name: '@storybook/sveltekit',
+    options: {},
+  },
   // For tighter Vite integration
   async viteFinal(config, { configType }) {
     // return the customized config
     return mergeConfig(config, {
       plugins:
-        configType === 'PRODUCTION' ? [turbosnap({ rootDir: config.root ?? process.cwd() })] : [],
+        configType === 'PRODUCTION'
+          ? [
+              turbosnap({
+                rootDir: config.root ?? process.cwd(),
+              }),
+            ]
+          : [],
       // customize the Vite config here
       resolve: {
         alias: {
@@ -48,5 +55,8 @@ module.exports = {
         },
       },
     });
+  },
+  docs: {
+    autodocs: true,
   },
 };
