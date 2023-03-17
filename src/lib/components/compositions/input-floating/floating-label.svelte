@@ -44,7 +44,7 @@
     onChange={onChangeWrapper}
     {label}
     labelClasses="tw_absolute tw_border tw_border-transparent tw_input-floating-label"
-    labelOrder="last"
+    labelOrder="first"
     {isRequired}
     {isInvalid}
     {type}

@@ -34,7 +34,7 @@
     {key}
     {label}
     labelClasses="tw_absolute tw_input-floating-label tw_select-floating-label"
-    labelOrder="last"
+    labelOrder="first"
     onChange={onChangeWrapper}
     {options}
     selectClasses="tw_select-floating"

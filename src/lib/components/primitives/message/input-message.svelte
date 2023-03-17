@@ -34,6 +34,6 @@
     )}`}
     id={`${key ? `${key}-message` : ''}`}
   >
-    {@html cleanMessage}
+  {@html cleanMessage}
   </p>
 {/if}

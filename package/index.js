@@ -23231,7 +23231,7 @@ function create_fragment$C(ctx) {
 				key: /*key*/ ctx[5],
 				label: /*label*/ ctx[6],
 				labelClasses: "tw_absolute tw_input-floating-label tw_select-floating-label",
-				labelOrder: "last",
+				labelOrder: "first",
 				onChange: /*onChangeWrapper*/ ctx[9],
 				options: /*options*/ ctx[7],
 				selectClasses: "tw_select-floating"
@@ -24968,7 +24968,7 @@ function create_if_block_3$3(ctx) {
 			attr(input, "id", /*key*/ ctx[3]);
 			attr(input, "placeholder", /*placeholder*/ ctx[8]);
 			input.required = /*isRequired*/ ctx[9];
-			attr(input, "type", "password");
+			attr(input, "type", "text");
 		},
 		m(target, anchor) {
 			insert(target, input, anchor);
@@ -25664,7 +25664,7 @@ function create_fragment$w(ctx) {
 		onChange: /*onChangeWrapper*/ ctx[11],
 		label: /*label*/ ctx[8],
 		labelClasses: "tw_absolute tw_border tw_border-transparent tw_input-floating-label",
-		labelOrder: "last",
+		labelOrder: "first",
 		isRequired: /*isRequired*/ ctx[6],
 		isInvalid: /*isInvalid*/ ctx[0],
 		type: /*type*/ ctx[10]

@@ -94,7 +94,7 @@
     on:change={onChange}
     {placeholder}
     required={isRequired}
-    type="password"
+    type="text"
     bind:value
   />
 {/if}
