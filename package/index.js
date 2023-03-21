@@ -16726,6 +16726,8 @@ var backToDefault = "Back to Sign In";
 var backToLogin = "Back to Sign In";
 var dontHaveAnAccount = "No account? <a href='?journey=Registration'>Register here!</a>";
 var closeModal = "Close";
+var charactersCannotRepeatMoreThan = "Character cannot repeat more than {max} times";
+var charactersCannotRepeatMoreThanCaseInsensitive = "Character cannot repeat more than {max} times (case insensitive)";
 var chooseDifferentUsername = "Please choose a different username.";
 var confirmPassword = "Confirm password";
 var constraintViolationForPassword = "Password does not meet the requirements.";
@@ -16758,6 +16760,9 @@ var nextButton = "Next";
 var notToExceedMaximumCharacterLength = "No more than {max} characters";
 var noLessThanMinimumCharacterLength = "At least {min} character(s)";
 var passwordCallback = "Password";
+var passwordCannotContainCommonPasswords = "Password cannot contain common passwords";
+var passwordCannotContainCommonPasswordsOrBeReversible = "Password cannot contain common passwords or reversible text";
+var passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan = "Password cannot contain common passwords or reversible text less than {min} characters";
 var passwordRequirements = "Password requirements:";
 var pleaseCheckValue = "Please check this value";
 var pleaseConfirm = "Please confirm";
@@ -16772,6 +16777,10 @@ var requiredField = "Value is required";
 var securityAnswer = "Security answer";
 var securityQuestions = "Security question(s)";
 var securityQuestionsPrompt = "Provide security question(s) and answer(s):";
+var shouldContainANumber = "Should contain a number";
+var shouldContainAnUppercase = "Should contain an uppercase letter";
+var shouldContainALowercase = "Should contain a lowercase letter";
+var shouldContainASymbol = "Should contain a symbol";
 var showPassword = "Show password";
 var sn = "Last name";
 var submitButton = "Submit";
@@ -16795,6 +16804,8 @@ var fallback = {
 	backToLogin: backToLogin,
 	dontHaveAnAccount: dontHaveAnAccount,
 	closeModal: closeModal,
+	charactersCannotRepeatMoreThan: charactersCannotRepeatMoreThan,
+	charactersCannotRepeatMoreThanCaseInsensitive: charactersCannotRepeatMoreThanCaseInsensitive,
 	chooseDifferentUsername: chooseDifferentUsername,
 	confirmPassword: confirmPassword,
 	constraintViolationForPassword: constraintViolationForPassword,
@@ -16827,6 +16838,9 @@ var fallback = {
 	notToExceedMaximumCharacterLength: notToExceedMaximumCharacterLength,
 	noLessThanMinimumCharacterLength: noLessThanMinimumCharacterLength,
 	passwordCallback: passwordCallback,
+	passwordCannotContainCommonPasswords: passwordCannotContainCommonPasswords,
+	passwordCannotContainCommonPasswordsOrBeReversible: passwordCannotContainCommonPasswordsOrBeReversible,
+	passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan: passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan,
 	passwordRequirements: passwordRequirements,
 	pleaseCheckValue: pleaseCheckValue,
 	pleaseConfirm: pleaseConfirm,
@@ -16841,6 +16855,10 @@ var fallback = {
 	securityAnswer: securityAnswer,
 	securityQuestions: securityQuestions,
 	securityQuestionsPrompt: securityQuestionsPrompt,
+	shouldContainANumber: shouldContainANumber,
+	shouldContainAnUppercase: shouldContainAnUppercase,
+	shouldContainALowercase: shouldContainALowercase,
+	shouldContainASymbol: shouldContainASymbol,
 	showPassword: showPassword,
 	sn: sn,
 	submitButton: submitButton,
@@ -16867,6 +16885,8 @@ const stringsSchema = z
     backToLogin: z.string(),
     dontHaveAnAccount: z.string(),
     closeModal: z.string(),
+    charactersCannotRepeatMoreThan: z.string(),
+    charactersCannotRepeatMoreThanCaseInsensitive: z.string(),
     chooseDifferentUsername: z.string(),
     confirmPassword: z.string(),
     constraintViolationForPassword: z.string(),
@@ -16899,6 +16919,9 @@ const stringsSchema = z
     notToExceedMaximumCharacterLength: z.string(),
     noLessThanMinimumCharacterLength: z.string(),
     passwordCallback: z.string(),
+    passwordCannotContainCommonPasswords: z.string(),
+    passwordCannotContainCommonPasswordsOrBeReversible: z.string(),
+    passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan: z.string(),
     passwordRequirements: z.string(),
     pleaseCheckValue: z.string(),
     pleaseConfirm: z.string(),
@@ -16913,6 +16936,10 @@ const stringsSchema = z
     securityAnswer: z.string(),
     securityQuestions: z.string(),
     securityQuestionsPrompt: z.string(),
+    shouldContainANumber: z.string(),
+    shouldContainAnUppercase: z.string(),
+    shouldContainALowercase: z.string(),
+    shouldContainASymbol: z.string(),
     showPassword: z.string(),
     sn: z.string(),
     submitButton: z.string(),
@@ -20606,12 +20633,41 @@ function getInputTypeFromPolicies(policies) {
     return 'text';
 }
 function getValidationFailureParams(failedPolicy) {
-    if (failedPolicy?.policyRequirement === 'CHARACTER_SET') {
-        const params = failedPolicy?.params;
+    if (failedPolicy?.policyRequirement === 'DICTIONARY') {
+        const params = failedPolicy.params;
+        const min = params?.['min-substring-length'] || 0;
+        const arr = [];
+        if (params?.['check-substrings'] && params?.['test-reversed-password']) {
+            arr.push({
+                length: min,
+                message: interpolate('passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan', {
+                    min: String(min),
+                }),
+                rule: 'reversibleSubstrings',
+            });
+        }
+        else if (params?.['test-reversed-password']) {
+            arr.push({
+                length: null,
+                message: interpolate('passwordCannotContainCommonPasswordsOrBeReversible'),
+                rule: 'reversibleSubstrings',
+            });
+        }
+        else {
+            arr.push({
+                length: null,
+                message: interpolate('passwordCannotContainCommonPasswords'),
+                rule: 'reversibleSubstrings',
+            });
+        }
+        return arr;
+    }
+    else if (failedPolicy?.policyRequirement === 'CHARACTER_SET') {
+        const params = failedPolicy.params;
         return params?.['character-sets'].map(convertCharacterSetToRuleObj);
     }
     else if (failedPolicy?.policyRequirement === 'LENGTH_BASED') {
-        const params = failedPolicy?.params;
+        const params = failedPolicy.params;
         const min = params?.['min-password-length'] || 0;
         const max = params?.['max-password-length'] || null;
         const arr = [];
@@ -20627,6 +20683,26 @@ function getValidationFailureParams(failedPolicy) {
                 length: min,
                 message: interpolate('doesNotMeetMinimumCharacterLength', { min: String(min) }),
                 rule: 'minimumLength',
+            });
+        }
+        return arr;
+    }
+    else if (failedPolicy?.policyRequirement === 'REPEATED_CHARACTERS') {
+        const params = failedPolicy.params;
+        const max = params['max-consecutive-length'] || 0;
+        const arr = [];
+        if (!params['case-sensitive-validation']) {
+            arr.push({
+                length: max,
+                message: interpolate('charactersCannotRepeatMoreThanCaseInsensitive', { max: String(max) }),
+                rule: 'repeatedCharactersCaseInsensitive',
+            });
+        }
+        else {
+            arr.push({
+                length: max,
+                message: interpolate('charactersCannotRepeatMoreThan', { max: String(max) }),
+                rule: 'repeatedCharacters',
             });
         }
         return arr;
@@ -20787,36 +20863,72 @@ function convertCharacterSetToRuleObj(set) {
     const num = arr[0];
     const type = arr[1];
     if (type === '0123456789') {
-        return {
-            length: Number(num),
-            message: interpolate('minimumNumberOfNumbers', { num: String(num) }),
-            rule: 'numbers',
-        };
+        if (num === '0') {
+            return {
+                length: null,
+                message: interpolate('shouldContainANumber'),
+                rule: 'numbers',
+            };
+        }
+        else {
+            return {
+                length: Number(num),
+                message: interpolate('minimumNumberOfNumbers', { num: String(num) }),
+                rule: 'numbers',
+            };
+        }
     }
     else if (type === 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-        return {
-            length: Number(num),
-            message: interpolate('minimumNumberOfUppercase', { num: String(num) }),
-            rule: 'uppercase',
-        };
+        if (num === '0') {
+            return {
+                length: null,
+                message: interpolate('shouldContainAnUppercase'),
+                rule: 'uppercase',
+            };
+        }
+        else {
+            return {
+                length: Number(num),
+                message: interpolate('minimumNumberOfUppercase', { num: String(num) }),
+                rule: 'uppercase',
+            };
+        }
     }
     else if (type === 'abcdefghijklmnopqrstuvwxyz') {
-        return {
-            length: Number(num),
-            message: interpolate('minimumNumberOfLowercase', { num: String(num) }),
-            rule: 'lowercase',
-        };
+        if (num === '0') {
+            return {
+                length: null,
+                message: interpolate('shouldContainALowercase'),
+                rule: 'lowercase',
+            };
+        }
+        else {
+            return {
+                length: Number(num),
+                message: interpolate('minimumNumberOfLowercase', { num: String(num) }),
+                rule: 'lowercase',
+            };
+        }
     }
     else if (type.includes('@') || type.includes('!') || type.includes('*') || type.includes('#')) {
-        return {
-            length: Number(num),
-            message: interpolate('minimumNumberOfSymbols', { num: String(num) }),
-            rule: 'symbols',
-        };
+        if (num === '0') {
+            return {
+                length: null,
+                message: interpolate('shouldContainASymbol'),
+                rule: 'symbols',
+            };
+        }
+        else {
+            return {
+                length: Number(num),
+                message: interpolate('minimumNumberOfSymbols', { num: String(num) }),
+                rule: 'symbols',
+            };
+        }
     }
     else {
         return {
-            length: Number(num),
+            length: null,
             message: interpolate('pleaseCheckValue'),
             rule: 'unknown',
         };
@@ -27131,8 +27243,8 @@ class Eye_icon extends SvelteComponent {
 
 function create_default_slot_1$8(ctx) {
 	let current;
-	const default_slot_template = /*#slots*/ ctx[12].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[13], null);
+	const default_slot_template = /*#slots*/ ctx[14].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[15], null);
 
 	return {
 		c() {
@@ -27147,15 +27259,15 @@ function create_default_slot_1$8(ctx) {
 		},
 		p(ctx, dirty) {
 			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 8192)) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 32768)) {
 					update_slot_base(
 						default_slot,
 						default_slot_template,
 						ctx,
-						/*$$scope*/ ctx[13],
+						/*$$scope*/ ctx[15],
 						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[13])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[13], dirty, null),
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[15])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[15], dirty, null),
 						null
 					);
 				}
@@ -27176,7 +27288,7 @@ function create_default_slot_1$8(ctx) {
 	};
 }
 
-// (47:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}       >
+// (59:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
 function create_default_slot$f(ctx) {
 	let t;
 	let current;
@@ -27206,7 +27318,7 @@ function create_default_slot$f(ctx) {
 	};
 }
 
-// (41:2) 
+// (53:2) 
 function create_input_button_slot$1(ctx) {
 	let button;
 	let eyeicon;
@@ -27245,7 +27357,7 @@ function create_input_button_slot$1(ctx) {
 			const eyeicon_changes = {};
 			if (dirty & /*isVisible*/ 64) eyeicon_changes.visible = /*isVisible*/ ctx[6];
 
-			if (dirty & /*$$scope*/ 8192) {
+			if (dirty & /*$$scope*/ 32768) {
 				eyeicon_changes.$$scope = { dirty, ctx };
 			}
 
@@ -27278,18 +27390,18 @@ function create_fragment$q(ctx) {
 				forceValidityFailure: /*forceValidityFailure*/ ctx[0],
 				isFirstInvalidInput: false,
 				hasRightIcon: true,
-				key: `${/*key*/ ctx[1]}-confirm`,
+				key: `${/*key*/ ctx[3]}-confirm`,
 				label: interpolate('confirmPassword', null, 'Confirm Password'),
-				message: /*isInvalid*/ ctx[3]
+				message: /*isInvalid*/ ctx[1]
 				? interpolate('passwordConfirmationError', null, 'Passwords do not match')
 				: undefined,
-				onChange: /*onChange*/ ctx[2],
-				isInvalid: /*isInvalid*/ ctx[3],
-				isRequired: /*isRequired*/ ctx[4],
-				showMessage: /*showMessage*/ ctx[5],
+				onChange: /*onChangeWrapper*/ ctx[9],
+				isInvalid: /*isInvalid*/ ctx[1],
+				isRequired: /*isRequired*/ ctx[2],
+				showMessage: /*showMessage*/ ctx[4],
 				type: /*type*/ ctx[7],
-				value: typeof /*value*/ ctx[9] === 'string'
-				? /*value*/ ctx[9]
+				value: typeof /*value*/ ctx[5] === 'string'
+				? /*value*/ ctx[5]
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot$1],
@@ -27310,19 +27422,22 @@ function create_fragment$q(ctx) {
 		p(ctx, [dirty]) {
 			const input_changes = {};
 			if (dirty & /*forceValidityFailure*/ 1) input_changes.forceValidityFailure = /*forceValidityFailure*/ ctx[0];
-			if (dirty & /*key*/ 2) input_changes.key = `${/*key*/ ctx[1]}-confirm`;
+			if (dirty & /*key*/ 8) input_changes.key = `${/*key*/ ctx[3]}-confirm`;
 
-			if (dirty & /*isInvalid*/ 8) input_changes.message = /*isInvalid*/ ctx[3]
+			if (dirty & /*isInvalid*/ 2) input_changes.message = /*isInvalid*/ ctx[1]
 			? interpolate('passwordConfirmationError', null, 'Passwords do not match')
 			: undefined;
 
-			if (dirty & /*onChange*/ 4) input_changes.onChange = /*onChange*/ ctx[2];
-			if (dirty & /*isInvalid*/ 8) input_changes.isInvalid = /*isInvalid*/ ctx[3];
-			if (dirty & /*isRequired*/ 16) input_changes.isRequired = /*isRequired*/ ctx[4];
-			if (dirty & /*showMessage*/ 32) input_changes.showMessage = /*showMessage*/ ctx[5];
+			if (dirty & /*isInvalid*/ 2) input_changes.isInvalid = /*isInvalid*/ ctx[1];
+			if (dirty & /*isRequired*/ 4) input_changes.isRequired = /*isRequired*/ ctx[2];
+			if (dirty & /*showMessage*/ 16) input_changes.showMessage = /*showMessage*/ ctx[4];
 			if (dirty & /*type*/ 128) input_changes.type = /*type*/ ctx[7];
 
-			if (dirty & /*$$scope, isVisible*/ 8256) {
+			if (dirty & /*value*/ 32) input_changes.value = typeof /*value*/ ctx[5] === 'string'
+			? /*value*/ ctx[5]
+			: '';
+
+			if (dirty & /*$$scope, isVisible*/ 32832) {
 				input_changes.$$scope = { dirty, ctx };
 			}
 
@@ -27346,16 +27461,24 @@ function create_fragment$q(ctx) {
 function instance$q($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { forceValidityFailure = false } = $$props;
-	let { key } = $$props;
-	let { onChange } = $$props;
 	let { isInvalid = false } = $$props;
 	let { isRequired = true } = $$props;
+	let { key } = $$props;
+	let { onChange } = $$props;
+	let { resetValue } = $$props;
 	let { style = {} } = $$props;
 	const Input = style.labels === 'stacked' ? Stacked_label : Floating_label;
 	let { showMessage = undefined } = $$props;
 	let isVisible = false;
 	let type = 'password';
 	let value;
+
+	function onChangeWrapper(event) {
+		$$invalidate(5, value = event.target?.value);
+
+		// TODO: revisit this logic to avoid unnecessary ternary
+		onChange(typeof value === 'string' ? value : undefined);
+	}
 
 	/**
  * @function toggleVisibility - toggles the password from masked to plaintext
@@ -27367,27 +27490,41 @@ function instance$q($$self, $$props, $$invalidate) {
 
 	$$self.$$set = $$props => {
 		if ('forceValidityFailure' in $$props) $$invalidate(0, forceValidityFailure = $$props.forceValidityFailure);
-		if ('key' in $$props) $$invalidate(1, key = $$props.key);
-		if ('onChange' in $$props) $$invalidate(2, onChange = $$props.onChange);
-		if ('isInvalid' in $$props) $$invalidate(3, isInvalid = $$props.isInvalid);
-		if ('isRequired' in $$props) $$invalidate(4, isRequired = $$props.isRequired);
-		if ('style' in $$props) $$invalidate(11, style = $$props.style);
-		if ('showMessage' in $$props) $$invalidate(5, showMessage = $$props.showMessage);
-		if ('$$scope' in $$props) $$invalidate(13, $$scope = $$props.$$scope);
+		if ('isInvalid' in $$props) $$invalidate(1, isInvalid = $$props.isInvalid);
+		if ('isRequired' in $$props) $$invalidate(2, isRequired = $$props.isRequired);
+		if ('key' in $$props) $$invalidate(3, key = $$props.key);
+		if ('onChange' in $$props) $$invalidate(11, onChange = $$props.onChange);
+		if ('resetValue' in $$props) $$invalidate(12, resetValue = $$props.resetValue);
+		if ('style' in $$props) $$invalidate(13, style = $$props.style);
+		if ('showMessage' in $$props) $$invalidate(4, showMessage = $$props.showMessage);
+		if ('$$scope' in $$props) $$invalidate(15, $$scope = $$props.$$scope);
+	};
+
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*resetValue, onChange, value*/ 6176) {
+			{
+				if (resetValue) {
+					$$invalidate(5, value = undefined);
+					onChange(value);
+				}
+			}
+		}
 	};
 
 	return [
 		forceValidityFailure,
-		key,
-		onChange,
 		isInvalid,
 		isRequired,
+		key,
 		showMessage,
+		value,
 		isVisible,
 		type,
 		Input,
-		value,
+		onChangeWrapper,
 		toggleVisibility,
+		onChange,
+		resetValue,
 		style,
 		slots,
 		$$scope
@@ -27400,12 +27537,13 @@ class Confirm_input extends SvelteComponent {
 
 		init(this, options, instance$q, create_fragment$q, safe_not_equal, {
 			forceValidityFailure: 0,
-			key: 1,
-			onChange: 2,
-			isInvalid: 3,
-			isRequired: 4,
-			style: 11,
-			showMessage: 5
+			isInvalid: 1,
+			isRequired: 2,
+			key: 3,
+			onChange: 11,
+			resetValue: 12,
+			style: 13,
+			showMessage: 4
 		});
 	}
 }
@@ -27414,8 +27552,8 @@ class Confirm_input extends SvelteComponent {
 
 function create_default_slot_1$7(ctx) {
 	let current;
-	const default_slot_template = /*#slots*/ ctx[19].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[20], null);
+	const default_slot_template = /*#slots*/ ctx[21].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[22], null);
 
 	return {
 		c() {
@@ -27430,15 +27568,15 @@ function create_default_slot_1$7(ctx) {
 		},
 		p(ctx, dirty) {
 			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 1048576)) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 4194304)) {
 					update_slot_base(
 						default_slot,
 						default_slot_template,
 						ctx,
-						/*$$scope*/ ctx[20],
+						/*$$scope*/ ctx[22],
 						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[20])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[20], dirty, null),
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[22])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[22], dirty, null),
 						null
 					);
 				}
@@ -27459,7 +27597,7 @@ function create_default_slot_1$7(ctx) {
 	};
 }
 
-// (82:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}       >
+// (94:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
 function create_default_slot$e(ctx) {
 	let t;
 	let current;
@@ -27489,7 +27627,7 @@ function create_default_slot$e(ctx) {
 	};
 }
 
-// (76:2) 
+// (88:2) 
 function create_input_button_slot(ctx) {
 	let button;
 	let eyeicon;
@@ -27520,7 +27658,7 @@ function create_input_button_slot(ctx) {
 			current = true;
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*toggleVisibility*/ ctx[16]);
+				dispose = listen(button, "click", /*toggleVisibility*/ ctx[17]);
 				mounted = true;
 			}
 		},
@@ -27528,7 +27666,7 @@ function create_input_button_slot(ctx) {
 			const eyeicon_changes = {};
 			if (dirty & /*isVisible*/ 1024) eyeicon_changes.visible = /*isVisible*/ ctx[10];
 
-			if (dirty & /*$$scope*/ 1048576) {
+			if (dirty & /*$$scope*/ 4194304) {
 				eyeicon_changes.$$scope = { dirty, ctx };
 			}
 
@@ -27552,7 +27690,7 @@ function create_input_button_slot(ctx) {
 	};
 }
 
-// (89:0) {#if callbackMetadata?.platform?.confirmPassword}
+// (101:0) {#if callbackMetadata?.platform?.confirmPassword}
 function create_if_block$a(ctx) {
 	let confirminput;
 	let current;
@@ -27562,7 +27700,8 @@ function create_if_block$a(ctx) {
 				forceValidityFailure: /*doPasswordsMatch*/ ctx[9] === false,
 				isInvalid: /*doPasswordsMatch*/ ctx[9] === false,
 				key: /*key*/ ctx[0],
-				onChange: /*confirmInput*/ ctx[14],
+				onChange: /*confirmInput*/ ctx[15],
+				resetValue: /*resetValue*/ ctx[11],
 				showMessage: /*doPasswordsMatch*/ ctx[9] === false,
 				style: /*style*/ ctx[4]
 			}
@@ -27581,6 +27720,7 @@ function create_if_block$a(ctx) {
 			if (dirty & /*doPasswordsMatch*/ 512) confirminput_changes.forceValidityFailure = /*doPasswordsMatch*/ ctx[9] === false;
 			if (dirty & /*doPasswordsMatch*/ 512) confirminput_changes.isInvalid = /*doPasswordsMatch*/ ctx[9] === false;
 			if (dirty & /*key*/ 1) confirminput_changes.key = /*key*/ ctx[0];
+			if (dirty & /*resetValue*/ 2048) confirminput_changes.resetValue = /*resetValue*/ ctx[11];
 			if (dirty & /*doPasswordsMatch*/ 512) confirminput_changes.showMessage = /*doPasswordsMatch*/ ctx[9] === false;
 			if (dirty & /*style*/ 16) confirminput_changes.style = /*style*/ ctx[4];
 			confirminput.$set(confirminput_changes);
@@ -27606,20 +27746,20 @@ function create_fragment$p(ctx) {
 	let if_block_anchor;
 	let current;
 
-	input = new /*Input*/ ctx[13]({
+	input = new /*Input*/ ctx[14]({
 			props: {
 				isFirstInvalidInput: /*callbackMetadata*/ ctx[1]?.derived.isFirstInvalidInput || false,
 				hasRightIcon: true,
 				key: /*key*/ ctx[0],
-				label: interpolate(textToKey(/*callbackType*/ ctx[8]), null, /*textInputLabel*/ ctx[11]),
+				label: interpolate(textToKey(/*callbackType*/ ctx[8]), null, /*textInputLabel*/ ctx[12]),
 				message: /*validationFailure*/ ctx[6] || (/*isRequired*/ ctx[3]
 				? interpolate('inputRequiredError')
 				: undefined),
-				onChange: /*setValue*/ ctx[15],
+				onChange: /*setValue*/ ctx[16],
 				isInvalid: /*isInvalid*/ ctx[2],
 				isRequired: /*isRequired*/ ctx[3],
 				showMessage: /*showMessage*/ ctx[5],
-				type: /*type*/ ctx[12],
+				type: /*type*/ ctx[13],
 				value: typeof /*value*/ ctx[7] === 'string'
 				? /*value*/ ctx[7]
 				: '',
@@ -27651,7 +27791,7 @@ function create_fragment$p(ctx) {
 			const input_changes = {};
 			if (dirty & /*callbackMetadata*/ 2) input_changes.isFirstInvalidInput = /*callbackMetadata*/ ctx[1]?.derived.isFirstInvalidInput || false;
 			if (dirty & /*key*/ 1) input_changes.key = /*key*/ ctx[0];
-			if (dirty & /*callbackType, textInputLabel*/ 2304) input_changes.label = interpolate(textToKey(/*callbackType*/ ctx[8]), null, /*textInputLabel*/ ctx[11]);
+			if (dirty & /*callbackType, textInputLabel*/ 4352) input_changes.label = interpolate(textToKey(/*callbackType*/ ctx[8]), null, /*textInputLabel*/ ctx[12]);
 
 			if (dirty & /*validationFailure, isRequired*/ 72) input_changes.message = /*validationFailure*/ ctx[6] || (/*isRequired*/ ctx[3]
 			? interpolate('inputRequiredError')
@@ -27660,13 +27800,13 @@ function create_fragment$p(ctx) {
 			if (dirty & /*isInvalid*/ 4) input_changes.isInvalid = /*isInvalid*/ ctx[2];
 			if (dirty & /*isRequired*/ 8) input_changes.isRequired = /*isRequired*/ ctx[3];
 			if (dirty & /*showMessage*/ 32) input_changes.showMessage = /*showMessage*/ ctx[5];
-			if (dirty & /*type*/ 4096) input_changes.type = /*type*/ ctx[12];
+			if (dirty & /*type*/ 8192) input_changes.type = /*type*/ ctx[13];
 
 			if (dirty & /*value*/ 128) input_changes.value = typeof /*value*/ ctx[7] === 'string'
 			? /*value*/ ctx[7]
 			: '';
 
-			if (dirty & /*$$scope, isVisible*/ 1049600) {
+			if (dirty & /*$$scope, isVisible*/ 4195328) {
 				input_changes.$$scope = { dirty, ctx };
 			}
 
@@ -27730,6 +27870,8 @@ function instance$p($$self, $$props, $$invalidate) {
 	let callbackType;
 	let doPasswordsMatch;
 	let isVisible = false;
+	let resetValue = false;
+	let savedValue = '';
 	let textInputLabel;
 	let type = 'password';
 	let value;
@@ -27738,8 +27880,8 @@ function instance$p($$self, $$props, $$invalidate) {
  * @function confirmInput - ensures the second password input matches the first
  * @param event
  */
-	function confirmInput(event) {
-		$$invalidate(18, confirmValue = event.target?.value);
+	function confirmInput(val) {
+		$$invalidate(19, confirmValue = val);
 	}
 
 	/**
@@ -27757,6 +27899,8 @@ function instance$p($$self, $$props, $$invalidate) {
  * for writing values to the callbacks received from AM
  *********************************************************************** */
 		callback.setInputValue(value);
+
+		$$invalidate(20, savedValue = String(value));
 	}
 
 	/**
@@ -27764,11 +27908,11 @@ function instance$p($$self, $$props, $$invalidate) {
  */
 	function toggleVisibility() {
 		$$invalidate(10, isVisible = !isVisible);
-		$$invalidate(12, type = isVisible ? 'text' : 'password');
+		$$invalidate(13, type = isVisible ? 'text' : 'password');
 	}
 
 	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(17, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(18, callback = $$props.callback);
 		if ('callbackMetadata' in $$props) $$invalidate(1, callbackMetadata = $$props.callbackMetadata);
 		if ('key' in $$props) $$invalidate(0, key = $$props.key);
 		if ('isInvalid' in $$props) $$invalidate(2, isInvalid = $$props.isInvalid);
@@ -27776,18 +27920,28 @@ function instance$p($$self, $$props, $$invalidate) {
 		if ('style' in $$props) $$invalidate(4, style = $$props.style);
 		if ('showMessage' in $$props) $$invalidate(5, showMessage = $$props.showMessage);
 		if ('validationFailure' in $$props) $$invalidate(6, validationFailure = $$props.validationFailure);
-		if ('$$scope' in $$props) $$invalidate(20, $$scope = $$props.$$scope);
+		if ('$$scope' in $$props) $$invalidate(22, $$scope = $$props.$$scope);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, callbackMetadata, confirmValue, value*/ 393346) {
+		if ($$self.$$.dirty & /*callback, callbackMetadata, savedValue, value, confirmValue*/ 1835138) {
 			{
 				$$invalidate(8, callbackType = callback.getType());
 				$$invalidate(0, key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`);
-				$$invalidate(11, textInputLabel = callback.getPrompt());
+				$$invalidate(12, textInputLabel = callback.getPrompt());
 				$$invalidate(7, value = callback?.getInputValue());
 
-				// Only assign a boolean if the confirm input has an actual value
+				/**
+ * `savedValue` represents what the user set after blur (local component state)
+ * `value` represents what's in the callback (empties from AM response)
+ *
+ * This unique combination is what produces the most reliable reset flag
+ */
+				$$invalidate(11, resetValue = !!savedValue && value === '');
+
+				/**
+ * Only assign a boolean if the confirm input has an actual value.
+ */
 				$$invalidate(9, doPasswordsMatch = confirmValue !== undefined
 				? confirmValue === value
 				: undefined);
@@ -27807,6 +27961,7 @@ function instance$p($$self, $$props, $$invalidate) {
 		callbackType,
 		doPasswordsMatch,
 		isVisible,
+		resetValue,
 		textInputLabel,
 		type,
 		Input,
@@ -27815,6 +27970,7 @@ function instance$p($$self, $$props, $$invalidate) {
 		toggleVisibility,
 		callback,
 		confirmValue,
+		savedValue,
 		slots,
 		$$scope
 	];
@@ -27825,7 +27981,7 @@ class Base extends SvelteComponent {
 		super();
 
 		init(this, options, instance$p, create_fragment$p, safe_not_equal, {
-			callback: 17,
+			callback: 18,
 			callbackMetadata: 1,
 			key: 0,
 			isInvalid: 2,

@@ -45,6 +45,12 @@ export const PolicyErrors = {
   },
 };
 
+export const PolicyErrorsAlt = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[3],
+  },
+};
+
 const Template = (args) => ({
   Component: Input,
   props: args,
