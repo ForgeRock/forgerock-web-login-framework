@@ -1,5 +1,4 @@
 import { get } from 'svelte/store';
-import type { z } from 'zod';
 
 import { configuredJourneysStore } from '$journey/config.store';
 

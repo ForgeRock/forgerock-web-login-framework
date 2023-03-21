@@ -165,7 +165,7 @@ export const usernamePasswordStep: Step = {
       _id: 1,
     },
   ],
-  stage: 'UsernamePassword',
+  stage: 'DefaultLogin',
   header: 'Sign In',
   description:
     'New here? <a href="#/service/Registration">Create an account</a><br><a href="#/service/ForgottenUsername">Forgot username?</a><a href="#/service/ResetPassword"> Forgot password?</a>',
@@ -474,5 +474,5 @@ export const registrationStep: Step = {
       _id: 8,
     },
   ],
-  stage: 'Registration',
+  stage: 'DefaultRegistration',
 };

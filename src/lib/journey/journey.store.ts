@@ -27,6 +27,15 @@ function initializeStack(initOptions?: StepOptions) {
 
   // Assign to exported variable (see bottom of file)
   stack = {
+    latest: async (): Promise<StepOptions> => {
+      return new Promise((resolve) => {
+        // subscribe, grab the current value and unsubscribe
+        subscribe((current) => {
+          const lastItem = current[current.length - 1];
+          resolve(lastItem);
+        })();
+      });
+    },
     pop: async (): Promise<StepOptions[]> => {
       return new Promise((resolve) => {
         update((current) => {
@@ -79,7 +88,6 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const stack = initializeStack();
 
-  let restartOptions: StepOptions;
   let stepNumber = 0;
 
   async function next(prevStep: StepTypes = null, nextOptions?: StepOptions, resumeUrl?: string) {
@@ -95,15 +103,6 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       ...initOptions,
       ...nextOptions,
     };
-
-    // These options are reserved only for restarting a journey after failure
-    if (initOptions || nextOptions) {
-      restartOptions = {
-        // Prioritize next options over initialize options
-        ...initOptions,
-        ...nextOptions,
-      };
-    }
 
     /**
      * Save previous step information just in case we have a total
@@ -197,6 +196,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       /**
        * SUCCESSFUL COMPLETION BLOCK
        */
+      stack.reset();
 
       // Set final state
       journeyStore.set({
@@ -221,6 +221,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         /**
          * Restart tree to get fresh step
          */
+        const restartOptions = await stack.latest();
         restartedStep = await FRAuth.next(undefined, restartOptions);
       } catch (err) {
         console.error(`Restart failed step request | ${err}`);
@@ -371,6 +372,17 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
   }
 
   async function start(startOptions?: StepOptions) {
+    const configTree = Config.get().tree;
+    // If no tree is passed in, but there's a configured default tree, use that
+    if (!startOptions?.tree && configTree) {
+      if (startOptions) {
+        startOptions.tree = configTree;
+      } else {
+        startOptions = {
+          tree: configTree,
+        };
+      }
+    }
     await stack.push(startOptions);
     await next(undefined, startOptions);
   }

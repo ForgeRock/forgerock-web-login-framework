@@ -14934,7 +14934,7 @@ const journeyConfigItemSchema = z.object({
         message: 'HREF string must start with `?journey` or `#/service`',
     })
         .array(),
-});
+}).optional();
 const journeyConfigSchema = z.object({
     forgotPassword: journeyConfigItemSchema,
     forgotUsername: journeyConfigItemSchema,
@@ -14951,8 +14951,8 @@ const defaultJourneys = {
         match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
     },
     login: {
-        journey: undefined,
-        match: ['#/service/Login', '?journey'],
+        journey: 'Login',
+        match: ['#/service/Login', '?journey', '?journey=Login'],
     },
     register: {
         journey: 'Registration',
@@ -14970,8 +14970,14 @@ function initialize$6(customJourneys) {
     if (customJourneys) {
         // Provide developer feedback if customized
         journeyConfigSchema.parse(customJourneys);
-        configuredJourneysStore.set(Object.keys(customJourneys).map((key) => ({
-            ...customJourneys[key],
+        // Merge the two journey configs, dev's overwriting the default
+        const mergedJourneyObjects = {
+            ...defaultJourneys,
+            ...customJourneys,
+        };
+        const customJourneyKeys = Object.keys(mergedJourneyObjects);
+        configuredJourneysStore.set((customJourneyKeys).map((key) => ({
+            ...mergedJourneyObjects[key],
             key,
         })));
     }
@@ -17322,6 +17328,15 @@ function initializeStack(initOptions) {
     const { update, set, subscribe } = writable(initialValue);
     // Assign to exported variable (see bottom of file)
     stack = {
+        latest: async () => {
+            return new Promise((resolve) => {
+                // subscribe, grab the current value and unsubscribe
+                subscribe((current) => {
+                    const lastItem = current[current.length - 1];
+                    resolve(lastItem);
+                })();
+            });
+        },
         pop: async () => {
             return new Promise((resolve) => {
                 update((current) => {
@@ -17373,7 +17388,6 @@ const journeyStore = writable({
 });
 function initialize$4(initOptions) {
     const stack = initializeStack();
-    let restartOptions;
     let stepNumber = 0;
     async function next(prevStep = null, nextOptions, resumeUrl) {
         if (!Config.get().serverConfig?.baseUrl) {
@@ -17387,14 +17401,6 @@ function initialize$4(initOptions) {
             ...initOptions,
             ...nextOptions,
         };
-        // These options are reserved only for restarting a journey after failure
-        if (initOptions || nextOptions) {
-            restartOptions = {
-                // Prioritize next options over initialize options
-                ...initOptions,
-                ...nextOptions,
-            };
-        }
         /**
          * Save previous step information just in case we have a total
          * form failure due to 400 response from ForgeRock.
@@ -17481,6 +17487,7 @@ function initialize$4(initOptions) {
             /**
              * SUCCESSFUL COMPLETION BLOCK
              */
+            stack.reset();
             // Set final state
             journeyStore.set({
                 completed: true,
@@ -17504,6 +17511,7 @@ function initialize$4(initOptions) {
                 /**
                  * Restart tree to get fresh step
                  */
+                const restartOptions = await stack.latest();
                 restartedStep = await FRAuth$1.next(undefined, restartOptions);
             }
             catch (err) {
@@ -17639,6 +17647,18 @@ function initialize$4(initOptions) {
         await next(undefined, resumeOptions, url);
     }
     async function start(startOptions) {
+        const configTree = Config.get().tree;
+        // If no tree is passed in, but there's a configured default tree, use that
+        if (!startOptions?.tree && configTree) {
+            if (startOptions) {
+                startOptions.tree = configTree;
+            }
+            else {
+                startOptions = {
+                    tree: configTree,
+                };
+            }
+        }
         await stack.push(startOptions);
         await next(undefined, startOptions);
     }
@@ -17881,8 +17901,6 @@ function widgetApiFactory(componentApi) {
         journeyStore.reset();
         oauthStore.reset();
         userStore.reset();
-        // Fetch fresh journey step
-        journey().start();
     }
     const configuration = (options) => {
         if (options?.forgerock) {
@@ -20653,18 +20671,36 @@ function getValidationMessageString(policy) {
         }
         case 'cannot-contain-characters': {
             const params = policy?.params;
-            const chars = params?.forbiddenChars.reduce((prev, curr) => {
-                prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
-                return prev;
-            }, '');
+            let chars = '';
+            if (typeof params !== 'object') {
+                return '';
+            }
+            if (Array.isArray(params.forbiddenChars)) {
+                chars = params.forbiddenChars.reduce((prev, curr) => {
+                    prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
+                    return prev;
+                }, '');
+            }
+            else if (typeof params.forbiddenChars === 'string') {
+                chars = params.forbiddenChars;
+            }
             return interpolate('fieldCanNotContainFollowingCharacters', { chars });
         }
         case 'cannot-contain-others': {
             const params = policy?.params;
-            const fields = params?.disallowedFields?.reduce((prev, curr) => {
-                prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
-                return prev;
-            }, '');
+            let fields = '';
+            if (typeof params !== 'object') {
+                return '';
+            }
+            if (Array.isArray(params.disallowedFields)) {
+                fields = params.disallowedFields?.reduce((prev, curr) => {
+                    prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
+                    return prev;
+                }, '');
+            }
+            else if (typeof params.disallowedFields === 'string') {
+                fields = params.disallowedFields;
+            }
             return interpolate('fieldCanNotContainFollowingValues', { fields });
         }
         case 'maximum-length': {
@@ -29214,17 +29250,17 @@ class Select_idp extends SvelteComponent {
 
 function get_each_context_1(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[10] = list[i];
+	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
 function get_each_context$4(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[7] = list[i];
+	child_ctx[8] = list[i];
 	return child_ctx;
 }
 
-// (34:33) 
+// (35:51) 
 function create_if_block_1$6(ctx) {
 	let div;
 	let p;
@@ -29234,7 +29270,7 @@ function create_if_block_1$6(ctx) {
 	let div_id_value;
 	let current;
 	t0 = new Locale_strings({ props: { key: /*messageKey*/ ctx[1] } });
-	let each_value_1 = /*validationRules*/ ctx[2];
+	let each_value_1 = /*validationRules*/ ctx[3];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value_1.length; i += 1) {
@@ -29276,8 +29312,8 @@ function create_if_block_1$6(ctx) {
 			if (dirty & /*messageKey*/ 2) t0_changes.key = /*messageKey*/ ctx[1];
 			t0.$set(t0_changes);
 
-			if (dirty & /*validationRules*/ 4) {
-				each_value_1 = /*validationRules*/ ctx[2];
+			if (dirty & /*validationRules*/ 8) {
+				each_value_1 = /*validationRules*/ ctx[3];
 				let i;
 
 				for (i = 0; i < each_value_1.length; i += 1) {
@@ -29320,7 +29356,7 @@ function create_if_block_1$6(ctx) {
 	};
 }
 
-// (23:0) {#if simplifiedFailures.length}
+// (24:0) {#if simplifiedFailures.length}
 function create_if_block$8(ctx) {
 	let div;
 	let p;
@@ -29330,7 +29366,7 @@ function create_if_block$8(ctx) {
 	let div_id_value;
 	let current;
 	t0 = new Locale_strings({ props: { key: /*messageKey*/ ctx[1] } });
-	let each_value = /*simplifiedFailures*/ ctx[3];
+	let each_value = /*simplifiedFailures*/ ctx[4];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
@@ -29372,8 +29408,8 @@ function create_if_block$8(ctx) {
 			if (dirty & /*messageKey*/ 2) t0_changes.key = /*messageKey*/ ctx[1];
 			t0.$set(t0_changes);
 
-			if (dirty & /*simplifiedFailures*/ 8) {
-				each_value = /*simplifiedFailures*/ ctx[3];
+			if (dirty & /*simplifiedFailures*/ 16) {
+				each_value = /*simplifiedFailures*/ ctx[4];
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -29416,10 +29452,10 @@ function create_if_block$8(ctx) {
 	};
 }
 
-// (40:6) {#each validationRules as rule}
+// (41:6) {#each validationRules as rule}
 function create_each_block_1(ctx) {
 	let li;
-	let t_value = /*rule*/ ctx[10].message + "";
+	let t_value = /*rule*/ ctx[11].message + "";
 	let t;
 
 	return {
@@ -29433,7 +29469,7 @@ function create_each_block_1(ctx) {
 			append(li, t);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*validationRules*/ 4 && t_value !== (t_value = /*rule*/ ctx[10].message + "")) set_data(t, t_value);
+			if (dirty & /*validationRules*/ 8 && t_value !== (t_value = /*rule*/ ctx[11].message + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(li);
@@ -29441,10 +29477,10 @@ function create_each_block_1(ctx) {
 	};
 }
 
-// (29:6) {#each simplifiedFailures as failure}
+// (30:6) {#each simplifiedFailures as failure}
 function create_each_block$4(ctx) {
 	let li;
-	let t_value = /*failure*/ ctx[7].message + "";
+	let t_value = /*failure*/ ctx[8].message + "";
 	let t;
 
 	return {
@@ -29458,7 +29494,7 @@ function create_each_block$4(ctx) {
 			append(li, t);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*simplifiedFailures*/ 8 && t_value !== (t_value = /*failure*/ ctx[7].message + "")) set_data(t, t_value);
+			if (dirty & /*simplifiedFailures*/ 16 && t_value !== (t_value = /*failure*/ ctx[8].message + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(li);
@@ -29475,8 +29511,8 @@ function create_fragment$g(ctx) {
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (/*simplifiedFailures*/ ctx[3].length) return 0;
-		if (/*validationRules*/ ctx[2].length) return 1;
+		if (/*simplifiedFailures*/ ctx[4].length) return 0;
+		if (/*showPolicies*/ ctx[2] && /*validationRules*/ ctx[3].length) return 1;
 		return -1;
 	}
 
@@ -29557,6 +29593,7 @@ function instance$g($$self, $$props, $$invalidate) {
 	let { key = undefined } = $$props;
 	let { label } = $$props;
 	let { messageKey } = $$props;
+	let { showPolicies = false } = $$props;
 	let validationFailures = getValidationFailures(callback, label);
 	let validationRules = getValidationPolicies(callback.getPolicies());
 
@@ -29569,19 +29606,20 @@ function instance$g($$self, $$props, $$invalidate) {
 	);
 
 	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(4, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(5, callback = $$props.callback);
 		if ('key' in $$props) $$invalidate(0, key = $$props.key);
-		if ('label' in $$props) $$invalidate(5, label = $$props.label);
+		if ('label' in $$props) $$invalidate(6, label = $$props.label);
 		if ('messageKey' in $$props) $$invalidate(1, messageKey = $$props.messageKey);
+		if ('showPolicies' in $$props) $$invalidate(2, showPolicies = $$props.showPolicies);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, label, validationFailures*/ 112) {
+		if ($$self.$$.dirty & /*callback, label, validationFailures*/ 224) {
 			{
-				$$invalidate(6, validationFailures = getValidationFailures(callback, label));
-				$$invalidate(2, validationRules = getValidationPolicies(callback.getPolicies()));
+				$$invalidate(7, validationFailures = getValidationFailures(callback, label));
+				$$invalidate(3, validationRules = getValidationPolicies(callback.getPolicies()));
 
-				$$invalidate(3, simplifiedFailures = validationFailures.reduce(
+				$$invalidate(4, simplifiedFailures = validationFailures.reduce(
 					(prev, curr) => {
 						prev = prev.concat(curr.restructured);
 						return prev;
@@ -29595,6 +29633,7 @@ function instance$g($$self, $$props, $$invalidate) {
 	return [
 		key,
 		messageKey,
+		showPolicies,
 		validationRules,
 		simplifiedFailures,
 		callback,
@@ -29608,10 +29647,11 @@ class Policies extends SvelteComponent {
 		super();
 
 		init(this, options, instance$g, create_fragment$g, safe_not_equal, {
-			callback: 4,
+			callback: 5,
 			key: 0,
-			label: 5,
-			messageKey: 1
+			label: 6,
+			messageKey: 1,
+			showPolicies: 2
 		});
 	}
 }
@@ -30439,7 +30479,8 @@ function create_default_slot$7(ctx) {
 			props: {
 				callback: /*callback*/ ctx[0],
 				label: /*prompt*/ ctx[3],
-				messageKey: "passwordRequirements"
+				messageKey: "passwordRequirements",
+				showPolicies: true
 			}
 		});
 
@@ -33480,7 +33521,7 @@ function get_each_context$1(ctx, list, i) {
 	return child_ctx;
 }
 
-// (44:2) {#if form?.icon}
+// (41:2) {#if form?.icon}
 function create_if_block_2$2(ctx) {
 	let div;
 	let newusericon;
@@ -33520,7 +33561,7 @@ function create_if_block_2$2(ctx) {
 	};
 }
 
-// (59:2) {#if form.message}
+// (56:2) {#if form.message}
 function create_if_block_1$2(ctx) {
 	let alert;
 	let current;
@@ -33568,7 +33609,7 @@ function create_if_block_1$2(ctx) {
 	};
 }
 
-// (60:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (57:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
 	let t;
@@ -33589,7 +33630,7 @@ function create_default_slot_2$1(ctx) {
 	};
 }
 
-// (65:2) {#each step?.callbacks as callback, idx}
+// (62:2) {#each step?.callbacks as callback, idx}
 function create_each_block$1(ctx) {
 	let callbackmapper;
 	let current;
@@ -33642,7 +33683,7 @@ function create_each_block$1(ctx) {
 	};
 }
 
-// (77:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+// (74:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
 function create_if_block$3(ctx) {
 	let button;
 	let current;
@@ -33691,7 +33732,7 @@ function create_if_block$3(ctx) {
 	};
 }
 
-// (78:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (75:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$2(ctx) {
 	let t;
 	let current;
@@ -33721,7 +33762,7 @@ function create_default_slot_1$2(ctx) {
 	};
 }
 
-// (43:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (40:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$3(ctx) {
 	let t0;
 	let h1;
@@ -34090,7 +34131,7 @@ class Registration extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/username-password.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/login.svelte generated by Svelte v3.55.1 */
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -34099,7 +34140,7 @@ function get_each_context(ctx, list, i) {
 	return child_ctx;
 }
 
-// (44:2) {#if form?.icon}
+// (41:2) {#if form?.icon}
 function create_if_block_2$1(ctx) {
 	let div;
 	let keyicon;
@@ -34139,7 +34180,7 @@ function create_if_block_2$1(ctx) {
 	};
 }
 
-// (53:2) {#if form?.message}
+// (50:2) {#if form?.message}
 function create_if_block_1$1(ctx) {
 	let alert;
 	let current;
@@ -34187,7 +34228,7 @@ function create_if_block_1$1(ctx) {
 	};
 }
 
-// (54:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (51:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
 	let t;
@@ -34208,7 +34249,7 @@ function create_default_slot_2(ctx) {
 	};
 }
 
-// (59:2) {#each step?.callbacks as callback, idx}
+// (56:2) {#each step?.callbacks as callback, idx}
 function create_each_block(ctx) {
 	let callbackmapper;
 	let current;
@@ -34261,7 +34302,7 @@ function create_each_block(ctx) {
 	};
 }
 
-// (71:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+// (68:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
 function create_if_block$2(ctx) {
 	let button;
 	let current;
@@ -34310,7 +34351,7 @@ function create_if_block$2(ctx) {
 	};
 }
 
-// (72:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (69:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$1(ctx) {
 	let t;
 	let current;
@@ -34340,7 +34381,7 @@ function create_default_slot_1$1(ctx) {
 	};
 }
 
-// (43:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (40:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$2(ctx) {
 	let t0;
 	let h1;
@@ -34742,7 +34783,7 @@ function instance$2($$self, $$props, $$invalidate) {
 	];
 }
 
-class Username_password extends SvelteComponent {
+class Login extends SvelteComponent {
 	constructor(options) {
 		super();
 
@@ -34770,10 +34811,10 @@ function mapStepToStage(currentStep) {
     switch (currentStep?.getStage && currentStep.getStage()) {
         case 'OneTimePassword':
             return One_time_password;
-        case 'Registration':
+        case 'DefaultRegistration':
             return Registration;
-        case 'UsernamePassword':
-            return Username_password;
+        case 'DefaultLogin':
+            return Login;
         default:
             return Generic;
     }

@@ -61,8 +61,27 @@
           timeout: 5000,
         },
         realmPath: 'alpha',
+        tree: 'Registration',
       },
       content,
+      journeys: {
+        forgotPassword: {
+          journey: 'TEST_ResetPasword',
+          match: ['#/service/TEST_ResetPassword', '?journey=TEST_ResetPassword', '#/service/ResetPassword', '?journey=ResetPassword'],
+        },
+        forgotUsername: {
+          journey: 'TEST_ForgottenUsername',
+          match: ['#/service/TEST_ForgottenUsername', '?journey=TEST_ForgottenUsername', '#/service/ForgottenUsername', '?journey=ForgottenUsername']
+        },
+        login: {
+          journey: 'TEST_Login',
+          match: ['#/service/TEST_Login', '?journey', '?journey=TEST_Login', '#/service/Login', '?journey', '?journey=Login'],
+        },
+        register: {
+          journey: 'TEST_Registration',
+          match: ['#/service/TEST_Registration', '?journey=TEST_Registration', '#/service/Registration', '?journey=Registration'],
+        },
+      },
       links: {
         termsAndConditions: 'https://www.forgerock.com/terms',
       },

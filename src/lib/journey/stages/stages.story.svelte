@@ -10,7 +10,7 @@
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import { initCheckValidation } from './_utilities/step.utilities';
   import { initialize as initializeStyles, partialStyleSchema } from '$lib/style.store';
-  import UsernamePassword from './username-password.svelte';
+  import Login from './login.svelte';
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
@@ -51,9 +51,9 @@
 <Centered>
   {#if stage === 'OneTimePassword'}
     <OneTimePassword {form} {journey} {metadata} {step} />
-  {:else if stage === 'UsernamePassword'}
-    <UsernamePassword {form} {journey} {metadata} {step} />
-  {:else if stage === 'Registration'}
+  {:else if stage === 'DefaultLogin'}
+    <Login {form} {journey} {metadata} {step} />
+  {:else if stage === 'DefaultRegistration'}
     <Registration {form} {journey} {metadata} {step} />
   {:else}
     <Generic {form} {journey} {metadata} {step} />

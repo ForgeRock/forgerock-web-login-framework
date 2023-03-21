@@ -1,7 +1,7 @@
 import Generic from '$journey/stages/generic.svelte';
 import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import Registration from '$journey/stages/registration.svelte';
-import UsernamePassword from '$journey/stages/username-password.svelte';
+import Login from '$journey/stages/login.svelte';
 
 import type { StepTypes } from '$journey/journey.interfaces';
 
@@ -19,10 +19,10 @@ export function mapStepToStage(currentStep: StepTypes) {
   switch (currentStep?.getStage && currentStep.getStage()) {
     case 'OneTimePassword':
       return OneTimePassword;
-    case 'Registration':
+    case 'DefaultRegistration':
       return Registration;
-    case 'UsernamePassword':
-      return UsernamePassword;
+    case 'DefaultLogin':
+      return Login;
     default:
       return Generic;
   }

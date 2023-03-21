@@ -596,12 +596,12 @@ text-align: center;
 .tw_text-right {
 text-align: right;
 }
-.tw_text-sm {
-font-size: 0.875rem;
-line-height: 1.25;
-}
 .tw_text-base {
 font-size: 0.9375rem;
+line-height: 1.25;
+}
+.tw_text-sm {
+font-size: 0.875rem;
 line-height: 1.25;
 }
 .tw_text-4xl {

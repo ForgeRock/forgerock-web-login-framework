@@ -54,5 +54,5 @@
   showMessage={isInvalid}
   {style}
 >
-  <Policies {callback} label={prompt} messageKey="passwordRequirements" />
+  <Policies {callback} label={prompt} messageKey="passwordRequirements" showPolicies={true} />
 </Base>

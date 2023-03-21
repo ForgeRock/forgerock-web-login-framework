@@ -16,7 +16,12 @@ import { initialize as initializeUser } from '$lib/user/user.store';
 import { initialize as initializeStyle } from '$lib/style.store';
 
 import type { componentApi as _componentApi } from './component.utilities';
-import type { JourneyOptions, JourneyOptionsChange, JourneyOptionsStart, WidgetConfigOptions } from '../interfaces';
+import type {
+  JourneyOptions,
+  JourneyOptionsChange,
+  JourneyOptionsStart,
+  WidgetConfigOptions,
+} from '../interfaces';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
 import type { UserStore, UserStoreValue } from '$lib/user/user.store';
@@ -38,9 +43,6 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     journeyStore.reset();
     oauthStore.reset();
     userStore.reset();
-
-    // Fetch fresh journey step
-    journey().start();
   }
 
   const configuration = (options?: WidgetConfigOptions) => {

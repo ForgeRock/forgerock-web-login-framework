@@ -14,9 +14,7 @@
   "types": "./index.d.ts",
   "typesVersions": {
     "*": {
-      "index": [
-        "./index.d.ts"
-      ]
+      "index": ["./index.d.ts"]
     }
   },
   "dependencies": {},
