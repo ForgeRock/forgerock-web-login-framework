@@ -143,18 +143,38 @@ function getValidationMessageString(policy: Policy) {
     }
     case 'cannot-contain-characters': {
       const params = policy?.params as { forbiddenChars: string[] };
-      const chars = params?.forbiddenChars.reduce((prev, curr) => {
-        prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
-        return prev;
-      }, '');
+      let chars = '';
+
+      if (typeof params !== 'object') {
+        return '';
+      }
+
+      if (Array.isArray(params.forbiddenChars)) {
+        chars = params.forbiddenChars.reduce((prev, curr) => {
+          prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
+          return prev;
+        }, '');
+      } else if (typeof params.forbiddenChars === 'string') {
+        chars = params.forbiddenChars;
+      }
       return interpolate('fieldCanNotContainFollowingCharacters', { chars });
     }
     case 'cannot-contain-others': {
       const params = policy?.params as { disallowedFields: string[] };
-      const fields = params?.disallowedFields?.reduce((prev, curr) => {
-        prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
-        return prev;
-      }, '');
+      let fields = '';
+
+      if (typeof params !== 'object') {
+        return '';
+      }
+
+      if (Array.isArray(params.disallowedFields)) {
+        fields = params.disallowedFields?.reduce((prev, curr) => {
+          prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
+          return prev;
+        }, '');
+      } else if (typeof params.disallowedFields === 'string') {
+        fields = params.disallowedFields;
+      }
       return interpolate('fieldCanNotContainFollowingValues', { fields });
     }
     case 'maximum-length': {
@@ -219,6 +239,7 @@ export function getValidationPolicies(policies: StringDict<unknown>): Policy[] {
   if (!Array.isArray(reqs)) {
     return [];
   }
+
   return reqs
     .map((policy) => {
       return {

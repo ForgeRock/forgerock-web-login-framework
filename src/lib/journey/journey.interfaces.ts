@@ -52,6 +52,7 @@ export interface JourneyStoreValue {
   response: Maybe<Step>;
 }
 export interface StackStore extends Pick<Writable<StepOptions[]>, 'subscribe'> {
+  latest: () => Promise<StepOptions>;
   pop: () => Promise<StepOptions[]>;
   push: (options?: StepOptions) => Promise<StepOptions[]>;
   reset: () => void;

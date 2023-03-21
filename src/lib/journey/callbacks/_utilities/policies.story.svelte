@@ -19,5 +19,5 @@
 </script>
 
 <Centered>
-  <Policies {callback} key="password-policies" {label} {messageKey} />
+  <Policies {callback} key="password-policies" {label} {messageKey} showPolicies={true} />
 </Centered>

@@ -48,9 +48,6 @@
       form?.submit();
     }
   }
-  function returnCallback(callback: any) {
-    return callback as never;
-  }
 
   afterUpdate(() => {
     alertNeedsFocus = !!form?.message;

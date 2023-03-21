@@ -1,15 +1,17 @@
 import { writable, type Writable } from 'svelte/store';
 import { z } from 'zod';
 
-export const journeyConfigItemSchema = z.object({
-  journey: z.string().optional(),
-  match: z
-    .string()
-    .regex(/^(#\/service|\?journey)/, {
-      message: 'HREF string must start with `?journey` or `#/service`',
-    })
-    .array(),
-});
+export const journeyConfigItemSchema = z
+  .object({
+    journey: z.string().optional(),
+    match: z
+      .string()
+      .regex(/^(#\/service|\?journey)/, {
+        message: 'HREF string must start with `?journey` or `#/service`',
+      })
+      .array(),
+  })
+  .optional();
 export const journeyConfigSchema = z.object({
   forgotPassword: journeyConfigItemSchema,
   forgotUsername: journeyConfigItemSchema,
@@ -31,8 +33,8 @@ const defaultJourneys = {
     match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
   },
   login: {
-    journey: undefined,
-    match: ['#/service/Login', '?journey'],
+    journey: 'Login',
+    match: ['#/service/Login', '?journey', '?journey=Login'],
   },
   register: {
     journey: 'Registration',
@@ -55,9 +57,16 @@ export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> 
     // Provide developer feedback if customized
     journeyConfigSchema.parse(customJourneys);
 
+    // Merge the two journey configs, dev's overwriting the default
+    const mergedJourneyObjects = {
+      ...defaultJourneys,
+      ...customJourneys,
+    };
+    const customJourneyKeys = Object.keys(mergedJourneyObjects) as JourneyKeys[];
+
     configuredJourneysStore.set(
-      (Object.keys(customJourneys) as JourneyKeys[]).map((key) => ({
-        ...customJourneys[key],
+      customJourneyKeys.map((key) => ({
+        ...mergedJourneyObjects[key],
         key,
       })),
     );

@@ -245,7 +245,7 @@ export const step3 = new FRStep({
       _id: 1,
     },
   ],
-  stage: 'UsernamePassword',
+  stage: 'DefaultLogin',
   header: 'Sign In',
   description:
     'New here? <a href="#/service/Registration">Create an account</a><br><a href="#/service/ForgottenUsername">Forgot username?</a><a href="#/service/ResetPassword"> Forgot password?</a>',
