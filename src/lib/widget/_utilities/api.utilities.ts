@@ -296,7 +296,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     configuration,
     getStores,
     journey,
-    request: HttpClient.request,
+    request: HttpClient.request.bind(HttpClient),
     user,
   };
 }
