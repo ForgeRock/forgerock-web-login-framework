@@ -14926,7 +14926,8 @@ function configure (config) {
     Config.set(config);
 }
 
-const journeyConfigItemSchema = z.object({
+const journeyConfigItemSchema = z
+    .object({
     journey: z.string().optional(),
     match: z
         .string()
@@ -14934,7 +14935,8 @@ const journeyConfigItemSchema = z.object({
         message: 'HREF string must start with `?journey` or `#/service`',
     })
         .array(),
-}).optional();
+})
+    .optional();
 const journeyConfigSchema = z.object({
     forgotPassword: journeyConfigItemSchema,
     forgotUsername: journeyConfigItemSchema,
@@ -14976,7 +14978,7 @@ function initialize$6(customJourneys) {
             ...customJourneys,
         };
         const customJourneyKeys = Object.keys(mergedJourneyObjects);
-        configuredJourneysStore.set((customJourneyKeys).map((key) => ({
+        configuredJourneysStore.set(customJourneyKeys.map((key) => ({
             ...mergedJourneyObjects[key],
             key,
         })));

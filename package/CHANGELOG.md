@@ -1,3 +1,10 @@
+# [1.0.0-beta.9](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2023-03-21)
+
+
+### Bug Fixes
+
+* **journeys:** fix stages, journey restarts & config, policy display, remove restart after logout ([ac0c9aa](https://github.com/forgerock/forgerock-web-login-framework/commit/ac0c9aaccf0359c36614a6199af7a64cfa9615e2))
+
 # [1.0.0-beta.8](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.7...v1.0.0-beta.8) (2023-03-15)
 
 ### Bug Fixes
