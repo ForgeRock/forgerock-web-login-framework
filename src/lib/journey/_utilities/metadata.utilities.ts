@@ -13,7 +13,7 @@ import {
 /**
  * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
  * @param {object} step - The modified Widget step object
- * @param checkValidation - function that checks if current callback is the first invalid callback
+ * @param {function} checkValidation - function that checks if current callback is the first invalid callback
  * @returns {array}
  */
 export function buildCallbackMetadata(

@@ -26,6 +26,17 @@ import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interface
 import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
 import type { UserStore, UserStoreValue } from '$lib/user/user.store';
 
+/**
+ * @function widgetApiFactory - Creates the widget API
+ * @param {object} componentApi - The component API
+ * @returns {object} - The widget API
+ * @property {object} componentApi - The component API for either inline or modal
+ * @property {object} configuration - Sets the configuration for the widget
+ * @property {function} getStores - Returns the stores: journeyStore, oauthStore, userStore
+ * @property {object} journey - the journey API
+ * @property {function} request - The HttpClient.request function from the SDK
+ * @property {object} user - the user API
+ */
 export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>) {
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;

@@ -40,6 +40,12 @@ const fallbackStyles = {
 
 export const styleStore: Writable<z.infer<typeof partialStyleSchema>> = writable(fallbackStyles);
 
+/**
+ * @function initialize - Initialize the style store
+ * @param {object} customStyle - An object of custom styles to merge with the default
+ * @returns {object} - The style store
+ * @example initialize({ checksAndRadios: 'standard' });
+ */
 export function initialize(customStyle?: z.infer<typeof partialStyleSchema>) {
   if (customStyle) {
     styleSchema.parse(customStyle);

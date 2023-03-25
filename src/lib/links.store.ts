@@ -10,6 +10,12 @@ export const linksSchema = z
 export const partialLinksSchema = linksSchema.partial();
 export const linksStore: Writable<z.infer<typeof partialLinksSchema> | undefined> = writable();
 
+/**
+ * @function initialize - Initialize the links store
+ * @param {object} customLinks - An object of custom links to merge with the default
+ * @returns {object} - The links store
+ * @example initialize({ termsAndConditions: 'https://example.com/terms' });
+ */
 export function initialize(customLinks?: z.infer<typeof partialLinksSchema>) {
   // If customLinks is provided, provide feedback for object
   if (customLinks) {

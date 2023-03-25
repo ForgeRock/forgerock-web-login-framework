@@ -45,6 +45,11 @@ type ValidatedCallbacks =
  * NEW "NORMALIZED" METHODS
  */
 
+/**
+ * @function getInputTypeFromPolicies - Determines the type of input to use based on the policies object
+ * @param {object} policies - The policies object from the callback
+ * @returns {string} - The type of input to use
+ */
 export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email' | 'text' {
   const value = policies?.value as Policies;
   if (typeof value !== 'object') {
@@ -66,6 +71,11 @@ export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email'
   return 'text';
 }
 
+/**
+ * @function getValidationFailureParams - Gets the validation failure params from the failed policy object
+ * @param {object} failedPolicy - The failed policy object from the callback
+ * @returns {array} - An array of objects containing the length, message, and rule
+ */
 export function getValidationFailureParams(
   failedPolicy: PolicyRequirement | undefined,
 ): RestructuredParam[] {
@@ -129,6 +139,11 @@ export function getValidationFailureParams(
   }
 }
 
+/**
+ * @function getValidationMessageString - Gets the validation message string from the policy object
+ * @param {object} policy - The policy object from the callback
+ * @returns {string} - The validation message string
+ */
 function getValidationMessageString(policy: Policy) {
   switch (policy?.policyId) {
     case 'at-least-X-capitals': {
@@ -217,6 +232,12 @@ function getValidationMessageString(policy: Policy) {
   }
 }
 
+/**
+ * @function getValidationFailures - Gets the validation failures from the callback object
+ * @param {object} callback - The callback object from the server
+ * @param {string} label - The label of the field
+ * @returns {array} - An array of failed policies
+ */
 export function getValidationFailures(callback: ValidatedCallbacks, label: string): FailedPolicy[] {
   const failedPolicies = callback.getFailedPolicies && callback.getFailedPolicies();
   const parsedPolicies = parseFailedPolicies(failedPolicies, label);
@@ -230,6 +251,11 @@ export function getValidationFailures(callback: ValidatedCallbacks, label: strin
   });
 }
 
+/**
+ * @function getValidationPolicies - Gets the validation policies from the callback object
+ * @param {object} policies - The policies object from the callback
+ * @returns {array} - An array of policies
+ */
 export function getValidationPolicies(policies: StringDict<unknown>): Policy[] {
   if (typeof policies !== 'object' && !policies) {
     return [];
@@ -251,6 +277,11 @@ export function getValidationPolicies(policies: StringDict<unknown>): Policy[] {
     .filter((policy) => !!policy.message);
 }
 
+/**
+ * @function isInputRequired - Checks if the input is required
+ * @param {object} callback - The callback object from the server
+ * @returns {boolean} - Whether the input is required
+ */
 export function isInputRequired(callback: ValidatedCallbacks): boolean {
   const policies = callback.getPolicies && callback.getPolicies();
 
@@ -265,6 +296,11 @@ export function isInputRequired(callback: ValidatedCallbacks): boolean {
   return isRequired;
 }
 
+/**
+ * @function convertCharacterSetToRuleObj - Converts a character set to a rule object
+ * @param {string} set - The character set to convert
+ * @returns {object} - The rule object
+ */
 function convertCharacterSetToRuleObj(set: string) {
   const arr = set.split(':');
   const num = arr[0];
@@ -303,6 +339,12 @@ function convertCharacterSetToRuleObj(set: string) {
   }
 }
 
+/**
+ * @function parseFailedPolicies - Parses the failed policies from the callback object
+ * @param {array} policies - The policies array from the callback
+ * @param {string} label - The label of the field
+ * @returns {array} - An array of failed policies
+ */
 export function parseFailedPolicies(
   policies: unknown[],
   label: string,
@@ -320,10 +362,11 @@ export function parseFailedPolicies(
   });
 }
 
-/** *********************************************
- * OLD METHODS
+/**
+ * @function getAttributeValidationFailureText - Gets the validation failure text from the callback object
+ * @param {object} callback - The callback object from the server
+ * @returns {string} - The validation failure text
  */
-
 export function getAttributeValidationFailureText(
   callback: AttributeInputCallback<boolean | number | string>,
 ): string {
@@ -338,6 +381,12 @@ export function getAttributeValidationFailureText(
   }, '');
 }
 
+/**
+ * @function getPasswordValidationFailureText - Gets the validation failure text from the callback object
+ * @param {object} callback - The callback object from the server
+ * @param {string} label - The label of the field
+ * @returns {string} - The validation failure text
+ */
 export function getPasswordValidationFailureText(
   callback: ValidatedCreatePasswordCallback,
   label: string,
@@ -362,6 +411,12 @@ export function getPasswordValidationFailureText(
   }, '');
 }
 
+/**
+ * @function getUsernameValidationFailureText - Gets the validation failure text from the callback object
+ * @param {object} callback - The callback object from the server
+ * @param {string} label - The label of the field
+ * @returns {string} - The validation failure text
+ */
 export function getUsernameValidationFailureText(
   callback: ValidatedCreateUsernameCallback,
   label: string,

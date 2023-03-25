@@ -5,14 +5,12 @@ import Login from '$journey/stages/login.svelte';
 
 import type { StepTypes } from '$journey/journey.interfaces';
 
+/**
+ * @function mapStepToStage - Maps the current step to the proper stage component.
+ * @param {object} currentStep - The current step to check
+ * @returns {object} - The stage Svelte component
+ */
 export function mapStepToStage(currentStep: StepTypes) {
-  /** *********************************************************************
-   * SDK INTEGRATION POINT
-   * Summary:SDK step method for getting the stage value
-   * ----------------------------------------------------------------------
-   * Details: This method is helpful in quickly identifying the stage
-   * when you want to provide special layout or handling of the form
-   ********************************************************************* */
   if (!currentStep || currentStep.type !== 'Step') {
     return Generic;
   }

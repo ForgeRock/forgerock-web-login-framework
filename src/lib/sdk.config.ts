@@ -99,6 +99,11 @@ const configSchema = z
   .strict();
 export const partialConfigSchema = configSchema.partial();
 
+/**
+ * @function - Sets the configuration for the SDK
+ * @param {object} config - The configuration object
+ * @returns {void}
+ */
 export default function (config: z.infer<typeof partialConfigSchema>) {
   configSchema.parse(config);
   Config.set(config);

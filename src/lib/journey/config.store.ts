@@ -52,6 +52,12 @@ const fallbackJourneyConfig = (Object.keys(defaultJourneys) as JourneyKeys[]).ma
 
 export const configuredJourneysStore: Writable<StoreItem[]> = writable(fallbackJourneyConfig);
 
+/**
+ * @function initialize - Initialize the configured journeys store
+ * @param {object} customJourneys - An object of custom journeys to merge with the default
+ * @returns {object} - The configured journeys store
+ * @example initialize({ login: { journey: 'Login', match: ['?journey=Login'] } })
+ */
 export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> | null) {
   if (customJourneys) {
     // Provide developer feedback if customized

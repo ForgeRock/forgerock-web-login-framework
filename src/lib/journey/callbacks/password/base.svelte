@@ -50,13 +50,6 @@
    */
   function setValue(event: Event) {
     value = (event.target as HTMLInputElement).value
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setInputValue(value);
   }
   /**

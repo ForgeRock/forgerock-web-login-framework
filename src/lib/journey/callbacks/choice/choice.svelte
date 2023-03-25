@@ -45,24 +45,10 @@
    * @param {Object} event
    */
   function setValue(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setChoiceIndex(Number((event.target as HTMLSelectElement).value));
   }
 
   $: {
-    /** *************************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for getting values
-     * --------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for accessing values from the callbacks received from AM
-     ************************************************************************* */
     choiceOptions = callback.getChoices()?.map((text, idx) => ({
       /**
        * Since locale content keys for the choice component are built off of the
