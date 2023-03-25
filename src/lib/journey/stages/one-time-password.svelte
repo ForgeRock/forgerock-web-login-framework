@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { FRStep } from '@forgerock/javascript-sdk';
-  import { afterUpdate, onMount } from 'svelte';
+  import { afterUpdate } from 'svelte';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -21,11 +21,10 @@
     StageJourneyObject,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import { captureLinks } from './_utilities/stage.utilities';
   import type { Maybe } from '$lib/interfaces';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
-  // New API
+  export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
@@ -58,19 +57,21 @@
 </script>
 
 <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-  {#if form?.icon}
-    <div class="tw_flex tw_justify-center">
-      <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
-    </div>
+  {#if componentStyle !== 'inline'}
+    {#if form?.icon}
+      <div class="tw_flex tw_justify-center">
+        <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+      </div>
+    {/if}
+    <h1 class="tw_primary-header dark:tw_primary-header_dark">
+      <T key="twoFactorAuthentication" />
+    </h1>
+    <p
+      class="tw_text-center tw_text-sm tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+    >
+      <T key="useTheAuthenticatorAppOnYourPhone" />
+    </p>
   {/if}
-  <h1 class="tw_primary-header dark:tw_primary-header_dark">
-    <T key="twoFactorAuthentication" />
-  </h1>
-  <p
-    class="tw_text-center tw_text-sm tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-  >
-    <T key="useTheAuthenticatorAppOnYourPhone" />
-  </p>
 
   {#if form?.message}
     <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">

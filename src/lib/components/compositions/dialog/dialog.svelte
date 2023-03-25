@@ -74,7 +74,7 @@
   {:else}
     <div
       class={`tw_pt-10 md:tw_pt-10 tw_text-right ${
-        $styleStore?.logo ? 'tw_h-32 md:tw_h-36  tw_pb-6' : ''
+        $styleStore?.logo ? 'tw_h-32 md:tw_h-36 tw_pb-6' : ''
       }`}
     >
       <button

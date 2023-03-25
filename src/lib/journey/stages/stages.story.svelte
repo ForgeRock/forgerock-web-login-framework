@@ -50,12 +50,12 @@
 
 <Centered>
   {#if stage === 'OneTimePassword'}
-    <OneTimePassword {form} {journey} {metadata} {step} />
+    <OneTimePassword componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else if stage === 'DefaultLogin'}
-    <Login {form} {journey} {metadata} {step} />
+    <Login componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else if stage === 'DefaultRegistration'}
-    <Registration {form} {journey} {metadata} {step} />
+    <Registration componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else}
-    <Generic {form} {journey} {metadata} {step} />
+    <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
   {/if}
 </Centered>

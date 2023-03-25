@@ -24,7 +24,7 @@
   import type { Maybe } from '$lib/interfaces';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
-  // New API
+  export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
@@ -52,7 +52,17 @@
     alertNeedsFocus = !!form?.message;
   });
 
-  onMount(() => captureLinks(linkWrapper, journey));
+  onMount(() => {
+    if (componentStyle === 'modal') {
+      captureLinks(linkWrapper, journey);
+    }
+  });
+
+  onMount(() => {
+    if (componentStyle === 'modal') {
+      captureLinks(linkWrapper, journey);
+    }
+  });
 
   $: {
     formMessageKey = convertStringToKey(form?.message);
@@ -60,20 +70,22 @@
 </script>
 
 <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-  {#if form?.icon}
-    <div class="tw_flex tw_justify-center">
-      <NewUserIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
-    </div>
+  {#if componentStyle !== 'inline'}
+    {#if form?.icon}
+      <div class="tw_flex tw_justify-center">
+        <NewUserIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+      </div>
+    {/if}
+    <h1 class="tw_primary-header dark:tw_primary-header_dark">
+      <T key="registerHeader" />
+    </h1>
+    <p
+      bind:this={linkWrapper}
+      class="tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+    >
+      <T key="alreadyHaveAnAccount" html={true} />
+    </p>
   {/if}
-  <h1 class="tw_primary-header dark:tw_primary-header_dark">
-    <T key="registerHeader" />
-  </h1>
-  <p
-    bind:this={linkWrapper}
-    class="tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-  >
-    <T key="alreadyHaveAnAccount" html={true} />
-  </p>
 
   {#if form.message}
     <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">

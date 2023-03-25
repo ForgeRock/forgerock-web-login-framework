@@ -84,7 +84,7 @@
 
 <Box>
   {#if !$userStore.successful}
-    <Journey displayIcon={true} {journeyStore} />
+    <Journey componentStyle="app" displayIcon={true} {journeyStore} />
   {:else}
     <p class="tw_mb-6">User: {name}</p>
     <button

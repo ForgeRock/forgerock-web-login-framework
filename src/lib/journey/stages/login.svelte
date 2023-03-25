@@ -25,7 +25,7 @@
   import type { Maybe } from '$lib/interfaces';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
-  // New API
+  export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
@@ -53,7 +53,11 @@
     alertNeedsFocus = !!form?.message;
   });
 
-  onMount(() => captureLinks(linkWrapper, journey));
+  onMount(() => {
+    if (componentStyle === 'modal') {
+      captureLinks(linkWrapper, journey);
+    }
+  });
 
   $: {
     formMessageKey = convertStringToKey(form?.message);
@@ -61,14 +65,16 @@
 </script>
 
 <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-  {#if form?.icon}
-    <div class="tw_flex tw_justify-center">
-      <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
-    </div>
+  {#if componentStyle !== 'inline'}
+    {#if form?.icon}
+      <div class="tw_flex tw_justify-center">
+        <KeyIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+      </div>
+    {/if}
+    <h1 class="tw_primary-header dark:tw_primary-header_dark">
+      <T key="loginHeader" />
+    </h1>
   {/if}
-  <h1 class="tw_primary-header dark:tw_primary-header_dark">
-    <T key="loginHeader" />
-  </h1>
 
   {#if form?.message}
     <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
@@ -94,30 +100,32 @@
     </Button>
   {/if}
 
-  <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
-    <button
-      on:click|preventDefault={() => {
-        journey.push({ tree: 'ResetPassword' });
-      }}
-    >
-      {interpolate('forgotPassword', null, 'Forgot Password?')}
-    </button>
-    &nbsp;
-    <button
-      on:click|preventDefault={() => {
-        journey.push({ tree: 'ForgottenUsername' });
-      }}
-    >
-      {interpolate('forgotUsername', null, 'Forgot Username?')}
-    </button>
-  </p>
+  {#if componentStyle !== 'inline'}
+    <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
+      <button
+        on:click|preventDefault={() => {
+          journey.push({ tree: 'ResetPassword' });
+        }}
+      >
+        {interpolate('forgotPassword', null, 'Forgot Password?')}
+      </button>
+      &nbsp;
+      <button
+        on:click|preventDefault={() => {
+          journey.push({ tree: 'ForgottenUsername' });
+        }}
+      >
+        {interpolate('forgotUsername', null, 'Forgot Username?')}
+      </button>
+    </p>
 
-  <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
+    <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
 
-  <p
-    bind:this={linkWrapper}
-    class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-  >
-    <T key="dontHaveAnAccount" html={true} />
-  </p>
+    <p
+      bind:this={linkWrapper}
+      class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+    >
+      <T key="dontHaveAnAccount" html={true} />
+    </p>
+  {/if}
 </Form>
