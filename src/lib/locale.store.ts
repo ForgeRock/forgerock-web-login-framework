@@ -78,6 +78,7 @@ export const stringsSchema = z
     twoFactorAuthentication: z.string(),
     useValidEmail: z.string(),
     unrecoverableError: z.string(),
+    unknownLoginError: z.string(),
     unknownNetworkError: z.string(),
     userName: z.string(),
     usernameRequirements: z.string(),
@@ -97,9 +98,10 @@ export const locale: Writable<string | null> = writable('en-US');
 export const stringsStore: Writable<Record<string, string> | null> = writable(null);
 
 /**
- * initialize locale information for Login Widget
- * @param: userLocale - optional locale object to override default locale
- * @returns: a schema which represents the user locale schema
+ * @function initialize - Initialize the locale store
+ * @param {object} userLocale - An object of custom locale strings to merge with the default
+ * @returns {object} - The locale store
+ * @example initialize({ loginHeader: 'Welcome to the login page' });
  */
 export function initialize(userLocale?: z.infer<typeof partialStringsSchema>) {
   if (userLocale) {

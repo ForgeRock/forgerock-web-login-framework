@@ -69,6 +69,7 @@
   "twoFactorAuthentication": "Two factor authentication",
   "useValidEmail": "Please use a valid email address.",
   "unrecoverableError": "There was an error in the form submission.",
+  "unknownLoginError": "Unknown login failure has occurred.",
   "unknownNetworkError": "Unknown network request failure has occurred.",
   "userName": "Username",
   "usernameRequirements": "Username requirements:",
