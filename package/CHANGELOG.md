@@ -1,3 +1,10 @@
+# [1.0.0-beta.10](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2023-03-25)
+
+
+### Bug Fixes
+
+* **index.svelte:** bind http client to request ([460a826](https://github.com/forgerock/forgerock-web-login-framework/commit/460a8269834be31e044fe1239db628b0c28d856b))
+
 # [1.0.0-beta.9](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2023-03-21)
 
 

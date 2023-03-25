@@ -18134,7 +18134,7 @@ function widgetApiFactory(componentApi) {
         configuration,
         getStores,
         journey,
-        request: _default$2.request,
+        request: _default$2.request.bind(_default$2),
         user,
     };
 }
