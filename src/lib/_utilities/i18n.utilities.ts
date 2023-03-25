@@ -11,6 +11,19 @@ import { stringsStore } from '$lib/locale.store';
  */
 const valueSchema = z.record(z.string().regex(/^[^<>]*$/)).optional();
 
+/**
+ * @function getLocale - Takes Accept-Language string,
+ *
+ * if `en-US,en;q=0.9`, it returns:
+ * en-US
+ *
+ * if `en;q=0.8`, it returns:
+ * en
+ *
+ * @param {string} acceptLanguageHeader - the header containing the language
+ * @param {string} delimiter - the delimiter used to separate the country code from the language code
+ * @returns {string} - the locale
+ */
 export function getLocale(acceptLanguageHeader: string, delimiter: '/' | '_'): string {
   if (typeof acceptLanguageHeader !== 'string') {
     console.warn('Accept Language Header is not a string');
@@ -47,6 +60,14 @@ export function getLocale(acceptLanguageHeader: string, delimiter: '/' | '_'): s
   return `${splitResult[1] || 'us'}${delimiter}${splitResult[0]}`.toLowerCase();
 }
 
+/**
+ * @function interpolate - Get a translation string
+ * Interpolate a string that contains variables
+ *
+ * @param {string} key - The key to lookup in the translation strings
+ * @param {object} values - An object of values to interpolate into the string
+ * @param {string} externalText - A string to use if no translation is found
+ */
 export function interpolate(
   key: string,
   values?: z.infer<typeof valueSchema> | null,
@@ -125,6 +146,32 @@ export function interpolate(
 
   return messageClean;
 }
+
+/**
+ * @function textToKey - Takes a human readable string and returns a key from it.
+ * This key is used to look up the string in the translation files.
+ *
+ * If the item is a number, it will be converted to a string and then
+ * processed as if it were a string.
+ *
+ * If the item is a string that contains word characters (`\w`) mixed with
+ * non-word characters (`\W`), the non-word characters will be removed and
+ * the resulting string will be converted to camelCase.
+ *
+ * @param {string} text - The text that will be converted to a key.
+ * @returns {string} A key that is unique to the given text.
+ *
+ * Examples:
+ * textToKey('hello world') => 'helloWorld'
+ * textToKey('HELLO WORLD') => 'helloWorld'
+ * textToKey('HELLO WORLD!!!') => 'helloWorld'
+ * textToKey('HELLO WORLD!!!') => 'helloWorld'
+ * textToKey('helloWorld') => 'helloWorld'
+ * textToKey('helloWorld123') => 'helloWorld123'
+ * textToKey('hello_world') => 'helloWorld'
+ * textToKey('hello-world') => 'helloWorld'
+ * textToKey('hello.world') => 'helloWorld'
+ */
 
 export function textToKey(text: string | number) {
   if (typeof text !== 'string' && typeof text !== 'number') {

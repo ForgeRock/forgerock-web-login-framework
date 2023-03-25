@@ -1,3 +1,9 @@
+/**
+ * @function logErrorAndThrow - Logs an error message and throws an error.
+ * @param {string} type - The type of error. This will be used to determine what error message to log.
+ * @throws {Error} - An error with a message that depends on the value of `type`.
+ */
+
 export function logErrorAndThrow(type: string) {
   if (type === 'missingStores') {
     const errorMessage = 'Error: missing configuration.';

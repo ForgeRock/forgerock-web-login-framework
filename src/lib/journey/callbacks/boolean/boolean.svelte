@@ -33,13 +33,6 @@
   let validationFailure: string;
 
   function setValue(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setInputValue((event.target as HTMLInputElement).checked);
   }
 

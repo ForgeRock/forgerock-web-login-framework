@@ -29,6 +29,13 @@ export const oauthStore: Writable<OAuthTokenStoreValue> = writable({
   successful: false,
   response: null,
 });
+
+/**
+ * @function initialize - Initializes the OAuth store with a get function and a reset function
+ * @param {object} initOptions - The options to pass to the TokenManager.getTokens function
+ * @returns {object} - The OAuth store
+ * @example initialize({ query: { prompt: 'none' } });
+ */
 export function initialize(initOptions?: GetTokensOptions) {
   async function get(getOptions?: GetTokensOptions) {
     /**

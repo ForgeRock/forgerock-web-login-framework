@@ -26,6 +26,12 @@ export const userStore: Writable<UserStoreValue> = writable({
   successful: false,
   response: null,
 });
+
+/**
+ * @function initialize - Initializes the user store with a get function and a reset function
+ * @param {object} initOptions - The options to pass to the UserManager.getCurrentUser function
+ * @returns {object} - The user store
+ */
 export function initialize(initOptions?: ConfigOptions) {
   async function get(getOptions?: ConfigOptions) {
     /**

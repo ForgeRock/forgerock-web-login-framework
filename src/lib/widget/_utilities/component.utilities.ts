@@ -58,6 +58,10 @@ export function closeComponent(
   });
 }
 
+/**
+ * @function componentApi - this is a widget external API
+ * @returns {object} - the public component API
+ */
 export const componentApi = () => {
   const { update } = componentStore;
   // Create derived store to minimize what's exposed to the dev
