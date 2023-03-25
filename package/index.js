@@ -35293,7 +35293,7 @@ function create_else_block$1(ctx) {
 	};
 }
 
-// (53:36) 
+// (56:52) 
 function create_if_block_3(ctx) {
 	let div;
 	let spinner;
@@ -35334,7 +35334,7 @@ function create_if_block_3(ctx) {
 	};
 }
 
-// (27:0) {#if !$journeyStore?.completed}
+// (30:0) {#if $journeyStore && !$journeyStore.completed}
 function create_if_block$1(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -35344,8 +35344,8 @@ function create_if_block$1(ctx) {
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
-		if (!/*$journeyStore*/ ctx[5].step) return 0;
-		if (/*$journeyStore*/ ctx[5].step.type === StepType$1.Step) return 1;
+		if (/*$journeyStore*/ ctx[5] && !/*$journeyStore*/ ctx[5].step) return 0;
+		if (/*$journeyStore*/ ctx[5].step?.type === StepType$1.Step) return 1;
 		return -1;
 	}
 
@@ -35421,7 +35421,7 @@ function create_if_block$1(ctx) {
 	};
 }
 
-// (58:2) <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
+// (61:2) <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_1(ctx) {
 	let t;
 	let current;
@@ -35454,7 +35454,7 @@ function create_default_slot_1(ctx) {
 	};
 }
 
-// (61:2) <Button style="secondary" onClick={tryAgain}>
+// (64:2) <Button style="secondary" onClick={tryAgain}>
 function create_default_slot$1(ctx) {
 	let t;
 	let current;
@@ -35484,7 +35484,7 @@ function create_default_slot$1(ctx) {
 	};
 }
 
-// (32:54) 
+// (35:55) 
 function create_if_block_2(ctx) {
 	let switch_instance;
 	let updating_formEl;
@@ -35606,7 +35606,7 @@ function create_if_block_2(ctx) {
 	};
 }
 
-// (28:2) {#if !$journeyStore.step}
+// (31:2) {#if $journeyStore && !$journeyStore.step}
 function create_if_block_1(ctx) {
 	let div;
 	let spinner;
@@ -35656,8 +35656,8 @@ function create_fragment$1(ctx) {
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (!/*$journeyStore*/ ctx[5]?.completed) return 0;
-		if (/*$journeyStore*/ ctx[5]?.successful) return 1;
+		if (/*$journeyStore*/ ctx[5] && !/*$journeyStore*/ ctx[5].completed) return 0;
+		if (/*$journeyStore*/ ctx[5] && /*$journeyStore*/ ctx[5].successful) return 1;
 		return 2;
 	}
 
@@ -35728,6 +35728,11 @@ function instance$1($$self, $$props, $$invalidate) {
 	let { formEl = null } = $$props;
 	let { journeyStore } = $$props;
 	$$subscribe_journeyStore();
+
+	if (!$journeyStore) {
+		console.error('Widget missing configuration. Import and call `configuration()`, then use `set()` to configure.');
+	}
+
 	let alertNeedsFocus = false;
 
 	function submitForm() {
@@ -35741,7 +35746,7 @@ function instance$1($$self, $$props, $$invalidate) {
 	}
 
 	afterUpdate(() => {
-		$$invalidate(4, alertNeedsFocus = !$journeyStore.successful);
+		$$invalidate(4, alertNeedsFocus = $journeyStore && !$journeyStore.successful);
 	});
 
 	function switch_instance_formEl_binding(value) {
