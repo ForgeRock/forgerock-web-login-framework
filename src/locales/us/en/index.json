@@ -49,7 +49,7 @@
   "requiredField": "Value is required",
   "securityAnswer": "Security answer",
   "securityQuestions": "Security question(s)",
-  "securityQuestionsPrompt": "Provide custom security question(s) and answer(s):",
+  "securityQuestionsPrompt": "Provide security question(s) and answer(s):",
   "showPassword": "Show password",
   "sn": "Last name",
   "submitButton": "Submit",

@@ -5,7 +5,7 @@ import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 test('Inline widget with additional stage attribute testing', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/inline?journey=TEST_LoginWithStageAttributes');
+  await navigate('widget/inline?journey=TEST_RegisterWithStageAttributes');
 
   await page.getByLabel('Username').fill('demouser');
 

@@ -10,6 +10,7 @@ import {
   loginStep,
   oneTimePasswordStep,
   registrationStep,
+  registrationStepWithTwoKBAs,
   usernamePasswordStep,
 } from './step.mock';
 import {
@@ -23,6 +24,7 @@ import {
 const frConfirmPassword = new FRStep(confirmPasswordStep);
 const frOneTimePassword = new FRStep(oneTimePasswordStep);
 const frRegistrationStep = new FRStep(registrationStep);
+const frRegistrationStepWithTwoKBAs = new FRStep(registrationStepWithTwoKBAs);
 const frLoginStep = new FRStep(loginStep);
 const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
 
@@ -238,6 +240,25 @@ export const SocialSingleProviderLocalAuthNoForm = {
     },
     stage: frSocialSingleProviderLocalAuthNoFormStep.getStage(),
     step: frSocialSingleProviderLocalAuthNoFormStep,
+  },
+};
+
+export const TwoKBAQuestionSets = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: frRegistrationStepWithTwoKBAs.getStage(),
+    step: frRegistrationStepWithTwoKBAs,
   },
 };
 
