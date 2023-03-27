@@ -113,7 +113,7 @@
     "remark-slug": "^7.0.1",
     "rimraf": "3.0.2",
     "rollup": "^3.17.3",
-    "rollup-plugin-dts": "^5.2.0",
+    "rollup-plugin-dts": "^5.3.0",
     "rollup-plugin-license": "^3.0.1",
     "rollup-plugin-postcss": "4.0.2",
     "rollup-plugin-styles": "^4.0.0",
