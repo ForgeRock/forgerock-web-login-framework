@@ -29,10 +29,12 @@
   export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
 
-  let confirmValue: string;
+  let confirmValue: Maybe<string>;
   let callbackType: string;
   let doPasswordsMatch: Maybe<boolean>;
   let isVisible = false;
+  let resetValue = false;
+  let savedValue = '';
   let textInputLabel: string;
   let type: 'password' | 'text' = 'password';
   let value: unknown;
@@ -41,15 +43,15 @@
    * @function confirmInput - ensures the second password input matches the first
    * @param event
    */
-  function confirmInput(event: Event) {
-    confirmValue = (event.target as HTMLInputElement)?.value;
+  function confirmInput(val: Maybe<string>) {
+    confirmValue = val;
   }
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
    */
   function setValue(event: Event) {
-    value = (event.target as HTMLInputElement).value
+    value = (event.target as HTMLInputElement).value;
     /** ***********************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for setting values
@@ -58,6 +60,7 @@
      * for writing values to the callbacks received from AM
      *********************************************************************** */
     callback.setInputValue(value);
+    savedValue = String(value);
   }
   /**
    * @function toggleVisibility - toggles the password from masked to plaintext
@@ -73,7 +76,17 @@
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
 
-    // Only assign a boolean if the confirm input has an actual value
+    /**
+     * `savedValue` represents what the user set after blur (local component state)
+     * `value` represents what's in the callback (empties from AM response)
+     *
+     * This unique combination is what produces the most reliable reset flag
+     */
+    resetValue = !!savedValue && value === '';
+
+    /**
+     * Only assign a boolean if the confirm input has an actual value.
+     */
     doPasswordsMatch = confirmValue !== undefined ? confirmValue === value : undefined;
   }
 </script>
@@ -97,9 +110,9 @@
     slot="input-button"
     type="button"
   >
-    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}
-      ><T key="showPassword" /></EyeIcon
-    >
+    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+      <T key="showPassword" />
+    </EyeIcon>
   </button>
   <slot />
 </Input>
@@ -110,6 +123,7 @@
     isInvalid={doPasswordsMatch === false}
     {key}
     onChange={confirmInput}
+    {resetValue}
     showMessage={doPasswordsMatch === false}
     {style}
   />

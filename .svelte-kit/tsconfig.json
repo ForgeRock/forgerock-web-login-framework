@@ -1,45 +1,76 @@
 {
-  "compilerOptions": {
-    "baseUrl": "..",
-    "paths": {
-      "$components": ["src/lib/components"],
-      "$components/*": ["src/lib/components/*"],
-      "$journey": ["src/lib/journey"],
-      "$journey/*": ["src/lib/journey/*"],
-      "$lib": ["src/lib"],
-      "$lib/*": ["src/lib/*"],
-      "$locales": ["src/locales"],
-      "$locales/*": ["src/locales/*"],
-      "$package": ["package"],
-      "$package/*": ["package/*"],
-      "$widget": ["src/widget"],
-      "$widget/*": ["src/widget/*"]
-    },
-    "rootDirs": ["..", "./types"],
-    "importsNotUsedAsValues": "error",
-    "isolatedModules": true,
-    "preserveValueImports": true,
-    "lib": ["esnext", "DOM", "DOM.Iterable"],
-    "moduleResolution": "node",
-    "module": "esnext",
-    "target": "esnext"
-  },
-  "include": [
-    "ambient.d.ts",
-    "./types/**/$types.d.ts",
-    "../vite.config.ts",
-    "../src/**/*.js",
-    "../src/**/*.ts",
-    "../src/**/*.svelte",
-    "../tests/**/*.js",
-    "../tests/**/*.ts",
-    "../tests/**/*.svelte"
-  ],
-  "exclude": [
-    "../node_modules/**",
-    "./[!ambient.d.ts]**",
-    "../src/service-worker.js",
-    "../src/service-worker.ts",
-    "../src/service-worker.d.ts"
-  ]
+	"compilerOptions": {
+		"baseUrl": "..",
+		"paths": {
+			"$components": [
+				"src/lib/components"
+			],
+			"$components/*": [
+				"src/lib/components/*"
+			],
+			"$journey": [
+				"src/lib/journey"
+			],
+			"$journey/*": [
+				"src/lib/journey/*"
+			],
+			"$lib": [
+				"src/lib"
+			],
+			"$lib/*": [
+				"src/lib/*"
+			],
+			"$locales": [
+				"src/locales"
+			],
+			"$locales/*": [
+				"src/locales/*"
+			],
+			"$package": [
+				"package"
+			],
+			"$package/*": [
+				"package/*"
+			],
+			"$widget": [
+				"src/widget"
+			],
+			"$widget/*": [
+				"src/widget/*"
+			]
+		},
+		"rootDirs": [
+			"..",
+			"./types"
+		],
+		"importsNotUsedAsValues": "error",
+		"isolatedModules": true,
+		"preserveValueImports": true,
+		"lib": [
+			"esnext",
+			"DOM",
+			"DOM.Iterable"
+		],
+		"moduleResolution": "node",
+		"module": "esnext",
+		"target": "esnext"
+	},
+	"include": [
+		"ambient.d.ts",
+		"./types/**/$types.d.ts",
+		"../vite.config.ts",
+		"../src/**/*.js",
+		"../src/**/*.ts",
+		"../src/**/*.svelte",
+		"../tests/**/*.js",
+		"../tests/**/*.ts",
+		"../tests/**/*.svelte"
+	],
+	"exclude": [
+		"../node_modules/**",
+		"./[!ambient.d.ts]**",
+		"../src/service-worker.js",
+		"../src/service-worker.ts",
+		"../src/service-worker.d.ts"
+	]
 }

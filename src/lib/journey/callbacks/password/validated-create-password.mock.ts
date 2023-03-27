@@ -157,6 +157,43 @@ export default {
       ],
       _id: 6,
     },
+    {
+      type: CallbackType.ValidatedCreatePasswordCallback,
+      output: [
+        { name: 'echoOn', value: false },
+        {
+          name: 'policies',
+          value: {
+            policyRequirements: ['VALID_TYPE'],
+            fallbackPolicies: null,
+            name: 'password',
+            policies: [
+              {
+                policyRequirements: ['VALID_TYPE'],
+                policyId: 'valid-type',
+                params: { types: ['string'] },
+              },
+            ],
+            conditionalPolicies: null,
+          },
+        },
+        {
+          name: 'failedPolicies',
+          value: [
+            // TODO: Fix validation crash
+            '{ "policyRequirement": "LENGTH_BASED", "params": { "max-password-length": 0, "min-password-length": 8 } }',
+            '{ "policyRequirement": "CHARACTER_SET", "params": { "allow-unclassified-characters": true, "character-set-ranges": [  ], "character-sets": [ "0:0123456789", "0:ABCDEFGHIJKLMNOPQRSTUVWXYZ", "0:abcdefghijklmnopqrstuvwxyz", "0:~!@#$%^&*()-_=+[]{}|;:,.<>/?" ], "min-character-sets": 4 } }',
+          ],
+        },
+        { name: 'validateOnly', value: false },
+        { name: 'prompt', value: 'Password' },
+      ],
+      input: [
+        { name: 'IDToken7', value: '' },
+        { name: 'IDToken7validateOnly', value: false },
+      ],
+      _id: 6,
+    },
   ],
 };
 

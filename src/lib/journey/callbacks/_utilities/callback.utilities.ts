@@ -69,8 +69,42 @@ export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email'
 export function getValidationFailureParams(
   failedPolicy: PolicyRequirement | undefined,
 ): RestructuredParam[] {
-  if (failedPolicy?.policyRequirement === 'CHARACTER_SET') {
-    const params = failedPolicy?.params as {
+  if (failedPolicy?.policyRequirement === 'DICTIONARY') {
+    const params = failedPolicy.params as {
+      'case-sensitive-validation': boolean;
+      'check-substrings': boolean;
+      'min-substring-length': number;
+      'test-reversed-password': boolean;
+    };
+    const min = params?.['min-substring-length'] || 0;
+
+    const arr = [];
+
+    if (params?.['check-substrings'] && params?.['test-reversed-password']) {
+      arr.push({
+        length: min,
+        message: interpolate('passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan', {
+          min: String(min),
+        }),
+        rule: 'reversibleSubstrings',
+      });
+    } else if (params?.['test-reversed-password']) {
+      arr.push({
+        length: null,
+        message: interpolate('passwordCannotContainCommonPasswordsOrBeReversible'),
+        rule: 'reversibleSubstrings',
+      });
+    } else {
+      arr.push({
+        length: null,
+        message: interpolate('passwordCannotContainCommonPasswords'),
+        rule: 'reversibleSubstrings',
+      });
+    }
+
+    return arr;
+  } else if (failedPolicy?.policyRequirement === 'CHARACTER_SET') {
+    const params = failedPolicy.params as {
       'allow-unclassified-characters': boolean;
       'character-set-ranges': [];
       'character-sets': string[];
@@ -78,7 +112,7 @@ export function getValidationFailureParams(
     };
     return params?.['character-sets'].map(convertCharacterSetToRuleObj);
   } else if (failedPolicy?.policyRequirement === 'LENGTH_BASED') {
-    const params = failedPolicy?.params as {
+    const params = failedPolicy.params as {
       'max-password-length': number;
       'min-password-length': number;
     };
@@ -101,6 +135,30 @@ export function getValidationFailureParams(
         rule: 'minimumLength',
       });
     }
+    return arr;
+  } else if (failedPolicy?.policyRequirement === 'REPEATED_CHARACTERS') {
+    const params = failedPolicy.params as {
+      'case-sensitive-validation': boolean;
+      'max-consecutive-length': number;
+    };
+    const max = params['max-consecutive-length'] || 0;
+
+    const arr = [];
+
+    if (!params['case-sensitive-validation']) {
+      arr.push({
+        length: max,
+        message: interpolate('charactersCannotRepeatMoreThanCaseInsensitive', { max: String(max) }),
+        rule: 'repeatedCharactersCaseInsensitive',
+      });
+    } else {
+      arr.push({
+        length: max,
+        message: interpolate('charactersCannotRepeatMoreThan', { max: String(max) }),
+        rule: 'repeatedCharacters',
+      });
+    }
+
     return arr;
   } else if (failedPolicy?.policyRequirement === 'VALID_USERNAME') {
     return [
@@ -271,32 +329,64 @@ function convertCharacterSetToRuleObj(set: string) {
   const type = arr[1];
 
   if (type === '0123456789') {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfNumbers', { num: String(num) }),
-      rule: 'numbers',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainANumber'),
+        rule: 'numbers',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfNumbers', { num: String(num) }),
+        rule: 'numbers',
+      };
+    }
   } else if (type === 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfUppercase', { num: String(num) }),
-      rule: 'uppercase',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainAnUppercase'),
+        rule: 'uppercase',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfUppercase', { num: String(num) }),
+        rule: 'uppercase',
+      };
+    }
   } else if (type === 'abcdefghijklmnopqrstuvwxyz') {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfLowercase', { num: String(num) }),
-      rule: 'lowercase',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainALowercase'),
+        rule: 'lowercase',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfLowercase', { num: String(num) }),
+        rule: 'lowercase',
+      };
+    }
   } else if (type.includes('@') || type.includes('!') || type.includes('*') || type.includes('#')) {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfSymbols', { num: String(num) }),
-      rule: 'symbols',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainASymbol'),
+        rule: 'symbols',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfSymbols', { num: String(num) }),
+        rule: 'symbols',
+      };
+    }
   } else {
     return {
-      length: Number(num),
+      length: null,
       message: interpolate('pleaseCheckValue'),
       rule: 'unknown',
     };

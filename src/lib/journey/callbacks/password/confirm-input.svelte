@@ -11,10 +11,11 @@
   import type { styleSchema } from '$lib/style.store';
 
   export let forceValidityFailure = false;
-  export let key: string;
-  export let onChange: (event: Event) => void;
   export let isInvalid = false;
   export let isRequired = true;
+  export let key: string;
+  export let onChange: (val: Maybe<string>) => void;
+  export let resetValue: boolean;
   export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
@@ -24,13 +25,26 @@
 
   let isVisible = false;
   let type: 'password' | 'text' = 'password';
-  let value: unknown;
+  let value: Maybe<string>;
+
+  function onChangeWrapper(event: Event) {
+    value = (event.target as HTMLInputElement)?.value;
+    // TODO: revisit this logic to avoid unnecessary ternary
+    onChange(typeof value === 'string' ? value : undefined);
+  }
   /**
    * @function toggleVisibility - toggles the password from masked to plaintext
    */
   function toggleVisibility() {
     isVisible = !isVisible;
     type = isVisible ? 'text' : 'password';
+  }
+
+  $: {
+    if (resetValue) {
+     value = undefined;
+     onChange(value);
+    }
   }
 </script>
 
@@ -41,7 +55,7 @@
   key={`${key}-confirm`}
   label={interpolate('confirmPassword', null, 'Confirm Password')}
   message={isInvalid ? interpolate('passwordConfirmationError', null, 'Passwords do not match') : undefined}
-  {onChange}
+  onChange={onChangeWrapper}
   {isInvalid}
   {isRequired}
   {showMessage}
@@ -54,9 +68,9 @@
     slot="input-button"
     type="button"
   >
-    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}
-      ><T key="showPassword" /></EyeIcon
-    >
+    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+      <T key="showPassword" />
+    </EyeIcon>
   </button>
   <slot />
 </Input>
