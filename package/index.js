@@ -16825,6 +16825,7 @@ var tryAgain = "Please try again";
 var twoFactorAuthentication = "Two factor authentication";
 var useValidEmail = "Please use a valid email address.";
 var unrecoverableError = "There was an error in the form submission.";
+var unknownLoginError = "Unknown login failure has occurred.";
 var unknownNetworkError = "Unknown network request failure has occurred.";
 var userName = "Username";
 var usernameRequirements = "Username requirements:";
@@ -16903,6 +16904,7 @@ var fallback = {
 	twoFactorAuthentication: twoFactorAuthentication,
 	useValidEmail: useValidEmail,
 	unrecoverableError: unrecoverableError,
+	unknownLoginError: unknownLoginError,
 	unknownNetworkError: unknownNetworkError,
 	userName: userName,
 	usernameRequirements: usernameRequirements,
@@ -16984,6 +16986,7 @@ const stringsSchema = z
     twoFactorAuthentication: z.string(),
     useValidEmail: z.string(),
     unrecoverableError: z.string(),
+    unknownLoginError: z.string(),
     unknownNetworkError: z.string(),
     userName: z.string(),
     usernameRequirements: z.string(),
@@ -16998,9 +17001,10 @@ stringsSchema.partial();
 stringsSchema.parse(fallback);
 const stringsStore = writable(null);
 /**
- * initialize locale information for Login Widget
- * @param: userLocale - optional locale object to override default locale
- * @returns: a schema which represents the user locale schema
+ * @function initialize - Initialize the locale store
+ * @param {object} userLocale - An object of custom locale strings to merge with the default
+ * @returns {object} - The locale store
+ * @example initialize({ loginHeader: 'Welcome to the login page' });
  */
 function initialize$5(userLocale) {
     if (userLocale) {
@@ -17452,6 +17456,11 @@ function buildStepMetadata(callbackMetadataArray, stageJson, stageName) {
     };
 }
 
+/**
+ * @function initializeJourney - Initializes the journey stack for tracking journey switches
+ * @param {object} initOptions - The initial options to set
+ * @returns {object} - The journey stack store with stack methods
+ */
 function initializeStack(initOptions) {
     const initialValue = initOptions ? [initOptions] : [];
     const { update, set, subscribe } = writable(initialValue);
@@ -17515,6 +17524,11 @@ const journeyStore = writable({
     successful: false,
     response: null,
 });
+/**
+ * @function initialize - Initializes the journey store
+ * @param {object} initOptions - The initial options to set
+ * @returns {object} - The journey store
+ */
 function initialize$4(initOptions) {
     const stack = initializeStack();
     let stepNumber = 0;
@@ -17634,7 +17648,7 @@ function initialize$4(initOptions) {
              *
              * Grab failure message, which may contain encoded HTML
              */
-            const failureMessageStr = htmlDecode(nextStep.payload.message || '');
+            const failureMessageStr = htmlDecode(nextStep.payload.message || 'Unknown login error');
             let restartedStep = null;
             try {
                 /**

@@ -1,3 +1,10 @@
+# [1.0.0-beta.15](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.14...v1.0.0-beta.15) (2023-03-27)
+
+
+### Bug Fixes
+
+* **login-failure:** handle 500 failures within login store ([90fb461](https://github.com/forgerock/forgerock-web-login-framework/commit/90fb461e2598f929e4b418c9794f8b085e433e54))
+
 # [1.0.0-beta.14](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2023-03-27)
 
 
