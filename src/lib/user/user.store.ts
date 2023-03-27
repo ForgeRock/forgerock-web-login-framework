@@ -33,6 +33,12 @@ export const userStore: Writable<UserStoreValue> = writable({
  * @returns {object} - The user store
  */
 export function initialize(initOptions?: ConfigOptions) {
+  /**
+   * Get user info from the server
+   * New state is returned in your `userEvents.subscribe` callback function
+   * @params: getOptions?: ConfigOptions
+   * @returns: Promise<void>
+   */
   async function get(getOptions?: ConfigOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions

@@ -37,6 +37,12 @@ export const oauthStore: Writable<OAuthTokenStoreValue> = writable({
  * @example initialize({ query: { prompt: 'none' } });
  */
 export function initialize(initOptions?: GetTokensOptions) {
+  /**
+   * Get tokens from the server
+   * new tokens are available in the subscribe method
+   * @params: getOptions?: GetTokensOptions
+   * @returns: Promise<void>
+   */
   async function get(getOptions?: GetTokensOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions

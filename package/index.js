@@ -719,9 +719,19 @@ const componentApi = () => {
         });
     });
     return {
+        /**
+         * Close a modal
+         * @param {object} args - object containing  the reason for closing component
+         * @returns {void}
+         */
         close: (args) => {
             closeComponent(args, true);
         },
+        /**
+         * Open a modal
+         * @param: void
+         * @returns: void
+         */
         open: () => {
             update((state) => {
                 if (state.type === 'inline') {
@@ -743,6 +753,10 @@ const componentApi = () => {
                 };
             });
         },
+        /**
+         * Subscribe to modal events
+         * returns the latest value from the event
+         */
         subscribe,
     };
 };
@@ -16983,6 +16997,11 @@ stringsSchema.partial();
 // Ensure fallback follows schema
 stringsSchema.parse(fallback);
 const stringsStore = writable(null);
+/**
+ * initialize locale information for Login Widget
+ * @param: userLocale - optional locale object to override default locale
+ * @returns: a schema which represents the user locale schema
+ */
 function initialize$5(userLocale) {
     if (userLocale) {
         /**
@@ -17837,6 +17856,12 @@ const oauthStore = writable({
  * @example initialize({ query: { prompt: 'none' } });
  */
 function initialize$2(initOptions) {
+    /**
+     * Get tokens from the server
+     * new tokens are available in the subscribe method
+     * @params: getOptions?: GetTokensOptions
+     * @returns: Promise<void>
+     */
     async function get(getOptions) {
         /**
          * Create an options object with getOptions overriding anything from initOptions
@@ -17910,6 +17935,12 @@ const userStore = writable({
  * @returns {object} - The user store
  */
 function initialize$1(initOptions) {
+    /**
+     * Get user info from the server
+     * New state is returned in your `userEvents.subscribe` callback function
+     * @params: getOptions?: ConfigOptions
+     * @returns: Promise<void>
+     */
     async function get(getOptions) {
         /**
          * Create an options object with getOptions overriding anything from initOptions
@@ -18077,6 +18108,10 @@ function widgetApiFactory(componentApi) {
         initialize$3(options?.links);
         initialize(options?.style);
         return {
+            /** Set the Login Widget's Configuration
+             * @param {WidgetConfigOptions} options - The configuration options for the Login Widget
+             * @returns {void}
+             **/
             set(setOptions) {
                 if (setOptions?.forgerock) {
                     configure({
@@ -18198,6 +18233,11 @@ function widgetApiFactory(componentApi) {
         return { change, start, subscribe };
     };
     const user = {
+        /**
+         * User Info
+         * @param: void
+         * @returns: UserStore
+         */
         info() {
             if (!journeyStore || !oauthStore || !userStore) {
                 logErrorAndThrow('missingStores');
@@ -18220,6 +18260,12 @@ function widgetApiFactory(componentApi) {
             }
             return { get: wrappedGet, subscribe };
         },
+        /**
+         * Logout a user from an AM Session
+         * @async
+         * @param: void
+         * @returns: Promise<void>
+         **/
         async logout() {
             if (!journeyStore || !oauthStore || !userStore) {
                 logErrorAndThrow('missingStores');
@@ -18248,6 +18294,11 @@ function widgetApiFactory(componentApi) {
             // Return undefined as there's no response information to share
             return;
         },
+        /**
+         * Returns the widget's Tokens object
+         * @param void;
+         * @returns OAuthStore
+         */
         tokens() {
             if (!journeyStore || !oauthStore || !userStore) {
                 logErrorAndThrow('missingStores');

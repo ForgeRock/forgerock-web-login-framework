@@ -79,9 +79,19 @@ export const componentApi = () => {
     });
 
   return {
+    /**
+     * Close a modal
+     * @param {object} args - object containing  the reason for closing component
+     * @returns {void}
+     */
     close: (args?: { reason: 'auto' | 'external' | 'user' }) => {
       closeComponent(args, true);
     },
+    /**
+     * Open a modal
+     * @param: void
+     * @returns: void
+     */
     open: () => {
       update((state) => {
         if (state.type === 'inline') {
@@ -105,6 +115,10 @@ export const componentApi = () => {
         };
       });
     },
+    /**
+     * Subscribe to modal events
+     * returns the latest value from the event
+     */
     subscribe,
   };
 };

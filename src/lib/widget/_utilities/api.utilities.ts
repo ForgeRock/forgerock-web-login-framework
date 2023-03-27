@@ -91,6 +91,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     initializeStyle(options?.style);
 
     return {
+      /** Set the Login Widget's Configuration
+       * @param {WidgetConfigOptions} options - The configuration options for the Login Widget
+       * @returns {void}
+       **/
       set(setOptions?: WidgetConfigOptions): void {
         if (setOptions?.forgerock) {
           configure({
@@ -222,6 +226,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     return { change, start, subscribe };
   };
   const user = {
+    /**
+     * User Info
+     * @param: void
+     * @returns: UserStore
+     */
     info() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
@@ -246,6 +255,12 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
 
       return { get: wrappedGet, subscribe };
     },
+    /**
+     * Logout a user from an AM Session
+     * @async
+     * @param: void
+     * @returns: Promise<void>
+     **/
     async logout() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
@@ -276,6 +291,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       // Return undefined as there's no response information to share
       return;
     },
+    /**
+     * Returns the widget's Tokens object
+     * @param void;
+     * @returns OAuthStore
+     */
     tokens() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
