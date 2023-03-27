@@ -1,3 +1,10 @@
+# [1.0.0-beta.12](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2023-03-27)
+
+
+### Bug Fixes
+
+* **password:** fix password confirmation reset and validation failures ([181c67e](https://github.com/forgerock/forgerock-web-login-framework/commit/181c67e475f712a131383317707f3760af2d099d))
+
 # [1.0.0-beta.11](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2023-03-27)
 
 
