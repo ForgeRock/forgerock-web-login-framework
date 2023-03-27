@@ -8,25 +8,22 @@
 
 # [1.0.0-beta.12](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2023-03-27)
 
-
 ### Bug Fixes
 
-* **password:** fix password confirmation reset and validation failures ([181c67e](https://github.com/forgerock/forgerock-web-login-framework/commit/181c67e475f712a131383317707f3760af2d099d))
+- **password:** fix password confirmation reset and validation failures ([181c67e](https://github.com/forgerock/forgerock-web-login-framework/commit/181c67e475f712a131383317707f3760af2d099d))
 
 # [1.0.0-beta.11](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.10...v1.0.0-beta.11) (2023-03-27)
 
-
 ### Bug Fixes
 
-* **style-e2e:** fix style for kba and fix e2e tests ([4d55431](https://github.com/forgerock/forgerock-web-login-framework/commit/4d55431a60ecdffea196dc8eb2c14d5f9c290e6c))
-* **style:** reworking application of headers and footers of widget ([bca81ca](https://github.com/forgerock/forgerock-web-login-framework/commit/bca81ca7286612c1ebe73151f8788ebdbda1d92a))
+- **style-e2e:** fix style for kba and fix e2e tests ([4d55431](https://github.com/forgerock/forgerock-web-login-framework/commit/4d55431a60ecdffea196dc8eb2c14d5f9c290e6c))
+- **style:** reworking application of headers and footers of widget ([bca81ca](https://github.com/forgerock/forgerock-web-login-framework/commit/bca81ca7286612c1ebe73151f8788ebdbda1d92a))
 
 # [1.0.0-beta.10](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.9...v1.0.0-beta.10) (2023-03-25)
 
-
 ### Bug Fixes
 
-* **index.svelte:** bind http client to request ([460a826](https://github.com/forgerock/forgerock-web-login-framework/commit/460a8269834be31e044fe1239db628b0c28d856b))
+- **index.svelte:** bind http client to request ([460a826](https://github.com/forgerock/forgerock-web-login-framework/commit/460a8269834be31e044fe1239db628b0c28d856b))
 
 # [1.0.0-beta.9](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.8...v1.0.0-beta.9) (2023-03-21)
 

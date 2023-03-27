@@ -16,6 +16,12 @@
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;
 
+  if (!$journeyStore) {
+    console.error(
+      'Widget missing configuration. Import and call `configuration()`, then use `set()` to configure.',
+    );
+  }
+
   let alertNeedsFocus = false;
 
   function submitForm() {
@@ -28,16 +34,16 @@
   }
 
   afterUpdate(() => {
-    alertNeedsFocus = !$journeyStore.successful;
+    alertNeedsFocus = $journeyStore && !$journeyStore.successful;
   });
 </script>
 
-{#if !$journeyStore?.completed}
-  {#if !$journeyStore.step}
+{#if $journeyStore && !$journeyStore.completed}
+  {#if $journeyStore && !$journeyStore.step}
     <div class="tw_text-center tw_w-full tw_py-4">
       <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
     </div>
-  {:else if $journeyStore.step.type === StepType.Step}
+  {:else if $journeyStore.step?.type === StepType.Step}
     <svelte:component
       this={mapStepToStage($journeyStore.step)}
       bind:formEl
@@ -58,7 +64,7 @@
       step={$journeyStore.step}
     />
   {/if}
-{:else if $journeyStore?.successful}
+{:else if $journeyStore && $journeyStore.successful}
   <div class="tw_text-center tw_w-full tw_py-4">
     <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
   </div>
