@@ -1,3 +1,10 @@
+# [1.0.0-beta.14](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2023-03-27)
+
+
+### Bug Fixes
+
+* **configuration:** improve handling and reporting of missing configuration ([a611623](https://github.com/forgerock/forgerock-web-login-framework/commit/a611623d7c33b0af18483ccad81a8725e461be65))
+
 # [1.0.0-beta.13](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2023-03-27)
 
 
