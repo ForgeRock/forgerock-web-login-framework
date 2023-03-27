@@ -21,6 +21,11 @@ import {
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import type { Maybe } from '$lib/interfaces';
 
+/**
+ * @function initializeJourney - Initializes the journey stack for tracking journey switches
+ * @param {object} initOptions - The initial options to set
+ * @returns {object} - The journey stack store with stack methods
+ */
 function initializeStack(initOptions?: StepOptions) {
   const initialValue = initOptions ? [initOptions] : [];
   const { update, set, subscribe }: Writable<StepOptions[]> = writable(initialValue);
@@ -85,6 +90,12 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
   successful: false,
   response: null,
 });
+
+/**
+ * @function initialize - Initializes the journey store
+ * @param {object} initOptions - The initial options to set
+ * @returns {object} - The journey store
+ */
 export function initialize(initOptions?: StepOptions): JourneyStore {
   const stack = initializeStack();
 
@@ -214,7 +225,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        *
        * Grab failure message, which may contain encoded HTML
        */
-      const failureMessageStr = htmlDecode(nextStep.payload.message || '');
+      const failureMessageStr = htmlDecode(nextStep.payload.message || 'Unknown login error');
       let restartedStep: StepTypes | null = null;
 
       try {
