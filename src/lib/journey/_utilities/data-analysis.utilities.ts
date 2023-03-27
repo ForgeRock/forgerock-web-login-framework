@@ -34,7 +34,9 @@ const userInputCallbacks = [
 
 export type UserInputCallbacks = (typeof userInputCallbacks)[number];
 
-// This eventually will be overridable by user of framework
+/**
+ * @function forceUserInputOptionalityCallbacks - Determines if a callback should be forced to be optional
+ */
 const forceUserInputOptionalityCallbacks = {
   SelectIdPCallback: (callback: FRCallback) => {
     const selectIdpCb = callback as SelectIdPCallback;
@@ -44,6 +46,11 @@ const forceUserInputOptionalityCallbacks = {
   },
 };
 
+/**
+ * @function isCbReadyByDefault - Determines if a callback is ready to be submitted by default
+ * @param {object} callback - Generic FRCallback from JavaScript SDK
+ * @returns {boolean}
+ */
 export function isCbReadyByDefault(callback: FRCallback) {
   if (callback.getType() === CallbackType.ConfirmationCallback) {
     const cb = callback as ConfirmationCallback;
@@ -54,6 +61,11 @@ export function isCbReadyByDefault(callback: FRCallback) {
   return false;
 }
 
+/**
+ * @function canForceUserInputOptionality
+ * @param {object} callback - generic FRCallback from JavaScript SDK
+ * @returns
+ */
 export function canForceUserInputOptionality(callback: FRCallback) {
   // See if a callback function exists within this collection
   const fn =
@@ -91,9 +103,9 @@ export function isStepSelfSubmittable(callbacks: CallbackMetadata[], userInputOp
 }
 
 /**
- * @function isStepReadyToSubmit -
+ * @function isStepReadyToSubmit - Determines if a step is ready to be submitted
  * @param  {array} callbacks - CallbackMetadata
- * @returns
+ * @returns {boolean}
  */
 export function isStepReadyToSubmit(callbacks: CallbackMetadata[]) {
   const selfSubmittableCbs = callbacks.filter((callback) => callback.derived.isSelfSubmitting);
@@ -105,9 +117,9 @@ export function isStepReadyToSubmit(callbacks: CallbackMetadata[]) {
 }
 
 /**
- *
+ * @function requiresUserInput - Determines if a callback requires user input
  * @param  {object} callback - Generic callback provided by JavaScript SDK
- * @returns
+ * @returns {boolean}
  */
 export function requiresUserInput(callback: FRCallback) {
   if (callback.getType() === CallbackType.SelectIdPCallback) {
@@ -125,10 +137,27 @@ export function requiresUserInput(callback: FRCallback) {
 
 // Notice this function can take a user provided argument function to
 // override behavior (this doesn't have to be well defined)
+
+/**
+ * @function isUserInputOptional - Determines if user input is optional
+ * Notice this function can take a user provided argument function to
+ * override behavior (this doesn't have to be well defined)
+ * @param {array} callbackMetadataArray - array of callback metadata
+ * @param  {number} numOfUserInputCbs - number of user input requiring callbacks
+ * @param {function} fn - optional function to override default behavior
+ * @returns {boolean} - true if user input is optional
+ * @example isUserInputOptional(callbackMetadataArray, numOfUserInputCbs, (prev, curr) => {
+ *   if (curr.derived.canForceUserInputOptionality && numOfUserInputCbs > 0) {
+ *     prev = true;
+ *   }
+ *   return prev;
+ * })
+ * @example isUserInputOptional(callbackMetadataArray, numOfUserInputCbs);
+ */
 export function isUserInputOptional(
   callbackMetadataArray: CallbackMetadata[],
   numOfUserInputCbs: number,
-  fn?: any, // TODO: replace this any with a narrow type
+  fn?: (prev: boolean, curr: CallbackMetadata) => boolean,
 ) {
   // default reducer function to check if both overriding callback exists
   // along with user input required callbacks

@@ -48,13 +48,6 @@
    * @param {Object} event
    */
   function setOptionValue(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setOptionIndex(Number((event.target as HTMLSelectElement).value));
   }
 
@@ -63,13 +56,6 @@
    * @param {Object} event
    */
   function setCheckboxValue(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     const value = (event.target as HTMLInputElement).checked;
     if (value) {
       callback.setOptionIndex(0);

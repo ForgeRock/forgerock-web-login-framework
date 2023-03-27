@@ -26,6 +26,17 @@ import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interface
 import type { OAuthStore, OAuthTokenStoreValue } from '$lib/oauth/oauth.store';
 import type { UserStore, UserStoreValue } from '$lib/user/user.store';
 
+/**
+ * @function widgetApiFactory - Creates the widget API
+ * @param {object} componentApi - The component API
+ * @returns {object} - The widget API
+ * @property {object} componentApi - The component API for either inline or modal
+ * @property {object} configuration - Sets the configuration for the widget
+ * @property {function} getStores - Returns the stores: journeyStore, oauthStore, userStore
+ * @property {object} journey - the journey API
+ * @property {function} request - The HttpClient.request function from the SDK
+ * @property {object} user - the user API
+ */
 export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>) {
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
@@ -80,6 +91,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     initializeStyle(options?.style);
 
     return {
+      /** Set the Login Widget's Configuration
+       * @param {WidgetConfigOptions} options - The configuration options for the Login Widget
+       * @returns {void}
+       **/
       set(setOptions?: WidgetConfigOptions): void {
         if (setOptions?.forgerock) {
           configure({
@@ -211,6 +226,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     return { change, start, subscribe };
   };
   const user = {
+    /**
+     * User Info
+     * @param: void
+     * @returns: UserStore
+     */
     info() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
@@ -235,6 +255,12 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
 
       return { get: wrappedGet, subscribe };
     },
+    /**
+     * Logout a user from an AM Session
+     * @async
+     * @param: void
+     * @returns: Promise<void>
+     **/
     async logout() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
@@ -265,6 +291,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       // Return undefined as there's no response information to share
       return;
     },
+    /**
+     * Returns the widget's Tokens object
+     * @param void;
+     * @returns OAuthStore
+     */
     tokens() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');

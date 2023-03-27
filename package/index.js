@@ -702,6 +702,10 @@ function closeComponent(args, shouldCloseDialog) {
         };
     });
 }
+/**
+ * @function componentApi - this is a widget external API
+ * @returns {object} - the public component API
+ */
 const componentApi = () => {
     const { update } = componentStore;
     // Create derived store to minimize what's exposed to the dev
@@ -715,9 +719,19 @@ const componentApi = () => {
         });
     });
     return {
+        /**
+         * Close a modal
+         * @param {object} args - object containing  the reason for closing component
+         * @returns {void}
+         */
         close: (args) => {
             closeComponent(args, true);
         },
+        /**
+         * Open a modal
+         * @param: void
+         * @returns: void
+         */
         open: () => {
             update((state) => {
                 if (state.type === 'inline') {
@@ -739,6 +753,10 @@ const componentApi = () => {
                 };
             });
         },
+        /**
+         * Subscribe to modal events
+         * returns the latest value from the event
+         */
         subscribe,
     };
 };
@@ -10873,6 +10891,11 @@ var HttpClient = /** @class */ (function (_super) {
 }(event_1.default));
 var _default$2 = httpClient.default = HttpClient;
 
+/**
+ * @function logErrorAndThrow - Logs an error message and throws an error.
+ * @param {string} type - The type of error. This will be used to determine what error message to log.
+ * @throws {Error} - An error with a message that depends on the value of `type`.
+ */
 function logErrorAndThrow(type) {
     if (type === 'missingStores') {
         const errorMessage = 'Error: missing configuration.';
@@ -14921,6 +14944,11 @@ const configSchema = z
 })
     .strict();
 configSchema.partial();
+/**
+ * @function - Sets the configuration for the SDK
+ * @param {object} config - The configuration object
+ * @returns {void}
+ */
 function configure (config) {
     configSchema.parse(config);
     Config.set(config);
@@ -14968,6 +14996,12 @@ const fallbackJourneyConfig = Object.keys(defaultJourneys).map((key) => ({
     key,
 }));
 const configuredJourneysStore = writable(fallbackJourneyConfig);
+/**
+ * @function initialize - Initialize the configured journeys store
+ * @param {object} customJourneys - An object of custom journeys to merge with the default
+ * @returns {object} - The configured journeys store
+ * @example initialize({ login: { journey: 'Login', match: ['?journey=Login'] } })
+ */
 function initialize$6(customJourneys) {
     if (customJourneys) {
         // Provide developer feedback if customized
@@ -16963,6 +16997,11 @@ stringsSchema.partial();
 // Ensure fallback follows schema
 stringsSchema.parse(fallback);
 const stringsStore = writable(null);
+/**
+ * initialize locale information for Login Widget
+ * @param: userLocale - optional locale object to override default locale
+ * @returns: a schema which represents the user locale schema
+ */
 function initialize$5(userLocale) {
     if (userLocale) {
         /**
@@ -16982,6 +17021,14 @@ function initialize$5(userLocale) {
  * Demo: https://regex101.com/r/Mw9vTB/1
  */
 const valueSchema = z.record(z.string().regex(/^[^<>]*$/)).optional();
+/**
+ * @function interpolate - Get a translation string
+ * Interpolate a string that contains variables
+ *
+ * @param {string} key - The key to lookup in the translation strings
+ * @param {object} values - An object of values to interpolate into the string
+ * @param {string} externalText - A string to use if no translation is found
+ */
 function interpolate(key, values, externalText) {
     // Let's throw some errors if we're trying to use keys/locales that don't exist.
     // We could improve this by using Typescript and/or fallback values.
@@ -17053,6 +17100,31 @@ function interpolate(key, values, externalText) {
     });
     return messageClean;
 }
+/**
+ * @function textToKey - Takes a human readable string and returns a key from it.
+ * This key is used to look up the string in the translation files.
+ *
+ * If the item is a number, it will be converted to a string and then
+ * processed as if it were a string.
+ *
+ * If the item is a string that contains word characters (`\w`) mixed with
+ * non-word characters (`\W`), the non-word characters will be removed and
+ * the resulting string will be converted to camelCase.
+ *
+ * @param {string} text - The text that will be converted to a key.
+ * @returns {string} A key that is unique to the given text.
+ *
+ * Examples:
+ * textToKey('hello world') => 'helloWorld'
+ * textToKey('HELLO WORLD') => 'helloWorld'
+ * textToKey('HELLO WORLD!!!') => 'helloWorld'
+ * textToKey('HELLO WORLD!!!') => 'helloWorld'
+ * textToKey('helloWorld') => 'helloWorld'
+ * textToKey('helloWorld123') => 'helloWorld123'
+ * textToKey('hello_world') => 'helloWorld'
+ * textToKey('hello-world') => 'helloWorld'
+ * textToKey('hello.world') => 'helloWorld'
+ */
 function textToKey(text) {
     if (typeof text !== 'string' && typeof text !== 'number') {
         throw new Error('Parameter for textToKey function needs to be of type string or number');
@@ -17194,7 +17266,9 @@ const userInputCallbacks = [
     CallbackType$1.ValidatedCreatePasswordCallback,
     CallbackType$1.ValidatedCreateUsernameCallback,
 ];
-// This eventually will be overridable by user of framework
+/**
+ * @function forceUserInputOptionalityCallbacks - Determines if a callback should be forced to be optional
+ */
 const forceUserInputOptionalityCallbacks = {
     SelectIdPCallback: (callback) => {
         const selectIdpCb = callback;
@@ -17203,6 +17277,11 @@ const forceUserInputOptionalityCallbacks = {
             .find((provider) => provider.provider === 'localAuthentication');
     },
 };
+/**
+ * @function isCbReadyByDefault - Determines if a callback is ready to be submitted by default
+ * @param {object} callback - Generic FRCallback from JavaScript SDK
+ * @returns {boolean}
+ */
 function isCbReadyByDefault(callback) {
     if (callback.getType() === CallbackType$1.ConfirmationCallback) {
         const cb = callback;
@@ -17212,6 +17291,11 @@ function isCbReadyByDefault(callback) {
     }
     return false;
 }
+/**
+ * @function canForceUserInputOptionality
+ * @param {object} callback - generic FRCallback from JavaScript SDK
+ * @returns
+ */
 function canForceUserInputOptionality(callback) {
     // See if a callback function exists within this collection
     const fn = forceUserInputOptionalityCallbacks[callback.getType()];
@@ -17239,9 +17323,9 @@ function isStepSelfSubmittable(callbacks, userInputOptional) {
     return !unsubmittableCallbacks.length;
 }
 /**
- *
+ * @function requiresUserInput - Determines if a callback requires user input
  * @param  {object} callback - Generic callback provided by JavaScript SDK
- * @returns
+ * @returns {boolean}
  */
 function requiresUserInput(callback) {
     if (callback.getType() === CallbackType$1.SelectIdPCallback) {
@@ -17257,6 +17341,22 @@ function requiresUserInput(callback) {
 }
 // Notice this function can take a user provided argument function to
 // override behavior (this doesn't have to be well defined)
+/**
+ * @function isUserInputOptional - Determines if user input is optional
+ * Notice this function can take a user provided argument function to
+ * override behavior (this doesn't have to be well defined)
+ * @param {array} callbackMetadataArray - array of callback metadata
+ * @param  {number} numOfUserInputCbs - number of user input requiring callbacks
+ * @param {function} fn - optional function to override default behavior
+ * @returns {boolean} - true if user input is optional
+ * @example isUserInputOptional(callbackMetadataArray, numOfUserInputCbs, (prev, curr) => {
+ *   if (curr.derived.canForceUserInputOptionality && numOfUserInputCbs > 0) {
+ *     prev = true;
+ *   }
+ *   return prev;
+ * })
+ * @example isUserInputOptional(callbackMetadataArray, numOfUserInputCbs);
+ */
 function isUserInputOptional(callbackMetadataArray, numOfUserInputCbs, fn) {
     // default reducer function to check if both overriding callback exists
     // along with user input required callbacks
@@ -17273,7 +17373,7 @@ function isUserInputOptional(callbackMetadataArray, numOfUserInputCbs, fn) {
 /**
  * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
  * @param {object} step - The modified Widget step object
- * @param checkValidation - function that checks if current callback is the first invalid callback
+ * @param {function} checkValidation - function that checks if current callback is the first invalid callback
  * @returns {array}
  */
 function buildCallbackMetadata(step, checkValidation, stageJson) {
@@ -17721,6 +17821,12 @@ const linksSchema = z
     .strict();
 linksSchema.partial();
 const linksStore = writable();
+/**
+ * @function initialize - Initialize the links store
+ * @param {object} customLinks - An object of custom links to merge with the default
+ * @returns {object} - The links store
+ * @example initialize({ termsAndConditions: 'https://example.com/terms' });
+ */
 function initialize$3(customLinks) {
     // If customLinks is provided, provide feedback for object
     if (customLinks) {
@@ -17743,7 +17849,19 @@ const oauthStore = writable({
     successful: false,
     response: null,
 });
+/**
+ * @function initialize - Initializes the OAuth store with a get function and a reset function
+ * @param {object} initOptions - The options to pass to the TokenManager.getTokens function
+ * @returns {object} - The OAuth store
+ * @example initialize({ query: { prompt: 'none' } });
+ */
 function initialize$2(initOptions) {
+    /**
+     * Get tokens from the server
+     * new tokens are available in the subscribe method
+     * @params: getOptions?: GetTokensOptions
+     * @returns: Promise<void>
+     */
     async function get(getOptions) {
         /**
          * Create an options object with getOptions overriding anything from initOptions
@@ -17811,7 +17929,18 @@ const userStore = writable({
     successful: false,
     response: null,
 });
+/**
+ * @function initialize - Initializes the user store with a get function and a reset function
+ * @param {object} initOptions - The options to pass to the UserManager.getCurrentUser function
+ * @returns {object} - The user store
+ */
 function initialize$1(initOptions) {
+    /**
+     * Get user info from the server
+     * New state is returned in your `userEvents.subscribe` callback function
+     * @params: getOptions?: ConfigOptions
+     * @returns: Promise<void>
+     */
     async function get(getOptions) {
         /**
          * Create an options object with getOptions overriding anything from initOptions
@@ -17903,6 +18032,12 @@ const fallbackStyles = {
     stage: undefined,
 };
 const styleStore = writable(fallbackStyles);
+/**
+ * @function initialize - Initialize the style store
+ * @param {object} customStyle - An object of custom styles to merge with the default
+ * @returns {object} - The style store
+ * @example initialize({ checksAndRadios: 'standard' });
+ */
 function initialize(customStyle) {
     if (customStyle) {
         styleSchema.parse(customStyle);
@@ -17914,6 +18049,17 @@ function initialize(customStyle) {
     return styleStore;
 }
 
+/**
+ * @function widgetApiFactory - Creates the widget API
+ * @param {object} componentApi - The component API
+ * @returns {object} - The widget API
+ * @property {object} componentApi - The component API for either inline or modal
+ * @property {object} configuration - Sets the configuration for the widget
+ * @property {function} getStores - Returns the stores: journeyStore, oauthStore, userStore
+ * @property {object} journey - the journey API
+ * @property {function} request - The HttpClient.request function from the SDK
+ * @property {object} user - the user API
+ */
 function widgetApiFactory(componentApi) {
     let journeyStore;
     let oauthStore;
@@ -17962,6 +18108,10 @@ function widgetApiFactory(componentApi) {
         initialize$3(options?.links);
         initialize(options?.style);
         return {
+            /** Set the Login Widget's Configuration
+             * @param {WidgetConfigOptions} options - The configuration options for the Login Widget
+             * @returns {void}
+             **/
             set(setOptions) {
                 if (setOptions?.forgerock) {
                     configure({
@@ -18083,6 +18233,11 @@ function widgetApiFactory(componentApi) {
         return { change, start, subscribe };
     };
     const user = {
+        /**
+         * User Info
+         * @param: void
+         * @returns: UserStore
+         */
         info() {
             if (!journeyStore || !oauthStore || !userStore) {
                 logErrorAndThrow('missingStores');
@@ -18105,6 +18260,12 @@ function widgetApiFactory(componentApi) {
             }
             return { get: wrappedGet, subscribe };
         },
+        /**
+         * Logout a user from an AM Session
+         * @async
+         * @param: void
+         * @returns: Promise<void>
+         **/
         async logout() {
             if (!journeyStore || !oauthStore || !userStore) {
                 logErrorAndThrow('missingStores');
@@ -18133,6 +18294,11 @@ function widgetApiFactory(componentApi) {
             // Return undefined as there's no response information to share
             return;
         },
+        /**
+         * Returns the widget's Tokens object
+         * @param void;
+         * @returns OAuthStore
+         */
         tokens() {
             if (!journeyStore || !oauthStore || !userStore) {
                 logErrorAndThrow('missingStores');
@@ -20615,6 +20781,11 @@ function matchJourneyAndDecideAction(href, journeys, stack) {
 /** *********************************************
  * NEW "NORMALIZED" METHODS
  */
+/**
+ * @function getInputTypeFromPolicies - Determines the type of input to use based on the policies object
+ * @param {object} policies - The policies object from the callback
+ * @returns {string} - The type of input to use
+ */
 function getInputTypeFromPolicies(policies) {
     const value = policies?.value;
     if (typeof value !== 'object') {
@@ -20632,6 +20803,11 @@ function getInputTypeFromPolicies(policies) {
     }
     return 'text';
 }
+/**
+ * @function getValidationFailureParams - Gets the validation failure params from the failed policy object
+ * @param {object} failedPolicy - The failed policy object from the callback
+ * @returns {array} - An array of objects containing the length, message, and rule
+ */
 function getValidationFailureParams(failedPolicy) {
     if (failedPolicy?.policyRequirement === 'DICTIONARY') {
         const params = failedPolicy.params;
@@ -20735,6 +20911,11 @@ function getValidationFailureParams(failedPolicy) {
         ];
     }
 }
+/**
+ * @function getValidationMessageString - Gets the validation message string from the policy object
+ * @param {object} policy - The policy object from the callback
+ * @returns {string} - The validation message string
+ */
 function getValidationMessageString(policy) {
     switch (policy?.policyId) {
         case 'at-least-X-capitals': {
@@ -20818,6 +20999,12 @@ function getValidationMessageString(policy) {
             return '';
     }
 }
+/**
+ * @function getValidationFailures - Gets the validation failures from the callback object
+ * @param {object} callback - The callback object from the server
+ * @param {string} label - The label of the field
+ * @returns {array} - An array of failed policies
+ */
 function getValidationFailures(callback, label) {
     const failedPolicies = callback.getFailedPolicies && callback.getFailedPolicies();
     const parsedPolicies = parseFailedPolicies(failedPolicies, label);
@@ -20829,6 +21016,11 @@ function getValidationFailures(callback, label) {
         };
     });
 }
+/**
+ * @function getValidationPolicies - Gets the validation policies from the callback object
+ * @param {object} policies - The policies object from the callback
+ * @returns {array} - An array of policies
+ */
 function getValidationPolicies(policies) {
     if (typeof policies !== 'object' && !policies) {
         return [];
@@ -20847,6 +21039,11 @@ function getValidationPolicies(policies) {
     })
         .filter((policy) => !!policy.message);
 }
+/**
+ * @function isInputRequired - Checks if the input is required
+ * @param {object} callback - The callback object from the server
+ * @returns {boolean} - Whether the input is required
+ */
 function isInputRequired(callback) {
     const policies = callback.getPolicies && callback.getPolicies();
     let isRequired = false;
@@ -20858,6 +21055,11 @@ function isInputRequired(callback) {
     }
     return isRequired;
 }
+/**
+ * @function convertCharacterSetToRuleObj - Converts a character set to a rule object
+ * @param {string} set - The character set to convert
+ * @returns {object} - The rule object
+ */
 function convertCharacterSetToRuleObj(set) {
     const arr = set.split(':');
     const num = arr[0];
@@ -20934,6 +21136,12 @@ function convertCharacterSetToRuleObj(set) {
         };
     }
 }
+/**
+ * @function parseFailedPolicies - Parses the failed policies from the callback object
+ * @param {array} policies - The policies array from the callback
+ * @param {string} label - The label of the field
+ * @returns {array} - An array of failed policies
+ */
 function parseFailedPolicies(policies, label) {
     return policies.map((policy) => {
         if (typeof policy === 'string') {
@@ -20949,8 +21157,10 @@ function parseFailedPolicies(policies, label) {
         }
     });
 }
-/** *********************************************
- * OLD METHODS
+/**
+ * @function getAttributeValidationFailureText - Gets the validation failure text from the callback object
+ * @param {object} callback - The callback object from the server
+ * @returns {string} - The validation failure text
  */
 function getAttributeValidationFailureText(callback) {
     // TODO: Mature this utility for better parsing and display
@@ -21949,13 +22159,6 @@ function instance$I($$self, $$props, $$invalidate) {
 	let validationFailure;
 
 	function setValue(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setInputValue(event.target.checked);
 	}
 
@@ -23724,7 +23927,7 @@ function create_else_block$6(ctx) {
 	};
 }
 
-// (66:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
+// (52:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
 function create_if_block$f(ctx) {
 	let radio;
 	let current;
@@ -23879,13 +24082,6 @@ function instance$B($$self, $$props, $$invalidate) {
  * @param {Object} event
  */
 	function setValue(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setChoiceIndex(Number(event.target.value));
 	}
 
@@ -23898,13 +24094,6 @@ function instance$B($$self, $$props, $$invalidate) {
 	$$self.$$.update = () => {
 		if ($$self.$$.dirty & /*callback, callbackMetadata, prompt*/ 2051) {
 			{
-				/** *************************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for getting values
- * --------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for accessing values from the callbacks received from AM
- ************************************************************************* */
 				$$invalidate(2, choiceOptions = callback.getChoices()?.map((text, idx) => ({
 					/**
  * Since locale content keys for the choice component are built off of the
@@ -24069,7 +24258,7 @@ function get_each_context$6(ctx, list, i) {
 	return child_ctx;
 }
 
-// (95:0) {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
+// (81:0) {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
 function create_if_block$e(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -24139,7 +24328,7 @@ function create_if_block$e(ctx) {
 	};
 }
 
-// (117:2) {:else}
+// (103:2) {:else}
 function create_else_block_1(ctx) {
 	let grid;
 	let current;
@@ -24185,7 +24374,7 @@ function create_else_block_1(ctx) {
 	};
 }
 
-// (96:2) {#if !stepMetadata?.derived.isStepSelfSubmittable}
+// (82:2) {#if !stepMetadata?.derived.isStepSelfSubmittable}
 function create_if_block_1$9(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -24255,7 +24444,7 @@ function create_if_block_1$9(ctx) {
 	};
 }
 
-// (120:8) <Button           style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}           type="button"           width="auto"           onClick={() => setBtnValue(Number(opt.value))}         >
+// (106:8) <Button           style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}           type="button"           width="auto"           onClick={() => setBtnValue(Number(opt.value))}         >
 function create_default_slot_2$5(ctx) {
 	let t0_value = /*opt*/ ctx[15].text + "";
 	let t0;
@@ -24280,7 +24469,7 @@ function create_default_slot_2$5(ctx) {
 	};
 }
 
-// (119:6) {#each options as opt}
+// (105:6) {#each options as opt}
 function create_each_block$6(ctx) {
 	let button;
 	let current;
@@ -24341,7 +24530,7 @@ function create_each_block$6(ctx) {
 	};
 }
 
-// (118:4) <Grid num={options.length}>
+// (104:4) <Grid num={options.length}>
 function create_default_slot_1$a(ctx) {
 	let each_1_anchor;
 	let current;
@@ -24425,7 +24614,7 @@ function create_default_slot_1$a(ctx) {
 	};
 }
 
-// (106:4) {:else}
+// (92:4) {:else}
 function create_else_block$5(ctx) {
 	let checkbox;
 	let current;
@@ -24476,7 +24665,7 @@ function create_else_block$5(ctx) {
 	};
 }
 
-// (97:4) {#if options.length > 1}
+// (83:4) {#if options.length > 1}
 function create_if_block_2$8(ctx) {
 	let select;
 	let current;
@@ -24523,7 +24712,7 @@ function create_if_block_2$8(ctx) {
 	};
 }
 
-// (107:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={inputName}         onChange={setCheckboxValue}         value={false}       >
+// (93:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={inputName}         onChange={setCheckboxValue}         value={false}       >
 function create_default_slot$h(ctx) {
 	let t_value = /*options*/ ctx[3][0].text + "";
 	let t;
@@ -24635,13 +24824,6 @@ function instance$z($$self, $$props, $$invalidate) {
  * @param {Object} event
  */
 	function setOptionValue(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setOptionIndex(Number(event.target.value));
 	}
 
@@ -24650,13 +24832,6 @@ function instance$z($$self, $$props, $$invalidate) {
  * @param {Object} event
  */
 	function setCheckboxValue(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		const value = event.target.checked;
 
 		if (value) {
@@ -26668,15 +26843,7 @@ function instance$t($$self, $$props, $$invalidate) {
 	? Stacked_label$1
 	: Floating_label$1;
 
-	/** *************************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for getting values
- * --------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for accessing values from the callbacks received from AM
- ************************************************************************* */
 	let customQuestionIndex = null;
-
 	let displayCustomQuestionInput = false;
 	let inputArr;
 	let inputName;
@@ -26704,13 +26871,6 @@ function instance$t($$self, $$props, $$invalidate) {
  * @param {Object} event
  */
 	function setAnswer(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setAnswer(event.target.value);
 	}
 
@@ -26727,14 +26887,6 @@ function instance$t($$self, $$props, $$invalidate) {
 			callback.setAnswer('');
 		} else {
 			$$invalidate(3, displayCustomQuestionInput = false);
-
-			/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 			callback.setQuestion(selectValue);
 		}
 	}
@@ -26745,14 +26897,6 @@ function instance$t($$self, $$props, $$invalidate) {
  */
 	function setQuestion(event) {
 		const inputValue = event.target.value;
-
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setQuestion(inputValue);
 	}
 
@@ -29949,13 +30093,6 @@ function instance$f($$self, $$props, $$invalidate) {
  * @param {Object} event
  */
 	function setValue(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setInputValue(event.target.value);
 	}
 
@@ -30144,7 +30281,7 @@ function create_else_block$3(ctx) {
 	};
 }
 
-// (41:0) {#if $linksStore?.termsAndConditions}
+// (27:0) {#if $linksStore?.termsAndConditions}
 function create_if_block$7(ctx) {
 	let link;
 	let t;
@@ -30222,7 +30359,7 @@ function create_if_block$7(ctx) {
 	};
 }
 
-// (42:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
+// (28:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
 function create_default_slot_1$5(ctx) {
 	let t_value = interpolate('termsAndConditionsLinkText') + "";
 	let t;
@@ -30241,7 +30378,7 @@ function create_default_slot_1$5(ctx) {
 	};
 }
 
-// (45:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
+// (31:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
 function create_default_slot$9(ctx) {
 	let t;
 	let current;
@@ -30349,13 +30486,6 @@ function instance$d($$self, $$props, $$invalidate) {
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
 
-	/** *************************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for getting values
- * --------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for accessing values from the callbacks received from AM
- ************************************************************************* */
 	const Checkbox = style.checksAndRadios === 'standard'
 	? Standard$1
 	: Animated$1;
@@ -30367,13 +30497,6 @@ function instance$d($$self, $$props, $$invalidate) {
  * @param {Object} event
  */
 	function setValue(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setAccepted(event.target.checked);
 	}
 
@@ -30932,13 +31055,6 @@ function instance$9($$self, $$props, $$invalidate) {
  * @param {Object} event
  */
 	function setValue(event) {
-		/** ***********************************************************************
- * SDK INTEGRATION POINT
- * Summary: SDK callback methods for setting values
- * ------------------------------------------------------------------------
- * Details: Each callback is wrapped by the SDK to provide helper methods
- * for writing values to the callbacks received from AM
- *********************************************************************** */
 		callback.setInputValue(event.target.value);
 	}
 
@@ -35195,14 +35311,12 @@ class Login extends SvelteComponent {
 	}
 }
 
+/**
+ * @function mapStepToStage - Maps the current step to the proper stage component.
+ * @param {object} currentStep - The current step to check
+ * @returns {object} - The stage Svelte component
+ */
 function mapStepToStage(currentStep) {
-    /** *********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary:SDK step method for getting the stage value
-     * ----------------------------------------------------------------------
-     * Details: This method is helpful in quickly identifying the stage
-     * when you want to provide special layout or handling of the form
-     ********************************************************************* */
     if (!currentStep || currentStep.type !== 'Step') {
         return Generic;
     }

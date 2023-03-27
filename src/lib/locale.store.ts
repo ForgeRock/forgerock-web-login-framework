@@ -96,6 +96,11 @@ stringsSchema.parse(fallback);
 export const locale: Writable<string | null> = writable('en-US');
 export const stringsStore: Writable<Record<string, string> | null> = writable(null);
 
+/**
+ * initialize locale information for Login Widget
+ * @param: userLocale - optional locale object to override default locale
+ * @returns: a schema which represents the user locale schema
+ */
 export function initialize(userLocale?: z.infer<typeof partialStringsSchema>) {
   if (userLocale) {
     /**

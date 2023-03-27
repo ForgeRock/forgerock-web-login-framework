@@ -30,13 +30,6 @@
   const Input = style.labels === 'stacked' ? InputStacked : InputFloating;
   const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
-  /** *************************************************************************
-   * SDK INTEGRATION POINT
-   * Summary: SDK callback methods for getting values
-   * --------------------------------------------------------------------------
-   * Details: Each callback is wrapped by the SDK to provide helper methods
-   * for accessing values from the callbacks received from AM
-   ************************************************************************* */
   let customQuestionIndex: string | null = null;
   let displayCustomQuestionInput = false;
   let inputArr: NameValue[] | undefined;
@@ -66,13 +59,6 @@
    * @param {Object} event
    */
   function setAnswer(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setAnswer((event.target as HTMLSelectElement).value);
   }
 
@@ -89,13 +75,6 @@
       callback.setAnswer('');
     } else {
       displayCustomQuestionInput = false;
-      /** ***********************************************************************
-       * SDK INTEGRATION POINT
-       * Summary: SDK callback methods for setting values
-       * ------------------------------------------------------------------------
-       * Details: Each callback is wrapped by the SDK to provide helper methods
-       * for writing values to the callbacks received from AM
-       *********************************************************************** */
       callback.setQuestion(selectValue);
     }
   }
@@ -106,13 +85,6 @@
    */
   function setQuestion(event: Event) {
     const inputValue = (event.target as HTMLSelectElement).value;
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setQuestion(inputValue);
   }
 

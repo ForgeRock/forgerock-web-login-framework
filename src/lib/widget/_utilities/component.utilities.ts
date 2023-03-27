@@ -58,6 +58,10 @@ export function closeComponent(
   });
 }
 
+/**
+ * @function componentApi - this is a widget external API
+ * @returns {object} - the public component API
+ */
 export const componentApi = () => {
   const { update } = componentStore;
   // Create derived store to minimize what's exposed to the dev
@@ -75,9 +79,19 @@ export const componentApi = () => {
     });
 
   return {
+    /**
+     * Close a modal
+     * @param {object} args - object containing  the reason for closing component
+     * @returns {void}
+     */
     close: (args?: { reason: 'auto' | 'external' | 'user' }) => {
       closeComponent(args, true);
     },
+    /**
+     * Open a modal
+     * @param: void
+     * @returns: void
+     */
     open: () => {
       update((state) => {
         if (state.type === 'inline') {
@@ -101,6 +115,10 @@ export const componentApi = () => {
         };
       });
     },
+    /**
+     * Subscribe to modal events
+     * returns the latest value from the event
+     */
     subscribe,
   };
 };
