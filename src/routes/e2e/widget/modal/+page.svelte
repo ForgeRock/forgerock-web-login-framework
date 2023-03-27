@@ -61,7 +61,6 @@
           timeout: 5000,
         },
         realmPath: 'alpha',
-        tree: 'Registration',
       },
       content,
       journeys: {

@@ -33,9 +33,9 @@ export const partialStyleSchema = styleSchema.partial();
 const fallbackStyles = {
   checksAndRadios: 'animated',
   labels: 'floating',
-  logo: {},
-  sections: {},
-  stage: {},
+  logo: undefined,
+  sections: undefined,
+  stage: undefined,
 } as const;
 
 export const styleStore: Writable<z.infer<typeof partialStyleSchema>> = writable(fallbackStyles);

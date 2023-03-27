@@ -476,3 +476,274 @@ export const registrationStep: Step = {
   ],
   stage: 'DefaultRegistration',
 };
+
+export const registrationStepWithTwoKBAs: Step = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlJlZ2lzdHJhdGlvbiIsIm90ayI6ImlnOXFqMWNrbjFkYnVjajE2dXBtYmlsYjZtIiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNWpPRlJEUTJWRFkyaG9iR1l5ZVRkZmJDMDFSVXhSTGt3eUxWQlRSSFJzUldkVmIzUkZZV3RrZWpNMGQwSXlNekJDTTFGbVNGbGhhV2xZZGpFelV6RmxVWEl0UkcwNVRWY3dTR2htU3pKWk5WcGlPVlo2Yld0b2NFSjRiVGx5UXpFMVUyTmZaRTFSTm1oUk1rMTFOSFpsVm0xTlJUUTNTV3R1Y0djeU1sbE9lVUZRUzJKaGVucGpSMnRMVmxoVmJuWmpjVkpCU25KbGVGQkNRWGxLTURWZlNFdHdNMUIyWTBkaVlVOTRZMVJxVDFCWFQyRTRTbTF6UkRCbGFITk1XV1p3YzFOalIwMVdaVEZyYUU4dFJUZDZPR1YyVGxaVmNqUjNNRTgyVHpoS05GSTRkMHhwU3pseWJsTkpkVlpOZUU5RFFVbDZOVjh5UlhrdE5qazNabVUyTmtKek9UTm5ka3hUU1ZsWVYyVkZkVlF0Um1GRFJ6VTFWWGx5UWxSRGNUZzFTRE14TlZCSU5HMUVTRXhqU25GTWVIbElYM0pIV1RkcFpXRnhORUowV2xVM2RIbHJaVWhZYTBwUU5GVXhTRVJXUWs1M2MwMVhRME5QVUcxSVNGcHpRUzB0WkdkU1Jtb3pabkF3ZEZoWlgxSjRlR3hpUkdONU9WZHlZMG81VkROVWRrRlhSM2N3TTJoUlJISmZTMXBxY1d4bE1YRk5hWFp3TWpoemNHTnRURU5zWmtkYVZVdDZSRlIwTW5wamVqVlZkMVpEYnpsSU4zSmFhRVprZDJkM1lqQm5Ta2xsYTFKTWNXY3pRa3MzUzFCaFYwTnpNbTkxWVdrNExWUlBkM1J6VW14eGR6VTFRMjE0TVZGbFgzVnROVTFyY0dGUU9FSkJNRFUzTUVGNVpYQjNaVTFzVkRsd2FHTlJVSGhTY0Y5NU1FeHNRMkZIUWtOYWNqUmFYMVpqWlhGelIwMUlNbGR1YUdob1VXOTRhM2hNWkRkcFFWcEJNMjFqVlhWMFRtTnhRVlpOZFVwTFdsbHZPVkUxYm5oSk5IWnhWMEpKWkZWNk9IaFljR3BOVGpoR2EwSjVOVmMyY0V4M1lWQkVRaTF5V0dJNVlXeHljQzB0WWt0a2REVjZjRWxXWnpFelRFTjBhV1YzY1haSldFeFFZVEk1V2t0T2FVRjVTblJYWHpkV1gzTjRhbkpXWWxKMk5tMXdUM1ZRYW05dk4xWmZRbWRTWDFCaFZFbFBhR1ZxU0VwbVdtWlVPVjl3ZWw5T1kybFJTbFpFY0ZGTlRrMW9NRnBPZHpKT1dHdEVZMDh4VWtwb1pHNTFaRmRsVGxCc1psWk1NRGhHWm5CYWJFWlFZa3g1YVhsTU5USkZlVjl1ZVV0clIySnRTekEwWTFSaUxXRjNMVko0TVhCb2JqZEROMWhwYzA4elJWOVhYMmN1TTFZeldHNUNNbUZtZEV4NWRWUlVNME5aYldvemR3LmRKWUJVTk5Hb3h6WmZDNDZpQmp2c2VPcVNYVmJLcmNhcC11eko2cGl2ZmMiLCJleHAiOjE2NTQyMTM4ODgsImlhdCI6MTY1NDIxMzU4OH0.2TyyM5dBQYMfuOX24kIzwSy5GSGT8glabII8QN7Gl7A',
+  callbacks: [
+    {
+      type: CallbackType.ValidatedCreateUsernameCallback,
+      output: [
+        {
+          name: 'policies',
+          value: {
+            policyRequirements: [
+              'REQUIRED',
+              'MIN_LENGTH',
+              'VALID_TYPE',
+              'VALID_USERNAME',
+              'CANNOT_CONTAIN_CHARACTERS',
+              'MAX_LENGTH',
+            ],
+            fallbackPolicies: null,
+            name: 'userName',
+            policies: [
+              { policyRequirements: ['REQUIRED'], policyId: 'required' },
+              { policyRequirements: ['REQUIRED'], policyId: 'not-empty' },
+              {
+                policyRequirements: ['MIN_LENGTH'],
+                policyId: 'minimum-length',
+                params: { minLength: 1 },
+              },
+              {
+                policyRequirements: ['VALID_TYPE'],
+                policyId: 'valid-type',
+                params: { types: ['string'] },
+              },
+              { policyId: 'valid-username', policyRequirements: ['VALID_USERNAME'] },
+              {
+                policyId: 'cannot-contain-characters',
+                params: { forbiddenChars: ['/'] },
+                policyRequirements: ['CANNOT_CONTAIN_CHARACTERS'],
+              },
+              {
+                policyId: 'minimum-length',
+                params: { minLength: 1 },
+                policyRequirements: ['MIN_LENGTH'],
+              },
+              {
+                policyId: 'maximum-length',
+                params: { maxLength: 255 },
+                policyRequirements: ['MAX_LENGTH'],
+              },
+            ],
+            conditionalPolicies: null,
+          },
+        },
+        { name: 'failedPolicies', value: [] },
+        { name: 'validateOnly', value: false },
+        { name: 'prompt', value: 'Username' },
+      ],
+      input: [
+        { name: 'IDToken1', value: '' },
+        { name: 'IDToken1validateOnly', value: false },
+      ],
+      _id: 0,
+    },
+    {
+      type: CallbackType.StringAttributeInputCallback,
+      output: [
+        { name: 'name', value: 'mail' },
+        { name: 'prompt', value: 'Email Address' },
+        { name: 'required', value: true },
+        {
+          name: 'policies',
+          value: {
+            policyRequirements: ['REQUIRED', 'VALID_TYPE', 'VALID_EMAIL_ADDRESS_FORMAT'],
+            fallbackPolicies: null,
+            name: 'mail',
+            policies: [
+              { policyRequirements: ['REQUIRED'], policyId: 'required' },
+              {
+                policyRequirements: ['VALID_TYPE'],
+                policyId: 'valid-type',
+                params: { types: ['string'] },
+              },
+              {
+                policyId: 'valid-email-address-format',
+                policyRequirements: ['VALID_EMAIL_ADDRESS_FORMAT'],
+              },
+            ],
+            conditionalPolicies: null,
+          },
+        },
+        { name: 'failedPolicies', value: [] },
+        { name: 'validateOnly', value: false },
+        { name: 'value', value: '' },
+      ],
+      input: [
+        { name: 'IDToken4', value: '' },
+        { name: 'IDToken4validateOnly', value: false },
+      ],
+      _id: 3,
+    },
+    {
+      type: CallbackType.BooleanAttributeInputCallback,
+      output: [
+        { name: 'name', value: 'preferences/marketing' },
+        { name: 'prompt', value: 'Send me special offers and services' },
+        { name: 'required', value: true },
+        { name: 'policies', value: {} },
+        { name: 'failedPolicies', value: [] },
+        { name: 'validateOnly', value: false },
+        { name: 'value', value: false },
+      ],
+      input: [
+        { name: 'IDToken5', value: false },
+        { name: 'IDToken5validateOnly', value: false },
+      ],
+      _id: 4,
+    },
+    {
+      type: CallbackType.ChoiceCallback,
+      output: [
+        {
+          name: 'prompt',
+          value: 'Choose one',
+        },
+        {
+          name: 'choices',
+          value: ['Choice A', 'Choice B', 'Choice C'],
+        },
+        {
+          name: 'defaultChoice',
+          value: 2,
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken1',
+          value: 0,
+        },
+      ],
+    },
+    {
+      type: CallbackType.ValidatedCreatePasswordCallback,
+      output: [
+        { name: 'echoOn', value: false },
+        {
+          name: 'policies',
+          value: {
+            policyRequirements: [
+              'VALID_TYPE',
+              'MIN_LENGTH',
+              'AT_LEAST_X_CAPITAL_LETTERS',
+              'AT_LEAST_X_NUMBERS',
+              'CANNOT_CONTAIN_OTHERS',
+            ],
+            fallbackPolicies: null,
+            name: 'password',
+            policies: [
+              {
+                policyRequirements: ['VALID_TYPE'],
+                policyId: 'valid-type',
+                params: {
+                  types: ['string'],
+                },
+              },
+              {
+                policyId: 'minimum-length',
+                params: {
+                  minLength: 8,
+                },
+                policyRequirements: ['MIN_LENGTH'],
+              },
+              {
+                policyId: 'at-least-X-capitals',
+                params: {
+                  numCaps: 1,
+                },
+                policyRequirements: ['AT_LEAST_X_CAPITAL_LETTERS'],
+              },
+              {
+                policyId: 'at-least-X-numbers',
+                params: {
+                  numNums: 1,
+                },
+                policyRequirements: ['AT_LEAST_X_NUMBERS'],
+              },
+              {
+                policyId: 'cannot-contain-others',
+                params: {
+                  disallowedFields: ['userName', 'givenName', 'sn'],
+                },
+                policyRequirements: ['CANNOT_CONTAIN_OTHERS'],
+              },
+            ],
+            conditionalPolicies: null,
+          },
+        },
+        { name: 'failedPolicies', value: [] },
+        { name: 'validateOnly', value: false },
+        { name: 'prompt', value: 'Password' },
+      ],
+      input: [
+        { name: 'IDToken7', value: '' },
+        { name: 'IDToken7validateOnly', value: false },
+      ],
+      _id: 6,
+    },
+    {
+      type: CallbackType.KbaCreateCallback,
+      output: [
+        { name: 'prompt', value: 'Select a security question' },
+        {
+          name: 'predefinedQuestions',
+          value: ["What's your favorite color?", 'Where did you grow up?'],
+        },
+        {
+          name: 'allowUserDefinedQuestions',
+          value: true,
+        },
+      ],
+      input: [
+        { name: 'IDToken8question', value: '' },
+        { name: 'IDToken8answer', value: '' },
+      ],
+      _id: 7,
+    },
+    {
+      type: CallbackType.KbaCreateCallback,
+      output: [
+        {
+          name: 'prompt',
+          value: 'Select second question',
+        },
+        {
+          name: 'predefinedQuestions',
+          value: ["What's your favorite color?", 'Where did you grow up?'],
+        },
+        {
+          name: 'allowUserDefinedQuestions',
+          value: true,
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken9question',
+          value: '',
+        },
+        {
+          name: 'IDToken9answer',
+          value: '',
+        },
+      ],
+      _id: 8,
+    },
+    {
+      type: CallbackType.TermsAndConditionsCallback,
+      output: [
+        { name: 'version', value: '0.0' },
+        {
+          name: 'terms',
+          value:
+            'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
+        },
+        { name: 'createDate', value: '2019-10-28T04:20:11.320Z' },
+      ],
+      input: [{ name: 'IDToken9', value: false }],
+      _id: 8,
+    },
+  ],
+  stage: 'DefaultRegistration',
+};

@@ -30,7 +30,7 @@
   import type { Maybe } from '$lib/interfaces';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
-  // New API
+  export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
@@ -93,7 +93,7 @@
   needsFocus={formNeedsFocus}
   onSubmitWhenValid={submitFormWrapper}
 >
-  {#if form?.icon}
+  {#if form?.icon && componentStyle !== 'inline'}
     <div class="tw_flex tw_justify-center">
       <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>

@@ -11,6 +11,7 @@
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
+  export let componentStyle: 'app' | 'inline' | 'modal';
   export let displayIcon: boolean;
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;
@@ -40,6 +41,7 @@
     <svelte:component
       this={mapStepToStage($journeyStore.step)}
       bind:formEl
+      {componentStyle}
       form={{
         icon: displayIcon,
         message: $journeyStore.error?.message || '',

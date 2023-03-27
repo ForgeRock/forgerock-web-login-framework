@@ -18,7 +18,7 @@ test('Modal widget with social callback redirect', async ({ page }) => {
 test('Modal widget with social callback redirect no local auth', async ({ page }) => {
   const { navigate } = asyncEvents(page);
 
-  await navigate('widget/modal?journey=LoginWithSocialNoLocalAuth');
+  await navigate('widget/modal?journey=TEST_LoginWithSocialNoLocal');
 
   const loginButton = page.getByRole('button', { name: 'Open Login Modal' });
 
@@ -32,7 +32,7 @@ test('Modal widget with social callback redirect no local auth', async ({ page }
 test('Modal widget with social callback local authentication', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/modal?journey=LoginWithSocial');
+  await navigate('widget/modal?journey=TEST_LoginWithSocial');
 
   await clickButton('Open Login Modal', '/authenticate');
 

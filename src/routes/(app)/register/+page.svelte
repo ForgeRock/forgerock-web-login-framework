@@ -43,5 +43,5 @@
 </script>
 
 <Box>
-  <Journey displayIcon={true} {journeyStore} />
+  <Journey componentStyle="app" displayIcon={true} {journeyStore} />
 </Box>

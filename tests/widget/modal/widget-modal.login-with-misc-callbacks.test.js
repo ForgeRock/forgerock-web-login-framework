@@ -6,7 +6,7 @@ test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
   // TODO update this to a new TEST_ journey once finished
-  await navigate('widget/modal?journey=LoginWithMoreMiscCallbacks');
+  await navigate('widget/modal?journey=TEST_LoginWithMiscCallbacks');
 
   await clickButton('Open Login Modal', '/authenticate');
 
@@ -25,17 +25,19 @@ test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   // Choice (select)
   const selectEl = page.getByLabel('Are you sure?');
   await selectEl.selectOption('0');
+  await clickButton('Next', '/authenticate');
 
   // Choice (radio)
   // TODO: The below selector should distinguish between the select and radio types
-  const radioEl = page.getByLabel('Are you sure?');
-  await radioEl.selectOption('0');
+  await expect(page.getByText('Are you sure?')).toBeVisible();
+  // TODO: Figure out why regular clicks don't work: https://github.com/microsoft/playwright/issues/13576
+  await page.getByLabel('Yes').dispatchEvent('click');
   await clickButton('Next', '/authenticate');
+  ``;
 
   await Promise.all([
     // NOTE: Make sure timer is same or more than set in Polling Wait node
-    page.waitForTimeout(3000),
-    page.locator('button', { hasText: 'Next' }).click(),
+    page.waitForTimeout(2000),
     // Spinner
     expect(page.getByRole('status')).toBeVisible(),
   ]);

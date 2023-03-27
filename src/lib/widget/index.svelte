@@ -51,6 +51,7 @@
       <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
       <Journey
         bind:formEl
+        componentStyle="modal"
         displayIcon={$styleStore?.stage?.icon ?? !$styleStore?.logo}
         {journeyStore}
       />
@@ -59,6 +60,11 @@
 {:else}
   <div class="fr_widget-root">
     <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
-    <Journey bind:formEl displayIcon={$styleStore?.stage?.icon ?? true} {journeyStore} />
+    <Journey
+      bind:formEl
+      componentStyle="inline"
+      displayIcon={$styleStore?.stage?.icon ?? true}
+      {journeyStore}
+    />
   </div>
 {/if}

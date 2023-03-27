@@ -49,5 +49,5 @@
 </script>
 
 <Centered>
-  <Generic {form} {journey} {metadata} {step} />
+  <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
 </Centered>

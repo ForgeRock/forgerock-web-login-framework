@@ -16771,7 +16771,7 @@ var registerSuccess = "Registration successful!";
 var requiredField = "Value is required";
 var securityAnswer = "Security answer";
 var securityQuestions = "Security question(s)";
-var securityQuestionsPrompt = "Provide custom security question(s) and answer(s):";
+var securityQuestionsPrompt = "Provide security question(s) and answer(s):";
 var showPassword = "Show password";
 var sn = "Last name";
 var submitButton = "Submit";
@@ -17871,9 +17871,9 @@ styleSchema.partial();
 const fallbackStyles = {
     checksAndRadios: 'animated',
     labels: 'floating',
-    logo: {},
-    sections: {},
-    stage: {},
+    logo: undefined,
+    sections: undefined,
+    stage: undefined,
 };
 const styleStore = writable(fallbackStyles);
 function initialize(customStyle) {
@@ -18524,7 +18524,7 @@ function create_else_block$9(ctx) {
 			attr(button, "aria-controls", /*dialogId*/ ctx[1]);
 
 			attr(div, "class", div_class_value = `tw_pt-10 md:tw_pt-10 tw_text-right ${(/*$styleStore*/ ctx[5]?.logo)
-			? 'tw_h-32 md:tw_h-36  tw_pb-6'
+			? 'tw_h-32 md:tw_h-36 tw_pb-6'
 			: ''}`);
 		},
 		m(target, anchor) {
@@ -18567,7 +18567,7 @@ function create_else_block$9(ctx) {
 			}
 
 			if (!current || dirty & /*$styleStore*/ 32 && div_class_value !== (div_class_value = `tw_pt-10 md:tw_pt-10 tw_text-right ${(/*$styleStore*/ ctx[5]?.logo)
-			? 'tw_h-32 md:tw_h-36  tw_pb-6'
+			? 'tw_h-32 md:tw_h-36 tw_pb-6'
 			: ''}`)) {
 				attr(div, "class", div_class_value);
 			}
@@ -24909,7 +24909,7 @@ function create_if_block_5$1(ctx) {
 }
 
 // (65:0) {#if type === 'number'}
-function create_if_block_4$1(ctx) {
+function create_if_block_4$2(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -24989,7 +24989,7 @@ function create_if_block_4$1(ctx) {
 }
 
 // (81:0) {#if type === 'password'}
-function create_if_block_3$3(ctx) {
+function create_if_block_3$6(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -25309,8 +25309,8 @@ function create_fragment$x(ctx) {
 	let if_block0 = /*labelOrder*/ ctx[6] === 'first' && create_if_block_7$1(ctx);
 	let if_block1 = /*type*/ ctx[11] === 'date' && create_if_block_6$1(ctx);
 	let if_block2 = /*type*/ ctx[11] === 'email' && create_if_block_5$1(ctx);
-	let if_block3 = /*type*/ ctx[11] === 'number' && create_if_block_4$1(ctx);
-	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$3(ctx);
+	let if_block3 = /*type*/ ctx[11] === 'number' && create_if_block_4$2(ctx);
+	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$6(ctx);
 	let if_block5 = /*type*/ ctx[11] === 'phone' && create_if_block_2$7(ctx);
 	let if_block6 = /*type*/ ctx[11] === 'text' && create_if_block_1$8(ctx);
 	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$d(ctx);
@@ -25407,7 +25407,7 @@ function create_fragment$x(ctx) {
 				if (if_block3) {
 					if_block3.p(ctx, dirty);
 				} else {
-					if_block3 = create_if_block_4$1(ctx);
+					if_block3 = create_if_block_4$2(ctx);
 					if_block3.c();
 					if_block3.m(t3.parentNode, t3);
 				}
@@ -25420,7 +25420,7 @@ function create_fragment$x(ctx) {
 				if (if_block4) {
 					if_block4.p(ctx, dirty);
 				} else {
-					if_block4 = create_if_block_3$3(ctx);
+					if_block4 = create_if_block_3$6(ctx);
 					if_block4.c();
 					if_block4.m(t4.parentNode, t4);
 				}
@@ -28517,7 +28517,7 @@ function get_each_context$5(ctx, list, i) {
 }
 
 // (66:56) 
-function create_if_block_3$2(ctx) {
+function create_if_block_3$5(ctx) {
 	let button;
 	let current;
 
@@ -28861,7 +28861,7 @@ function create_default_slot_1$6(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_1$7, create_if_block_2$6, create_if_block_3$2];
+	const if_block_creators = [create_if_block_1$7, create_if_block_2$6, create_if_block_3$5];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -31569,7 +31569,7 @@ function create_if_block_5(ctx) {
 }
 
 // (126:52) 
-function create_if_block_4(ctx) {
+function create_if_block_4$1(ctx) {
 	let kbacreate;
 	let current;
 	const kbacreate_spread_levels = [/*newProps*/ ctx[19]];
@@ -31612,7 +31612,7 @@ function create_if_block_4(ctx) {
 }
 
 // (120:54) 
-function create_if_block_3$1(ctx) {
+function create_if_block_3$4(ctx) {
 	let hiddenvalue;
 	let current;
 	const hiddenvalue_spread_levels = [/*newProps*/ ctx[19]];
@@ -31793,8 +31793,8 @@ function create_fragment$8(ctx) {
 		create_if_block$6,
 		create_if_block_1$5,
 		create_if_block_2$5,
-		create_if_block_3$1,
-		create_if_block_4,
+		create_if_block_3$4,
+		create_if_block_4$1,
 		create_if_block_5,
 		create_if_block_6,
 		create_if_block_7,
@@ -32027,12 +32027,12 @@ class Callback_mapper extends SvelteComponent {
 
 function get_each_context$3(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[15] = list[i];
-	child_ctx[17] = i;
+	child_ctx[16] = list[i];
+	child_ctx[18] = i;
 	return child_ctx;
 }
 
-// (70:2) {#if form?.icon}
+// (70:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block_2$4(ctx) {
 	let div;
 	let shieldicon;
@@ -32080,7 +32080,7 @@ function create_if_block_1$4(ctx) {
 	alert = new Alert({
 			props: {
 				id: formFailureMessageId,
-				needsFocus: /*alertNeedsFocus*/ ctx[5],
+				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
 				$$slots: { default: [create_default_slot_2$3] },
 				$$scope: { ctx }
@@ -32097,9 +32097,9 @@ function create_if_block_1$4(ctx) {
 		},
 		p(ctx, dirty) {
 			const alert_changes = {};
-			if (dirty & /*alertNeedsFocus*/ 32) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[5];
+			if (dirty & /*alertNeedsFocus*/ 64) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[6];
 
-			if (dirty & /*$$scope, formMessageKey, form*/ 262210) {
+			if (dirty & /*$$scope, formMessageKey, form*/ 524420) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32122,7 +32122,7 @@ function create_if_block_1$4(ctx) {
 
 // (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$3(ctx) {
-	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
+	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
 	return {
@@ -32133,7 +32133,7 @@ function create_default_slot_2$3(ctx) {
 			insert(target, t, anchor);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*formMessageKey, form*/ 66 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "")) set_data(t, t_value);
+			if (dirty & /*formMessageKey, form*/ 132 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(t);
@@ -32149,11 +32149,11 @@ function create_each_block$3(ctx) {
 	callbackmapper = new Callback_mapper({
 			props: {
 				props: {
-					callback: /*callback*/ ctx[15],
-					callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[17]],
-					selfSubmitFunction: /*determineSubmission*/ ctx[11],
-					stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-					style: /*$styleStore*/ ctx[10]
+					callback: /*callback*/ ctx[16],
+					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[18]],
+					selfSubmitFunction: /*determineSubmission*/ ctx[12],
+					stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+					style: /*$styleStore*/ ctx[11]
 				}
 			}
 		});
@@ -32169,12 +32169,12 @@ function create_each_block$3(ctx) {
 		p(ctx, dirty) {
 			const callbackmapper_changes = {};
 
-			if (dirty & /*step, metadata, $styleStore*/ 1048) callbackmapper_changes.props = {
-				callback: /*callback*/ ctx[15],
-				callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[17]],
-				selfSubmitFunction: /*determineSubmission*/ ctx[11],
-				stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-				style: /*$styleStore*/ ctx[10]
+			if (dirty & /*step, metadata, $styleStore*/ 2096) callbackmapper_changes.props = {
+				callback: /*callback*/ ctx[16],
+				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[18]],
+				selfSubmitFunction: /*determineSubmission*/ ctx[12],
+				stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+				style: /*$styleStore*/ ctx[11]
 			};
 
 			callbackmapper.$set(callbackmapper_changes);
@@ -32201,7 +32201,7 @@ function create_if_block$5(ctx) {
 
 	button = new Button({
 			props: {
-				busy: /*journey*/ ctx[2]?.loading,
+				busy: /*journey*/ ctx[3]?.loading,
 				style: "primary",
 				type: "submit",
 				width: "full",
@@ -32220,9 +32220,9 @@ function create_if_block$5(ctx) {
 		},
 		p(ctx, dirty) {
 			const button_changes = {};
-			if (dirty & /*journey*/ 4) button_changes.busy = /*journey*/ ctx[2]?.loading;
+			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
 
-			if (dirty & /*$$scope*/ 262144) {
+			if (dirty & /*$$scope*/ 524288) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32288,24 +32288,24 @@ function create_default_slot$5(ctx) {
 	let t5;
 	let backto;
 	let current;
-	let if_block0 = /*form*/ ctx[1]?.icon && create_if_block_2$4();
+	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$4();
 
 	sanitize0 = new Server_strings({
 			props: {
 				html: true,
-				string: /*step*/ ctx[4]?.getHeader() || ''
+				string: /*step*/ ctx[5]?.getHeader() || ''
 			}
 		});
 
 	sanitize1 = new Server_strings({
 			props: {
 				html: true,
-				string: /*step*/ ctx[4]?.getDescription() || ''
+				string: /*step*/ ctx[5]?.getDescription() || ''
 			}
 		});
 
-	let if_block1 = /*form*/ ctx[1]?.message && create_if_block_1$4(ctx);
-	let each_value = /*step*/ ctx[4]?.callbacks;
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$4(ctx);
+	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
@@ -32316,8 +32316,8 @@ function create_default_slot$5(ctx) {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) && create_if_block$5(ctx);
-	backto = new Back_to({ props: { journey: /*journey*/ ctx[2] } });
+	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block$5(ctx);
+	backto = new Back_to({ props: { journey: /*journey*/ ctx[3] } });
 
 	return {
 		c() {
@@ -32354,7 +32354,7 @@ function create_default_slot$5(ctx) {
 			append(header, t1);
 			append(header, p);
 			mount_component(sanitize1, p, null);
-			/*header_binding*/ ctx[13](header);
+			/*header_binding*/ ctx[14](header);
 			insert(target, t2, anchor);
 			if (if_block1) if_block1.m(target, anchor);
 			insert(target, t3, anchor);
@@ -32370,9 +32370,9 @@ function create_default_slot$5(ctx) {
 			current = true;
 		},
 		p(ctx, dirty) {
-			if (/*form*/ ctx[1]?.icon) {
+			if (/*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline') {
 				if (if_block0) {
-					if (dirty & /*form*/ 2) {
+					if (dirty & /*form, componentStyle*/ 6) {
 						transition_in(if_block0, 1);
 					}
 				} else {
@@ -32392,17 +32392,17 @@ function create_default_slot$5(ctx) {
 			}
 
 			const sanitize0_changes = {};
-			if (dirty & /*step*/ 16) sanitize0_changes.string = /*step*/ ctx[4]?.getHeader() || '';
+			if (dirty & /*step*/ 32) sanitize0_changes.string = /*step*/ ctx[5]?.getHeader() || '';
 			sanitize0.$set(sanitize0_changes);
 			const sanitize1_changes = {};
-			if (dirty & /*step*/ 16) sanitize1_changes.string = /*step*/ ctx[4]?.getDescription() || '';
+			if (dirty & /*step*/ 32) sanitize1_changes.string = /*step*/ ctx[5]?.getDescription() || '';
 			sanitize1.$set(sanitize1_changes);
 
-			if (/*form*/ ctx[1]?.message) {
+			if (/*form*/ ctx[2]?.message) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 
-					if (dirty & /*form*/ 2) {
+					if (dirty & /*form*/ 4) {
 						transition_in(if_block1, 1);
 					}
 				} else {
@@ -32421,8 +32421,8 @@ function create_default_slot$5(ctx) {
 				check_outros();
 			}
 
-			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 3096) {
-				each_value = /*step*/ ctx[4]?.callbacks;
+			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 6192) {
+				each_value = /*step*/ ctx[5]?.callbacks;
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -32448,11 +32448,11 @@ function create_default_slot$5(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) {
+			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
-					if (dirty & /*metadata*/ 8) {
+					if (dirty & /*metadata*/ 16) {
 						transition_in(if_block2, 1);
 					}
 				} else {
@@ -32472,7 +32472,7 @@ function create_default_slot$5(ctx) {
 			}
 
 			const backto_changes = {};
-			if (dirty & /*journey*/ 4) backto_changes.journey = /*journey*/ ctx[2];
+			if (dirty & /*journey*/ 8) backto_changes.journey = /*journey*/ ctx[3];
 			backto.$set(backto_changes);
 		},
 		i(local) {
@@ -32511,7 +32511,7 @@ function create_default_slot$5(ctx) {
 			if (detaching) detach(header);
 			destroy_component(sanitize0);
 			destroy_component(sanitize1);
-			/*header_binding*/ ctx[13](null);
+			/*header_binding*/ ctx[14](null);
 			if (detaching) detach(t2);
 			if (if_block1) if_block1.d(detaching);
 			if (detaching) detach(t3);
@@ -32530,14 +32530,14 @@ function create_fragment$7(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[14](value);
+		/*form_1_formEl_binding*/ ctx[15](value);
 	}
 
 	let form_1_props = {
-		ariaDescribedBy: /*formAriaDescriptor*/ ctx[7],
+		ariaDescribedBy: /*formAriaDescriptor*/ ctx[8],
 		id: formElementId,
-		needsFocus: /*formNeedsFocus*/ ctx[8],
-		onSubmitWhenValid: /*submitFormWrapper*/ ctx[12],
+		needsFocus: /*formNeedsFocus*/ ctx[9],
+		onSubmitWhenValid: /*submitFormWrapper*/ ctx[13],
 		$$slots: { default: [create_default_slot$5] },
 		$$scope: { ctx }
 	};
@@ -32559,10 +32559,10 @@ function create_fragment$7(ctx) {
 		},
 		p(ctx, [dirty]) {
 			const form_1_changes = {};
-			if (dirty & /*formAriaDescriptor*/ 128) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[7];
-			if (dirty & /*formNeedsFocus*/ 256) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[8];
+			if (dirty & /*formAriaDescriptor*/ 256) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[8];
+			if (dirty & /*formNeedsFocus*/ 512) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[9];
 
-			if (dirty & /*$$scope, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form, linkWrapper*/ 263806) {
+			if (dirty & /*$$scope, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form, linkWrapper, componentStyle*/ 527614) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32595,7 +32595,8 @@ const formElementId = 'genericStepForm';
 
 function instance$7($$self, $$props, $$invalidate) {
 	let $styleStore;
-	component_subscribe($$self, styleStore, $$value => $$invalidate(10, $styleStore = $$value));
+	component_subscribe($$self, styleStore, $$value => $$invalidate(11, $styleStore = $$value));
+	let { componentStyle } = $$props;
 	let { form } = $$props;
 	let { formEl = null } = $$props;
 	let { journey } = $$props;
@@ -32617,20 +32618,20 @@ function instance$7($$self, $$props, $$invalidate) {
 	}
 
 	function submitFormWrapper() {
-		$$invalidate(5, alertNeedsFocus = false);
-		$$invalidate(8, formNeedsFocus = false);
+		$$invalidate(6, alertNeedsFocus = false);
+		$$invalidate(9, formNeedsFocus = false);
 		form?.submit();
 	}
 
 	afterUpdate(() => {
 		if (form?.message) {
-			$$invalidate(7, formAriaDescriptor = formFailureMessageId);
-			$$invalidate(5, alertNeedsFocus = true);
-			$$invalidate(8, formNeedsFocus = false);
+			$$invalidate(8, formAriaDescriptor = formFailureMessageId);
+			$$invalidate(6, alertNeedsFocus = true);
+			$$invalidate(9, formNeedsFocus = false);
 		} else {
-			$$invalidate(7, formAriaDescriptor = formHeaderId);
-			$$invalidate(5, alertNeedsFocus = false);
-			$$invalidate(8, formNeedsFocus = true);
+			$$invalidate(8, formAriaDescriptor = formHeaderId);
+			$$invalidate(6, alertNeedsFocus = false);
+			$$invalidate(9, formNeedsFocus = true);
 		}
 	});
 
@@ -32639,7 +32640,7 @@ function instance$7($$self, $$props, $$invalidate) {
 	function header_binding($$value) {
 		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
 			linkWrapper = $$value;
-			$$invalidate(9, linkWrapper);
+			$$invalidate(10, linkWrapper);
 		});
 	}
 
@@ -32649,24 +32650,26 @@ function instance$7($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('form' in $$props) $$invalidate(1, form = $$props.form);
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('journey' in $$props) $$invalidate(2, journey = $$props.journey);
-		if ('metadata' in $$props) $$invalidate(3, metadata = $$props.metadata);
-		if ('step' in $$props) $$invalidate(4, step = $$props.step);
+		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(4, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(5, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*step, form*/ 18) {
+		if ($$self.$$.dirty & /*step, form*/ 36) {
 			{
 				shouldRedirectFromStep(step) && FRAuth$1.redirect(step);
-				$$invalidate(6, formMessageKey = convertStringToKey(form?.message));
+				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
 			}
 		}
 	};
 
 	return [
 		formEl,
+		componentStyle,
 		form,
 		journey,
 		metadata,
@@ -32689,11 +32692,12 @@ class Generic extends SvelteComponent {
 		super();
 
 		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
-			form: 1,
+			componentStyle: 1,
+			form: 2,
 			formEl: 0,
-			journey: 2,
-			metadata: 3,
-			step: 4
+			journey: 3,
+			metadata: 4,
+			step: 5
 		});
 	}
 }
@@ -32806,13 +32810,101 @@ class Key_icon extends SvelteComponent {
 
 function get_each_context$2(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[10] = list[i];
-	child_ctx[12] = i;
+	child_ctx[11] = list[i];
+	child_ctx[13] = i;
 	return child_ctx;
 }
 
-// (39:2) {#if form?.icon}
+// (38:2) {#if componentStyle !== 'inline'}
 function create_if_block_2$3(ctx) {
+	let t0;
+	let h1;
+	let t1;
+	let t2;
+	let p;
+	let t3;
+	let current;
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_3$3();
+
+	t1 = new Locale_strings({
+			props: { key: "twoFactorAuthentication" }
+		});
+
+	t3 = new Locale_strings({
+			props: { key: "useTheAuthenticatorAppOnYourPhone" }
+		});
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			t0 = space();
+			h1 = element("h1");
+			create_component(t1.$$.fragment);
+			t2 = space();
+			p = element("p");
+			create_component(t3.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p, "class", "tw_text-center tw_text-sm tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, t0, anchor);
+			insert(target, h1, anchor);
+			mount_component(t1, h1, null);
+			insert(target, t2, anchor);
+			insert(target, p, anchor);
+			mount_component(t3, p, null);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*form*/ ctx[2]?.icon) {
+				if (if_block) {
+					if (dirty & /*form*/ 4) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block_3$3();
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(t0.parentNode, t0);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			transition_in(t1.$$.fragment, local);
+			transition_in(t3.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			transition_out(t1.$$.fragment, local);
+			transition_out(t3.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(h1);
+			destroy_component(t1);
+			if (detaching) detach(t2);
+			if (detaching) detach(p);
+			destroy_component(t3);
+		}
+	};
+}
+
+// (39:4) {#if form?.icon}
+function create_if_block_3$3(ctx) {
 	let div;
 	let keyicon;
 	let current;
@@ -32851,7 +32943,7 @@ function create_if_block_2$3(ctx) {
 	};
 }
 
-// (53:2) {#if form?.message}
+// (54:2) {#if form?.message}
 function create_if_block_1$3(ctx) {
 	let alert;
 	let current;
@@ -32859,7 +32951,7 @@ function create_if_block_1$3(ctx) {
 	alert = new Alert({
 			props: {
 				id: "formFailureMessageAlert",
-				needsFocus: /*alertNeedsFocus*/ ctx[5],
+				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
 				$$slots: { default: [create_default_slot_2$2] },
 				$$scope: { ctx }
@@ -32876,9 +32968,9 @@ function create_if_block_1$3(ctx) {
 		},
 		p(ctx, dirty) {
 			const alert_changes = {};
-			if (dirty & /*alertNeedsFocus*/ 32) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[5];
+			if (dirty & /*alertNeedsFocus*/ 64) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[6];
 
-			if (dirty & /*$$scope, formMessageKey, form*/ 8258) {
+			if (dirty & /*$$scope, formMessageKey, form*/ 16516) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32899,9 +32991,9 @@ function create_if_block_1$3(ctx) {
 	};
 }
 
-// (54:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (55:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$2(ctx) {
-	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
+	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
 	return {
@@ -32912,7 +33004,7 @@ function create_default_slot_2$2(ctx) {
 			insert(target, t, anchor);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*formMessageKey, form*/ 66 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "")) set_data(t, t_value);
+			if (dirty & /*formMessageKey, form*/ 132 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(t);
@@ -32920,7 +33012,7 @@ function create_default_slot_2$2(ctx) {
 	};
 }
 
-// (59:2) {#each step?.callbacks as callback, idx}
+// (60:2) {#each step?.callbacks as callback, idx}
 function create_each_block$2(ctx) {
 	let callbackmapper;
 	let current;
@@ -32928,11 +33020,11 @@ function create_each_block$2(ctx) {
 	callbackmapper = new Callback_mapper({
 			props: {
 				props: {
-					callback: /*callback*/ ctx[10],
-					callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[12]],
-					selfSubmitFunction: /*determineSubmission*/ ctx[8],
-					stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-					style: /*$style*/ ctx[7]
+					callback: /*callback*/ ctx[11],
+					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[13]],
+					selfSubmitFunction: /*determineSubmission*/ ctx[9],
+					stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+					style: /*$style*/ ctx[8]
 				}
 			}
 		});
@@ -32948,12 +33040,12 @@ function create_each_block$2(ctx) {
 		p(ctx, dirty) {
 			const callbackmapper_changes = {};
 
-			if (dirty & /*step, metadata, $style*/ 152) callbackmapper_changes.props = {
-				callback: /*callback*/ ctx[10],
-				callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[12]],
-				selfSubmitFunction: /*determineSubmission*/ ctx[8],
-				stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-				style: /*$style*/ ctx[7]
+			if (dirty & /*step, metadata, $style*/ 304) callbackmapper_changes.props = {
+				callback: /*callback*/ ctx[11],
+				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[13]],
+				selfSubmitFunction: /*determineSubmission*/ ctx[9],
+				stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+				style: /*$style*/ ctx[8]
 			};
 
 			callbackmapper.$set(callbackmapper_changes);
@@ -32973,14 +33065,14 @@ function create_each_block$2(ctx) {
 	};
 }
 
-// (71:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+// (72:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
 function create_if_block$4(ctx) {
 	let button;
 	let current;
 
 	button = new Button({
 			props: {
-				busy: /*journey*/ ctx[2]?.loading,
+				busy: /*journey*/ ctx[3]?.loading,
 				style: "primary",
 				type: "submit",
 				width: "full",
@@ -32999,9 +33091,9 @@ function create_if_block$4(ctx) {
 		},
 		p(ctx, dirty) {
 			const button_changes = {};
-			if (dirty & /*journey*/ 4) button_changes.busy = /*journey*/ ctx[2]?.loading;
+			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
 
-			if (dirty & /*$$scope*/ 8192) {
+			if (dirty & /*$$scope*/ 16384) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -33022,7 +33114,7 @@ function create_if_block$4(ctx) {
 	};
 }
 
-// (72:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (73:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$3(ctx) {
 	let t;
 	let current;
@@ -33052,31 +33144,16 @@ function create_default_slot_1$3(ctx) {
 	};
 }
 
-// (38:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (37:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$4(ctx) {
 	let t0;
-	let h1;
 	let t1;
 	let t2;
-	let p;
-	let t3;
-	let t4;
-	let t5;
-	let t6;
 	let if_block2_anchor;
 	let current;
-	let if_block0 = /*form*/ ctx[1]?.icon && create_if_block_2$3();
-
-	t1 = new Locale_strings({
-			props: { key: "twoFactorAuthentication" }
-		});
-
-	t3 = new Locale_strings({
-			props: { key: "useTheAuthenticatorAppOnYourPhone" }
-		});
-
-	let if_block1 = /*form*/ ctx[1]?.message && create_if_block_1$3(ctx);
-	let each_value = /*step*/ ctx[4]?.callbacks;
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$3(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$3(ctx);
+	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
@@ -33087,60 +33164,48 @@ function create_default_slot$4(ctx) {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) && create_if_block$4(ctx);
+	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block$4(ctx);
 
 	return {
 		c() {
 			if (if_block0) if_block0.c();
 			t0 = space();
-			h1 = element("h1");
-			create_component(t1.$$.fragment);
-			t2 = space();
-			p = element("p");
-			create_component(t3.$$.fragment);
-			t4 = space();
 			if (if_block1) if_block1.c();
-			t5 = space();
+			t1 = space();
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].c();
 			}
 
-			t6 = space();
+			t2 = space();
 			if (if_block2) if_block2.c();
 			if_block2_anchor = empty();
-			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
-			attr(p, "class", "tw_text-center tw_text-sm tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
 		},
 		m(target, anchor) {
 			if (if_block0) if_block0.m(target, anchor);
 			insert(target, t0, anchor);
-			insert(target, h1, anchor);
-			mount_component(t1, h1, null);
-			insert(target, t2, anchor);
-			insert(target, p, anchor);
-			mount_component(t3, p, null);
-			insert(target, t4, anchor);
 			if (if_block1) if_block1.m(target, anchor);
-			insert(target, t5, anchor);
+			insert(target, t1, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].m(target, anchor);
 			}
 
-			insert(target, t6, anchor);
+			insert(target, t2, anchor);
 			if (if_block2) if_block2.m(target, anchor);
 			insert(target, if_block2_anchor, anchor);
 			current = true;
 		},
 		p(ctx, dirty) {
-			if (/*form*/ ctx[1]?.icon) {
+			if (/*componentStyle*/ ctx[1] !== 'inline') {
 				if (if_block0) {
-					if (dirty & /*form*/ 2) {
+					if_block0.p(ctx, dirty);
+
+					if (dirty & /*componentStyle*/ 2) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$3();
+					if_block0 = create_if_block_2$3(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -33155,18 +33220,18 @@ function create_default_slot$4(ctx) {
 				check_outros();
 			}
 
-			if (/*form*/ ctx[1]?.message) {
+			if (/*form*/ ctx[2]?.message) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 
-					if (dirty & /*form*/ 2) {
+					if (dirty & /*form*/ 4) {
 						transition_in(if_block1, 1);
 					}
 				} else {
 					if_block1 = create_if_block_1$3(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
-					if_block1.m(t5.parentNode, t5);
+					if_block1.m(t1.parentNode, t1);
 				}
 			} else if (if_block1) {
 				group_outros();
@@ -33178,8 +33243,8 @@ function create_default_slot$4(ctx) {
 				check_outros();
 			}
 
-			if (dirty & /*step, metadata, determineSubmission, $style*/ 408) {
-				each_value = /*step*/ ctx[4]?.callbacks;
+			if (dirty & /*step, metadata, determineSubmission, $style*/ 816) {
+				each_value = /*step*/ ctx[5]?.callbacks;
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -33192,7 +33257,7 @@ function create_default_slot$4(ctx) {
 						each_blocks[i] = create_each_block$2(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
-						each_blocks[i].m(t6.parentNode, t6);
+						each_blocks[i].m(t2.parentNode, t2);
 					}
 				}
 
@@ -33205,11 +33270,11 @@ function create_default_slot$4(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) {
+			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
-					if (dirty & /*metadata*/ 8) {
+					if (dirty & /*metadata*/ 16) {
 						transition_in(if_block2, 1);
 					}
 				} else {
@@ -33231,8 +33296,6 @@ function create_default_slot$4(ctx) {
 		i(local) {
 			if (current) return;
 			transition_in(if_block0);
-			transition_in(t1.$$.fragment, local);
-			transition_in(t3.$$.fragment, local);
 			transition_in(if_block1);
 
 			for (let i = 0; i < each_value.length; i += 1) {
@@ -33244,8 +33307,6 @@ function create_default_slot$4(ctx) {
 		},
 		o(local) {
 			transition_out(if_block0);
-			transition_out(t1.$$.fragment, local);
-			transition_out(t3.$$.fragment, local);
 			transition_out(if_block1);
 			each_blocks = each_blocks.filter(Boolean);
 
@@ -33259,16 +33320,10 @@ function create_default_slot$4(ctx) {
 		d(detaching) {
 			if (if_block0) if_block0.d(detaching);
 			if (detaching) detach(t0);
-			if (detaching) detach(h1);
-			destroy_component(t1);
-			if (detaching) detach(t2);
-			if (detaching) detach(p);
-			destroy_component(t3);
-			if (detaching) detach(t4);
 			if (if_block1) if_block1.d(detaching);
-			if (detaching) detach(t5);
+			if (detaching) detach(t1);
 			destroy_each(each_blocks, detaching);
-			if (detaching) detach(t6);
+			if (detaching) detach(t2);
 			if (if_block2) if_block2.d(detaching);
 			if (detaching) detach(if_block2_anchor);
 		}
@@ -33281,12 +33336,12 @@ function create_fragment$5(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[9](value);
+		/*form_1_formEl_binding*/ ctx[10](value);
 	}
 
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
-		onSubmitWhenValid: /*form*/ ctx[1]?.submit,
+		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
 		$$slots: { default: [create_default_slot$4] },
 		$$scope: { ctx }
 	};
@@ -33308,9 +33363,9 @@ function create_fragment$5(ctx) {
 		},
 		p(ctx, [dirty]) {
 			const form_1_changes = {};
-			if (dirty & /*form*/ 2) form_1_changes.onSubmitWhenValid = /*form*/ ctx[1]?.submit;
+			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*form*/ ctx[2]?.submit;
 
-			if (dirty & /*$$scope, journey, metadata, step, $style, alertNeedsFocus, formMessageKey, form*/ 8446) {
+			if (dirty & /*$$scope, journey, metadata, step, $style, alertNeedsFocus, formMessageKey, form, componentStyle*/ 16894) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -33339,7 +33394,8 @@ function create_fragment$5(ctx) {
 
 function instance$5($$self, $$props, $$invalidate) {
 	let $style;
-	component_subscribe($$self, styleStore, $$value => $$invalidate(7, $style = $$value));
+	component_subscribe($$self, styleStore, $$value => $$invalidate(8, $style = $$value));
+	let { componentStyle } = $$props;
 	let { form } = $$props;
 	let { formEl = null } = $$props;
 	let { journey } = $$props;
@@ -33358,7 +33414,7 @@ function instance$5($$self, $$props, $$invalidate) {
 	}
 
 	afterUpdate(() => {
-		$$invalidate(5, alertNeedsFocus = !!form?.message);
+		$$invalidate(6, alertNeedsFocus = !!form?.message);
 	});
 
 	function form_1_formEl_binding(value) {
@@ -33367,23 +33423,25 @@ function instance$5($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('form' in $$props) $$invalidate(1, form = $$props.form);
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('journey' in $$props) $$invalidate(2, journey = $$props.journey);
-		if ('metadata' in $$props) $$invalidate(3, metadata = $$props.metadata);
-		if ('step' in $$props) $$invalidate(4, step = $$props.step);
+		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(4, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(5, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*form*/ 2) {
+		if ($$self.$$.dirty & /*form*/ 4) {
 			{
-				$$invalidate(6, formMessageKey = convertStringToKey(form?.message));
+				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
 			}
 		}
 	};
 
 	return [
 		formEl,
+		componentStyle,
 		form,
 		journey,
 		metadata,
@@ -33401,11 +33459,12 @@ class One_time_password extends SvelteComponent {
 		super();
 
 		init(this, options, instance$5, create_fragment$5, safe_not_equal, {
-			form: 1,
+			componentStyle: 1,
+			form: 2,
 			formEl: 0,
-			journey: 2,
-			metadata: 3,
-			step: 4
+			journey: 3,
+			metadata: 4,
+			step: 5
 		});
 	}
 }
@@ -33518,13 +33577,100 @@ class New_user_icon extends SvelteComponent {
 
 function get_each_context$1(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[12] = list[i];
-	child_ctx[14] = i;
+	child_ctx[13] = list[i];
+	child_ctx[15] = i;
 	return child_ctx;
 }
 
-// (41:2) {#if form?.icon}
+// (50:2) {#if componentStyle !== 'inline'}
 function create_if_block_2$2(ctx) {
+	let t0;
+	let h1;
+	let t1;
+	let t2;
+	let p;
+	let t3;
+	let current;
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_3$2();
+	t1 = new Locale_strings({ props: { key: "registerHeader" } });
+
+	t3 = new Locale_strings({
+			props: { key: "alreadyHaveAnAccount", html: true }
+		});
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			t0 = space();
+			h1 = element("h1");
+			create_component(t1.$$.fragment);
+			t2 = space();
+			p = element("p");
+			create_component(t3.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p, "class", "tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, t0, anchor);
+			insert(target, h1, anchor);
+			mount_component(t1, h1, null);
+			insert(target, t2, anchor);
+			insert(target, p, anchor);
+			mount_component(t3, p, null);
+			/*p_binding*/ ctx[11](p);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*form*/ ctx[2]?.icon) {
+				if (if_block) {
+					if (dirty & /*form*/ 4) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block_3$2();
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(t0.parentNode, t0);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			transition_in(t1.$$.fragment, local);
+			transition_in(t3.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			transition_out(t1.$$.fragment, local);
+			transition_out(t3.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(h1);
+			destroy_component(t1);
+			if (detaching) detach(t2);
+			if (detaching) detach(p);
+			destroy_component(t3);
+			/*p_binding*/ ctx[11](null);
+		}
+	};
+}
+
+// (51:4) {#if form?.icon}
+function create_if_block_3$2(ctx) {
 	let div;
 	let newusericon;
 	let current;
@@ -33563,7 +33709,7 @@ function create_if_block_2$2(ctx) {
 	};
 }
 
-// (56:2) {#if form.message}
+// (67:2) {#if form.message}
 function create_if_block_1$2(ctx) {
 	let alert;
 	let current;
@@ -33571,7 +33717,7 @@ function create_if_block_1$2(ctx) {
 	alert = new Alert({
 			props: {
 				id: "formFailureMessageAlert",
-				needsFocus: /*alertNeedsFocus*/ ctx[5],
+				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
 				$$slots: { default: [create_default_slot_2$1] },
 				$$scope: { ctx }
@@ -33588,9 +33734,9 @@ function create_if_block_1$2(ctx) {
 		},
 		p(ctx, dirty) {
 			const alert_changes = {};
-			if (dirty & /*alertNeedsFocus*/ 32) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[5];
+			if (dirty & /*alertNeedsFocus*/ 64) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[6];
 
-			if (dirty & /*$$scope, formMessageKey, form*/ 32834) {
+			if (dirty & /*$$scope, formMessageKey, form*/ 65668) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
@@ -33611,9 +33757,9 @@ function create_if_block_1$2(ctx) {
 	};
 }
 
-// (57:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (68:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$1(ctx) {
-	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
+	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
 	return {
@@ -33624,7 +33770,7 @@ function create_default_slot_2$1(ctx) {
 			insert(target, t, anchor);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*formMessageKey, form*/ 66 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "")) set_data(t, t_value);
+			if (dirty & /*formMessageKey, form*/ 132 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(t);
@@ -33632,7 +33778,7 @@ function create_default_slot_2$1(ctx) {
 	};
 }
 
-// (62:2) {#each step?.callbacks as callback, idx}
+// (73:2) {#each step?.callbacks as callback, idx}
 function create_each_block$1(ctx) {
 	let callbackmapper;
 	let current;
@@ -33640,11 +33786,11 @@ function create_each_block$1(ctx) {
 	callbackmapper = new Callback_mapper({
 			props: {
 				props: {
-					callback: /*callback*/ ctx[12],
-					callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[14]],
-					selfSubmitFunction: /*determineSubmission*/ ctx[9],
-					stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-					style: /*$styleStore*/ ctx[8]
+					callback: /*callback*/ ctx[13],
+					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
+					selfSubmitFunction: /*determineSubmission*/ ctx[10],
+					stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+					style: /*$styleStore*/ ctx[9]
 				}
 			}
 		});
@@ -33660,12 +33806,12 @@ function create_each_block$1(ctx) {
 		p(ctx, dirty) {
 			const callbackmapper_changes = {};
 
-			if (dirty & /*step, metadata, $styleStore*/ 280) callbackmapper_changes.props = {
-				callback: /*callback*/ ctx[12],
-				callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[14]],
-				selfSubmitFunction: /*determineSubmission*/ ctx[9],
-				stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-				style: /*$styleStore*/ ctx[8]
+			if (dirty & /*step, metadata, $styleStore*/ 560) callbackmapper_changes.props = {
+				callback: /*callback*/ ctx[13],
+				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
+				selfSubmitFunction: /*determineSubmission*/ ctx[10],
+				stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+				style: /*$styleStore*/ ctx[9]
 			};
 
 			callbackmapper.$set(callbackmapper_changes);
@@ -33685,14 +33831,14 @@ function create_each_block$1(ctx) {
 	};
 }
 
-// (74:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+// (85:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
 function create_if_block$3(ctx) {
 	let button;
 	let current;
 
 	button = new Button({
 			props: {
-				busy: /*journey*/ ctx[2]?.loading,
+				busy: /*journey*/ ctx[3]?.loading,
 				style: "primary",
 				type: "submit",
 				width: "full",
@@ -33711,9 +33857,9 @@ function create_if_block$3(ctx) {
 		},
 		p(ctx, dirty) {
 			const button_changes = {};
-			if (dirty & /*journey*/ 4) button_changes.busy = /*journey*/ ctx[2]?.loading;
+			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
 
-			if (dirty & /*$$scope*/ 32768) {
+			if (dirty & /*$$scope*/ 65536) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -33734,7 +33880,7 @@ function create_if_block$3(ctx) {
 	};
 }
 
-// (75:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (86:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$2(ctx) {
 	let t;
 	let current;
@@ -33764,28 +33910,16 @@ function create_default_slot_1$2(ctx) {
 	};
 }
 
-// (40:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (49:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$3(ctx) {
 	let t0;
-	let h1;
 	let t1;
 	let t2;
-	let p;
-	let t3;
-	let t4;
-	let t5;
-	let t6;
 	let if_block2_anchor;
 	let current;
-	let if_block0 = /*form*/ ctx[1]?.icon && create_if_block_2$2();
-	t1 = new Locale_strings({ props: { key: "registerHeader" } });
-
-	t3 = new Locale_strings({
-			props: { key: "alreadyHaveAnAccount", html: true }
-		});
-
-	let if_block1 = /*form*/ ctx[1].message && create_if_block_1$2(ctx);
-	let each_value = /*step*/ ctx[4]?.callbacks;
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$2(ctx);
+	let if_block1 = /*form*/ ctx[2].message && create_if_block_1$2(ctx);
+	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
@@ -33796,61 +33930,48 @@ function create_default_slot$3(ctx) {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) && create_if_block$3(ctx);
+	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block$3(ctx);
 
 	return {
 		c() {
 			if (if_block0) if_block0.c();
 			t0 = space();
-			h1 = element("h1");
-			create_component(t1.$$.fragment);
-			t2 = space();
-			p = element("p");
-			create_component(t3.$$.fragment);
-			t4 = space();
 			if (if_block1) if_block1.c();
-			t5 = space();
+			t1 = space();
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].c();
 			}
 
-			t6 = space();
+			t2 = space();
 			if (if_block2) if_block2.c();
 			if_block2_anchor = empty();
-			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
-			attr(p, "class", "tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
 		},
 		m(target, anchor) {
 			if (if_block0) if_block0.m(target, anchor);
 			insert(target, t0, anchor);
-			insert(target, h1, anchor);
-			mount_component(t1, h1, null);
-			insert(target, t2, anchor);
-			insert(target, p, anchor);
-			mount_component(t3, p, null);
-			/*p_binding*/ ctx[10](p);
-			insert(target, t4, anchor);
 			if (if_block1) if_block1.m(target, anchor);
-			insert(target, t5, anchor);
+			insert(target, t1, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].m(target, anchor);
 			}
 
-			insert(target, t6, anchor);
+			insert(target, t2, anchor);
 			if (if_block2) if_block2.m(target, anchor);
 			insert(target, if_block2_anchor, anchor);
 			current = true;
 		},
 		p(ctx, dirty) {
-			if (/*form*/ ctx[1]?.icon) {
+			if (/*componentStyle*/ ctx[1] !== 'inline') {
 				if (if_block0) {
-					if (dirty & /*form*/ 2) {
+					if_block0.p(ctx, dirty);
+
+					if (dirty & /*componentStyle*/ 2) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$2();
+					if_block0 = create_if_block_2$2(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -33865,18 +33986,18 @@ function create_default_slot$3(ctx) {
 				check_outros();
 			}
 
-			if (/*form*/ ctx[1].message) {
+			if (/*form*/ ctx[2].message) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 
-					if (dirty & /*form*/ 2) {
+					if (dirty & /*form*/ 4) {
 						transition_in(if_block1, 1);
 					}
 				} else {
 					if_block1 = create_if_block_1$2(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
-					if_block1.m(t5.parentNode, t5);
+					if_block1.m(t1.parentNode, t1);
 				}
 			} else if (if_block1) {
 				group_outros();
@@ -33888,8 +34009,8 @@ function create_default_slot$3(ctx) {
 				check_outros();
 			}
 
-			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 792) {
-				each_value = /*step*/ ctx[4]?.callbacks;
+			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 1584) {
+				each_value = /*step*/ ctx[5]?.callbacks;
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -33902,7 +34023,7 @@ function create_default_slot$3(ctx) {
 						each_blocks[i] = create_each_block$1(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
-						each_blocks[i].m(t6.parentNode, t6);
+						each_blocks[i].m(t2.parentNode, t2);
 					}
 				}
 
@@ -33915,11 +34036,11 @@ function create_default_slot$3(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) {
+			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
-					if (dirty & /*metadata*/ 8) {
+					if (dirty & /*metadata*/ 16) {
 						transition_in(if_block2, 1);
 					}
 				} else {
@@ -33941,8 +34062,6 @@ function create_default_slot$3(ctx) {
 		i(local) {
 			if (current) return;
 			transition_in(if_block0);
-			transition_in(t1.$$.fragment, local);
-			transition_in(t3.$$.fragment, local);
 			transition_in(if_block1);
 
 			for (let i = 0; i < each_value.length; i += 1) {
@@ -33954,8 +34073,6 @@ function create_default_slot$3(ctx) {
 		},
 		o(local) {
 			transition_out(if_block0);
-			transition_out(t1.$$.fragment, local);
-			transition_out(t3.$$.fragment, local);
 			transition_out(if_block1);
 			each_blocks = each_blocks.filter(Boolean);
 
@@ -33969,17 +34086,10 @@ function create_default_slot$3(ctx) {
 		d(detaching) {
 			if (if_block0) if_block0.d(detaching);
 			if (detaching) detach(t0);
-			if (detaching) detach(h1);
-			destroy_component(t1);
-			if (detaching) detach(t2);
-			if (detaching) detach(p);
-			destroy_component(t3);
-			/*p_binding*/ ctx[10](null);
-			if (detaching) detach(t4);
 			if (if_block1) if_block1.d(detaching);
-			if (detaching) detach(t5);
+			if (detaching) detach(t1);
 			destroy_each(each_blocks, detaching);
-			if (detaching) detach(t6);
+			if (detaching) detach(t2);
 			if (if_block2) if_block2.d(detaching);
 			if (detaching) detach(if_block2_anchor);
 		}
@@ -33992,12 +34102,12 @@ function create_fragment$3(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[11](value);
+		/*form_1_formEl_binding*/ ctx[12](value);
 	}
 
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
-		onSubmitWhenValid: /*form*/ ctx[1]?.submit,
+		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
 		$$slots: { default: [create_default_slot$3] },
 		$$scope: { ctx }
 	};
@@ -34019,9 +34129,9 @@ function create_fragment$3(ctx) {
 		},
 		p(ctx, [dirty]) {
 			const form_1_changes = {};
-			if (dirty & /*form*/ 2) form_1_changes.onSubmitWhenValid = /*form*/ ctx[1]?.submit;
+			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*form*/ ctx[2]?.submit;
 
-			if (dirty & /*$$scope, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form, linkWrapper*/ 33278) {
+			if (dirty & /*$$scope, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form, linkWrapper, componentStyle*/ 66558) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -34050,7 +34160,8 @@ function create_fragment$3(ctx) {
 
 function instance$3($$self, $$props, $$invalidate) {
 	let $styleStore;
-	component_subscribe($$self, styleStore, $$value => $$invalidate(8, $styleStore = $$value));
+	component_subscribe($$self, styleStore, $$value => $$invalidate(9, $styleStore = $$value));
+	let { componentStyle } = $$props;
 	let { form } = $$props;
 	let { formEl = null } = $$props;
 	let { journey } = $$props;
@@ -34070,15 +34181,25 @@ function instance$3($$self, $$props, $$invalidate) {
 	}
 
 	afterUpdate(() => {
-		$$invalidate(5, alertNeedsFocus = !!form?.message);
+		$$invalidate(6, alertNeedsFocus = !!form?.message);
 	});
 
-	onMount(() => captureLinks(linkWrapper, journey));
+	onMount(() => {
+		if (componentStyle === 'modal') {
+			captureLinks(linkWrapper, journey);
+		}
+	});
+
+	onMount(() => {
+		if (componentStyle === 'modal') {
+			captureLinks(linkWrapper, journey);
+		}
+	});
 
 	function p_binding($$value) {
 		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
 			linkWrapper = $$value;
-			$$invalidate(7, linkWrapper);
+			$$invalidate(8, linkWrapper);
 		});
 	}
 
@@ -34088,23 +34209,25 @@ function instance$3($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('form' in $$props) $$invalidate(1, form = $$props.form);
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('journey' in $$props) $$invalidate(2, journey = $$props.journey);
-		if ('metadata' in $$props) $$invalidate(3, metadata = $$props.metadata);
-		if ('step' in $$props) $$invalidate(4, step = $$props.step);
+		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(4, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(5, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*form*/ 2) {
+		if ($$self.$$.dirty & /*form*/ 4) {
 			{
-				$$invalidate(6, formMessageKey = convertStringToKey(form?.message));
+				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
 			}
 		}
 	};
 
 	return [
 		formEl,
+		componentStyle,
 		form,
 		journey,
 		metadata,
@@ -34124,11 +34247,12 @@ class Registration extends SvelteComponent {
 		super();
 
 		init(this, options, instance$3, create_fragment$3, safe_not_equal, {
-			form: 1,
+			componentStyle: 1,
+			form: 2,
 			formEl: 0,
-			journey: 2,
-			metadata: 3,
-			step: 4
+			journey: 3,
+			metadata: 4,
+			step: 5
 		});
 	}
 }
@@ -34137,13 +34261,79 @@ class Registration extends SvelteComponent {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[14] = list[i];
-	child_ctx[16] = i;
+	child_ctx[15] = list[i];
+	child_ctx[17] = i;
 	return child_ctx;
 }
 
-// (41:2) {#if form?.icon}
-function create_if_block_2$1(ctx) {
+// (45:2) {#if componentStyle !== 'inline'}
+function create_if_block_3$1(ctx) {
+	let t0;
+	let h1;
+	let t1;
+	let current;
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4();
+	t1 = new Locale_strings({ props: { key: "loginHeader" } });
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			t0 = space();
+			h1 = element("h1");
+			create_component(t1.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, t0, anchor);
+			insert(target, h1, anchor);
+			mount_component(t1, h1, null);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*form*/ ctx[2]?.icon) {
+				if (if_block) {
+					if (dirty & /*form*/ 4) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block_4();
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(t0.parentNode, t0);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			transition_in(t1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			transition_out(t1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(h1);
+			destroy_component(t1);
+		}
+	};
+}
+
+// (46:4) {#if form?.icon}
+function create_if_block_4(ctx) {
 	let div;
 	let keyicon;
 	let current;
@@ -34182,15 +34372,15 @@ function create_if_block_2$1(ctx) {
 	};
 }
 
-// (50:2) {#if form?.message}
-function create_if_block_1$1(ctx) {
+// (56:2) {#if form?.message}
+function create_if_block_2$1(ctx) {
 	let alert;
 	let current;
 
 	alert = new Alert({
 			props: {
 				id: "formFailureMessageAlert",
-				needsFocus: /*alertNeedsFocus*/ ctx[5],
+				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
 				$$slots: { default: [create_default_slot_2] },
 				$$scope: { ctx }
@@ -34207,9 +34397,9 @@ function create_if_block_1$1(ctx) {
 		},
 		p(ctx, dirty) {
 			const alert_changes = {};
-			if (dirty & /*alertNeedsFocus*/ 32) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[5];
+			if (dirty & /*alertNeedsFocus*/ 64) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[6];
 
-			if (dirty & /*$$scope, formMessageKey, form*/ 131138) {
+			if (dirty & /*$$scope, formMessageKey, form*/ 262276) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
@@ -34230,9 +34420,9 @@ function create_if_block_1$1(ctx) {
 	};
 }
 
-// (51:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (57:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2(ctx) {
-	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "";
+	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
 	return {
@@ -34243,7 +34433,7 @@ function create_default_slot_2(ctx) {
 			insert(target, t, anchor);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*formMessageKey, form*/ 66 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[1]?.message) + "")) set_data(t, t_value);
+			if (dirty & /*formMessageKey, form*/ 132 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(t);
@@ -34251,7 +34441,7 @@ function create_default_slot_2(ctx) {
 	};
 }
 
-// (56:2) {#each step?.callbacks as callback, idx}
+// (62:2) {#each step?.callbacks as callback, idx}
 function create_each_block(ctx) {
 	let callbackmapper;
 	let current;
@@ -34259,11 +34449,11 @@ function create_each_block(ctx) {
 	callbackmapper = new Callback_mapper({
 			props: {
 				props: {
-					callback: /*callback*/ ctx[14],
-					callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[16]],
-					selfSubmitFunction: /*determineSubmission*/ ctx[9],
-					stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-					style: /*$styleStore*/ ctx[8]
+					callback: /*callback*/ ctx[15],
+					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[17]],
+					selfSubmitFunction: /*determineSubmission*/ ctx[10],
+					stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+					style: /*$styleStore*/ ctx[9]
 				}
 			}
 		});
@@ -34279,12 +34469,12 @@ function create_each_block(ctx) {
 		p(ctx, dirty) {
 			const callbackmapper_changes = {};
 
-			if (dirty & /*step, metadata, $styleStore*/ 280) callbackmapper_changes.props = {
-				callback: /*callback*/ ctx[14],
-				callbackMetadata: /*metadata*/ ctx[3]?.callbacks[/*idx*/ ctx[16]],
-				selfSubmitFunction: /*determineSubmission*/ ctx[9],
-				stepMetadata: /*metadata*/ ctx[3]?.step && { .../*metadata*/ ctx[3].step },
-				style: /*$styleStore*/ ctx[8]
+			if (dirty & /*step, metadata, $styleStore*/ 560) callbackmapper_changes.props = {
+				callback: /*callback*/ ctx[15],
+				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[17]],
+				selfSubmitFunction: /*determineSubmission*/ ctx[10],
+				stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+				style: /*$styleStore*/ ctx[9]
 			};
 
 			callbackmapper.$set(callbackmapper_changes);
@@ -34304,14 +34494,14 @@ function create_each_block(ctx) {
 	};
 }
 
-// (68:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
-function create_if_block$2(ctx) {
+// (74:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+function create_if_block_1$1(ctx) {
 	let button;
 	let current;
 
 	button = new Button({
 			props: {
-				busy: /*journey*/ ctx[2]?.loading,
+				busy: /*journey*/ ctx[3]?.loading,
 				style: "primary",
 				type: "submit",
 				width: "full",
@@ -34330,9 +34520,9 @@ function create_if_block$2(ctx) {
 		},
 		p(ctx, dirty) {
 			const button_changes = {};
-			if (dirty & /*journey*/ 4) button_changes.busy = /*journey*/ ctx[2]?.loading;
+			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
 
-			if (dirty & /*$$scope*/ 131072) {
+			if (dirty & /*$$scope*/ 262144) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -34353,7 +34543,7 @@ function create_if_block$2(ctx) {
 	};
 }
 
-// (69:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (75:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$1(ctx) {
 	let t;
 	let current;
@@ -34383,31 +34573,99 @@ function create_default_slot_1$1(ctx) {
 	};
 }
 
-// (40:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-function create_default_slot$2(ctx) {
-	let t0;
-	let h1;
-	let t1;
-	let t2;
-	let t3;
-	let t4;
-	let t5;
+// (80:2) {#if componentStyle !== 'inline'}
+function create_if_block$2(ctx) {
 	let p0;
 	let button0;
-	let t7;
+	let t1;
 	let button1;
-	let t9;
+	let t3;
 	let hr;
-	let t10;
+	let t4;
 	let p1;
-	let t11;
+	let t5;
 	let current;
 	let mounted;
 	let dispose;
-	let if_block0 = /*form*/ ctx[1]?.icon && create_if_block_2$1();
-	t1 = new Locale_strings({ props: { key: "loginHeader" } });
-	let if_block1 = /*form*/ ctx[1]?.message && create_if_block_1$1(ctx);
-	let each_value = /*step*/ ctx[4]?.callbacks;
+
+	t5 = new Locale_strings({
+			props: { key: "dontHaveAnAccount", html: true }
+		});
+
+	return {
+		c() {
+			p0 = element("p");
+			button0 = element("button");
+			button0.textContent = `${interpolate('forgotPassword', null, 'Forgot Password?')}`;
+			t1 = text("\n       \n      ");
+			button1 = element("button");
+			button1.textContent = `${interpolate('forgotUsername', null, 'Forgot Username?')}`;
+			t3 = space();
+			hr = element("hr");
+			t4 = space();
+			p1 = element("p");
+			create_component(t5.$$.fragment);
+			attr(p0, "class", "tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light");
+			attr(hr, "class", "tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark");
+			attr(p1, "class", "tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+		},
+		m(target, anchor) {
+			insert(target, p0, anchor);
+			append(p0, button0);
+			append(p0, t1);
+			append(p0, button1);
+			insert(target, t3, anchor);
+			insert(target, hr, anchor);
+			insert(target, t4, anchor);
+			insert(target, p1, anchor);
+			mount_component(t5, p1, null);
+			/*p1_binding*/ ctx[13](p1);
+			current = true;
+
+			if (!mounted) {
+				dispose = [
+					listen(button0, "click", prevent_default(/*click_handler*/ ctx[11])),
+					listen(button1, "click", prevent_default(/*click_handler_1*/ ctx[12]))
+				];
+
+				mounted = true;
+			}
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(t5.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t5.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(p0);
+			if (detaching) detach(t3);
+			if (detaching) detach(hr);
+			if (detaching) detach(t4);
+			if (detaching) detach(p1);
+			destroy_component(t5);
+			/*p1_binding*/ ctx[13](null);
+			mounted = false;
+			run_all(dispose);
+		}
+	};
+}
+
+// (44:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+function create_default_slot$2(ctx) {
+	let t0;
+	let t1;
+	let t2;
+	let t3;
+	let if_block3_anchor;
+	let current;
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$1(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$1(ctx);
+	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
@@ -34418,90 +34676,53 @@ function create_default_slot$2(ctx) {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) && create_if_block$2(ctx);
-
-	t11 = new Locale_strings({
-			props: { key: "dontHaveAnAccount", html: true }
-		});
+	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block_1$1(ctx);
+	let if_block3 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$2(ctx);
 
 	return {
 		c() {
 			if (if_block0) if_block0.c();
 			t0 = space();
-			h1 = element("h1");
-			create_component(t1.$$.fragment);
-			t2 = space();
 			if (if_block1) if_block1.c();
-			t3 = space();
+			t1 = space();
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].c();
 			}
 
-			t4 = space();
+			t2 = space();
 			if (if_block2) if_block2.c();
-			t5 = space();
-			p0 = element("p");
-			button0 = element("button");
-			button0.textContent = `${interpolate('forgotPassword', null, 'Forgot Password?')}`;
-			t7 = text("\n     \n    ");
-			button1 = element("button");
-			button1.textContent = `${interpolate('forgotUsername', null, 'Forgot Username?')}`;
-			t9 = space();
-			hr = element("hr");
-			t10 = space();
-			p1 = element("p");
-			create_component(t11.$$.fragment);
-			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
-			attr(p0, "class", "tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light");
-			attr(hr, "class", "tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark");
-			attr(p1, "class", "tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+			t3 = space();
+			if (if_block3) if_block3.c();
+			if_block3_anchor = empty();
 		},
 		m(target, anchor) {
 			if (if_block0) if_block0.m(target, anchor);
 			insert(target, t0, anchor);
-			insert(target, h1, anchor);
-			mount_component(t1, h1, null);
-			insert(target, t2, anchor);
 			if (if_block1) if_block1.m(target, anchor);
-			insert(target, t3, anchor);
+			insert(target, t1, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
 				each_blocks[i].m(target, anchor);
 			}
 
-			insert(target, t4, anchor);
+			insert(target, t2, anchor);
 			if (if_block2) if_block2.m(target, anchor);
-			insert(target, t5, anchor);
-			insert(target, p0, anchor);
-			append(p0, button0);
-			append(p0, t7);
-			append(p0, button1);
-			insert(target, t9, anchor);
-			insert(target, hr, anchor);
-			insert(target, t10, anchor);
-			insert(target, p1, anchor);
-			mount_component(t11, p1, null);
-			/*p1_binding*/ ctx[12](p1);
+			insert(target, t3, anchor);
+			if (if_block3) if_block3.m(target, anchor);
+			insert(target, if_block3_anchor, anchor);
 			current = true;
-
-			if (!mounted) {
-				dispose = [
-					listen(button0, "click", prevent_default(/*click_handler*/ ctx[10])),
-					listen(button1, "click", prevent_default(/*click_handler_1*/ ctx[11]))
-				];
-
-				mounted = true;
-			}
 		},
 		p(ctx, dirty) {
-			if (/*form*/ ctx[1]?.icon) {
+			if (/*componentStyle*/ ctx[1] !== 'inline') {
 				if (if_block0) {
-					if (dirty & /*form*/ 2) {
+					if_block0.p(ctx, dirty);
+
+					if (dirty & /*componentStyle*/ 2) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$1();
+					if_block0 = create_if_block_3$1(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -34516,18 +34737,18 @@ function create_default_slot$2(ctx) {
 				check_outros();
 			}
 
-			if (/*form*/ ctx[1]?.message) {
+			if (/*form*/ ctx[2]?.message) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 
-					if (dirty & /*form*/ 2) {
+					if (dirty & /*form*/ 4) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_1$1(ctx);
+					if_block1 = create_if_block_2$1(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
-					if_block1.m(t3.parentNode, t3);
+					if_block1.m(t1.parentNode, t1);
 				}
 			} else if (if_block1) {
 				group_outros();
@@ -34539,8 +34760,8 @@ function create_default_slot$2(ctx) {
 				check_outros();
 			}
 
-			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 792) {
-				each_value = /*step*/ ctx[4]?.callbacks;
+			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 1584) {
+				each_value = /*step*/ ctx[5]?.callbacks;
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -34553,7 +34774,7 @@ function create_default_slot$2(ctx) {
 						each_blocks[i] = create_each_block(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
-						each_blocks[i].m(t4.parentNode, t4);
+						each_blocks[i].m(t2.parentNode, t2);
 					}
 				}
 
@@ -34566,18 +34787,18 @@ function create_default_slot$2(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[3]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[3]?.step?.derived.isStepSelfSubmittable) {
+			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
-					if (dirty & /*metadata*/ 8) {
+					if (dirty & /*metadata*/ 16) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block$2(ctx);
+					if_block2 = create_if_block_1$1(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
-					if_block2.m(t5.parentNode, t5);
+					if_block2.m(t3.parentNode, t3);
 				}
 			} else if (if_block2) {
 				group_outros();
@@ -34588,11 +34809,33 @@ function create_default_slot$2(ctx) {
 
 				check_outros();
 			}
+
+			if (/*componentStyle*/ ctx[1] !== 'inline') {
+				if (if_block3) {
+					if_block3.p(ctx, dirty);
+
+					if (dirty & /*componentStyle*/ 2) {
+						transition_in(if_block3, 1);
+					}
+				} else {
+					if_block3 = create_if_block$2(ctx);
+					if_block3.c();
+					transition_in(if_block3, 1);
+					if_block3.m(if_block3_anchor.parentNode, if_block3_anchor);
+				}
+			} else if (if_block3) {
+				group_outros();
+
+				transition_out(if_block3, 1, 1, () => {
+					if_block3 = null;
+				});
+
+				check_outros();
+			}
 		},
 		i(local) {
 			if (current) return;
 			transition_in(if_block0);
-			transition_in(t1.$$.fragment, local);
 			transition_in(if_block1);
 
 			for (let i = 0; i < each_value.length; i += 1) {
@@ -34600,12 +34843,11 @@ function create_default_slot$2(ctx) {
 			}
 
 			transition_in(if_block2);
-			transition_in(t11.$$.fragment, local);
+			transition_in(if_block3);
 			current = true;
 		},
 		o(local) {
 			transition_out(if_block0);
-			transition_out(t1.$$.fragment, local);
 			transition_out(if_block1);
 			each_blocks = each_blocks.filter(Boolean);
 
@@ -34614,30 +34856,20 @@ function create_default_slot$2(ctx) {
 			}
 
 			transition_out(if_block2);
-			transition_out(t11.$$.fragment, local);
+			transition_out(if_block3);
 			current = false;
 		},
 		d(detaching) {
 			if (if_block0) if_block0.d(detaching);
 			if (detaching) detach(t0);
-			if (detaching) detach(h1);
-			destroy_component(t1);
-			if (detaching) detach(t2);
 			if (if_block1) if_block1.d(detaching);
-			if (detaching) detach(t3);
+			if (detaching) detach(t1);
 			destroy_each(each_blocks, detaching);
-			if (detaching) detach(t4);
+			if (detaching) detach(t2);
 			if (if_block2) if_block2.d(detaching);
-			if (detaching) detach(t5);
-			if (detaching) detach(p0);
-			if (detaching) detach(t9);
-			if (detaching) detach(hr);
-			if (detaching) detach(t10);
-			if (detaching) detach(p1);
-			destroy_component(t11);
-			/*p1_binding*/ ctx[12](null);
-			mounted = false;
-			run_all(dispose);
+			if (detaching) detach(t3);
+			if (if_block3) if_block3.d(detaching);
+			if (detaching) detach(if_block3_anchor);
 		}
 	};
 }
@@ -34648,12 +34880,12 @@ function create_fragment$2(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[13](value);
+		/*form_1_formEl_binding*/ ctx[14](value);
 	}
 
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
-		onSubmitWhenValid: /*form*/ ctx[1]?.submit,
+		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
 		$$slots: { default: [create_default_slot$2] },
 		$$scope: { ctx }
 	};
@@ -34675,9 +34907,9 @@ function create_fragment$2(ctx) {
 		},
 		p(ctx, [dirty]) {
 			const form_1_changes = {};
-			if (dirty & /*form*/ 2) form_1_changes.onSubmitWhenValid = /*form*/ ctx[1]?.submit;
+			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*form*/ ctx[2]?.submit;
 
-			if (dirty & /*$$scope, linkWrapper, journey, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form*/ 131582) {
+			if (dirty & /*$$scope, linkWrapper, journey, componentStyle, metadata, step, $styleStore, alertNeedsFocus, formMessageKey, form*/ 263166) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -34706,7 +34938,8 @@ function create_fragment$2(ctx) {
 
 function instance$2($$self, $$props, $$invalidate) {
 	let $styleStore;
-	component_subscribe($$self, styleStore, $$value => $$invalidate(8, $styleStore = $$value));
+	component_subscribe($$self, styleStore, $$value => $$invalidate(9, $styleStore = $$value));
+	let { componentStyle } = $$props;
 	let { form } = $$props;
 	let { formEl = null } = $$props;
 	let { journey } = $$props;
@@ -34726,10 +34959,14 @@ function instance$2($$self, $$props, $$invalidate) {
 	}
 
 	afterUpdate(() => {
-		$$invalidate(5, alertNeedsFocus = !!form?.message);
+		$$invalidate(6, alertNeedsFocus = !!form?.message);
 	});
 
-	onMount(() => captureLinks(linkWrapper, journey));
+	onMount(() => {
+		if (componentStyle === 'modal') {
+			captureLinks(linkWrapper, journey);
+		}
+	});
 
 	const click_handler = () => {
 		journey.push({ tree: 'ResetPassword' });
@@ -34742,7 +34979,7 @@ function instance$2($$self, $$props, $$invalidate) {
 	function p1_binding($$value) {
 		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
 			linkWrapper = $$value;
-			$$invalidate(7, linkWrapper);
+			$$invalidate(8, linkWrapper);
 		});
 	}
 
@@ -34752,23 +34989,25 @@ function instance$2($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('form' in $$props) $$invalidate(1, form = $$props.form);
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('journey' in $$props) $$invalidate(2, journey = $$props.journey);
-		if ('metadata' in $$props) $$invalidate(3, metadata = $$props.metadata);
-		if ('step' in $$props) $$invalidate(4, step = $$props.step);
+		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(4, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(5, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*form*/ 2) {
+		if ($$self.$$.dirty & /*form*/ 4) {
 			{
-				$$invalidate(6, formMessageKey = convertStringToKey(form?.message));
+				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
 			}
 		}
 	};
 
 	return [
 		formEl,
+		componentStyle,
 		form,
 		journey,
 		metadata,
@@ -34790,11 +35029,12 @@ class Login extends SvelteComponent {
 		super();
 
 		init(this, options, instance$2, create_fragment$2, safe_not_equal, {
-			form: 1,
+			componentStyle: 1,
+			form: 2,
 			formEl: 0,
-			journey: 2,
-			metadata: 3,
-			step: 4
+			journey: 3,
+			metadata: 4,
+			step: 5
 		});
 	}
 }
@@ -34833,7 +35073,7 @@ function create_else_block$1(ctx) {
 	alert = new Alert({
 			props: {
 				id: "unrecoverableStepError",
-				needsFocus: /*alertNeedsFocus*/ ctx[3],
+				needsFocus: /*alertNeedsFocus*/ ctx[4],
 				type: "error",
 				$$slots: { default: [create_default_slot_1] },
 				$$scope: { ctx }
@@ -34843,7 +35083,7 @@ function create_else_block$1(ctx) {
 	button = new Button({
 			props: {
 				style: "secondary",
-				onClick: /*tryAgain*/ ctx[6],
+				onClick: /*tryAgain*/ ctx[7],
 				$$slots: { default: [create_default_slot$1] },
 				$$scope: { ctx }
 			}
@@ -34863,16 +35103,16 @@ function create_else_block$1(ctx) {
 		},
 		p(ctx, dirty) {
 			const alert_changes = {};
-			if (dirty & /*alertNeedsFocus*/ 8) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[3];
+			if (dirty & /*alertNeedsFocus*/ 16) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[4];
 
-			if (dirty & /*$$scope*/ 256) {
+			if (dirty & /*$$scope*/ 512) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
 			alert.$set(alert_changes);
 			const button_changes = {};
 
-			if (dirty & /*$$scope*/ 256) {
+			if (dirty & /*$$scope*/ 512) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -34897,7 +35137,7 @@ function create_else_block$1(ctx) {
 	};
 }
 
-// (51:36) 
+// (53:36) 
 function create_if_block_3(ctx) {
 	let div;
 	let spinner;
@@ -34938,7 +35178,7 @@ function create_if_block_3(ctx) {
 	};
 }
 
-// (26:0) {#if !$journeyStore?.completed}
+// (27:0) {#if !$journeyStore?.completed}
 function create_if_block$1(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -34948,8 +35188,8 @@ function create_if_block$1(ctx) {
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
-		if (!/*$journeyStore*/ ctx[4].step) return 0;
-		if (/*$journeyStore*/ ctx[4].step.type === StepType$1.Step) return 1;
+		if (!/*$journeyStore*/ ctx[5].step) return 0;
+		if (/*$journeyStore*/ ctx[5].step.type === StepType$1.Step) return 1;
 		return -1;
 	}
 
@@ -35025,7 +35265,7 @@ function create_if_block$1(ctx) {
 	};
 }
 
-// (56:2) <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
+// (58:2) <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_1(ctx) {
 	let t;
 	let current;
@@ -35058,7 +35298,7 @@ function create_default_slot_1(ctx) {
 	};
 }
 
-// (59:2) <Button style="secondary" onClick={tryAgain}>
+// (61:2) <Button style="secondary" onClick={tryAgain}>
 function create_default_slot$1(ctx) {
 	let t;
 	let current;
@@ -35088,7 +35328,7 @@ function create_default_slot$1(ctx) {
 	};
 }
 
-// (31:54) 
+// (32:54) 
 function create_if_block_2(ctx) {
 	let switch_instance;
 	let updating_formEl;
@@ -35096,27 +35336,28 @@ function create_if_block_2(ctx) {
 	let current;
 
 	function switch_instance_formEl_binding(value) {
-		/*switch_instance_formEl_binding*/ ctx[7](value);
+		/*switch_instance_formEl_binding*/ ctx[8](value);
 	}
 
-	var switch_value = mapStepToStage(/*$journeyStore*/ ctx[4].step);
+	var switch_value = mapStepToStage(/*$journeyStore*/ ctx[5].step);
 
 	function switch_props(ctx) {
 		let switch_instance_props = {
+			componentStyle: /*componentStyle*/ ctx[1],
 			form: {
-				icon: /*displayIcon*/ ctx[1],
-				message: /*$journeyStore*/ ctx[4].error?.message || '',
-				status: (/*$journeyStore*/ ctx[4].error?.code) ? 'error' : 'ok',
-				submit: /*submitForm*/ ctx[5]
+				icon: /*displayIcon*/ ctx[2],
+				message: /*$journeyStore*/ ctx[5].error?.message || '',
+				status: (/*$journeyStore*/ ctx[5].error?.code) ? 'error' : 'ok',
+				submit: /*submitForm*/ ctx[6]
 			},
 			journey: {
-				loading: /*$journeyStore*/ ctx[4].loading,
-				pop: /*journeyStore*/ ctx[2].pop,
-				push: /*journeyStore*/ ctx[2].push,
+				loading: /*$journeyStore*/ ctx[5].loading,
+				pop: /*journeyStore*/ ctx[3].pop,
+				push: /*journeyStore*/ ctx[3].push,
 				stack
 			},
-			metadata: /*$journeyStore*/ ctx[4].metadata,
-			step: /*$journeyStore*/ ctx[4].step
+			metadata: /*$journeyStore*/ ctx[5].metadata,
+			step: /*$journeyStore*/ ctx[5].step
 		};
 
 		if (/*formEl*/ ctx[0] !== void 0) {
@@ -35143,23 +35384,24 @@ function create_if_block_2(ctx) {
 		},
 		p(ctx, dirty) {
 			const switch_instance_changes = {};
+			if (dirty & /*componentStyle*/ 2) switch_instance_changes.componentStyle = /*componentStyle*/ ctx[1];
 
-			if (dirty & /*displayIcon, $journeyStore*/ 18) switch_instance_changes.form = {
-				icon: /*displayIcon*/ ctx[1],
-				message: /*$journeyStore*/ ctx[4].error?.message || '',
-				status: (/*$journeyStore*/ ctx[4].error?.code) ? 'error' : 'ok',
-				submit: /*submitForm*/ ctx[5]
+			if (dirty & /*displayIcon, $journeyStore*/ 36) switch_instance_changes.form = {
+				icon: /*displayIcon*/ ctx[2],
+				message: /*$journeyStore*/ ctx[5].error?.message || '',
+				status: (/*$journeyStore*/ ctx[5].error?.code) ? 'error' : 'ok',
+				submit: /*submitForm*/ ctx[6]
 			};
 
-			if (dirty & /*$journeyStore, journeyStore*/ 20) switch_instance_changes.journey = {
-				loading: /*$journeyStore*/ ctx[4].loading,
-				pop: /*journeyStore*/ ctx[2].pop,
-				push: /*journeyStore*/ ctx[2].push,
+			if (dirty & /*$journeyStore, journeyStore*/ 40) switch_instance_changes.journey = {
+				loading: /*$journeyStore*/ ctx[5].loading,
+				pop: /*journeyStore*/ ctx[3].pop,
+				push: /*journeyStore*/ ctx[3].push,
 				stack
 			};
 
-			if (dirty & /*$journeyStore*/ 16) switch_instance_changes.metadata = /*$journeyStore*/ ctx[4].metadata;
-			if (dirty & /*$journeyStore*/ 16) switch_instance_changes.step = /*$journeyStore*/ ctx[4].step;
+			if (dirty & /*$journeyStore*/ 32) switch_instance_changes.metadata = /*$journeyStore*/ ctx[5].metadata;
+			if (dirty & /*$journeyStore*/ 32) switch_instance_changes.step = /*$journeyStore*/ ctx[5].step;
 
 			if (!updating_formEl && dirty & /*formEl*/ 1) {
 				updating_formEl = true;
@@ -35167,7 +35409,7 @@ function create_if_block_2(ctx) {
 				add_flush_callback(() => updating_formEl = false);
 			}
 
-			if (switch_value !== (switch_value = mapStepToStage(/*$journeyStore*/ ctx[4].step))) {
+			if (switch_value !== (switch_value = mapStepToStage(/*$journeyStore*/ ctx[5].step))) {
 				if (switch_instance) {
 					group_outros();
 					const old_component = switch_instance;
@@ -35208,7 +35450,7 @@ function create_if_block_2(ctx) {
 	};
 }
 
-// (27:2) {#if !$journeyStore.step}
+// (28:2) {#if !$journeyStore.step}
 function create_if_block_1(ctx) {
 	let div;
 	let spinner;
@@ -35258,8 +35500,8 @@ function create_fragment$1(ctx) {
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (!/*$journeyStore*/ ctx[4]?.completed) return 0;
-		if (/*$journeyStore*/ ctx[4]?.successful) return 1;
+		if (!/*$journeyStore*/ ctx[5]?.completed) return 0;
+		if (/*$journeyStore*/ ctx[5]?.successful) return 1;
 		return 2;
 	}
 
@@ -35322,9 +35564,10 @@ function create_fragment$1(ctx) {
 function instance$1($$self, $$props, $$invalidate) {
 	let $journeyStore,
 		$$unsubscribe_journeyStore = noop,
-		$$subscribe_journeyStore = () => ($$unsubscribe_journeyStore(), $$unsubscribe_journeyStore = subscribe(journeyStore, $$value => $$invalidate(4, $journeyStore = $$value)), journeyStore);
+		$$subscribe_journeyStore = () => ($$unsubscribe_journeyStore(), $$unsubscribe_journeyStore = subscribe(journeyStore, $$value => $$invalidate(5, $journeyStore = $$value)), journeyStore);
 
 	$$self.$$.on_destroy.push(() => $$unsubscribe_journeyStore());
+	let { componentStyle } = $$props;
 	let { displayIcon } = $$props;
 	let { formEl = null } = $$props;
 	let { journeyStore } = $$props;
@@ -35342,7 +35585,7 @@ function instance$1($$self, $$props, $$invalidate) {
 	}
 
 	afterUpdate(() => {
-		$$invalidate(3, alertNeedsFocus = !$journeyStore.successful);
+		$$invalidate(4, alertNeedsFocus = !$journeyStore.successful);
 	});
 
 	function switch_instance_formEl_binding(value) {
@@ -35351,13 +35594,15 @@ function instance$1($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('displayIcon' in $$props) $$invalidate(1, displayIcon = $$props.displayIcon);
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('displayIcon' in $$props) $$invalidate(2, displayIcon = $$props.displayIcon);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('journeyStore' in $$props) $$subscribe_journeyStore($$invalidate(2, journeyStore = $$props.journeyStore));
+		if ('journeyStore' in $$props) $$subscribe_journeyStore($$invalidate(3, journeyStore = $$props.journeyStore));
 	};
 
 	return [
 		formEl,
+		componentStyle,
 		displayIcon,
 		journeyStore,
 		alertNeedsFocus,
@@ -35373,9 +35618,10 @@ class Journey extends SvelteComponent {
 		super();
 
 		init(this, options, instance$1, create_fragment$1, safe_not_equal, {
-			displayIcon: 1,
+			componentStyle: 1,
+			displayIcon: 2,
 			formEl: 0,
-			journeyStore: 2
+			journeyStore: 3
 		});
 	}
 }
@@ -35393,6 +35639,7 @@ function create_else_block(ctx) {
 	}
 
 	let journey_1_props = {
+		componentStyle: "inline",
 		displayIcon: /*$styleStore*/ ctx[4]?.stage?.icon ?? true,
 		journeyStore: /*journeyStore*/ ctx[5]
 	};
@@ -35524,6 +35771,7 @@ function create_default_slot(ctx) {
 	}
 
 	let journey_1_props = {
+		componentStyle: "modal",
 		displayIcon: /*$styleStore*/ ctx[4]?.stage?.icon ?? !/*$styleStore*/ ctx[4]?.logo,
 		journeyStore: /*journeyStore*/ ctx[5]
 	};

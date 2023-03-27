@@ -64,13 +64,22 @@ module.exports = function (theme) {
     '.kba-fieldset': {
       position: 'relative',
       borderColor: theme('colors.secondary.DEFAULT'),
-      borderBottomWidth: '1px',
-      borderTopWidth: '0',
-      marginTop: theme('spacing.8'),
-      paddingBottom: theme('spacing.4'),
+      borderBottomWidth: '0',
+      borderTopWidth: '1px',
+      borderTopStyle: 'dashed',
       paddingTop: theme('spacing.6'),
 
-      '&:after': {
+      '& > h2': {
+        display: 'none',
+      },
+      '&:first-of-type': {
+        borderTopWidth: '0',
+        marginTop: theme('spacing.10'),
+      },
+      '&:first-of-type > h2': {
+        display: 'block',
+      },
+      '&:first-of-type:after': {
         borderColor: theme('colors.secondary.DEFAULT'),
         borderTopWidth: '1px',
         content: '""',
@@ -80,7 +89,7 @@ module.exports = function (theme) {
         top: '-0.1em',
         width: '45%',
       },
-      '&:before': {
+      '&:first-of-type:before': {
         borderColor: theme('colors.secondary.DEFAULT'),
         borderTopWidth: '1px',
         content: '""',
@@ -88,6 +97,14 @@ module.exports = function (theme) {
         position: 'absolute',
         top: '-0.1em',
         width: '45%',
+      },
+      '&:first-of-type .kba-lock-icon': {
+        display: 'flex',
+      },
+      '&:last-of-type': {
+        borderBottomWidth: '1px',
+        marginBottom: theme('spacing.8'),
+        paddingBottom: theme('spacing.4'),
       },
     },
     '.kba-fieldset_dark': {
@@ -101,7 +118,7 @@ module.exports = function (theme) {
       },
     },
     '.kba-lock-icon': {
-      display: 'flex',
+      display: 'none',
       justifyContent: 'center',
       position: 'absolute',
       top: `-${theme('spacing.3')}`,
