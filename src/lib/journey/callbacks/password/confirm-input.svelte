@@ -11,8 +11,8 @@
   import type { styleSchema } from '$lib/style.store';
 
   export let forceValidityFailure = false;
-  export let isInvalid = false;
-  export let isRequired = true;
+  export let passwordsDoNotMatch = false;
+  export let isRequired = false;
   export let key: string;
   export let onChange: (val: Maybe<string>) => void;
   export let resetValue: boolean;
@@ -26,6 +26,7 @@
   let isVisible = false;
   let type: 'password' | 'text' = 'password';
   let value: Maybe<string>;
+  let message = '';
 
   function onChangeWrapper(event: Event) {
     value = (event.target as HTMLInputElement)?.value;
@@ -42,8 +43,15 @@
 
   $: {
     if (resetValue) {
-     value = undefined;
-     onChange(value);
+      value = undefined;
+      onChange(value);
+    }
+    if (passwordsDoNotMatch) {
+      message = interpolate('passwordConfirmationError', null, 'Passwords do not match');
+    } else if (isRequired) {
+      message = interpolate('requiredField', null, 'This field is required');
+    } else {
+      message = '';
     }
   }
 </script>
@@ -54,9 +62,9 @@
   hasRightIcon={true}
   key={`${key}-confirm`}
   label={interpolate('confirmPassword', null, 'Confirm Password')}
-  message={isInvalid ? interpolate('passwordConfirmationError', null, 'Passwords do not match') : undefined}
+  {message}
   onChange={onChangeWrapper}
-  {isInvalid}
+  isInvalid={passwordsDoNotMatch}
   {isRequired}
   {showMessage}
   {type}

@@ -37,7 +37,7 @@
   let savedValue = '';
   let textInputLabel: string;
   let type: 'password' | 'text' = 'password';
-  let value: unknown;
+  let value: string;
 
   /**
    * @function confirmInput - ensures the second password input matches the first
@@ -74,7 +74,7 @@
     callbackType = callback.getType();
     key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
-    value = callback?.getInputValue();
+    value = callback?.getInputValue() as string;
 
     /**
      * `savedValue` represents what the user set after blur (local component state)
@@ -120,8 +120,9 @@
 {#if callbackMetadata?.platform?.confirmPassword}
   <ConfirmInput
     forceValidityFailure={doPasswordsMatch === false}
-    isInvalid={doPasswordsMatch === false}
+    passwordsDoNotMatch={doPasswordsMatch === false}
     {key}
+    isRequired={value.length > 0}
     onChange={confirmInput}
     {resetValue}
     showMessage={doPasswordsMatch === false}
