@@ -23112,7 +23112,7 @@ function get_each_context$7(ctx, list, i) {
 	return child_ctx;
 }
 
-// (40:0) {#if labelOrder === 'first'}
+// (39:0) {#if labelOrder === 'first'}
 function create_if_block_1$a(ctx) {
 	let label_1;
 	let current;
@@ -23160,7 +23160,7 @@ function create_if_block_1$a(ctx) {
 	};
 }
 
-// (41:2) <Label {key} classes={`${labelClasses}`}>
+// (40:2) <Label {key} classes={`${labelClasses}`}>
 function create_default_slot_1$b(ctx) {
 	let t;
 
@@ -23180,7 +23180,7 @@ function create_default_slot_1$b(ctx) {
 	};
 }
 
-// (55:2) {#each options as option}
+// (54:2) {#each options as option}
 function create_each_block$7(ctx) {
 	let option;
 	let t0_value = /*option*/ ctx[15].text + "";
@@ -23221,7 +23221,7 @@ function create_each_block$7(ctx) {
 	};
 }
 
-// (62:0) {#if labelOrder === 'last'}
+// (61:0) {#if labelOrder === 'last'}
 function create_if_block$g(ctx) {
 	let label_1;
 	let current;
@@ -23274,7 +23274,7 @@ function create_if_block$g(ctx) {
 	};
 }
 
-// (63:2) <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>
+// (62:2) <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>
 function create_default_slot$i(ctx) {
 	let t;
 
@@ -23512,8 +23512,6 @@ function instance$E($$self, $$props, $$invalidate) {
 
 		// Check if text is same as label
 		$$invalidate(10, shouldDisplayOption = !(label === selectedOption?.text));
-
-		console.log(shouldDisplayOption);
 
 		// Continue with calling onChange parameter
 		onChange(event);
@@ -27401,8 +27399,8 @@ class Eye_icon extends SvelteComponent {
 
 function create_default_slot_1$8(ctx) {
 	let current;
-	const default_slot_template = /*#slots*/ ctx[14].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[15], null);
+	const default_slot_template = /*#slots*/ ctx[15].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[16], null);
 
 	return {
 		c() {
@@ -27417,15 +27415,15 @@ function create_default_slot_1$8(ctx) {
 		},
 		p(ctx, dirty) {
 			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 32768)) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 65536)) {
 					update_slot_base(
 						default_slot,
 						default_slot_template,
 						ctx,
-						/*$$scope*/ ctx[15],
+						/*$$scope*/ ctx[16],
 						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[15])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[15], dirty, null),
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[16])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[16], dirty, null),
 						null
 					);
 				}
@@ -27446,7 +27444,7 @@ function create_default_slot_1$8(ctx) {
 	};
 }
 
-// (59:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+// (69:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
 function create_default_slot$f(ctx) {
 	let t;
 	let current;
@@ -27476,7 +27474,7 @@ function create_default_slot$f(ctx) {
 	};
 }
 
-// (53:2) 
+// (63:2) 
 function create_input_button_slot$1(ctx) {
 	let button;
 	let eyeicon;
@@ -27507,7 +27505,7 @@ function create_input_button_slot$1(ctx) {
 			current = true;
 
 			if (!mounted) {
-				dispose = listen(button, "click", /*toggleVisibility*/ ctx[10]);
+				dispose = listen(button, "click", /*toggleVisibility*/ ctx[11]);
 				mounted = true;
 			}
 		},
@@ -27515,7 +27513,7 @@ function create_input_button_slot$1(ctx) {
 			const eyeicon_changes = {};
 			if (dirty & /*isVisible*/ 64) eyeicon_changes.visible = /*isVisible*/ ctx[6];
 
-			if (dirty & /*$$scope*/ 32768) {
+			if (dirty & /*$$scope*/ 65536) {
 				eyeicon_changes.$$scope = { dirty, ctx };
 			}
 
@@ -27543,18 +27541,16 @@ function create_fragment$q(ctx) {
 	let input;
 	let current;
 
-	input = new /*Input*/ ctx[8]({
+	input = new /*Input*/ ctx[9]({
 			props: {
 				forceValidityFailure: /*forceValidityFailure*/ ctx[0],
 				isFirstInvalidInput: false,
 				hasRightIcon: true,
 				key: `${/*key*/ ctx[3]}-confirm`,
 				label: interpolate('confirmPassword', null, 'Confirm Password'),
-				message: /*isInvalid*/ ctx[1]
-				? interpolate('passwordConfirmationError', null, 'Passwords do not match')
-				: undefined,
-				onChange: /*onChangeWrapper*/ ctx[9],
-				isInvalid: /*isInvalid*/ ctx[1],
+				message: /*message*/ ctx[8],
+				onChange: /*onChangeWrapper*/ ctx[10],
+				isInvalid: /*passwordsDoNotMatch*/ ctx[1],
 				isRequired: /*isRequired*/ ctx[2],
 				showMessage: /*showMessage*/ ctx[4],
 				type: /*type*/ ctx[7],
@@ -27581,12 +27577,8 @@ function create_fragment$q(ctx) {
 			const input_changes = {};
 			if (dirty & /*forceValidityFailure*/ 1) input_changes.forceValidityFailure = /*forceValidityFailure*/ ctx[0];
 			if (dirty & /*key*/ 8) input_changes.key = `${/*key*/ ctx[3]}-confirm`;
-
-			if (dirty & /*isInvalid*/ 2) input_changes.message = /*isInvalid*/ ctx[1]
-			? interpolate('passwordConfirmationError', null, 'Passwords do not match')
-			: undefined;
-
-			if (dirty & /*isInvalid*/ 2) input_changes.isInvalid = /*isInvalid*/ ctx[1];
+			if (dirty & /*message*/ 256) input_changes.message = /*message*/ ctx[8];
+			if (dirty & /*passwordsDoNotMatch*/ 2) input_changes.isInvalid = /*passwordsDoNotMatch*/ ctx[1];
 			if (dirty & /*isRequired*/ 4) input_changes.isRequired = /*isRequired*/ ctx[2];
 			if (dirty & /*showMessage*/ 16) input_changes.showMessage = /*showMessage*/ ctx[4];
 			if (dirty & /*type*/ 128) input_changes.type = /*type*/ ctx[7];
@@ -27595,7 +27587,7 @@ function create_fragment$q(ctx) {
 			? /*value*/ ctx[5]
 			: '';
 
-			if (dirty & /*$$scope, isVisible*/ 32832) {
+			if (dirty & /*$$scope, isVisible*/ 65600) {
 				input_changes.$$scope = { dirty, ctx };
 			}
 
@@ -27619,8 +27611,8 @@ function create_fragment$q(ctx) {
 function instance$q($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { forceValidityFailure = false } = $$props;
-	let { isInvalid = false } = $$props;
-	let { isRequired = true } = $$props;
+	let { passwordsDoNotMatch = false } = $$props;
+	let { isRequired = false } = $$props;
 	let { key } = $$props;
 	let { onChange } = $$props;
 	let { resetValue } = $$props;
@@ -27630,6 +27622,7 @@ function instance$q($$self, $$props, $$invalidate) {
 	let isVisible = false;
 	let type = 'password';
 	let value;
+	let message = '';
 
 	function onChangeWrapper(event) {
 		$$invalidate(5, value = event.target?.value);
@@ -27648,22 +27641,30 @@ function instance$q($$self, $$props, $$invalidate) {
 
 	$$self.$$set = $$props => {
 		if ('forceValidityFailure' in $$props) $$invalidate(0, forceValidityFailure = $$props.forceValidityFailure);
-		if ('isInvalid' in $$props) $$invalidate(1, isInvalid = $$props.isInvalid);
+		if ('passwordsDoNotMatch' in $$props) $$invalidate(1, passwordsDoNotMatch = $$props.passwordsDoNotMatch);
 		if ('isRequired' in $$props) $$invalidate(2, isRequired = $$props.isRequired);
 		if ('key' in $$props) $$invalidate(3, key = $$props.key);
-		if ('onChange' in $$props) $$invalidate(11, onChange = $$props.onChange);
-		if ('resetValue' in $$props) $$invalidate(12, resetValue = $$props.resetValue);
-		if ('style' in $$props) $$invalidate(13, style = $$props.style);
+		if ('onChange' in $$props) $$invalidate(12, onChange = $$props.onChange);
+		if ('resetValue' in $$props) $$invalidate(13, resetValue = $$props.resetValue);
+		if ('style' in $$props) $$invalidate(14, style = $$props.style);
 		if ('showMessage' in $$props) $$invalidate(4, showMessage = $$props.showMessage);
-		if ('$$scope' in $$props) $$invalidate(15, $$scope = $$props.$$scope);
+		if ('$$scope' in $$props) $$invalidate(16, $$scope = $$props.$$scope);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*resetValue, onChange, value*/ 6176) {
+		if ($$self.$$.dirty & /*resetValue, onChange, value, passwordsDoNotMatch, isRequired*/ 12326) {
 			{
 				if (resetValue) {
 					$$invalidate(5, value = undefined);
 					onChange(value);
+				}
+
+				if (passwordsDoNotMatch) {
+					$$invalidate(8, message = interpolate('passwordConfirmationError', null, 'Passwords do not match'));
+				} else if (isRequired) {
+					$$invalidate(8, message = interpolate('requiredField', null, 'This field is required'));
+				} else {
+					$$invalidate(8, message = '');
 				}
 			}
 		}
@@ -27671,13 +27672,14 @@ function instance$q($$self, $$props, $$invalidate) {
 
 	return [
 		forceValidityFailure,
-		isInvalid,
+		passwordsDoNotMatch,
 		isRequired,
 		key,
 		showMessage,
 		value,
 		isVisible,
 		type,
+		message,
 		Input,
 		onChangeWrapper,
 		toggleVisibility,
@@ -27695,12 +27697,12 @@ class Confirm_input extends SvelteComponent {
 
 		init(this, options, instance$q, create_fragment$q, safe_not_equal, {
 			forceValidityFailure: 0,
-			isInvalid: 1,
+			passwordsDoNotMatch: 1,
 			isRequired: 2,
 			key: 3,
-			onChange: 11,
-			resetValue: 12,
-			style: 13,
+			onChange: 12,
+			resetValue: 13,
+			style: 14,
 			showMessage: 4
 		});
 	}
@@ -27856,8 +27858,9 @@ function create_if_block$a(ctx) {
 	confirminput = new Confirm_input({
 			props: {
 				forceValidityFailure: /*doPasswordsMatch*/ ctx[9] === false,
-				isInvalid: /*doPasswordsMatch*/ ctx[9] === false,
+				passwordsDoNotMatch: /*doPasswordsMatch*/ ctx[9] === false,
 				key: /*key*/ ctx[0],
+				isRequired: /*value*/ ctx[7].length > 0,
 				onChange: /*confirmInput*/ ctx[15],
 				resetValue: /*resetValue*/ ctx[11],
 				showMessage: /*doPasswordsMatch*/ ctx[9] === false,
@@ -27876,8 +27879,9 @@ function create_if_block$a(ctx) {
 		p(ctx, dirty) {
 			const confirminput_changes = {};
 			if (dirty & /*doPasswordsMatch*/ 512) confirminput_changes.forceValidityFailure = /*doPasswordsMatch*/ ctx[9] === false;
-			if (dirty & /*doPasswordsMatch*/ 512) confirminput_changes.isInvalid = /*doPasswordsMatch*/ ctx[9] === false;
+			if (dirty & /*doPasswordsMatch*/ 512) confirminput_changes.passwordsDoNotMatch = /*doPasswordsMatch*/ ctx[9] === false;
 			if (dirty & /*key*/ 1) confirminput_changes.key = /*key*/ ctx[0];
+			if (dirty & /*value*/ 128) confirminput_changes.isRequired = /*value*/ ctx[7].length > 0;
 			if (dirty & /*resetValue*/ 2048) confirminput_changes.resetValue = /*resetValue*/ ctx[11];
 			if (dirty & /*doPasswordsMatch*/ 512) confirminput_changes.showMessage = /*doPasswordsMatch*/ ctx[9] === false;
 			if (dirty & /*style*/ 16) confirminput_changes.style = /*style*/ ctx[4];

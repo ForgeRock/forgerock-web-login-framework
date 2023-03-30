@@ -1,3 +1,10 @@
+# [1.0.0-beta.16](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.15...v1.0.0-beta.16) (2023-03-30)
+
+
+### Bug Fixes
+
+* **confirm-input:** make confirm input required when password is filled ([0c8325c](https://github.com/forgerock/forgerock-web-login-framework/commit/0c8325cd2e0a9959c3a88b2e4aa8abd6e931456b))
+
 # [1.0.0-beta.15](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.14...v1.0.0-beta.15) (2023-03-27)
 
 
