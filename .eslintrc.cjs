@@ -15,6 +15,7 @@ module.exports = {
     'package/*',
     'svelte-package/*',
     '.svelte-kit',
+    '.svelte-kit/tsconfig.json',
     '.husky',
   ],
   overrides: [
