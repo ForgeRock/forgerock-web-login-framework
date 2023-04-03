@@ -39,7 +39,7 @@ export interface JourneyStoreValue {
   error: Maybe<{
     code: Maybe<number>;
     message: Maybe<string>;
-    step: Maybe<Step>;
+    stage: Maybe<string>;
     troubleshoot: Maybe<string>;
   }>;
   loading: boolean;
