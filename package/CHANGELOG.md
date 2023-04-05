@@ -7,25 +7,22 @@
 
 # [1.0.0-beta.15](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.14...v1.0.0-beta.15) (2023-03-27)
 
-
 ### Bug Fixes
 
-* **login-failure:** handle 500 failures within login store ([90fb461](https://github.com/forgerock/forgerock-web-login-framework/commit/90fb461e2598f929e4b418c9794f8b085e433e54))
+- **login-failure:** handle 500 failures within login store ([90fb461](https://github.com/forgerock/forgerock-web-login-framework/commit/90fb461e2598f929e4b418c9794f8b085e433e54))
 
 # [1.0.0-beta.14](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.13...v1.0.0-beta.14) (2023-03-27)
 
-
 ### Bug Fixes
 
-* **configuration:** improve handling and reporting of missing configuration ([a611623](https://github.com/forgerock/forgerock-web-login-framework/commit/a611623d7c33b0af18483ccad81a8725e461be65))
+- **configuration:** improve handling and reporting of missing configuration ([a611623](https://github.com/forgerock/forgerock-web-login-framework/commit/a611623d7c33b0af18483ccad81a8725e461be65))
 
 # [1.0.0-beta.13](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.12...v1.0.0-beta.13) (2023-03-27)
 
-
 ### Bug Fixes
 
-* **password:** fix password confirmation reset and validation failures ([5b7d039](https://github.com/forgerock/forgerock-web-login-framework/commit/5b7d039ed8feb7eb7053b6818425c9a32b0e667c))
-* **style:** reworking application of headers and footers of widget ([1aa8306](https://github.com/forgerock/forgerock-web-login-framework/commit/1aa8306366127e38145fb6e69298da160349cd0e))
+- **password:** fix password confirmation reset and validation failures ([5b7d039](https://github.com/forgerock/forgerock-web-login-framework/commit/5b7d039ed8feb7eb7053b6818425c9a32b0e667c))
+- **style:** reworking application of headers and footers of widget ([1aa8306](https://github.com/forgerock/forgerock-web-login-framework/commit/1aa8306366127e38145fb6e69298da160349cd0e))
 
 # [1.0.0-beta.12](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.11...v1.0.0-beta.12) (2023-03-27)
 

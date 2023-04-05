@@ -2,11 +2,11 @@ import dts from 'rollup-plugin-dts';
 
 export default [
   {
-    input: 'svelte-package/widget/index.svelte.d.ts',
+    input: 'svelte-package/widget/types.d.ts',
     external: ['./main.css'],
     output: [
       {
-        file: 'package/index.d.ts',
+        file: 'package/types.d.ts',
         format: 'es',
       },
     ],

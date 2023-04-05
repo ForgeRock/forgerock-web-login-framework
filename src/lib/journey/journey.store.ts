@@ -322,8 +322,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           error: {
             code: nextStep.getCode(),
             message: failureMessageStr,
-            // TODO: Should we remove the callbacks for PII info?
-            step: prevStep?.payload,
+            stage: prevStep?.payload?.stage,
             troubleshoot: null,
           },
           loading: false,
@@ -351,8 +350,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           error: {
             code: nextStep.getCode(),
             message: failureMessageStr,
-            // TODO: Should we remove the callbacks for PII info?
-            step: prevStep?.payload,
+            stage: prevStep?.payload?.stage,
             troubleshoot: null,
           },
           loading: false,

@@ -17731,8 +17731,7 @@ function initialize$4(initOptions) {
                     error: {
                         code: nextStep.getCode(),
                         message: failureMessageStr,
-                        // TODO: Should we remove the callbacks for PII info?
-                        step: prevStep?.payload,
+                        stage: prevStep?.payload?.stage,
                         troubleshoot: null,
                     },
                     loading: false,
@@ -17762,8 +17761,7 @@ function initialize$4(initOptions) {
                     error: {
                         code: nextStep.getCode(),
                         message: failureMessageStr,
-                        // TODO: Should we remove the callbacks for PII info?
-                        step: prevStep?.payload,
+                        stage: prevStep?.payload?.stage,
                         troubleshoot: null,
                     },
                     loading: false,
