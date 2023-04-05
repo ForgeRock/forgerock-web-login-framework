@@ -1,3 +1,10 @@
+# [1.0.0-beta.17](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.16...v1.0.0-beta.17) (2023-04-05)
+
+
+### Bug Fixes
+
+* **types.ts:** rename the types file where we missed it and fix release ([6071603](https://github.com/forgerock/forgerock-web-login-framework/commit/6071603026ed2134da036c14de0be1d416708fe1))
+
 # [1.0.0-beta.16](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0-beta.15...v1.0.0-beta.16) (2023-03-30)
 
 
