@@ -18,13 +18,13 @@ const declareModuleSection = `declare module '*.svelte' {
 `;
 const importMetaPath = fileURLToPath(import.meta.url);
 const importMetaDirectoryPath = dirname(importMetaPath);
-const index = join(importMetaDirectoryPath, '../', 'package', 'index.d.ts');
+const index = join(importMetaDirectoryPath, '../', 'package', 'types.d.ts');
 
 const indexContents = String(readFileSync(index));
 
 const declareModuleIdx = indexContents.indexOf(declareModuleSection);
 if (declareModuleIdx === -1) {
-  console.error(`Failed to remove the Svelte declare module section from ${inline}`);
+  console.error(`Failed to remove the Svelte declare module section from types`);
   process.exit(1);
 }
 
