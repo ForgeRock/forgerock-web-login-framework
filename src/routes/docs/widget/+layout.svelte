@@ -8,6 +8,7 @@
       <li><a href="/docs/widget">Overview</a></li>
       <li><a href="/docs/widget/quick-start">Quick Start</a></li>
       <li><a href="/docs/widget/full-api">Full API</a></li>
+      <li><a href="/docs/widget/features">Features</a></li>
       <li><a href="/docs/widget/theming">Theming</a></li>
       <li><a href="/docs/widget/tutorials">Tutorials</a></li>
       <li><a href="/docs/widget/roadmap">Roadmap</a></li>

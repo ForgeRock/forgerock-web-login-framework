@@ -3,6 +3,7 @@
 
   import Label from '$components/primitives/label/label.svelte';
 
+  export let forceValidityFailure = false;
   export let isFirstInvalidInput: boolean;
   export let inputClasses = '';
   export let key: string;
@@ -40,6 +41,7 @@
     aria-invalid={isInvalid}
     bind:this={inputEl}
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    data-force-validity-failure={forceValidityFailure}
     id={key}
     on:change={onChange}
     {placeholder}
@@ -55,6 +57,7 @@
     aria-invalid={isInvalid}
     bind:this={inputEl}
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    data-force-validity-failure={forceValidityFailure}
     id={key}
     on:change={onChange}
     {placeholder}
@@ -70,6 +73,7 @@
     aria-invalid={isInvalid}
     bind:this={inputEl}
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    data-force-validity-failure={forceValidityFailure}
     id={key}
     on:change={onChange}
     {placeholder}
@@ -85,6 +89,7 @@
     aria-invalid={isInvalid}
     bind:this={inputEl}
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    data-force-validity-failure={forceValidityFailure}
     id={key}
     on:change={onChange}
     {placeholder}
@@ -100,6 +105,7 @@
     aria-invalid={isInvalid}
     bind:this={inputEl}
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    data-force-validity-failure={forceValidityFailure}
     id={key}
     on:change={onChange}
     {placeholder}
@@ -115,6 +121,7 @@
     aria-invalid={isInvalid}
     bind:this={inputEl}
     class={`${inputClasses} tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full`}
+    data-force-validity-failure={forceValidityFailure}
     id={key}
     on:change={onChange}
     {placeholder}

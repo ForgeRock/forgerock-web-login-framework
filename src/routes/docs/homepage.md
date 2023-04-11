@@ -1,12 +1,16 @@
 <script>
   import Image from './image.svelte';
+
+  export let data;
 </script>
 
-# ForgeRock Web Login Framework
+# ForgeRock { data.framework.name }
 
-## WARNING: VAPORWARE
+## WARNING: BETA VERSION
 
-**This is a prototype of a development framework for generating a ForgeRock Login App for self-hosting or JavaScript Widget into an existing self-hosted SPA (React, Vue, Angular, etc.). This project is not officially supported and is not recommended for any product development. If you use this, you accept all the risks that come with completely unsupported software.**
+**This is a early preview ({ data.package.version }) of a development framework for generating a JavaScript { data.package.name } for use within an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a standalone ForgeRock { data.app.name} for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
+
+Note: As of Beta.6, the API has gone under a dramatic refactoring. Please pay close attention to the API changes if you were using Beta.5 or earlier.
 
 <Image>
 
@@ -16,15 +20,25 @@
 
 ## Summary
 
-This Web Login Framework is a development tool set for easily developing an alternative to the ForgeRock-hosted login application or building your own login application or component from scratch. The first product to be provided by this framework is the Login Widget which is a JavaScript component that can be installed into any modern JavaScript application. A future product provided by this framework will be a self-contained Login Application that can be self-hosted which will be useful as a centralized login app to your ecosystem of applications.
+The { data.package.name } produced by this framework is intended to be an all-inclusive, UI component that can be installed within any modern JavaScript app for handling the default login, registration and related user flows. It can be used within a React, Vue, Angular or any other modern JavaScript framework (does not currently support Node.js or server-rendering (SSR)).
 
-## ForgeRock Login Widget
+## ForgeRock { data.package.name }
 
-The Login Widget is an embeddable JavaScript component that can be used within any modern JavaScript SPA (Single Page Application). It requires no "runtime" UI libraries or frameworks, so it can be used within a React, Angular, Vue, etc. application without any additional dependencies.
+The Login Widget, currently in beta, is an embeddable JavaScript component that requires no "runtime" UI libraries or frameworks, allowing it to be used within a React, Angular, Vue, etc. application without any additional dependencies.
 
-This Login Widget is compatible with ForgeRock AM trees or Identity Cloud journeys and their built-in nodes and their corresponding callbacks. [Please see our "Roadmap" section for current limitations and planned features](/docs/widget/roadmap).
+This Widget helps you easily integrate your existing or new apps with the ForgeRock platform and its journeys. It supports the rendering of the built-in nodes and their corresponding callbacks within authentication and self-service journeys. [Please see our "Roadmap" section for current limitations and planned features](/docs/widget/roadmap).
 
 [Please visit our "Widget Docs" for the quick-start and full API documentation](/docs/widget).
+
+## ForgeRock { data.app.name }
+
+This is a future proposal that would leverage this framework to produce an independent, customizable application for self-hosting, in addition to producing the Login Widget. This Login App would be recommended for use in building a custom, self-hosted, centralized login experience. Let us know if this is of interest to you.
+
+## What is "The Framework"?
+
+The "framework" refers to the underlying tech responsible for producing the products (the ForgeRock { data.package.name }, for example) intended for use by our customers. This tech is composed of the development framework (SvelteKit), theming library (Tailwind), bundling (Rollup/Vite), localization, testing (Playwright). This can be downloaded and modified to produce custom versions of the { data.package.name } that can be used in place of the out-of-the-box product.
+
+[See this FAQ for more information on this topic](/docs/contributing/faqs#question-what-is-the-framework).
 
 ## Contributing to the Framework
 

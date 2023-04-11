@@ -1,23 +1,35 @@
-import { readable, writable, type Readable, type Writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 import { z } from 'zod';
 
+// TODO: Reevaluate use of JS versus JSON without breaking type generation for lib
+// eslint-disable-next-line
+// @ts-ignore
 import fallback from '$locales/us/en/index.json';
 
 export const stringsSchema = z
   .object({
     alreadyHaveAnAccount: z.string(),
+    backToDefault: z.string(),
+    backToLogin: z.string(),
     dontHaveAnAccount: z.string(),
     closeModal: z.string(),
+    charactersCannotRepeatMoreThan: z.string(),
+    charactersCannotRepeatMoreThanCaseInsensitive: z.string(),
     chooseDifferentUsername: z.string(),
+    confirmPassword: z.string(),
     constraintViolationForPassword: z.string(),
     constraintViolationForValue: z.string(),
+    continueWith: z.string(),
     customSecurityQuestion: z.string(),
     doesNotMeetMinimumCharacterLength: z.string(),
     ensurePasswordIsMoreThan: z.string(),
     ensurePasswordHasOne: z.string(),
+    enterVerificationCode: z.string(),
     exceedsMaximumCharacterLength: z.string(),
     fieldCanNotContainFollowingCharacters: z.string(),
     fieldCanNotContainFollowingValues: z.string(),
+    forgotPassword: z.string(),
+    forgotUsername: z.string(),
     givenName: z.string(),
     inputRequiredError: z.string(),
     loading: z.string(),
@@ -35,6 +47,9 @@ export const stringsSchema = z
     notToExceedMaximumCharacterLength: z.string(),
     noLessThanMinimumCharacterLength: z.string(),
     passwordCallback: z.string(),
+    passwordCannotContainCommonPasswords: z.string(),
+    passwordCannotContainCommonPasswordsOrBeReversible: z.string(),
+    passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan: z.string(),
     passwordRequirements: z.string(),
     pleaseCheckValue: z.string(),
     pleaseConfirm: z.string(),
@@ -49,18 +64,25 @@ export const stringsSchema = z
     securityAnswer: z.string(),
     securityQuestions: z.string(),
     securityQuestionsPrompt: z.string(),
+    shouldContainANumber: z.string(),
+    shouldContainAnUppercase: z.string(),
+    shouldContainALowercase: z.string(),
+    shouldContainASymbol: z.string(),
     showPassword: z.string(),
-    signInWith: z.string(),
     sn: z.string(),
     submitButton: z.string(),
     successMessage: z.string(),
     termsAndConditions: z.string(),
     termsAndConditionsLinkText: z.string(),
     tryAgain: z.string(),
+    twoFactorAuthentication: z.string(),
     useValidEmail: z.string(),
     unrecoverableError: z.string(),
+    unknownLoginError: z.string(),
     unknownNetworkError: z.string(),
+    userName: z.string(),
     usernameRequirements: z.string(),
+    useTheAuthenticatorAppOnYourPhone: z.string(),
     validatedCreatePasswordCallback: z.string(),
     validatedCreateUsernameCallback: z.string(),
     valueRequirements: z.string(),
@@ -73,15 +95,22 @@ export const partialStringsSchema = stringsSchema.partial();
 stringsSchema.parse(fallback);
 
 export const locale: Writable<string | null> = writable('en-US');
-export let strings: Readable<Record<string, string> | null>;
+export const stringsStore: Writable<Record<string, string> | null> = writable(null);
 
+/**
+ * @function initialize - Initialize the locale store
+ * @param {object} userLocale - An object of custom locale strings to merge with the default
+ * @returns {object} - The locale store
+ * @example initialize({ loginHeader: 'Welcome to the login page' });
+ */
 export function initialize(userLocale?: z.infer<typeof partialStringsSchema>) {
   if (userLocale) {
     /**
      * Allow widgets to overwrite select portions of the content
      */
-    strings = readable({ ...fallback, ...userLocale });
+    stringsStore.set({ ...fallback, ...userLocale });
   } else {
-    strings = readable(fallback);
+    stringsStore.set(fallback);
   }
+  return stringsSchema;
 }

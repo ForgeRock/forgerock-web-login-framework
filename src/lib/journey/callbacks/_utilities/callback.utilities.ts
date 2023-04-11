@@ -45,6 +45,11 @@ type ValidatedCallbacks =
  * NEW "NORMALIZED" METHODS
  */
 
+/**
+ * @function getInputTypeFromPolicies - Determines the type of input to use based on the policies object
+ * @param {object} policies - The policies object from the callback
+ * @returns {string} - The type of input to use
+ */
 export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email' | 'text' {
   const value = policies?.value as Policies;
   if (typeof value !== 'object') {
@@ -66,11 +71,50 @@ export function getInputTypeFromPolicies(policies: StringDict<unknown>): 'email'
   return 'text';
 }
 
+/**
+ * @function getValidationFailureParams - Gets the validation failure params from the failed policy object
+ * @param {object} failedPolicy - The failed policy object from the callback
+ * @returns {array} - An array of objects containing the length, message, and rule
+ */
 export function getValidationFailureParams(
   failedPolicy: PolicyRequirement | undefined,
 ): RestructuredParam[] {
-  if (failedPolicy?.policyRequirement === 'CHARACTER_SET') {
-    const params = failedPolicy?.params as {
+  if (failedPolicy?.policyRequirement === 'DICTIONARY') {
+    const params = failedPolicy.params as {
+      'case-sensitive-validation': boolean;
+      'check-substrings': boolean;
+      'min-substring-length': number;
+      'test-reversed-password': boolean;
+    };
+    const min = params?.['min-substring-length'] || 0;
+
+    const arr = [];
+
+    if (params?.['check-substrings'] && params?.['test-reversed-password']) {
+      arr.push({
+        length: min,
+        message: interpolate('passwordCannotContainCommonPasswordsOrBeReversibleStringsLessThan', {
+          min: String(min),
+        }),
+        rule: 'reversibleSubstrings',
+      });
+    } else if (params?.['test-reversed-password']) {
+      arr.push({
+        length: null,
+        message: interpolate('passwordCannotContainCommonPasswordsOrBeReversible'),
+        rule: 'reversibleSubstrings',
+      });
+    } else {
+      arr.push({
+        length: null,
+        message: interpolate('passwordCannotContainCommonPasswords'),
+        rule: 'reversibleSubstrings',
+      });
+    }
+
+    return arr;
+  } else if (failedPolicy?.policyRequirement === 'CHARACTER_SET') {
+    const params = failedPolicy.params as {
       'allow-unclassified-characters': boolean;
       'character-set-ranges': [];
       'character-sets': string[];
@@ -78,7 +122,7 @@ export function getValidationFailureParams(
     };
     return params?.['character-sets'].map(convertCharacterSetToRuleObj);
   } else if (failedPolicy?.policyRequirement === 'LENGTH_BASED') {
-    const params = failedPolicy?.params as {
+    const params = failedPolicy.params as {
       'max-password-length': number;
       'min-password-length': number;
     };
@@ -101,6 +145,30 @@ export function getValidationFailureParams(
         rule: 'minimumLength',
       });
     }
+    return arr;
+  } else if (failedPolicy?.policyRequirement === 'REPEATED_CHARACTERS') {
+    const params = failedPolicy.params as {
+      'case-sensitive-validation': boolean;
+      'max-consecutive-length': number;
+    };
+    const max = params['max-consecutive-length'] || 0;
+
+    const arr = [];
+
+    if (!params['case-sensitive-validation']) {
+      arr.push({
+        length: max,
+        message: interpolate('charactersCannotRepeatMoreThanCaseInsensitive', { max: String(max) }),
+        rule: 'repeatedCharactersCaseInsensitive',
+      });
+    } else {
+      arr.push({
+        length: max,
+        message: interpolate('charactersCannotRepeatMoreThan', { max: String(max) }),
+        rule: 'repeatedCharacters',
+      });
+    }
+
     return arr;
   } else if (failedPolicy?.policyRequirement === 'VALID_USERNAME') {
     return [
@@ -129,6 +197,11 @@ export function getValidationFailureParams(
   }
 }
 
+/**
+ * @function getValidationMessageString - Gets the validation message string from the policy object
+ * @param {object} policy - The policy object from the callback
+ * @returns {string} - The validation message string
+ */
 function getValidationMessageString(policy: Policy) {
   switch (policy?.policyId) {
     case 'at-least-X-capitals': {
@@ -143,18 +216,38 @@ function getValidationMessageString(policy: Policy) {
     }
     case 'cannot-contain-characters': {
       const params = policy?.params as { forbiddenChars: string[] };
-      const chars = params?.forbiddenChars.reduce((prev, curr) => {
-        prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
-        return prev;
-      }, '');
+      let chars = '';
+
+      if (typeof params !== 'object') {
+        return '';
+      }
+
+      if (Array.isArray(params.forbiddenChars)) {
+        chars = params.forbiddenChars.reduce((prev, curr) => {
+          prev = `${prev ? `${prev}, ` : `${prev}`} ${curr}`;
+          return prev;
+        }, '');
+      } else if (typeof params.forbiddenChars === 'string') {
+        chars = params.forbiddenChars;
+      }
       return interpolate('fieldCanNotContainFollowingCharacters', { chars });
     }
     case 'cannot-contain-others': {
       const params = policy?.params as { disallowedFields: string[] };
-      const fields = params?.disallowedFields?.reduce((prev, curr) => {
-        prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
-        return prev;
-      }, '');
+      let fields = '';
+
+      if (typeof params !== 'object') {
+        return '';
+      }
+
+      if (Array.isArray(params.disallowedFields)) {
+        fields = params.disallowedFields?.reduce((prev, curr) => {
+          prev = `${prev ? `${prev}, ` : `${prev}`} ${interpolate(curr)}`;
+          return prev;
+        }, '');
+      } else if (typeof params.disallowedFields === 'string') {
+        fields = params.disallowedFields;
+      }
       return interpolate('fieldCanNotContainFollowingValues', { fields });
     }
     case 'maximum-length': {
@@ -197,6 +290,12 @@ function getValidationMessageString(policy: Policy) {
   }
 }
 
+/**
+ * @function getValidationFailures - Gets the validation failures from the callback object
+ * @param {object} callback - The callback object from the server
+ * @param {string} label - The label of the field
+ * @returns {array} - An array of failed policies
+ */
 export function getValidationFailures(callback: ValidatedCallbacks, label: string): FailedPolicy[] {
   const failedPolicies = callback.getFailedPolicies && callback.getFailedPolicies();
   const parsedPolicies = parseFailedPolicies(failedPolicies, label);
@@ -210,6 +309,11 @@ export function getValidationFailures(callback: ValidatedCallbacks, label: strin
   });
 }
 
+/**
+ * @function getValidationPolicies - Gets the validation policies from the callback object
+ * @param {object} policies - The policies object from the callback
+ * @returns {array} - An array of policies
+ */
 export function getValidationPolicies(policies: StringDict<unknown>): Policy[] {
   if (typeof policies !== 'object' && !policies) {
     return [];
@@ -219,6 +323,7 @@ export function getValidationPolicies(policies: StringDict<unknown>): Policy[] {
   if (!Array.isArray(reqs)) {
     return [];
   }
+
   return reqs
     .map((policy) => {
       return {
@@ -230,6 +335,11 @@ export function getValidationPolicies(policies: StringDict<unknown>): Policy[] {
     .filter((policy) => !!policy.message);
 }
 
+/**
+ * @function isInputRequired - Checks if the input is required
+ * @param {object} callback - The callback object from the server
+ * @returns {boolean} - Whether the input is required
+ */
 export function isInputRequired(callback: ValidatedCallbacks): boolean {
   const policies = callback.getPolicies && callback.getPolicies();
 
@@ -244,44 +354,87 @@ export function isInputRequired(callback: ValidatedCallbacks): boolean {
   return isRequired;
 }
 
+/**
+ * @function convertCharacterSetToRuleObj - Converts a character set to a rule object
+ * @param {string} set - The character set to convert
+ * @returns {object} - The rule object
+ */
 function convertCharacterSetToRuleObj(set: string) {
   const arr = set.split(':');
   const num = arr[0];
   const type = arr[1];
 
   if (type === '0123456789') {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfNumbers', { num: String(num) }),
-      rule: 'numbers',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainANumber'),
+        rule: 'numbers',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfNumbers', { num: String(num) }),
+        rule: 'numbers',
+      };
+    }
   } else if (type === 'ABCDEFGHIJKLMNOPQRSTUVWXYZ') {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfUppercase', { num: String(num) }),
-      rule: 'uppercase',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainAnUppercase'),
+        rule: 'uppercase',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfUppercase', { num: String(num) }),
+        rule: 'uppercase',
+      };
+    }
   } else if (type === 'abcdefghijklmnopqrstuvwxyz') {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfLowercase', { num: String(num) }),
-      rule: 'lowercase',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainALowercase'),
+        rule: 'lowercase',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfLowercase', { num: String(num) }),
+        rule: 'lowercase',
+      };
+    }
   } else if (type.includes('@') || type.includes('!') || type.includes('*') || type.includes('#')) {
-    return {
-      length: Number(num),
-      message: interpolate('minimumNumberOfSymbols', { num: String(num) }),
-      rule: 'symbols',
-    };
+    if (num === '0') {
+      return {
+        length: null,
+        message: interpolate('shouldContainASymbol'),
+        rule: 'symbols',
+      };
+    } else {
+      return {
+        length: Number(num),
+        message: interpolate('minimumNumberOfSymbols', { num: String(num) }),
+        rule: 'symbols',
+      };
+    }
   } else {
     return {
-      length: Number(num),
+      length: null,
       message: interpolate('pleaseCheckValue'),
       rule: 'unknown',
     };
   }
 }
 
+/**
+ * @function parseFailedPolicies - Parses the failed policies from the callback object
+ * @param {array} policies - The policies array from the callback
+ * @param {string} label - The label of the field
+ * @returns {array} - An array of failed policies
+ */
 export function parseFailedPolicies(
   policies: unknown[],
   label: string,
@@ -299,10 +452,11 @@ export function parseFailedPolicies(
   });
 }
 
-/** *********************************************
- * OLD METHODS
+/**
+ * @function getAttributeValidationFailureText - Gets the validation failure text from the callback object
+ * @param {object} callback - The callback object from the server
+ * @returns {string} - The validation failure text
  */
-
 export function getAttributeValidationFailureText(
   callback: AttributeInputCallback<boolean | number | string>,
 ): string {
@@ -317,6 +471,12 @@ export function getAttributeValidationFailureText(
   }, '');
 }
 
+/**
+ * @function getPasswordValidationFailureText - Gets the validation failure text from the callback object
+ * @param {object} callback - The callback object from the server
+ * @param {string} label - The label of the field
+ * @returns {string} - The validation failure text
+ */
 export function getPasswordValidationFailureText(
   callback: ValidatedCreatePasswordCallback,
   label: string,
@@ -341,6 +501,12 @@ export function getPasswordValidationFailureText(
   }, '');
 }
 
+/**
+ * @function getUsernameValidationFailureText - Gets the validation failure text from the callback object
+ * @param {object} callback - The callback object from the server
+ * @param {string} label - The label of the field
+ * @returns {string} - The validation failure text
+ */
 export function getUsernameValidationFailureText(
   callback: ValidatedCreateUsernameCallback,
   label: string,

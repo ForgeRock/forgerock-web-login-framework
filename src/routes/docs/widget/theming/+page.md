@@ -1,12 +1,14 @@
 <script>
   import Image from '../../image.svelte';
+
+  // export let data;
 </script>
 
-## Theming
+# Theming
 
-The widget can be themed quite easily through a [Tailwind configuration file](https://tailwindcss.com/docs/configuration). There is also a light and [dark mode for the default theme](https://tailwindcss.com/docs/dark-mode). Below we will show you how to utilize these features.
+The widget can be themed quite easily through a [Tailwind configuration file](https://tailwindcss.com/docs/configuration). There is also a light and [dark mode for the default theme](https://tailwindcss.com/docs/dark-mode). Below, we will show you how to utilize these features.
 
-### Dark mode
+## Dark mode
 
 <Image>
 
@@ -34,11 +36,11 @@ Or, you can programmatically do it like this:
 </body>
 ```
 
-### Theme configuration
+## Theme configuration
 
 The Login Widget uses [Tailwind CSS](https://tailwindcss.com/) as its styling library. [Reconfiguring the theme](https://tailwindcss.com/docs/theme) to use different colors, fonts and sizing is done through providing new values to the [configuration file](https://github.com/cerebrl/forgerock-web-login-framework/blob/main/tailwind.config.cjs) and rebuilding the Widget.
 
-#### Steps
+### Steps
 
 1. Clone the [ForgeRock Web Login Framework](https://github.com/cerebrl/forgerock-web-login-framework)
 2. Install the npm dependencies: `npm i`
@@ -70,7 +72,7 @@ module.exports = {
 };
 ```
 
-##### Screenshot
+#### Screenshot
 
 <Image>
 
@@ -78,11 +80,13 @@ module.exports = {
 
 </Image>
 
-Anything configurable in Tailwind is configurable in this theme. The custom config properties (what we call "tokens") that our default theme uses can be found in [the `/theme/default/tokens.cjs` file](https://github.com/cerebrl/forgerock-web-login-framework/blob/main/themes/default/tokens.cjs). But, do not directly modify the theme files, only modify the root `tailwind.config.cjs` file in order to preserve your upgrade path.
+To safely adjust the theme's styling, we recommend using the base properties (what we call "tokens") found in our default theme in [the `/theme/default/tokens.cjs` file](https://github.com/cerebrl/forgerock-web-login-framework/blob/main/themes/default/tokens.cjs). But, do not directly modify the `/theme` files, only modify the values in the root `tailwind.config.cjs` file in order to preserve your upgrade path.
 
-#### Supported customization
+> NOTE: Technically, any theme setting that's configurable in the Tailwind library is configurable in the Widget, but do so with caution as there may be side-effects to reconfiguring the core, underlying values that could be hard to overcome.
 
-Currently, customization is restricted to the following:
+### Supported customization
+
+Currently, the recommended values to customize are grouped to the following:
 
 1. Colors
 2. Fonts

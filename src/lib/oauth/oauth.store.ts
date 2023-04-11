@@ -3,6 +3,9 @@ import { writable, type Writable } from 'svelte/store';
 
 import type { Maybe } from '$lib/interfaces';
 
+const interactionNeeded = 'The request requires some interaction that is not allowed.';
+const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
+
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
   get: (getOptions?: GetTokensOptions) => void;
   reset: () => void;
@@ -12,21 +15,34 @@ export interface OAuthTokenStoreValue {
   error: Maybe<{
     code?: Maybe<number>;
     message: Maybe<string>;
+    troubleshoot: Maybe<string>;
   }>;
   loading: boolean;
   successful: boolean;
   response: Maybe<OAuth2Tokens> | void;
 }
 
-export function initialize(initOptions?: GetTokensOptions) {
-  const { set, subscribe }: Writable<OAuthTokenStoreValue> = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    successful: false,
-    response: null,
-  });
+export const oauthStore: Writable<OAuthTokenStoreValue> = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+});
 
+/**
+ * @function initialize - Initializes the OAuth store with a get function and a reset function
+ * @param {object} initOptions - The options to pass to the TokenManager.getTokens function
+ * @returns {object} - The OAuth store
+ * @example initialize({ query: { prompt: 'none' } });
+ */
+export function initialize(initOptions?: GetTokensOptions) {
+  /**
+   * Get tokens from the server
+   * new tokens are available in the subscribe method
+   * @params: getOptions?: GetTokensOptions
+   * @returns: Promise<void>
+   */
   async function get(getOptions?: GetTokensOptions) {
     /**
      * Create an options object with getOptions overriding anything from initOptions
@@ -40,15 +56,23 @@ export function initialize(initOptions?: GetTokensOptions) {
 
     let tokens: OAuth2Tokens | void;
 
+    oauthStore.set({
+      completed: false,
+      error: null,
+      loading: true,
+      successful: false,
+      response: null,
+    });
+
     try {
       tokens = await TokenManager.getTokens(options);
     } catch (err: unknown) {
-      console.error(`Get tokens | ${err}`);
       if (err instanceof Error) {
-        set({
+        oauthStore.set({
           completed: true,
           error: {
             message: err.message,
+            troubleshoot: err.message === interactionNeeded ? sessionCookieConsentMessage : '',
           },
           loading: false,
           successful: false,
@@ -58,7 +82,7 @@ export function initialize(initOptions?: GetTokensOptions) {
       return;
     }
 
-    set({
+    oauthStore.set({
       completed: true,
       error: null,
       loading: false,
@@ -68,7 +92,7 @@ export function initialize(initOptions?: GetTokensOptions) {
   }
 
   function reset() {
-    set({
+    oauthStore.set({
       completed: false,
       error: null,
       loading: false,
@@ -80,6 +104,6 @@ export function initialize(initOptions?: GetTokensOptions) {
   return {
     get,
     reset,
-    subscribe,
+    subscribe: oauthStore.subscribe,
   };
 }

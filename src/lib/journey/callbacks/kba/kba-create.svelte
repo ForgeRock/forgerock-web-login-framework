@@ -1,10 +1,12 @@
 <script lang="ts">
   import type { KbaCreateCallback, NameValue } from '@forgerock/javascript-sdk';
   import { writable } from 'svelte/store';
+  import type { z } from 'zod';
 
-  import Floating from '$components/compositions/input-floating/floating-label.svelte';
-  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
-  import Select from '$components/compositions/select-floating/floating-label.svelte';
+  import InputFloating from '$components/compositions/input-floating/floating-label.svelte';
+  import InputStacked from '$components/compositions/input-stacked/stacked-label.svelte';
+  import SelectFloating from '$components/compositions/select-floating/floating-label.svelte';
+  import SelectStacked from '$components/compositions/select-stacked/stacked-label.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
@@ -14,24 +16,20 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: KbaCreateCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+  export let style: z.infer<typeof styleSchema> = {};
 
-  const Input = style.labels === 'stacked' ? Stacked : Floating;
+  const Input = style.labels === 'stacked' ? InputStacked : InputFloating;
+  const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
-  /** *************************************************************************
-   * SDK INTEGRATION POINT
-   * Summary: SDK callback methods for getting values
-   * --------------------------------------------------------------------------
-   * Details: Each callback is wrapped by the SDK to provide helper methods
-   * for accessing values from the callbacks received from AM
-   ************************************************************************* */
   let customQuestionIndex: string | null = null;
   let displayCustomQuestionInput = false;
   let inputArr: NameValue[] | undefined;
@@ -61,13 +59,6 @@
    * @param {Object} event
    */
   function setAnswer(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setAnswer((event.target as HTMLSelectElement).value);
   }
 
@@ -84,13 +75,6 @@
       callback.setAnswer('');
     } else {
       displayCustomQuestionInput = false;
-      /** ***********************************************************************
-       * SDK INTEGRATION POINT
-       * Summary: SDK callback methods for setting values
-       * ------------------------------------------------------------------------
-       * Details: Each callback is wrapped by the SDK to provide helper methods
-       * for writing values to the callbacks received from AM
-       *********************************************************************** */
       callback.setQuestion(selectValue);
     }
   }
@@ -101,19 +85,12 @@
    */
   function setQuestion(event: Event) {
     const inputValue = (event.target as HTMLSelectElement).value;
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setQuestion(inputValue);
   }
 
   $: {
     inputArr = callback?.payload?.input;
-    inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata?.idx}`;
     inputNameQuestion = inputName;
     inputNameAnswer = Array.isArray(inputArr) && inputArr[1].name;
     prompt = callback.getPrompt();
@@ -167,6 +144,7 @@
 
   <Select
     isFirstInvalidInput={false}
+    isRequired={true}
     key={inputNameQuestion}
     label={prompt}
     onChange={selectQuestion}
@@ -176,7 +154,8 @@
   {#if displayCustomQuestionInput}
     <Input
       isFirstInvalidInput={false}
-      key={`kba-custom-question-${callbackMetadata.idx}`}
+      isRequired={true}
+      key={`kba-custom-question-${callbackMetadata?.idx}`}
       label={interpolate('customSecurityQuestion')}
       showMessage={false}
       message={interpolate('inputRequiredError')}
@@ -186,8 +165,9 @@
   {/if}
 
   <Input
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
-    key={inputNameAnswer || `kba-answer-${callbackMetadata.idx}`}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    isRequired={true}
+    key={inputNameAnswer || `kba-answer-${callbackMetadata?.idx}`}
     label={interpolate('securityAnswer')}
     showMessage={false}
     message={interpolate('inputRequiredError')}

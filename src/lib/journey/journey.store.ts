@@ -1,28 +1,111 @@
-import { FRAuth, FRStep, FRLoginFailure, StepType, FRCallback } from '@forgerock/javascript-sdk';
+import {
+  Config,
+  FRAuth,
+  FRStep,
+  FRLoginFailure,
+  StepType,
+  FRCallback,
+} from '@forgerock/javascript-sdk';
 import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
-import { writable, type Writable } from 'svelte/store';
+import { get, writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
-import type { JourneyStore, JourneyStoreValue, StepTypes } from './journey.interfaces';
+import { logErrorAndThrow } from '$lib/_utilities/errors.utilities';
+import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
 import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
+  initCheckValidation,
   shouldPopulateWithPreviousCallbacks,
-} from './_utilities/step.utilities';
+} from './stages/_utilities/step.utilities';
+import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+import type { Maybe } from '$lib/interfaces';
 
+/**
+ * @function initializeJourney - Initializes the journey stack for tracking journey switches
+ * @param {object} initOptions - The initial options to set
+ * @returns {object} - The journey stack store with stack methods
+ */
+function initializeStack(initOptions?: StepOptions) {
+  const initialValue = initOptions ? [initOptions] : [];
+  const { update, set, subscribe }: Writable<StepOptions[]> = writable(initialValue);
+
+  // Assign to exported variable (see bottom of file)
+  stack = {
+    latest: async (): Promise<StepOptions> => {
+      return new Promise((resolve) => {
+        // subscribe, grab the current value and unsubscribe
+        subscribe((current) => {
+          const lastItem = current[current.length - 1];
+          resolve(lastItem);
+        })();
+      });
+    },
+    pop: async (): Promise<StepOptions[]> => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+          if (current.length) {
+            state = current.slice(0, -1);
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
+      });
+    },
+    push: async (options?: StepOptions): Promise<StepOptions[]> => {
+      return new Promise((resolve) => {
+        update((current) => {
+          let state;
+
+          if (!current.length) {
+            state = [{ ...options }];
+          } else if (options && options?.tree !== current[current.length - 1]?.tree) {
+            state = [...current, options];
+          } else {
+            state = current;
+          }
+          resolve([...state]);
+          return state;
+        });
+      });
+    },
+    reset: () => {
+      set([]);
+    },
+    subscribe,
+  };
+
+  return stack;
+}
+
+export const journeyStore: Writable<JourneyStoreValue> = writable({
+  completed: false,
+  error: null,
+  loading: false,
+  metadata: null,
+  step: null,
+  successful: false,
+  response: null,
+});
+
+/**
+ * @function initialize - Initializes the journey store
+ * @param {object} initOptions - The initial options to set
+ * @returns {object} - The journey store
+ */
 export function initialize(initOptions?: StepOptions): JourneyStore {
-  const { set, subscribe }: Writable<JourneyStoreValue> = writable({
-    completed: false,
-    error: null,
-    loading: false,
-    step: null,
-    successful: false,
-    response: null,
-  });
+  const stack = initializeStack();
 
   let stepNumber = 0;
 
   async function next(prevStep: StepTypes = null, nextOptions?: StepOptions, resumeUrl?: string) {
+    if (!Config.get().serverConfig?.baseUrl) {
+      logErrorAndThrow('missingBaseUrl');
+    }
+
     /**
      * Create an options object with nextOptions overriding anything from initOptions
      * TODO: Does this object merge need to be more granular?
@@ -44,10 +127,11 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     const previousPayload = prevStep?.payload;
     let nextStep: StepTypes;
 
-    set({
+    journeyStore.set({
       completed: false,
       error: null,
       loading: true,
+      metadata: get(journeyStore).metadata,
       step: prevStep,
       successful: false,
       response: null,
@@ -71,7 +155,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
          */
         nextStep = await FRAuth.next(prevStep as FRStep, options);
       } else {
-        nextStep = await FRAuth.next(undefined, options);
+        nextStep = await FRAuth.start(options);
       }
     } catch (err) {
       console.error(`Next step request | ${err}`);
@@ -85,17 +169,36 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
 
     if (nextStep.type === StepType.Step) {
-      /**
-       * SUCCESSFUL CONTINUATION BLOCK
-       */
+      const stageAttribute = nextStep.getStage();
+
+      let stageJson: Maybe<Record<string, unknown>> = null;
+      let stageName: Maybe<string> = null;
+
+      // Check if stage attribute is serialized JSON
+      if (stageAttribute && stageAttribute.includes('{')) {
+        try {
+          stageJson = JSON.parse(stageAttribute);
+        } catch (err) {
+          console.warn('Stage attribute value was not parsable');
+        }
+      } else if (stageAttribute) {
+        stageName = stageAttribute;
+      }
+
+      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
 
-      set({
+      journeyStore.set({
         completed: false,
         error: null,
         loading: false,
+        metadata: {
+          callbacks: callbackMetadata,
+          step: stepMetadata,
+        },
         step: nextStep,
         successful: false,
         response: null,
@@ -104,12 +207,14 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       /**
        * SUCCESSFUL COMPLETION BLOCK
        */
+      stack.reset();
 
       // Set final state
-      set({
+      journeyStore.set({
         completed: true,
         error: null,
         loading: false,
+        metadata: null,
         step: null,
         successful: true,
         response: nextStep.payload,
@@ -120,14 +225,15 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        *
        * Grab failure message, which may contain encoded HTML
        */
-      const failureMessageStr = htmlDecode(nextStep.payload.message || '');
+      const failureMessageStr = htmlDecode(nextStep.payload.message || 'Unknown login error');
       let restartedStep: StepTypes | null = null;
 
       try {
         /**
          * Restart tree to get fresh step
          */
-        restartedStep = await FRAuth.next(undefined, options);
+        const restartOptions = await stack.latest();
+        restartedStep = await FRAuth.next(undefined, restartOptions);
       } catch (err) {
         console.error(`Restart failed step request | ${err}`);
 
@@ -188,38 +294,67 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
        * the final result to the user.
        */
       if (restartedStep.type === StepType.Step) {
-        set({
+        const stageAttribute = restartedStep.getStage();
+
+        let stageJson: Maybe<Record<string, unknown>> = null;
+        let stageName: Maybe<string> = null;
+
+        // Check if stage attribute is serialized JSON
+        if (stageAttribute && stageAttribute.includes('{')) {
+          try {
+            stageJson = JSON.parse(stageAttribute);
+          } catch (err) {
+            console.warn('Stage attribute value was not parsable');
+          }
+        } else if (stageAttribute) {
+          stageName = stageAttribute;
+        }
+
+        const callbackMetadata = buildCallbackMetadata(
+          restartedStep,
+          initCheckValidation(),
+          stageJson,
+        );
+        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
+
+        journeyStore.set({
           completed: false,
           error: {
             code: nextStep.getCode(),
             message: failureMessageStr,
-            // TODO: Should we remove the callbacks for PII info?
-            step: prevStep?.payload,
+            stage: prevStep?.payload?.stage,
+            troubleshoot: null,
           },
           loading: false,
+          metadata: {
+            callbacks: callbackMetadata,
+            step: stepMetadata,
+          },
           step: restartedStep,
           successful: false,
           response: null,
         });
       } else if (restartedStep.type === StepType.LoginSuccess) {
-        set({
+        journeyStore.set({
           completed: true,
           error: null,
           loading: false,
+          metadata: null,
           step: null,
           successful: true,
           response: restartedStep.payload,
         });
       } else {
-        set({
+        journeyStore.set({
           completed: true,
           error: {
             code: nextStep.getCode(),
             message: failureMessageStr,
-            // TODO: Should we remove the callbacks for PII info?
-            step: prevStep?.payload,
+            stage: prevStep?.payload?.stage,
+            troubleshoot: null,
           },
           loading: false,
+          metadata: null,
           step: null,
           successful: false,
           response: restartedStep.payload,
@@ -228,19 +363,45 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
   }
 
+  async function pop() {
+    reset();
+    const updatedStack = await stack.pop();
+    const currentJourney = updatedStack[updatedStack.length - 1];
+    await start(currentJourney);
+  }
+
+  async function push(newOptions: StepOptions) {
+    reset();
+    await stack.push(newOptions);
+    await start(newOptions);
+  }
+
   async function resume(url: string, resumeOptions?: StepOptions) {
     await next(undefined, resumeOptions, url);
   }
 
   async function start(startOptions?: StepOptions) {
+    const configTree = Config.get().tree;
+    // If no tree is passed in, but there's a configured default tree, use that
+    if (!startOptions?.tree && configTree) {
+      if (startOptions) {
+        startOptions.tree = configTree;
+      } else {
+        startOptions = {
+          tree: configTree,
+        };
+      }
+    }
+    await stack.push(startOptions);
     await next(undefined, startOptions);
   }
 
   function reset() {
-    set({
+    journeyStore.set({
       completed: false,
       error: null,
       loading: false,
+      metadata: null,
       step: null,
       successful: false,
       response: null,
@@ -249,9 +410,13 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
   return {
     next,
+    pop,
+    push,
     reset,
     resume,
     start,
-    subscribe,
+    subscribe: journeyStore.subscribe,
   };
 }
+
+export let stack: StackStore;

@@ -1,14 +1,12 @@
 name: 'CI Pipeline'
 on:
-  pull_request:
-    branches-ignore:
-      - dependabot/**
+  push:
 jobs:
-  pr:
+  install:
     strategy:
       matrix:
         node: [16.x, 18.x]
-        os: [macos-latest, ubuntu-latest] #, windows-latest]
+        os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v3
@@ -19,11 +17,90 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
-      - run: npm ci
-      - run: npm run build
-      - name: Publish to Chromatic
-        if: ${{ matrix.os == 'ubuntu-latest' && matrix.node < 17 && !github.event.pull_request.draft }}
-        uses: chromaui/action@v1
+      - uses: actions/cache@v3
+        id: npm-cache
         with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          path: |
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm
+      - name: Install dependencies if cache invalid
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+  pr:
+    needs: install
+    strategy:
+      matrix:
+        node: [16.x, 18.x]
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+      VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+      VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
+      VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Restore npm dependencies
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm
+      - run: npm run build
+      - name: Build Storybook
+        run: npm run build:storybook --quiet
+      - run: npx playwright install
+      - name: Serve Storybook and run tests
+        if: ${{ runner.os == 'ubuntu-latest' }} # this one hangs on mac os for some reason
+        run: |
+          npx concurrently -k -s first -n "SB,TEST" -c "magenta,blue" \
+            "npx http-server storybook-static --port 6006 --silent" \
+            "npx wait-on tcp:6006 && npm run test:storybook"
+  chromatic:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    needs: install
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+          cache: 'npm'
+      - name: Restore npm dependencies
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm
+      - name: Install dependencies if cache invalid
+        if: steps.npm-cache.outputs.cache-hit != 'true'
+        run: npm ci
+      - uses: chromaui/action@v1
+        with:
+          onlyChanged: true
+          exitOnceUploaded: true
+          traceChanged: true
+          diagnostics: true
+          buildScriptName: 'build:storybook'
           exitZeroOnChanges: true
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: chromatic-build-artifacts-${{ github.run_id }}
+          path: |
+            chromatic-diagnostics.json
+            **/build-storybook.log

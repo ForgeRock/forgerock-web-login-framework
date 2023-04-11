@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { PollingWaitCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
@@ -9,25 +10,28 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: z.infer<typeof styleSchema> = {};
+
   export let callback: PollingWaitCallback;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
 
   let message: string;
-  let time: number;
+
+  // Ensure this is written outside of the Reactive blog, or it get's called multiple times
+  setTimeout(() => {
+    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
+    selfSubmitFunction && selfSubmitFunction();
+  }, callback.getWaitTime());
 
   $: {
+    callback = callback as PollingWaitCallback;
     message = callback.getMessage();
-    time = callback.getWaitTime();
-    setTimeout(() => {
-      callbackMetadata.isReadyForSubmission = true;
-      selfSubmitFunction && selfSubmitFunction();
-    }, time);
   }
 </script>
 

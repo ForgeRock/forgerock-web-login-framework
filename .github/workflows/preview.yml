@@ -3,6 +3,9 @@ on:
   pull_request:
     branches:
       - main
+      - next
+      - beta
+      - alpha
 jobs:
   preview:
     runs-on: ubuntu-latest
@@ -20,7 +23,7 @@ jobs:
       - name: Deploy preview environment
         uses: okteto/deploy-preview@latest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         with:
           name: pr-${{ github.event.number }}-ryanbas21
           timeout: 15m
@@ -39,49 +42,15 @@ jobs:
           node-version: '16.x'
       - uses: ryanbas21/update-cors-am-github-action@latest
         with:
-          AM_URL: ${{ secrets.AM_URL }}
+          AM_URL: ${{ secrets.VITE_FR_AM_URL }}
           USERNAME: ${{ secrets.AM_USERNAME }}
           PASSWORD: ${{ secrets.AM_PASSWORD }}
-          REALM_PATH: ${{ secrets.AM_REALM }}
+          REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
           ORIGINS: ${{ needs.preview.outputs.urls }}
-          COOKIE_NAME: ${{ secrets.COOKIE_NAME }}
+          COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
           REDIRECTION_URIS: ${{ secrets.REDIRECTION_URIS }}
           REMOVE: false
           CORS_CONFIG_NAME: 'org-ui'
-      - name: Audit URLs using Lighthouse
-        id: lighthouse_audit
-        uses: treosh/lighthouse-ci-action@v7
-        with: # hope this works because this is an array
-          uploadArtifacts: true
-          temporaryPublicStorage: true
-          urls: |
-            https://preview-pr-${{ github.event.number }}-ryanbas21.cloud.okteto.net/
-      - name: Lighthouse Report
-        uses: manrueda/lighthouse-report-action@v1.1.2
-        with:
-          reports: '.lighthouseci'
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload artifacts
-        uses: actions/upload-artifact@master
-        with:
-          name: Lighthouse reports
-          path: /tmp/artifacts
-      - name: Format lighthouse result
-        id: lighthouse_result
-        uses: actions/github-script@v4
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: "const links = ${{ steps.lighthouse_audit.outputs.links }}\nconst results = (${{ steps.lighthouse_audit.outputs.manifest }}).filter(result => result.isRepresentativeRun);\nconst score = res => res >= 90 ? '\U0001F7E2' : res >= 50 ? '\U0001F7E0' : '\U0001F534';\nconst comment = results.map((result) => {\n  const summary = result.summary;\n  const url = result.url;\n  return `\n  \U0001F30E [${url}](${url})\n  ⚡️ [Lighthouse report](${links[url]})\n  | Category | Score |\n  | --- | --- |\n  ${Object.keys(summary).map((key) => {\n    const percentage = Math.round(summary[key] * 100);\n    return `| ${score(percentage)} ${key} | ${percentage} |`;\n  }).join('\\n')}\n  `;\n}).join('---');\ncore.setOutput(\"comment\", comment);\n"
-      - name: Add Lighthouse comment to PR
-        id: lighthouse_comment_to_pr
-        if: ${{ always() }}
-        uses: marocchino/sticky-pull-request-comment@v1
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          number: ${{ github.event.pull_request.number }}
-          header: lighthouse
-          message: |
-            ${{ steps.lighthouse_result.outputs.comment }}
   e2e:
     needs: additional
     runs-on: ubuntu-latest

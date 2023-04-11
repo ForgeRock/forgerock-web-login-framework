@@ -1,4 +1,5 @@
 .DS_Store
+storybook-static
 node_modules
 /build
 /.svelte-kit/*
@@ -6,14 +7,20 @@ node_modules
 !/.svelte-kit/tsconfig.json
 /package/*
 /package/**/*
-!/*/package.json
+!/package/README.md
+!/package/CHANGELOG.md
+!/package/LICENSE
+!/package/package.json
 .env
 .env.*
 !.env.example
 /test-results/
 /playwright-report/
 /playwright/.cache/
+
 .syncthing*
 /test-results/
 /playwright-report/
 /playwright/.cache/
+.eslintcache
+svelte-package

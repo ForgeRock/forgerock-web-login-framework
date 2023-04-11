@@ -23,17 +23,21 @@ export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
     callbackMetadata: {
-      isFirstInvalidInput: false,
-      isReadyForSubmission: false,
-      isSelfSubmitting: false,
-      isUserInputRequired: true,
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: false,
+        isUserInputRequired: true,
+      },
       idx: 0,
     },
     stepMetadata: {
-      isStepSelfSubmittable: false,
-      numOfCallbacks: 2,
-      numOfSelfSubmittableCbs: 0,
-      numOfUserInputCbs: 2,
+      derived: {
+        isStepSelfSubmittable: false,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 0,
+        numOfUserInputCbs: 2,
+      },
     },
   },
 };
@@ -42,17 +46,47 @@ export const SingleOptSelfSubmit = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[1],
     callbackMetadata: {
-      isFirstInvalidInput: false,
-      isReadyForSubmission: false,
-      isSelfSubmitting: true,
-      isUserInputRequired: true,
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: true,
+        isUserInputRequired: true,
+      },
       idx: 0,
     },
     stepMetadata: {
-      isStepSelfSubmittable: true,
-      numOfCallbacks: 2,
-      numOfSelfSubmittableCbs: 2,
-      numOfUserInputCbs: 0,
+      derived: {
+        isStepSelfSubmittable: true,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 2,
+        numOfUserInputCbs: 0,
+      },
+    },
+  },
+};
+
+export const SingleOptNotSelfSubmit = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[2],
+    callbackMetadata: {
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: true,
+        isUserInputRequired: true,
+      },
+      idx: 0,
+      platform: {
+        showOnlyPositiveAnswer: true,
+      },
+    },
+    stepMetadata: {
+      derived: {
+        isStepSelfSubmittable: false,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 2,
+        numOfUserInputCbs: 0,
+      },
     },
   },
 };
@@ -61,18 +95,47 @@ export const TwoOptSelfSubmit = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
     callbackMetadata: {
-      isFirstInvalidInput: false,
-      isReadyForSubmission: false,
-      isSelfSubmitting: true,
-      isUserInputRequired: false,
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: true,
+        isUserInputRequired: false,
+      },
       idx: 0,
     },
     selfSubmitFunction: jest.fn(),
     stepMetadata: {
-      isStepSelfSubmittable: true,
-      numOfCallbacks: 2,
-      numOfSelfSubmittableCbs: 2,
-      numOfUserInputCbs: 0,
+      derived: {
+        isStepSelfSubmittable: true,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 2,
+        numOfUserInputCbs: 0,
+      },
+    },
+  },
+};
+
+export const OnlyPositiveAnswer = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
+    callbackMetadata: {
+      derived: {
+        isFirstInvalidInput: false,
+        isReadyForSubmission: false,
+        isSelfSubmitting: true,
+        isUserInputRequired: false,
+      },
+      idx: 0,
+      platform: { id: 'af15a3ef-3db1-45ce-b510-ec4ea514ab30', showOnlyPositiveAnswer: true },
+    },
+    selfSubmitFunction: jest.fn(),
+    stepMetadata: {
+      derived: {
+        isStepSelfSubmittable: true,
+        numOfCallbacks: 2,
+        numOfSelfSubmittableCbs: 2,
+        numOfUserInputCbs: 0,
+      },
     },
   },
 };
@@ -88,7 +151,7 @@ BaseInteraction.args = { ...Base.args };
 
 BaseInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0];
+  const cb = BaseInteraction.args.callback;
   const select = canvas.getByLabelText('Please confirm');
 
   await userEvent.selectOptions(select, '0');
@@ -102,20 +165,47 @@ BaseInteraction.play = async ({ canvasElement }) => {
 
 export const ButtonInteraction = Template.bind({});
 
-ButtonInteraction.args = { ...TwoOptSelfSubmit.args };
+ButtonInteraction.args = {
+  ...TwoOptSelfSubmit.args,
+  callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[3],
+};
 
 ButtonInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0];
-  const posButton = canvas.getByRole('button', { name: 'Yes' });
+  const cb = ButtonInteraction.args.callback;
+  const posButton = canvas.getByRole('button', { name: 'Yup' });
 
   await userEvent.click(posButton);
+
   await expect(cb.getInputValue()).toBe(0);
   await expect(TwoOptSelfSubmit.args.selfSubmitFunction).toBeCalled();
 
   await new Promise((resolve) => setTimeout(resolve, 1000));
-  const negButton = canvas.getByRole('button', { name: 'No' });
+  const negButton = canvas.getByRole('button', { name: 'Nope' });
 
   await userEvent.click(negButton);
+  await expect(cb.getInputValue()).toBe(1);
+};
+
+export const CheckboxInteraction = Template.bind({});
+
+CheckboxInteraction.args = { ...SingleOptNotSelfSubmit.args };
+
+CheckboxInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const cb = CheckboxInteraction.args.callback;
+  const confirm = canvas.getByRole('checkbox', { name: 'I confirm' });
+
+  // Check default choice
+  // await new Promise((resolve) => setTimeout(resolve, 500));
+  await expect(cb.getInputValue()).toBe(1);
+
+  await userEvent.click(confirm);
+  // Check to ensure value is updated
+  await expect(cb.getInputValue()).toBe(0);
+
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+
+  await userEvent.click(confirm);
   await expect(cb.getInputValue()).toBe(1);
 };

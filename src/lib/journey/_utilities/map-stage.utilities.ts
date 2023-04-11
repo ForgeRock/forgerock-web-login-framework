@@ -1,25 +1,26 @@
 import Generic from '$journey/stages/generic.svelte';
+import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import Registration from '$journey/stages/registration.svelte';
-import UsernamePassword from '$journey/stages/username-password.svelte';
+import Login from '$journey/stages/login.svelte';
 
 import type { StepTypes } from '$journey/journey.interfaces';
 
+/**
+ * @function mapStepToStage - Maps the current step to the proper stage component.
+ * @param {object} currentStep - The current step to check
+ * @returns {object} - The stage Svelte component
+ */
 export function mapStepToStage(currentStep: StepTypes) {
-  /** *********************************************************************
-   * SDK INTEGRATION POINT
-   * Summary:SDK step method for getting the stage value
-   * ----------------------------------------------------------------------
-   * Details: This method is helpful in quickly identifying the stage
-   * when you want to provide special layout or handling of the form
-   ********************************************************************* */
   if (!currentStep || currentStep.type !== 'Step') {
     return Generic;
   }
   switch (currentStep?.getStage && currentStep.getStage()) {
-    case 'Registration':
+    case 'OneTimePassword':
+      return OneTimePassword;
+    case 'DefaultRegistration':
       return Registration;
-    case 'UsernamePassword':
-      return UsernamePassword;
+    case 'DefaultLogin':
+      return Login;
     default:
       return Generic;
   }

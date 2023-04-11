@@ -1,6 +1,17 @@
 {
-  "name": "forgerock-web-login-widget",
-  "version": "0.1.1",
+  "name": "@forgerock/login-widget",
   "type": "module",
-  "dependencies": {}
+  "exports": {
+    ".": {
+      "import": "./index.js",
+      "require": "./index.cjs"
+    },
+    "./widget.css": {
+      "import": "./widget.css",
+      "require": "./widget.css"
+    }
+  },
+  "types": "./types.d.ts",
+  "dependencies": {},
+  "version": "1.0.0-beta.17"
 }

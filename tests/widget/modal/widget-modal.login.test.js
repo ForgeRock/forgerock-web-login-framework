@@ -1,26 +1,57 @@
 import { expect, test } from '@playwright/test';
 
-test('modal widget', async ({ page }) => {
-  await page.goto('widget/modal');
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
-  const dialog = page.locator('dialog');
-  expect(await dialog.isVisible()).toBeFalsy();
+test('Modal widget with login', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  await Promise.all([
-    loginButton.click(),
-    // Add just a bit of a delay to ensure dialog responds
-    page.waitForEvent('requestfinished'),
-  ]);
-  expect(await dialog.isVisible()).toBeTruthy();
+  const messageArray = [];
 
-  await page.fill('text="Username"', 'demouser');
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Sign In' }).click();
+  // Listen for events on page
+  page.on('console', async (msg) => {
+    return messageArray.push(msg.text());
+  });
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  // Navigate to page without Widget instantiation
+  await navigate('widget');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  const loginLink = page.getByRole('link', { name: 'Login via Modal Widget' });
+
+  await expect(loginLink).toBeVisible();
+
+  await navigate('widget/modal?journey=TEST_Login');
+
+  await expect(page.getByRole('dialog')).toBeHidden();
+
+  // Try failed login
+  await clickButton('Open Login Modal', '/authenticate');
+
+  await expect(page.getByRole('dialog')).toBeVisible();
+
+  await page.getByLabel('Username').fill('notauser');
+  await page.getByLabel('Password').fill('notapassword');
+
+  await clickButton('Sign In', '/authenticate');
+
+  await expect(page.getByText('Sign in failed')).toBeVisible();
+
+  // Try successful login
+  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Password').fill('j56eKtae*1');
+
+  await clickButton('Sign In', '/authenticate');
+
+  await verifyUserInfo(page, expect);
+
+  // Navigate to page without Widget instantiation
+  await navigate('widget');
+
+  // Refresh the page to clear out previous Widget references
+  await page.reload({ waitUntil: 'networkidle' });
+
+  // Test the config and user API without Widget references
+  await verifyUserInfo(page, expect);
+
+  // Journey onFailure()
+  expect(messageArray.includes('Login failure event fired')).toBe(true);
 });

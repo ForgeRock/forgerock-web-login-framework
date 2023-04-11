@@ -1,11 +1,10 @@
 <script lang="ts">
   import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import {
-    getValidationPolicies,
     getValidationFailures,
     isInputRequired,
-    type Policy,
     type FailedPolicy,
   } from '$journey/callbacks/_utilities/callback.utilities';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
@@ -18,55 +17,48 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: ValidatedCreateUsernameCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+  export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
   let callbackType: string;
   let inputName: string;
+  let isInvalid: boolean;
   let isRequired: boolean;
   let prompt: string;
   let value: unknown;
-  let validationRules: Policy[];
   let validationFailures: FailedPolicy[];
-  let isInvalid: boolean;
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
    */
   function setValue(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
   $: {
     callbackType = callback.getType();
-    inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata?.idx}`;
     isRequired = isInputRequired(callback);
     prompt = callback.getPrompt();
     value = callback?.getInputValue();
-    validationRules = getValidationPolicies(callback.getPolicies());
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   {isRequired}
   {isInvalid}
   key={inputName}
@@ -77,5 +69,5 @@
   type="text"
   value={typeof value === 'string' ? value : ''}
 >
-  <Policies {callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
+  <Policies callback={callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
 </Input>

@@ -12,7 +12,8 @@
    * @param {Object} event - HTML form event
    * @return {undefined}
    */
-  function formSubmit(event: SubmitEvent) {
+  // TODO: Using an `any` to give us time to figure out these weird event types that just changed
+  function formSubmit(event: any) {
     /**
      * Reference for validation: https://www.aleksandrhovhannisyan.com/blog/html-input-validation-without-a-form/
      */
@@ -42,8 +43,12 @@
        * The vast majority of these will be a list of one
        */
       Array.from(inputs).forEach((input) => {
-        // Just check validity, but don't "report" it
-        const isValid = input.checkValidity();
+        /**
+         * Just check validity, but don't "report" it
+         * The data attribute is a string of 'true', 'false', OR the value undefined
+         */
+        const isValid = input.checkValidity() && input.dataset.forceValidityFailure !== 'true';
+        // debugger;
 
         // Grab the associated elements to this input
         const messageKey = input.getAttribute('aria-describedby') || '';
@@ -80,7 +85,6 @@
   }
 
   $: {
-    console.log('Form has been updated.');
     if (needsFocus) {
       formEl && formEl.focus();
     }

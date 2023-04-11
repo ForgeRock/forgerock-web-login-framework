@@ -8,4 +8,9 @@ export default defineConfig({
     alias: aliases,
   },
   plugins: [svelte({ hot: !process.env.VITEST })],
+  test: {
+    typecheck: {
+      tsconfig: 'tsconfig.vitest.json',
+    },
+  },
 });

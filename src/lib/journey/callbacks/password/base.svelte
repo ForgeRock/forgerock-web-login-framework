@@ -3,7 +3,9 @@
     PasswordCallback,
     ValidatedCreatePasswordCallback,
   } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
+  import ConfirmInput from './confirm-input.svelte';
   import EyeIcon from '$components/icons/eye-icon.svelte';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
@@ -11,21 +13,15 @@
   import T from '$components/_utilities/locale-strings.svelte';
 
   import type { Maybe } from '$lib/interfaces';
-  import type {
-    CallbackMetadata,
-    SelfSubmitFunction,
-    StepMetadata,
-  } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { CallbackMetadata } from '$journey/journey.interfaces';
+  import type { styleSchema } from '$lib/style.store';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
-  export let callbackMetadata: CallbackMetadata;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
   export let key: string;
   export let isInvalid = false;
   export let isRequired = false;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
@@ -33,18 +29,29 @@
   export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
 
+  let confirmValue: Maybe<string>;
   let callbackType: string;
-  let textInputLabel: string;
-
+  let doPasswordsMatch: Maybe<boolean>;
   let isVisible = false;
+  let resetValue = false;
+  let savedValue = '';
+  let textInputLabel: string;
   let type: 'password' | 'text' = 'password';
-  let value: unknown;
+  let value: string;
 
+  /**
+   * @function confirmInput - ensures the second password input matches the first
+   * @param event
+   */
+  function confirmInput(val: Maybe<string>) {
+    confirmValue = val;
+  }
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
    * @param {Object} event
    */
   function setValue(event: Event) {
+    value = (event.target as HTMLInputElement).value;
     /** ***********************************************************************
      * SDK INTEGRATION POINT
      * Summary: SDK callback methods for setting values
@@ -52,7 +59,8 @@
      * Details: Each callback is wrapped by the SDK to provide helper methods
      * for writing values to the callbacks received from AM
      *********************************************************************** */
-    callback.setInputValue((event.target as HTMLInputElement).value);
+    callback.setInputValue(value);
+    savedValue = String(value);
   }
   /**
    * @function toggleVisibility - toggles the password from masked to plaintext
@@ -64,14 +72,27 @@
 
   $: {
     callbackType = callback.getType();
-    key = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+    key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
-    value = callback?.getInputValue();
+    value = callback?.getInputValue() as string;
+
+    /**
+     * `savedValue` represents what the user set after blur (local component state)
+     * `value` represents what's in the callback (empties from AM response)
+     *
+     * This unique combination is what produces the most reliable reset flag
+     */
+    resetValue = !!savedValue && value === '';
+
+    /**
+     * Only assign a boolean if the confirm input has an actual value.
+     */
+    doPasswordsMatch = confirmValue !== undefined ? confirmValue === value : undefined;
   }
 </script>
 
 <Input
-  isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
   hasRightIcon={true}
   {key}
   label={interpolate(textToKey(callbackType), null, textInputLabel)}
@@ -89,9 +110,22 @@
     slot="input-button"
     type="button"
   >
-    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}
-      ><T key="showPassword" /></EyeIcon
-    >
+    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+      <T key="showPassword" />
+    </EyeIcon>
   </button>
   <slot />
 </Input>
+
+{#if callbackMetadata?.platform?.confirmPassword}
+  <ConfirmInput
+    forceValidityFailure={doPasswordsMatch === false}
+    passwordsDoNotMatch={doPasswordsMatch === false}
+    {key}
+    isRequired={value.length > 0}
+    onChange={confirmInput}
+    {resetValue}
+    showMessage={doPasswordsMatch === false}
+    {style}
+  />
+{/if}

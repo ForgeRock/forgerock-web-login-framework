@@ -1,15 +1,25 @@
 import { expect, test } from '@playwright/test';
 
-test('inline widget', async ({ page }) => {
-  await page.goto('widget/inline');
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  await page.fill('text="Username"', 'demouser');
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.locator('button', { hasText: 'Sign In' }).click();
+test('Inline widget with login', async ({ page }) => {
+  const messageArray = [];
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  // Listen for events on page
+  page.on('console', async (msg) => {
+    return messageArray.push(msg.text());
+  });
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  const { clickButton, navigate } = asyncEvents(page);
+  await navigate('widget/inline?journey=TEST_Login');
+
+  await page.getByRole('textbox', { name: 'Username' }).type('demouser');
+  await page.getByRole('textbox', { name: 'Password' }).type('j56eKtae*1');
+
+  await clickButton('Sign In', '/authenticate');
+
+  await verifyUserInfo(page, expect);
+
+  // Form onMount()
+  expect(messageArray.includes('Form mounted')).toBe(true);
 });

@@ -1,9 +1,12 @@
 <script lang="ts">
   import type { SelectIdPCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
+
   import AppleIcon from '../../../components/icons/apple-icon.svelte';
+  import FacebookIcon from '../../../components/icons/facebook-icon.svelte';
+  import GoogleIcon from '../../../components/icons/google-icon.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import Grid from '$components/primitives/grid/grid.svelte';
-  import { interpolate, textToKey } from '$lib/_utilities/i18n.utilities';
   import T from '$components/_utilities/locale-strings.svelte';
 
   import type {
@@ -11,19 +14,17 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: SelectIdPCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export const style: z.infer<typeof styleSchema> = {};
 
-  let inputName: string;
-  let label: string;
+  export let callback: SelectIdPCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let stepMetadata: Maybe<StepMetadata>;
+
   let idps: { value: string; text: string }[];
-  let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
@@ -31,7 +32,7 @@
    */
   function setBtnValue(value: string) {
     callback.setProvider(value);
-    callbackMetadata.isReadyForSubmission = true;
+    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
     selfSubmitFunction && selfSubmitFunction();
   }
 
@@ -56,20 +57,47 @@
   }
 </script>
 
-<Grid num={idps.length}>
-  {#each idps as idp}
-    <Button type="button" width="auto" onClick={() => setBtnValue(idp.value)}
-      ><AppleIcon
-        classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"
-      />
-      <T key="signInWith" />
-      {idp.text}
-    </Button>
-  {/each}
-</Grid>
-
-{#if stepMetadata.numOfCallbacks > 1}
+{#each idps as idp}
   <Grid num={1}>
-    <hr />
+    {#if idp.text.toUpperCase().includes('APPLE')}
+      <Button
+        classes="tw_button-apple dark:tw_button-apple_dark"
+        type="button"
+        width="auto"
+        onClick={() => setBtnValue(idp.value)}
+      >
+        <AppleIcon classes="tw_inline-block tw_fill-current" />
+        <T key="continueWith" />
+        {idp.text}
+      </Button>
+    {:else if idp.text.toUpperCase().includes('FACEBOOK')}
+      <Button
+        classes="tw_button-facebook dark:tw_button-facebook_dark"
+        type="button"
+        width="auto"
+        onClick={() => setBtnValue(idp.value)}
+      >
+        <FacebookIcon classes="tw_inline-block tw_fill-current" />
+        <T key="continueWith" />
+        {idp.text}
+      </Button>
+    {:else if idp.text.toUpperCase().includes('GOOGLE')}
+      <Button
+        classes="tw_button-google dark:tw_button-google_dark"
+        type="button"
+        width="auto"
+        onClick={() => setBtnValue(idp.value)}
+      >
+        <GoogleIcon classes="tw_inline-block tw_fill-current" />
+        <T key="continueWith" />
+        {idp.text}
+      </Button>
+    {/if}
+  </Grid>
+{/each}
+
+{#if stepMetadata && stepMetadata.derived.numOfCallbacks > 1}
+  <Grid num={1}>
+    <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
   </Grid>
 {/if}

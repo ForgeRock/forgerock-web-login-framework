@@ -1,10 +1,11 @@
 <script lang="ts">
   import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import { interpolate } from '$lib/_utilities/i18n.utilities';
   import Link from '$components/primitives/link/link.svelte';
-  import { links } from '$lib/links.store';
+  import { linksStore } from '$lib/links.store';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
 
@@ -13,24 +14,18 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: TermsAndConditionsCallback;
-  export let checkAndRadioType: 'animated' | 'standard' = 'animated';
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  // Unused props. Setting to const` prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
 
-  /** *************************************************************************
-   * SDK INTEGRATION POINT
-   * Summary: SDK callback methods for getting values
-   * --------------------------------------------------------------------------
-   * Details: Each callback is wrapped by the SDK to provide helper methods
-   * for accessing values from the callbacks received from AM
-   ************************************************************************* */
-  const Checkbox = checkAndRadioType === 'standard' ? Standard : Animated;
+  export let style: z.infer<typeof styleSchema> = {};
+  export let callback: TermsAndConditionsCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+
+  const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
   let inputName: string;
 
@@ -39,27 +34,20 @@
    * @param {Object} event
    */
   function setValue(event: Event) {
-    /** ***********************************************************************
-     * SDK INTEGRATION POINT
-     * Summary: SDK callback methods for setting values
-     * ------------------------------------------------------------------------
-     * Details: Each callback is wrapped by the SDK to provide helper methods
-     * for writing values to the callbacks received from AM
-     *********************************************************************** */
     callback.setAccepted((event.target as HTMLInputElement).checked);
   }
 
   $: {
-    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata.idx}`;
+    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`;
   }
 </script>
 
-{#if $links?.termsAndConditions}
-  <Link classes="tw_block tw_mb-4" href={$links?.termsAndConditions} target="_blank">
+{#if $linksStore?.termsAndConditions}
+  <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
     {interpolate('termsAndConditionsLinkText')}
   </Link>
   <Checkbox
-    isFirstInvalidInput={callbackMetadata.isFirstInvalidInput}
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     key={inputName}
     onChange={setValue}
     value={false}

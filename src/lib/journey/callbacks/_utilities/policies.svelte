@@ -22,6 +22,7 @@
   export let key: Maybe<string> = undefined;
   export let label: string;
   export let messageKey: string;
+  export let showPolicies = false;
 
   let validationFailures = getValidationFailures(callback, label);
   let validationRules = getValidationPolicies(callback.getPolicies());
@@ -51,7 +52,7 @@
       {/each}
     </ul>
   </div>
-{:else if validationRules.length}
+{:else if (showPolicies && validationRules.length)}
   <div class="tw_input-policies tw_w-full" id={`${key ? `${key}-message` : ''}`}>
     <p class="tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">
       <T key={messageKey} />

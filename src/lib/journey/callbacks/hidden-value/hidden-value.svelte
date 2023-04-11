@@ -1,17 +1,18 @@
 <script lang="ts">
-  import type { HiddenValueCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
 
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
+  import type { HiddenValueCallback } from '@forgerock/javascript-sdk';
 
-  export let callback: HiddenValueCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export const callback: Maybe<HiddenValueCallback> = null;
+  export const callbackMetadata: Maybe<CallbackMetadata> = null;
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+  export const style: z.infer<typeof styleSchema> = {};
 </script>

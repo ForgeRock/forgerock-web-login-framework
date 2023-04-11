@@ -30,7 +30,9 @@ export const Base = {
 export const Radio = {
   args: {
     ...Base.args,
-    displayType: 'radio',
+    callbackMetadata: {
+      platform: { id: 'af15a3ef-3db1-45ce-b510-ec4ea514ab30', displayType: 'radio' },
+    },
   },
 };
 

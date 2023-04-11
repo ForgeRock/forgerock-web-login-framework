@@ -6,6 +6,8 @@
    * allow for easier typing for the callback.
    */
   import type { PasswordCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
+
 
   import Base from './base.svelte';
 
@@ -14,20 +16,23 @@
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Style } from '$lib/style.store';
+  import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
+  // Unused props. Setting to const prevents errors in console
+  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export const stepMetadata: Maybe<StepMetadata> = null;
+
   export let callback: PasswordCallback;
-  export let callbackMetadata: CallbackMetadata;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: StepMetadata;
-  export let style: Style = {};
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+  export let style: z.infer<typeof styleSchema> = {};
 
   let inputName: string;
 
   $: {
-    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata.idx}`;
+    callback = callback as PasswordCallback;
+    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
   }
 </script>
 
-<Base {callback} {callbackMetadata} {selfSubmitFunction} {stepMetadata} {style} key={inputName} />
+<Base callback={callback} {callbackMetadata} {style} key={inputName} />

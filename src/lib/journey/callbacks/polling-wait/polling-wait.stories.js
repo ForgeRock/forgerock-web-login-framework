@@ -21,20 +21,7 @@ export default {
 export const Base = {
   args: {
     callback: step.getCallbackOfType(CallbackType.PollingWaitCallback),
-    callbackMetadata: {
-      isFirstInvalidInput: false,
-      isReadyForSubmission: false,
-      isSelfSubmitting: true,
-      isUserInputRequired: false,
-      idx: 0,
-    },
     selfSubmitFunction: jest.fn(),
-    stepMetadata: {
-      isStepSelfSubmittable: true,
-      numOfCallbacks: 2,
-      numOfSelfSubmittableCbs: 2,
-      numOfUserInputCbs: 0,
-    },
   },
 };
 

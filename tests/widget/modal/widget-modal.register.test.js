@@ -1,36 +1,36 @@
 import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
-test('modal widget', async ({ page }) => {
-  await page.goto('widget/modal?journey=Registration', { waitUntil: 'networkidle' });
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
-  const loginButton = page.locator('button', { hasText: 'Open Login Modal' });
+test('Modal widget with user registration', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
 
-  await loginButton.click();
+  await navigate('widget/modal?journey=TEST_Registration');
 
-  await page.waitForEvent('requestfinished');
+  await clickButton('Open Login Modal', '/authenticate');
 
-  await page.fill('text="Username"', uuid());
-  await page.fill('text=First Name', 'Demo');
-  await page.fill('text=Last Name', 'User');
-  await page.fill('text=Email Address', 'demo@user.com');
-  await page.fill('text=Password', 'j56eKtae*1');
-  await page.selectOption('select', '0');
-  await page.fill('text=Security Answer', 'Red');
+  await page.getByLabel('Username').fill(uuid());
+  await page.getByLabel('First Name').fill('Demo');
+  await page.getByLabel('Last Name').fill('User');
+  await page.getByLabel('Email Address').fill('test@auto.com');
+  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page
+    .getByLabel('Select a security question')
+    .selectOption({ label: `What's your favorite color?` });
+  await page.getByLabel('Security Answer').fill('Red');
 
-  const termsLink = page.locator('text=View full Terms & Conditions');
+  const termsLink = page.getByRole('link', { name: 'View full Terms & Conditions' });
   const termsUrl = await termsLink.getAttribute('href');
   const termsTarget = await termsLink.getAttribute('target');
 
   expect(termsUrl).toBe('https://www.forgerock.com/terms');
   expect(termsTarget).toBe('_blank');
 
-  await page.click('text=Please accept our Terms & Conditions');
-  await page.locator('button', { hasText: 'Register' }).click();
+  // `getByLabel()` does not work, likely due to the `<span>` elements (?)
+  await page.getByText('Please accept our Terms & Conditions').click();
 
-  const fullName = page.locator('#fullName');
-  const email = page.locator('#email');
+  await clickButton('Register', '/authenticate');
 
-  expect(await fullName.innerText()).toBe('Full name: Demo User');
-  expect(await email.innerText()).toBe('Email: demo@user.com');
+  await verifyUserInfo(page, expect, 'register');
 });

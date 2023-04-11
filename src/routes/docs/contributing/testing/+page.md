@@ -1,24 +1,30 @@
-## Testing
+<script>
+  // import Image from '../../image.svelte';
+
+  // export let data;
+</script>
+
+# Testing
 
 The below is a technical brief on our testing within this framework, but if you are looking for more of a philosophy behind why and how we test, [see this article about the Layered Cake of Testing](https://cerebralideas.com/blog/layered-cake-of-testing).
 
-### Unit
+## Unit
 
 We use Vitest and only test utility functions (almost always pure, stateless functions). We don't "unit test" components. Unit tests live as siblings to the very file it tests.
 
-### Integration
+## Integration
 
 We test components with Storybook's "Interaction" tests for our integration of Svelte components along with their use of utility functions. These tests live within the `*.stories.js` file as a sibling to the component itself.
 
-### End-to-end
+## End-to-end
 
 We test the fully running artifact with Playwright. Testing the widget is done against a running Svelte app that imports the built package of the Widget as if installed via NPM. Tests are in the root `tests` directory.
 
-### Manual tests
+## Manual tests
 
 These are end-to-end tests that cannot be automated and must be manually tested. This usually involves randomly generated codes that reside outside of the system, and are hard or impossible to mock.
 
-#### Please manually test the following
+### Please manually test the following
 
 1. Journey continuation feature (e.g. Email Suspend Node) requires manual testing due to the randomly generated code sent to email which cannot be automated at this time.
 2. Social authentication feature requires manual testing due to the use of accounts and credentials for external services, which cannot be automated.
@@ -172,14 +178,14 @@ expect(await fullName.innerText()).toBe('Full name: Demo User');
 expect(await email.innerText()).toBe('Email: demo@user.com');
 ```
 
-#### References
+### References
 
 Here are the APIs discussed above:
 
 1. Locators: [page.locator | Playwright](https://playwright.dev/docs/api/class-page#page-locator) – notice how it returns `Locator`
 2. `innnerText`: [locator.innerText | Playwright](https://playwright.dev/docs/api/class-locator#locator-inner-text) – notice how it return `Promise<string>`
 
-### Chromatic
+## Chromatic
 
 Rebuilds and syncs with Chromatic:
 

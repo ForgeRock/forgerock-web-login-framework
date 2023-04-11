@@ -1,6 +1,12 @@
-## Design Principles
+<script>
+  // import Image from '../../image.svelte';
 
-### Overarching goals
+  // export let data;
+</script>
+
+# Design Principles
+
+## Product goals
 
 1. Low-code asset for authentication/authorization
 2. Ease of use with strong, opinionated defaults
@@ -13,7 +19,7 @@
 9. Themable with default light and dark mode
 10. Supports internationalization/localization
 
-### Technical requirements
+## Technical requirements
 
 1. Project uses framework that produces a full-stack, highly scalable, deployable application compatible with basic Node installations or special, “edge-first” deployments like Vercel, Netlify and/or Cloudflare
 2. Project uses Universal Architectural design; meaning, the same codebase is used both for server and browser environments
@@ -36,7 +42,7 @@
 19. Storybook to develop UI components for documentation, and integration testing
 20. Monitor bundle size, ship modern bundle, if we need to support older browsers, support those in their own bundle
 
-### Engineering principles
+## Engineering principles
 
 1. Functional Programming principles strongly applied
    1. Data immutability
