@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0...v1.0.1) (2023-04-12)
+
+
+### Bug Fixes
+
+* **readme:** fix-readme ([46f4a04](https://github.com/forgerock/forgerock-web-login-framework/commit/46f4a04387a13557a4ce3c5e8666513748363a19))
+
 # 1.0.0 (2023-04-11)
 
 
