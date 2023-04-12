@@ -3,12 +3,6 @@
 [![Commitizen friendly](https://img.shields.io/badge/commitizen-friendly-brightgreen.svg)](http://commitizen.github.io/cz-cli/)
 [![semantic-release: conventional](https://img.shields.io/badge/semantic--release-conventional-e10079?logo=semantic-release)](https://github.com/semantic-release/semantic-release)
 
-## WARNING: BETA VERSION
-
-**This is a early preview ({ data.package.version }) of a development framework for generating a JavaScript { data.package.name } for use within an existing self-hosted SPA (React, Vue, Angular, etc.). Eventually, this same framework will also generate a standalone ForgeRock { data.app.name} for self-hosting. This project is not yet officially supported and is not recommended for any project development. If you use this, you accept all the risks that come with completely unsupported software.**
-
-Note: As of Beta 6, the API has gone under a dramatic refactoring. Please pay close attention to the API changes if you were using Beta 5 or earlier.
-
 ## Table of Contents
 
 - [Overview](#overview)
@@ -65,10 +59,8 @@ What's not supported? Internet Explorer, Legacy Edge, WebView, Electron and othe
 
 ### Installing the package
 
-Note: **This project is currently in Beta**, so importing the widget from npm requires the `beta` tag. Because of this, it's worth noting what's not [currently supported](#currently-unsupported).
-
 ```shell
-npm install @forgerock/login-widget@beta
+npm install @forgerock/login-widget
 ```
 
 ### Adding the Widget's CSS
