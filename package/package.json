@@ -12,9 +12,6 @@
     "url": "https://github.com/forgerock/forgerock-web-login-framework.git"
   },
   "license": "MIT",
-  "files": [
-    "LICENSE"
-  ],
   "dependencies": {},
   "version": "1.0.2-beta.1"
 }
