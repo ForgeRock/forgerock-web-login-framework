@@ -6,12 +6,15 @@
       "import": "./index.js",
       "require": "./index.cjs"
     },
-    "./widget.css": {
-      "import": "./widget.css",
-      "require": "./widget.css"
-    }
+    "./widget.css": "./widget.css"
   },
-  "types": "./types.d.ts",
+  "repository": {
+    "url": "https://github.com/forgerock/forgerock-web-login-framework.git"
+  },
+  "license": "MIT",
+  "files": [
+    "LICENSE"
+  ],
   "dependencies": {},
-  "version": "1.0.0-beta.17"
+  "version": "1.0.1"
 }
