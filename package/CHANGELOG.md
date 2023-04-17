@@ -1,3 +1,10 @@
+## [1.0.2-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.2-beta.1...v1.0.2-beta.2) (2023-04-17)
+
+
+### Bug Fixes
+
+* **files:** files in package.json means it only updates whats in there ([bdc23ae](https://github.com/forgerock/forgerock-web-login-framework/commit/bdc23ae6c8030b84aea9e92db83a72bee442263a))
+
 ## [1.0.2-beta.1](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.1...v1.0.2-beta.1) (2023-04-17)
 
 
