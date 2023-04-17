@@ -1,3 +1,10 @@
+## [1.0.2-beta.1](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.1...v1.0.2-beta.1) (2023-04-17)
+
+
+### Bug Fixes
+
+* **license:** fix license file ([846d4e9](https://github.com/forgerock/forgerock-web-login-framework/commit/846d4e92c6d9776aa87282eaef65f86593af031b))
+
 ## [1.0.1](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.0...v1.0.1) (2023-04-12)
 
 
