@@ -1,3 +1,10 @@
+## [1.0.2-beta.3](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.2-beta.2...v1.0.2-beta.3) (2023-04-18)
+
+
+### Bug Fixes
+
+* **types:** add new types file to type correction script ([2f93c6b](https://github.com/forgerock/forgerock-web-login-framework/commit/2f93c6b40932df0f69f225c39d7b843d6c614e6b))
+
 ## [1.0.2-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.2-beta.1...v1.0.2-beta.2) (2023-04-17)
 
 
