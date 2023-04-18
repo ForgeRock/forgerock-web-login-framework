@@ -19,19 +19,6 @@ const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 const production = !process.env.ROLLUP_WATCH;
 const packageFolder = 'package';
 const plugins = [
-  license({
-    sourcemap: true,
-    cwd: process.cwd(), // The default
-
-    banner: {
-      commentStyle: 'regular', // The default
-
-      content: {
-        file: path.join(__dirname, 'package/LICENSE'),
-        encoding: 'utf-8', // Default is utf-8
-      },
-    },
-  }),
   alias({
     entries: aliases,
   }),
@@ -65,8 +52,15 @@ const plugins = [
     sourceMap: true,
     inlineSources: true,
   }),
-  // minify
-  // production && terser(),
+  license({
+    sourcemap: true,
+    banner: {
+      content: {
+        file: path.join(__dirname, 'LICENSE'),
+        encoding: 'utf-8', // Default is utf-8
+      },
+    },
+  }),
 ];
 
 function warningHandler(warning) {

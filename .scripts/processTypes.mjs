@@ -16,18 +16,30 @@ const declareModuleSection = `declare module '*.svelte' {
     export { SvelteComponentDev as default } from 'svelte/internal';
 }
 `;
+
 const importMetaPath = fileURLToPath(import.meta.url);
 const importMetaDirectoryPath = dirname(importMetaPath);
-const index = join(importMetaDirectoryPath, '../', 'package', 'types.d.ts');
+
+const index = join(importMetaDirectoryPath, '../', 'package', 'index.d.ts');
+const types = join(importMetaDirectoryPath, '../', 'package', 'types.d.ts');
 
 const indexContents = String(readFileSync(index));
+const typesContents = String(readFileSync(types));
 
 const declareModuleIdx = indexContents.indexOf(declareModuleSection);
+const declareModuleTypes = typesContents.indexOf(declareModuleSection);
+
 if (declareModuleIdx === -1) {
+  console.error(`Failed to remove the Svelte declare module section from types`);
+  process.exit(1);
+}
+if (declareModuleTypes === -1) {
   console.error(`Failed to remove the Svelte declare module section from types`);
   process.exit(1);
 }
 
 const indexCleaned = indexContents.replace(declareModuleSection, '');
+const typesCleaned = typesContents.replace(declareModuleSection, '');
 
 writeFileSync(index, indexCleaned);
+writeFileSync(types, typesCleaned);
