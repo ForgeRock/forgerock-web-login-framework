@@ -57,6 +57,9 @@ jobs:
       - name: Build Storybook
         run: npm run build:storybook --quiet
       - run: npx playwright install
+      - name: 'e2e if  on fork'
+        if: github.repository_owner != 'ForgeRock'
+        run: npm run ci:e2e
       - name: Serve Storybook and run tests
         if: ${{ runner.os == 'ubuntu-latest' }} # this one hangs on mac os for some reason
         run: |
