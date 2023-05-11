@@ -4,9 +4,7 @@
   import Centered from '$components/primitives/box/centered.svelte';
   import PollingWait from './polling-wait.svelte';
 
-  import type {
-    SelfSubmitFunction,
-  } from '$journey/journey.interfaces';
+  import type { SelfSubmitFunction } from '$journey/journey.interfaces';
 
   export let callback: PollingWaitCallback;
   export let selfSubmitFunction: SelfSubmitFunction;
@@ -23,7 +21,7 @@
   };
   let stepMetadata = {
     derived: {
-      isStepSelfSubmittable: true,
+      isStepSelfSubmittable: () => true,
       isUserInputOptional: false,
       numOfCallbacks: 2,
       numOfSelfSubmittableCbs: 2,

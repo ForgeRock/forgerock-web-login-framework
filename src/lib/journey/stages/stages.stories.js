@@ -12,6 +12,8 @@ import {
   registrationStep,
   registrationStepWithTwoKBAs,
   usernamePasswordStep,
+  deviceProfileComposition,
+  deviceProfileAloneData,
 } from './step.mock';
 import {
   multipleProvidersLocalAuthFormStep,
@@ -21,6 +23,8 @@ import {
   singleProviderLocalAuthNoFormStep,
 } from '../callbacks/select-idp/select-idp.mock';
 
+const deviceProfileComposed = new FRStep(deviceProfileComposition);
+const deviceProfileAlone = new FRStep(deviceProfileAloneData);
 const frConfirmPassword = new FRStep(confirmPasswordStep);
 const frOneTimePassword = new FRStep(oneTimePasswordStep);
 const frRegistrationStep = new FRStep(registrationStep);
@@ -128,7 +132,44 @@ export const UsernamePassword = {
     step: frUsernamePasswordStep,
   },
 };
-
+export const DeviceProfilePageNode = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([{ tree: 'Login' }]),
+    },
+    labelType: 'stacked',
+    stage: deviceProfileComposed.getStage(),
+    step: deviceProfileComposed,
+  },
+};
+export const DeviceProfileAlone = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([{ tree: 'Login' }]),
+    },
+    labelType: 'stacked',
+    stage: deviceProfileAlone.getStage(),
+    step: deviceProfileAlone,
+  },
+};
 export const ConfirmPassword = {
   args: {
     form: {

@@ -33,7 +33,7 @@ export const Base = {
     },
     stepMetadata: {
       derived: {
-        isStepSelfSubmittable: false,
+        isStepSelfSubmittable: () => false,
         numOfCallbacks: 2,
         numOfSelfSubmittableCbs: 0,
         numOfUserInputCbs: 2,
@@ -56,7 +56,7 @@ export const SingleOptSelfSubmit = {
     },
     stepMetadata: {
       derived: {
-        isStepSelfSubmittable: true,
+        isStepSelfSubmittable: () => true,
         numOfCallbacks: 2,
         numOfSelfSubmittableCbs: 2,
         numOfUserInputCbs: 0,
@@ -82,7 +82,7 @@ export const SingleOptNotSelfSubmit = {
     },
     stepMetadata: {
       derived: {
-        isStepSelfSubmittable: false,
+        isStepSelfSubmittable: () => false,
         numOfCallbacks: 2,
         numOfSelfSubmittableCbs: 2,
         numOfUserInputCbs: 0,
@@ -106,7 +106,7 @@ export const TwoOptSelfSubmit = {
     selfSubmitFunction: jest.fn(),
     stepMetadata: {
       derived: {
-        isStepSelfSubmittable: true,
+        isStepSelfSubmittable: () => true,
         numOfCallbacks: 2,
         numOfSelfSubmittableCbs: 2,
         numOfUserInputCbs: 0,
@@ -131,7 +131,7 @@ export const OnlyPositiveAnswer = {
     selfSubmitFunction: jest.fn(),
     stepMetadata: {
       derived: {
-        isStepSelfSubmittable: true,
+        isStepSelfSubmittable: () => true,
         numOfCallbacks: 2,
         numOfSelfSubmittableCbs: 2,
         numOfUserInputCbs: 0,

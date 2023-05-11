@@ -1,14 +1,15 @@
 <script lang="ts">
-  import type { ChoiceCallback } from '@forgerock/javascript-sdk';
+  import type { DeviceProfileCallback } from '@forgerock/javascript-sdk';
 
   import Centered from '$components/primitives/box/centered.svelte';
-  import Choice from './choice.svelte';
+  import DeviceProfile from './device-profile.svelte';
 
-  import type { CallbackMetadata } from '$journey/journey.interfaces';
+  import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
   import type { Maybe } from '$lib/interfaces';
 
-  export let callback: ChoiceCallback;
+  export let callback: DeviceProfileCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
+  export let selfSubmitFunction: () => void;
 
   let mergedCallbackMetadata = {
     derived: {
@@ -21,11 +22,11 @@
     idx: 0,
     ...callbackMetadata,
   };
-  let stepMetadata = {
+  let stepMetadata: StepMetadata = {
     derived: {
       isStepSelfSubmittable: () => false,
       isUserInputOptional: false,
-      numOfCallbacks: 2,
+      numOfCallbacks: 1,
       numOfSelfSubmittableCbs: 0,
       numOfUserInputCbs: 2,
     },
@@ -33,5 +34,10 @@
 </script>
 
 <Centered>
-  <Choice {callback} callbackMetadata={mergedCallbackMetadata} {stepMetadata} />
+  <DeviceProfile
+    {callback}
+    callbackMetadata={mergedCallbackMetadata}
+    {stepMetadata}
+    {selfSubmitFunction}
+  />
 </Centered>

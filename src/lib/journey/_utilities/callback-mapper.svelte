@@ -5,7 +5,7 @@
    *
    * TODO: This could possibly be simplified if the `callback.getType` method in the SDK
    * returned a union of the possible types, rather than just a generic `string` type.
-  */
+   */
 
   import { CallbackType } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
@@ -27,6 +27,7 @@
   import Unknown from '$journey/callbacks/unknown/unknown.svelte';
   import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
   import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
+  import DeviceProfile from '$journey/callbacks/device-profile/device-profile.svelte';
 
   import type {
     AttributeInputCallback,
@@ -45,6 +46,7 @@
     ValidatedCreatePasswordCallback,
     ValidatedCreateUsernameCallback,
     FRCallback,
+    DeviceProfileCallback,
   } from '@forgerock/javascript-sdk';
 
   import type {
@@ -81,16 +83,17 @@
   let _TermsAndConditionsCallback: TermsAndConditionsCallback;
   let _TextOutputCallback: TextOutputCallback;
   let _SuspendedTextOutputCallback: SuspendedTextOutputCallback;
+  let _DeviceProfileCallback: DeviceProfileCallback;
   let _FRCallback: FRCallback;
 
   $: {
     cbType = props.callback.getType();
 
-    switch(cbType) {
+    switch (cbType) {
       case CallbackType.BooleanAttributeInputCallback:
         _BooleanAttributeInputCallback = props.callback as AttributeInputCallback<boolean>;
-          break;
-        case CallbackType.ChoiceCallback:
+        break;
+      case CallbackType.ChoiceCallback:
         _ChoiceCallback = props.callback as ChoiceCallback;
         break;
       case CallbackType.ConfirmationCallback:
@@ -119,8 +122,8 @@
         break;
       case CallbackType.StringAttributeInputCallback:
         _StringAttributeInputCallback = props.callback as AttributeInputCallback<string>;
-          break;
-        case CallbackType.ValidatedCreatePasswordCallback:
+        break;
+      case CallbackType.ValidatedCreatePasswordCallback:
         _ValidatedCreatePasswordCallback = props.callback as ValidatedCreatePasswordCallback;
         break;
       case CallbackType.ValidatedCreateUsernameCallback:
@@ -134,6 +137,9 @@
         break;
       case CallbackType.SuspendedTextOutputCallback:
         _SuspendedTextOutputCallback = props.callback as SuspendedTextOutputCallback;
+        break;
+      case CallbackType.DeviceProfileCallback:
+        _DeviceProfileCallback = props.callback as DeviceProfileCallback;
         break;
       default:
         _FRCallback = props.callback as FRCallback;
@@ -237,6 +243,12 @@
     callback: _SuspendedTextOutputCallback,
   }}
   <TextOutput {...newProps} />
+{:else if cbType === CallbackType.DeviceProfileCallback}
+  {@const newProps = {
+    ...props,
+    callback: _DeviceProfileCallback,
+  }}
+  <DeviceProfile {...newProps} />
 {:else}
   {@const newProps = {
     ...props,
