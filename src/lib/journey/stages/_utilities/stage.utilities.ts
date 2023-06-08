@@ -1,4 +1,6 @@
 import { get } from 'svelte/store';
+import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
+import type { FRStep } from '@forgerock/javascript-sdk';
 
 import { configuredJourneysStore } from '$journey/config.store';
 
@@ -73,5 +75,29 @@ export function matchJourneyAndDecideAction(
     }
   } else {
     return { action: null };
+  }
+}
+/**
+ * Determine a webauthn step
+ * @param step
+ * @returns FRStep
+ */
+export async function determineWebAuthNStep(step: FRStep) {
+  const webAuthN = FRWebAuthn.getWebAuthnStepType(step);
+  try {
+    switch (webAuthN) {
+      case WebAuthnStepType.Registration: {
+        const newStep = await FRWebAuthn.register(step);
+        return newStep;
+      }
+      case WebAuthnStepType.Authentication: {
+        const newStep = await FRWebAuthn.authenticate(step);
+        return newStep;
+      }
+      default:
+        return step;
+    }
+  } catch (err) {
+    return err;
   }
 }

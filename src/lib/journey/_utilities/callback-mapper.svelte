@@ -7,7 +7,7 @@
    * returned a union of the possible types, rather than just a generic `string` type.
    */
 
-  import { CallbackType } from '@forgerock/javascript-sdk';
+  import { CallbackType, WebAuthnStepType } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
 
   // Callback handler components
@@ -28,6 +28,7 @@
   import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
   import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
   import DeviceProfile from '$journey/callbacks/device-profile/device-profile.svelte';
+  import Metadata from '$journey/callbacks/metadata/metadata.svelte';
 
   import type {
     AttributeInputCallback,
@@ -47,6 +48,7 @@
     ValidatedCreateUsernameCallback,
     FRCallback,
     DeviceProfileCallback,
+    MetadataCallback,
   } from '@forgerock/javascript-sdk';
 
   import type {
@@ -57,13 +59,17 @@
   import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
 
-  export let props: {
+  type Props = {
     callback: FRCallback;
     callbackMetadata: Maybe<CallbackMetadata>;
     selfSubmitFunction: SelfSubmitFunction;
     stepMetadata: Maybe<StepMetadata>;
     style: z.infer<typeof styleSchema>;
   };
+  export let props:
+    | Props
+    | (Props & { recoveryCodes: Array<string> })
+    | (Props & { webAuthnValue: WebAuthnStepType });
 
   let cbType: string;
 
@@ -83,6 +89,7 @@
   let _TermsAndConditionsCallback: TermsAndConditionsCallback;
   let _TextOutputCallback: TextOutputCallback;
   let _SuspendedTextOutputCallback: SuspendedTextOutputCallback;
+  let _MetadataCallback: MetadataCallback;
   let _DeviceProfileCallback: DeviceProfileCallback;
   let _FRCallback: FRCallback;
 
@@ -140,6 +147,9 @@
         break;
       case CallbackType.DeviceProfileCallback:
         _DeviceProfileCallback = props.callback as DeviceProfileCallback;
+        break;
+      case CallbackType.MetadataCallback:
+        _MetadataCallback = props.callback as MetadataCallback;
         break;
       default:
         _FRCallback = props.callback as FRCallback;
@@ -249,6 +259,12 @@
     callback: _DeviceProfileCallback,
   }}
   <DeviceProfile {...newProps} />
+{:else if cbType === CallbackType.MetadataCallback}
+  {@const newProps = {
+    ...props,
+    callback: _MetadataCallback,
+  }}
+  <Metadata {...newProps} />
 {:else}
   {@const newProps = {
     ...props,

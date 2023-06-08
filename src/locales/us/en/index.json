@@ -51,7 +51,11 @@
   "registerButton": "Register",
   "registerHeader": "Register",
   "registerSuccess": "Registration successful!",
+  "registeringYourDevice": "Choose your device for identity verification.",
   "requiredField": "Value is required",
+  "recoveryCodesText": "You must make a copy of these recovery codes. They cannot be displayed again.",
+  "recoveryCodesHeader": "Your Recovery Codes",
+  "recoveryCodesFooter": "Use one of these codes to authenticate if you lose your device.",
   "securityAnswer": "Security answer",
   "securityQuestions": "Security question(s)",
   "securityQuestionsPrompt": "Provide security question(s) and answer(s):",
@@ -73,8 +77,11 @@
   "unknownNetworkError": "Unknown network request failure has occurred.",
   "userName": "Username",
   "usernameRequirements": "Username requirements:",
+  "useYourDeviceToVerify": "Use your device to verify your identity.",
   "useTheAuthenticatorAppOnYourPhone": "Find the verification code using the authenticator app on your phone.",
   "validatedCreatePasswordCallback": "Password",
   "validatedCreateUsernameCallback": "Username",
-  "valueRequirements": "Value requirements:"
+  "valueRequirements": "Value requirements:",
+  "verifyingYourIdentity": "Verifying your identity...",
+  "yourDeviceWillBeUsedToVerify": "Use your device for identity verification"
 }

@@ -501,6 +501,9 @@ transform: rotate(360deg);
 .tw_animate-spin {
 animation: tw_spin 1s linear infinite;
 }
+.tw_list-inside {
+list-style-position: inside;
+}
 .tw_list-disc {
 list-style-type: disc;
 }
@@ -577,6 +580,9 @@ background-color: rgb(51 65 85 / var(--tw-bg-opacity));
 .tw_fill-current {
 fill: currentColor;
 }
+.tw_p-px {
+padding: 1px;
+}
 .tw_p-6 {
 padding: 1.5rem;
 }
@@ -613,6 +619,9 @@ font-weight: 300;
 }
 .tw_font-bold {
 font-weight: 700;
+}
+.tw_font-extrabold {
+font-weight: 800;
 }
 .tw_text-primary-light {
 --tw-text-opacity: 1;

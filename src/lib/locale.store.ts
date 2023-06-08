@@ -60,6 +60,10 @@ export const stringsSchema = z
     registerButton: z.string(),
     registerHeader: z.string(),
     registerSuccess: z.string(),
+    registeringYourDevice: z.string(),
+    recoveryCodesHeader: z.string(),
+    recoveryCodesFooter: z.string(),
+    recoveryCodesText: z.string(),
     requiredField: z.string(),
     securityAnswer: z.string(),
     securityQuestions: z.string(),
@@ -83,9 +87,12 @@ export const stringsSchema = z
     userName: z.string(),
     usernameRequirements: z.string(),
     useTheAuthenticatorAppOnYourPhone: z.string(),
+    useYourDeviceToVerify: z.string(),
     validatedCreatePasswordCallback: z.string(),
     validatedCreateUsernameCallback: z.string(),
     valueRequirements: z.string(),
+    verifyingYourIdentity: z.string(),
+    yourDeviceWillBeUsedToVerify: z.string(),
   })
   .strict();
 
