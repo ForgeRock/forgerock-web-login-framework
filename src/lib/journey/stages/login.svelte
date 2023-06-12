@@ -16,7 +16,7 @@
 
   // Types
   import type {
-  CallbackMetadata,
+    CallbackMetadata,
     StageFormObject,
     StageJourneyObject,
     StepMetadata,
@@ -44,7 +44,7 @@
     // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 
     // The below variation is more liberal first self-submittable cb to call this wins.
-    if (metadata?.step?.derived.isStepSelfSubmittable) {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
       form?.submit();
     }
   }
@@ -94,7 +94,7 @@
     />
   {/each}
 
-  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>
