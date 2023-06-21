@@ -77,27 +77,3 @@ export function matchJourneyAndDecideAction(
     return { action: null };
   }
 }
-/**
- * Determine a webauthn step
- * @param step
- * @returns FRStep
- */
-export async function determineWebAuthNStep(step: FRStep) {
-  const webAuthN = FRWebAuthn.getWebAuthnStepType(step);
-  try {
-    switch (webAuthN) {
-      case WebAuthnStepType.Registration: {
-        const newStep = await FRWebAuthn.register(step);
-        return newStep;
-      }
-      case WebAuthnStepType.Authentication: {
-        const newStep = await FRWebAuthn.authenticate(step);
-        return newStep;
-      }
-      default:
-        return step;
-    }
-  } catch (err) {
-    return err;
-  }
-}

@@ -31,5 +31,5 @@
 </script>
 
 <Centered>
-  <TextOutput {callback} {recoveryCodes} {webAuthnValue} />
+  <TextOutput {callback} />
 </Centered>

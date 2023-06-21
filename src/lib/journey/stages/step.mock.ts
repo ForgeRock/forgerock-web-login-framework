@@ -241,7 +241,23 @@ export const oneTimePasswordStep: Step = {
   ],
   stage: 'OneTimePassword',
 };
-
+export const recoveryCodes: Step = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlBhc3N3b3JkbGVzc1dlYkF1dGhuIiwib3RrIjoidXVnOHNxNjNwNGs2YnRzN2NoOHZzYnVjbDQiLCJhdXRoSW5kZXhUeXBlIjoic2VydmljZSIsInJlYWxtIjoiL2FscGhhIiwic2Vzc2lvbklkIjoiKkFBSlRTUUFDTURJQUJIUjVjR1VBQ0VwWFZGOUJWVlJJQUFKVE1RQUNNREUuKmV5SjBlWEFpT2lKS1YxUWlMQ0pqZEhraU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkuWlhsS01HVllRV2xQYVVwTFZqRlJhVXhEU214aWJVMXBUMmxLUWsxVVNUUlJNRXBFVEZWb1ZFMXFWVEpKYVhkcFdWZDRia2xxYjJsYVIyeDVTVzR3TGk1SVdHRXhaek5EZUU1MldGZFhVblpzV0ZOdVNtVm5MamRuWkZkUmFWRlZPRmhQUWsxcFpuZEZjMWx5T1U0MFlWaHdjbkJ4V0ZGT01IQlZaa3BTUjB4WFVUUnBkR3BNTFRKblVGUkJlbEpPVW0weFJTMVlXRTlzVGxoRlluZEVSVmxvUWtSTlozbFlZVWxaVmpZdGRGSmFOVmMxU2twbU56RTVTSFZGVFV4T2VHeHlWSFpHVkVJd1UweHBTVWxQWWkxMFExY3RaVFZ2ZWpWM2NDMDVUM0ZKZW1KUVUwazRNRk40Ukc5bU9FRllNbWhoVVhCeFVrVnFSMU5oWlVsaVEzTjZNWE53WWpOVGExUXRZVFpVTTFWUk0wTkZjRnBPWDJGWmRHOUVaekJRVW1ad1FVOW9aV2c0WmxGVGNWRTNiVWxmYzJOSGVURnJZVTVUWWxjMkxVRlhZVll6YVdoUVNDMTZjbHA1VDJaU1EyUlBTVVpPVnpoMVdXeERUWG8zVFRaemFWODJZVlpSTVZRelltbzFiV3BDTFZrMlIwbDNSR1kxU2pSeVh6SlpZMWxsYzBsWVpVcGhhSFJHWlRSUmVUVjBlbVp5YkRWd1Z6WTNUa3AxVEZCMVYzSlVObkI2WDFBMGRGbG1UM0l5WjNkRE1UbG5Wa1ZxYW1KNlZVUkRkM0l3VERsWFNtbE9NM3BIZUZoeUxWTk9WMkp1YTBscFVtNVBPRWRoVEZSaWVFSk1iWFl0VEc1dk5IQjJRbGxIVWprNE5rNVdjMFJqWmpKVWFrZDBWVE5mZERSbVptRjNaMnRyWWtOclJtdDZXRFV5Wm5RME0ySlFabGRMWmtaRE1Fc3piRlpoT1ZGalozbGtVR3c1UW5WeU56bDBTbmR5TWtwSGIxZEpTRXB2VDJWbWIwOXZkekJTUkRkWWFFbDBTMVZoTVMxdFZuTlpaRnBDVG1oWVpuQnNlVW96TTFGRE5IZzRiSEV3VG00NVNWOW5TV3hRVEhJMmNHRTJaM0JRYUc1aVNXVkpkVGhRTUZac2FtSjRjbk00Y1MxRlEycG5VRU40ZFRWSVdHZEVOVVZxTVRKelozVjVWV0Y2WDAxbmVVNWhaV3Q1Wm14b1MydG1RbkpsYWxOamJuWmtSRFphWjJoTlowaFpjVE5EWm5oUE9XZ3dkbXMxVWpSME0wRktTbTl4UVU4MlgzVkVTRlpTVWpWNVdWZHNaVEZNUWpadVpFVnhOVTQzWW1WMlRGbFRZbTUzYW5sTU9HVmxaMDlmYnpJMWMxcG9iRTl1TVRaamRrTTNlRmh6T0ZOSmNFcDFVM1paVjJaVWJqazBWR3hHYmtOVWNFMXdhMWcxUVdOSVFWSnZWa3hNV2xSdk5YRXlNbEJpZG5oRGIyaG9hRkJKYTJGcVIwMTZlRmh1Y1ZCSU1VNHRVVGRRT1VSRk1WYzRXRzV1UjE5RmFrbHhORmRtVjFOeFluRmpjMngyT1haWU1XZGxSR1ZXUlZGNVEwdE9jRWRJUzNWaFZXb3dWbDk1WDNaemVWUldiRFJUVW5CUFpUWkRla3hqYzBsM0xXYzFVMk5STkRscGNERmxiVmxGTjI4MVJGVldZazlNUTBKNVdVUTFiamhEUWpOVE4xaHBkSFV3YUVORVMxOWtVM1ZUWmpSQlJreFVhalZ2VjNFMlpETnFlRFIzWkVwRlozbEVYM2R1TlVoSk1FZGxlbmg2Wldsb2RHOVdjVXh1WTNKS2JHUTVZVkZ6TFVKSFlrbHRXRk16UXpkM01rTkNjemMxUjBoT1l6UXdVa1JFUVZneFN6UnVObTVwZDAxTFpXRnRVbkJZTVZOR1dtMDVRVFJTUW1Rd2QyNUVYMHR6VDFsVUxUUjFTMGQwWkhGNGIwNXZUR2hUUkd0TlVrNXRNMEUwTFRoSVFreHhhMEpHYWkxcVMwRnpkRWxPZDFoV2IyaDJNR3gzYXpGSVNFOW1ZMXAyVDNKMmRUQXlXamMwUlZJMk9GODBlV3BNTWtwUFowdzNSVzVHZUVwdVYzaDRUR2RrVlZwM00xSm5hbTg1Y0ZkV2VXVXhRazlvV0hCdlREZzFRM0E0TW1nd1drSm5XRkZMV1RSTU0xOWFiREp1YTFBMmNYbFpNbHBFYkhCSWRHaFlhRFJ6Y1hBMGFYTkZkVGhSTnpjMlNYY3diVTQxZURGS2RrRnRlWHBZVlhCTGRVbzNTVTQxZWtWSmJGSnNWRWx0VlZNdFFrdHNTSGxvVTJKR1RtSlhkMEZvZDBaSk5uQjJlSEZZYTBKVWEyWkxjVlppYlZvelNIQlhWRzlYTURWeWFHWjZTVGsxTjBnMlpqSmxZVmxaWVdGb05sUnpibWxKVlU4NVNsSTJSV2xIZG5scmQzRkZWbkoxWVV4b1VsRnFRMUptUldSbVRGRlJRVkV5WW5oTlJFcG9kMlV5WW5wMlVsbHFNV2hmVWw5elVEaGZVWEYwYVhnMlNHOWhiRlpVT1ZKdVJXeGpSMlZFYm5seVVrTTJRa2hHZVdJeE1XcGhSbXBuTTBKS2JHUlpXak5NYWxaT01VUlFTekpoYWpCcU16VnRWeTEzYTNGVVQwRnJUV1I1ZDE5WFZFSXRWekJ0WVV0TmJFUm9VM1J5T1ZKcVZETlhVek5EVmtWRFRFdzBiMUpPTW1SMk1UUnlWRk41UkRscVNrUnhPSFJyTm1kb1gwUjJTV1ZKWm5Kd1NHdzFlRWs0UzJ4dWEyeEVjMnd0Y1VORWJEY3hVbEJCT0VoaE1pNWljbEk1YlROWk5WY3hRa0paU0ZOVlJrMW9ObmRSLmtCNjlONWZuMXdBQm9WU1JQMDcxTXdyeHJrSFpjSjViXzBCdzQxMHRYb0UiLCJleHAiOjE2ODczNTc3MzksImlhdCI6MTY4NzM1NzQzOX0.8QcUHytp7PWmxLWVVg6F3vxbnCGv_99m15LDXpsXjDE',
+  callbacks: [
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            '/*\n * Copyright 2018 ForgeRock AS. All Rights Reserved\n *\n * Use of this code requires a commercial software license with ForgeRock AS.\n * or with one of its affiliates. All use shall be exclusively subject\n * to such license between the licensee and ForgeRock AS.\n */\n\nvar newLocation = document.getElementById("wrapper");\nvar oldHtml = newLocation.getElementsByTagName("fieldset")[0].innerHTML;\nnewLocation.getElementsByTagName("fieldset")[0].innerHTML = "<div class=\\"panel panel-default\\">\\n" +\n    "    <div class=\\"panel-body text-center\\">\\n" +\n    "        <h3>Your Recovery Codes</h3>\\n" +\n    "        <h4>You must make a copy of these recovery codes. They cannot be displayed again.</h4>\\n" +\n    "    </div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "CyFrHnLq2x\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "x95uukzd3C\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "FHmdsD8khD\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "s77okhRxLX\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "XuTOVS00K6\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "CWmtqmR34b\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "N9v9L1ultI\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "ciA0MUvRRn\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "iVowPQpu7V\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "RsRY6CkwF3\\n" +\n    "</div>\\n" +\n    "<div class=\\"panel-body text-center\\">\\n" +\n    "        <p>Use one of these codes to authenticate if you lose your device, which has been named: <em>New Security Key</em></p>\\n" +\n    "</div>\\n" +\n    "</div>" + oldHtml;\ndocument.body.appendChild(newLocation);\n\n\n',
+        },
+        { name: 'messageType', value: '4' },
+      ],
+    },
+  ],
+};
 export const usernamePasswordStep: Step = {
   authId:
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IkxvZ2luIiwib3RrIjoiNmwxb2RmdWFzbjBxMXNrZXBjZTUzZmMyNCIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaW9uSWQiOiIqQUFKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTVrTVhnMlptVkJNVmhZU0ZnNFR6VlNTMmRTUTFKQkxsQTBVV0p4Um10Tk5tMDRSblpNV1Y5eVZ6UnBZM0IzVlRneGIxUkxUa3c0YUVweE9UZFNOSGhHYzBGRVpIUjVRVlpMVVhab2Vtd3hjRkl6VVdsMGNIaENVV1pPVVhSbmFWODJlUzFmVGxCR1UwMVJkRGhNT0VSMGFVUk1UMkpHYUZsck1XSnNYMUUxU1ROQlRHd3dRbXRGVjI5TWNUaExTR001V21SbVpWTkZRVXBOTjBFMVEzQTBaRzQxVEc5cExTMVFUWGRoWnpaM2FrUkxORWxmVldKWllXbFRTak5FZGxkclQwZFpSVTV6V0hsSWFuY3RjV0o1WlV0emR6RTBZVWR6Ym5CdVVIVnNWbTFXWkZOc01XMUViSFUyTmxsNFZXOUhUMlZ3UVRKU09VSnVVRE5rYjBOWFMyTXpkREJqWXpVMWFqRm5lUzFYYzJabmVGTmlWekZZTlhkcVRtZFBVR1ozWW5SNVRISktjMHRwYzA0eWMyTTJWbFJ1T1RnMFZpMUVWVzVzVjJRMVN6QlZVVXBPY2w5MllVMURUMUZtU1hSM2NFc3lYMnhZWVhCdE9VVjNWRW8zY0VwVmQwVnJabHBKTkRWM1IyVlBVMGRDVlVaWlp5MVVhV05IVEdwT2NrcGZXazlxTkdKZmVXMWphWE5SU0U1WFdGOUtZeTFRZFZJNGIyWm9RbkE1U1RaRGMyWmZVbGcwWHpKUGJteDNVbDk0Y0d4dFUySlVSVlIxWTA5UVNHTnBkSGx1VjFsQ05VaDJObnB4WjFaNmJ5MDRNMkZCUVVzdFQydGpZWHBNWm1NeU1XYzNNbW94ZWxCU05HWnBhbUZaYVhGRFZGOUVhWE5IT0c0eVV6RkZUazF5T1ZOV2N6QmFjSE5WYkRKWlYzUkplSGhqT0MxMmMxQTBiaTEzWnpsUk5XcExkbkozWlV0c2EyOU9WazVETm5wT1dDMUNhbll6WVV0dFVUTjRVbVJxYUc5eU4zQnJSSFI2TUZKU1RHcHJXaTFYWkdwb05UaFliVFJtYTFKVFJFOTJWMHBLUlZJNVFUUmtXbEZHZEU1elQxcHBTR3BWWjFOdFgzVnpNSE4xZFVwR09EZE5hQzA0WldGd1YybDFMWGgzZFZaeGNuVk5SV0pQVmpGR1J6ZFJUbmRNU1RBdGJWWmlja3gyZVVsS04wNUJiamhxVEZZdFlsZHFMVVp1Wm1vd0xqWlBjemhUU2taUFNUaDRPVzgyTkV4NVdrNXVMVkUuRGpTUGdQck5VdFQ0U2JKWm9fZ2NiUlZCbWVQcGRHcUZzb1UyM250dVNCdyIsImV4cCI6MTY1NDIxNDQxMywiaWF0IjoxNjU0MjE0MTEzfQ.ZGwMWJb5crNXiAvvfvnwciOTyXaAKHjSk-aExg7QdnQ',
@@ -840,4 +856,86 @@ export const registrationStepWithTwoKBAs: Step = {
     },
   ],
   stage: 'DefaultRegistration',
+};
+
+export const webAuthnAuthenticationStep = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlBhc3N3b3JkbGVzc1dlYkF1dGhuIiwib3RrIjoiOGdpaDJxdHJhNzltZTgwa3ZqZGg0MTlkbTUiLCJhdXRoSW5kZXhUeXBlIjoic2VydmljZSIsInJlYWxtIjoiL2FscGhhIiwic2Vzc2lvbklkIjoiKkFBSlRTUUFDTURJQUJIUjVjR1VBQ0VwWFZGOUJWVlJJQUFKVE1RQUNNREUuKmV5SjBlWEFpT2lKS1YxUWlMQ0pqZEhraU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkuWlhsS01HVllRV2xQYVVwTFZqRlJhVXhEU214aWJVMXBUMmxLUWsxVVNUUlJNRXBFVEZWb1ZFMXFWVEpKYVhkcFdWZDRia2xxYjJsYVIyeDVTVzR3TGk1TWJsQkxWR2h4V2tab1ZUTkhUa1IyVVdwRmR6RlJMbUV0ZG5GSVIyMDRlakZKYlV4WWRFZHljbTEwY0dST2FtWnJSalV3ZW01cmFYb3pjV1EzYldOV1ZURnRNVUp3YkhwR1ZGVk1kRzh6TFRaeVJrdHBTMnBSUW5ST2FITTRWMlJzVjI5d1gxZzNjVTk2WjJKYVpWYzVMV1kzVmtFdFZESkxVM0pTTkhoR1VHZElWV3hJYlZGYWFGaDNSRWd5VUZseFZuaHJRV1pUY1RGWVlXUlBSSHBDZVZWUGRuRk5ibWR5VEdJelpEQm9SMjVZWWtSUVFqTktibGxDWmtneWFEQlJURzl6TkdKV1drMUliRzlFVjNGd05HeDZWV0puZGtaVVJuTnVkR1JoUkRaaGJrUTBTbVYyVDJKME5YZGhVbUZrTmtST2QzTkxkMGREY0VwS1JYRTVNM0kwZEZrNGVqaGZXbUV6TVVsSmFGSXRNR0ZNVW5OeFNYSmFPVlZ0TlRFME4wVkpRVEkzWTFORmVGWTRTRmxtU1RFMmJpMWpjVEZ3YzNob1duQkhURWhWTjFONlRXODRSVzVITWxRMVMweGxSVm80VUZSWFUxQlZRMko2ZHpJMVMyTklRbEZsUWw5blVXTjFkMGRZVGtWdWFsVllNVjg1VGpkcFRXNDBabmw1ZERBNVVVVmlXVzg0VlRSMVNqSnpMV05OVmtaaldubENRbmx0YUU5bGJEaFRObU5FVUdSSVJIWlBTVE5aY0RKcWVtNTJVSEJpVmxBMlpVNXBla2Q2V0ROYVdrUnJWMU5JUkdNMFEwZHZWamh4TFdGeFNHWXllWE5LZGtwSWFHUk5hWFpLYlc1Zk1HWnBRa2hhWnpobk1HeGpWVzAxV21Jek5Wb3liVkJCV1UxUE5VaDFOVUpGT1Zab2N6QlhOelpvYUU1V2VraFBVMGszVmtKSFJ6bHRRMnRYY3kwNFNqUTRTVnBaWVc5aVZuaHhRbTFEV0ZSb05WTnpUV2RUTnpReU1qbGZUME5NVDJ0clJWY3dOWEpoTjIxUGJVeHpSR1JKVERONFVrNTVVREoxYkdOclFqUmFkelEzUzFGclZpMXpVMWRYWWtsblUxRmpWVmRUWlUxTGFuUmhPRkJCVUVOR1JFNW5TM0ZSU0ZJM2RtVnllRVIxZDNaTVp6QkNSbFZMYm1OZlQyUjJRazlFZHpFNVpEbHBRMWs1VHpSRVR6bEROR2RrWm1WeGNWWkZka1V0UmxacVRYTXRka1IxU2s4MlEyVkpiRGxOYm1keE4zZDRSM1JqT1VWNlMyUjNaVWRDT0dRMWVFeGlkazlsUzI1SlUyc3RhamRIVmpOdmRqQnFjREZhTWsxSU1rbzBUaTFsU0dwVVRDMURUV1JhU2k1MllUbDJRMjlLVmtrME1HVmlObkJSVEU1RmMxSlIuRFRJVUdaRnlrVUd2STlROVVvbFc1ZElMTWU3YUx2UFVZQVJzS3dUMy15dyIsImV4cCI6MTY4NzM3NTU2NCwiaWF0IjoxNjg3Mzc1MjY0fQ.dizHBQ9lBW36ZuOdvOH3rwE83zBcXNtHIjjYAIdFLmU',
+  callbacks: [
+    {
+      type: 'MetadataCallback',
+      output: [
+        {
+          name: 'data',
+          value: {
+            _action: 'webauthn_authentication',
+            challenge: 'gNO22N2EuBw1eL9JXOZ0zZjflAQwtGLsMW4nFZJOl1E=',
+            allowCredentials:
+              'allowCredentials: [{ "type": "public-key", "id": new Int8Array([101, 22, 32, -44, 119, -77, 35, 104, -122, -104, 41, -78, 76, -61, -32, 46, 93, 16, -39, 55, 57, -97, 67, 44, 113, 54, -113, -94, -26, 38, -62, -29, -27, 83, -93, -96, -9, 25, -108, -38, -70, 37, 125, -7, -118, -37, -10, 52, -67, 41, -116, -44, 46, -116, 119, 117, 113, -24, 67, -12, 76, 30, -13, -44]).buffer }]',
+            _allowCredentials: [
+              {
+                type: 'public-key',
+                id: [
+                  101, 22, 32, -44, 119, -77, 35, 104, -122, -104, 41, -78, 76, -61, -32, 46, 93,
+                  16, -39, 55, 57, -97, 67, 44, 113, 54, -113, -94, -26, 38, -62, -29, -27, 83, -93,
+                  -96, -9, 25, -108, -38, -70, 37, 125, -7, -118, -37, -10, 52, -67, 41, -116, -44,
+                  46, -116, 119, 117, 113, -24, 67, -12, 76, 30, -13, -44,
+                ],
+              },
+            ],
+            timeout: '60000',
+            userVerification: 'discouraged',
+            relyingPartyId: '',
+            _relyingPartyId: '',
+            _type: 'WebAuthn',
+          },
+        },
+      ],
+    },
+    {
+      type: 'HiddenValueCallback',
+      output: [
+        { name: 'value', value: 'false' },
+        { name: 'id', value: 'webAuthnOutcome' },
+      ],
+      input: [{ name: 'IDToken2', value: 'webAuthnOutcome' }],
+    },
+  ],
+};
+
+export const webAuthnRegistrationStep = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlBhc3N3b3JkbGVzc1dlYkF1dGhuIiwib3RrIjoidGljM3RrYTU3NTE3azM2bnE3NjA3OWw2bjUiLCJhdXRoSW5kZXhUeXBlIjoic2VydmljZSIsInJlYWxtIjoiL2FscGhhIiwic2Vzc2lvbklkIjoiKkFBSlRTUUFDTURJQUJIUjVjR1VBQ0VwWFZGOUJWVlJJQUFKVE1RQUNNREUuKmV5SjBlWEFpT2lKS1YxUWlMQ0pqZEhraU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkuWlhsS01HVllRV2xQYVVwTFZqRlJhVXhEU214aWJVMXBUMmxLUWsxVVNUUlJNRXBFVEZWb1ZFMXFWVEpKYVhkcFdWZDRia2xxYjJsYVIyeDVTVzR3TGk1bVZFaHViRTlWVjNGa0xVVkpZWHBNU25GNlJXTlJMa2hpWmpjdFMydFJkbWQzT1VSUlZUUk9UazkyYVZKUGRpMXllVm80TUVSd1lVVldUWFppT1RnNFJGOUdRekIzVjJwdlgwOTFjV1J3Y1ZGRFlXZEdWazl3ZW5OamJYbG9jekp0UTNkMExYbElORGRCYmpCR2IxQTNMWE5tYmtGMVZHZHRTWFpTUTBOV1UwRjFkVzVrZUdSWGJtaDVOMGN6YmtSRFIybEpUMEkzYWtSUWRYaFphMVUzUmtaWUxYSTFXa0pUZUVrNE9HOVdibGw0YW5GbGRXTTFOR3htV1RablRXMHhWMHBwU0hwVlkzbzBSakpCZG10NFEwbERSa1ppZEhoek5VaHBNMDV2WVhjd2VFRlRZVWcxWVhwdlNrbEJWVWRUTVdSMGVUbEJUMU15YVRSelRVVkNRa3B0U0V0UmRqbDBaalJ6TFZWamJFVkdWMEZ5WlRjeVJXOHplRWt3ZW5KWmVrSXhaR2hpVmpsRVlVbGlUbmN5WW5kNVUwRnZZemc1YTFGa2VEWmxWVU5yVTI5ak1FOXdWMHR3YldSTlJGazNVMlZvU1VwaGFXWk5iVW8wVnpCSVR6Vkdaa2hFTlVKeFEwMUJPVEZPYTNKNk4zcEtMVnBvYVVoalVEY3hUMjVzVkVSNE1YWlpTM294TkdoTlZHWnhhbEYxYTFKTE5HRTNWSEpYYWxGTE0zZG5aREV6TWpWT1lrNW9OV2t0WkhGUlVpMHlWbVpIWDJkbFFVOVBPRWt3V0hGWGFYTmtNMmhJWkVoU2IwTkthMjlKWW5JMWQzQmtPVXhXWTNCYU1tcG9TRjlsUmtaQ2VEQnBUemhqUVd0a1V6UTROMWR2UkdkUU1YbFROMXB5YTNacFgzb3dNME54ZDNWSVJYaEtSVGMxTTNNMFkwaEpUVzFKVFVreVpIbzFjamRDVGpBeldDMDRaSFIxYUZadVoyUldUSGxwVlVveFdubHBTMjV4U2kxVlpqbFVWemxVYTJWWVlUZENkM2h1ZGs1S09HVlNOMk5JY3pKRVJ6RmtWazFRWm5nNFJTMVpTbmhuUkZwUFdHRTNOM2RtZGpOcFdUWnZRbFU0YmxGcVZYTXRabVozWWpoaVdUUndibFl4VWxSdVdqaFFRbU5KUTB4NFVuTkpOWE5PWHpOU2NFRmtkbE5oYzJVd1NrZEdObUV4VGs5bVNHOU1haTFQU0VGTGN6WjFiVzFQVm1jMmVFUTNjVjlqYnkxYVVscENiRVJ2ZFVsdFJFVk5jMUJJTVdkVFRtRmliR042WkZKblZrWnNlbXhXYURac05sVk5kRnBsTFdSS2NXOXhWamxUVkdGVGVUbHZNMDlQT1U1SGEwbHBOVlppWDFOV04wNHlaVXRYUTJkVWNWcEtiVU5NTVdGMmFISndha0ZZUzNsNExWRnJMVlZEVDBRMk5sazBWMVpaWkVjNFdWWk9TbE01WlhwV01FUTJPVXBPY0ZWMlluVklXbE5EUkdkcGRqQjFaV2MzTUdsblVHeDVTMlY2VDJsNFRYQjJORUoyZUZaMGRFaDBUWFpwUm01R2RWbE9TVTFLVFVGTlZrOHpNR1ppV25Vd0xuUnBhall0WjBGdWRFYzVhemQzVnpCMVZrOHlVVkUuUzFwTGZ2cXdPXzVpTm10aE5ER0lxWVl6S1JjYXZEendIbzlqTEdSZFA0dyIsImV4cCI6MTY4NzM3NTczOSwiaWF0IjoxNjg3Mzc1NDM5fQ.CH0CHzW0Xk82ncr53x6n2MeHhK539VVCqHjpyn39uc0',
+  callbacks: [
+    {
+      type: 'TextOutputCallback',
+      output: [
+        {
+          name: 'message',
+          value:
+            '/*\n * Copyright 2018-2020 ForgeRock AS. All Rights Reserved\n *\n * Use of this code requires a commercial software license with ForgeRock AS.\n * or with one of its affiliates. All use shall be exclusively subject\n * to such license between the licensee and ForgeRock AS.\n */\n\nif (!window.PublicKeyCredential) {\n    document.getElementById(\'webAuthnOutcome\').value = "unsupported";\n    document.getElementById("loginButton_0").click();\n}\n\nvar publicKey = {\n    challenge: new Int8Array([-9, 108, -90, 2, 110, 98, -76, -65, -1, 93, 24, 82, -58, 109, 92, 24, 8, 87, -78, 83, -55, 42, -58, 73, -21, -22, 35, -109, 46, -2, -97, -78]).buffer,\n    // Relying Party:\n    rp: {\n        \n        name: "ForgeRock"\n    },\n    // User:\n    user: {\n        id: Uint8Array.from("NmNlNjdlNzYtYWVjYi00YjA1LWEzY2EtNGIzZjRlYTk3NDNk", function (c) { return c.charCodeAt(0) }),\n        name: "6ce67e76-aecb-4b05-a3ca-4b3f4ea9743d",\n        displayName: "6ce67e76-aecb-4b05-a3ca-4b3f4ea9743d"\n    },\n    pubKeyCredParams: [ { "type": "public-key", "alg": -7 }, { "type": "public-key", "alg": -257 } ],\n    attestation: "none",\n    timeout: 60000,\n    excludeCredentials: [],\n    authenticatorSelection: {"userVerification":"discouraged"}\n};\n\nnavigator.credentials.create({publicKey: publicKey})\n    .then(function (newCredentialInfo) {\n        var rawId = newCredentialInfo.id;\n        var clientData = String.fromCharCode.apply(null, new Uint8Array(newCredentialInfo.response.clientDataJSON));\n        var keyData = new Int8Array(newCredentialInfo.response.attestationObject).toString();\n        document.getElementById(\'webAuthnOutcome\').value = clientData + "::" + keyData + "::" + rawId;\n        document.getElementById("loginButton_0").click();\n    }).catch(function (err) {\n        document.getElementById(\'webAuthnOutcome\').value = "ERROR" + "::" + err;\n        document.getElementById("loginButton_0").click();\n    });',
+        },
+        { name: 'messageType', value: '4' },
+      ],
+    },
+    {
+      type: 'TextOutputCallback',
+      output: [
+        {
+          name: 'message',
+          value:
+            '/*\n * Copyright 2018 ForgeRock AS. All Rights Reserved\n *\n * Use of this code requires a commercial software license with ForgeRock AS.\n * or with one of its affiliates. All use shall be exclusively subject\n * to such license between the licensee and ForgeRock AS.\n *\n */\n\n/*\n * Note:\n *\n * When a ConfirmationCallback is used (e.g. during recovery code use), the XUI does not render a loginButton. However\n * the webAuthn script needs to call loginButton.click() to execute the appropriate data reformatting prior to sending\n * the request into AM. Here we query whether the loginButton exists and add it to the DOM if it doesn\'t.\n */\n\nvar newLocation = document.getElementById("wrapper");\n\nvar script = "<div class=\\"form-group\\">\\n" +\n    "<div class=\\"panel panel-default\\">\\n" +\n    "    <div class=\\"panel-body text-center\\">\\n" +\n    "    <h4 class=\\"awaiting-response\\"><i class=\\"fa fa-circle-o-notch fa-spin text-primary\\"></i> Waiting for local device... </h4>\\n" +\n    "    </div>\\n" +\n    "</div>\\n";\n\nif (!document.getElementById("loginButton_0")) {\n    script += "<input id=\\"loginButton_0\\" role=\\"button\\" type=\\"submit\\" hidden>";\n} else {\n    document.getElementById("loginButton_0").style.visibility=\'hidden\';\n}\n\nscript += "</div>";\n\nnewLocation.getElementsByTagName("fieldset")[0].innerHTML += script;\ndocument.body.appendChild(newLocation);',
+        },
+        { name: 'messageType', value: '4' },
+      ],
+    },
+    {
+      type: 'HiddenValueCallback',
+      output: [
+        { name: 'value', value: 'false' },
+        { name: 'id', value: 'webAuthnOutcome' },
+      ],
+      input: [{ name: 'IDToken3', value: 'webAuthnOutcome' }],
+    },
+  ],
 };

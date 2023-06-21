@@ -1,40 +1,25 @@
 <script lang="ts">
-  import {
-    FRAuth,
-    FRRecoveryCodes,
-    FRStep,
-    FRWebAuthn,
-    WebAuthnStepType,
-  } from '@forgerock/javascript-sdk';
-  import { afterUpdate, onMount } from 'svelte';
+  import { FRRecoveryCodes } from '@forgerock/javascript-sdk';
+  import { afterUpdate } from 'svelte';
 
   // i18n
-  import { interpolate } from '$lib/_utilities/i18n.utilities';
   import T from '$components/_utilities/locale-strings.svelte';
 
   // Import primitives
-  import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import {
-    convertStringToKey,
-    shouldRedirectFromStep,
-  } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
-  import Sanitize from '$components/_utilities/server-strings.svelte';
-  import ShieldIcon from '$components/icons/shield-icon.svelte';
-  import { styleStore } from '$lib/style.store';
+  import ClipboardIcon from '$components/icons/shield-check-icon.svelte';
 
   // Types
+  import type { FRStep } from '@forgerock/javascript-sdk';
+
   import type {
     CallbackMetadata,
     StageFormObject,
     StageJourneyObject,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import BackTo from './_utilities/back-to.svelte';
-  import { captureLinks, determineWebAuthNStep } from './_utilities/stage.utilities';
   import type { Maybe } from '$lib/interfaces';
-  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
@@ -51,43 +36,20 @@
   const formHeaderId = 'genericStepHeader';
   const formElementId = 'genericStepForm';
 
-  let alertNeedsFocus = false;
-  let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
-  let linkWrapper: HTMLElement;
-
-  function determineSubmission() {
-    // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
-    // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
-
-    // The below variation is more liberal, first self-submittable cb to call this wins.
-    if (metadata?.step?.derived.isStepSelfSubmittable()) {
-      submitFormWrapper();
-    }
-  }
-  function submitFormWrapper() {
-    alertNeedsFocus = false;
-    formNeedsFocus = false;
-    form?.submit();
-  }
 
   afterUpdate(() => {
     if (form?.message) {
       formAriaDescriptor = formFailureMessageId;
-      alertNeedsFocus = true;
       formNeedsFocus = false;
     } else {
       formAriaDescriptor = formHeaderId;
-      alertNeedsFocus = false;
       formNeedsFocus = true;
     }
   });
 
-  onMount(() => captureLinks(linkWrapper, journey));
   $: {
-    shouldRedirectFromStep(step) && FRAuth.redirect(step);
-    formMessageKey = convertStringToKey(form?.message);
     codes = FRRecoveryCodes.getCodes(step);
   }
 </script>
@@ -97,48 +59,48 @@
   ariaDescribedBy={formAriaDescriptor}
   id={formElementId}
   needsFocus={formNeedsFocus}
-  onSubmitWhenValid={submitFormWrapper}
+  onSubmitWhenValid={() => form.submit()}
 >
   {#if form?.icon && componentStyle !== 'inline'}
     <div class="tw_flex tw_justify-center">
-      <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+      <ClipboardIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
   {/if}
-  <header bind:this={linkWrapper} id={formHeaderId}>
+
+  <header id={formHeaderId}>
     <h1 class="tw_primary-header dark:tw_primary-header_dark">
-      <Sanitize html={true} string={step?.getHeader() || ''} />
+      <T key="yourMultiFactorAuthIsEnabled" />
     </h1>
     <p
-      class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+      class="tw_-mt-5 tw_mb-2 tw_py-4 tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light"
     >
-      <Sanitize html={true} string={step?.getDescription() || ''} />
+      <T key="useThisNewMfaToHelpVerifyYourIdentity" />
     </p>
   </header>
 
-  {#if form?.message}
-    <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
-      {interpolate(formMessageKey, null, form?.message)}
-    </Alert>
-  {/if}
+  <hr class="tw_border-collapse tw_border-secondary-light dark:tw_border-secondary-dark tw_mb-8" />
 
-  {#each step?.callbacks as callback, idx}
-    <CallbackMapper
-      props={{
-        callback,
-        callbackMetadata: metadata?.callbacks[idx],
-        selfSubmitFunction: determineSubmission,
-        stepMetadata: metadata?.step && { ...metadata.step },
-        style: $styleStore,
-        recoveryCodes: codes,
-      }}
-    />
-  {/each}
+  <h2 class="tw_secondary-header dark:tw_secondary-header_dark tw_text-lg">
+    <T key="dontGetLockedOut" />
+  </h2>
 
-  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable() || codes.length > 0}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
-      <T key="nextButton" />
-    </Button>
-  {/if}
+  <p class="tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6">
+    <T html={true} key="yourRecoveryCodesToAccessAccountForLostDevice" />
+  </p>
 
-  <BackTo {journey} />
+  <ol
+    class="tw_font-mono tw_border tw_border-secondary-light dark:tw_border-secondary-dark tw_bg-body-light dark:tw_bg-body-dark tw_list-decimal tw_text-secondary-light dark:tw_text-secondary-light tw_py-4 tw_list-inside tw_rounded-md tw_mb-4 tw_columns-2"
+  >
+    {#each codes as code}
+      <li class="tw_text-center">
+        <span class="tw_text-secondary-dark dark:tw_text-secondary-light">
+          {code}
+        </span>
+      </li>
+    {/each}
+  </ol>
+
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">
+    <T key="nextButton" />
+  </Button>
 </Form>

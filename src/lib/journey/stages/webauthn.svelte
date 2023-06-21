@@ -1,16 +1,6 @@
 <script lang="ts">
-  import {
-    CallbackType,
-    FRAuth,
-    FRCallback,
-    FRRecoveryCodes,
-    FRStep,
-    FRWebAuthn,
-    TextOutputCallback,
-    WebAuthnStepType,
-  } from '@forgerock/javascript-sdk';
-  import type { Callback } from '@forgerock/javascript-sdk';
-  import { afterUpdate, onMount } from 'svelte';
+  import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
+  import { afterUpdate } from 'svelte';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -18,29 +8,24 @@
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
-  import Button from '$components/primitives/button/button.svelte';
-  import {
-    convertStringToKey,
-    shouldRedirectFromStep,
-  } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
-  import Sanitize from '$components/_utilities/server-strings.svelte';
-  import ShieldIcon from '$components/icons/shield-icon.svelte';
-  import { styleStore } from '$lib/style.store';
+  import FingerprintIcon from '$components/icons/fingerprint-icon.svelte';
 
   // Types
+  import type { FRStep } from '@forgerock/javascript-sdk';
+
   import type {
     CallbackMetadata,
     StageFormObject,
     StageJourneyObject,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import BackTo from './_utilities/back-to.svelte';
-  import { captureLinks, determineWebAuthNStep } from './_utilities/stage.utilities';
   import type { Maybe } from '$lib/interfaces';
-  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
-  import TextOutput from '$journey/callbacks/text-output/text-output.svelte';
+  import Spinner from '$components/primitives/spinner/spinner.svelte';
 
+  // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
+  export let allowWebAuthn = true;
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
@@ -59,24 +44,7 @@
   let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
-  let linkWrapper: HTMLElement;
-  let webAuthnValue = WebAuthnStepType.None;
-  let fakeCallback = new FRCallback({} as Callback) as TextOutputCallback;
-
-  function determineSubmission() {
-    // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
-    // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
-
-    // The below variation is more liberal, first self-submittable cb to call this wins.
-    if (metadata?.step?.derived.isStepSelfSubmittable()) {
-      submitFormWrapper();
-    }
-  }
-  function submitFormWrapper() {
-    alertNeedsFocus = false;
-    formNeedsFocus = false;
-    form?.submit();
-  }
+  let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
 
   afterUpdate(() => {
     if (form?.message) {
@@ -90,14 +58,36 @@
     }
   });
 
-  determineWebAuthNStep(step).then(submitFormWrapper);
+  /**
+   * Determine a WebAuthn step
+   */
+  async function callWebAuthnApi() {
+    try {
+      switch (webAuthnType) {
+        case WebAuthnStepType.Registration: {
+          await FRWebAuthn.register(step);
+          break;
+        }
+        case WebAuthnStepType.Authentication: {
+          await FRWebAuthn.authenticate(step);
+          break;
+        }
+        default:
+          break;
+      }
+    } catch (err) {
+      // TODO: handle error
+    }
+    form.submit();
+  }
 
-  onMount(() => captureLinks(linkWrapper, journey));
+  // Call the WebAuthn API without await
+  if (allowWebAuthn) {
+    callWebAuthnApi();
+  }
+
   $: {
-    shouldRedirectFromStep(step) && FRAuth.redirect(step);
     formMessageKey = convertStringToKey(form?.message);
-    webAuthnValue = FRWebAuthn.getWebAuthnStepType(step);
-    console.log(webAuthnValue, step);
   }
 </script>
 
@@ -106,23 +96,16 @@
   ariaDescribedBy={formAriaDescriptor}
   id={formElementId}
   needsFocus={formNeedsFocus}
-  onSubmitWhenValid={submitFormWrapper}
 >
   {#if form?.icon && componentStyle !== 'inline'}
     <div class="tw_flex tw_justify-center">
-      <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+      <FingerprintIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
   {/if}
-  <header bind:this={linkWrapper} id={formHeaderId}>
-    <h1 class="tw_primary-header dark:tw_primary-header_dark">
-      <Sanitize html={true} string={step?.getHeader() || ''} />
-    </h1>
-    <p
-      class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-    >
-      <Sanitize html={true} string={step?.getDescription() || ''} />
-    </p>
-  </header>
+
+  <div class="tw_text-center tw_w-full tw_py-4">
+    <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+  </div>
 
   {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
@@ -130,30 +113,27 @@
     </Alert>
   {/if}
 
-  {#each step?.callbacks as callback, idx}
-    {#if step.getCallbacksOfType(CallbackType.TextOutputCallback).length === 2 && idx === 1}
-      {''}
-    {:else}
-      <CallbackMapper
-        props={{
-          callback,
-          callbackMetadata: metadata?.callbacks[idx],
-          selfSubmitFunction: determineSubmission,
-          stepMetadata: metadata?.step && { ...metadata.step },
-          style: $styleStore,
-          webAuthnValue,
-        }}
-      />
-    {/if}
-  {/each}
-  {#if step.getCallbacksOfType(CallbackType.TextOutputCallback).length === 0}
-    <TextOutput {webAuthnValue} recoveryCodes={[]} callback={fakeCallback} />
+  {#if webAuthnType === WebAuthnStepType.Authentication}
+    <header id={formHeaderId}>
+      <h1 class="tw_primary-header dark:tw_primary-header_dark">
+        <T key="verifyYourIdentity" />
+      </h1>
+      <p
+        class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+      >
+        <T key="useDeviceForIdentityVerification" />
+      </p>
+    </header>
+  {:else}
+    <header id={formHeaderId}>
+      <h1 class="tw_primary-header dark:tw_primary-header_dark">
+        <T key="registerYourDevice" />
+      </h1>
+      <p
+        class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+      >
+        <T key="chooseYourDeviceForIdentityVerification" />
+      </p>
+    </header>
   {/if}
-  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
-      <T key="nextButton" />
-    </Button>
-  {/if}
-
-  <BackTo {journey} />
 </Form>
