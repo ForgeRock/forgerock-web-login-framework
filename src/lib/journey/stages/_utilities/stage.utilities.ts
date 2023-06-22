@@ -1,4 +1,6 @@
 import { get } from 'svelte/store';
+import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
+import type { FRStep } from '@forgerock/javascript-sdk';
 
 import { configuredJourneysStore } from '$journey/config.store';
 

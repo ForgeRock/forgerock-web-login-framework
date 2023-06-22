@@ -1,6 +1,6 @@
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { FRStep, CallbackType, WebAuthnStepType } from '@forgerock/javascript-sdk';
 import { expect } from '@storybook/jest';
-import { userEvent, within } from '@storybook/testing-library';
+import { within } from '@storybook/testing-library';
 
 import response from './text-output.mock';
 import TextOutput from './text-output.story.svelte';

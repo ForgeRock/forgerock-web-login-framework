@@ -412,6 +412,10 @@ grid-row-start: 2;
 margin-top: 1rem;
 margin-bottom: 1rem;
 }
+.tw_my-6 {
+margin-top: 1.5rem;
+margin-bottom: 1.5rem;
+}
 .tw_mb-6 {
 margin-bottom: 1.5rem;
 }
@@ -421,11 +425,14 @@ margin-top: -1.25rem;
 .tw_mb-2 {
 margin-bottom: 0.5rem;
 }
-.tw_ml-10 {
-margin-left: 2.5rem;
+.tw_mb-8 {
+margin-bottom: 2rem;
 }
 .tw_mb-4 {
 margin-bottom: 1rem;
+}
+.tw_ml-10 {
+margin-left: 2.5rem;
 }
 .tw_mr-2 {
 margin-right: 0.5rem;
@@ -493,6 +500,9 @@ width: 6rem;
 .tw_flex-1 {
 flex: 1 1 0%;
 }
+.tw_border-collapse {
+border-collapse: collapse;
+}
 @keyframes tw_spin {
 to {
 transform: rotate(360deg);
@@ -501,8 +511,18 @@ transform: rotate(360deg);
 .tw_animate-spin {
 animation: tw_spin 1s linear infinite;
 }
+.tw_list-inside {
+list-style-position: inside;
+}
+.tw_list-decimal {
+list-style-type: decimal;
+}
 .tw_list-disc {
 list-style-type: disc;
+}
+.tw_columns-2 {
+-moz-columns: 2;
+     columns: 2;
 }
 .tw_grid-cols-\[2\.5em_1fr\] {
 grid-template-columns: 2.5em 1fr;
@@ -536,6 +556,9 @@ justify-items: stretch;
 }
 .tw_gap-4 {
 gap: 1rem;
+}
+.tw_rounded-md {
+border-radius: 0.375rem;
 }
 .tw_rounded-full {
 border-radius: 9999px;
@@ -596,6 +619,9 @@ text-align: center;
 .tw_text-right {
 text-align: right;
 }
+.tw_font-mono {
+font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
 .tw_text-base {
 font-size: 0.9375rem;
 line-height: 1.25;
@@ -603,6 +629,10 @@ line-height: 1.25;
 .tw_text-sm {
 font-size: 0.875rem;
 line-height: 1.25;
+}
+.tw_text-lg {
+font-size: 1.25rem;
+line-height: 1;
 }
 .tw_text-4xl {
 font-size: 2.25rem;
@@ -613,6 +643,9 @@ font-weight: 300;
 }
 .tw_font-bold {
 font-weight: 700;
+}
+.tw_font-semibold {
+font-weight: 600;
 }
 .tw_text-primary-light {
 --tw-text-opacity: 1;
@@ -629,6 +662,10 @@ color: rgb(55 65 81 / var(--tw-text-opacity));
 .tw_text-link-dark {
 --tw-text-opacity: 1;
 color: rgb(37 99 235 / var(--tw-text-opacity));
+}
+.tw_text-secondary-light {
+--tw-text-opacity: 1;
+color: rgb(209 213 219 / var(--tw-text-opacity));
 }
 .tw_text-error-dark {
 --tw-text-opacity: 1;
@@ -666,7 +703,7 @@ text-align: center;
 }
 .tw_secondary-header {
 font-weight: 500;
-font-size: 0.9375rem;
+font-size: 1.25rem;
 margin-bottom: 1rem;
 }
 }

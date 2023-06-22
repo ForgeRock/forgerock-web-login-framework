@@ -8,9 +8,11 @@
   import OneTimePassword from './one-time-password.svelte';
   import Registration from './registration.svelte';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+  import RecoveryCodes from './recovery-codes.svelte';
   import { initCheckValidation } from './_utilities/step.utilities';
   import { initialize as initializeStyles, partialStyleSchema } from '$lib/style.store';
   import Login from './login.svelte';
+  import WebAuthn from './webauthn.svelte';
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
@@ -55,6 +57,10 @@
     <Login componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else if stage === 'DefaultRegistration'}
     <Registration componentStyle="modal" {form} {journey} {metadata} {step} />
+  {:else if stage === 'RecoveryCodes'}
+    <RecoveryCodes componentStyle="modal" {form} {journey} {metadata} {step} />
+  {:else if stage === 'WebAuthn'}
+    <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {journey} {metadata} {step} />
   {:else}
     <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
   {/if}
