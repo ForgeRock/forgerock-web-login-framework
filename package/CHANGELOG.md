@@ -1,3 +1,17 @@
+# [1.1.0-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.1.0-beta.1...v1.1.0-beta.2) (2023-06-22)
+
+
+### Features
+
+* **callbacks:** add-webauthn-support ([26af184](https://github.com/forgerock/forgerock-web-login-framework/commit/26af18457b466f161288e64070a317ceba50f0b0))
+
+# [1.1.0-beta.1](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.2...v1.1.0-beta.1) (2023-06-12)
+
+
+### Features
+
+* **callbacks:** device-profile-node addition ([a41fa12](https://github.com/forgerock/forgerock-web-login-framework/commit/a41fa129080ae957d803b4d40b254452d25055bb))
+
 ## [1.0.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.1...v1.0.2) (2023-04-18)
 
 

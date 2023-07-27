@@ -134,7 +134,7 @@
     <T key="securityQuestions" />
   </legend>
 
-  <h2 class="tw_secondary-header dark:tw_secondary-header_dark">
+  <h2 class="dark:tw_secondary-header_dark tw_font-semibold tw_mb-4">
     <T key="securityQuestionsPrompt" />
   </h2>
 

@@ -23,7 +23,7 @@
   };
   let stepMetadata = {
     derived: {
-      isStepSelfSubmittable: false,
+      isStepSelfSubmittable: () => false,
       isUserInputOptional: false,
       numOfCallbacks: 2,
       numOfSelfSubmittableCbs: 0,

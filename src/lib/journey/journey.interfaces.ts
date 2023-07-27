@@ -60,7 +60,7 @@ export interface StackStore extends Pick<Writable<StepOptions[]>, 'subscribe'> {
 export interface StepMetadata {
   derived: {
     isUserInputOptional: boolean;
-    isStepSelfSubmittable: boolean;
+    isStepSelfSubmittable: () => boolean;
     numOfCallbacks: number;
     numOfSelfSubmittableCbs: number;
     numOfUserInputCbs: number;

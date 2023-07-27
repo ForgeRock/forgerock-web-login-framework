@@ -3,7 +3,7 @@
   export let formEl: HTMLFormElement | null = null;
   export let id = 'formId';
   export let needsFocus = false;
-  export let onSubmitWhenValid: (event: SubmitEvent, isFormValid: boolean) => void;
+  export let onSubmitWhenValid: ((event: SubmitEvent, isFormValid: boolean) => void) | undefined = undefined;
 
   let isFormValid = false;
 
@@ -80,7 +80,7 @@
     // If there's no invalid input, submit form.
     if (isFirstInvalidInput === null) {
       isFormValid = true;
-      onSubmitWhenValid(event, isFormValid);
+      onSubmitWhenValid && onSubmitWhenValid(event, isFormValid);
     }
   }
 

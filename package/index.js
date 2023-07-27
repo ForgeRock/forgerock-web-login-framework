@@ -1108,7 +1108,7 @@ var __assign$a = (undefined && undefined.__assign) || function () {
     };
     return __assign$a.apply(this, arguments);
 };
-var __awaiter$n = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$o = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -1117,7 +1117,7 @@ var __awaiter$n = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$n = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$o = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -1158,9 +1158,9 @@ var Auth$1 = /** @class */ (function () {
      * @return {Step} The next step in the authentication tree.
      */
     Auth.next = function (previousStep, options) {
-        return __awaiter$n(this, void 0, void 0, function () {
+        return __awaiter$o(this, void 0, void 0, function () {
             var _a, middleware, realmPath, serverConfig, tree, type, query, url, runMiddleware, req, res, json;
-            return __generator$n(this, function (_b) {
+            return __generator$o(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = Config.get(options), middleware = _a.middleware, realmPath = _a.realmPath, serverConfig = _a.serverConfig, tree = _a.tree, type = _a.type;
@@ -1211,9 +1211,9 @@ var Auth$1 = /** @class */ (function () {
         return init;
     };
     Auth.getResponseJson = function (res) {
-        return __awaiter$n(this, void 0, void 0, function () {
+        return __awaiter$o(this, void 0, void 0, function () {
             var contentType, isJson, json, _a;
-            return __generator$n(this, function (_b) {
+            return __generator$o(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         contentType = res.headers.get('content-type');
@@ -3176,7 +3176,7 @@ var __assign$8 = (undefined && undefined.__assign) || function () {
     };
     return __assign$8.apply(this, arguments);
 };
-var __awaiter$m = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$n = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -3185,7 +3185,7 @@ var __awaiter$m = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$m = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$n = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -3251,9 +3251,9 @@ var FRAuth$1 = /** @class */ (function () {
      * @return The next step in the authentication tree
      */
     FRAuth.next = function (previousStep, options) {
-        return __awaiter$m(this, void 0, void 0, function () {
+        return __awaiter$n(this, void 0, void 0, function () {
             var nextPayload, callbackFactory;
-            return __generator$m(this, function (_a) {
+            return __generator$n(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, Auth$1.next(previousStep ? previousStep.payload : undefined, options)];
                     case 1:
@@ -3299,12 +3299,12 @@ var FRAuth$1 = /** @class */ (function () {
      */
     FRAuth.resume = function (url, options) {
         var _a, _b, _c;
-        return __awaiter$m(this, void 0, void 0, function () {
+        return __awaiter$n(this, void 0, void 0, function () {
             function requiresPreviousStep() {
                 return (code && state) || form_post_entry || responsekey;
             }
             var parsedUrl, code, error, errorCode, errorMessage, form_post_entry, nonce, RelayState, responsekey, scope, state, suspendedId, authIndexValue, previousStep, redirectStepString, nextOptions;
-            return __generator$m(this, function (_d) {
+            return __generator$n(this, function (_d) {
                 switch (_d.label) {
                     case 0:
                         parsedUrl = new URL(url);
@@ -3353,8 +3353,8 @@ var FRAuth$1 = /** @class */ (function () {
      * @return The next step in the authentication tree
      */
     FRAuth.start = function (options) {
-        return __awaiter$m(this, void 0, void 0, function () {
-            return __generator$m(this, function (_a) {
+        return __awaiter$n(this, void 0, void 0, function () {
+            return __generator$n(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, FRAuth.next(undefined, options)];
                     case 1: return [2 /*return*/, _a.sent()];
@@ -3532,7 +3532,7 @@ var __assign$7 = (undefined && undefined.__assign) || function () {
     };
     return __assign$7.apply(this, arguments);
 };
-var __awaiter$l = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$m = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -3541,7 +3541,7 @@ var __awaiter$l = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$l = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$m = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -3589,7 +3589,7 @@ var __generator$l = (undefined && undefined.__generator) || function (thisArg, b
  * });
  * ```
  */
-/** @class */ ((function (_super) {
+var FRDevice = /** @class */ (function (_super) {
     __extends$l(FRDevice, _super);
     function FRDevice(config) {
         var _this = _super.call(this) || this;
@@ -3709,16 +3709,16 @@ var __generator$l = (undefined && undefined.__generator) || function (thisArg, b
         return installedFonts;
     };
     FRDevice.prototype.getLocationCoordinates = function () {
-        return __awaiter$l(this, void 0, void 0, function () {
+        return __awaiter$m(this, void 0, void 0, function () {
             var _this = this;
-            return __generator$l(this, function (_a) {
+            return __generator$m(this, function (_a) {
                 if (!(typeof navigator !== 'undefined' && navigator.geolocation)) {
                     console.warn('Cannot collect geolocation information. navigator.geolocation is not defined.');
                     return [2 /*return*/, Promise.resolve({})];
                 }
                 // eslint-disable-next-line no-async-promise-executor
-                return [2 /*return*/, new Promise(function (resolve) { return __awaiter$l(_this, void 0, void 0, function () {
-                        return __generator$l(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve) { return __awaiter$m(_this, void 0, void 0, function () {
+                        return __generator$m(this, function (_a) {
                             navigator.geolocation.getCurrentPosition(function (position) {
                                 return resolve({
                                     latitude: position.coords.latitude,
@@ -3747,9 +3747,9 @@ var __generator$l = (undefined && undefined.__generator) || function (thisArg, b
     };
     FRDevice.prototype.getProfile = function (_a) {
         var location = _a.location, metadata = _a.metadata;
-        return __awaiter$l(this, void 0, void 0, function () {
+        return __awaiter$m(this, void 0, void 0, function () {
             var profile, _b;
-            return __generator$l(this, function (_c) {
+            return __generator$m(this, function (_c) {
                 switch (_c.label) {
                     case 0:
                         profile = {
@@ -3783,7 +3783,97 @@ var __generator$l = (undefined && undefined.__generator) || function (thisArg, b
         }
     };
     return FRDevice;
-})(Collector));
+}(Collector));
+
+/*
+ * @forgerock/javascript-sdk
+ *
+ * script-parser.ts
+ *
+ * Copyright (c) 2020 ForgeRock. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+function parseDisplayRecoveryCodesText(text) {
+    /**
+     * e.g. ` ...
+     *    "<div class=\"text-center\">\n" +
+     *    "iZmEtxvQ00\n" +
+     *    "</div>\n" +
+     * ... `
+     */
+    var recoveryCodesMatches = text.match(/\s[\w\W]"([\w]*)\\/g);
+    var recoveryCodes = Array.isArray(recoveryCodesMatches) &&
+        recoveryCodesMatches.map(function (substr) {
+            // e.g. `"iZmEtxvQ00\`
+            var arr = substr.match(/"([\w]*)\\/);
+            return Array.isArray(arr) ? arr[1] : '';
+        });
+    return recoveryCodes || [];
+}
+
+/*
+ * @forgerock/javascript-sdk
+ *
+ * index.ts
+ *
+ * Copyright (c) 2020 ForgeRock. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+/**
+ * Utility for handling recovery code nodes.
+ *
+ * Example:
+ *
+ * ```js
+ * // Determine if step is Display Recovery Codes step
+ * const isDisplayRecoveryCodesStep = FRRecoveryCodes.isDisplayStep(step);
+ * if (isDisplayRecoveryCodesStep) {
+ *   const recoveryCodes = FRRecoveryCodes.getCodes(step);
+ *   // Do the UI needful
+ * }
+ * ```
+ */
+var FRRecoveryCodes = /** @class */ (function () {
+    function FRRecoveryCodes() {
+    }
+    /**
+     * Retrieves the recovery codes by parsing the JavaScript message text in callback.
+     *
+     * @param step The step to evaluate
+     * @return Recovery Code values in array
+     */
+    FRRecoveryCodes.getCodes = function (step) {
+        var _a;
+        var text = (_a = this.getDisplayCallback(step)) === null || _a === void 0 ? void 0 : _a.getOutputByName('message', '');
+        return parseDisplayRecoveryCodesText(text || '');
+    };
+    /**
+     * Determines if the given step is a Display Recovery Codes step.
+     *
+     * @param step The step to evaluate
+     * @return Is this step a Display Recovery Codes step
+     */
+    FRRecoveryCodes.isDisplayStep = function (step) {
+        return !!this.getDisplayCallback(step);
+    };
+    /**
+     * Gets the recovery codes step.
+     *
+     * @param step The step to evaluate
+     * @return gets the Display Recovery Codes' callback
+     */
+    FRRecoveryCodes.getDisplayCallback = function (step) {
+        return step
+            .getCallbacksOfType(CallbackType$1.TextOutputCallback)
+            .find(function (x) {
+            var cb = x.getOutputByName('message', undefined);
+            return cb && (cb.includes('Recovery Codes') || cb.includes('recovery codes'));
+        });
+    };
+    return FRRecoveryCodes;
+}());
 
 /*
  * @forgerock/javascript-sdk
@@ -3807,6 +3897,163 @@ var TOKEN_KEY$1 = 'tokens';
  * @forgerock/javascript-sdk
  *
  * indexed-db.ts
+ *
+ * Copyright (c) 2020 ForgeRock. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+var __awaiter$l = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __generator$l = (undefined && undefined.__generator) || function (thisArg, body) {
+    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
+    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
+    function verb(n) { return function (v) { return step([n, v]); }; }
+    function step(op) {
+        if (f) throw new TypeError("Generator is already executing.");
+        while (_) try {
+            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
+            if (y = 0, t) op = [op[0] & 2, t.value];
+            switch (op[0]) {
+                case 0: case 1: t = op; break;
+                case 4: _.label++; return { value: op[1], done: false };
+                case 5: _.label++; y = op[1]; op = [0]; continue;
+                case 7: op = _.ops.pop(); _.trys.pop(); continue;
+                default:
+                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
+                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
+                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
+                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
+                    if (t[2]) _.ops.pop();
+                    _.trys.pop(); continue;
+            }
+            op = body.call(thisArg, _);
+        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
+        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+    }
+};
+/**
+ * Provides wrapper for tokens with IndexedDB.
+ */
+var IndexedDBWrapper$1 = /** @class */ (function () {
+    function IndexedDBWrapper() {
+    }
+    /**
+     * Retrieve tokens.
+     */
+    IndexedDBWrapper.get = function (clientId) {
+        return __awaiter$l(this, void 0, void 0, function () {
+            return __generator$l(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        var onError = function () { return reject(); };
+                        var openReq = window.indexedDB.open(DB_NAME$1);
+                        openReq.onsuccess = function () {
+                            if (!openReq.result.objectStoreNames.contains(clientId)) {
+                                openReq.result.close();
+                                return reject('Client ID not found');
+                            }
+                            var getReq = openReq.result
+                                .transaction(clientId, 'readonly')
+                                .objectStore(clientId)
+                                .get(TOKEN_KEY$1);
+                            getReq.onsuccess = function (event) {
+                                if (!event || !event.target) {
+                                    throw new Error('Missing storage event target');
+                                }
+                                openReq.result.close();
+                                resolve(event.target.result);
+                            };
+                            getReq.onerror = onError;
+                        };
+                        openReq.onupgradeneeded = function () {
+                            openReq.result.close();
+                            reject('IndexedDB upgrade needed');
+                        };
+                        openReq.onerror = onError;
+                    })];
+            });
+        });
+    };
+    /**
+     * Saves tokens.
+     */
+    IndexedDBWrapper.set = function (clientId, tokens) {
+        return __awaiter$l(this, void 0, void 0, function () {
+            return __generator$l(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        var openReq = window.indexedDB.open(DB_NAME$1);
+                        var onSetSuccess = function () {
+                            openReq.result.close();
+                            resolve();
+                        };
+                        var onError = function () { return reject(); };
+                        var onUpgradeNeeded = function () {
+                            openReq.result.createObjectStore(clientId);
+                        };
+                        var onOpenSuccess = function () {
+                            if (!openReq.result.objectStoreNames.contains(clientId)) {
+                                var version = openReq.result.version + 1;
+                                openReq.result.close();
+                                openReq = window.indexedDB.open(DB_NAME$1, version);
+                                openReq.onupgradeneeded = onUpgradeNeeded;
+                                openReq.onsuccess = onOpenSuccess;
+                                openReq.onerror = onError;
+                                return;
+                            }
+                            var txnReq = openReq.result.transaction(clientId, 'readwrite');
+                            txnReq.onerror = onError;
+                            var objectStore = txnReq.objectStore(clientId);
+                            var putReq = objectStore.put(tokens, TOKEN_KEY$1);
+                            putReq.onsuccess = onSetSuccess;
+                            putReq.onerror = onError;
+                        };
+                        openReq.onupgradeneeded = onUpgradeNeeded;
+                        openReq.onsuccess = onOpenSuccess;
+                        openReq.onerror = onError;
+                    })];
+            });
+        });
+    };
+    /**
+     * Removes stored tokens.
+     */
+    IndexedDBWrapper.remove = function (clientId) {
+        return __awaiter$l(this, void 0, void 0, function () {
+            return __generator$l(this, function (_a) {
+                return [2 /*return*/, new Promise(function (resolve, reject) {
+                        var onError = function () { return reject(); };
+                        var openReq = window.indexedDB.open(DB_NAME$1);
+                        openReq.onsuccess = function () {
+                            if (!openReq.result.objectStoreNames.contains(clientId)) {
+                                return resolve();
+                            }
+                            var removeReq = openReq.result
+                                .transaction(clientId, 'readwrite')
+                                .objectStore(clientId)
+                                .delete(TOKEN_KEY$1);
+                            removeReq.onsuccess = function () {
+                                resolve();
+                            };
+                            removeReq.onerror = onError;
+                        };
+                        openReq.onerror = onError;
+                    })];
+            });
+        });
+    };
+    return IndexedDBWrapper;
+}());
+
+/*
+ * @forgerock/javascript-sdk
+ *
+ * local-storage.ts
  *
  * Copyright (c) 2020 ForgeRock. All rights reserved.
  * This software may be modified and distributed under the terms
@@ -3849,121 +4096,64 @@ var __generator$k = (undefined && undefined.__generator) || function (thisArg, b
     }
 };
 /**
- * Provides wrapper for tokens with IndexedDB.
+ * Provides wrapper for tokens with localStorage.
  */
-var IndexedDBWrapper$1 = /** @class */ (function () {
-    function IndexedDBWrapper() {
+var LocalStorageWrapper$1 = /** @class */ (function () {
+    function LocalStorageWrapper() {
     }
     /**
      * Retrieve tokens.
      */
-    IndexedDBWrapper.get = function (clientId) {
+    LocalStorageWrapper.get = function (clientId) {
         return __awaiter$k(this, void 0, void 0, function () {
+            var tokenString;
             return __generator$k(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var onError = function () { return reject(); };
-                        var openReq = window.indexedDB.open(DB_NAME$1);
-                        openReq.onsuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                openReq.result.close();
-                                return reject('Client ID not found');
-                            }
-                            var getReq = openReq.result
-                                .transaction(clientId, 'readonly')
-                                .objectStore(clientId)
-                                .get(TOKEN_KEY$1);
-                            getReq.onsuccess = function (event) {
-                                if (!event || !event.target) {
-                                    throw new Error('Missing storage event target');
-                                }
-                                openReq.result.close();
-                                resolve(event.target.result);
-                            };
-                            getReq.onerror = onError;
-                        };
-                        openReq.onupgradeneeded = function () {
-                            openReq.result.close();
-                            reject('IndexedDB upgrade needed');
-                        };
-                        openReq.onerror = onError;
-                    })];
+                tokenString = localStorage.getItem("".concat(DB_NAME$1, "-").concat(clientId));
+                try {
+                    return [2 /*return*/, Promise.resolve(JSON.parse(tokenString || ''))];
+                }
+                catch (err) {
+                    console.warn('Could not parse token from localStorage. This could be due to accessing a removed token');
+                    // Original behavior had an untyped return of undefined for no token
+                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                    // @ts-ignore
+                    return [2 /*return*/, undefined];
+                }
+                return [2 /*return*/];
             });
         });
     };
     /**
      * Saves tokens.
      */
-    IndexedDBWrapper.set = function (clientId, tokens) {
+    LocalStorageWrapper.set = function (clientId, tokens) {
         return __awaiter$k(this, void 0, void 0, function () {
+            var tokenString;
             return __generator$k(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var openReq = window.indexedDB.open(DB_NAME$1);
-                        var onSetSuccess = function () {
-                            openReq.result.close();
-                            resolve();
-                        };
-                        var onError = function () { return reject(); };
-                        var onUpgradeNeeded = function () {
-                            openReq.result.createObjectStore(clientId);
-                        };
-                        var onOpenSuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                var version = openReq.result.version + 1;
-                                openReq.result.close();
-                                openReq = window.indexedDB.open(DB_NAME$1, version);
-                                openReq.onupgradeneeded = onUpgradeNeeded;
-                                openReq.onsuccess = onOpenSuccess;
-                                openReq.onerror = onError;
-                                return;
-                            }
-                            var txnReq = openReq.result.transaction(clientId, 'readwrite');
-                            txnReq.onerror = onError;
-                            var objectStore = txnReq.objectStore(clientId);
-                            var putReq = objectStore.put(tokens, TOKEN_KEY$1);
-                            putReq.onsuccess = onSetSuccess;
-                            putReq.onerror = onError;
-                        };
-                        openReq.onupgradeneeded = onUpgradeNeeded;
-                        openReq.onsuccess = onOpenSuccess;
-                        openReq.onerror = onError;
-                    })];
+                tokenString = JSON.stringify(tokens);
+                localStorage.setItem("".concat(DB_NAME$1, "-").concat(clientId), tokenString);
+                return [2 /*return*/];
             });
         });
     };
     /**
      * Removes stored tokens.
      */
-    IndexedDBWrapper.remove = function (clientId) {
+    LocalStorageWrapper.remove = function (clientId) {
         return __awaiter$k(this, void 0, void 0, function () {
             return __generator$k(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var onError = function () { return reject(); };
-                        var openReq = window.indexedDB.open(DB_NAME$1);
-                        openReq.onsuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                return resolve();
-                            }
-                            var removeReq = openReq.result
-                                .transaction(clientId, 'readwrite')
-                                .objectStore(clientId)
-                                .delete(TOKEN_KEY$1);
-                            removeReq.onsuccess = function () {
-                                resolve();
-                            };
-                            removeReq.onerror = onError;
-                        };
-                        openReq.onerror = onError;
-                    })];
+                localStorage.removeItem("".concat(DB_NAME$1, "-").concat(clientId));
+                return [2 /*return*/];
             });
         });
     };
-    return IndexedDBWrapper;
+    return LocalStorageWrapper;
 }());
 
 /*
  * @forgerock/javascript-sdk
  *
- * local-storage.ts
+ * session-storage.ts
  *
  * Copyright (c) 2020 ForgeRock. All rights reserved.
  * This software may be modified and distributed under the terms
@@ -4006,24 +4196,24 @@ var __generator$j = (undefined && undefined.__generator) || function (thisArg, b
     }
 };
 /**
- * Provides wrapper for tokens with localStorage.
+ * Provides wrapper for tokens with sessionStorage.
  */
-var LocalStorageWrapper$1 = /** @class */ (function () {
-    function LocalStorageWrapper() {
+var SessionStorageWrapper$1 = /** @class */ (function () {
+    function SessionStorageWrapper() {
     }
     /**
      * Retrieve tokens.
      */
-    LocalStorageWrapper.get = function (clientId) {
+    SessionStorageWrapper.get = function (clientId) {
         return __awaiter$j(this, void 0, void 0, function () {
             var tokenString;
             return __generator$j(this, function (_a) {
-                tokenString = localStorage.getItem("".concat(DB_NAME$1, "-").concat(clientId));
+                tokenString = sessionStorage.getItem("".concat(DB_NAME$1, "-").concat(clientId));
                 try {
                     return [2 /*return*/, Promise.resolve(JSON.parse(tokenString || ''))];
                 }
                 catch (err) {
-                    console.warn('Could not parse token from localStorage. This could be due to accessing a removed token');
+                    console.warn('Could not parse token from sessionStorage. This could be due to accessing a removed token');
                     // Original behavior had an untyped return of undefined for no token
                     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                     // @ts-ignore
@@ -4036,12 +4226,12 @@ var LocalStorageWrapper$1 = /** @class */ (function () {
     /**
      * Saves tokens.
      */
-    LocalStorageWrapper.set = function (clientId, tokens) {
+    SessionStorageWrapper.set = function (clientId, tokens) {
         return __awaiter$j(this, void 0, void 0, function () {
             var tokenString;
             return __generator$j(this, function (_a) {
                 tokenString = JSON.stringify(tokens);
-                localStorage.setItem("".concat(DB_NAME$1, "-").concat(clientId), tokenString);
+                sessionStorage.setItem("".concat(DB_NAME$1, "-").concat(clientId), tokenString);
                 return [2 /*return*/];
             });
         });
@@ -4049,23 +4239,23 @@ var LocalStorageWrapper$1 = /** @class */ (function () {
     /**
      * Removes stored tokens.
      */
-    LocalStorageWrapper.remove = function (clientId) {
+    SessionStorageWrapper.remove = function (clientId) {
         return __awaiter$j(this, void 0, void 0, function () {
             return __generator$j(this, function (_a) {
-                localStorage.removeItem("".concat(DB_NAME$1, "-").concat(clientId));
+                sessionStorage.removeItem("".concat(DB_NAME$1, "-").concat(clientId));
                 return [2 /*return*/];
             });
         });
     };
-    return LocalStorageWrapper;
+    return SessionStorageWrapper;
 }());
 
 /*
  * @forgerock/javascript-sdk
  *
- * session-storage.ts
+ * index.ts
  *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
+ * Copyright (c) 2020-2021 ForgeRock. All rights reserved.
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
@@ -4106,106 +4296,6 @@ var __generator$i = (undefined && undefined.__generator) || function (thisArg, b
     }
 };
 /**
- * Provides wrapper for tokens with sessionStorage.
- */
-var SessionStorageWrapper$1 = /** @class */ (function () {
-    function SessionStorageWrapper() {
-    }
-    /**
-     * Retrieve tokens.
-     */
-    SessionStorageWrapper.get = function (clientId) {
-        return __awaiter$i(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$i(this, function (_a) {
-                tokenString = sessionStorage.getItem("".concat(DB_NAME$1, "-").concat(clientId));
-                try {
-                    return [2 /*return*/, Promise.resolve(JSON.parse(tokenString || ''))];
-                }
-                catch (err) {
-                    console.warn('Could not parse token from sessionStorage. This could be due to accessing a removed token');
-                    // Original behavior had an untyped return of undefined for no token
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    return [2 /*return*/, undefined];
-                }
-                return [2 /*return*/];
-            });
-        });
-    };
-    /**
-     * Saves tokens.
-     */
-    SessionStorageWrapper.set = function (clientId, tokens) {
-        return __awaiter$i(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$i(this, function (_a) {
-                tokenString = JSON.stringify(tokens);
-                sessionStorage.setItem("".concat(DB_NAME$1, "-").concat(clientId), tokenString);
-                return [2 /*return*/];
-            });
-        });
-    };
-    /**
-     * Removes stored tokens.
-     */
-    SessionStorageWrapper.remove = function (clientId) {
-        return __awaiter$i(this, void 0, void 0, function () {
-            return __generator$i(this, function (_a) {
-                sessionStorage.removeItem("".concat(DB_NAME$1, "-").concat(clientId));
-                return [2 /*return*/];
-            });
-        });
-    };
-    return SessionStorageWrapper;
-}());
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020-2021 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$h = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$h = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-/**
  * Provides access to the token storage API.
  * The type of storage (localStorage, sessionStorage, etc) can be configured
  * through `tokenStore` object on the SDK configuration.
@@ -4217,9 +4307,9 @@ var TokenStorage$1 = /** @class */ (function () {
      * Gets stored tokens.
      */
     TokenStorage.get = function () {
-        return __awaiter$h(this, void 0, void 0, function () {
+        return __awaiter$i(this, void 0, void 0, function () {
             var _a, clientId, tokenStore;
-            return __generator$h(this, function (_b) {
+            return __generator$i(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
@@ -4252,9 +4342,9 @@ var TokenStorage$1 = /** @class */ (function () {
      * Saves tokens.
      */
     TokenStorage.set = function (tokens) {
-        return __awaiter$h(this, void 0, void 0, function () {
+        return __awaiter$i(this, void 0, void 0, function () {
             var _a, clientId, tokenStore;
-            return __generator$h(this, function (_b) {
+            return __generator$i(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
@@ -4287,9 +4377,9 @@ var TokenStorage$1 = /** @class */ (function () {
      * Removes stored tokens.
      */
     TokenStorage.remove = function () {
-        return __awaiter$h(this, void 0, void 0, function () {
+        return __awaiter$i(this, void 0, void 0, function () {
             var _a, clientId, tokenStore;
-            return __generator$h(this, function (_b) {
+            return __generator$i(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
@@ -4355,7 +4445,7 @@ function isOkOr4xx$1(response) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$g = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$h = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -4364,7 +4454,7 @@ var __awaiter$g = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$g = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$h = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -4416,9 +4506,9 @@ var PKCE$1 = /** @class */ (function () {
      * @param verifier The verifier to hash
      */
     PKCE.createChallenge = function (verifier) {
-        return __awaiter$g(this, void 0, void 0, function () {
+        return __awaiter$h(this, void 0, void 0, function () {
             var sha256, challenge;
-            return __generator$g(this, function (_a) {
+            return __generator$h(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.sha256(verifier)];
                     case 1:
@@ -4446,9 +4536,9 @@ var PKCE$1 = /** @class */ (function () {
      * @param value The string to hash
      */
     PKCE.sha256 = function (value) {
-        return __awaiter$g(this, void 0, void 0, function () {
+        return __awaiter$h(this, void 0, void 0, function () {
             var uint8Array, hashBuffer, hashArray;
-            return __generator$g(this, function (_a) {
+            return __generator$h(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         uint8Array = new TextEncoder().encode(value);
@@ -4513,7 +4603,7 @@ var __assign$6 = (undefined && undefined.__assign) || function () {
     };
     return __assign$6.apply(this, arguments);
 };
-var __awaiter$f = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$g = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -4522,7 +4612,7 @@ var __awaiter$f = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$f = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$g = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -4568,9 +4658,9 @@ var OAuth2Client = /** @class */ (function () {
     function OAuth2Client() {
     }
     OAuth2Client.createAuthorizeUrl = function (options) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var _a, clientId, middleware, redirectUri, scope, requestParams, challenge, runMiddleware, url;
-            return __generator$f(this, function (_b) {
+            return __generator$g(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = Config.get(options), clientId = _a.clientId, middleware = _a.middleware, redirectUri = _a.redirectUri, scope = _a.scope;
@@ -4602,10 +4692,10 @@ var OAuth2Client = /** @class */ (function () {
      * New Name: getAuthCodeByIframe
      */
     OAuth2Client.getAuthCodeByIframe = function (options) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var url, serverConfig;
             var _this = this;
-            return __generator$f(this, function (_a) {
+            return __generator$g(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.createAuthorizeUrl(options)];
                     case 1:
@@ -4655,9 +4745,9 @@ var OAuth2Client = /** @class */ (function () {
      * Exchanges an authorization code for OAuth tokens.
      */
     OAuth2Client.getOAuth2Tokens = function (options) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var _a, clientId, redirectUri, requestParams, body, init, response, responseBody, message, responseObject, tokenExpiry;
-            return __generator$f(this, function (_b) {
+            return __generator$g(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = Config.get(options), clientId = _a.clientId, redirectUri = _a.redirectUri;
@@ -4713,9 +4803,9 @@ var OAuth2Client = /** @class */ (function () {
      * Gets OIDC user information.
      */
     OAuth2Client.getUserInfo = function (options) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var response, json;
-            return __generator$f(this, function (_a) {
+            return __generator$g(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, this.request('userInfo', undefined, true, undefined, options)];
                     case 1:
@@ -4735,9 +4825,9 @@ var OAuth2Client = /** @class */ (function () {
      * Invokes the OIDC end session endpoint.
      */
     OAuth2Client.endSession = function (options) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var idToken, query, response;
-            return __generator$f(this, function (_a) {
+            return __generator$g(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, TokenStorage$1.get()];
                     case 1:
@@ -4761,9 +4851,9 @@ var OAuth2Client = /** @class */ (function () {
      * Immediately revokes the stored access token.
      */
     OAuth2Client.revokeToken = function (options) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var clientId, accessToken, init, response;
-            return __generator$f(this, function (_a) {
+            return __generator$g(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         clientId = Config.get(options).clientId;
@@ -4788,9 +4878,9 @@ var OAuth2Client = /** @class */ (function () {
         });
     };
     OAuth2Client.request = function (endpoint, query, includeToken, init, options) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var _a, middleware, serverConfig, url, getActionType, accessToken, runMiddleware, req;
-            return __generator$f(this, function (_b) {
+            return __generator$g(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = Config.get(options), middleware = _a.middleware, serverConfig = _a.serverConfig;
@@ -4832,9 +4922,9 @@ var OAuth2Client = /** @class */ (function () {
         return !!url && /error=([^&]+)/.test(url);
     };
     OAuth2Client.getBody = function (response) {
-        return __awaiter$f(this, void 0, void 0, function () {
+        return __awaiter$g(this, void 0, void 0, function () {
             var contentType;
-            return __generator$f(this, function (_a) {
+            return __generator$g(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         contentType = response.headers.get('Content-Type');
@@ -4879,7 +4969,7 @@ var OAuth2Client = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$e = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$f = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -4888,7 +4978,7 @@ var __awaiter$e = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$e = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$f = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -4925,9 +5015,9 @@ var SessionManager = /** @class */ (function () {
      * Ends the current session.
      */
     SessionManager.logout = function (options) {
-        return __awaiter$e(this, void 0, void 0, function () {
+        return __awaiter$f(this, void 0, void 0, function () {
             var _a, middleware, realmPath, serverConfig, init, path, url, runMiddleware, req, response;
-            return __generator$e(this, function (_b) {
+            return __generator$f(this, function (_b) {
                 switch (_b.label) {
                     case 0:
                         _a = Config.get(options), middleware = _a.middleware, realmPath = _a.realmPath, serverConfig = _a.serverConfig;
@@ -4998,7 +5088,7 @@ var __assign$5 = (undefined && undefined.__assign) || function () {
     };
     return __assign$5.apply(this, arguments);
 };
-var __awaiter$d = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$e = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -5007,7 +5097,7 @@ var __awaiter$d = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$d = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$e = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -5079,9 +5169,9 @@ var TokenManager$1 = /** @class */ (function () {
      */
     TokenManager.getTokens = function (options) {
         var _a, _b, _c;
-        return __awaiter$d(this, void 0, void 0, function () {
+        return __awaiter$e(this, void 0, void 0, function () {
             var tokens, _d, clientId, middleware, serverConfig, support, oauthThreshold, error_1, error_2, storedString, storedValues, verifier, state, authorizeUrlOptions, authorizeUrl, parsedUrl, _e, runMiddleware, init, response, parsedQuery, err_1;
-            return __generator$d(this, function (_f) {
+            return __generator$e(this, function (_f) {
                 switch (_f.label) {
                     case 0:
                         tokens = null;
@@ -5210,8 +5300,8 @@ var TokenManager$1 = /** @class */ (function () {
         });
     };
     TokenManager.deleteTokens = function () {
-        return __awaiter$d(this, void 0, void 0, function () {
-            return __generator$d(this, function (_a) {
+        return __awaiter$e(this, void 0, void 0, function () {
+            return __generator$e(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, TokenStorage$1.remove()];
                     case 1:
@@ -5223,9 +5313,9 @@ var TokenManager$1 = /** @class */ (function () {
     };
     TokenManager.tokenExchange = function (options, stored) {
         var _a, _b, _c, _d;
-        return __awaiter$d(this, void 0, void 0, function () {
+        return __awaiter$e(this, void 0, void 0, function () {
             var authorizationCode, verifier, getTokensOptions, tokens, error_3;
-            return __generator$d(this, function (_e) {
+            return __generator$e(this, function (_e) {
                 switch (_e.label) {
                     case 0:
                         /**
@@ -5298,7 +5388,7 @@ var UserManager = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$c = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$d = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -5307,7 +5397,7 @@ var __awaiter$c = (undefined && undefined.__awaiter) || function (thisArg, _argu
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-var __generator$c = (undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$d = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -5349,8 +5439,8 @@ var FRUser = /** @class */ (function () {
      * @param options Configuration overrides
      */
     FRUser.login = function (handler, options) {
-        return __awaiter$c(this, void 0, void 0, function () {
-            return __generator$c(this, function (_a) {
+        return __awaiter$d(this, void 0, void 0, function () {
+            return __generator$d(this, function (_a) {
                 console.info(handler, options); // Avoid lint errors
                 throw new Error('FRUser.login() not implemented');
             });
@@ -5364,9 +5454,9 @@ var FRUser = /** @class */ (function () {
      * @param options Configuration overrides
      */
     FRUser.loginWithUI = function (ui, options) {
-        return __awaiter$c(this, void 0, void 0, function () {
+        return __awaiter$d(this, void 0, void 0, function () {
             var currentUser;
-            return __generator$c(this, function (_a) {
+            return __generator$d(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 4, , 5]);
@@ -5394,8 +5484,8 @@ var FRUser = /** @class */ (function () {
      * @param options Configuration overrides
      */
     FRUser.logout = function (options) {
-        return __awaiter$c(this, void 0, void 0, function () {
-            return __generator$c(this, function (_a) {
+        return __awaiter$d(this, void 0, void 0, function () {
+            return __generator$d(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         _a.trys.push([0, 2, , 3]);
@@ -5479,6 +5569,87 @@ var WebAuthnStepType;
     WebAuthnStepType[WebAuthnStepType["Registration"] = 2] = "Registration";
 })(WebAuthnStepType || (WebAuthnStepType = {}));
 
+/*
+ * @forgerock/javascript-sdk
+ *
+ * helpers.ts
+ *
+ * Copyright (c) 2020 ForgeRock. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+function ensureArray(arr) {
+    return arr || [];
+}
+function arrayBufferToString(arrayBuffer) {
+    // https://goo.gl/yabPex - To future-proof, we'll pass along whatever the browser
+    // gives us and let AM disregard randomly-injected properties
+    var uint8Array = new Uint8Array(arrayBuffer);
+    var txtDecoder = new TextDecoder();
+    var json = txtDecoder.decode(uint8Array);
+    return json;
+}
+function getIndexOne(arr) {
+    return arr ? arr[1] : '';
+}
+// TODO: Remove this once AM is providing fully-serialized JSON
+function parseCredentials(value) {
+    try {
+        var creds = value
+            .split('}')
+            .filter(function (x) { return !!x && x !== ']'; })
+            .map(function (x) {
+            // eslint-disable-next-line @typescript-eslint/no-use-before-define
+            var idArray = parseNumberArray(x);
+            return {
+                id: new Int8Array(idArray).buffer,
+                type: 'public-key',
+            };
+        });
+        return creds;
+    }
+    catch (error) {
+        var e = new Error('Transforming credential object to string failed');
+        e.name = WebAuthnOutcomeType.EncodingError;
+        throw e;
+    }
+}
+function parseNumberArray(value) {
+    var matches = /new Int8Array\((.+)\)/.exec(value);
+    if (matches === null || matches.length < 2) {
+        return [];
+    }
+    return JSON.parse(matches[1]);
+}
+function parsePubKeyArray(value) {
+    if (Array.isArray(value)) {
+        return value;
+    }
+    if (typeof value !== 'string') {
+        return undefined;
+    }
+    if (value && value[0] === '[') {
+        return JSON.parse(value);
+    }
+    value = value.replace(/(\w+):/g, '"$1":');
+    return JSON.parse("[".concat(value, "]"));
+}
+/**
+ * AM is currently serializing RP as one of the following formats, depending on
+ * whether RP ID has been configured:
+ *   "relyingPartyId":""
+ *   "relyingPartyId":"rpId: \"foo\","
+ * This regex handles both formats, but should be removed once AM is fixed.
+ */
+function parseRelyingPartyId(relyingPartyId) {
+    if (relyingPartyId.includes('rpId')) {
+        return relyingPartyId.replace(/rpId: "(.+)",/, '$1');
+    }
+    else {
+        return relyingPartyId.replace(/id: "(.+)",/, '$1');
+    }
+}
+
 /* eslint-disable no-useless-escape */
 /*
  * @forgerock/javascript-sdk
@@ -5500,6 +5671,121 @@ var __assign$4 = (undefined && undefined.__assign) || function () {
     };
     return __assign$4.apply(this, arguments);
 };
+function parseWebAuthnRegisterText(text) {
+    var txtEncoder = new TextEncoder();
+    // TODO: Incrementally move to `*` instead of `{0,}`
+    // e.g. `attestation: "none"`
+    var attestation = getIndexOne(text.match(/attestation"{0,}:\s{0,}"(\w+)"/));
+    // e.g. `timeout: 60000`
+    var timeout = Number(getIndexOne(text.match(/timeout"{0,}:\s{0,}(\d+)/)));
+    // e.g. from 7.0: `"userVerification":"preferred"`
+    // e.g. from 6.5: `userVerification: "preferred"`
+    var userVerification = getIndexOne(text.match(/userVerification"{0,}:\s{0,}"(\w+)"/));
+    // e.g. `"requireResidentKey":true`
+    var requireResidentKey = getIndexOne(text.match(/requireResidentKey"{0,}:\s{0,}(\w+)/));
+    // e.g. `"authenticatorAttachment":"cross-platform"`
+    var authenticatorAttachment = getIndexOne(text.match(/authenticatorAttachment"{0,}:\s{0,}"([\w-]+)/));
+    // e.g. `rp: {\n id: \"https://user.example.com:3002\",\n name: \"ForgeRock\"\n }`
+    var rp = getIndexOne(text.match(/rp"{0,}:\s{0,}{([^}]+)}/)).trim();
+    // e.g. `id: \"example.com\"
+    var rpId = getIndexOne(rp.match(/id"{0,}:\s{0,}"([^"]*)"/));
+    // e.g. `name: \"ForgeRock\"`
+    var rpName = getIndexOne(rp.match(/name"{0,}:\s{0,}"([^"]*)"/));
+    // e.g. `user: {\n id: Uint8Array.from(\"NTdhN...RiNjI5\",
+    // function (c) { return c.charCodeAt(0) }),\n
+    // name: \"57a5b4e4-...-a4f2e5d4b629\",\n
+    // displayName: \"57a5b4e4-...-a4f2e5d4b629\"\n }`
+    var user = getIndexOne(text.match(/user"{0,}:\s{0,}{([^]{0,})},/)).trim();
+    // e.g `id: Uint8Array.from(\"NTdhN...RiNjI5\",`
+    var userId = getIndexOne(user.match(/id"{0,}:\s{0,}Uint8Array.from\("([^"]+)"/));
+    // e.g. `name: \"57a5b4e4-...-a4f2e5d4b629\",`
+    var userName = getIndexOne(user.match(/name"{0,}:\s{0,}"([\d\w._-]+)"/));
+    // e.g. `displayName: \"57a5b4e4-...-a4f2e5d4b629\"`
+    var userDisplayName = getIndexOne(user.match(/displayName"{0,}:\s{0,}"([\d\w\s.@_-]+)"/));
+    // e.g. `pubKeyCredParams: [
+    // { \"type\": \"public-key\", \"alg\": -257 }, { \"type\": \"public-key\", \"alg\": -7 }
+    // ]`
+    var pubKeyCredParamsString = getIndexOne(
+    // Capture the `pubKeyCredParams` without also matching `excludeCredentials` as well.
+    // `excludeCredentials` values are very similar to this property, so we need to make sure
+    // our last value doesn't end with "buffer", so we are only capturing objects that
+    // end in a digit and possibly a space.
+    text.match(/pubKeyCredParams"*:\s*\[([^]+\d\s*})\s*]/)).trim();
+    // e.g. `{ \"type\": \"public-key\", \"alg\": -257 }, { \"type\": \"public-key\", \"alg\": -7 }`
+    var pubKeyCredParams = parsePubKeyArray(pubKeyCredParamsString);
+    if (!pubKeyCredParams) {
+        var e = new Error('Missing pubKeyCredParams property from registration options');
+        e.name = WebAuthnOutcomeType.DataError;
+        throw e;
+    }
+    // e.g. `excludeCredentials: [{
+    // \"type\": \"public-key\", \"id\": new Int8Array([-18, 69, -99, 82, 38, -66]).buffer },
+    // { \"type\": \"public-key\", \"id\": new Int8Array([64, 17, -15, 56, -32, 91]).buffer }],\n`
+    var excludeCredentialsString = getIndexOne(text.match(/excludeCredentials"{0,}:\s{0,}\[([^]+)\s{0,}]/)).trim();
+    // e.g. `{ \"type\": \"public-key\", \"id\": new Int8Array([-18, 69, -99, 82, 38, -66]).buffer },
+    // { \"type\": \"public-key\", \"id\": new Int8Array([64, 17, -15, 56, -32, 91]).buffer }`
+    var excludeCredentials = parseCredentials(excludeCredentialsString);
+    // e.g. `challenge: new Int8Array([87, -95, 18, ... -3,  49, 12, 81]).buffer,`
+    var challengeArr = ensureArray(text.match(/challenge"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
+    // e.g. `[87, -95, 18, ... -3,  49, 12, 81]`
+    var challengeJSON = JSON.parse(challengeArr[2]);
+    // e.g. [87, -95, 18, ... -3,  49, 12, 81]
+    var challenge = new Int8Array(challengeJSON).buffer;
+    return __assign$4(__assign$4({ attestation: attestation, authenticatorSelection: __assign$4(__assign$4({ userVerification: userVerification }, (authenticatorAttachment && { authenticatorAttachment: authenticatorAttachment })), (requireResidentKey === 'true' && { requireResidentKey: !!requireResidentKey })), challenge: challenge }, (excludeCredentials.length && { excludeCredentials: excludeCredentials })), { pubKeyCredParams: pubKeyCredParams, rp: __assign$4({ name: rpName }, (rpId && { id: rpId })), timeout: timeout, user: {
+            displayName: userDisplayName,
+            id: txtEncoder.encode(userId),
+            name: userName,
+        } });
+}
+function parseWebAuthnAuthenticateText(text) {
+    var allowCredentials;
+    var allowCredentialsText;
+    if (text.includes('acceptableCredentials')) {
+        // e.g. `var acceptableCredentials = [
+        //  { "type": "public-key", "id": new Int8Array([1, 97, 2, 123, ... -17]).buffer }
+        // ];`
+        allowCredentialsText = getIndexOne(text.match(/acceptableCredentials"*\s*=\s*\[([^]+)\s*]/)).trim();
+    }
+    else {
+        // e.g. `allowCredentials: [
+        // { \"type\": \"public-key\",
+        // \"id\": new Int8Array([-107, 93, 68, -67, ... -19, 7, 4]).buffer }
+        // ]`
+        allowCredentialsText = getIndexOne(text.match(/allowCredentials"{0,}:\s{0,}\[([^]+)\s{0,}]/)).trim();
+    }
+    // e.g. `"userVerification":"preferred"`
+    var userVerification = getIndexOne(text.match(/userVerification"{0,}:\s{0,}"(\w+)"/));
+    if (allowCredentialsText) {
+        // Splitting objects in array in case the user has multiple keys
+        var allowCredentialArr = allowCredentialsText.split('},') || [allowCredentialsText];
+        // Iterating over array of substrings
+        allowCredentials = allowCredentialArr.map(function (str) {
+            // e.g. `{ \"type\": \"public-key\",
+            var type = getIndexOne(str.match(/type"{0,}:\s{0,}"([\w-]+)"/));
+            // e.g. \"id\": new Int8Array([-107, 93, 68, -67, ... -19, 7, 4]).buffer
+            var idArr = ensureArray(str.match(/id"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
+            // e.g. `[-107, 93, 68, -67, ... -19, 7, 4]`
+            var idJSON = JSON.parse(idArr[2]);
+            // e.g. [-107, 93, 68, -67, ... -19, 7, 4]
+            var id = new Int8Array(idJSON).buffer;
+            return {
+                type: type,
+                id: id,
+            };
+        });
+    }
+    // e.g. `timeout: 60000`
+    var timeout = Number(getIndexOne(text.match(/timeout"{0,}:\s{0,}(\d+)/)));
+    // e.g. `challenge: new Int8Array([87, -95, 18, ... -3,  49, 12, 81]).buffer,`
+    var challengeArr = ensureArray(text.match(/challenge"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
+    // e.g. `[87, -95, 18, ... -3,  49, 12, 81]`
+    var challengeJSON = JSON.parse(challengeArr[2]);
+    // e.g. [87, -95, 18, ... -3,  49, 12, 81]
+    var challenge = new Int8Array(challengeJSON).buffer;
+    // e.g. `rpId: \"example.com\"`
+    var rpId = getIndexOne(text.match(/rpId"{0,}:\s{0,}\\{0,}"([^"\\]*)/));
+    return __assign$4(__assign$4(__assign$4({ challenge: challenge, timeout: timeout }, (allowCredentials && { allowCredentials: allowCredentials })), (userVerification && { userVerification: userVerification })), (rpId && { rpId: rpId }));
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -5521,7 +5807,7 @@ var __assign$3 = (undefined && undefined.__assign) || function () {
     };
     return __assign$3.apply(this, arguments);
 };
-(undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+var __awaiter$c = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -5530,7 +5816,7 @@ var __assign$3 = (undefined && undefined.__assign) || function () {
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-(undefined && undefined.__generator) || function (thisArg, body) {
+var __generator$c = (undefined && undefined.__generator) || function (thisArg, body) {
     var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
     return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
     function verb(n) { return function (v) { return step([n, v]); }; }
@@ -5557,6 +5843,373 @@ var __assign$3 = (undefined && undefined.__assign) || function () {
         if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
 };
+/**
+ * Utility for integrating a web browser's WebAuthn API.
+ *
+ * Example:
+ *
+ * ```js
+ * // Determine if a step is a WebAuthn step
+ * const stepType = FRWebAuthn.getWebAuthnStepType(step);
+ * if (stepType === WebAuthnStepType.Registration) {
+ *   // Register a new device
+ *   await FRWebAuthn.register(step);
+ * } else if (stepType === WebAuthnStepType.Authentication) {
+ *   // Authenticate with a registered device
+ *   await FRWebAuthn.authenticate(step);
+ * }
+ * ```
+ */
+var FRWebAuthn = /** @class */ (function () {
+    function FRWebAuthn() {
+    }
+    /**
+     * Determines if the given step is a WebAuthn step.
+     *
+     * @param step The step to evaluate
+     * @return A WebAuthnStepType value
+     */
+    FRWebAuthn.getWebAuthnStepType = function (step) {
+        var outcomeCallback = this.getOutcomeCallback(step);
+        var metadataCallback = this.getMetadataCallback(step);
+        var textOutputCallback = this.getTextOutputCallback(step);
+        if (outcomeCallback && metadataCallback) {
+            var metadata = metadataCallback.getOutputValue('data');
+            if (metadata === null || metadata === void 0 ? void 0 : metadata.pubKeyCredParams) {
+                return WebAuthnStepType.Registration;
+            }
+            return WebAuthnStepType.Authentication;
+        }
+        else if (outcomeCallback && textOutputCallback) {
+            var message = textOutputCallback.getMessage();
+            if (message.includes('pubKeyCredParams')) {
+                return WebAuthnStepType.Registration;
+            }
+            return WebAuthnStepType.Authentication;
+        }
+        else {
+            return WebAuthnStepType.None;
+        }
+    };
+    /**
+     * Populates the step with the necessary authentication outcome.
+     *
+     * @param step The step that contains WebAuthn authentication data
+     * @return The populated step
+     */
+    FRWebAuthn.authenticate = function (step) {
+        return __awaiter$c(this, void 0, void 0, function () {
+            var _a, hiddenCallback, metadataCallback, textOutputCallback, outcome, publicKey, meta, credential, error_1, e;
+            return __generator$c(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _a = this.getCallbacks(step), hiddenCallback = _a.hiddenCallback, metadataCallback = _a.metadataCallback, textOutputCallback = _a.textOutputCallback;
+                        if (!(hiddenCallback && (metadataCallback || textOutputCallback))) return [3 /*break*/, 5];
+                        outcome = void 0;
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 3, , 4]);
+                        publicKey = void 0;
+                        if (metadataCallback) {
+                            meta = metadataCallback.getOutputValue('data');
+                            publicKey = this.createAuthenticationPublicKey(meta);
+                        }
+                        else if (textOutputCallback) {
+                            publicKey = parseWebAuthnAuthenticateText(textOutputCallback.getMessage());
+                        }
+                        return [4 /*yield*/, this.getAuthenticationCredential(publicKey)];
+                    case 2:
+                        credential = _b.sent();
+                        outcome = this.getAuthenticationOutcome(credential);
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_1 = _b.sent();
+                        if (!(error_1 instanceof Error))
+                            throw error_1;
+                        // NotSupportedError is a special case
+                        if (error_1.name === WebAuthnOutcomeType.NotSupportedError) {
+                            hiddenCallback.setInputValue(WebAuthnOutcome.Unsupported);
+                            throw error_1;
+                        }
+                        hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(error_1.name, ":").concat(error_1.message));
+                        throw error_1;
+                    case 4:
+                        hiddenCallback.setInputValue(outcome);
+                        return [2 /*return*/, step];
+                    case 5:
+                        e = new Error('Incorrect callbacks for WebAuthn authentication');
+                        e.name = WebAuthnOutcomeType.DataError;
+                        hiddenCallback === null || hiddenCallback === void 0 ? void 0 : hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(e.name, ":").concat(e.message));
+                        throw e;
+                }
+            });
+        });
+    };
+    /**
+     * Populates the step with the necessary registration outcome.
+     *
+     * @param step The step that contains WebAuthn registration data
+     * @return The populated step
+     */
+    FRWebAuthn.register = function (step) {
+        return __awaiter$c(this, void 0, void 0, function () {
+            var _a, hiddenCallback, metadataCallback, textOutputCallback, outcome, publicKey, meta, credential, error_2, e;
+            return __generator$c(this, function (_b) {
+                switch (_b.label) {
+                    case 0:
+                        _a = this.getCallbacks(step), hiddenCallback = _a.hiddenCallback, metadataCallback = _a.metadataCallback, textOutputCallback = _a.textOutputCallback;
+                        if (!(hiddenCallback && (metadataCallback || textOutputCallback))) return [3 /*break*/, 5];
+                        outcome = void 0;
+                        _b.label = 1;
+                    case 1:
+                        _b.trys.push([1, 3, , 4]);
+                        publicKey = void 0;
+                        if (metadataCallback) {
+                            meta = metadataCallback.getOutputValue('data');
+                            publicKey = this.createRegistrationPublicKey(meta);
+                        }
+                        else if (textOutputCallback) {
+                            publicKey = parseWebAuthnRegisterText(textOutputCallback.getMessage());
+                        }
+                        return [4 /*yield*/, this.getRegistrationCredential(publicKey)];
+                    case 2:
+                        credential = _b.sent();
+                        outcome = this.getRegistrationOutcome(credential);
+                        return [3 /*break*/, 4];
+                    case 3:
+                        error_2 = _b.sent();
+                        if (!(error_2 instanceof Error))
+                            throw error_2;
+                        // NotSupportedError is a special case
+                        if (error_2.name === WebAuthnOutcomeType.NotSupportedError) {
+                            hiddenCallback.setInputValue(WebAuthnOutcome.Unsupported);
+                            throw error_2;
+                        }
+                        hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(error_2.name, ":").concat(error_2.message));
+                        throw error_2;
+                    case 4:
+                        hiddenCallback.setInputValue(outcome);
+                        return [2 /*return*/, step];
+                    case 5:
+                        e = new Error('Incorrect callbacks for WebAuthn registration');
+                        e.name = WebAuthnOutcomeType.DataError;
+                        hiddenCallback === null || hiddenCallback === void 0 ? void 0 : hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(e.name, ":").concat(e.message));
+                        throw e;
+                }
+            });
+        });
+    };
+    /**
+     * Returns an object containing the two WebAuthn callbacks.
+     *
+     * @param step The step that contains WebAuthn callbacks
+     * @return The WebAuthn callbacks
+     */
+    FRWebAuthn.getCallbacks = function (step) {
+        var hiddenCallback = this.getOutcomeCallback(step);
+        var metadataCallback = this.getMetadataCallback(step);
+        var textOutputCallback = this.getTextOutputCallback(step);
+        var returnObj = {
+            hiddenCallback: hiddenCallback,
+        };
+        if (metadataCallback) {
+            returnObj.metadataCallback = metadataCallback;
+        }
+        else if (textOutputCallback) {
+            returnObj.textOutputCallback = textOutputCallback;
+        }
+        return returnObj;
+    };
+    /**
+     * Returns the WebAuthn metadata callback containing data to pass to the browser
+     * Web Authentication API.
+     *
+     * @param step The step that contains WebAuthn callbacks
+     * @return The metadata callback
+     */
+    FRWebAuthn.getMetadataCallback = function (step) {
+        return step.getCallbacksOfType(CallbackType$1.MetadataCallback).find(function (x) {
+            var cb = x.getOutputByName('data', undefined);
+            // eslint-disable-next-line no-prototype-builtins
+            return cb && cb.hasOwnProperty('relyingPartyId');
+        });
+    };
+    /**
+     * Returns the WebAuthn hidden value callback where the outcome should be populated.
+     *
+     * @param step The step that contains WebAuthn callbacks
+     * @return The hidden value callback
+     */
+    FRWebAuthn.getOutcomeCallback = function (step) {
+        return step
+            .getCallbacksOfType(CallbackType$1.HiddenValueCallback)
+            .find(function (x) { return x.getOutputByName('id', '') === 'webAuthnOutcome'; });
+    };
+    /**
+     * Returns the WebAuthn metadata callback containing data to pass to the browser
+     * Web Authentication API.
+     *
+     * @param step The step that contains WebAuthn callbacks
+     * @return The metadata callback
+     */
+    FRWebAuthn.getTextOutputCallback = function (step) {
+        return step
+            .getCallbacksOfType(CallbackType$1.TextOutputCallback)
+            .find(function (x) {
+            var cb = x.getOutputByName('message', undefined);
+            return cb && cb.includes('webAuthnOutcome');
+        });
+    };
+    /**
+     * Retrieves the credential from the browser Web Authentication API.
+     *
+     * @param options The public key options associated with the request
+     * @return The credential
+     */
+    FRWebAuthn.getAuthenticationCredential = function (options) {
+        return __awaiter$c(this, void 0, void 0, function () {
+            var e, credential;
+            return __generator$c(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        // Feature check before we attempt registering a device
+                        if (!window.PublicKeyCredential) {
+                            e = new Error('PublicKeyCredential not supported by this browser');
+                            e.name = WebAuthnOutcomeType.NotSupportedError;
+                            throw e;
+                        }
+                        return [4 /*yield*/, navigator.credentials.get({ publicKey: options })];
+                    case 1:
+                        credential = _a.sent();
+                        return [2 /*return*/, credential];
+                }
+            });
+        });
+    };
+    /**
+     * Converts an authentication credential into the outcome expected by OpenAM.
+     *
+     * @param credential The credential to convert
+     * @return The outcome string
+     */
+    FRWebAuthn.getAuthenticationOutcome = function (credential) {
+        if (credential === null) {
+            var e = new Error('No credential generated from authentication');
+            e.name = WebAuthnOutcomeType.UnknownError;
+            throw e;
+        }
+        try {
+            var clientDataJSON = arrayBufferToString(credential.response.clientDataJSON);
+            var assertionResponse = credential.response;
+            var authenticatorData = new Int8Array(assertionResponse.authenticatorData).toString();
+            var signature = new Int8Array(assertionResponse.signature).toString();
+            // Current native typing for PublicKeyCredential does not include `userHandle`
+            // eslint-disable-next-line
+            // @ts-ignore
+            var userHandle = arrayBufferToString(credential.response.userHandle);
+            var stringOutput = "".concat(clientDataJSON, "::").concat(authenticatorData, "::").concat(signature, "::").concat(credential.id);
+            // Check if Username is stored on device
+            if (userHandle) {
+                stringOutput = "".concat(stringOutput, "::").concat(userHandle);
+            }
+            return stringOutput;
+        }
+        catch (error) {
+            var e = new Error('Transforming credential object to string failed');
+            e.name = WebAuthnOutcomeType.EncodingError;
+            throw e;
+        }
+    };
+    /**
+     * Retrieves the credential from the browser Web Authentication API.
+     *
+     * @param options The public key options associated with the request
+     * @return The credential
+     */
+    FRWebAuthn.getRegistrationCredential = function (options) {
+        return __awaiter$c(this, void 0, void 0, function () {
+            var e, credential;
+            return __generator$c(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        // Feature check before we attempt registering a device
+                        if (!window.PublicKeyCredential) {
+                            e = new Error('PublicKeyCredential not supported by this browser');
+                            e.name = WebAuthnOutcomeType.NotSupportedError;
+                            throw e;
+                        }
+                        return [4 /*yield*/, navigator.credentials.create({ publicKey: options })];
+                    case 1:
+                        credential = _a.sent();
+                        return [2 /*return*/, credential];
+                }
+            });
+        });
+    };
+    /**
+     * Converts a registration credential into the outcome expected by OpenAM.
+     *
+     * @param credential The credential to convert
+     * @return The outcome string
+     */
+    FRWebAuthn.getRegistrationOutcome = function (credential) {
+        if (credential === null) {
+            var e = new Error('No credential generated from registration');
+            e.name = WebAuthnOutcomeType.UnknownError;
+            throw e;
+        }
+        try {
+            var clientDataJSON = arrayBufferToString(credential.response.clientDataJSON);
+            var attestationResponse = credential.response;
+            var attestationObject = new Int8Array(attestationResponse.attestationObject).toString();
+            return "".concat(clientDataJSON, "::").concat(attestationObject, "::").concat(credential.id);
+        }
+        catch (error) {
+            var e = new Error('Transforming credential object to string failed');
+            e.name = WebAuthnOutcomeType.EncodingError;
+            throw e;
+        }
+    };
+    /**
+     * Converts authentication tree metadata into options required by the browser
+     * Web Authentication API.
+     *
+     * @param metadata The metadata provided in the authentication tree MetadataCallback
+     * @return The Web Authentication API request options
+     */
+    FRWebAuthn.createAuthenticationPublicKey = function (metadata) {
+        var acceptableCredentials = metadata.acceptableCredentials, allowCredentials = metadata.allowCredentials, challenge = metadata.challenge, relyingPartyId = metadata.relyingPartyId, timeout = metadata.timeout, userVerification = metadata.userVerification;
+        var rpId = parseRelyingPartyId(relyingPartyId);
+        var allowCredentialsValue = parseCredentials(allowCredentials || acceptableCredentials || '');
+        return __assign$3(__assign$3(__assign$3({ challenge: Uint8Array.from(atob(challenge), function (c) { return c.charCodeAt(0); }).buffer, timeout: timeout }, (allowCredentialsValue && { allowCredentials: allowCredentialsValue })), (userVerification && { userVerification: userVerification })), (rpId && { rpId: rpId }));
+    };
+    /**
+     * Converts authentication tree metadata into options required by the browser
+     * Web Authentication API.
+     *
+     * @param metadata The metadata provided in the authentication tree MetadataCallback
+     * @return The Web Authentication API request options
+     */
+    FRWebAuthn.createRegistrationPublicKey = function (metadata) {
+        var pubKeyCredParamsString = metadata.pubKeyCredParams;
+        var pubKeyCredParams = parsePubKeyArray(pubKeyCredParamsString);
+        if (!pubKeyCredParams) {
+            var e = new Error('Missing pubKeyCredParams property from registration options');
+            e.name = WebAuthnOutcomeType.DataError;
+            throw e;
+        }
+        var excludeCredentials = parseCredentials(metadata.excludeCredentials);
+        var attestationPreference = metadata.attestationPreference, authenticatorSelection = metadata.authenticatorSelection, challenge = metadata.challenge, relyingPartyId = metadata.relyingPartyId, relyingPartyName = metadata.relyingPartyName, timeout = metadata.timeout, userId = metadata.userId, userName = metadata.userName, displayName = metadata.displayName;
+        var rpId = parseRelyingPartyId(relyingPartyId);
+        var rp = __assign$3({ name: relyingPartyName }, (rpId && { id: rpId }));
+        return __assign$3(__assign$3({ attestation: attestationPreference, authenticatorSelection: JSON.parse(authenticatorSelection), challenge: Uint8Array.from(atob(challenge), function (c) { return c.charCodeAt(0); }).buffer }, (excludeCredentials.length && { excludeCredentials: excludeCredentials })), { pubKeyCredParams: pubKeyCredParams, rp: rp, timeout: timeout, user: {
+                displayName: displayName || userName,
+                id: Int8Array.from(userId.split('').map(function (c) { return c.charCodeAt(0); })),
+                name: userName,
+            } });
+    };
+    return FRWebAuthn;
+}());
 
 /*
  * @forgerock/javascript-sdk
@@ -16758,17 +17411,19 @@ var sanitize = libExports$1;
 var alreadyHaveAnAccount = "Already have an account? <a href='?journey'>Sign in here!</a>";
 var backToDefault = "Back to Sign In";
 var backToLogin = "Back to Sign In";
-var dontHaveAnAccount = "No account? <a href='?journey=Registration'>Register here!</a>";
 var closeModal = "Close";
 var charactersCannotRepeatMoreThan = "Character cannot repeat more than {max} times";
 var charactersCannotRepeatMoreThanCaseInsensitive = "Character cannot repeat more than {max} times (case insensitive)";
 var chooseDifferentUsername = "Please choose a different username.";
+var chooseYourDeviceForIdentityVerification = "Choose your device for identity verification.";
 var confirmPassword = "Confirm password";
 var constraintViolationForPassword = "Password does not meet the requirements.";
 var constraintViolationForValue = "Value does not meet the requirements.";
 var continueWith = "Continue with ";
 var customSecurityQuestion = "Custom security question";
 var doesNotMeetMinimumCharacterLength = "At least {min} character(s)";
+var dontGetLockedOut = "Don't get locked out of your account!";
+var dontHaveAnAccount = "No account? <a href='?journey=Registration'>Register here!</a>";
 var ensurePasswordIsMoreThan = "Password must contain at least {minPasswordLength} character(s).";
 var ensurePasswordHasOne = "Password must contain at least 1 capital letter, 1 number, and 1 special character.";
 var enterVerificationCode = "Enter verification code";
@@ -16808,6 +17463,7 @@ var registerButton = "Register";
 var registerHeader = "Register";
 var registerSuccess = "Registration successful!";
 var requiredField = "Value is required";
+var registerYourDevice = "Register your device";
 var securityAnswer = "Security answer";
 var securityQuestions = "Security question(s)";
 var securityQuestionsPrompt = "Provide security question(s) and answer(s):";
@@ -16823,31 +17479,38 @@ var termsAndConditions = "Please accept our Terms & Conditions";
 var termsAndConditionsLinkText = "View full Terms & Conditions";
 var tryAgain = "Please try again";
 var twoFactorAuthentication = "Two factor authentication";
+var useThisNewMfaToHelpVerifyYourIdentity = "Use this new device or Multi-Factor Authentication method to help verify your identity.";
 var useValidEmail = "Please use a valid email address.";
 var unrecoverableError = "There was an error in the form submission.";
 var unknownLoginError = "Unknown login failure has occurred.";
 var unknownNetworkError = "Unknown network request failure has occurred.";
+var useDeviceForIdentityVerification = "Use your device for identity verification.";
 var userName = "Username";
 var usernameRequirements = "Username requirements:";
 var useTheAuthenticatorAppOnYourPhone = "Find the verification code using the authenticator app on your phone.";
 var validatedCreatePasswordCallback = "Password";
 var validatedCreateUsernameCallback = "Username";
 var valueRequirements = "Value requirements:";
+var verifyYourIdentity = "Verify your identity";
+var yourMultiFactorAuthIsEnabled = "Your new device or MFA is enabled";
+var yourRecoveryCodesToAccessAccountForLostDevice = "If you lose your device, or don’t have it with you, a recovery code is the only way to sign in to your account with 2-step verification enabled. It’s strongly recommended that you print and store these codes in a safe place. <b>Each code can only be used once</b>.";
 var fallback = {
 	alreadyHaveAnAccount: alreadyHaveAnAccount,
 	backToDefault: backToDefault,
 	backToLogin: backToLogin,
-	dontHaveAnAccount: dontHaveAnAccount,
 	closeModal: closeModal,
 	charactersCannotRepeatMoreThan: charactersCannotRepeatMoreThan,
 	charactersCannotRepeatMoreThanCaseInsensitive: charactersCannotRepeatMoreThanCaseInsensitive,
 	chooseDifferentUsername: chooseDifferentUsername,
+	chooseYourDeviceForIdentityVerification: chooseYourDeviceForIdentityVerification,
 	confirmPassword: confirmPassword,
 	constraintViolationForPassword: constraintViolationForPassword,
 	constraintViolationForValue: constraintViolationForValue,
 	continueWith: continueWith,
 	customSecurityQuestion: customSecurityQuestion,
 	doesNotMeetMinimumCharacterLength: doesNotMeetMinimumCharacterLength,
+	dontGetLockedOut: dontGetLockedOut,
+	dontHaveAnAccount: dontHaveAnAccount,
 	ensurePasswordIsMoreThan: ensurePasswordIsMoreThan,
 	ensurePasswordHasOne: ensurePasswordHasOne,
 	enterVerificationCode: enterVerificationCode,
@@ -16887,6 +17550,7 @@ var fallback = {
 	registerHeader: registerHeader,
 	registerSuccess: registerSuccess,
 	requiredField: requiredField,
+	registerYourDevice: registerYourDevice,
 	securityAnswer: securityAnswer,
 	securityQuestions: securityQuestions,
 	securityQuestionsPrompt: securityQuestionsPrompt,
@@ -16902,16 +17566,21 @@ var fallback = {
 	termsAndConditionsLinkText: termsAndConditionsLinkText,
 	tryAgain: tryAgain,
 	twoFactorAuthentication: twoFactorAuthentication,
+	useThisNewMfaToHelpVerifyYourIdentity: useThisNewMfaToHelpVerifyYourIdentity,
 	useValidEmail: useValidEmail,
 	unrecoverableError: unrecoverableError,
 	unknownLoginError: unknownLoginError,
 	unknownNetworkError: unknownNetworkError,
+	useDeviceForIdentityVerification: useDeviceForIdentityVerification,
 	userName: userName,
 	usernameRequirements: usernameRequirements,
 	useTheAuthenticatorAppOnYourPhone: useTheAuthenticatorAppOnYourPhone,
 	validatedCreatePasswordCallback: validatedCreatePasswordCallback,
 	validatedCreateUsernameCallback: validatedCreateUsernameCallback,
-	valueRequirements: valueRequirements
+	valueRequirements: valueRequirements,
+	verifyYourIdentity: verifyYourIdentity,
+	yourMultiFactorAuthIsEnabled: yourMultiFactorAuthIsEnabled,
+	yourRecoveryCodesToAccessAccountForLostDevice: yourRecoveryCodesToAccessAccountForLostDevice
 };
 
 const stringsSchema = z
@@ -16924,11 +17593,13 @@ const stringsSchema = z
     charactersCannotRepeatMoreThan: z.string(),
     charactersCannotRepeatMoreThanCaseInsensitive: z.string(),
     chooseDifferentUsername: z.string(),
+    chooseYourDeviceForIdentityVerification: z.string(),
     confirmPassword: z.string(),
     constraintViolationForPassword: z.string(),
     constraintViolationForValue: z.string(),
     continueWith: z.string(),
     customSecurityQuestion: z.string(),
+    dontGetLockedOut: z.string(),
     doesNotMeetMinimumCharacterLength: z.string(),
     ensurePasswordIsMoreThan: z.string(),
     ensurePasswordHasOne: z.string(),
@@ -16968,6 +17639,7 @@ const stringsSchema = z
     registerButton: z.string(),
     registerHeader: z.string(),
     registerSuccess: z.string(),
+    registerYourDevice: z.string(),
     requiredField: z.string(),
     securityAnswer: z.string(),
     securityQuestions: z.string(),
@@ -16984,16 +17656,21 @@ const stringsSchema = z
     termsAndConditionsLinkText: z.string(),
     tryAgain: z.string(),
     twoFactorAuthentication: z.string(),
+    useThisNewMfaToHelpVerifyYourIdentity: z.string(),
     useValidEmail: z.string(),
     unrecoverableError: z.string(),
     unknownLoginError: z.string(),
     unknownNetworkError: z.string(),
+    useDeviceForIdentityVerification: z.string(),
     userName: z.string(),
     usernameRequirements: z.string(),
     useTheAuthenticatorAppOnYourPhone: z.string(),
     validatedCreatePasswordCallback: z.string(),
     validatedCreateUsernameCallback: z.string(),
     valueRequirements: z.string(),
+    verifyYourIdentity: z.string(),
+    yourMultiFactorAuthIsEnabled: z.string(),
+    yourRecoveryCodesToAccessAccountForLostDevice: z.string(),
 })
     .strict();
 stringsSchema.partial();
@@ -17434,7 +18111,7 @@ function buildStepMetadata(callbackMetadataArray, stageJson, stageName) {
     }
     return {
         derived: {
-            isStepSelfSubmittable: isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
+            isStepSelfSubmittable: () => isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
             isUserInputOptional: userInputOptional,
             numOfCallbacks: callbackMetadataArray.length,
             numOfSelfSubmittableCbs: callbackMetadataArray.filter((cb) => !!cb.derived.isSelfSubmitting)
@@ -18346,7 +19023,7 @@ function widgetApiFactory(componentApi) {
 
 /* src/lib/components/_utilities/locale-strings.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$a(ctx) {
+function create_else_block$b(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[5].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
@@ -18399,7 +19076,7 @@ function create_else_block$a(ctx) {
 }
 
 // (11:0) {#if html}
-function create_if_block$n(ctx) {
+function create_if_block$q(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[5].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
@@ -18496,12 +19173,12 @@ function fallback_block$2(ctx) {
 	};
 }
 
-function create_fragment$Z(ctx) {
+function create_fragment$12(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$n, create_else_block$a];
+	const if_block_creators = [create_if_block$q, create_else_block$b];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -18565,7 +19242,7 @@ function create_fragment$Z(ctx) {
 	};
 }
 
-function instance$_($$self, $$props, $$invalidate) {
+function instance$14($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { html = false } = $$props;
 	let { key } = $$props;
@@ -18593,13 +19270,13 @@ function instance$_($$self, $$props, $$invalidate) {
 class Locale_strings extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$_, create_fragment$Z, safe_not_equal, { html: 0, key: 2, values: 3 });
+		init(this, options, instance$14, create_fragment$12, safe_not_equal, { html: 0, key: 2, values: 3 });
 	}
 }
 
 /* src/lib/components/icons/x-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$Y(ctx) {
+function create_fragment$11(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -18675,7 +19352,7 @@ function create_fragment$Y(ctx) {
 	};
 }
 
-function instance$Z($$self, $$props, $$invalidate) {
+function instance$13($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -18692,13 +19369,13 @@ function instance$Z($$self, $$props, $$invalidate) {
 class X_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$Z, create_fragment$Y, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$13, create_fragment$11, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/compositions/dialog/dialog.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$9(ctx) {
+function create_else_block$a(ctx) {
 	let div;
 	let button;
 	let xicon;
@@ -18711,12 +19388,12 @@ function create_else_block$9(ctx) {
 	xicon = new X_icon({
 			props: {
 				classes: "tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light",
-				$$slots: { default: [create_default_slot_1$c] },
+				$$slots: { default: [create_default_slot_1$e] },
 				$$scope: { ctx }
 			}
 		});
 
-	let if_block = /*$styleStore*/ ctx[5]?.logo && create_if_block_1$c(ctx);
+	let if_block = /*$styleStore*/ ctx[5]?.logo && create_if_block_1$d(ctx);
 
 	return {
 		c() {
@@ -18762,7 +19439,7 @@ function create_else_block$9(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block_1$c(ctx);
+					if_block = create_if_block_1$d(ctx);
 					if_block.c();
 					if_block.m(div, null);
 				}
@@ -18797,7 +19474,7 @@ function create_else_block$9(ctx) {
 }
 
 // (39:2) {#if withHeader}
-function create_if_block$m(ctx) {
+function create_if_block$p(ctx) {
 	let div1;
 	let div0;
 	let div0_style_value;
@@ -18811,7 +19488,7 @@ function create_if_block$m(ctx) {
 	xicon = new X_icon({
 			props: {
 				classes: "tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light",
-				$$slots: { default: [create_default_slot$q] },
+				$$slots: { default: [create_default_slot$t] },
 				$$scope: { ctx }
 			}
 		});
@@ -18889,7 +19566,7 @@ function create_if_block$m(ctx) {
 }
 
 // (72:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
-function create_default_slot_1$c(ctx) {
+function create_default_slot_1$e(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "closeModal" } });
@@ -18919,7 +19596,7 @@ function create_default_slot_1$c(ctx) {
 }
 
 // (77:6) {#if $styleStore?.logo}
-function create_if_block_1$c(ctx) {
+function create_if_block_1$d(ctx) {
 	let div;
 	let div_style_value;
 
@@ -18944,7 +19621,7 @@ function create_if_block_1$c(ctx) {
 }
 
 // (55:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
-function create_default_slot$q(ctx) {
+function create_default_slot$t(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "closeModal" } });
@@ -18973,7 +19650,7 @@ function create_default_slot$q(ctx) {
 	};
 }
 
-function create_fragment$X(ctx) {
+function create_fragment$10(ctx) {
 	let dialog;
 	let current_block_type_index;
 	let if_block;
@@ -18981,7 +19658,7 @@ function create_fragment$X(ctx) {
 	let div;
 	let dialog_class_value;
 	let current;
-	const if_block_creators = [create_if_block$m, create_else_block$9];
+	const if_block_creators = [create_if_block$p, create_else_block$a];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -19093,7 +19770,7 @@ function create_fragment$X(ctx) {
 	};
 }
 
-function instance$Y($$self, $$props, $$invalidate) {
+function instance$12($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(5, $styleStore = $$value));
 	let { $$slots: slots = {}, $$scope } = $$props;
@@ -19167,7 +19844,7 @@ class Dialog extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$Y, create_fragment$X, safe_not_equal, {
+		init(this, options, instance$12, create_fragment$10, safe_not_equal, {
 			dialogEl: 0,
 			dialogId: 1,
 			forceOpen: 2,
@@ -19183,7 +19860,7 @@ class Dialog extends SvelteComponent {
 
 /* src/lib/components/icons/alert-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$W(ctx) {
+function create_fragment$$(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -19259,7 +19936,7 @@ function create_fragment$W(ctx) {
 	};
 }
 
-function instance$X($$self, $$props, $$invalidate) {
+function instance$11($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -19276,13 +19953,13 @@ function instance$X($$self, $$props, $$invalidate) {
 class Alert_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$X, create_fragment$W, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$11, create_fragment$$, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/info-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$V(ctx) {
+function create_fragment$_(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -19358,7 +20035,7 @@ function create_fragment$V(ctx) {
 	};
 }
 
-function instance$W($$self, $$props, $$invalidate) {
+function instance$10($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -19375,13 +20052,13 @@ function instance$W($$self, $$props, $$invalidate) {
 class Info_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$W, create_fragment$V, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$10, create_fragment$_, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/warning-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$U(ctx) {
+function create_fragment$Z(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -19457,7 +20134,7 @@ function create_fragment$U(ctx) {
 	};
 }
 
-function instance$V($$self, $$props, $$invalidate) {
+function instance$$($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -19474,13 +20151,13 @@ function instance$V($$self, $$props, $$invalidate) {
 class Warning_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$V, create_fragment$U, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$$, create_fragment$Z, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/primitives/alert/alert.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$8(ctx) {
+function create_else_block$9(ctx) {
 	let infoicon;
 	let current;
 	infoicon = new Info_icon({});
@@ -19509,7 +20186,7 @@ function create_else_block$8(ctx) {
 }
 
 // (43:33) 
-function create_if_block_1$b(ctx) {
+function create_if_block_1$c(ctx) {
 	let warningicon;
 	let current;
 	warningicon = new Warning_icon({});
@@ -19538,7 +20215,7 @@ function create_if_block_1$b(ctx) {
 }
 
 // (41:4) {#if type === 'error'}
-function create_if_block$l(ctx) {
+function create_if_block$o(ctx) {
 	let alerticon;
 	let current;
 	alerticon = new Alert_icon({});
@@ -19566,7 +20243,7 @@ function create_if_block$l(ctx) {
 	};
 }
 
-function create_fragment$T(ctx) {
+function create_fragment$Y(ctx) {
 	let div;
 	let p;
 	let current_block_type_index;
@@ -19575,7 +20252,7 @@ function create_fragment$T(ctx) {
 	let span;
 	let div_class_value;
 	let current;
-	const if_block_creators = [create_if_block$l, create_if_block_1$b, create_else_block$8];
+	const if_block_creators = [create_if_block$o, create_if_block_1$c, create_else_block$9];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -19702,7 +20379,7 @@ function generateClassString$3(...args) {
 	);
 }
 
-function instance$U($$self, $$props, $$invalidate) {
+function instance$_($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { id } = $$props;
 	let { needsFocus = false } = $$props;
@@ -19739,13 +20416,13 @@ function instance$U($$self, $$props, $$invalidate) {
 class Alert extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$U, create_fragment$T, safe_not_equal, { id: 0, needsFocus: 3, type: 1 });
+		init(this, options, instance$_, create_fragment$Y, safe_not_equal, { id: 0, needsFocus: 3, type: 1 });
 	}
 }
 
 /* src/lib/components/primitives/spinner/spinner.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$S(ctx) {
+function create_fragment$X(ctx) {
 	let div;
 	let span;
 	let t;
@@ -19789,7 +20466,7 @@ function create_fragment$S(ctx) {
 	};
 }
 
-function instance$T($$self, $$props, $$invalidate) {
+function instance$Z($$self, $$props, $$invalidate) {
 	let { colorClass } = $$props;
 	let { layoutClasses } = $$props;
 
@@ -19804,13 +20481,13 @@ function instance$T($$self, $$props, $$invalidate) {
 class Spinner extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$T, create_fragment$S, safe_not_equal, { colorClass: 0, layoutClasses: 1 });
+		init(this, options, instance$Z, create_fragment$X, safe_not_equal, { colorClass: 0, layoutClasses: 1 });
 	}
 }
 
 /* src/lib/components/primitives/button/button.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$k(ctx) {
+function create_if_block$n(ctx) {
 	let spinner;
 	let current;
 
@@ -19861,14 +20538,14 @@ function fallback_block$1(ctx) {
 	};
 }
 
-function create_fragment$R(ctx) {
+function create_fragment$W(ctx) {
 	let button;
 	let t;
 	let button_class_value;
 	let current;
 	let mounted;
 	let dispose;
-	let if_block = /*busy*/ ctx[0] && create_if_block$k();
+	let if_block = /*busy*/ ctx[0] && create_if_block$n();
 	const default_slot_template = /*#slots*/ ctx[7].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[6], null);
 	const default_slot_or_fallback = default_slot || fallback_block$1();
@@ -19910,7 +20587,7 @@ function create_fragment$R(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$k();
+					if_block = create_if_block$n();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(button, t);
@@ -19991,7 +20668,7 @@ function generateClassString$2(...args) {
 	);
 }
 
-function instance$S($$self, $$props, $$invalidate) {
+function instance$Y($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { busy = false } = $$props;
 	let { classes = '' } = $$props;
@@ -20021,7 +20698,7 @@ class Button extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$S, create_fragment$R, safe_not_equal, {
+		init(this, options, instance$Y, create_fragment$W, safe_not_equal, {
 			busy: 0,
 			classes: 1,
 			onClick: 2,
@@ -20034,7 +20711,7 @@ class Button extends SvelteComponent {
 
 /* src/lib/components/primitives/form/form.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$Q(ctx) {
+function create_fragment$V(ctx) {
 	let form;
 	let form_class_value;
 	let current;
@@ -20121,13 +20798,13 @@ function create_fragment$Q(ctx) {
 	};
 }
 
-function instance$R($$self, $$props, $$invalidate) {
+function instance$X($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { ariaDescribedBy } = $$props;
 	let { formEl = null } = $$props;
 	let { id = 'formId' } = $$props;
 	let { needsFocus = false } = $$props;
-	let { onSubmitWhenValid } = $$props;
+	let { onSubmitWhenValid = undefined } = $$props;
 	let isFormValid = false;
 
 	/**
@@ -20201,7 +20878,7 @@ function instance$R($$self, $$props, $$invalidate) {
 		// If there's no invalid input, submit form.
 		if (isFirstInvalidInput === null) {
 			$$invalidate(3, isFormValid = true);
-			onSubmitWhenValid(event, isFormValid);
+			onSubmitWhenValid && onSubmitWhenValid(event, isFormValid);
 		}
 	}
 
@@ -20249,7 +20926,7 @@ class Form extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$R, create_fragment$Q, safe_not_equal, {
+		init(this, options, instance$X, create_fragment$V, safe_not_equal, {
 			ariaDescribedBy: 1,
 			formEl: 0,
 			id: 2,
@@ -20261,7 +20938,7 @@ class Form extends SvelteComponent {
 
 /* src/lib/components/_utilities/server-strings.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$7(ctx) {
+function create_else_block$8(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[4].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
@@ -20314,7 +20991,7 @@ function create_else_block$7(ctx) {
 }
 
 // (10:0) {#if html}
-function create_if_block$j(ctx) {
+function create_if_block$m(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[4].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
@@ -20411,12 +21088,12 @@ function fallback_block(ctx) {
 	};
 }
 
-function create_fragment$P(ctx) {
+function create_fragment$U(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$j, create_else_block$7];
+	const if_block_creators = [create_if_block$m, create_else_block$8];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -20480,7 +21157,7 @@ function create_fragment$P(ctx) {
 	};
 }
 
-function instance$Q($$self, $$props, $$invalidate) {
+function instance$W($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { html = false } = $$props;
 	let { string } = $$props;
@@ -20506,13 +21183,13 @@ function instance$Q($$self, $$props, $$invalidate) {
 class Server_strings extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$Q, create_fragment$P, safe_not_equal, { html: 0, string: 2 });
+		init(this, options, instance$W, create_fragment$U, safe_not_equal, { html: 0, string: 2 });
 	}
 }
 
 /* src/lib/components/icons/shield-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$O(ctx) {
+function create_fragment$T(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -20588,7 +21265,7 @@ function create_fragment$O(ctx) {
 	};
 }
 
-function instance$P($$self, $$props, $$invalidate) {
+function instance$V($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -20605,13 +21282,13 @@ function instance$P($$self, $$props, $$invalidate) {
 class Shield_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$P, create_fragment$O, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$V, create_fragment$T, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/stages/_utilities/back-to.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$i(ctx) {
+function create_if_block$l(ctx) {
 	let p;
 	let button;
 	let t_value = interpolate(/*string*/ ctx[1]) + "";
@@ -20647,9 +21324,9 @@ function create_if_block$i(ctx) {
 	};
 }
 
-function create_fragment$N(ctx) {
+function create_fragment$S(ctx) {
 	let if_block_anchor;
-	let if_block = /*$stack*/ ctx[2].length > 1 && create_if_block$i(ctx);
+	let if_block = /*$stack*/ ctx[2].length > 1 && create_if_block$l(ctx);
 
 	return {
 		c() {
@@ -20665,7 +21342,7 @@ function create_fragment$N(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$i(ctx);
+					if_block = create_if_block$l(ctx);
 					if_block.c();
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
 				}
@@ -20683,7 +21360,7 @@ function create_fragment$N(ctx) {
 	};
 }
 
-function instance$O($$self, $$props, $$invalidate) {
+function instance$U($$self, $$props, $$invalidate) {
 	let $stack;
 	let $configuredJourneysStore;
 	component_subscribe($$self, configuredJourneysStore, $$value => $$invalidate(5, $configuredJourneysStore = $$value));
@@ -20724,7 +21401,7 @@ function instance$O($$self, $$props, $$invalidate) {
 class Back_to extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$O, create_fragment$N, safe_not_equal, { journey: 0 });
+		init(this, options, instance$U, create_fragment$S, safe_not_equal, { journey: 0 });
 	}
 }
 
@@ -21188,7 +21865,7 @@ function getAttributeValidationFailureText(callback) {
 
 /* src/lib/components/primitives/message/input-message.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$h(ctx) {
+function create_if_block$k(ctx) {
 	let p;
 	let p_class_value;
 	let p_id_value;
@@ -21219,9 +21896,9 @@ function create_if_block$h(ctx) {
 	};
 }
 
-function create_fragment$M(ctx) {
+function create_fragment$R(ctx) {
 	let if_block_anchor;
-	let if_block = /*dirtyMessage*/ ctx[1] && create_if_block$h(ctx);
+	let if_block = /*dirtyMessage*/ ctx[1] && create_if_block$k(ctx);
 
 	return {
 		c() {
@@ -21237,7 +21914,7 @@ function create_fragment$M(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$h(ctx);
+					if_block = create_if_block$k(ctx);
 					if_block.c();
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
 				}
@@ -21269,7 +21946,7 @@ function generateClassString$1(...args) {
 	);
 }
 
-function instance$N($$self, $$props, $$invalidate) {
+function instance$T($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { dirtyMessage } = $$props;
 	let { key = undefined } = $$props;
@@ -21300,7 +21977,7 @@ class Input_message extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$N, create_fragment$M, safe_not_equal, {
+		init(this, options, instance$T, create_fragment$R, safe_not_equal, {
 			classes: 0,
 			dirtyMessage: 1,
 			key: 2,
@@ -21312,7 +21989,7 @@ class Input_message extends SvelteComponent {
 
 /* src/lib/components/primitives/label/label.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$L(ctx) {
+function create_fragment$Q(ctx) {
 	let label;
 	let label_class_value;
 	let current;
@@ -21375,7 +22052,7 @@ function create_fragment$L(ctx) {
 	};
 }
 
-function instance$M($$self, $$props, $$invalidate) {
+function instance$S($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { key } = $$props;
 	let { classes = '' } = $$props;
@@ -21392,13 +22069,13 @@ function instance$M($$self, $$props, $$invalidate) {
 class Label extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$M, create_fragment$L, safe_not_equal, { key: 0, classes: 1 });
+		init(this, options, instance$S, create_fragment$Q, safe_not_equal, { key: 0, classes: 1 });
 	}
 }
 
 /* src/lib/components/compositions/checkbox/animated.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$p(ctx) {
+function create_default_slot$s(ctx) {
 	let span;
 	let t;
 	let current;
@@ -21455,7 +22132,7 @@ function create_default_slot$p(ctx) {
 	};
 }
 
-function create_fragment$K(ctx) {
+function create_fragment$P(ctx) {
 	let div1;
 	let input;
 	let input_data_message_value;
@@ -21472,7 +22149,7 @@ function create_fragment$K(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: "tw_grid tw_grid-cols-[2.5em_1fr] tw_relative",
-				$$slots: { default: [create_default_slot$p] },
+				$$slots: { default: [create_default_slot$s] },
 				$$scope: { ctx }
 			}
 		});
@@ -21579,7 +22256,7 @@ function create_fragment$K(ctx) {
 	};
 }
 
-function instance$L($$self, $$props, $$invalidate) {
+function instance$R($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { message = '' } = $$props;
@@ -21648,7 +22325,7 @@ let Animated$1 = class Animated extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$L, create_fragment$K, safe_not_equal, {
+		init(this, options, instance$R, create_fragment$P, safe_not_equal, {
 			checkValidity: 8,
 			message: 1,
 			isFirstInvalidInput: 9,
@@ -21664,7 +22341,7 @@ let Animated$1 = class Animated extends SvelteComponent {
 
 /* src/lib/components/primitives/checkbox/checkbox.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$o(ctx) {
+function create_default_slot$r(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[7].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[9], null);
@@ -21711,7 +22388,7 @@ function create_default_slot$o(ctx) {
 	};
 }
 
-function create_fragment$J(ctx) {
+function create_fragment$O(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let t;
@@ -21723,7 +22400,7 @@ function create_fragment$J(ctx) {
 	label = new Label({
 			props: {
 				key: /*key*/ ctx[2],
-				$$slots: { default: [create_default_slot$o] },
+				$$slots: { default: [create_default_slot$r] },
 				$$scope: { ctx }
 			}
 		});
@@ -21808,7 +22485,7 @@ function create_fragment$J(ctx) {
 	};
 }
 
-function instance$K($$self, $$props, $$invalidate) {
+function instance$Q($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { isFirstInvalidInput } = $$props;
 	let { isRequired = false } = $$props;
@@ -21859,7 +22536,7 @@ class Checkbox extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$K, create_fragment$J, safe_not_equal, {
+		init(this, options, instance$Q, create_fragment$O, safe_not_equal, {
 			isFirstInvalidInput: 6,
 			isRequired: 0,
 			isInvalid: 1,
@@ -21872,7 +22549,7 @@ class Checkbox extends SvelteComponent {
 
 /* src/lib/components/compositions/checkbox/standard.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$n(ctx) {
+function create_default_slot$q(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[10].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[11], null);
@@ -21919,7 +22596,7 @@ function create_default_slot$n(ctx) {
 	};
 }
 
-function create_fragment$I(ctx) {
+function create_fragment$N(ctx) {
 	let div;
 	let checkbox;
 	let t;
@@ -21935,7 +22612,7 @@ function create_fragment$I(ctx) {
 				key: /*key*/ ctx[4],
 				onChange: /*onChangeWrapper*/ ctx[7],
 				value: /*value*/ ctx[6],
-				$$slots: { default: [create_default_slot$n] },
+				$$slots: { default: [create_default_slot$q] },
 				$$scope: { ctx }
 			}
 		});
@@ -22006,7 +22683,7 @@ function create_fragment$I(ctx) {
 	};
 }
 
-function instance$J($$self, $$props, $$invalidate) {
+function instance$P($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { message = '' } = $$props;
@@ -22059,7 +22736,7 @@ let Standard$1 = class Standard extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$J, create_fragment$I, safe_not_equal, {
+		init(this, options, instance$P, create_fragment$N, safe_not_equal, {
 			checkValidity: 8,
 			message: 1,
 			isFirstInvalidInput: 2,
@@ -22075,7 +22752,7 @@ let Standard$1 = class Standard extends SvelteComponent {
 
 /* src/lib/journey/callbacks/boolean/boolean.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$m(ctx) {
+function create_default_slot$p(ctx) {
 	let t_value = interpolate(textToKey(/*outputName*/ ctx[2]), null, /*prompt*/ ctx[4]) + "";
 	let t;
 
@@ -22095,7 +22772,7 @@ function create_default_slot$m(ctx) {
 	};
 }
 
-function create_fragment$H(ctx) {
+function create_fragment$M(ctx) {
 	let checkbox;
 	let current;
 
@@ -22107,7 +22784,7 @@ function create_fragment$H(ctx) {
 				message: /*validationFailure*/ ctx[5],
 				onChange: /*setValue*/ ctx[7],
 				value: /*previousValue*/ ctx[3],
-				$$slots: { default: [create_default_slot$m] },
+				$$slots: { default: [create_default_slot$p] },
 				$$scope: { ctx }
 			}
 		});
@@ -22149,7 +22826,7 @@ function create_fragment$H(ctx) {
 	};
 }
 
-function instance$I($$self, $$props, $$invalidate) {
+function instance$O($$self, $$props, $$invalidate) {
 	const stepMetadata = null;
 	const selfSubmitFunction = null;
 	let { callback } = $$props;
@@ -22216,7 +22893,7 @@ let Boolean$1 = class Boolean extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$I, create_fragment$H, safe_not_equal, {
+		init(this, options, instance$O, create_fragment$M, safe_not_equal, {
 			stepMetadata: 8,
 			selfSubmitFunction: 9,
 			callback: 10,
@@ -22236,14 +22913,14 @@ let Boolean$1 = class Boolean extends SvelteComponent {
 
 /* src/lib/components/compositions/radio/animated.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$9(ctx, list, i) {
+function get_each_context$a(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[13] = list[i];
 	return child_ctx;
 }
 
 // (41:8) <Label           key={`${key}-${option.value}`}           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"         >
-function create_default_slot$l(ctx) {
+function create_default_slot$o(ctx) {
 	let span;
 	let t0;
 	let t1_value = /*option*/ ctx[13].text + "";
@@ -22273,7 +22950,7 @@ function create_default_slot$l(ctx) {
 }
 
 // (27:4) {#each options as option}
-function create_each_block$9(ctx) {
+function create_each_block$a(ctx) {
 	let div;
 	let input;
 	let input_checked_value;
@@ -22290,7 +22967,7 @@ function create_each_block$9(ctx) {
 			props: {
 				key: `${/*key*/ ctx[5]}-${/*option*/ ctx[13].value}`,
 				classes: "tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative",
-				$$slots: { default: [create_default_slot$l] },
+				$$slots: { default: [create_default_slot$o] },
 				$$scope: { ctx }
 			}
 		});
@@ -22384,7 +23061,7 @@ function create_each_block$9(ctx) {
 	};
 }
 
-function create_fragment$G(ctx) {
+function create_fragment$L(ctx) {
 	let fieldset;
 	let legend;
 	let t0;
@@ -22398,7 +23075,7 @@ function create_fragment$G(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
+		each_blocks[i] = create_each_block$a(get_each_context$a(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -22456,13 +23133,13 @@ function create_fragment$G(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$9(ctx, each_value, i);
+					const child_ctx = get_each_context$a(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$9(child_ctx);
+						each_blocks[i] = create_each_block$a(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(div, t2);
@@ -22513,7 +23190,7 @@ function create_fragment$G(ctx) {
 	};
 }
 
-function instance$H($$self, $$props, $$invalidate) {
+function instance$N($$self, $$props, $$invalidate) {
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
 	let { groupLabel = '' } = $$props;
@@ -22575,7 +23252,7 @@ class Animated extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$H, create_fragment$G, safe_not_equal, {
+		init(this, options, instance$N, create_fragment$L, safe_not_equal, {
 			defaultOption: 0,
 			message: 1,
 			groupLabel: 2,
@@ -22593,7 +23270,7 @@ class Animated extends SvelteComponent {
 
 /* src/lib/components/primitives/radio/radio.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$k(ctx) {
+function create_default_slot$n(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[9].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[11], null);
@@ -22640,7 +23317,7 @@ function create_default_slot$k(ctx) {
 	};
 }
 
-function create_fragment$F(ctx) {
+function create_fragment$K(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let t;
@@ -22652,7 +23329,7 @@ function create_fragment$F(ctx) {
 	label = new Label({
 			props: {
 				key: /*key*/ ctx[3],
-				$$slots: { default: [create_default_slot$k] },
+				$$slots: { default: [create_default_slot$n] },
 				$$scope: { ctx }
 			}
 		});
@@ -22747,7 +23424,7 @@ function create_fragment$F(ctx) {
 	};
 }
 
-function instance$G($$self, $$props, $$invalidate) {
+function instance$M($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checked = false } = $$props;
 	let { isFirstInvalidInput } = $$props;
@@ -22804,7 +23481,7 @@ class Radio extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$G, create_fragment$F, safe_not_equal, {
+		init(this, options, instance$M, create_fragment$K, safe_not_equal, {
 			checked: 0,
 			isFirstInvalidInput: 8,
 			isRequired: 1,
@@ -22819,14 +23496,14 @@ class Radio extends SvelteComponent {
 
 /* src/lib/components/compositions/radio/standard.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$8(ctx, list, i) {
+function get_each_context$9(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
 // (21:6) <Radio         checked={defaultOption === option.value}         {isFirstInvalidInput}         {isRequired}         {isInvalid}         key={`${key}-${option.value}`}         {name}         {onChange}         value={option.value}       >
-function create_default_slot$j(ctx) {
+function create_default_slot$m(ctx) {
 	let t_value = /*option*/ ctx[11].text + "";
 	let t;
 
@@ -22847,7 +23524,7 @@ function create_default_slot$j(ctx) {
 }
 
 // (19:2) {#each options as option}
-function create_each_block$8(ctx) {
+function create_each_block$9(ctx) {
 	let div;
 	let radio;
 	let t;
@@ -22863,7 +23540,7 @@ function create_each_block$8(ctx) {
 				name: /*name*/ ctx[7],
 				onChange: /*onChange*/ ctx[8],
 				value: /*option*/ ctx[11].value,
-				$$slots: { default: [create_default_slot$j] },
+				$$slots: { default: [create_default_slot$m] },
 				$$scope: { ctx }
 			}
 		});
@@ -22914,7 +23591,7 @@ function create_each_block$8(ctx) {
 	};
 }
 
-function create_fragment$E(ctx) {
+function create_fragment$J(ctx) {
 	let fieldset;
 	let legend;
 	let t0;
@@ -22927,7 +23604,7 @@ function create_fragment$E(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -22983,13 +23660,13 @@ function create_fragment$E(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$8(ctx, each_value, i);
+					const child_ctx = get_each_context$9(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$8(child_ctx);
+						each_blocks[i] = create_each_block$9(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(fieldset, t2);
@@ -23040,7 +23717,7 @@ function create_fragment$E(ctx) {
 	};
 }
 
-function instance$F($$self, $$props, $$invalidate) {
+function instance$L($$self, $$props, $$invalidate) {
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
 	let { groupLabel = '' } = $$props;
@@ -23086,7 +23763,7 @@ class Standard extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$F, create_fragment$E, safe_not_equal, {
+		init(this, options, instance$L, create_fragment$J, safe_not_equal, {
 			defaultOption: 0,
 			message: 1,
 			groupLabel: 2,
@@ -23104,14 +23781,14 @@ class Standard extends SvelteComponent {
 
 /* src/lib/components/primitives/select/select.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$7(ctx, list, i) {
+function get_each_context$8(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[15] = list[i];
 	return child_ctx;
 }
 
 // (39:0) {#if labelOrder === 'first'}
-function create_if_block_1$a(ctx) {
+function create_if_block_1$b(ctx) {
 	let label_1;
 	let current;
 
@@ -23119,7 +23796,7 @@ function create_if_block_1$a(ctx) {
 			props: {
 				key: /*key*/ ctx[4],
 				classes: `${/*labelClasses*/ ctx[6]}`,
-				$$slots: { default: [create_default_slot_1$b] },
+				$$slots: { default: [create_default_slot_1$d] },
 				$$scope: { ctx }
 			}
 		});
@@ -23159,7 +23836,7 @@ function create_if_block_1$a(ctx) {
 }
 
 // (40:2) <Label {key} classes={`${labelClasses}`}>
-function create_default_slot_1$b(ctx) {
+function create_default_slot_1$d(ctx) {
 	let t;
 
 	return {
@@ -23179,7 +23856,7 @@ function create_default_slot_1$b(ctx) {
 }
 
 // (54:2) {#each options as option}
-function create_each_block$7(ctx) {
+function create_each_block$8(ctx) {
 	let option;
 	let t0_value = /*option*/ ctx[15].text + "";
 	let t0;
@@ -23220,7 +23897,7 @@ function create_each_block$7(ctx) {
 }
 
 // (61:0) {#if labelOrder === 'last'}
-function create_if_block$g(ctx) {
+function create_if_block$j(ctx) {
 	let label_1;
 	let current;
 
@@ -23230,7 +23907,7 @@ function create_if_block$g(ctx) {
 				classes: `${/*shouldDisplayOption*/ ctx[10]
 				? /*labelClasses*/ ctx[6]
 				: 'tw_sr-only'}`,
-				$$slots: { default: [create_default_slot$i] },
+				$$slots: { default: [create_default_slot$l] },
 				$$scope: { ctx }
 			}
 		});
@@ -23273,7 +23950,7 @@ function create_if_block$g(ctx) {
 }
 
 // (62:2) <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>
-function create_default_slot$i(ctx) {
+function create_default_slot$l(ctx) {
 	let t;
 
 	return {
@@ -23292,7 +23969,7 @@ function create_default_slot$i(ctx) {
 	};
 }
 
-function create_fragment$D(ctx) {
+function create_fragment$I(ctx) {
 	let t0;
 	let select;
 	let select_aria_describedby_value;
@@ -23302,15 +23979,15 @@ function create_fragment$D(ctx) {
 	let current;
 	let mounted;
 	let dispose;
-	let if_block0 = /*labelOrder*/ ctx[7] === 'first' && create_if_block_1$a(ctx);
+	let if_block0 = /*labelOrder*/ ctx[7] === 'first' && create_if_block_1$b(ctx);
 	let each_value = /*options*/ ctx[8];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$7(get_each_context$7(ctx, each_value, i));
+		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
 	}
 
-	let if_block1 = /*labelOrder*/ ctx[7] === 'last' && create_if_block$g(ctx);
+	let if_block1 = /*labelOrder*/ ctx[7] === 'last' && create_if_block$j(ctx);
 
 	return {
 		c() {
@@ -23364,7 +24041,7 @@ function create_fragment$D(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_1$a(ctx);
+					if_block0 = create_if_block_1$b(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -23384,12 +24061,12 @@ function create_fragment$D(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$7(ctx, each_value, i);
+					const child_ctx = get_each_context$8(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$7(child_ctx);
+						each_blocks[i] = create_each_block$8(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(select, null);
 					}
@@ -23432,7 +24109,7 @@ function create_fragment$D(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block$g(ctx);
+					if_block1 = create_if_block$j(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
@@ -23473,7 +24150,7 @@ function create_fragment$D(ctx) {
 	};
 }
 
-function instance$E($$self, $$props, $$invalidate) {
+function instance$K($$self, $$props, $$invalidate) {
 	let { selectClasses = '' } = $$props;
 	let { defaultOption = null } = $$props;
 	let { isFirstInvalidInput } = $$props;
@@ -23560,7 +24237,7 @@ class Select extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$E, create_fragment$D, safe_not_equal, {
+		init(this, options, instance$K, create_fragment$I, safe_not_equal, {
 			selectClasses: 0,
 			defaultOption: 1,
 			isFirstInvalidInput: 12,
@@ -23578,7 +24255,7 @@ class Select extends SvelteComponent {
 
 /* src/lib/components/compositions/select-floating/floating-label.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$C(ctx) {
+function create_fragment$H(ctx) {
 	let div;
 	let select;
 	let t;
@@ -23661,7 +24338,7 @@ function create_fragment$C(ctx) {
 	};
 }
 
-function instance$D($$self, $$props, $$invalidate) {
+function instance$J($$self, $$props, $$invalidate) {
 	let { checkValidity = null } = $$props;
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
@@ -23716,7 +24393,7 @@ let Floating_label$1 = class Floating_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$D, create_fragment$C, safe_not_equal, {
+		init(this, options, instance$J, create_fragment$H, safe_not_equal, {
 			checkValidity: 10,
 			defaultOption: 1,
 			message: 2,
@@ -23734,7 +24411,7 @@ let Floating_label$1 = class Floating_label extends SvelteComponent {
 
 /* src/lib/components/compositions/select-stacked/stacked-label.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$B(ctx) {
+function create_fragment$G(ctx) {
 	let div;
 	let select;
 	let t;
@@ -23816,7 +24493,7 @@ function create_fragment$B(ctx) {
 	};
 }
 
-function instance$C($$self, $$props, $$invalidate) {
+function instance$I($$self, $$props, $$invalidate) {
 	let { checkValidity = null } = $$props;
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
@@ -23871,7 +24548,7 @@ let Stacked_label$1 = class Stacked_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$C, create_fragment$B, safe_not_equal, {
+		init(this, options, instance$I, create_fragment$G, safe_not_equal, {
 			checkValidity: 10,
 			defaultOption: 1,
 			message: 2,
@@ -23889,7 +24566,7 @@ let Stacked_label$1 = class Stacked_label extends SvelteComponent {
 
 /* src/lib/journey/callbacks/choice/choice.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$6(ctx) {
+function create_else_block$7(ctx) {
 	let select;
 	let current;
 
@@ -23938,7 +24615,7 @@ function create_else_block$6(ctx) {
 }
 
 // (52:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
-function create_if_block$f(ctx) {
+function create_if_block$i(ctx) {
 	let radio;
 	let current;
 
@@ -23988,12 +24665,12 @@ function create_if_block$f(ctx) {
 	};
 }
 
-function create_fragment$A(ctx) {
+function create_fragment$F(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$f, create_else_block$6];
+	const if_block_creators = [create_if_block$i, create_else_block$7];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -24057,7 +24734,7 @@ function create_fragment$A(ctx) {
 	};
 }
 
-function instance$B($$self, $$props, $$invalidate) {
+function instance$H($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -24145,7 +24822,7 @@ class Choice extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$B, create_fragment$A, safe_not_equal, {
+		init(this, options, instance$H, create_fragment$F, safe_not_equal, {
 			selfSubmitFunction: 9,
 			stepMetadata: 10,
 			callback: 11,
@@ -24165,7 +24842,7 @@ class Choice extends SvelteComponent {
 
 /* src/lib/components/primitives/grid/grid.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$z(ctx) {
+function create_fragment$E(ctx) {
 	let div;
 	let div_class_value;
 	let current;
@@ -24241,7 +24918,7 @@ function generateClassString(...args) {
 	);
 }
 
-function instance$A($$self, $$props, $$invalidate) {
+function instance$G($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { num = 2 } = $$props;
 
@@ -24256,33 +24933,36 @@ function instance$A($$self, $$props, $$invalidate) {
 class Grid extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$A, create_fragment$z, safe_not_equal, { num: 0 });
+		init(this, options, instance$G, create_fragment$E, safe_not_equal, { num: 0 });
 	}
 }
 
 /* src/lib/journey/callbacks/confirmation/confirmation.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$6(ctx, list, i) {
+function get_each_context$7(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[15] = list[i];
 	return child_ctx;
 }
 
 // (81:0) {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
-function create_if_block$e(ctx) {
+function create_if_block$h(ctx) {
+	let show_if;
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_1$9, create_else_block_1];
+	const if_block_creators = [create_if_block_1$a, create_else_block_1];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (!/*stepMetadata*/ ctx[1]?.derived.isStepSelfSubmittable) return 0;
+		if (dirty & /*stepMetadata*/ 2) show_if = null;
+		if (show_if == null) show_if = !!!/*stepMetadata*/ ctx[1]?.derived.isStepSelfSubmittable();
+		if (show_if) return 0;
 		return 1;
 	}
 
-	current_block_type_index = select_block_type(ctx);
+	current_block_type_index = select_block_type(ctx, -1);
 	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
 	return {
@@ -24297,7 +24977,7 @@ function create_if_block$e(ctx) {
 		},
 		p(ctx, dirty) {
 			let previous_block_index = current_block_type_index;
-			current_block_type_index = select_block_type(ctx);
+			current_block_type_index = select_block_type(ctx, dirty);
 
 			if (current_block_type_index === previous_block_index) {
 				if_blocks[current_block_type_index].p(ctx, dirty);
@@ -24346,7 +25026,7 @@ function create_else_block_1(ctx) {
 	grid = new Grid({
 			props: {
 				num: /*options*/ ctx[3].length,
-				$$slots: { default: [create_default_slot_1$a] },
+				$$slots: { default: [create_default_slot_1$c] },
 				$$scope: { ctx }
 			}
 		});
@@ -24384,13 +25064,13 @@ function create_else_block_1(ctx) {
 	};
 }
 
-// (82:2) {#if !stepMetadata?.derived.isStepSelfSubmittable}
-function create_if_block_1$9(ctx) {
+// (82:2) {#if !stepMetadata?.derived.isStepSelfSubmittable()}
+function create_if_block_1$a(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_2$8, create_else_block$5];
+	const if_block_creators = [create_if_block_2$9, create_else_block$6];
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
@@ -24454,7 +25134,7 @@ function create_if_block_1$9(ctx) {
 	};
 }
 
-// (106:8) <Button           style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}           type="button"           width="auto"           onClick={() => setBtnValue(Number(opt.value))}         >
+// (106:8) <Button           style={options.length > 1 && defaultChoice === Number(opt.value)             ? 'primary'             : buttonStyle}           type="button"           width="auto"           onClick={() => setBtnValue(Number(opt.value))}         >
 function create_default_slot_2$5(ctx) {
 	let t0_value = /*opt*/ ctx[15].text + "";
 	let t0;
@@ -24480,7 +25160,7 @@ function create_default_slot_2$5(ctx) {
 }
 
 // (105:6) {#each options as opt}
-function create_each_block$6(ctx) {
+function create_each_block$7(ctx) {
 	let button;
 	let current;
 
@@ -24541,14 +25221,14 @@ function create_each_block$6(ctx) {
 }
 
 // (104:4) <Grid num={options.length}>
-function create_default_slot_1$a(ctx) {
+function create_default_slot_1$c(ctx) {
 	let each_1_anchor;
 	let current;
 	let each_value = /*options*/ ctx[3];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
+		each_blocks[i] = create_each_block$7(get_each_context$7(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -24577,13 +25257,13 @@ function create_default_slot_1$a(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$6(ctx, each_value, i);
+					const child_ctx = get_each_context$7(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$6(child_ctx);
+						each_blocks[i] = create_each_block$7(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
@@ -24625,7 +25305,7 @@ function create_default_slot_1$a(ctx) {
 }
 
 // (92:4) {:else}
-function create_else_block$5(ctx) {
+function create_else_block$6(ctx) {
 	let checkbox;
 	let current;
 
@@ -24636,7 +25316,7 @@ function create_else_block$5(ctx) {
 				key: /*inputName*/ ctx[6],
 				onChange: /*setCheckboxValue*/ ctx[10],
 				value: false,
-				$$slots: { default: [create_default_slot$h] },
+				$$slots: { default: [create_default_slot$k] },
 				$$scope: { ctx }
 			}
 		});
@@ -24676,7 +25356,7 @@ function create_else_block$5(ctx) {
 }
 
 // (83:4) {#if options.length > 1}
-function create_if_block_2$8(ctx) {
+function create_if_block_2$9(ctx) {
 	let select;
 	let current;
 
@@ -24723,7 +25403,7 @@ function create_if_block_2$8(ctx) {
 }
 
 // (93:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={inputName}         onChange={setCheckboxValue}         value={false}       >
-function create_default_slot$h(ctx) {
+function create_default_slot$k(ctx) {
 	let t_value = /*options*/ ctx[3][0].text + "";
 	let t;
 
@@ -24743,10 +25423,10 @@ function create_default_slot$h(ctx) {
 	};
 }
 
-function create_fragment$y(ctx) {
+function create_fragment$D(ctx) {
 	let if_block_anchor;
 	let current;
-	let if_block = /*stepMetadata*/ ctx[1]?.platform?.stageName !== 'OneTimePassword' && create_if_block$e(ctx);
+	let if_block = /*stepMetadata*/ ctx[1]?.platform?.stageName !== 'OneTimePassword' && create_if_block$h(ctx);
 
 	return {
 		c() {
@@ -24767,7 +25447,7 @@ function create_fragment$y(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$e(ctx);
+					if_block = create_if_block$h(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -24798,7 +25478,7 @@ function create_fragment$y(ctx) {
 	};
 }
 
-function instance$z($$self, $$props, $$invalidate) {
+function instance$F($$self, $$props, $$invalidate) {
 	const style = {};
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
@@ -24882,7 +25562,7 @@ function instance$z($$self, $$props, $$invalidate) {
 					$$invalidate(3, options = options.slice(0, 1));
 				}
 
-				if (!stepMetadata?.derived.isStepSelfSubmittable && options.length > 1) {
+				if (!stepMetadata?.derived.isStepSelfSubmittable() && options.length > 1) {
 					// Since the user needs to confirm, add this empty `value` to force selection
 					options.unshift({ value: '', text: label });
 				} else if (options.length === 1) {
@@ -24917,7 +25597,7 @@ class Confirmation extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$z, create_fragment$y, safe_not_equal, {
+		init(this, options, instance$F, create_fragment$D, safe_not_equal, {
 			style: 11,
 			callback: 12,
 			callbackMetadata: 0,
@@ -24933,7 +25613,7 @@ class Confirmation extends SvelteComponent {
 
 /* src/lib/journey/callbacks/hidden-value/hidden-value.svelte generated by Svelte v3.55.1 */
 
-function instance$y($$self, $$props, $$invalidate) {
+function instance$E($$self, $$props, $$invalidate) {
 	const callback = null;
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
@@ -24946,7 +25626,7 @@ class Hidden_value extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$y, null, safe_not_equal, {
+		init(this, options, instance$E, null, safe_not_equal, {
 			callback: 0,
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
@@ -24986,7 +25666,7 @@ function create_if_block_7$1(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: `${/*labelClasses*/ ctx[5]} tw_w-full tw_ml-1`,
-				$$slots: { default: [create_default_slot_1$9] },
+				$$slots: { default: [create_default_slot_1$b] },
 				$$scope: { ctx }
 			}
 		});
@@ -25026,7 +25706,7 @@ function create_if_block_7$1(ctx) {
 }
 
 // (25:2) <Label {key} classes={`${labelClasses} tw_w-full tw_ml-1`}>
-function create_default_slot_1$9(ctx) {
+function create_default_slot_1$b(ctx) {
 	let t;
 
 	return {
@@ -25366,7 +26046,7 @@ function create_if_block_3$6(ctx) {
 }
 
 // (97:0) {#if type === 'phone'}
-function create_if_block_2$7(ctx) {
+function create_if_block_2$8(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -25446,7 +26126,7 @@ function create_if_block_2$7(ctx) {
 }
 
 // (113:0) {#if type === 'text'}
-function create_if_block_1$8(ctx) {
+function create_if_block_1$9(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -25526,7 +26206,7 @@ function create_if_block_1$8(ctx) {
 }
 
 // (129:0) {#if labelOrder === 'last'}
-function create_if_block$d(ctx) {
+function create_if_block$g(ctx) {
 	let label_1;
 	let current;
 
@@ -25534,7 +26214,7 @@ function create_if_block$d(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: `${/*labelClasses*/ ctx[5]}`,
-				$$slots: { default: [create_default_slot$g] },
+				$$slots: { default: [create_default_slot$j] },
 				$$scope: { ctx }
 			}
 		});
@@ -25574,7 +26254,7 @@ function create_if_block$d(ctx) {
 }
 
 // (130:2) <Label {key} classes={`${labelClasses}`}>
-function create_default_slot$g(ctx) {
+function create_default_slot$j(ctx) {
 	let t;
 
 	return {
@@ -25593,7 +26273,7 @@ function create_default_slot$g(ctx) {
 	};
 }
 
-function create_fragment$x(ctx) {
+function create_fragment$C(ctx) {
 	let t0;
 	let t1;
 	let t2;
@@ -25608,9 +26288,9 @@ function create_fragment$x(ctx) {
 	let if_block2 = /*type*/ ctx[11] === 'email' && create_if_block_5$1(ctx);
 	let if_block3 = /*type*/ ctx[11] === 'number' && create_if_block_4$2(ctx);
 	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$6(ctx);
-	let if_block5 = /*type*/ ctx[11] === 'phone' && create_if_block_2$7(ctx);
-	let if_block6 = /*type*/ ctx[11] === 'text' && create_if_block_1$8(ctx);
-	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$d(ctx);
+	let if_block5 = /*type*/ ctx[11] === 'phone' && create_if_block_2$8(ctx);
+	let if_block6 = /*type*/ ctx[11] === 'text' && create_if_block_1$9(ctx);
+	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$g(ctx);
 
 	return {
 		c() {
@@ -25730,7 +26410,7 @@ function create_fragment$x(ctx) {
 				if (if_block5) {
 					if_block5.p(ctx, dirty);
 				} else {
-					if_block5 = create_if_block_2$7(ctx);
+					if_block5 = create_if_block_2$8(ctx);
 					if_block5.c();
 					if_block5.m(t5.parentNode, t5);
 				}
@@ -25743,7 +26423,7 @@ function create_fragment$x(ctx) {
 				if (if_block6) {
 					if_block6.p(ctx, dirty);
 				} else {
-					if_block6 = create_if_block_1$8(ctx);
+					if_block6 = create_if_block_1$9(ctx);
 					if_block6.c();
 					if_block6.m(t6.parentNode, t6);
 				}
@@ -25760,7 +26440,7 @@ function create_fragment$x(ctx) {
 						transition_in(if_block7, 1);
 					}
 				} else {
-					if_block7 = create_if_block$d(ctx);
+					if_block7 = create_if_block$g(ctx);
 					if_block7.c();
 					transition_in(if_block7, 1);
 					if_block7.m(if_block7_anchor.parentNode, if_block7_anchor);
@@ -25807,7 +26487,7 @@ function create_fragment$x(ctx) {
 	};
 }
 
-function instance$x($$self, $$props, $$invalidate) {
+function instance$D($$self, $$props, $$invalidate) {
 	let { forceValidityFailure = false } = $$props;
 	let { isFirstInvalidInput } = $$props;
 	let { inputClasses = '' } = $$props;
@@ -25951,7 +26631,7 @@ class Input extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$x, create_fragment$x, safe_not_equal, {
+		init(this, options, instance$D, create_fragment$C, safe_not_equal, {
 			forceValidityFailure: 1,
 			isFirstInvalidInput: 13,
 			inputClasses: 2,
@@ -25973,7 +26653,7 @@ class Input extends SvelteComponent {
 const get_input_button_slot_changes$1 = dirty => ({});
 const get_input_button_slot_context$1 = ctx => ({});
 
-function create_fragment$w(ctx) {
+function create_fragment$B(ctx) {
 	let div1;
 	let input;
 	let updating_value;
@@ -26148,7 +26828,7 @@ function create_fragment$w(ctx) {
 	};
 }
 
-function instance$w($$self, $$props, $$invalidate) {
+function instance$C($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { forceValidityFailure = false } = $$props;
@@ -26219,7 +26899,7 @@ class Floating_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$w, create_fragment$w, safe_not_equal, {
+		init(this, options, instance$C, create_fragment$B, safe_not_equal, {
 			checkValidity: 12,
 			forceValidityFailure: 2,
 			message: 3,
@@ -26241,7 +26921,7 @@ class Floating_label extends SvelteComponent {
 const get_input_button_slot_changes = dirty => ({});
 const get_input_button_slot_context = ctx => ({});
 
-function create_fragment$v(ctx) {
+function create_fragment$A(ctx) {
 	let div1;
 	let input;
 	let updating_value;
@@ -26420,7 +27100,7 @@ function create_fragment$v(ctx) {
 	};
 }
 
-function instance$v($$self, $$props, $$invalidate) {
+function instance$B($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { forceValidityFailure = false } = $$props;
@@ -26494,7 +27174,7 @@ class Stacked_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$v, create_fragment$v, safe_not_equal, {
+		init(this, options, instance$B, create_fragment$A, safe_not_equal, {
 			checkValidity: 13,
 			forceValidityFailure: 2,
 			isFirstInvalidInput: 3,
@@ -26515,7 +27195,7 @@ class Stacked_label extends SvelteComponent {
 
 /* src/lib/components/icons/lock-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$u(ctx) {
+function create_fragment$z(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -26596,7 +27276,7 @@ function create_fragment$u(ctx) {
 	};
 }
 
-function instance$u($$self, $$props, $$invalidate) {
+function instance$A($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -26613,13 +27293,13 @@ function instance$u($$self, $$props, $$invalidate) {
 class Lock_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$u, create_fragment$u, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$A, create_fragment$z, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/callbacks/kba/kba-create.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$c(ctx) {
+function create_if_block$f(ctx) {
 	let input;
 	let current;
 
@@ -26664,7 +27344,7 @@ function create_if_block$c(ctx) {
 	};
 }
 
-function create_fragment$t(ctx) {
+function create_fragment$y(ctx) {
 	let fieldset;
 	let legend;
 	let t0;
@@ -26700,7 +27380,7 @@ function create_fragment$t(ctx) {
 			}
 		});
 
-	let if_block = /*displayCustomQuestionInput*/ ctx[3] && create_if_block$c(ctx);
+	let if_block = /*displayCustomQuestionInput*/ ctx[3] && create_if_block$f(ctx);
 
 	function input_value_binding(value) {
 		/*input_value_binding*/ ctx[21](value);
@@ -26742,7 +27422,7 @@ function create_fragment$t(ctx) {
 			t6 = space();
 			create_component(input.$$.fragment);
 			attr(legend, "class", "tw_sr-only");
-			attr(h2, "class", "tw_secondary-header dark:tw_secondary-header_dark");
+			attr(h2, "class", "dark:tw_secondary-header_dark tw_font-semibold tw_mb-4");
 			attr(span, "class", "tw_kba-lock-icon dark:tw_kba-lock-icon_dark");
 			attr(fieldset, "class", "tw_kba-fieldset tw_input-spacing dark:tw_kba-fieldset_dark");
 		},
@@ -26779,7 +27459,7 @@ function create_fragment$t(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$c(ctx);
+					if_block = create_if_block$f(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(fieldset, t6);
@@ -26837,7 +27517,7 @@ function create_fragment$t(ctx) {
 	};
 }
 
-function instance$t($$self, $$props, $$invalidate) {
+function instance$z($$self, $$props, $$invalidate) {
 	let $value;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -26993,7 +27673,7 @@ class Kba_create extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$t, create_fragment$t, safe_not_equal, {
+		init(this, options, instance$z, create_fragment$y, safe_not_equal, {
 			selfSubmitFunction: 13,
 			stepMetadata: 14,
 			callback: 15,
@@ -27013,7 +27693,7 @@ class Kba_create extends SvelteComponent {
 
 /* src/lib/journey/callbacks/username/name.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$s(ctx) {
+function create_fragment$x(ctx) {
 	let input;
 	let current;
 
@@ -27066,7 +27746,7 @@ function create_fragment$s(ctx) {
 	};
 }
 
-function instance$s($$self, $$props, $$invalidate) {
+function instance$y($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -27118,7 +27798,7 @@ class Name extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$s, create_fragment$s, safe_not_equal, {
+		init(this, options, instance$y, create_fragment$x, safe_not_equal, {
 			selfSubmitFunction: 7,
 			stepMetadata: 8,
 			callback: 9,
@@ -27138,7 +27818,7 @@ class Name extends SvelteComponent {
 
 /* src/lib/components/icons/eye-icon.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$4(ctx) {
+function create_else_block$5(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -27220,7 +27900,7 @@ function create_else_block$4(ctx) {
 }
 
 // (6:0) {#if !visible}
-function create_if_block$b(ctx) {
+function create_if_block$e(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -27301,12 +27981,12 @@ function create_if_block$b(ctx) {
 	};
 }
 
-function create_fragment$r(ctx) {
+function create_fragment$w(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$b, create_else_block$4];
+	const if_block_creators = [create_if_block$e, create_else_block$5];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -27370,7 +28050,7 @@ function create_fragment$r(ctx) {
 	};
 }
 
-function instance$r($$self, $$props, $$invalidate) {
+function instance$x($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -27389,13 +28069,13 @@ function instance$r($$self, $$props, $$invalidate) {
 class Eye_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$r, create_fragment$r, safe_not_equal, { classes: 0, size: 1, visible: 2 });
+		init(this, options, instance$x, create_fragment$w, safe_not_equal, { classes: 0, size: 1, visible: 2 });
 	}
 }
 
 /* src/lib/journey/callbacks/password/confirm-input.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot_1$8(ctx) {
+function create_default_slot_1$a(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[15].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[16], null);
@@ -27443,7 +28123,7 @@ function create_default_slot_1$8(ctx) {
 }
 
 // (69:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-function create_default_slot$f(ctx) {
+function create_default_slot$i(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "showPassword" } });
@@ -27484,7 +28164,7 @@ function create_input_button_slot$1(ctx) {
 			props: {
 				classes: "tw_password-icon dark:tw_password-icon_dark",
 				visible: /*isVisible*/ ctx[6],
-				$$slots: { default: [create_default_slot$f] },
+				$$slots: { default: [create_default_slot$i] },
 				$$scope: { ctx }
 			}
 		});
@@ -27535,7 +28215,7 @@ function create_input_button_slot$1(ctx) {
 	};
 }
 
-function create_fragment$q(ctx) {
+function create_fragment$v(ctx) {
 	let input;
 	let current;
 
@@ -27557,7 +28237,7 @@ function create_fragment$q(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot$1],
-					default: [create_default_slot_1$8]
+					default: [create_default_slot_1$a]
 				},
 				$$scope: { ctx }
 			}
@@ -27606,7 +28286,7 @@ function create_fragment$q(ctx) {
 	};
 }
 
-function instance$q($$self, $$props, $$invalidate) {
+function instance$w($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { forceValidityFailure = false } = $$props;
 	let { passwordsDoNotMatch = false } = $$props;
@@ -27693,7 +28373,7 @@ class Confirm_input extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$q, create_fragment$q, safe_not_equal, {
+		init(this, options, instance$w, create_fragment$v, safe_not_equal, {
 			forceValidityFailure: 0,
 			passwordsDoNotMatch: 1,
 			isRequired: 2,
@@ -27708,7 +28388,7 @@ class Confirm_input extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/base.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot_1$7(ctx) {
+function create_default_slot_1$9(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[21].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[22], null);
@@ -27756,7 +28436,7 @@ function create_default_slot_1$7(ctx) {
 }
 
 // (94:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-function create_default_slot$e(ctx) {
+function create_default_slot$h(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "showPassword" } });
@@ -27797,7 +28477,7 @@ function create_input_button_slot(ctx) {
 			props: {
 				classes: "tw_password-icon dark:tw_password-icon_dark",
 				visible: /*isVisible*/ ctx[10],
-				$$slots: { default: [create_default_slot$e] },
+				$$slots: { default: [create_default_slot$h] },
 				$$scope: { ctx }
 			}
 		});
@@ -27849,7 +28529,7 @@ function create_input_button_slot(ctx) {
 }
 
 // (101:0) {#if callbackMetadata?.platform?.confirmPassword}
-function create_if_block$a(ctx) {
+function create_if_block$d(ctx) {
 	let confirminput;
 	let current;
 
@@ -27900,7 +28580,7 @@ function create_if_block$a(ctx) {
 	};
 }
 
-function create_fragment$p(ctx) {
+function create_fragment$u(ctx) {
 	let input;
 	let t;
 	let if_block_anchor;
@@ -27925,13 +28605,13 @@ function create_fragment$p(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot],
-					default: [create_default_slot_1$7]
+					default: [create_default_slot_1$9]
 				},
 				$$scope: { ctx }
 			}
 		});
 
-	let if_block = /*callbackMetadata*/ ctx[1]?.platform?.confirmPassword && create_if_block$a(ctx);
+	let if_block = /*callbackMetadata*/ ctx[1]?.platform?.confirmPassword && create_if_block$d(ctx);
 
 	return {
 		c() {
@@ -27980,7 +28660,7 @@ function create_fragment$p(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$a(ctx);
+					if_block = create_if_block$d(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -28015,7 +28695,7 @@ function create_fragment$p(ctx) {
 	};
 }
 
-function instance$p($$self, $$props, $$invalidate) {
+function instance$v($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
@@ -28140,7 +28820,7 @@ class Base extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$p, create_fragment$p, safe_not_equal, {
+		init(this, options, instance$v, create_fragment$u, safe_not_equal, {
 			callback: 18,
 			callbackMetadata: 1,
 			key: 0,
@@ -28155,7 +28835,7 @@ class Base extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/password.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$o(ctx) {
+function create_fragment$t(ctx) {
 	let base;
 	let current;
 
@@ -28199,7 +28879,7 @@ function create_fragment$o(ctx) {
 	};
 }
 
-function instance$o($$self, $$props, $$invalidate) {
+function instance$u($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -28229,7 +28909,7 @@ class Password extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$o, create_fragment$o, safe_not_equal, {
+		init(this, options, instance$u, create_fragment$t, safe_not_equal, {
 			selfSubmitFunction: 4,
 			stepMetadata: 5,
 			callback: 0,
@@ -28249,7 +28929,7 @@ class Password extends SvelteComponent {
 
 /* src/lib/components/primitives/text/text.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$n(ctx) {
+function create_fragment$s(ctx) {
 	let p;
 	let p_class_value;
 	let current;
@@ -28307,7 +28987,7 @@ function create_fragment$n(ctx) {
 	};
 }
 
-function instance$n($$self, $$props, $$invalidate) {
+function instance$t($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 
@@ -28322,13 +29002,13 @@ function instance$n($$self, $$props, $$invalidate) {
 class Text extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$n, create_fragment$n, safe_not_equal, { classes: 0 });
+		init(this, options, instance$t, create_fragment$s, safe_not_equal, { classes: 0 });
 	}
 }
 
 /* src/lib/journey/callbacks/polling-wait/polling-wait.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$d(ctx) {
+function create_default_slot$g(ctx) {
 	let t;
 
 	return {
@@ -28347,7 +29027,7 @@ function create_default_slot$d(ctx) {
 	};
 }
 
-function create_fragment$m(ctx) {
+function create_fragment$r(ctx) {
 	let div;
 	let spinner;
 	let t;
@@ -28363,7 +29043,7 @@ function create_fragment$m(ctx) {
 
 	text_1 = new Text({
 			props: {
-				$$slots: { default: [create_default_slot$d] },
+				$$slots: { default: [create_default_slot$g] },
 				$$scope: { ctx }
 			}
 		});
@@ -28411,7 +29091,7 @@ function create_fragment$m(ctx) {
 	};
 }
 
-function instance$m($$self, $$props, $$invalidate) {
+function instance$s($$self, $$props, $$invalidate) {
 	const stepMetadata = null;
 	const style = {};
 	let { callback } = $$props;
@@ -28453,7 +29133,7 @@ class Polling_wait extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$m, create_fragment$m, safe_not_equal, {
+		init(this, options, instance$s, create_fragment$r, safe_not_equal, {
 			stepMetadata: 3,
 			style: 4,
 			callback: 1,
@@ -28473,7 +29153,7 @@ class Polling_wait extends SvelteComponent {
 
 /* src/lib/journey/callbacks/redirect/redirect.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$c(ctx) {
+function create_default_slot$f(ctx) {
 	let t;
 
 	return {
@@ -28492,7 +29172,7 @@ function create_default_slot$c(ctx) {
 	};
 }
 
-function create_fragment$l(ctx) {
+function create_fragment$q(ctx) {
 	let div;
 	let spinner;
 	let t;
@@ -28508,7 +29188,7 @@ function create_fragment$l(ctx) {
 
 	text_1 = new Text({
 			props: {
-				$$slots: { default: [create_default_slot$c] },
+				$$slots: { default: [create_default_slot$f] },
 				$$scope: { ctx }
 			}
 		});
@@ -28557,7 +29237,7 @@ function create_fragment$l(ctx) {
 	};
 }
 
-function instance$l($$self, $$props, $$invalidate) {
+function instance$r($$self, $$props, $$invalidate) {
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -28584,7 +29264,7 @@ class Redirect extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$l, create_fragment$l, safe_not_equal, {
+		init(this, options, instance$r, create_fragment$q, safe_not_equal, {
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
 			stepMetadata: 3,
@@ -28612,7 +29292,7 @@ class Redirect extends SvelteComponent {
 
 /* src/lib/components/icons/apple-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$k(ctx) {
+function create_fragment$p(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -28657,7 +29337,7 @@ function create_fragment$k(ctx) {
 	};
 }
 
-function instance$k($$self, $$props, $$invalidate) {
+function instance$q($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -28672,13 +29352,13 @@ function instance$k($$self, $$props, $$invalidate) {
 class Apple_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$k, create_fragment$k, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$q, create_fragment$p, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/facebook-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$j(ctx) {
+function create_fragment$o(ctx) {
 	let svg;
 	let path;
 
@@ -28719,7 +29399,7 @@ function create_fragment$j(ctx) {
 	};
 }
 
-function instance$j($$self, $$props, $$invalidate) {
+function instance$p($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -28734,13 +29414,13 @@ function instance$j($$self, $$props, $$invalidate) {
 class Facebook_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$j, create_fragment$j, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$p, create_fragment$o, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/google-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$i(ctx) {
+function create_fragment$n(ctx) {
 	let svg;
 	let g;
 	let path0;
@@ -28805,7 +29485,7 @@ function create_fragment$i(ctx) {
 	};
 }
 
-function instance$i($$self, $$props, $$invalidate) {
+function instance$o($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -28820,13 +29500,13 @@ function instance$i($$self, $$props, $$invalidate) {
 class Google_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$i, create_fragment$i, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$o, create_fragment$n, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/callbacks/select-idp/select-idp.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$5(ctx, list, i) {
+function get_each_context$6(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[10] = list[i];
 	return child_ctx;
@@ -28887,7 +29567,7 @@ function create_if_block_3$5(ctx) {
 }
 
 // (55:58) 
-function create_if_block_2$6(ctx) {
+function create_if_block_2$7(ctx) {
 	let button;
 	let current;
 
@@ -28941,7 +29621,7 @@ function create_if_block_2$6(ctx) {
 }
 
 // (44:4) {#if idp.text.toUpperCase().includes('APPLE')}
-function create_if_block_1$7(ctx) {
+function create_if_block_1$8(ctx) {
 	let button;
 	let current;
 
@@ -29169,7 +29849,7 @@ function create_default_slot_2$4(ctx) {
 }
 
 // (43:2) <Grid num={1}>
-function create_default_slot_1$6(ctx) {
+function create_default_slot_1$8(ctx) {
 	let show_if;
 	let show_if_1;
 	let show_if_2;
@@ -29177,7 +29857,7 @@ function create_default_slot_1$6(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_1$7, create_if_block_2$6, create_if_block_3$5];
+	const if_block_creators = [create_if_block_1$8, create_if_block_2$7, create_if_block_3$5];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -29266,14 +29946,14 @@ function create_default_slot_1$6(ctx) {
 }
 
 // (42:0) {#each idps as idp}
-function create_each_block$5(ctx) {
+function create_each_block$6(ctx) {
 	let grid;
 	let current;
 
 	grid = new Grid({
 			props: {
 				num: 1,
-				$$slots: { default: [create_default_slot_1$6] },
+				$$slots: { default: [create_default_slot_1$8] },
 				$$scope: { ctx }
 			}
 		});
@@ -29311,14 +29991,14 @@ function create_each_block$5(ctx) {
 }
 
 // (81:0) {#if stepMetadata && stepMetadata.derived.numOfCallbacks > 1}
-function create_if_block$9(ctx) {
+function create_if_block$c(ctx) {
 	let grid;
 	let current;
 
 	grid = new Grid({
 			props: {
 				num: 1,
-				$$slots: { default: [create_default_slot$b] },
+				$$slots: { default: [create_default_slot$e] },
 				$$scope: { ctx }
 			}
 		});
@@ -29347,7 +30027,7 @@ function create_if_block$9(ctx) {
 }
 
 // (82:2) <Grid num={1}>
-function create_default_slot$b(ctx) {
+function create_default_slot$e(ctx) {
 	let hr;
 
 	return {
@@ -29365,7 +30045,7 @@ function create_default_slot$b(ctx) {
 	};
 }
 
-function create_fragment$h(ctx) {
+function create_fragment$m(ctx) {
 	let t;
 	let if_block_anchor;
 	let current;
@@ -29373,14 +30053,14 @@ function create_fragment$h(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$5(get_each_context$5(ctx, each_value, i));
+		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block = /*stepMetadata*/ ctx[0] && /*stepMetadata*/ ctx[0].derived.numOfCallbacks > 1 && create_if_block$9(ctx);
+	let if_block = /*stepMetadata*/ ctx[0] && /*stepMetadata*/ ctx[0].derived.numOfCallbacks > 1 && create_if_block$c(ctx);
 
 	return {
 		c() {
@@ -29408,13 +30088,13 @@ function create_fragment$h(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$5(ctx, each_value, i);
+					const child_ctx = get_each_context$6(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$5(child_ctx);
+						each_blocks[i] = create_each_block$6(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t.parentNode, t);
@@ -29436,7 +30116,7 @@ function create_fragment$h(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$9(ctx);
+					if_block = create_if_block$c(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -29480,7 +30160,7 @@ function create_fragment$h(ctx) {
 	};
 }
 
-function instance$h($$self, $$props, $$invalidate) {
+function instance$n($$self, $$props, $$invalidate) {
 	const style = {};
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
@@ -29550,7 +30230,7 @@ class Select_idp extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$h, create_fragment$h, safe_not_equal, {
+		init(this, options, instance$n, create_fragment$m, safe_not_equal, {
 			style: 4,
 			callback: 5,
 			callbackMetadata: 3,
@@ -29572,14 +30252,14 @@ function get_each_context_1(ctx, list, i) {
 	return child_ctx;
 }
 
-function get_each_context$4(ctx, list, i) {
+function get_each_context$5(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[8] = list[i];
 	return child_ctx;
 }
 
 // (35:51) 
-function create_if_block_1$6(ctx) {
+function create_if_block_1$7(ctx) {
 	let div;
 	let p;
 	let t0;
@@ -29675,7 +30355,7 @@ function create_if_block_1$6(ctx) {
 }
 
 // (24:0) {#if simplifiedFailures.length}
-function create_if_block$8(ctx) {
+function create_if_block$b(ctx) {
 	let div;
 	let p;
 	let t0;
@@ -29688,7 +30368,7 @@ function create_if_block$8(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+		each_blocks[i] = create_each_block$5(get_each_context$5(ctx, each_value, i));
 	}
 
 	return {
@@ -29731,12 +30411,12 @@ function create_if_block$8(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$4(ctx, each_value, i);
+					const child_ctx = get_each_context$5(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$4(child_ctx);
+						each_blocks[i] = create_each_block$5(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(ul, null);
 					}
@@ -29796,7 +30476,7 @@ function create_each_block_1(ctx) {
 }
 
 // (30:6) {#each simplifiedFailures as failure}
-function create_each_block$4(ctx) {
+function create_each_block$5(ctx) {
 	let li;
 	let t_value = /*failure*/ ctx[8].message + "";
 	let t;
@@ -29820,12 +30500,12 @@ function create_each_block$4(ctx) {
 	};
 }
 
-function create_fragment$g(ctx) {
+function create_fragment$l(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$8, create_if_block_1$6];
+	const if_block_creators = [create_if_block$b, create_if_block_1$7];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -29906,7 +30586,7 @@ function create_fragment$g(ctx) {
 	};
 }
 
-function instance$g($$self, $$props, $$invalidate) {
+function instance$m($$self, $$props, $$invalidate) {
 	let { callback } = $$props;
 	let { key = undefined } = $$props;
 	let { label } = $$props;
@@ -29964,7 +30644,7 @@ class Policies extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$g, create_fragment$g, safe_not_equal, {
+		init(this, options, instance$m, create_fragment$l, safe_not_equal, {
 			callback: 5,
 			key: 0,
 			label: 6,
@@ -29976,7 +30656,7 @@ class Policies extends SvelteComponent {
 
 /* src/lib/journey/callbacks/string-attribute/string-attribute-input.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$a(ctx) {
+function create_default_slot$d(ctx) {
 	let policies_1;
 	let current;
 
@@ -30019,7 +30699,7 @@ function create_default_slot$a(ctx) {
 	};
 }
 
-function create_fragment$f(ctx) {
+function create_fragment$k(ctx) {
 	let input;
 	let current;
 
@@ -30037,7 +30717,7 @@ function create_fragment$f(ctx) {
 				type: /*type*/ ctx[7],
 				showMessage: !!/*isInvalid*/ ctx[8],
 				value: /*previousValue*/ ctx[6],
-				$$slots: { default: [create_default_slot$a] },
+				$$slots: { default: [create_default_slot$d] },
 				$$scope: { ctx }
 			}
 		});
@@ -30087,7 +30767,7 @@ function create_fragment$f(ctx) {
 	};
 }
 
-function instance$f($$self, $$props, $$invalidate) {
+function instance$l($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -30163,7 +30843,7 @@ class String_attribute_input extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$f, create_fragment$f, safe_not_equal, {
+		init(this, options, instance$l, create_fragment$k, safe_not_equal, {
 			selfSubmitFunction: 11,
 			stepMetadata: 12,
 			callback: 0,
@@ -30183,7 +30863,7 @@ class String_attribute_input extends SvelteComponent {
 
 /* src/lib/components/primitives/link/link.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$e(ctx) {
+function create_fragment$j(ctx) {
 	let a;
 	let a_class_value;
 	let current;
@@ -30251,7 +30931,7 @@ function create_fragment$e(ctx) {
 	};
 }
 
-function instance$e($$self, $$props, $$invalidate) {
+function instance$k($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { href } = $$props;
@@ -30270,13 +30950,13 @@ function instance$e($$self, $$props, $$invalidate) {
 class Link extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$e, create_fragment$e, safe_not_equal, { classes: 0, href: 1, target: 2 });
+		init(this, options, instance$k, create_fragment$j, safe_not_equal, { classes: 0, href: 1, target: 2 });
 	}
 }
 
 /* src/lib/journey/callbacks/terms-and-conditions/terms-conditions.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$3(ctx) {
+function create_else_block$4(ctx) {
 	let p;
 
 	return {
@@ -30298,7 +30978,7 @@ function create_else_block$3(ctx) {
 }
 
 // (27:0) {#if $linksStore?.termsAndConditions}
-function create_if_block$7(ctx) {
+function create_if_block$a(ctx) {
 	let link;
 	let t;
 	let checkbox;
@@ -30309,7 +30989,7 @@ function create_if_block$7(ctx) {
 				classes: "tw_block tw_mb-4",
 				href: /*$linksStore*/ ctx[2]?.termsAndConditions,
 				target: "_blank",
-				$$slots: { default: [create_default_slot_1$5] },
+				$$slots: { default: [create_default_slot_1$7] },
 				$$scope: { ctx }
 			}
 		});
@@ -30320,7 +31000,7 @@ function create_if_block$7(ctx) {
 				key: /*inputName*/ ctx[1],
 				onChange: /*setValue*/ ctx[4],
 				value: false,
-				$$slots: { default: [create_default_slot$9] },
+				$$slots: { default: [create_default_slot$c] },
 				$$scope: { ctx }
 			}
 		});
@@ -30376,7 +31056,7 @@ function create_if_block$7(ctx) {
 }
 
 // (28:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
-function create_default_slot_1$5(ctx) {
+function create_default_slot_1$7(ctx) {
 	let t_value = interpolate('termsAndConditionsLinkText') + "";
 	let t;
 
@@ -30395,7 +31075,7 @@ function create_default_slot_1$5(ctx) {
 }
 
 // (31:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
-function create_default_slot$9(ctx) {
+function create_default_slot$c(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "termsAndConditions" } });
@@ -30424,12 +31104,12 @@ function create_default_slot$9(ctx) {
 	};
 }
 
-function create_fragment$d(ctx) {
+function create_fragment$i(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$7, create_else_block$3];
+	const if_block_creators = [create_if_block$a, create_else_block$4];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -30493,7 +31173,7 @@ function create_fragment$d(ctx) {
 	};
 }
 
-function instance$d($$self, $$props, $$invalidate) {
+function instance$j($$self, $$props, $$invalidate) {
 	let $linksStore;
 	component_subscribe($$self, linksStore, $$value => $$invalidate(2, $linksStore = $$value));
 	const selfSubmitFunction = null;
@@ -30547,7 +31227,7 @@ class Terms_conditions extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$d, create_fragment$d, safe_not_equal, {
+		init(this, options, instance$j, create_fragment$i, safe_not_equal, {
 			selfSubmitFunction: 5,
 			stepMetadata: 6,
 			style: 7,
@@ -30567,7 +31247,7 @@ class Terms_conditions extends SvelteComponent {
 
 /* src/lib/journey/callbacks/text-output/text-output.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$8(ctx) {
+function create_default_slot$b(ctx) {
 	let html_tag;
 	let html_anchor;
 
@@ -30591,14 +31271,14 @@ function create_default_slot$8(ctx) {
 	};
 }
 
-function create_fragment$c(ctx) {
+function create_fragment$h(ctx) {
 	let text_1;
 	let current;
 
 	text_1 = new Text({
 			props: {
 				classes: "tw_font-bold tw_mt-6",
-				$$slots: { default: [create_default_slot$8] },
+				$$slots: { default: [create_default_slot$b] },
 				$$scope: { ctx }
 			}
 		});
@@ -30635,7 +31315,7 @@ function create_fragment$c(ctx) {
 	};
 }
 
-function instance$c($$self, $$props, $$invalidate) {
+function instance$i($$self, $$props, $$invalidate) {
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -30672,7 +31352,7 @@ class Text_output extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$c, create_fragment$c, safe_not_equal, {
+		init(this, options, instance$i, create_fragment$h, safe_not_equal, {
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
 			stepMetadata: 3,
@@ -30700,7 +31380,7 @@ class Text_output extends SvelteComponent {
 
 /* src/lib/journey/callbacks/unknown/unknown.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$b(ctx) {
+function create_fragment$g(ctx) {
 	let p;
 
 	return {
@@ -30721,7 +31401,7 @@ function create_fragment$b(ctx) {
 	};
 }
 
-function instance$b($$self, $$props, $$invalidate) {
+function instance$h($$self, $$props, $$invalidate) {
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -30740,7 +31420,7 @@ class Unknown extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$b, create_fragment$b, safe_not_equal, {
+		init(this, options, instance$h, create_fragment$g, safe_not_equal, {
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
 			stepMetadata: 3,
@@ -30768,7 +31448,7 @@ class Unknown extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/validated-create-password.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$7(ctx) {
+function create_default_slot$a(ctx) {
 	let policies;
 	let current;
 
@@ -30810,7 +31490,7 @@ function create_default_slot$7(ctx) {
 	};
 }
 
-function create_fragment$a(ctx) {
+function create_fragment$f(ctx) {
 	let base;
 	let current;
 
@@ -30823,7 +31503,7 @@ function create_fragment$a(ctx) {
 				key: /*inputName*/ ctx[4],
 				showMessage: /*isInvalid*/ ctx[5],
 				style: /*style*/ ctx[2],
-				$$slots: { default: [create_default_slot$7] },
+				$$slots: { default: [create_default_slot$a] },
 				$$scope: { ctx }
 			}
 		});
@@ -30866,7 +31546,7 @@ function create_fragment$a(ctx) {
 	};
 }
 
-function instance$a($$self, $$props, $$invalidate) {
+function instance$g($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -30918,7 +31598,7 @@ class Validated_create_password extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$a, create_fragment$a, safe_not_equal, {
+		init(this, options, instance$g, create_fragment$f, safe_not_equal, {
 			selfSubmitFunction: 7,
 			stepMetadata: 8,
 			callback: 0,
@@ -30938,7 +31618,7 @@ class Validated_create_password extends SvelteComponent {
 
 /* src/lib/journey/callbacks/username/validated-create-username.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot$6(ctx) {
+function create_default_slot$9(ctx) {
 	let policies;
 	let current;
 
@@ -30981,7 +31661,7 @@ function create_default_slot$6(ctx) {
 	};
 }
 
-function create_fragment$9(ctx) {
+function create_fragment$e(ctx) {
 	let input;
 	let current;
 
@@ -31001,7 +31681,7 @@ function create_fragment$9(ctx) {
 				value: typeof /*value*/ ctx[7] === 'string'
 				? /*value*/ ctx[7]
 				: '',
-				$$slots: { default: [create_default_slot$6] },
+				$$slots: { default: [create_default_slot$9] },
 				$$scope: { ctx }
 			}
 		});
@@ -31051,7 +31731,7 @@ function create_fragment$9(ctx) {
 	};
 }
 
-function instance$9($$self, $$props, $$invalidate) {
+function instance$f($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -31116,7 +31796,7 @@ class Validated_create_username extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$9, create_fragment$9, safe_not_equal, {
+		init(this, options, instance$f, create_fragment$e, safe_not_equal, {
 			selfSubmitFunction: 10,
 			stepMetadata: 11,
 			callback: 0,
@@ -31134,6 +31814,236 @@ class Validated_create_username extends SvelteComponent {
 	}
 }
 
+/* src/lib/journey/callbacks/device-profile/device-profile.svelte generated by Svelte v3.55.1 */
+
+function create_if_block$9(ctx) {
+	let div;
+	let spinner;
+	let t;
+	let text_1;
+	let current;
+
+	spinner = new Spinner({
+			props: {
+				colorClass: "tw_text-primary-light",
+				layoutClasses: "tw_h-24 tw_mb-6 tw_w-24"
+			}
+		});
+
+	text_1 = new Text({
+			props: {
+				$$slots: { default: [create_default_slot$8] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(spinner.$$.fragment);
+			t = space();
+			create_component(text_1.$$.fragment);
+			attr(div, "class", "tw_text-center tw_w-full tw_py-4");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(spinner, div, null);
+			append(div, t);
+			mount_component(text_1, div, null);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const text_1_changes = {};
+
+			if (dirty & /*$$scope*/ 128) {
+				text_1_changes.$$scope = { dirty, ctx };
+			}
+
+			text_1.$set(text_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(spinner.$$.fragment, local);
+			transition_in(text_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(spinner.$$.fragment, local);
+			transition_out(text_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(spinner);
+			destroy_component(text_1);
+		}
+	};
+}
+
+// (26:4) <Text>
+function create_default_slot$8(ctx) {
+	let t;
+
+	return {
+		c() {
+			t = text(/*deviceMessage*/ ctx[1]);
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		p: noop,
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+function create_fragment$d(ctx) {
+	let if_block_anchor;
+	let current;
+	let if_block = /*stepMetadata*/ ctx[0]?.derived.numOfCallbacks === 1 && create_if_block$9(ctx);
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			if_block_anchor = empty();
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, if_block_anchor, anchor);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			if (/*stepMetadata*/ ctx[0]?.derived.numOfCallbacks === 1) {
+				if (if_block) {
+					if_block.p(ctx, dirty);
+
+					if (dirty & /*stepMetadata*/ 1) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block$9(ctx);
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(if_block_anchor.parentNode, if_block_anchor);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach(if_block_anchor);
+		}
+	};
+}
+
+function instance$e($$self, $$props, $$invalidate) {
+	let { callback } = $$props;
+	let { callbackMetadata = null } = $$props;
+	let { stepMetadata = null } = $$props;
+	let { selfSubmitFunction } = $$props;
+	const device = new FRDevice({});
+	let deviceMessage = callback.getMessage();
+
+	async function initializeProfile() {
+		const location = callback?.isLocationRequired() ?? false;
+		const metadata = callback?.isMetadataRequired() ?? false;
+		const profile = await device.getProfile({ location, metadata });
+		callback.setProfile(profile);
+
+		if (callbackMetadata) {
+			$$invalidate(2, callbackMetadata.derived.isReadyForSubmission = true, callbackMetadata);
+		}
+
+		return selfSubmitFunction && selfSubmitFunction();
+	}
+
+	initializeProfile();
+
+	$$self.$$set = $$props => {
+		if ('callback' in $$props) $$invalidate(3, callback = $$props.callback);
+		if ('callbackMetadata' in $$props) $$invalidate(2, callbackMetadata = $$props.callbackMetadata);
+		if ('stepMetadata' in $$props) $$invalidate(0, stepMetadata = $$props.stepMetadata);
+		if ('selfSubmitFunction' in $$props) $$invalidate(4, selfSubmitFunction = $$props.selfSubmitFunction);
+	};
+
+	return [stepMetadata, deviceMessage, callbackMetadata, callback, selfSubmitFunction];
+}
+
+class Device_profile extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$e, create_fragment$d, safe_not_equal, {
+			callback: 3,
+			callbackMetadata: 2,
+			stepMetadata: 0,
+			selfSubmitFunction: 4
+		});
+	}
+}
+
+/* src/lib/journey/callbacks/metadata/metadata.svelte generated by Svelte v3.55.1 */
+
+function instance$d($$self, $$props, $$invalidate) {
+	const callback = null;
+	const callbackMetadata = null;
+	const selfSubmitFunction = null;
+	const stepMetadata = null;
+	const style = {};
+	return [callback, callbackMetadata, selfSubmitFunction, stepMetadata, style];
+}
+
+class Metadata extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$d, null, safe_not_equal, {
+			callback: 0,
+			callbackMetadata: 1,
+			selfSubmitFunction: 2,
+			stepMetadata: 3,
+			style: 4
+		});
+	}
+
+	get callback() {
+		return this.$$.ctx[0];
+	}
+
+	get callbackMetadata() {
+		return this.$$.ctx[1];
+	}
+
+	get selfSubmitFunction() {
+		return this.$$.ctx[2];
+	}
+
+	get stepMetadata() {
+		return this.$$.ctx[3];
+	}
+
+	get style() {
+		return this.$$.ctx[4];
+	}
+}
+
 /* src/lib/journey/_utilities/callback-mapper.svelte generated by Svelte v3.55.1 */
 
 function get_else_ctx(ctx) {
@@ -31141,10 +32051,34 @@ function get_else_ctx(ctx) {
 
 	const constants_0 = {
 		.../*props*/ child_ctx[0],
-		callback: /*_FRCallback*/ child_ctx[18]
+		callback: /*_FRCallback*/ child_ctx[20]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
+	return child_ctx;
+}
+
+function get_if_ctx_17(ctx) {
+	const child_ctx = ctx.slice();
+
+	const constants_0 = {
+		.../*props*/ child_ctx[0],
+		callback: /*_MetadataCallback*/ child_ctx[18]
+	};
+
+	child_ctx[21] = constants_0;
+	return child_ctx;
+}
+
+function get_if_ctx_16(ctx) {
+	const child_ctx = ctx.slice();
+
+	const constants_0 = {
+		.../*props*/ child_ctx[0],
+		callback: /*_DeviceProfileCallback*/ child_ctx[19]
+	};
+
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31156,7 +32090,7 @@ function get_if_ctx_15(ctx) {
 		callback: /*_SuspendedTextOutputCallback*/ child_ctx[17]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31168,7 +32102,7 @@ function get_if_ctx_14(ctx) {
 		callback: /*_TextOutputCallback*/ child_ctx[16]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31180,7 +32114,7 @@ function get_if_ctx_13(ctx) {
 		callback: /*_TermsAndConditionsCallback*/ child_ctx[15]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31192,7 +32126,7 @@ function get_if_ctx_12(ctx) {
 		callback: /*_ValidatedCreateUsernameCallback*/ child_ctx[14]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31204,7 +32138,7 @@ function get_if_ctx_11(ctx) {
 		callback: /*_ValidatedCreatePasswordCallback*/ child_ctx[13]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31216,7 +32150,7 @@ function get_if_ctx_10(ctx) {
 		callback: /*_StringAttributeInputCallback*/ child_ctx[12]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31228,7 +32162,7 @@ function get_if_ctx_9(ctx) {
 		callback: /*_SelectIdPCallback*/ child_ctx[11]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31240,7 +32174,7 @@ function get_if_ctx_8(ctx) {
 		callback: /*_RedirectCallback*/ child_ctx[10]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31252,7 +32186,7 @@ function get_if_ctx_7(ctx) {
 		callback: /*_PollingWaitCallback*/ child_ctx[9]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31264,7 +32198,7 @@ function get_if_ctx_6(ctx) {
 		callback: /*_PasswordCallback*/ child_ctx[8]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31276,7 +32210,7 @@ function get_if_ctx_5(ctx) {
 		callback: /*_NameCallback*/ child_ctx[7]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31288,7 +32222,7 @@ function get_if_ctx_4(ctx) {
 		callback: /*_KbaCreateCallback*/ child_ctx[6]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31300,7 +32234,7 @@ function get_if_ctx_3(ctx) {
 		callback: /*_HiddenValueCallback*/ child_ctx[5]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31312,7 +32246,7 @@ function get_if_ctx_2(ctx) {
 		callback: /*_ConfirmationCallback*/ child_ctx[4]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31324,7 +32258,7 @@ function get_if_ctx_1(ctx) {
 		callback: /*_ChoiceCallback*/ child_ctx[3]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
@@ -31336,15 +32270,15 @@ function get_if_ctx(ctx) {
 		callback: /*_BooleanAttributeInputCallback*/ child_ctx[2]
 	};
 
-	child_ctx[19] = constants_0;
+	child_ctx[21] = constants_0;
 	return child_ctx;
 }
 
-// (198:0) {:else}
-function create_else_block$2(ctx) {
+// (220:0) {:else}
+function create_else_block$3(ctx) {
 	let unknown;
 	let current;
-	const unknown_spread_levels = [/*newProps*/ ctx[19]];
+	const unknown_spread_levels = [/*newProps*/ ctx[21]];
 	let unknown_props = {};
 
 	for (let i = 0; i < unknown_spread_levels.length; i += 1) {
@@ -31362,8 +32296,8 @@ function create_else_block$2(ctx) {
 			current = true;
 		},
 		p(ctx, dirty) {
-			const unknown_changes = (dirty & /*props, _FRCallback*/ 262145)
-			? get_spread_update(unknown_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			const unknown_changes = (dirty & /*props, _FRCallback*/ 1048577)
+			? get_spread_update(unknown_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			unknown.$set(unknown_changes);
@@ -31383,11 +32317,97 @@ function create_else_block$2(ctx) {
 	};
 }
 
-// (192:62) 
+// (214:51) 
+function create_if_block_17(ctx) {
+	let metadata;
+	let current;
+	const metadata_spread_levels = [/*newProps*/ ctx[21]];
+	let metadata_props = {};
+
+	for (let i = 0; i < metadata_spread_levels.length; i += 1) {
+		metadata_props = assign(metadata_props, metadata_spread_levels[i]);
+	}
+
+	metadata = new Metadata({ props: metadata_props });
+
+	return {
+		c() {
+			create_component(metadata.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(metadata, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const metadata_changes = (dirty & /*props, _MetadataCallback*/ 262145)
+			? get_spread_update(metadata_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
+			: {};
+
+			metadata.$set(metadata_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(metadata.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(metadata.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(metadata, detaching);
+		}
+	};
+}
+
+// (208:56) 
+function create_if_block_16(ctx) {
+	let deviceprofile;
+	let current;
+	const deviceprofile_spread_levels = [/*newProps*/ ctx[21]];
+	let deviceprofile_props = {};
+
+	for (let i = 0; i < deviceprofile_spread_levels.length; i += 1) {
+		deviceprofile_props = assign(deviceprofile_props, deviceprofile_spread_levels[i]);
+	}
+
+	deviceprofile = new Device_profile({ props: deviceprofile_props });
+
+	return {
+		c() {
+			create_component(deviceprofile.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(deviceprofile, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const deviceprofile_changes = (dirty & /*props, _DeviceProfileCallback*/ 524289)
+			? get_spread_update(deviceprofile_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
+			: {};
+
+			deviceprofile.$set(deviceprofile_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(deviceprofile.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(deviceprofile.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(deviceprofile, detaching);
+		}
+	};
+}
+
+// (202:62) 
 function create_if_block_15(ctx) {
 	let textoutput;
 	let current;
-	const textoutput_spread_levels = [/*newProps*/ ctx[19]];
+	const textoutput_spread_levels = [/*newProps*/ ctx[21]];
 	let textoutput_props = {};
 
 	for (let i = 0; i < textoutput_spread_levels.length; i += 1) {
@@ -31406,7 +32426,7 @@ function create_if_block_15(ctx) {
 		},
 		p(ctx, dirty) {
 			const textoutput_changes = (dirty & /*props, _SuspendedTextOutputCallback*/ 131073)
-			? get_spread_update(textoutput_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(textoutput_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			textoutput.$set(textoutput_changes);
@@ -31426,11 +32446,11 @@ function create_if_block_15(ctx) {
 	};
 }
 
-// (186:53) 
+// (196:53) 
 function create_if_block_14(ctx) {
 	let textoutput;
 	let current;
-	const textoutput_spread_levels = [/*newProps*/ ctx[19]];
+	const textoutput_spread_levels = [/*newProps*/ ctx[21]];
 	let textoutput_props = {};
 
 	for (let i = 0; i < textoutput_spread_levels.length; i += 1) {
@@ -31449,7 +32469,7 @@ function create_if_block_14(ctx) {
 		},
 		p(ctx, dirty) {
 			const textoutput_changes = (dirty & /*props, _TextOutputCallback*/ 65537)
-			? get_spread_update(textoutput_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(textoutput_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			textoutput.$set(textoutput_changes);
@@ -31469,11 +32489,11 @@ function create_if_block_14(ctx) {
 	};
 }
 
-// (180:61) 
+// (190:61) 
 function create_if_block_13(ctx) {
 	let termsconditions;
 	let current;
-	const termsconditions_spread_levels = [/*newProps*/ ctx[19]];
+	const termsconditions_spread_levels = [/*newProps*/ ctx[21]];
 	let termsconditions_props = {};
 
 	for (let i = 0; i < termsconditions_spread_levels.length; i += 1) {
@@ -31492,7 +32512,7 @@ function create_if_block_13(ctx) {
 		},
 		p(ctx, dirty) {
 			const termsconditions_changes = (dirty & /*props, _TermsAndConditionsCallback*/ 32769)
-			? get_spread_update(termsconditions_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(termsconditions_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			termsconditions.$set(termsconditions_changes);
@@ -31512,11 +32532,11 @@ function create_if_block_13(ctx) {
 	};
 }
 
-// (174:66) 
+// (184:66) 
 function create_if_block_12(ctx) {
 	let validatedcreateusername;
 	let current;
-	const validatedcreateusername_spread_levels = [/*newProps*/ ctx[19]];
+	const validatedcreateusername_spread_levels = [/*newProps*/ ctx[21]];
 	let validatedcreateusername_props = {};
 
 	for (let i = 0; i < validatedcreateusername_spread_levels.length; i += 1) {
@@ -31535,7 +32555,7 @@ function create_if_block_12(ctx) {
 		},
 		p(ctx, dirty) {
 			const validatedcreateusername_changes = (dirty & /*props, _ValidatedCreateUsernameCallback*/ 16385)
-			? get_spread_update(validatedcreateusername_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(validatedcreateusername_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			validatedcreateusername.$set(validatedcreateusername_changes);
@@ -31555,11 +32575,11 @@ function create_if_block_12(ctx) {
 	};
 }
 
-// (168:66) 
+// (178:66) 
 function create_if_block_11(ctx) {
 	let validatedcreatepassword;
 	let current;
-	const validatedcreatepassword_spread_levels = [/*newProps*/ ctx[19]];
+	const validatedcreatepassword_spread_levels = [/*newProps*/ ctx[21]];
 	let validatedcreatepassword_props = {};
 
 	for (let i = 0; i < validatedcreatepassword_spread_levels.length; i += 1) {
@@ -31578,7 +32598,7 @@ function create_if_block_11(ctx) {
 		},
 		p(ctx, dirty) {
 			const validatedcreatepassword_changes = (dirty & /*props, _ValidatedCreatePasswordCallback*/ 8193)
-			? get_spread_update(validatedcreatepassword_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(validatedcreatepassword_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			validatedcreatepassword.$set(validatedcreatepassword_changes);
@@ -31598,11 +32618,11 @@ function create_if_block_11(ctx) {
 	};
 }
 
-// (162:63) 
+// (172:63) 
 function create_if_block_10(ctx) {
 	let stringattributeinput;
 	let current;
-	const stringattributeinput_spread_levels = [/*newProps*/ ctx[19]];
+	const stringattributeinput_spread_levels = [/*newProps*/ ctx[21]];
 	let stringattributeinput_props = {};
 
 	for (let i = 0; i < stringattributeinput_spread_levels.length; i += 1) {
@@ -31621,7 +32641,7 @@ function create_if_block_10(ctx) {
 		},
 		p(ctx, dirty) {
 			const stringattributeinput_changes = (dirty & /*props, _StringAttributeInputCallback*/ 4097)
-			? get_spread_update(stringattributeinput_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(stringattributeinput_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			stringattributeinput.$set(stringattributeinput_changes);
@@ -31641,11 +32661,11 @@ function create_if_block_10(ctx) {
 	};
 }
 
-// (156:52) 
+// (166:52) 
 function create_if_block_9(ctx) {
 	let selectidp;
 	let current;
-	const selectidp_spread_levels = [/*newProps*/ ctx[19]];
+	const selectidp_spread_levels = [/*newProps*/ ctx[21]];
 	let selectidp_props = {};
 
 	for (let i = 0; i < selectidp_spread_levels.length; i += 1) {
@@ -31664,7 +32684,7 @@ function create_if_block_9(ctx) {
 		},
 		p(ctx, dirty) {
 			const selectidp_changes = (dirty & /*props, _SelectIdPCallback*/ 2049)
-			? get_spread_update(selectidp_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(selectidp_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			selectidp.$set(selectidp_changes);
@@ -31684,11 +32704,11 @@ function create_if_block_9(ctx) {
 	};
 }
 
-// (150:51) 
+// (160:51) 
 function create_if_block_8(ctx) {
 	let redirect;
 	let current;
-	const redirect_spread_levels = [/*newProps*/ ctx[19]];
+	const redirect_spread_levels = [/*newProps*/ ctx[21]];
 	let redirect_props = {};
 
 	for (let i = 0; i < redirect_spread_levels.length; i += 1) {
@@ -31707,7 +32727,7 @@ function create_if_block_8(ctx) {
 		},
 		p(ctx, dirty) {
 			const redirect_changes = (dirty & /*props, _RedirectCallback*/ 1025)
-			? get_spread_update(redirect_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(redirect_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			redirect.$set(redirect_changes);
@@ -31727,11 +32747,11 @@ function create_if_block_8(ctx) {
 	};
 }
 
-// (144:54) 
+// (154:54) 
 function create_if_block_7(ctx) {
 	let pollingwait;
 	let current;
-	const pollingwait_spread_levels = [/*newProps*/ ctx[19]];
+	const pollingwait_spread_levels = [/*newProps*/ ctx[21]];
 	let pollingwait_props = {};
 
 	for (let i = 0; i < pollingwait_spread_levels.length; i += 1) {
@@ -31750,7 +32770,7 @@ function create_if_block_7(ctx) {
 		},
 		p(ctx, dirty) {
 			const pollingwait_changes = (dirty & /*props, _PollingWaitCallback*/ 513)
-			? get_spread_update(pollingwait_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(pollingwait_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			pollingwait.$set(pollingwait_changes);
@@ -31770,11 +32790,11 @@ function create_if_block_7(ctx) {
 	};
 }
 
-// (138:51) 
+// (148:51) 
 function create_if_block_6(ctx) {
 	let password;
 	let current;
-	const password_spread_levels = [/*newProps*/ ctx[19]];
+	const password_spread_levels = [/*newProps*/ ctx[21]];
 	let password_props = {};
 
 	for (let i = 0; i < password_spread_levels.length; i += 1) {
@@ -31793,7 +32813,7 @@ function create_if_block_6(ctx) {
 		},
 		p(ctx, dirty) {
 			const password_changes = (dirty & /*props, _PasswordCallback*/ 257)
-			? get_spread_update(password_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(password_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			password.$set(password_changes);
@@ -31813,11 +32833,11 @@ function create_if_block_6(ctx) {
 	};
 }
 
-// (132:47) 
+// (142:47) 
 function create_if_block_5(ctx) {
 	let name;
 	let current;
-	const name_spread_levels = [/*newProps*/ ctx[19]];
+	const name_spread_levels = [/*newProps*/ ctx[21]];
 	let name_props = {};
 
 	for (let i = 0; i < name_spread_levels.length; i += 1) {
@@ -31836,7 +32856,7 @@ function create_if_block_5(ctx) {
 		},
 		p(ctx, dirty) {
 			const name_changes = (dirty & /*props, _NameCallback*/ 129)
-			? get_spread_update(name_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(name_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			name.$set(name_changes);
@@ -31856,11 +32876,11 @@ function create_if_block_5(ctx) {
 	};
 }
 
-// (126:52) 
+// (136:52) 
 function create_if_block_4$1(ctx) {
 	let kbacreate;
 	let current;
-	const kbacreate_spread_levels = [/*newProps*/ ctx[19]];
+	const kbacreate_spread_levels = [/*newProps*/ ctx[21]];
 	let kbacreate_props = {};
 
 	for (let i = 0; i < kbacreate_spread_levels.length; i += 1) {
@@ -31879,7 +32899,7 @@ function create_if_block_4$1(ctx) {
 		},
 		p(ctx, dirty) {
 			const kbacreate_changes = (dirty & /*props, _KbaCreateCallback*/ 65)
-			? get_spread_update(kbacreate_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(kbacreate_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			kbacreate.$set(kbacreate_changes);
@@ -31899,11 +32919,11 @@ function create_if_block_4$1(ctx) {
 	};
 }
 
-// (120:54) 
+// (130:54) 
 function create_if_block_3$4(ctx) {
 	let hiddenvalue;
 	let current;
-	const hiddenvalue_spread_levels = [/*newProps*/ ctx[19]];
+	const hiddenvalue_spread_levels = [/*newProps*/ ctx[21]];
 	let hiddenvalue_props = {};
 
 	for (let i = 0; i < hiddenvalue_spread_levels.length; i += 1) {
@@ -31922,7 +32942,7 @@ function create_if_block_3$4(ctx) {
 		},
 		p(ctx, dirty) {
 			const hiddenvalue_changes = (dirty & /*props, _HiddenValueCallback*/ 33)
-			? get_spread_update(hiddenvalue_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(hiddenvalue_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			hiddenvalue.$set(hiddenvalue_changes);
@@ -31942,11 +32962,11 @@ function create_if_block_3$4(ctx) {
 	};
 }
 
-// (114:55) 
-function create_if_block_2$5(ctx) {
+// (124:55) 
+function create_if_block_2$6(ctx) {
 	let confirmation;
 	let current;
-	const confirmation_spread_levels = [/*newProps*/ ctx[19]];
+	const confirmation_spread_levels = [/*newProps*/ ctx[21]];
 	let confirmation_props = {};
 
 	for (let i = 0; i < confirmation_spread_levels.length; i += 1) {
@@ -31965,7 +32985,7 @@ function create_if_block_2$5(ctx) {
 		},
 		p(ctx, dirty) {
 			const confirmation_changes = (dirty & /*props, _ConfirmationCallback*/ 17)
-			? get_spread_update(confirmation_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(confirmation_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			confirmation.$set(confirmation_changes);
@@ -31985,11 +33005,11 @@ function create_if_block_2$5(ctx) {
 	};
 }
 
-// (108:49) 
-function create_if_block_1$5(ctx) {
+// (118:49) 
+function create_if_block_1$6(ctx) {
 	let choice;
 	let current;
-	const choice_spread_levels = [/*newProps*/ ctx[19]];
+	const choice_spread_levels = [/*newProps*/ ctx[21]];
 	let choice_props = {};
 
 	for (let i = 0; i < choice_spread_levels.length; i += 1) {
@@ -32008,7 +33028,7 @@ function create_if_block_1$5(ctx) {
 		},
 		p(ctx, dirty) {
 			const choice_changes = (dirty & /*props, _ChoiceCallback*/ 9)
-			? get_spread_update(choice_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(choice_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			choice.$set(choice_changes);
@@ -32028,11 +33048,11 @@ function create_if_block_1$5(ctx) {
 	};
 }
 
-// (102:0) {#if cbType === CallbackType.BooleanAttributeInputCallback}
-function create_if_block$6(ctx) {
+// (112:0) {#if cbType === CallbackType.BooleanAttributeInputCallback}
+function create_if_block$8(ctx) {
 	let boolean;
 	let current;
-	const boolean_spread_levels = [/*newProps*/ ctx[19]];
+	const boolean_spread_levels = [/*newProps*/ ctx[21]];
 	let boolean_props = {};
 
 	for (let i = 0; i < boolean_spread_levels.length; i += 1) {
@@ -32051,7 +33071,7 @@ function create_if_block$6(ctx) {
 		},
 		p(ctx, dirty) {
 			const boolean_changes = (dirty & /*props, _BooleanAttributeInputCallback*/ 5)
-			? get_spread_update(boolean_spread_levels, [get_spread_object(/*newProps*/ ctx[19])])
+			? get_spread_update(boolean_spread_levels, [get_spread_object(/*newProps*/ ctx[21])])
 			: {};
 
 			boolean.$set(boolean_changes);
@@ -32071,16 +33091,16 @@ function create_if_block$6(ctx) {
 	};
 }
 
-function create_fragment$8(ctx) {
+function create_fragment$c(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
 
 	const if_block_creators = [
-		create_if_block$6,
-		create_if_block_1$5,
-		create_if_block_2$5,
+		create_if_block$8,
+		create_if_block_1$6,
+		create_if_block_2$6,
 		create_if_block_3$4,
 		create_if_block_4$1,
 		create_if_block_5,
@@ -32094,7 +33114,9 @@ function create_fragment$8(ctx) {
 		create_if_block_13,
 		create_if_block_14,
 		create_if_block_15,
-		create_else_block$2
+		create_if_block_16,
+		create_if_block_17,
+		create_else_block$3
 	];
 
 	const if_blocks = [];
@@ -32116,7 +33138,9 @@ function create_fragment$8(ctx) {
 		if (/*cbType*/ ctx[1] === CallbackType$1.TermsAndConditionsCallback) return 13;
 		if (/*cbType*/ ctx[1] === CallbackType$1.TextOutputCallback) return 14;
 		if (/*cbType*/ ctx[1] === CallbackType$1.SuspendedTextOutputCallback) return 15;
-		return 16;
+		if (/*cbType*/ ctx[1] === CallbackType$1.DeviceProfileCallback) return 16;
+		if (/*cbType*/ ctx[1] === CallbackType$1.MetadataCallback) return 17;
+		return 18;
 	}
 
 	function select_block_ctx(ctx, index) {
@@ -32136,6 +33160,8 @@ function create_fragment$8(ctx) {
 		if (index === 13) return get_if_ctx_13(ctx);
 		if (index === 14) return get_if_ctx_14(ctx);
 		if (index === 15) return get_if_ctx_15(ctx);
+		if (index === 16) return get_if_ctx_16(ctx);
+		if (index === 17) return get_if_ctx_17(ctx);
 		return get_else_ctx(ctx);
 	}
 
@@ -32195,7 +33221,7 @@ function create_fragment$8(ctx) {
 	};
 }
 
-function instance$8($$self, $$props, $$invalidate) {
+function instance$c($$self, $$props, $$invalidate) {
 	let { props } = $$props;
 	let cbType;
 	let _BooleanAttributeInputCallback;
@@ -32214,6 +33240,8 @@ function instance$8($$self, $$props, $$invalidate) {
 	let _TermsAndConditionsCallback;
 	let _TextOutputCallback;
 	let _SuspendedTextOutputCallback;
+	let _MetadataCallback;
+	let _DeviceProfileCallback;
 	let _FRCallback;
 
 	$$self.$$set = $$props => {
@@ -32274,8 +33302,14 @@ function instance$8($$self, $$props, $$invalidate) {
 					case CallbackType$1.SuspendedTextOutputCallback:
 						$$invalidate(17, _SuspendedTextOutputCallback = props.callback);
 						break;
+					case CallbackType$1.DeviceProfileCallback:
+						$$invalidate(19, _DeviceProfileCallback = props.callback);
+						break;
+					case CallbackType$1.MetadataCallback:
+						$$invalidate(18, _MetadataCallback = props.callback);
+						break;
 					default:
-						$$invalidate(18, _FRCallback = props.callback);
+						$$invalidate(20, _FRCallback = props.callback);
 				}
 			}
 		}
@@ -32300,6 +33334,8 @@ function instance$8($$self, $$props, $$invalidate) {
 		_TermsAndConditionsCallback,
 		_TextOutputCallback,
 		_SuspendedTextOutputCallback,
+		_MetadataCallback,
+		_DeviceProfileCallback,
 		_FRCallback
 	];
 }
@@ -32307,13 +33343,13 @@ function instance$8($$self, $$props, $$invalidate) {
 class Callback_mapper extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$8, create_fragment$8, safe_not_equal, { props: 0 });
+		init(this, options, instance$c, create_fragment$c, safe_not_equal, { props: 0 });
 	}
 }
 
 /* src/lib/journey/stages/generic.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$3(ctx, list, i) {
+function get_each_context$4(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[16] = list[i];
 	child_ctx[18] = i;
@@ -32321,7 +33357,7 @@ function get_each_context$3(ctx, list, i) {
 }
 
 // (70:2) {#if form?.icon && componentStyle !== 'inline'}
-function create_if_block_2$4(ctx) {
+function create_if_block_2$5(ctx) {
 	let div;
 	let shieldicon;
 	let current;
@@ -32361,13 +33397,13 @@ function create_if_block_2$4(ctx) {
 }
 
 // (86:2) {#if form?.message}
-function create_if_block_1$4(ctx) {
+function create_if_block_1$5(ctx) {
 	let alert;
 	let current;
 
 	alert = new Alert({
 			props: {
-				id: formFailureMessageId,
+				id: formFailureMessageId$2,
 				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
 				$$slots: { default: [create_default_slot_2$3] },
@@ -32430,7 +33466,7 @@ function create_default_slot_2$3(ctx) {
 }
 
 // (92:2) {#each step?.callbacks as callback, idx}
-function create_each_block$3(ctx) {
+function create_each_block$4(ctx) {
 	let callbackmapper;
 	let current;
 
@@ -32482,8 +33518,8 @@ function create_each_block$3(ctx) {
 	};
 }
 
-// (104:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
-function create_if_block$5(ctx) {
+// (104:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+function create_if_block$7(ctx) {
 	let button;
 	let current;
 
@@ -32493,7 +33529,7 @@ function create_if_block$5(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_1$4] },
+				$$slots: { default: [create_default_slot_1$6] },
 				$$scope: { ctx }
 			}
 		});
@@ -32532,7 +33568,7 @@ function create_if_block$5(ctx) {
 }
 
 // (105:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$4(ctx) {
+function create_default_slot_1$6(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "nextButton" } });
@@ -32562,7 +33598,7 @@ function create_default_slot_1$4(ctx) {
 }
 
 // (63:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
-function create_default_slot$5(ctx) {
+function create_default_slot$7(ctx) {
 	let t0;
 	let header;
 	let h1;
@@ -32573,10 +33609,11 @@ function create_default_slot$5(ctx) {
 	let t2;
 	let t3;
 	let t4;
+	let show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
 	let t5;
 	let backto;
 	let current;
-	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$4();
+	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$5();
 
 	sanitize0 = new Server_strings({
 			props: {
@@ -32592,19 +33629,19 @@ function create_default_slot$5(ctx) {
 			}
 		});
 
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$4(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$5(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
+		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block$5(ctx);
+	let if_block2 = show_if && create_if_block$7(ctx);
 	backto = new Back_to({ props: { journey: /*journey*/ ctx[3] } });
 
 	return {
@@ -32631,7 +33668,7 @@ function create_default_slot$5(ctx) {
 			create_component(backto.$$.fragment);
 			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
 			attr(p, "class", "tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
-			attr(header, "id", formHeaderId);
+			attr(header, "id", formHeaderId$2);
 		},
 		m(target, anchor) {
 			if (if_block0) if_block0.m(target, anchor);
@@ -32664,7 +33701,7 @@ function create_default_slot$5(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$4();
+					if_block0 = create_if_block_2$5();
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -32694,7 +33731,7 @@ function create_default_slot$5(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_1$4(ctx);
+					if_block1 = create_if_block_1$5(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t3.parentNode, t3);
@@ -32714,13 +33751,13 @@ function create_default_slot$5(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$3(ctx, each_value, i);
+					const child_ctx = get_each_context$4(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$3(child_ctx);
+						each_blocks[i] = create_each_block$4(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t4.parentNode, t4);
@@ -32736,7 +33773,9 @@ function create_default_slot$5(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
+			if (dirty & /*metadata*/ 16) show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
+
+			if (show_if) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
@@ -32744,7 +33783,7 @@ function create_default_slot$5(ctx) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block$5(ctx);
+					if_block2 = create_if_block$7(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
 					if_block2.m(t5.parentNode, t5);
@@ -32812,7 +33851,7 @@ function create_default_slot$5(ctx) {
 	};
 }
 
-function create_fragment$7(ctx) {
+function create_fragment$b(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -32823,10 +33862,10 @@ function create_fragment$7(ctx) {
 
 	let form_1_props = {
 		ariaDescribedBy: /*formAriaDescriptor*/ ctx[8],
-		id: formElementId,
+		id: formElementId$2,
 		needsFocus: /*formNeedsFocus*/ ctx[9],
 		onSubmitWhenValid: /*submitFormWrapper*/ ctx[13],
-		$$slots: { default: [create_default_slot$5] },
+		$$slots: { default: [create_default_slot$7] },
 		$$scope: { ctx }
 	};
 
@@ -32877,11 +33916,11 @@ function create_fragment$7(ctx) {
 	};
 }
 
-const formFailureMessageId = 'genericStepFailureMessage';
-const formHeaderId = 'genericStepHeader';
-const formElementId = 'genericStepForm';
+const formFailureMessageId$2 = 'genericStepFailureMessage';
+const formHeaderId$2 = 'genericStepHeader';
+const formElementId$2 = 'genericStepForm';
 
-function instance$7($$self, $$props, $$invalidate) {
+function instance$b($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(11, $styleStore = $$value));
 	let { componentStyle } = $$props;
@@ -32900,7 +33939,7 @@ function instance$7($$self, $$props, $$invalidate) {
 		// TODO: the below is more strict; all self-submitting cbs have to complete before submitting
 		// if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 		// The below variation is more liberal, first self-submittable cb to call this wins.
-		if (metadata?.step?.derived.isStepSelfSubmittable) {
+		if (metadata?.step?.derived.isStepSelfSubmittable()) {
 			submitFormWrapper();
 		}
 	}
@@ -32913,11 +33952,11 @@ function instance$7($$self, $$props, $$invalidate) {
 
 	afterUpdate(() => {
 		if (form?.message) {
-			$$invalidate(8, formAriaDescriptor = formFailureMessageId);
+			$$invalidate(8, formAriaDescriptor = formFailureMessageId$2);
 			$$invalidate(6, alertNeedsFocus = true);
 			$$invalidate(9, formNeedsFocus = false);
 		} else {
-			$$invalidate(8, formAriaDescriptor = formHeaderId);
+			$$invalidate(8, formAriaDescriptor = formHeaderId$2);
 			$$invalidate(6, alertNeedsFocus = false);
 			$$invalidate(9, formNeedsFocus = true);
 		}
@@ -32979,7 +34018,7 @@ class Generic extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
+		init(this, options, instance$b, create_fragment$b, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
@@ -32992,7 +34031,7 @@ class Generic extends SvelteComponent {
 
 /* src/lib/components/icons/key-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$6(ctx) {
+function create_fragment$a(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -33073,7 +34112,7 @@ function create_fragment$6(ctx) {
 	};
 }
 
-function instance$6($$self, $$props, $$invalidate) {
+function instance$a($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -33090,13 +34129,13 @@ function instance$6($$self, $$props, $$invalidate) {
 class Key_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$6, create_fragment$6, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$a, create_fragment$a, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/stages/one-time-password.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$2(ctx, list, i) {
+function get_each_context$3(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[11] = list[i];
 	child_ctx[13] = i;
@@ -33104,7 +34143,7 @@ function get_each_context$2(ctx, list, i) {
 }
 
 // (38:2) {#if componentStyle !== 'inline'}
-function create_if_block_2$3(ctx) {
+function create_if_block_2$4(ctx) {
 	let t0;
 	let h1;
 	let t1;
@@ -33232,7 +34271,7 @@ function create_if_block_3$3(ctx) {
 }
 
 // (54:2) {#if form?.message}
-function create_if_block_1$3(ctx) {
+function create_if_block_1$4(ctx) {
 	let alert;
 	let current;
 
@@ -33301,7 +34340,7 @@ function create_default_slot_2$2(ctx) {
 }
 
 // (60:2) {#each step?.callbacks as callback, idx}
-function create_each_block$2(ctx) {
+function create_each_block$3(ctx) {
 	let callbackmapper;
 	let current;
 
@@ -33353,8 +34392,8 @@ function create_each_block$2(ctx) {
 	};
 }
 
-// (72:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
-function create_if_block$4(ctx) {
+// (72:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+function create_if_block$6(ctx) {
 	let button;
 	let current;
 
@@ -33364,7 +34403,7 @@ function create_if_block$4(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_1$3] },
+				$$slots: { default: [create_default_slot_1$5] },
 				$$scope: { ctx }
 			}
 		});
@@ -33403,7 +34442,7 @@ function create_if_block$4(ctx) {
 }
 
 // (73:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$3(ctx) {
+function create_default_slot_1$5(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "loginButton" } });
@@ -33433,26 +34472,27 @@ function create_default_slot_1$3(ctx) {
 }
 
 // (37:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-function create_default_slot$4(ctx) {
+function create_default_slot$6(ctx) {
 	let t0;
 	let t1;
 	let t2;
+	let show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
 	let if_block2_anchor;
 	let current;
-	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$3(ctx);
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$3(ctx);
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$4(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$4(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
+		each_blocks[i] = create_each_block$3(get_each_context$3(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block$4(ctx);
+	let if_block2 = show_if && create_if_block$6(ctx);
 
 	return {
 		c() {
@@ -33493,7 +34533,7 @@ function create_default_slot$4(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$3(ctx);
+					if_block0 = create_if_block_2$4(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -33516,7 +34556,7 @@ function create_default_slot$4(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_1$3(ctx);
+					if_block1 = create_if_block_1$4(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t1.parentNode, t1);
@@ -33536,13 +34576,13 @@ function create_default_slot$4(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$2(ctx, each_value, i);
+					const child_ctx = get_each_context$3(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$2(child_ctx);
+						each_blocks[i] = create_each_block$3(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t2.parentNode, t2);
@@ -33558,7 +34598,9 @@ function create_default_slot$4(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
+			if (dirty & /*metadata*/ 16) show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
+
+			if (show_if) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
@@ -33566,7 +34608,7 @@ function create_default_slot$4(ctx) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block$4(ctx);
+					if_block2 = create_if_block$6(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
 					if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
@@ -33618,7 +34660,7 @@ function create_default_slot$4(ctx) {
 	};
 }
 
-function create_fragment$5(ctx) {
+function create_fragment$9(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -33630,7 +34672,7 @@ function create_fragment$5(ctx) {
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
 		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
-		$$slots: { default: [create_default_slot$4] },
+		$$slots: { default: [create_default_slot$6] },
 		$$scope: { ctx }
 	};
 
@@ -33680,7 +34722,7 @@ function create_fragment$5(ctx) {
 	};
 }
 
-function instance$5($$self, $$props, $$invalidate) {
+function instance$9($$self, $$props, $$invalidate) {
 	let $style;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(8, $style = $$value));
 	let { componentStyle } = $$props;
@@ -33696,7 +34738,7 @@ function instance$5($$self, $$props, $$invalidate) {
 		// TODO: the below is more strict; all self-submitting cbs have to complete before submitting
 		// if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 		// The below variation is more liberal first self-submittable cb to call this wins.
-		if (metadata?.step?.derived.isStepSelfSubmittable) {
+		if (metadata?.step?.derived.isStepSelfSubmittable()) {
 			form?.submit();
 		}
 	}
@@ -33746,7 +34788,7 @@ class One_time_password extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$5, create_fragment$5, safe_not_equal, {
+		init(this, options, instance$9, create_fragment$9, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
@@ -33759,7 +34801,7 @@ class One_time_password extends SvelteComponent {
 
 /* src/lib/components/icons/new-user-icon.svelte generated by Svelte v3.55.1 */
 
-function create_fragment$4(ctx) {
+function create_fragment$8(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -33840,7 +34882,7 @@ function create_fragment$4(ctx) {
 	};
 }
 
-function instance$4($$self, $$props, $$invalidate) {
+function instance$8($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -33857,13 +34899,13 @@ function instance$4($$self, $$props, $$invalidate) {
 class New_user_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$4, create_fragment$4, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$8, create_fragment$8, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/stages/registration.svelte generated by Svelte v3.55.1 */
 
-function get_each_context$1(ctx, list, i) {
+function get_each_context$2(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[13] = list[i];
 	child_ctx[15] = i;
@@ -33871,7 +34913,7 @@ function get_each_context$1(ctx, list, i) {
 }
 
 // (50:2) {#if componentStyle !== 'inline'}
-function create_if_block_2$2(ctx) {
+function create_if_block_2$3(ctx) {
 	let t0;
 	let h1;
 	let t1;
@@ -33998,7 +35040,7 @@ function create_if_block_3$2(ctx) {
 }
 
 // (67:2) {#if form.message}
-function create_if_block_1$2(ctx) {
+function create_if_block_1$3(ctx) {
 	let alert;
 	let current;
 
@@ -34067,7 +35109,7 @@ function create_default_slot_2$1(ctx) {
 }
 
 // (73:2) {#each step?.callbacks as callback, idx}
-function create_each_block$1(ctx) {
+function create_each_block$2(ctx) {
 	let callbackmapper;
 	let current;
 
@@ -34119,8 +35161,8 @@ function create_each_block$1(ctx) {
 	};
 }
 
-// (85:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
-function create_if_block$3(ctx) {
+// (85:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+function create_if_block$5(ctx) {
 	let button;
 	let current;
 
@@ -34130,7 +35172,7 @@ function create_if_block$3(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_1$2] },
+				$$slots: { default: [create_default_slot_1$4] },
 				$$scope: { ctx }
 			}
 		});
@@ -34169,7 +35211,7 @@ function create_if_block$3(ctx) {
 }
 
 // (86:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$2(ctx) {
+function create_default_slot_1$4(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "registerButton" } });
@@ -34199,26 +35241,27 @@ function create_default_slot_1$2(ctx) {
 }
 
 // (49:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-function create_default_slot$3(ctx) {
+function create_default_slot$5(ctx) {
 	let t0;
 	let t1;
 	let t2;
+	let show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
 	let if_block2_anchor;
 	let current;
-	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$2(ctx);
-	let if_block1 = /*form*/ ctx[2].message && create_if_block_1$2(ctx);
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$3(ctx);
+	let if_block1 = /*form*/ ctx[2].message && create_if_block_1$3(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block$3(ctx);
+	let if_block2 = show_if && create_if_block$5(ctx);
 
 	return {
 		c() {
@@ -34259,7 +35302,7 @@ function create_default_slot$3(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$2(ctx);
+					if_block0 = create_if_block_2$3(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -34282,7 +35325,7 @@ function create_default_slot$3(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_1$2(ctx);
+					if_block1 = create_if_block_1$3(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t1.parentNode, t1);
@@ -34302,13 +35345,13 @@ function create_default_slot$3(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$1(ctx, each_value, i);
+					const child_ctx = get_each_context$2(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$1(child_ctx);
+						each_blocks[i] = create_each_block$2(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t2.parentNode, t2);
@@ -34324,7 +35367,9 @@ function create_default_slot$3(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
+			if (dirty & /*metadata*/ 16) show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
+
+			if (show_if) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
@@ -34332,7 +35377,7 @@ function create_default_slot$3(ctx) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block$3(ctx);
+					if_block2 = create_if_block$5(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
 					if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
@@ -34384,7 +35429,7 @@ function create_default_slot$3(ctx) {
 	};
 }
 
-function create_fragment$3(ctx) {
+function create_fragment$7(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -34396,7 +35441,7 @@ function create_fragment$3(ctx) {
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
 		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
-		$$slots: { default: [create_default_slot$3] },
+		$$slots: { default: [create_default_slot$5] },
 		$$scope: { ctx }
 	};
 
@@ -34446,7 +35491,7 @@ function create_fragment$3(ctx) {
 	};
 }
 
-function instance$3($$self, $$props, $$invalidate) {
+function instance$7($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(9, $styleStore = $$value));
 	let { componentStyle } = $$props;
@@ -34463,7 +35508,7 @@ function instance$3($$self, $$props, $$invalidate) {
 		// TODO: the below is more strict; all self-submitting cbs have to complete before submitting
 		// if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 		// The below variation is more liberal first self-submittable cb to call this wins.
-		if (metadata?.step?.derived.isStepSelfSubmittable) {
+		if (metadata?.step?.derived.isStepSelfSubmittable()) {
 			form?.submit();
 		}
 	}
@@ -34534,7 +35579,7 @@ class Registration extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$3, create_fragment$3, safe_not_equal, {
+		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
@@ -34547,7 +35592,7 @@ class Registration extends SvelteComponent {
 
 /* src/lib/journey/stages/login.svelte generated by Svelte v3.55.1 */
 
-function get_each_context(ctx, list, i) {
+function get_each_context$1(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[15] = list[i];
 	child_ctx[17] = i;
@@ -34661,7 +35706,7 @@ function create_if_block_4(ctx) {
 }
 
 // (56:2) {#if form?.message}
-function create_if_block_2$1(ctx) {
+function create_if_block_2$2(ctx) {
 	let alert;
 	let current;
 
@@ -34730,7 +35775,7 @@ function create_default_slot_2(ctx) {
 }
 
 // (62:2) {#each step?.callbacks as callback, idx}
-function create_each_block(ctx) {
+function create_each_block$1(ctx) {
 	let callbackmapper;
 	let current;
 
@@ -34782,8 +35827,8 @@ function create_each_block(ctx) {
 	};
 }
 
-// (74:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
-function create_if_block_1$1(ctx) {
+// (74:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+function create_if_block_1$2(ctx) {
 	let button;
 	let current;
 
@@ -34793,7 +35838,7 @@ function create_if_block_1$1(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_1$1] },
+				$$slots: { default: [create_default_slot_1$3] },
 				$$scope: { ctx }
 			}
 		});
@@ -34832,7 +35877,7 @@ function create_if_block_1$1(ctx) {
 }
 
 // (75:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$1(ctx) {
+function create_default_slot_1$3(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "loginButton" } });
@@ -34862,7 +35907,7 @@ function create_default_slot_1$1(ctx) {
 }
 
 // (80:2) {#if componentStyle !== 'inline'}
-function create_if_block$2(ctx) {
+function create_if_block$4(ctx) {
 	let p0;
 	let button0;
 	let t1;
@@ -34944,28 +35989,29 @@ function create_if_block$2(ctx) {
 }
 
 // (44:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-function create_default_slot$2(ctx) {
+function create_default_slot$4(ctx) {
 	let t0;
 	let t1;
 	let t2;
+	let show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
 	let t3;
 	let if_block3_anchor;
 	let current;
 	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$1(ctx);
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$1(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$2(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) && create_if_block_1$1(ctx);
-	let if_block3 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$2(ctx);
+	let if_block2 = show_if && create_if_block_1$2(ctx);
+	let if_block3 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$4(ctx);
 
 	return {
 		c() {
@@ -35033,7 +36079,7 @@ function create_default_slot$2(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_2$1(ctx);
+					if_block1 = create_if_block_2$2(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t1.parentNode, t1);
@@ -35053,13 +36099,13 @@ function create_default_slot$2(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context(ctx, each_value, i);
+					const child_ctx = get_each_context$1(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block(child_ctx);
+						each_blocks[i] = create_each_block$1(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t2.parentNode, t2);
@@ -35075,7 +36121,9 @@ function create_default_slot$2(ctx) {
 				check_outros();
 			}
 
-			if (/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable) {
+			if (dirty & /*metadata*/ 16) show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
+
+			if (show_if) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 
@@ -35083,7 +36131,7 @@ function create_default_slot$2(ctx) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block_1$1(ctx);
+					if_block2 = create_if_block_1$2(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
 					if_block2.m(t3.parentNode, t3);
@@ -35106,7 +36154,7 @@ function create_default_slot$2(ctx) {
 						transition_in(if_block3, 1);
 					}
 				} else {
-					if_block3 = create_if_block$2(ctx);
+					if_block3 = create_if_block$4(ctx);
 					if_block3.c();
 					transition_in(if_block3, 1);
 					if_block3.m(if_block3_anchor.parentNode, if_block3_anchor);
@@ -35162,7 +36210,7 @@ function create_default_slot$2(ctx) {
 	};
 }
 
-function create_fragment$2(ctx) {
+function create_fragment$6(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -35174,7 +36222,7 @@ function create_fragment$2(ctx) {
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
 		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
-		$$slots: { default: [create_default_slot$2] },
+		$$slots: { default: [create_default_slot$4] },
 		$$scope: { ctx }
 	};
 
@@ -35224,7 +36272,7 @@ function create_fragment$2(ctx) {
 	};
 }
 
-function instance$2($$self, $$props, $$invalidate) {
+function instance$6($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(9, $styleStore = $$value));
 	let { componentStyle } = $$props;
@@ -35241,7 +36289,7 @@ function instance$2($$self, $$props, $$invalidate) {
 		// TODO: the below is more strict; all self-submitting cbs have to complete before submitting
 		// if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 		// The below variation is more liberal first self-submittable cb to call this wins.
-		if (metadata?.step?.derived.isStepSelfSubmittable) {
+		if (metadata?.step?.derived.isStepSelfSubmittable()) {
 			form?.submit();
 		}
 	}
@@ -35316,7 +36364,7 @@ class Login extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$2, create_fragment$2, safe_not_equal, {
+		init(this, options, instance$6, create_fragment$6, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
@@ -35327,15 +36375,1170 @@ class Login extends SvelteComponent {
 	}
 }
 
+/* src/lib/components/icons/fingerprint-icon.svelte generated by Svelte v3.55.1 */
+
+function create_fragment$5(ctx) {
+	let svg;
+	let path0;
+	let path1;
+	let path2;
+	let path3;
+	let path4;
+
+	return {
+		c() {
+			svg = svg_element("svg");
+			path0 = svg_element("path");
+			path1 = svg_element("path");
+			path2 = svg_element("path");
+			path3 = svg_element("path");
+			path4 = svg_element("path");
+			attr(path0, "d", "M8.06 6.5a.5.5 0 0 1 .5.5v.776a11.5 11.5 0 0 1-.552 3.519l-1.331 4.14a.5.5 0 0 1-.952-.305l1.33-4.141a10.5 10.5 0 0 0 .504-3.213V7a.5.5 0 0 1 .5-.5Z");
+			attr(path1, "d", "M6.06 7a2 2 0 1 1 4 0 .5.5 0 1 1-1 0 1 1 0 1 0-2 0v.332c0 .409-.022.816-.066 1.221A.5.5 0 0 1 6 8.447c.04-.37.06-.742.06-1.115V7Zm3.509 1a.5.5 0 0 1 .487.513 11.5 11.5 0 0 1-.587 3.339l-1.266 3.8a.5.5 0 0 1-.949-.317l1.267-3.8a10.5 10.5 0 0 0 .535-3.048A.5.5 0 0 1 9.569 8Zm-3.356 2.115a.5.5 0 0 1 .33.626L5.24 14.939a.5.5 0 1 1-.955-.296l1.303-4.199a.5.5 0 0 1 .625-.329Z");
+			attr(path2, "d", "M4.759 5.833A3.501 3.501 0 0 1 11.559 7a.5.5 0 0 1-1 0 2.5 2.5 0 0 0-4.857-.833.5.5 0 1 1-.943-.334Zm.3 1.67a.5.5 0 0 1 .449.546 10.72 10.72 0 0 1-.4 2.031l-1.222 4.072a.5.5 0 1 1-.958-.287L4.15 9.793a9.72 9.72 0 0 0 .363-1.842.5.5 0 0 1 .546-.449Zm6 .647a.5.5 0 0 1 .5.5c0 1.28-.213 2.552-.632 3.762l-1.09 3.145a.5.5 0 0 1-.944-.327l1.089-3.145c.382-1.105.578-2.266.578-3.435a.5.5 0 0 1 .5-.5Z");
+			attr(path3, "d", "M3.902 4.222a4.996 4.996 0 0 1 5.202-2.113.5.5 0 0 1-.208.979 3.996 3.996 0 0 0-4.163 1.69.5.5 0 0 1-.831-.556Zm6.72-.955a.5.5 0 0 1 .705-.052A4.99 4.99 0 0 1 13.059 7v1.5a.5.5 0 1 1-1 0V7a3.99 3.99 0 0 0-1.386-3.028.5.5 0 0 1-.051-.705ZM3.68 5.842a.5.5 0 0 1 .422.568c-.029.192-.044.39-.044.59 0 .71-.1 1.417-.298 2.1l-1.14 3.923a.5.5 0 1 1-.96-.279L2.8 8.821A6.531 6.531 0 0 0 3.058 7c0-.25.019-.496.054-.736a.5.5 0 0 1 .568-.422Zm8.882 3.66a.5.5 0 0 1 .456.54c-.084 1-.298 1.986-.64 2.934l-.744 2.068a.5.5 0 0 1-.941-.338l.745-2.07a10.51 10.51 0 0 0 .584-2.678.5.5 0 0 1 .54-.456Z");
+			attr(path4, "d", "M4.81 1.37A6.5 6.5 0 0 1 14.56 7a.5.5 0 1 1-1 0 5.5 5.5 0 0 0-8.25-4.765.5.5 0 0 1-.5-.865Zm-.89 1.257a.5.5 0 0 1 .04.706A5.478 5.478 0 0 0 2.56 7a.5.5 0 0 1-1 0c0-1.664.626-3.184 1.655-4.333a.5.5 0 0 1 .706-.04ZM1.915 8.02a.5.5 0 0 1 .346.616l-.779 2.767a.5.5 0 1 1-.962-.27l.778-2.767a.5.5 0 0 1 .617-.346Zm12.15.481a.5.5 0 0 1 .49.51c-.03 1.499-.161 3.025-.727 4.533l-.07.187a.5.5 0 0 1-.936-.351l.07-.187c.506-1.35.634-2.74.663-4.202a.5.5 0 0 1 .51-.49Z");
+			attr(svg, "class", /*classes*/ ctx[0]);
+			attr(svg, "height", /*size*/ ctx[1]);
+			attr(svg, "width", /*size*/ ctx[1]);
+			attr(svg, "viewBox", "0 0 16 16");
+			attr(svg, "xmlns", "http://www.w3.org/2000/svg");
+		},
+		m(target, anchor) {
+			insert(target, svg, anchor);
+			append(svg, path0);
+			append(svg, path1);
+			append(svg, path2);
+			append(svg, path3);
+			append(svg, path4);
+		},
+		p(ctx, [dirty]) {
+			if (dirty & /*classes*/ 1) {
+				attr(svg, "class", /*classes*/ ctx[0]);
+			}
+
+			if (dirty & /*size*/ 2) {
+				attr(svg, "height", /*size*/ ctx[1]);
+			}
+
+			if (dirty & /*size*/ 2) {
+				attr(svg, "width", /*size*/ ctx[1]);
+			}
+		},
+		i: noop,
+		o: noop,
+		d(detaching) {
+			if (detaching) detach(svg);
+		}
+	};
+}
+
+function instance$5($$self, $$props, $$invalidate) {
+	let { classes = '' } = $$props;
+	let { size = '24px' } = $$props;
+
+	$$self.$$set = $$props => {
+		if ('classes' in $$props) $$invalidate(0, classes = $$props.classes);
+		if ('size' in $$props) $$invalidate(1, size = $$props.size);
+	};
+
+	return [classes, size];
+}
+
+class Fingerprint_icon extends SvelteComponent {
+	constructor(options) {
+		super();
+		init(this, options, instance$5, create_fragment$5, safe_not_equal, { classes: 0, size: 1 });
+	}
+}
+
+/* src/lib/journey/stages/webauthn.svelte generated by Svelte v3.55.1 */
+
+function create_if_block_2$1(ctx) {
+	let div;
+	let fingerprinticon;
+	let current;
+
+	fingerprinticon = new Fingerprint_icon({
+			props: {
+				classes: "tw_text-gray-400 tw_fill-current",
+				size: "72px"
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(fingerprinticon.$$.fragment);
+			attr(div, "class", "tw_flex tw_justify-center");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(fingerprinticon, div, null);
+			current = true;
+		},
+		i(local) {
+			if (current) return;
+			transition_in(fingerprinticon.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(fingerprinticon.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(fingerprinticon);
+		}
+	};
+}
+
+// (88:2) {#if form?.message}
+function create_if_block_1$1(ctx) {
+	let alert;
+	let current;
+
+	alert = new Alert({
+			props: {
+				id: formFailureMessageId$1,
+				needsFocus: /*alertNeedsFocus*/ ctx[3],
+				type: "error",
+				$$slots: { default: [create_default_slot_1$2] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(alert.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(alert, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const alert_changes = {};
+			if (dirty & /*alertNeedsFocus*/ 8) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[3];
+
+			if (dirty & /*$$scope, formMessageKey, form*/ 16404) {
+				alert_changes.$$scope = { dirty, ctx };
+			}
+
+			alert.$set(alert_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(alert.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(alert.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(alert, detaching);
+		}
+	};
+}
+
+// (89:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+function create_default_slot_1$2(ctx) {
+	let t_value = interpolate(/*formMessageKey*/ ctx[4], null, /*form*/ ctx[2]?.message) + "";
+	let t;
+
+	return {
+		c() {
+			t = text(t_value);
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*formMessageKey, form*/ 20 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[4], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
+		},
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+// (105:2) {:else}
+function create_else_block$2(ctx) {
+	let header;
+	let h1;
+	let t0;
+	let t1;
+	let p;
+	let t2;
+	let current;
+	t0 = new Locale_strings({ props: { key: "registerYourDevice" } });
+
+	t2 = new Locale_strings({
+			props: {
+				key: "chooseYourDeviceForIdentityVerification"
+			}
+		});
+
+	return {
+		c() {
+			header = element("header");
+			h1 = element("h1");
+			create_component(t0.$$.fragment);
+			t1 = space();
+			p = element("p");
+			create_component(t2.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p, "class", "tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+			attr(header, "id", formHeaderId$1);
+		},
+		m(target, anchor) {
+			insert(target, header, anchor);
+			append(header, h1);
+			mount_component(t0, h1, null);
+			append(header, t1);
+			append(header, p);
+			mount_component(t2, p, null);
+			current = true;
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(t0.$$.fragment, local);
+			transition_in(t2.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t0.$$.fragment, local);
+			transition_out(t2.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(header);
+			destroy_component(t0);
+			destroy_component(t2);
+		}
+	};
+}
+
+// (94:2) {#if webAuthnType === WebAuthnStepType.Authentication}
+function create_if_block$3(ctx) {
+	let header;
+	let h1;
+	let t0;
+	let t1;
+	let p;
+	let t2;
+	let current;
+	t0 = new Locale_strings({ props: { key: "verifyYourIdentity" } });
+
+	t2 = new Locale_strings({
+			props: { key: "useDeviceForIdentityVerification" }
+		});
+
+	return {
+		c() {
+			header = element("header");
+			h1 = element("h1");
+			create_component(t0.$$.fragment);
+			t1 = space();
+			p = element("p");
+			create_component(t2.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p, "class", "tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+			attr(header, "id", formHeaderId$1);
+		},
+		m(target, anchor) {
+			insert(target, header, anchor);
+			append(header, h1);
+			mount_component(t0, h1, null);
+			append(header, t1);
+			append(header, p);
+			mount_component(t2, p, null);
+			current = true;
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(t0.$$.fragment, local);
+			transition_in(t2.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t0.$$.fragment, local);
+			transition_out(t2.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(header);
+			destroy_component(t0);
+			destroy_component(t2);
+		}
+	};
+}
+
+// (72:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
+function create_default_slot$3(ctx) {
+	let t0;
+	let div;
+	let spinner;
+	let t1;
+	let t2;
+	let current_block_type_index;
+	let if_block2;
+	let if_block2_anchor;
+	let current;
+	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$1();
+
+	spinner = new Spinner({
+			props: {
+				colorClass: "tw_text-primary-light",
+				layoutClasses: "tw_h-28 tw_w-28"
+			}
+		});
+
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$1(ctx);
+	const if_block_creators = [create_if_block$3, create_else_block$2];
+	const if_blocks = [];
+
+	function select_block_type(ctx, dirty) {
+		if (/*webAuthnType*/ ctx[7] === WebAuthnStepType.Authentication) return 0;
+		return 1;
+	}
+
+	current_block_type_index = select_block_type(ctx);
+	if_block2 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+	return {
+		c() {
+			if (if_block0) if_block0.c();
+			t0 = space();
+			div = element("div");
+			create_component(spinner.$$.fragment);
+			t1 = space();
+			if (if_block1) if_block1.c();
+			t2 = space();
+			if_block2.c();
+			if_block2_anchor = empty();
+			attr(div, "class", "tw_text-center tw_w-full tw_py-4");
+		},
+		m(target, anchor) {
+			if (if_block0) if_block0.m(target, anchor);
+			insert(target, t0, anchor);
+			insert(target, div, anchor);
+			mount_component(spinner, div, null);
+			insert(target, t1, anchor);
+			if (if_block1) if_block1.m(target, anchor);
+			insert(target, t2, anchor);
+			if_blocks[current_block_type_index].m(target, anchor);
+			insert(target, if_block2_anchor, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline') {
+				if (if_block0) {
+					if (dirty & /*form, componentStyle*/ 6) {
+						transition_in(if_block0, 1);
+					}
+				} else {
+					if_block0 = create_if_block_2$1();
+					if_block0.c();
+					transition_in(if_block0, 1);
+					if_block0.m(t0.parentNode, t0);
+				}
+			} else if (if_block0) {
+				group_outros();
+
+				transition_out(if_block0, 1, 1, () => {
+					if_block0 = null;
+				});
+
+				check_outros();
+			}
+
+			if (/*form*/ ctx[2]?.message) {
+				if (if_block1) {
+					if_block1.p(ctx, dirty);
+
+					if (dirty & /*form*/ 4) {
+						transition_in(if_block1, 1);
+					}
+				} else {
+					if_block1 = create_if_block_1$1(ctx);
+					if_block1.c();
+					transition_in(if_block1, 1);
+					if_block1.m(t2.parentNode, t2);
+				}
+			} else if (if_block1) {
+				group_outros();
+
+				transition_out(if_block1, 1, 1, () => {
+					if_block1 = null;
+				});
+
+				check_outros();
+			}
+
+			if_block2.p(ctx, dirty);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block0);
+			transition_in(spinner.$$.fragment, local);
+			transition_in(if_block1);
+			transition_in(if_block2);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block0);
+			transition_out(spinner.$$.fragment, local);
+			transition_out(if_block1);
+			transition_out(if_block2);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block0) if_block0.d(detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(div);
+			destroy_component(spinner);
+			if (detaching) detach(t1);
+			if (if_block1) if_block1.d(detaching);
+			if (detaching) detach(t2);
+			if_blocks[current_block_type_index].d(detaching);
+			if (detaching) detach(if_block2_anchor);
+		}
+	};
+}
+
+function create_fragment$4(ctx) {
+	let form_1;
+	let updating_formEl;
+	let current;
+
+	function form_1_formEl_binding(value) {
+		/*form_1_formEl_binding*/ ctx[12](value);
+	}
+
+	let form_1_props = {
+		ariaDescribedBy: /*formAriaDescriptor*/ ctx[5],
+		id: formElementId$1,
+		needsFocus: /*formNeedsFocus*/ ctx[6],
+		$$slots: { default: [create_default_slot$3] },
+		$$scope: { ctx }
+	};
+
+	if (/*formEl*/ ctx[0] !== void 0) {
+		form_1_props.formEl = /*formEl*/ ctx[0];
+	}
+
+	form_1 = new Form({ props: form_1_props });
+	binding_callbacks.push(() => bind(form_1, 'formEl', form_1_formEl_binding));
+
+	return {
+		c() {
+			create_component(form_1.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(form_1, target, anchor);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			const form_1_changes = {};
+			if (dirty & /*formAriaDescriptor*/ 32) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[5];
+			if (dirty & /*formNeedsFocus*/ 64) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[6];
+
+			if (dirty & /*$$scope, alertNeedsFocus, formMessageKey, form, componentStyle*/ 16414) {
+				form_1_changes.$$scope = { dirty, ctx };
+			}
+
+			if (!updating_formEl && dirty & /*formEl*/ 1) {
+				updating_formEl = true;
+				form_1_changes.formEl = /*formEl*/ ctx[0];
+				add_flush_callback(() => updating_formEl = false);
+			}
+
+			form_1.$set(form_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(form_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(form_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(form_1, detaching);
+		}
+	};
+}
+
+const formFailureMessageId$1 = 'genericStepFailureMessage';
+const formHeaderId$1 = 'genericStepHeader';
+const formElementId$1 = 'genericStepForm';
+
+function instance$4($$self, $$props, $$invalidate) {
+	let { allowWebAuthn = true } = $$props;
+	let { componentStyle } = $$props;
+	let { form } = $$props;
+	let { formEl = null } = $$props;
+	let { journey } = $$props;
+	let { metadata } = $$props;
+	let { step } = $$props;
+	let alertNeedsFocus = false;
+	let formMessageKey = '';
+	let formAriaDescriptor = 'genericStepHeader';
+	let formNeedsFocus = false;
+	let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
+
+	afterUpdate(() => {
+		if (form?.message) {
+			$$invalidate(5, formAriaDescriptor = formFailureMessageId$1);
+			$$invalidate(3, alertNeedsFocus = true);
+			$$invalidate(6, formNeedsFocus = false);
+		} else {
+			$$invalidate(5, formAriaDescriptor = formHeaderId$1);
+			$$invalidate(3, alertNeedsFocus = false);
+			$$invalidate(6, formNeedsFocus = true);
+		}
+	});
+
+	/**
+ * Determine a WebAuthn step
+ */
+	async function callWebAuthnApi() {
+		try {
+			switch (webAuthnType) {
+				case WebAuthnStepType.Registration:
+					{
+						await FRWebAuthn.register(step);
+						break;
+					}
+				case WebAuthnStepType.Authentication:
+					{
+						await FRWebAuthn.authenticate(step);
+						break;
+					}
+				default:
+					break;
+			}
+		} catch(err) {
+			
+		} // TODO: handle error
+
+		form.submit();
+	}
+
+	// Call the WebAuthn API without await
+	if (allowWebAuthn) {
+		callWebAuthnApi();
+	}
+
+	function form_1_formEl_binding(value) {
+		formEl = value;
+		$$invalidate(0, formEl);
+	}
+
+	$$self.$$set = $$props => {
+		if ('allowWebAuthn' in $$props) $$invalidate(8, allowWebAuthn = $$props.allowWebAuthn);
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(2, form = $$props.form);
+		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
+		if ('journey' in $$props) $$invalidate(9, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(10, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(11, step = $$props.step);
+	};
+
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*form*/ 4) {
+			{
+				$$invalidate(4, formMessageKey = convertStringToKey(form?.message));
+			}
+		}
+	};
+
+	return [
+		formEl,
+		componentStyle,
+		form,
+		alertNeedsFocus,
+		formMessageKey,
+		formAriaDescriptor,
+		formNeedsFocus,
+		webAuthnType,
+		allowWebAuthn,
+		journey,
+		metadata,
+		step,
+		form_1_formEl_binding
+	];
+}
+
+class Webauthn extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$4, create_fragment$4, safe_not_equal, {
+			allowWebAuthn: 8,
+			componentStyle: 1,
+			form: 2,
+			formEl: 0,
+			journey: 9,
+			metadata: 10,
+			step: 11
+		});
+	}
+}
+
+/* src/lib/components/icons/shield-check-icon.svelte generated by Svelte v3.55.1 */
+
+function create_fragment$3(ctx) {
+	let svg;
+	let path;
+
+	return {
+		c() {
+			svg = svg_element("svg");
+			path = svg_element("path");
+			attr(path, "fill-rule", "evenodd");
+			attr(path, "d", "M8 0c-.69 0-1.843.265-2.928.56-1.11.3-2.229.655-2.887.87a1.54 1.54 0 0 0-1.044 1.262c-.596 4.477.787 7.795 2.465 9.99a11.777 11.777 0 0 0 2.517 2.453c.386.273.744.482 1.048.625.28.132.581.24.829.24s.548-.108.829-.24a7.159 7.159 0 0 0 1.048-.625 11.775 11.775 0 0 0 2.517-2.453c1.678-2.195 3.061-5.513 2.465-9.99a1.541 1.541 0 0 0-1.044-1.263 62.467 62.467 0 0 0-2.887-.87C9.843.266 8.69 0 8 0zm2.146 5.146a.5.5 0 0 1 .708.708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 7.793l2.646-2.647z");
+			attr(svg, "xmlns", "http://www.w3.org/2000/svg");
+			attr(svg, "height", /*size*/ ctx[1]);
+			attr(svg, "width", /*size*/ ctx[1]);
+			attr(svg, "class", /*classes*/ ctx[0]);
+			attr(svg, "fill", "currentColor");
+			attr(svg, "viewBox", "0 0 16 18");
+		},
+		m(target, anchor) {
+			insert(target, svg, anchor);
+			append(svg, path);
+		},
+		p(ctx, [dirty]) {
+			if (dirty & /*size*/ 2) {
+				attr(svg, "height", /*size*/ ctx[1]);
+			}
+
+			if (dirty & /*size*/ 2) {
+				attr(svg, "width", /*size*/ ctx[1]);
+			}
+
+			if (dirty & /*classes*/ 1) {
+				attr(svg, "class", /*classes*/ ctx[0]);
+			}
+		},
+		i: noop,
+		o: noop,
+		d(detaching) {
+			if (detaching) detach(svg);
+		}
+	};
+}
+
+function instance$3($$self, $$props, $$invalidate) {
+	let { classes = '' } = $$props;
+	let { size = '24px' } = $$props;
+
+	$$self.$$set = $$props => {
+		if ('classes' in $$props) $$invalidate(0, classes = $$props.classes);
+		if ('size' in $$props) $$invalidate(1, size = $$props.size);
+	};
+
+	return [classes, size];
+}
+
+class Shield_check_icon extends SvelteComponent {
+	constructor(options) {
+		super();
+		init(this, options, instance$3, create_fragment$3, safe_not_equal, { classes: 0, size: 1 });
+	}
+}
+
+/* src/lib/journey/stages/recovery-codes.svelte generated by Svelte v3.55.1 */
+
+function get_each_context(ctx, list, i) {
+	const child_ctx = ctx.slice();
+	child_ctx[11] = list[i];
+	return child_ctx;
+}
+
+// (43:2) {#if form?.icon && componentStyle !== 'inline'}
+function create_if_block$2(ctx) {
+	let div;
+	let clipboardicon;
+	let current;
+
+	clipboardicon = new Shield_check_icon({
+			props: {
+				classes: "tw_text-gray-400 tw_fill-current",
+				size: "72px"
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(clipboardicon.$$.fragment);
+			attr(div, "class", "tw_flex tw_justify-center");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(clipboardicon, div, null);
+			current = true;
+		},
+		i(local) {
+			if (current) return;
+			transition_in(clipboardicon.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(clipboardicon.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(clipboardicon);
+		}
+	};
+}
+
+// (73:4) {#each codes as code}
+function create_each_block(ctx) {
+	let li;
+	let span;
+	let t0_value = /*code*/ ctx[11] + "";
+	let t0;
+	let t1;
+
+	return {
+		c() {
+			li = element("li");
+			span = element("span");
+			t0 = text(t0_value);
+			t1 = space();
+			attr(span, "class", "tw_text-secondary-dark dark:tw_text-secondary-light");
+			attr(li, "class", "tw_text-center");
+		},
+		m(target, anchor) {
+			insert(target, li, anchor);
+			append(li, span);
+			append(span, t0);
+			append(li, t1);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*codes*/ 16 && t0_value !== (t0_value = /*code*/ ctx[11] + "")) set_data(t0, t0_value);
+		},
+		d(detaching) {
+			if (detaching) detach(li);
+		}
+	};
+}
+
+// (82:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+function create_default_slot_1$1(ctx) {
+	let t;
+	let current;
+	t = new Locale_strings({ props: { key: "nextButton" } });
+
+	return {
+		c() {
+			create_component(t.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(t, target, anchor);
+			current = true;
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(t.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(t, detaching);
+		}
+	};
+}
+
+// (36:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
+function create_default_slot$2(ctx) {
+	let t0;
+	let header;
+	let h1;
+	let t1;
+	let t2;
+	let p0;
+	let t3;
+	let t4;
+	let hr;
+	let t5;
+	let h2;
+	let t6;
+	let t7;
+	let p1;
+	let t8;
+	let t9;
+	let ol;
+	let t10;
+	let button;
+	let current;
+	let if_block = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$2();
+
+	t1 = new Locale_strings({
+			props: { key: "yourMultiFactorAuthIsEnabled" }
+		});
+
+	t3 = new Locale_strings({
+			props: {
+				key: "useThisNewMfaToHelpVerifyYourIdentity"
+			}
+		});
+
+	t6 = new Locale_strings({ props: { key: "dontGetLockedOut" } });
+
+	t8 = new Locale_strings({
+			props: {
+				html: true,
+				key: "yourRecoveryCodesToAccessAccountForLostDevice"
+			}
+		});
+
+	let each_value = /*codes*/ ctx[4];
+	let each_blocks = [];
+
+	for (let i = 0; i < each_value.length; i += 1) {
+		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+	}
+
+	button = new Button({
+			props: {
+				busy: /*journey*/ ctx[3]?.loading,
+				style: "primary",
+				type: "submit",
+				width: "full",
+				$$slots: { default: [create_default_slot_1$1] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			t0 = space();
+			header = element("header");
+			h1 = element("h1");
+			create_component(t1.$$.fragment);
+			t2 = space();
+			p0 = element("p");
+			create_component(t3.$$.fragment);
+			t4 = space();
+			hr = element("hr");
+			t5 = space();
+			h2 = element("h2");
+			create_component(t6.$$.fragment);
+			t7 = space();
+			p1 = element("p");
+			create_component(t8.$$.fragment);
+			t9 = space();
+			ol = element("ol");
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].c();
+			}
+
+			t10 = space();
+			create_component(button.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p0, "class", "tw_-mt-5 tw_mb-2 tw_py-4 tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light");
+			attr(header, "id", formHeaderId);
+			attr(hr, "class", "tw_border-collapse tw_border-secondary-light dark:tw_border-secondary-dark tw_mb-8");
+			attr(h2, "class", "tw_secondary-header dark:tw_secondary-header_dark tw_text-lg");
+			attr(p1, "class", "tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6");
+			attr(ol, "class", "tw_font-mono tw_border tw_border-secondary-light dark:tw_border-secondary-dark tw_bg-body-light dark:tw_bg-body-dark tw_list-decimal tw_text-secondary-light dark:tw_text-secondary-light tw_py-4 tw_list-inside tw_rounded-md tw_mb-4 tw_columns-2");
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, t0, anchor);
+			insert(target, header, anchor);
+			append(header, h1);
+			mount_component(t1, h1, null);
+			append(header, t2);
+			append(header, p0);
+			mount_component(t3, p0, null);
+			insert(target, t4, anchor);
+			insert(target, hr, anchor);
+			insert(target, t5, anchor);
+			insert(target, h2, anchor);
+			mount_component(t6, h2, null);
+			insert(target, t7, anchor);
+			insert(target, p1, anchor);
+			mount_component(t8, p1, null);
+			insert(target, t9, anchor);
+			insert(target, ol, anchor);
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].m(ol, null);
+			}
+
+			insert(target, t10, anchor);
+			mount_component(button, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline') {
+				if (if_block) {
+					if (dirty & /*form, componentStyle*/ 6) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block$2();
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(t0.parentNode, t0);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+
+			if (dirty & /*codes*/ 16) {
+				each_value = /*codes*/ ctx[4];
+				let i;
+
+				for (i = 0; i < each_value.length; i += 1) {
+					const child_ctx = get_each_context(ctx, each_value, i);
+
+					if (each_blocks[i]) {
+						each_blocks[i].p(child_ctx, dirty);
+					} else {
+						each_blocks[i] = create_each_block(child_ctx);
+						each_blocks[i].c();
+						each_blocks[i].m(ol, null);
+					}
+				}
+
+				for (; i < each_blocks.length; i += 1) {
+					each_blocks[i].d(1);
+				}
+
+				each_blocks.length = each_value.length;
+			}
+
+			const button_changes = {};
+			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
+
+			if (dirty & /*$$scope*/ 16384) {
+				button_changes.$$scope = { dirty, ctx };
+			}
+
+			button.$set(button_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			transition_in(t1.$$.fragment, local);
+			transition_in(t3.$$.fragment, local);
+			transition_in(t6.$$.fragment, local);
+			transition_in(t8.$$.fragment, local);
+			transition_in(button.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			transition_out(t1.$$.fragment, local);
+			transition_out(t3.$$.fragment, local);
+			transition_out(t6.$$.fragment, local);
+			transition_out(t8.$$.fragment, local);
+			transition_out(button.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(header);
+			destroy_component(t1);
+			destroy_component(t3);
+			if (detaching) detach(t4);
+			if (detaching) detach(hr);
+			if (detaching) detach(t5);
+			if (detaching) detach(h2);
+			destroy_component(t6);
+			if (detaching) detach(t7);
+			if (detaching) detach(p1);
+			destroy_component(t8);
+			if (detaching) detach(t9);
+			if (detaching) detach(ol);
+			destroy_each(each_blocks, detaching);
+			if (detaching) detach(t10);
+			destroy_component(button, detaching);
+		}
+	};
+}
+
+function create_fragment$2(ctx) {
+	let form_1;
+	let updating_formEl;
+	let current;
+
+	function form_1_formEl_binding(value) {
+		/*form_1_formEl_binding*/ ctx[10](value);
+	}
+
+	let form_1_props = {
+		ariaDescribedBy: /*formAriaDescriptor*/ ctx[5],
+		id: formElementId,
+		needsFocus: /*formNeedsFocus*/ ctx[6],
+		onSubmitWhenValid: /*func*/ ctx[9],
+		$$slots: { default: [create_default_slot$2] },
+		$$scope: { ctx }
+	};
+
+	if (/*formEl*/ ctx[0] !== void 0) {
+		form_1_props.formEl = /*formEl*/ ctx[0];
+	}
+
+	form_1 = new Form({ props: form_1_props });
+	binding_callbacks.push(() => bind(form_1, 'formEl', form_1_formEl_binding));
+
+	return {
+		c() {
+			create_component(form_1.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(form_1, target, anchor);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			const form_1_changes = {};
+			if (dirty & /*formAriaDescriptor*/ 32) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[5];
+			if (dirty & /*formNeedsFocus*/ 64) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[6];
+			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*func*/ ctx[9];
+
+			if (dirty & /*$$scope, journey, codes, form, componentStyle*/ 16414) {
+				form_1_changes.$$scope = { dirty, ctx };
+			}
+
+			if (!updating_formEl && dirty & /*formEl*/ 1) {
+				updating_formEl = true;
+				form_1_changes.formEl = /*formEl*/ ctx[0];
+				add_flush_callback(() => updating_formEl = false);
+			}
+
+			form_1.$set(form_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(form_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(form_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(form_1, detaching);
+		}
+	};
+}
+
+const formFailureMessageId = 'genericStepFailureMessage';
+const formHeaderId = 'genericStepHeader';
+const formElementId = 'genericStepForm';
+
+function instance$2($$self, $$props, $$invalidate) {
+	let { componentStyle } = $$props;
+	let { form } = $$props;
+	let { formEl = null } = $$props;
+	let { journey } = $$props;
+	let { metadata } = $$props;
+	let { step } = $$props;
+	let codes = [];
+	let formAriaDescriptor = 'genericStepHeader';
+	let formNeedsFocus = false;
+
+	afterUpdate(() => {
+		if (form?.message) {
+			$$invalidate(5, formAriaDescriptor = formFailureMessageId);
+			$$invalidate(6, formNeedsFocus = false);
+		} else {
+			$$invalidate(5, formAriaDescriptor = formHeaderId);
+			$$invalidate(6, formNeedsFocus = true);
+		}
+	});
+
+	const func = () => form.submit();
+
+	function form_1_formEl_binding(value) {
+		formEl = value;
+		$$invalidate(0, formEl);
+	}
+
+	$$self.$$set = $$props => {
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(2, form = $$props.form);
+		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
+		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(7, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(8, step = $$props.step);
+	};
+
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*step*/ 256) {
+			{
+				$$invalidate(4, codes = FRRecoveryCodes.getCodes(step));
+			}
+		}
+	};
+
+	return [
+		formEl,
+		componentStyle,
+		form,
+		journey,
+		codes,
+		formAriaDescriptor,
+		formNeedsFocus,
+		metadata,
+		step,
+		func,
+		form_1_formEl_binding
+	];
+}
+
+class Recovery_codes extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$2, create_fragment$2, safe_not_equal, {
+			componentStyle: 1,
+			form: 2,
+			formEl: 0,
+			journey: 3,
+			metadata: 7,
+			step: 8
+		});
+	}
+}
+
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
  * @returns {object} - The stage Svelte component
  */
 function mapStepToStage(currentStep) {
+    // Handle unlikely error state
     if (!currentStep || currentStep.type !== 'Step') {
         return Generic;
     }
+    // Prioritize stage value if present
     switch (currentStep?.getStage && currentStep.getStage()) {
         case 'OneTimePassword':
             return One_time_password;
@@ -35343,9 +37546,15 @@ function mapStepToStage(currentStep) {
             return Registration;
         case 'DefaultLogin':
             return Login;
-        default:
-            return Generic;
     }
+    // getWebAuthnStepType will return 0 if not a WebAuthn step
+    if (FRWebAuthn.getWebAuthnStepType(currentStep)) {
+        return Webauthn;
+    }
+    if (FRRecoveryCodes.isDisplayStep(currentStep)) {
+        return Recovery_codes;
+    }
+    return Generic;
 }
 
 /* src/lib/journey/journey.svelte generated by Svelte v3.55.1 */

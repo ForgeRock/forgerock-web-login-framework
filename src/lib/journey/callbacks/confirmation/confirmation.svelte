@@ -39,7 +39,9 @@
    */
   function setBtnValue(index: number) {
     callback.setOptionIndex(index);
-    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
+    if (callbackMetadata) {
+      callbackMetadata.derived.isReadyForSubmission = true;
+    }
     selfSubmitFunction && selfSubmitFunction();
   }
 
@@ -84,7 +86,7 @@
       options = options.slice(0, 1);
     }
 
-    if (!stepMetadata?.derived.isStepSelfSubmittable && options.length > 1) {
+    if (!stepMetadata?.derived.isStepSelfSubmittable() && options.length > 1) {
       // Since the user needs to confirm, add this empty `value` to force selection
       options.unshift({ value: '', text: label });
     } else if (options.length === 1) {
@@ -97,7 +99,7 @@
 
 <!-- Only render confirmation if NOT currently on 'OneTimePassword' stage -->
 {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
-  {#if !stepMetadata?.derived.isStepSelfSubmittable}
+  {#if !stepMetadata?.derived.isStepSelfSubmittable()}
     {#if options.length > 1}
       <Select
         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
@@ -116,13 +118,15 @@
         value={false}
       >
         {options[0].text}
-    </Checkbox>
+      </Checkbox>
     {/if}
   {:else}
     <Grid num={options.length}>
       {#each options as opt}
         <Button
-          style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}
+          style={options.length > 1 && defaultChoice === Number(opt.value)
+            ? 'primary'
+            : buttonStyle}
           type="button"
           width="auto"
           onClick={() => setBtnValue(Number(opt.value))}

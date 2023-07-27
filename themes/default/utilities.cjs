@@ -42,7 +42,7 @@ module.exports = (theme) => ({
   },
   '.secondary-header': {
     fontWeight: theme('fontWeight.medium'),
-    fontSize: theme('fontSize.base'),
+    fontSize: theme('fontSize.lg'),
     marginBottom: theme('spacing.4'),
   },
   '.secondary-header_dark': {

@@ -88,7 +88,7 @@ export function buildStepMetadata<T = unknown>(
 
   return {
     derived: {
-      isStepSelfSubmittable: isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
+      isStepSelfSubmittable: () => isStepSelfSubmittable(callbackMetadataArray, userInputOptional),
       isUserInputOptional: userInputOptional,
       numOfCallbacks: callbackMetadataArray.length,
       numOfSelfSubmittableCbs: callbackMetadataArray.filter((cb) => !!cb.derived.isSelfSubmitting)

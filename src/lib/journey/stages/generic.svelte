@@ -55,14 +55,13 @@
     // if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
 
     // The below variation is more liberal, first self-submittable cb to call this wins.
-    if (metadata?.step?.derived.isStepSelfSubmittable) {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
       submitFormWrapper();
     }
   }
   function submitFormWrapper() {
     alertNeedsFocus = false;
     formNeedsFocus = false;
-
     form?.submit();
   }
 
@@ -127,7 +126,7 @@
     />
   {/each}
 
-  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable}
+  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="nextButton" />
     </Button>

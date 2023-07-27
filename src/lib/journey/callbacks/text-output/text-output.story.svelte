@@ -1,10 +1,12 @@
 <script lang="ts">
-  import type { TextOutputCallback } from '@forgerock/javascript-sdk';
+  import { WebAuthnStepType, type TextOutputCallback } from '@forgerock/javascript-sdk';
   import Centered from '$components/primitives/box/centered.svelte';
 
   import TextOutput from './text-output.svelte';
 
   export let callback: TextOutputCallback;
+  export let recoveryCodes: string[] = [];
+  export let webAuthnValue: WebAuthnStepType = WebAuthnStepType.None;
 
   let callbackMetadata = {
     derived: {
@@ -16,9 +18,10 @@
     },
     idx: 0,
   };
+
   let stepMetadata = {
     derived: {
-      isStepSelfSubmittable: false,
+      isStepSelfSubmittable: () => false,
       isUserInputOptional: false,
       numOfCallbacks: 2,
       numOfSelfSubmittableCbs: 0,
@@ -28,5 +31,5 @@
 </script>
 
 <Centered>
-  <TextOutput {callback} {callbackMetadata} {stepMetadata} />
+  <TextOutput {callback} />
 </Centered>
