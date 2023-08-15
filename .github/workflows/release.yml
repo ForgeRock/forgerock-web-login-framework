@@ -61,3 +61,9 @@ jobs:
           VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
           VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
           VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+      - name: rebase beta branch
+        if: github.ref == 'refs/heads/main'
+        run: |
+          git checkout beta
+          git rebase origin main
+          git push origin beta -f
