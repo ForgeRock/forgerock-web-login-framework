@@ -4,6 +4,8 @@ import { initialize } from '../src/lib/locale.store';
 
 import '../src/app.css';
 
+import { withThemeByClassName } from '@storybook/addon-styling';
+
 // Initializes localized content globally for all stories
 initialize();
 
@@ -51,3 +53,14 @@ export const parameters = {
     stylePreview: true,
   },
 };
+
+export const decorators = [
+  // Adds theme switching support.
+  withThemeByClassName({
+    themes: {
+      light: 'light',
+      dark: 'dark',
+    },
+    defaultTheme: 'light',
+  }),
+];
