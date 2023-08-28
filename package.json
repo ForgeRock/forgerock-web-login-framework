@@ -119,7 +119,7 @@
     "rollup-plugin-postcss": "4.0.2",
     "rollup-plugin-styles": "^4.0.0",
     "rollup-plugin-svelte": "^7.1.0",
-    "semantic-release-slack-bot": "3.5.3",
+    "semantic-release-slack-bot": "4.0.2",
     "storybook": "^7.0.0-rc.3",
     "storybook-addon-code-editor": "0.3.7",
     "storybook-dark-mode": "2.0.5",
