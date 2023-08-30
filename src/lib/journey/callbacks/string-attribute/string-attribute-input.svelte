@@ -68,17 +68,19 @@
   }
 </script>
 
-<Input
-  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-  key={inputName}
-  label={interpolate(outputName, null, prompt)}
-  message={isRequired ? interpolate('inputRequiredError') : undefined}
-  onChange={setValue}
-  {isRequired}
-  {isInvalid}
-  {type}
-  showMessage={!!isInvalid}
-  value={previousValue}
->
-  <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />
-</Input>
+{#key callback}
+  <Input
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    key={inputName}
+    label={interpolate(outputName, null, prompt)}
+    message={isRequired ? interpolate('inputRequiredError') : undefined}
+    onChange={setValue}
+    {isRequired}
+    {isInvalid}
+    {type}
+    showMessage={!!isInvalid}
+    value={previousValue}
+  >
+    <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />
+  </Input>
+{/key}

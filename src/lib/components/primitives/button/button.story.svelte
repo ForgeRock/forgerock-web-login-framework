@@ -5,7 +5,7 @@
   // Button props
   export let busy = false;
   // export let customCss = [];
-  export let onClick = (event: Event) => {};
+  export let onClick = () => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
   export let text: string;
   export let type: 'button' | 'submit' | null = null;

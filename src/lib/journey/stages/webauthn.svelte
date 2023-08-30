@@ -16,7 +16,6 @@
   import type { FRStep } from '@forgerock/javascript-sdk';
 
   import type { StageFormObject } from '$journey/journey.interfaces';
-  import type { Maybe } from '$lib/interfaces';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn

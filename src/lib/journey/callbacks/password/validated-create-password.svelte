@@ -45,14 +45,16 @@
   }
 </script>
 
-<Base
-  {callback}
-  {callbackMetadata}
-  {isInvalid}
-  {isRequired}
-  key={inputName}
-  showMessage={isInvalid}
-  {style}
->
-  <Policies {callback} label={prompt} messageKey="passwordRequirements" showPolicies={true} />
-</Base>
+{#key callback}
+  <Base
+    {callback}
+    {callbackMetadata}
+    {isInvalid}
+    {isRequired}
+    key={inputName}
+    showMessage={isInvalid}
+    {style}
+  >
+    <Policies {callback} label={prompt} messageKey="passwordRequirements" showPolicies={true} />
+  </Base>
+{/key}

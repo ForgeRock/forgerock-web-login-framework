@@ -32,7 +32,9 @@
    */
   function setBtnValue(value: string) {
     callback.setProvider(value);
-    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
+    if (callbackMetadata) {
+      callbackMetadata.derived.isReadyForSubmission = true;
+    }
     selfSubmitFunction && selfSubmitFunction();
   }
 
@@ -50,7 +52,7 @@
       callback.setProvider('localAuthentication');
     }
 
-    idps = socialProviders.map((option, index) => ({
+    idps = socialProviders.map((option) => ({
       value: option.provider,
       text: option.uiConfig.buttonDisplayName,
     }));

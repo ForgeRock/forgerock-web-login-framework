@@ -12,7 +12,8 @@
   let journeyParam = $page.url.searchParams.get('journey');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
-  let userResponse: any | null;
+  // tslint:disable-next-line: no-any
+  let userResponse: { [key: string]: any } | null;
   let widgetEl: HTMLDivElement;
 
   async function logout() {

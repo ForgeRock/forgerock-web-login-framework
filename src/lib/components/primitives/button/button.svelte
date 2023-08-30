@@ -5,7 +5,7 @@
   export let busy = false;
   export let classes = '';
   // export let customCss: { key: string; value: string }[] = [];
-  export let onClick: (event: Event) => void = (e) => {};
+  export let onClick: (event: Event) => void = () => {};
   export let style: 'outline' | 'primary' | 'secondary' = 'outline';
   export let type: 'button' | 'submit' | null = null;
   export let width: 'auto' | 'full' = 'auto';

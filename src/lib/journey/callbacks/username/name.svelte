@@ -41,12 +41,14 @@
   }
 </script>
 
-<Input
-  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-  key={inputName}
-  label={interpolate(textToKey(textInputLabel || callbackType), null, textInputLabel)}
-  onChange={setValue}
-  type="text"
-  showMessage={false}
-  value={typeof value === 'string' ? value : ''}
-/>
+{#key callback}
+  <Input
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    key={inputName}
+    label={interpolate(textToKey(textInputLabel || callbackType), null, textInputLabel)}
+    onChange={setValue}
+    type="text"
+    showMessage={false}
+    value={typeof value === 'string' ? value : ''}
+  />
+{/key}
