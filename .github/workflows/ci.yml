@@ -9,7 +9,7 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Node ${{ matrix.node }} Run
@@ -41,7 +41,7 @@ jobs:
       VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
       VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Restore npm dependencies
@@ -68,7 +68,7 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: install
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v3

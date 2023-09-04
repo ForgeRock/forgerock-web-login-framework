@@ -36,7 +36,7 @@ jobs:
     needs: preview
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
           node-version: '16.x'
@@ -58,7 +58,7 @@ jobs:
       matrix:
         node: [16.x, 18.x]
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
       - name: install dependencies
         run: npm ci
