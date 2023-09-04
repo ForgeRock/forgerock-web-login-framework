@@ -120,7 +120,7 @@
     "rollup-plugin-styles": "^4.0.0",
     "rollup-plugin-svelte": "^7.1.0",
     "semantic-release-slack-bot": "3.5.3",
-    "storybook": "^7.0.0-rc.3",
+    "storybook": "^7.4.0",
     "storybook-addon-code-editor": "0.3.7",
     "storybook-dark-mode": "2.0.5",
     "svelte": "^3.55.1",
