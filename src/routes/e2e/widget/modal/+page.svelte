@@ -9,9 +9,7 @@
   const journeyEvents = journey();
 
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
-  let codeParam = $page.url.searchParams.get('code');
   let journeyParam = $page.url.searchParams.get('journey');
-  let stateParam = $page.url.searchParams.get('state');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
   let userResponse: any | null;
@@ -66,19 +64,41 @@
       journeys: {
         forgotPassword: {
           journey: 'TEST_ResetPasword',
-          match: ['#/service/TEST_ResetPassword', '?journey=TEST_ResetPassword', '#/service/ResetPassword', '?journey=ResetPassword'],
+          match: [
+            '#/service/TEST_ResetPassword',
+            '?journey=TEST_ResetPassword',
+            '#/service/ResetPassword',
+            '?journey=ResetPassword',
+          ],
         },
         forgotUsername: {
           journey: 'TEST_ForgottenUsername',
-          match: ['#/service/TEST_ForgottenUsername', '?journey=TEST_ForgottenUsername', '#/service/ForgottenUsername', '?journey=ForgottenUsername']
+          match: [
+            '#/service/TEST_ForgottenUsername',
+            '?journey=TEST_ForgottenUsername',
+            '#/service/ForgottenUsername',
+            '?journey=ForgottenUsername',
+          ],
         },
         login: {
           journey: 'TEST_Login',
-          match: ['#/service/TEST_Login', '?journey', '?journey=TEST_Login', '#/service/Login', '?journey', '?journey=Login'],
+          match: [
+            '#/service/TEST_Login',
+            '?journey',
+            '?journey=TEST_Login',
+            '#/service/Login',
+            '?journey',
+            '?journey=Login',
+          ],
         },
         register: {
           journey: 'TEST_Registration',
-          match: ['#/service/TEST_Registration', '?journey=TEST_Registration', '#/service/Registration', '?journey=Registration'],
+          match: [
+            '#/service/TEST_Registration',
+            '?journey=TEST_Registration',
+            '#/service/Registration',
+            '?journey=Registration',
+          ],
         },
       },
       links: {

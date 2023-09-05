@@ -87,7 +87,6 @@ const configSchema = z
           set: z.function().args(z.string()).returns(z.promise(z.void())),
           remove: z.function().args(z.string()).returns(z.promise(z.void())),
         }),
-        z.literal('indexedDB'),
         z.literal('sessionStorage'),
         z.literal('localStorage'),
       ])

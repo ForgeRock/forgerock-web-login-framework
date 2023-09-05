@@ -1,5 +1,5 @@
-import { expect, jest } from '@storybook/jest';
-import { userEvent, within } from '@storybook/testing-library';
+import { expect } from '@storybook/jest';
+import { within } from '@storybook/testing-library';
 import Label from './label.story.svelte';
 
 export default {

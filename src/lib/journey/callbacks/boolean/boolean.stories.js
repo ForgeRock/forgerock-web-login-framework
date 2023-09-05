@@ -1,4 +1,4 @@
-import { expect, jest } from '@storybook/jest';
+import { expect } from '@storybook/jest';
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 import { within } from '@storybook/testing-library';
 

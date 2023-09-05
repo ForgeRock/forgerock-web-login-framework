@@ -69,5 +69,5 @@
   type="text"
   value={typeof value === 'string' ? value : ''}
 >
-  <Policies callback={callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
+  <Policies {callback} key={inputName} label={prompt} messageKey="usernameRequirements" />
 </Input>

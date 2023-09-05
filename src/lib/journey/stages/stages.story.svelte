@@ -58,9 +58,9 @@
   {:else if stage === 'DefaultRegistration'}
     <Registration componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else if stage === 'RecoveryCodes'}
-    <RecoveryCodes componentStyle="modal" {form} {journey} {metadata} {step} />
+    <RecoveryCodes componentStyle="modal" {form} {journey} {step} />
   {:else if stage === 'WebAuthn'}
-    <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {journey} {metadata} {step} />
+    <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {step} />
   {:else}
     <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
   {/if}

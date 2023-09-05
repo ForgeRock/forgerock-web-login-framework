@@ -6,7 +6,7 @@ import {
   StepType,
   FRCallback,
 } from '@forgerock/javascript-sdk';
-import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import type { StepOptions } from '@forgerock/javascript-sdk/src/auth/interfaces';
 import { get, writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
