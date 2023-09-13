@@ -1,4 +1,4 @@
-import { FRStep, CallbackType, WebAuthnStepType } from '@forgerock/javascript-sdk';
+import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 import { expect } from '@storybook/jest';
 import { within } from '@storybook/testing-library';
 
@@ -37,6 +37,17 @@ export const WithScript = {
   },
 };
 
+export const Warning = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[3],
+  },
+};
+
+export const Error = {
+  args: {
+    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[4],
+  },
+};
 export const Suspended = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.SuspendedTextOutputCallback)[0],

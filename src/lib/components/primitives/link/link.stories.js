@@ -26,7 +26,7 @@ Interaction.args = { ...Base.args };
 Interaction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
   const link = canvas.getByRole('link');
-  userEvent.tab();
+  await userEvent.tab();
   expect(link).toHaveFocus();
   expect(link).toHaveAttribute('href', '/');
 };

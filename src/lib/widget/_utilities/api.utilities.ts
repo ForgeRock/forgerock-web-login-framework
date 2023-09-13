@@ -1,5 +1,5 @@
 import { Config, FRUser, SessionManager, type ConfigOptions } from '@forgerock/javascript-sdk';
-import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
+import { HttpClient } from '@forgerock/javascript-sdk';
 import { derived, get, type Readable } from 'svelte/store';
 
 import { logErrorAndThrow } from '$lib/_utilities/errors.utilities';

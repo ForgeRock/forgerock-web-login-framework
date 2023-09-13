@@ -1,6 +1,4 @@
-import { FRStep, CallbackType, RedirectCallback } from '@forgerock/javascript-sdk';
-import { expect } from '@storybook/jest';
-import { userEvent, within } from '@storybook/testing-library';
+import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 
 import response from './redirect.mock';
 import Input from './redirect.story.svelte';

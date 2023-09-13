@@ -2,11 +2,15 @@
   import { FRDevice, type DeviceProfileCallback } from '@forgerock/javascript-sdk';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
-  import type { SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
   import type { Maybe } from '$lib/interfaces';
 
   export let callback: DeviceProfileCallback;
-  export let callbackMetadata: Maybe<Record<string, any>> = null;
+  export let callbackMetadata: Maybe<CallbackMetadata> = null;
   export let stepMetadata: Maybe<StepMetadata> = null;
   export let selfSubmitFunction: SelfSubmitFunction;
   const device = new FRDevice({});

@@ -3,8 +3,8 @@
 
   import { configuration, user } from '$package/index';
 
-  let loading: any;
-  let userInfo: any;
+  let loading: unknown;
+  let userInfo: Record<string, unknown> | null;
 
   async function logout() {
     await user.logout();
@@ -22,16 +22,16 @@
           timeout: 5000,
         },
         realmPath: 'alpha',
-      }
+      },
     });
 
     // Using observable method:
     const { get, subscribe } = user.info();
     get();
-    subscribe((event) => {
+    subscribe((event: { loading: unknown; response: unknown }) => {
       console.log(event);
       loading = event.loading;
-      userInfo = event.response;
+      userInfo = event.response as Record<string, unknown>;
     });
 
     // Using Promise method
@@ -41,7 +41,6 @@
     // userInfo = event.response;
   });
 </script>
-
 
 {#if !loading}
   {#if userInfo}
@@ -63,7 +62,5 @@
     </ul>
   {/if}
 {:else}
-  <p>Loading ... </p>
+  <p>Loading ...</p>
 {/if}
-
-

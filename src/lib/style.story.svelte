@@ -14,7 +14,7 @@
   export let form: StageFormObject;
   export let journey: StageJourneyObject;
   export let stage: string;
-  export let stageJson: any;
+  export let stageJson: Record<string, unknown>;
   export let step: FRStep;
   export let style: z.infer<typeof partialStyleSchema>;
 
@@ -24,7 +24,7 @@
   // Check if stage attribute is serialized JSON
   if (stage && stage.includes('{')) {
     try {
-      stageJson = JSON.parse(stage);
+      stageJson = JSON.parse(stage) as Record<string, unknown>;
     } catch (err) {
       console.warn('Stage attribute value was not parsable');
     }

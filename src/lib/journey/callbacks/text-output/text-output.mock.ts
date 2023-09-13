@@ -21,7 +21,7 @@ export default {
       output: [
         {
           name: 'message',
-          value: 'Have you read our <a href="#">privacy policy</a>?',
+          value: 'Have <em>you</em> <strong>read<strong> our <a href="#">privacy policy</a>?',
         },
         {
           name: 'messageType',
@@ -39,7 +39,33 @@ export default {
         },
         {
           name: 'messageType',
-          value: '0',
+          value: '4',
+        },
+      ],
+    },
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value: 'There has been a login attempt in your account, please check!',
+        },
+        {
+          name: 'messageType',
+          value: '1',
+        },
+      ],
+    },
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value: 'Login Failure',
+        },
+        {
+          name: 'messageType',
+          value: '2',
         },
       ],
     },

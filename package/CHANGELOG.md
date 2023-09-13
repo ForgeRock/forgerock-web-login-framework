@@ -1,3 +1,18 @@
+# [1.2.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.1.0...v1.2.0) (2023-09-12)
+
+
+### Features
+
+* **LAW:** improve rendering of TextOutputCallback's types ([0d6af68](https://github.com/forgerock/forgerock-web-login-framework/commit/0d6af682b675777af3554fafed62710bc6611020))
+
+# [1.1.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.0.2...v1.1.0) (2023-07-27)
+
+
+### Features
+
+* **callbacks:** add-webauthn-support ([26af184](https://github.com/forgerock/forgerock-web-login-framework/commit/26af18457b466f161288e64070a317ceba50f0b0))
+* **callbacks:** device-profile-node addition ([a41fa12](https://github.com/forgerock/forgerock-web-login-framework/commit/a41fa129080ae957d803b4d40b254452d25055bb))
+
 # [1.1.0-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.1.0-beta.1...v1.1.0-beta.2) (2023-06-22)
 
 

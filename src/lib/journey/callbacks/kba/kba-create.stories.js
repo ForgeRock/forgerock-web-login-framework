@@ -38,24 +38,16 @@ Interaction.play = async ({ canvasElement }) => {
 
   const cb = step.getCallbackOfType(CallbackType.KbaCreateCallback);
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
   await userEvent.tab();
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const selectEl = canvas.getByLabelText('Select a security question', {
     selector: 'select',
   });
-  await userEvent.selectOptions(selectEl, '0', { delay: 200 });
+  await userEvent.selectOptions(selectEl, '0', { delay: 100 });
 
   await expect(canvas.queryByLabelText('Custom security question')).toBeNull();
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
   await userEvent.tab();
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   const answerEl = canvas.getByLabelText('Security answer', {
     selector: 'input',
@@ -65,13 +57,9 @@ Interaction.play = async ({ canvasElement }) => {
     delay: 200,
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  await userEvent.selectOptions(selectEl, '2', { delay: 200 });
+  await userEvent.selectOptions(selectEl, '2', { delay: 100 });
 
   await userEvent.tab();
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await expect(canvas.queryByLabelText('Custom security question')).toBeVisible();
 
@@ -79,26 +67,17 @@ Interaction.play = async ({ canvasElement }) => {
     selector: 'input',
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
   await userEvent.type(questionEl, 'Favorite food?', {
     delay: 200,
   });
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
 
   await userEvent.clear(answerEl);
   await userEvent.type(answerEl, 'Tacos', {
     delay: 200,
   });
 
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await userEvent.selectOptions(selectEl, '1', { delay: 100 });
 
-  await userEvent.selectOptions(selectEl, '1', { delay: 200 });
-
-  await new Promise((resolve) => setTimeout(resolve, 1000));
-
-  console.log(cb);
   expect(cb.getInputValue()).toBe('1');
   expect(cb.payload.input[1].value).toBe('Tacos');
 

@@ -1,4 +1,4 @@
-import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import type { StepOptions } from '@forgerock/javascript-sdk/src/auth/interfaces';
 import type { z } from 'zod';
 
 // Import store types

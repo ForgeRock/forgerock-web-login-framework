@@ -17,6 +17,8 @@ import {
   recoveryCodes,
   webAuthnAuthenticationStep,
   webAuthnRegistrationStep,
+  successMessagesRenderingStep,
+  failureMessagesRenderingStep,
 } from './step.mock';
 import {
   multipleProvidersLocalAuthFormStep,
@@ -45,6 +47,8 @@ const frSocialSingleProviderLocalAuthFormStep = new FRStep(singleProviderLocalAu
 const frSocialSingleProviderLocalAuthNoFormStep = new FRStep(singleProviderLocalAuthNoFormStep);
 const frWebAuthnAuthenticationStep = new FRStep(webAuthnAuthenticationStep);
 const frWebAuthnRegistrationStep = new FRStep(webAuthnRegistrationStep);
+const frSuccessMessagesRendering = new FRStep(successMessagesRenderingStep);
+const frFailureMessagesRendering = new FRStep(failureMessagesRenderingStep);
 
 initialize();
 
@@ -363,6 +367,44 @@ export const WebAuthnRegistration = {
     },
     stage: 'WebAuthn',
     step: frWebAuthnRegistrationStep,
+  },
+};
+
+export const SuccessMessagesRenderingStep = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: '',
+    step: frSuccessMessagesRendering,
+  },
+};
+
+export const FailureMessagesRenderingStep = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: '',
+    step: frFailureMessagesRendering,
   },
 };
 

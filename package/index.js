@@ -790,8 +790,9 @@ function mount(component, element) {
  * of the MIT license. See the LICENSE file for details.
  */
 /** @hidden */
-var DEFAULT_TIMEOUT$1 = 60 * 1000;
-var DEFAULT_OAUTH_THRESHOLD$1 = 30 * 1000;
+const DEFAULT_TIMEOUT = 5 * 1000;
+const DEFAULT_OAUTH_THRESHOLD = 30 * 1000;
+const PREFIX = 'FR-SDK';
 
 /*
  * @forgerock/javascript-sdk
@@ -802,24 +803,16 @@ var DEFAULT_OAUTH_THRESHOLD$1 = 30 * 1000;
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __assign$b = (undefined && undefined.__assign) || function () {
-    __assign$b = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$b.apply(this, arguments);
-};
 /**
  * Sets defaults for options that are required but have no supplied value
  * @param options The options to set defaults for
  * @returns options The options with defaults
  */
 function setDefaults(options) {
-    return __assign$b(__assign$b({}, options), { oauthThreshold: options.oauthThreshold || DEFAULT_OAUTH_THRESHOLD$1 });
+    return {
+        ...options,
+        oauthThreshold: options.oauthThreshold || DEFAULT_OAUTH_THRESHOLD,
+    };
 }
 /**
  * Utility for merging configuration defaults with one-off options.
@@ -838,52 +831,51 @@ function setDefaults(options) {
  * const configOverrides = { tree: 'PasswordlessWebAuthn' };
  * const step = await FRAuth.next(undefined, configOverrides);
  */
-var Config = /** @class */ (function () {
-    function Config() {
-    }
+class Config {
     /**
      * Sets the default options.
      *
      * @param options The options to use as defaults
      */
-    Config.set = function (options) {
+    static set(options) {
         if (!this.isValid(options)) {
             throw new Error('Configuration is invalid');
         }
         if (options.serverConfig) {
             this.validateServerConfig(options.serverConfig);
         }
-        this.options = __assign$b({}, setDefaults(options));
-    };
+        this.options = {
+            ...setDefaults(options),
+        };
+    }
     /**
      * Merges the provided options with the default options.  Ensures a server configuration exists.
      *
      * @param options The options to merge with defaults
      */
-    Config.get = function (options) {
+    static get(options) {
         if (!this.options && !options) {
             throw new Error('Configuration has not been set');
         }
-        var merged = __assign$b(__assign$b({}, this.options), options);
+        const merged = { ...this.options, ...options };
         if (!merged.serverConfig || !merged.serverConfig.baseUrl) {
             throw new Error('Server configuration has not been set');
         }
         return merged;
-    };
-    Config.isValid = function (options) {
+    }
+    static isValid(options) {
         return !!(options && options.serverConfig);
-    };
-    Config.validateServerConfig = function (serverConfig) {
+    }
+    static validateServerConfig(serverConfig) {
         if (!serverConfig.timeout) {
-            serverConfig.timeout = DEFAULT_TIMEOUT$1;
+            serverConfig.timeout = DEFAULT_TIMEOUT;
         }
-        var url = serverConfig.baseUrl;
+        const url = serverConfig.baseUrl;
         if (url && url.charAt(url.length - 1) !== '/') {
             serverConfig.baseUrl = url + '/';
         }
-    };
-    return Config;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -922,7 +914,7 @@ var ActionTypes;
  * @ignore
  * These are private constants
  */
-var REQUESTED_WITH$1 = 'forgerock-sdk';
+const REQUESTED_WITH = 'forgerock-sdk';
 
 /*
  * @forgerock/javascript-sdk
@@ -938,12 +930,9 @@ var REQUESTED_WITH$1 = 'forgerock-sdk';
  * @ignore
  * These are private utility functions
  */
-function withTimeout$1(promise, timeout) {
-    if (timeout === void 0) { timeout = DEFAULT_TIMEOUT$1; }
-    var effectiveTimeout = timeout || DEFAULT_TIMEOUT$1;
-    var timeoutP = new Promise(function (_, reject) {
-        return window.setTimeout(function () { return reject(new Error('Timeout')); }, effectiveTimeout);
-    });
+function withTimeout(promise, timeout = DEFAULT_TIMEOUT) {
+    const effectiveTimeout = timeout || DEFAULT_TIMEOUT;
+    const timeoutP = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), effectiveTimeout));
     return Promise.race([promise, timeoutP]);
 }
 
@@ -957,18 +946,18 @@ function withTimeout$1(promise, timeout) {
  * of the MIT license. See the LICENSE file for details.
  */
 /** @hidden */
-function getRealmUrlPath$1(realmPath) {
+function getRealmUrlPath(realmPath) {
     // Split the path and scrub segments
-    var names = (realmPath || '')
+    const names = (realmPath || '')
         .split('/')
-        .map(function (x) { return x.trim(); })
-        .filter(function (x) { return x !== ''; });
+        .map((x) => x.trim())
+        .filter((x) => x !== '');
     // Ensure 'root' is the first realm
     if (names[0] !== 'root') {
         names.unshift('root');
     }
     // Concatenate into a URL path
-    var urlPath = names.map(function (x) { return "realms/".concat(x); }).join('/');
+    const urlPath = names.map((x) => `realms/${x}`).join('/');
     return urlPath;
 }
 
@@ -981,36 +970,27 @@ function getRealmUrlPath$1(realmPath) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __spreadArray$1 = (undefined && undefined.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
 /**
  * Returns the base URL including protocol, hostname and any non-standard port.
  * The returned URL does not include a trailing slash.
  */
-function getBaseUrl$1(url) {
-    var isNonStandardPort = (url.protocol === 'http:' && ['', '80'].indexOf(url.port) === -1) ||
+function getBaseUrl(url) {
+    const isNonStandardPort = (url.protocol === 'http:' && ['', '80'].indexOf(url.port) === -1) ||
         (url.protocol === 'https:' && ['', '443'].indexOf(url.port) === -1);
-    var port = isNonStandardPort ? ":".concat(url.port) : '';
-    var baseUrl = "".concat(url.protocol, "//").concat(url.hostname).concat(port);
+    const port = isNonStandardPort ? `:${url.port}` : '';
+    const baseUrl = `${url.protocol}//${url.hostname}${port}`;
     return baseUrl;
 }
-function getEndpointPath$1(endpoint, realmPath, customPaths) {
-    var realmUrlPath = getRealmUrlPath$1(realmPath);
-    var defaultPaths = {
-        authenticate: "json/".concat(realmUrlPath, "/authenticate"),
-        authorize: "oauth2/".concat(realmUrlPath, "/authorize"),
-        accessToken: "oauth2/".concat(realmUrlPath, "/access_token"),
-        endSession: "oauth2/".concat(realmUrlPath, "/connect/endSession"),
-        userInfo: "oauth2/".concat(realmUrlPath, "/userinfo"),
-        revoke: "oauth2/".concat(realmUrlPath, "/token/revoke"),
-        sessions: "json/".concat(realmUrlPath, "/sessions/"),
+function getEndpointPath(endpoint, realmPath, customPaths) {
+    const realmUrlPath = getRealmUrlPath(realmPath);
+    const defaultPaths = {
+        authenticate: `json/${realmUrlPath}/authenticate`,
+        authorize: `oauth2/${realmUrlPath}/authorize`,
+        accessToken: `oauth2/${realmUrlPath}/access_token`,
+        endSession: `oauth2/${realmUrlPath}/connect/endSession`,
+        userInfo: `oauth2/${realmUrlPath}/userinfo`,
+        revoke: `oauth2/${realmUrlPath}/token/revoke`,
+        sessions: `json/${realmUrlPath}/sessions/`,
     };
     if (customPaths && customPaths[endpoint]) {
         // TypeScript is not correctly reading the condition above
@@ -1023,25 +1003,25 @@ function getEndpointPath$1(endpoint, realmPath, customPaths) {
         return defaultPaths[endpoint];
     }
 }
-function resolve$1(baseUrl, path) {
-    var url = new URL(baseUrl);
+function resolve(baseUrl, path) {
+    const url = new URL(baseUrl);
     if (path.startsWith('/')) {
-        return "".concat(getBaseUrl$1(url)).concat(path);
+        return `${getBaseUrl(url)}${path}`;
     }
-    var basePath = url.pathname.split('/');
-    var destPath = path.split('/').filter(function (x) { return !!x; });
-    var newPath = __spreadArray$1(__spreadArray$1([], basePath.slice(0, -1), true), destPath, true).join('/');
-    return "".concat(getBaseUrl$1(url)).concat(newPath);
+    const basePath = url.pathname.split('/');
+    const destPath = path.split('/').filter((x) => !!x);
+    const newPath = [...basePath.slice(0, -1), ...destPath].join('/');
+    return `${getBaseUrl(url)}${newPath}`;
 }
-function parseQuery$1(fullUrl) {
-    var url = new URL(fullUrl);
-    var query = {};
-    url.searchParams.forEach(function (v, k) { return (query[k] = v); });
+function parseQuery(fullUrl) {
+    const url = new URL(fullUrl);
+    const query = {};
+    url.searchParams.forEach((v, k) => (query[k] = v));
     return query;
 }
-function stringify$1(data) {
-    var pairs = [];
-    for (var k in data) {
+function stringify(data) {
+    const pairs = [];
+    for (const k in data) {
         if (data[k]) {
             pairs.push(k + '=' + encodeURIComponent(data[k]));
         }
@@ -1067,20 +1047,19 @@ function stringify$1(data) {
  * @param action.payload - The payload of the action that can contain metadata
  * @returns {function} - Function that takes middleware parameter & runs middleware against request
  */
-function middlewareWrapper$1(request, 
+function middlewareWrapper(request, 
 // eslint-disable-next-line
-_a) {
-    var type = _a.type, payload = _a.payload;
+{ type, payload }) {
     // no mutation and no reassignment
-    var actionCopy = Object.freeze({ type: type, payload: payload });
-    return function (middleware) {
+    const actionCopy = Object.freeze({ type, payload });
+    return (middleware) => {
         if (!Array.isArray(middleware)) {
             return request;
         }
         // Copy middleware so the `shift` below doesn't mutate source
-        var mwareCopy = middleware.map(function (fn) { return fn; });
+        const mwareCopy = middleware.map((fn) => fn);
         function iterator() {
-            var nextMiddlewareToBeCalled = mwareCopy.shift();
+            const nextMiddlewareToBeCalled = mwareCopy.shift();
             nextMiddlewareToBeCalled && nextMiddlewareToBeCalled(request, actionCopy, iterator);
             return request;
         }
@@ -1097,59 +1076,10 @@ _a) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __assign$a = (undefined && undefined.__assign) || function () {
-    __assign$a = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$a.apply(this, arguments);
-};
-var __awaiter$o = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$o = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Provides direct access to the OpenAM authentication tree API.
  */
-var Auth$1 = /** @class */ (function () {
-    function Auth() {
-    }
+class Auth {
     /**
      * Gets the next step in the authentication tree.
      *
@@ -1157,86 +1087,56 @@ var Auth$1 = /** @class */ (function () {
      * @param {StepOptions} options Configuration default overrides.
      * @return {Step} The next step in the authentication tree.
      */
-    Auth.next = function (previousStep, options) {
-        return __awaiter$o(this, void 0, void 0, function () {
-            var _a, middleware, realmPath, serverConfig, tree, type, query, url, runMiddleware, req, res, json;
-            return __generator$o(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = Config.get(options), middleware = _a.middleware, realmPath = _a.realmPath, serverConfig = _a.serverConfig, tree = _a.tree, type = _a.type;
-                        query = options ? options.query : {};
-                        url = this.constructUrl(serverConfig, realmPath, tree, query);
-                        runMiddleware = middlewareWrapper$1({
-                            url: new URL(url),
-                            init: this.configureRequest(previousStep),
-                        }, {
-                            type: previousStep ? ActionTypes.Authenticate : ActionTypes.StartAuthenticate,
-                            payload: {
-                                tree: tree,
-                                type: type ? type : 'service',
-                            },
-                        });
-                        req = runMiddleware(middleware);
-                        return [4 /*yield*/, withTimeout$1(fetch(req.url.toString(), req.init), serverConfig.timeout)];
-                    case 1:
-                        res = _b.sent();
-                        return [4 /*yield*/, this.getResponseJson(res)];
-                    case 2:
-                        json = _b.sent();
-                        return [2 /*return*/, json];
-                }
-            });
+    static async next(previousStep, options) {
+        const { middleware, realmPath, serverConfig, tree, type } = Config.get(options);
+        const query = options ? options.query : {};
+        const url = this.constructUrl(serverConfig, realmPath, tree, query);
+        const runMiddleware = middlewareWrapper({
+            url: new URL(url),
+            init: this.configureRequest(previousStep),
+        }, {
+            type: previousStep ? ActionTypes.Authenticate : ActionTypes.StartAuthenticate,
+            payload: {
+                tree,
+                type: type ? type : 'service',
+            },
         });
-    };
-    Auth.constructUrl = function (serverConfig, realmPath, tree, query) {
-        var treeParams = tree ? { authIndexType: 'service', authIndexValue: tree } : undefined;
-        var params = __assign$a(__assign$a({}, query), treeParams);
-        var queryString = Object.keys(params).length > 0 ? "?".concat(stringify$1(params)) : '';
-        var path = getEndpointPath$1('authenticate', realmPath, serverConfig.paths);
-        var url = resolve$1(serverConfig.baseUrl, "".concat(path).concat(queryString));
+        const req = runMiddleware(middleware);
+        const res = await withTimeout(fetch(req.url.toString(), req.init), serverConfig.timeout);
+        const json = await this.getResponseJson(res);
+        return json;
+    }
+    static constructUrl(serverConfig, realmPath, tree, query) {
+        const treeParams = tree ? { authIndexType: 'service', authIndexValue: tree } : undefined;
+        const params = { ...query, ...treeParams };
+        const queryString = Object.keys(params).length > 0 ? `?${stringify(params)}` : '';
+        const path = getEndpointPath('authenticate', realmPath, serverConfig.paths);
+        const url = resolve(serverConfig.baseUrl, `${path}${queryString}`);
         return url;
-    };
-    Auth.configureRequest = function (step) {
-        var init = {
+    }
+    static configureRequest(step) {
+        const init = {
             body: step ? JSON.stringify(step) : undefined,
             credentials: 'include',
             headers: new Headers({
                 Accept: 'application/json',
                 'Accept-API-Version': 'protocol=1.0,resource=2.1',
                 'Content-Type': 'application/json',
-                'X-Requested-With': REQUESTED_WITH$1,
+                'X-Requested-With': REQUESTED_WITH,
             }),
             method: 'POST',
         };
         return init;
-    };
-    Auth.getResponseJson = function (res) {
-        return __awaiter$o(this, void 0, void 0, function () {
-            var contentType, isJson, json, _a;
-            return __generator$o(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        contentType = res.headers.get('content-type');
-                        isJson = contentType && contentType.indexOf('application/json') > -1;
-                        if (!isJson) return [3 /*break*/, 2];
-                        return [4 /*yield*/, res.json()];
-                    case 1:
-                        _a = _b.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a = {};
-                        _b.label = 3;
-                    case 3:
-                        json = _a;
-                        json.status = res.status;
-                        json.ok = res.ok;
-                        return [2 /*return*/, json];
-                }
-            });
-        });
-    };
-    return Auth;
-}());
+    }
+    static async getResponseJson(res) {
+        const contentType = res.headers.get('content-type');
+        const isJson = contentType && contentType.indexOf('application/json') > -1;
+        const json = isJson ? await res.json() : {};
+        json.status = res.status;
+        json.ok = res.ok;
+        return json;
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -1250,17 +1150,17 @@ var Auth$1 = /** @class */ (function () {
 /**
  * Known errors that can occur during authentication.
  */
-var ErrorCode$1;
+var ErrorCode;
 (function (ErrorCode) {
     ErrorCode["BadRequest"] = "BAD_REQUEST";
     ErrorCode["Timeout"] = "TIMEOUT";
     ErrorCode["Unauthorized"] = "UNAUTHORIZED";
     ErrorCode["Unknown"] = "UNKNOWN";
-})(ErrorCode$1 || (ErrorCode$1 = {}));
+})(ErrorCode || (ErrorCode = {}));
 /**
  * Types of callbacks directly supported by the SDK.
  */
-var CallbackType$1;
+var CallbackType;
 (function (CallbackType) {
     CallbackType["BooleanAttributeInputCallback"] = "BooleanAttributeInputCallback";
     CallbackType["ChoiceCallback"] = "ChoiceCallback";
@@ -1283,101 +1183,7 @@ var CallbackType$1;
     CallbackType["TextOutputCallback"] = "TextOutputCallback";
     CallbackType["ValidatedCreatePasswordCallback"] = "ValidatedCreatePasswordCallback";
     CallbackType["ValidatedCreateUsernameCallback"] = "ValidatedCreateUsernameCallback";
-})(CallbackType$1 || (CallbackType$1 = {}));
-
-/*
- * @forgerock/javascript-sdk
- *
- * helpers.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-/** @hidden */
-function add$1(container, type, listener) {
-    container[type] = container[type] || [];
-    if (container[type].indexOf(listener) < 0) {
-        container[type].push(listener);
-    }
-}
-/** @hidden */
-function remove$1(container, type, listener) {
-    if (!container[type]) {
-        return;
-    }
-    var index = container[type].indexOf(listener);
-    if (index >= 0) {
-        container[type].splice(index, 1);
-    }
-}
-/** @hidden */
-function clear$1(container, type) {
-    Object.keys(container).forEach(function (k) {
-        if (!type || k === type) {
-            delete container[k];
-        }
-    });
-}
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-/**
- * Event dispatcher for subscribing and publishing categorized events.
- */
-var Dispatcher$1 = /** @class */ (function () {
-    function Dispatcher() {
-        this.callbacks = {};
-    }
-    /**
-     * Subscribes to an event type.
-     *
-     * @param type The event type
-     * @param listener The function to subscribe to events of this type
-     */
-    Dispatcher.prototype.addEventListener = function (type, listener) {
-        add$1(this.callbacks, type, listener);
-    };
-    /**
-     * Unsubscribes from an event type.
-     *
-     * @param type The event type
-     * @param listener The function to unsubscribe from events of this type
-     */
-    Dispatcher.prototype.removeEventListener = function (type, listener) {
-        remove$1(this.callbacks, type, listener);
-    };
-    /**
-     * Unsubscribes all listener functions to a single event type or all event types.
-     *
-     * @param type The event type, or all event types if not specified
-     */
-    Dispatcher.prototype.clearEventListeners = function (type) {
-        clear$1(this.callbacks, type);
-    };
-    /**
-     * Publishes an event.
-     *
-     * @param event The event object to publish
-     */
-    Dispatcher.prototype.dispatchEvent = function (event) {
-        if (!this.callbacks[event.type]) {
-            return;
-        }
-        for (var _i = 0, _a = this.callbacks[event.type]; _i < _a.length; _i++) {
-            var listener = _a[_i];
-            listener(event);
-        }
-    };
-    return Dispatcher;
-}());
+})(CallbackType || (CallbackType = {}));
 
 /*
  * @forgerock/javascript-sdk
@@ -1388,7 +1194,7 @@ var Dispatcher$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var PolicyKey$1;
+var PolicyKey;
 (function (PolicyKey) {
     PolicyKey["CannotContainCharacters"] = "CANNOT_CONTAIN_CHARACTERS";
     PolicyKey["CannotContainDuplicates"] = "CANNOT_CONTAIN_DUPLICATES";
@@ -1411,7 +1217,7 @@ var PolicyKey$1;
     PolicyKey["ValidPhoneFormat"] = "VALID_PHONE_FORMAT";
     PolicyKey["ValidQueryFilter"] = "VALID_QUERY_FILTER";
     PolicyKey["ValidType"] = "VALID_TYPE";
-})(PolicyKey$1 || (PolicyKey$1 = {}));
+})(PolicyKey || (PolicyKey = {}));
 
 /*
  * @forgerock/javascript-sdk
@@ -1427,7 +1233,7 @@ var PolicyKey$1;
  * @ignore
  * These are private utility functions
  */
-function plural$1(n, singularText, pluralText) {
+function plural(n, singularText, pluralText) {
     if (n === 1) {
         return singularText;
     }
@@ -1443,7 +1249,7 @@ function plural$1(n, singularText, pluralText) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-function getProp$1(obj, prop, defaultValue) {
+function getProp(obj, prop, defaultValue) {
     if (!obj || obj[prop] === undefined) {
         return defaultValue;
     }
@@ -1459,62 +1265,53 @@ function getProp$1(obj, prop, defaultValue) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var _a$1;
-var defaultMessageCreator$1 = (_a$1 = {},
-    _a$1[PolicyKey$1.CannotContainCharacters] = function (property, params) {
-        var forbiddenChars = getProp$1(params, 'forbiddenChars', '');
-        return "".concat(property, " must not contain following characters: \"").concat(forbiddenChars, "\"");
+const defaultMessageCreator = {
+    [PolicyKey.CannotContainCharacters]: (property, params) => {
+        const forbiddenChars = getProp(params, 'forbiddenChars', '');
+        return `${property} must not contain following characters: "${forbiddenChars}"`;
     },
-    _a$1[PolicyKey$1.CannotContainDuplicates] = function (property, params) {
-        var duplicateValue = getProp$1(params, 'duplicateValue', '');
-        return "".concat(property, "  must not contain duplicates: \"").concat(duplicateValue, "\"");
+    [PolicyKey.CannotContainDuplicates]: (property, params) => {
+        const duplicateValue = getProp(params, 'duplicateValue', '');
+        return `${property}  must not contain duplicates: "${duplicateValue}"`;
     },
-    _a$1[PolicyKey$1.CannotContainOthers] = function (property, params) {
-        var disallowedFields = getProp$1(params, 'disallowedFields', '');
-        return "".concat(property, " must not contain: \"").concat(disallowedFields, "\"");
+    [PolicyKey.CannotContainOthers]: (property, params) => {
+        const disallowedFields = getProp(params, 'disallowedFields', '');
+        return `${property} must not contain: "${disallowedFields}"`;
     },
-    _a$1[PolicyKey$1.LeastCapitalLetters] = function (property, params) {
-        var numCaps = getProp$1(params, 'numCaps', 0);
-        return "".concat(property, " must contain at least ").concat(numCaps, " capital ").concat(plural$1(numCaps, 'letter'));
+    [PolicyKey.LeastCapitalLetters]: (property, params) => {
+        const numCaps = getProp(params, 'numCaps', 0);
+        return `${property} must contain at least ${numCaps} capital ${plural(numCaps, 'letter')}`;
     },
-    _a$1[PolicyKey$1.LeastNumbers] = function (property, params) {
-        var numNums = getProp$1(params, 'numNums', 0);
-        return "".concat(property, " must contain at least ").concat(numNums, " numeric ").concat(plural$1(numNums, 'value'));
+    [PolicyKey.LeastNumbers]: (property, params) => {
+        const numNums = getProp(params, 'numNums', 0);
+        return `${property} must contain at least ${numNums} numeric ${plural(numNums, 'value')}`;
     },
-    _a$1[PolicyKey$1.MatchRegexp] = function (property) { return "".concat(property, " has failed the \"MATCH_REGEXP\" policy"); },
-    _a$1[PolicyKey$1.MaximumLength] = function (property, params) {
-        var maxLength = getProp$1(params, 'maxLength', 0);
-        return "".concat(property, " must be at most ").concat(maxLength, " ").concat(plural$1(maxLength, 'character'));
+    [PolicyKey.MatchRegexp]: (property) => `${property} has failed the "MATCH_REGEXP" policy`,
+    [PolicyKey.MaximumLength]: (property, params) => {
+        const maxLength = getProp(params, 'maxLength', 0);
+        return `${property} must be at most ${maxLength} ${plural(maxLength, 'character')}`;
     },
-    _a$1[PolicyKey$1.MaximumNumber] = function (property) {
-        return "".concat(property, " has failed the \"MAXIMUM_NUMBER_VALUE\" policy");
+    [PolicyKey.MaximumNumber]: (property) => `${property} has failed the "MAXIMUM_NUMBER_VALUE" policy`,
+    [PolicyKey.MinimumLength]: (property, params) => {
+        const minLength = getProp(params, 'minLength', 0);
+        return `${property} must be at least ${minLength} ${plural(minLength, 'character')}`;
     },
-    _a$1[PolicyKey$1.MinimumLength] = function (property, params) {
-        var minLength = getProp$1(params, 'minLength', 0);
-        return "".concat(property, " must be at least ").concat(minLength, " ").concat(plural$1(minLength, 'character'));
+    [PolicyKey.MinimumNumber]: (property) => `${property} has failed the "MINIMUM_NUMBER_VALUE" policy`,
+    [PolicyKey.Required]: (property) => `${property} is required`,
+    [PolicyKey.Unique]: (property) => `${property} must be unique`,
+    [PolicyKey.UnknownPolicy]: (property, params) => {
+        const policyRequirement = getProp(params, 'policyRequirement', 'Unknown');
+        return `${property}: Unknown policy requirement "${policyRequirement}"`;
     },
-    _a$1[PolicyKey$1.MinimumNumber] = function (property) {
-        return "".concat(property, " has failed the \"MINIMUM_NUMBER_VALUE\" policy");
-    },
-    _a$1[PolicyKey$1.Required] = function (property) { return "".concat(property, " is required"); },
-    _a$1[PolicyKey$1.Unique] = function (property) { return "".concat(property, " must be unique"); },
-    _a$1[PolicyKey$1.UnknownPolicy] = function (property, params) {
-        var policyRequirement = getProp$1(params, 'policyRequirement', 'Unknown');
-        return "".concat(property, ": Unknown policy requirement \"").concat(policyRequirement, "\"");
-    },
-    _a$1[PolicyKey$1.ValidArrayItems] = function (property) {
-        return "".concat(property, " has failed the \"VALID_ARRAY_ITEMS\" policy");
-    },
-    _a$1[PolicyKey$1.ValidDate] = function (property) { return "".concat(property, " has an invalid date"); },
-    _a$1[PolicyKey$1.ValidEmailAddress] = function (property) { return "".concat(property, " has an invalid email address"); },
-    _a$1[PolicyKey$1.ValidNameFormat] = function (property) { return "".concat(property, " has an invalid name format"); },
-    _a$1[PolicyKey$1.ValidNumber] = function (property) { return "".concat(property, " has an invalid number"); },
-    _a$1[PolicyKey$1.ValidPhoneFormat] = function (property) { return "".concat(property, " has an invalid phone number"); },
-    _a$1[PolicyKey$1.ValidQueryFilter] = function (property) {
-        return "".concat(property, " has failed the \"VALID_QUERY_FILTER\" policy");
-    },
-    _a$1[PolicyKey$1.ValidType] = function (property) { return "".concat(property, " has failed the \"VALID_TYPE\" policy"); },
-    _a$1);
+    [PolicyKey.ValidArrayItems]: (property) => `${property} has failed the "VALID_ARRAY_ITEMS" policy`,
+    [PolicyKey.ValidDate]: (property) => `${property} has an invalid date`,
+    [PolicyKey.ValidEmailAddress]: (property) => `${property} has an invalid email address`,
+    [PolicyKey.ValidNameFormat]: (property) => `${property} has an invalid name format`,
+    [PolicyKey.ValidNumber]: (property) => `${property} has an invalid number`,
+    [PolicyKey.ValidPhoneFormat]: (property) => `${property} has an invalid phone number`,
+    [PolicyKey.ValidQueryFilter]: (property) => `${property} has failed the "VALID_QUERY_FILTER" policy`,
+    [PolicyKey.ValidType]: (property) => `${property} has failed the "VALID_TYPE" policy`,
+};
 
 /*
  * @forgerock/javascript-sdk
@@ -1525,17 +1322,6 @@ var defaultMessageCreator$1 = (_a$1 = {},
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __assign$9 = (undefined && undefined.__assign) || function () {
-    __assign$9 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$9.apply(this, arguments);
-};
 /**
  * Utility for processing policy failures into human readable messages.
  *
@@ -1559,9 +1345,7 @@ var __assign$9 = (undefined && undefined.__assign) || function () {
  *   const messagesClassMethod = FRPolicy.parseErrors(thisStep, messageCreator)
  * }
  */
-var FRPolicy = /** @class */ (function () {
-    function FRPolicy() {
-    }
+class FRPolicy {
     /**
      * Parses policy errors and generates human readable error messages.
      *
@@ -1570,21 +1354,20 @@ var FRPolicy = /** @class */ (function () {
      * Extensible and overridable custom error messages for policy failures.
      * @return {ProcessedPropertyError[]} Array of objects containing all processed policy errors.
      */
-    FRPolicy.parseErrors = function (err, messageCreator) {
-        var _this = this;
-        var errors = [];
+    static parseErrors(err, messageCreator) {
+        const errors = [];
         if (err.detail && err.detail.failedPolicyRequirements) {
-            err.detail.failedPolicyRequirements.map(function (x) {
+            err.detail.failedPolicyRequirements.map((x) => {
                 errors.push.apply(errors, [
                     {
                         detail: x,
-                        messages: _this.parseFailedPolicyRequirement(x, messageCreator),
+                        messages: this.parseFailedPolicyRequirement(x, messageCreator),
                     },
                 ]);
             });
         }
         return errors;
-    };
+    }
     /**
      * Parses a failed policy and returns a string array of error messages.
      *
@@ -1593,14 +1376,13 @@ var FRPolicy = /** @class */ (function () {
      * Extensible and overridable custom error messages for policy failures.
      * @return {string[]} Array of strings with all processed policy errors.
      */
-    FRPolicy.parseFailedPolicyRequirement = function (failedPolicy, messageCreator) {
-        var _this = this;
-        var errors = [];
-        failedPolicy.policyRequirements.map(function (policyRequirement) {
-            errors.push(_this.parsePolicyRequirement(failedPolicy.property, policyRequirement, messageCreator));
+    static parseFailedPolicyRequirement(failedPolicy, messageCreator) {
+        const errors = [];
+        failedPolicy.policyRequirements.map((policyRequirement) => {
+            errors.push(this.parsePolicyRequirement(failedPolicy.property, policyRequirement, messageCreator));
         });
         return errors;
-    };
+    }
     /**
      * Parses a policy error into a human readable error message.
      *
@@ -1610,23 +1392,22 @@ var FRPolicy = /** @class */ (function () {
      * Extensible and overridable custom error messages for policy failures.
      * @return {string} Human readable error message.
      */
-    FRPolicy.parsePolicyRequirement = function (property, policy, messageCreator) {
-        if (messageCreator === void 0) { messageCreator = {}; }
+    static parsePolicyRequirement(property, policy, messageCreator = {}) {
         // AM is returning policy requirement failures as JSON strings
-        var policyObject = typeof policy === 'string' ? JSON.parse(policy) : __assign$9({}, policy);
-        var policyRequirement = policyObject.policyRequirement;
+        const policyObject = typeof policy === 'string' ? JSON.parse(policy) : { ...policy };
+        const policyRequirement = policyObject.policyRequirement;
         // Determine which message creator function to use
-        var effectiveMessageCreator = messageCreator[policyRequirement] ||
-            defaultMessageCreator$1[policyRequirement] ||
-            defaultMessageCreator$1[PolicyKey$1.UnknownPolicy];
+        const effectiveMessageCreator = messageCreator[policyRequirement] ||
+            defaultMessageCreator[policyRequirement] ||
+            defaultMessageCreator[PolicyKey.UnknownPolicy];
         // Flatten the parameters and create the message
-        var params = policyObject.params
-            ? __assign$9(__assign$9({}, policyObject.params), { policyRequirement: policyRequirement }) : { policyRequirement: policyRequirement };
-        var message = effectiveMessageCreator(property, params);
+        const params = policyObject.params
+            ? { ...policyObject.params, policyRequirement }
+            : { policyRequirement };
+        const message = effectiveMessageCreator(property, params);
         return message;
-    };
-    return FRPolicy;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -1640,12 +1421,12 @@ var FRPolicy = /** @class */ (function () {
 /**
  * Types of steps returned by the authentication tree.
  */
-var StepType$1;
+var StepType;
 (function (StepType) {
     StepType["LoginFailure"] = "LoginFailure";
     StepType["LoginSuccess"] = "LoginSuccess";
     StepType["Step"] = "Step";
-})(StepType$1 || (StepType$1 = {}));
+})(StepType || (StepType = {}));
 
 /*
  * @forgerock/javascript-sdk
@@ -1656,49 +1437,48 @@ var StepType$1;
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var FRLoginFailure$1 = /** @class */ (function () {
+class FRLoginFailure {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function FRLoginFailure(payload) {
+    constructor(payload) {
         this.payload = payload;
         /**
          * The type of step.
          */
-        this.type = StepType$1.LoginFailure;
+        this.type = StepType.LoginFailure;
     }
     /**
      * Gets the error code.
      */
-    FRLoginFailure.prototype.getCode = function () {
+    getCode() {
         return Number(this.payload.code);
-    };
+    }
     /**
      * Gets the failure details.
      */
-    FRLoginFailure.prototype.getDetail = function () {
+    getDetail() {
         return this.payload.detail;
-    };
+    }
     /**
      * Gets the failure message.
      */
-    FRLoginFailure.prototype.getMessage = function () {
+    getMessage() {
         return this.payload.message;
-    };
+    }
     /**
      * Gets processed failure message.
      */
-    FRLoginFailure.prototype.getProcessedMessage = function (messageCreator) {
+    getProcessedMessage(messageCreator) {
         return FRPolicy.parseErrors(this.payload, messageCreator);
-    };
+    }
     /**
      * Gets the failure reason.
      */
-    FRLoginFailure.prototype.getReason = function () {
+    getReason() {
         return this.payload.reason;
-    };
-    return FRLoginFailure;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -1709,37 +1489,36 @@ var FRLoginFailure$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var FRLoginSuccess$1 = /** @class */ (function () {
+class FRLoginSuccess {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function FRLoginSuccess(payload) {
+    constructor(payload) {
         this.payload = payload;
         /**
          * The type of step.
          */
-        this.type = StepType$1.LoginSuccess;
+        this.type = StepType.LoginSuccess;
     }
     /**
      * Gets the step's realm.
      */
-    FRLoginSuccess.prototype.getRealm = function () {
+    getRealm() {
         return this.payload.realm;
-    };
+    }
     /**
      * Gets the step's session token.
      */
-    FRLoginSuccess.prototype.getSessionToken = function () {
+    getSessionToken() {
         return this.payload.tokenId;
-    };
+    }
     /**
      * Gets the step's success URL.
      */
-    FRLoginSuccess.prototype.getSuccessUrl = function () {
+    getSuccessUrl() {
         return this.payload.successUrl;
-    };
-    return FRLoginSuccess;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -1753,89 +1532,84 @@ var FRLoginSuccess$1 = /** @class */ (function () {
 /**
  * Base class for authentication tree callback wrappers.
  */
-var FRCallback$1 = /** @class */ (function () {
+class FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function FRCallback(payload) {
+    constructor(payload) {
         this.payload = payload;
     }
     /**
      * Gets the name of this callback type.
      */
-    FRCallback.prototype.getType = function () {
+    getType() {
         return this.payload.type;
-    };
+    }
     /**
      * Gets the value of the specified input element, or the first element if `selector` is not
      * provided.
      *
      * @param selector The index position or name of the desired element
      */
-    FRCallback.prototype.getInputValue = function (selector) {
-        if (selector === void 0) { selector = 0; }
+    getInputValue(selector = 0) {
         return this.getArrayElement(this.payload.input, selector).value;
-    };
+    }
     /**
      * Sets the value of the specified input element, or the first element if `selector` is not
      * provided.
      *
      * @param selector The index position or name of the desired element
      */
-    FRCallback.prototype.setInputValue = function (value, selector) {
-        if (selector === void 0) { selector = 0; }
+    setInputValue(value, selector = 0) {
         this.getArrayElement(this.payload.input, selector).value = value;
-    };
+    }
     /**
      * Gets the value of the specified output element, or the first element if `selector`
      * is not provided.
      *
      * @param selector The index position or name of the desired element
      */
-    FRCallback.prototype.getOutputValue = function (selector) {
-        if (selector === void 0) { selector = 0; }
+    getOutputValue(selector = 0) {
         return this.getArrayElement(this.payload.output, selector).value;
-    };
+    }
     /**
      * Gets the value of the first output element with the specified name or the
      * specified default value.
      *
      * @param name The name of the desired element
      */
-    FRCallback.prototype.getOutputByName = function (name, defaultValue) {
-        var output = this.payload.output.find(function (x) { return x.name === name; });
+    getOutputByName(name, defaultValue) {
+        const output = this.payload.output.find((x) => x.name === name);
         return output ? output.value : defaultValue;
-    };
-    FRCallback.prototype.getArrayElement = function (array, selector) {
-        if (selector === void 0) { selector = 0; }
+    }
+    getArrayElement(array, selector = 0) {
         if (array === undefined) {
-            throw new Error("No NameValue array was provided to search (selector ".concat(selector, ")"));
+            throw new Error(`No NameValue array was provided to search (selector ${selector})`);
         }
         if (typeof selector === 'number') {
             if (selector < 0 || selector > array.length - 1) {
-                throw new Error("Selector index ".concat(selector, " is out of range"));
+                throw new Error(`Selector index ${selector} is out of range`);
             }
             return array[selector];
         }
         if (typeof selector === 'string') {
-            var input = array.find(function (x) { return x.name === selector; });
+            const input = array.find((x) => x.name === selector);
             if (!input) {
-                throw new Error("Missing callback input entry \"".concat(selector, "\""));
+                throw new Error(`Missing callback input entry "${selector}"`);
             }
             return input;
         }
         // Duck typing for RegEx
-        if (typeof selector === 'object' && selector.test && selector.exec) {
-            var input = array.find(function (x) { return selector.test(x.name); });
+        if (typeof selector === 'object' && selector.test && Boolean(selector.exec)) {
+            const input = array.find((x) => selector.test(x.name));
             if (!input) {
-                throw new Error("Missing callback input entry \"".concat(selector, "\""));
+                throw new Error(`Missing callback input entry "${selector}"`);
             }
             return input;
         }
         throw new Error('Invalid selector value type');
-    };
-    return FRCallback;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -1846,83 +1620,71 @@ var FRCallback$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$E = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect attributes.
  *
  * @typeparam T Maps to StringAttributeInputCallback, NumberAttributeInputCallback and
  *     BooleanAttributeInputCallback, respectively
  */
-var AttributeInputCallback$1 = /** @class */ (function (_super) {
-    __extends$E(AttributeInputCallback, _super);
+class AttributeInputCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function AttributeInputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the attribute name.
      */
-    AttributeInputCallback.prototype.getName = function () {
+    getName() {
         return this.getOutputByName('name', '');
-    };
+    }
     /**
      * Gets the attribute prompt.
      */
-    AttributeInputCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Gets whether the attribute is required.
      */
-    AttributeInputCallback.prototype.isRequired = function () {
+    isRequired() {
         return this.getOutputByName('required', false);
-    };
+    }
     /**
      * Gets the callback's failed policies.
      */
-    AttributeInputCallback.prototype.getFailedPolicies = function () {
-        return this.getOutputByName('failedPolicies', []);
-    };
+    getFailedPolicies() {
+        const failedPolicies = this.getOutputByName('failedPolicies', []);
+        try {
+            return failedPolicies.map((v) => JSON.parse(v));
+        }
+        catch (err) {
+            throw new Error('Unable to parse "failed policies" from the ForgeRock server. The JSON within `AttributeInputCallback` was either malformed or missing.');
+        }
+    }
     /**
      * Gets the callback's applicable policies.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    AttributeInputCallback.prototype.getPolicies = function () {
+    getPolicies() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.getOutputByName('policies', {});
-    };
+    }
     /**
      * Set if validating value only.
      */
-    AttributeInputCallback.prototype.setValidateOnly = function (value) {
+    setValidateOnly(value) {
         this.setInputValue(value, /validateOnly/);
-    };
+    }
     /**
      * Sets the attribute's value.
      */
-    AttributeInputCallback.prototype.setValue = function (value) {
+    setValue(value) {
         this.setInputValue(value);
-    };
-    return AttributeInputCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -1933,74 +1695,56 @@ var AttributeInputCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$D = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect an answer to a choice.
  */
-var ChoiceCallback$1 = /** @class */ (function (_super) {
-    __extends$D(ChoiceCallback, _super);
+class ChoiceCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function ChoiceCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the choice's prompt.
      */
-    ChoiceCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Gets the choice's default answer.
      */
-    ChoiceCallback.prototype.getDefaultChoice = function () {
+    getDefaultChoice() {
         return this.getOutputByName('defaultChoice', 0);
-    };
+    }
     /**
      * Gets the choice's possible answers.
      */
-    ChoiceCallback.prototype.getChoices = function () {
+    getChoices() {
         return this.getOutputByName('choices', []);
-    };
+    }
     /**
      * Sets the choice's answer by index position.
      */
-    ChoiceCallback.prototype.setChoiceIndex = function (index) {
-        var length = this.getChoices().length;
+    setChoiceIndex(index) {
+        const length = this.getChoices().length;
         if (index < 0 || index > length - 1) {
-            throw new Error("".concat(index, " is out of bounds"));
+            throw new Error(`${index} is out of bounds`);
         }
         this.setInputValue(index);
-    };
+    }
     /**
      * Sets the choice's answer by value.
      */
-    ChoiceCallback.prototype.setChoiceValue = function (value) {
-        var index = this.getChoices().indexOf(value);
+    setChoiceValue(value) {
+        const index = this.getChoices().indexOf(value);
         if (index === -1) {
-            throw new Error("\"".concat(value, "\" is not a valid choice"));
+            throw new Error(`"${value}" is not a valid choice`);
         }
         this.setInputValue(index);
-    };
-    return ChoiceCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2011,85 +1755,67 @@ var ChoiceCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$C = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect a confirmation to a message.
  */
-var ConfirmationCallback$1 = /** @class */ (function (_super) {
-    __extends$C(ConfirmationCallback, _super);
+class ConfirmationCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function ConfirmationCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the index position of the confirmation's default answer.
      */
-    ConfirmationCallback.prototype.getDefaultOption = function () {
+    getDefaultOption() {
         return Number(this.getOutputByName('defaultOption', 0));
-    };
+    }
     /**
      * Gets the confirmation's message type.
      */
-    ConfirmationCallback.prototype.getMessageType = function () {
+    getMessageType() {
         return Number(this.getOutputByName('messageType', 0));
-    };
+    }
     /**
      * Gets the confirmation's possible answers.
      */
-    ConfirmationCallback.prototype.getOptions = function () {
+    getOptions() {
         return this.getOutputByName('options', []);
-    };
+    }
     /**
      * Gets the confirmation's option type.
      */
-    ConfirmationCallback.prototype.getOptionType = function () {
+    getOptionType() {
         return Number(this.getOutputByName('optionType', 0));
-    };
+    }
     /**
      * Gets the confirmation's prompt.
      */
-    ConfirmationCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Set option index.
      */
-    ConfirmationCallback.prototype.setOptionIndex = function (index) {
+    setOptionIndex(index) {
         if (index !== 0 && index !== 1) {
-            throw new Error("\"".concat(index, "\" is not a valid choice"));
+            throw new Error(`"${index}" is not a valid choice`);
         }
         this.setInputValue(index);
-    };
+    }
     /**
      * Set option value.
      */
-    ConfirmationCallback.prototype.setOptionValue = function (value) {
-        var index = this.getOptions().indexOf(value);
+    setOptionValue(value) {
+        const index = this.getOptions().indexOf(value);
         if (index === -1) {
-            throw new Error("\"".concat(value, "\" is not a valid choice"));
+            throw new Error(`"${value}" is not a valid choice`);
         }
         this.setInputValue(index);
-    };
-    return ConfirmationCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2100,60 +1826,42 @@ var ConfirmationCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$B = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect device profile data.
  */
-var DeviceProfileCallback$1 = /** @class */ (function (_super) {
-    __extends$B(DeviceProfileCallback, _super);
+class DeviceProfileCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function DeviceProfileCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback's data.
      */
-    DeviceProfileCallback.prototype.getMessage = function () {
+    getMessage() {
         return this.getOutputByName('message', '');
-    };
+    }
     /**
      * Does callback require metadata?
      */
-    DeviceProfileCallback.prototype.isMetadataRequired = function () {
+    isMetadataRequired() {
         return this.getOutputByName('metadata', false);
-    };
+    }
     /**
      * Does callback require location data?
      */
-    DeviceProfileCallback.prototype.isLocationRequired = function () {
+    isLocationRequired() {
         return this.getOutputByName('location', false);
-    };
+    }
     /**
      * Sets the profile.
      */
-    DeviceProfileCallback.prototype.setProfile = function (profile) {
+    setProfile(profile) {
         this.setInputValue(JSON.stringify(profile));
-    };
-    return DeviceProfileCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2164,36 +1872,18 @@ var DeviceProfileCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$A = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect information indirectly from the user.
  */
-var HiddenValueCallback$1 = /** @class */ (function (_super) {
-    __extends$A(HiddenValueCallback, _super);
+class HiddenValueCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function HiddenValueCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
-    return HiddenValueCallback;
-}(FRCallback$1));
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2204,70 +1894,52 @@ var HiddenValueCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$z = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect KBA-style security questions and answers.
  */
-var KbaCreateCallback$1 = /** @class */ (function (_super) {
-    __extends$z(KbaCreateCallback, _super);
+class KbaCreateCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function KbaCreateCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback prompt.
      */
-    KbaCreateCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Gets the callback's list of pre-defined security questions.
      */
-    KbaCreateCallback.prototype.getPredefinedQuestions = function () {
+    getPredefinedQuestions() {
         return this.getOutputByName('predefinedQuestions', []);
-    };
+    }
     /**
      * Sets the callback's security question.
      */
-    KbaCreateCallback.prototype.setQuestion = function (question) {
+    setQuestion(question) {
         this.setValue('question', question);
-    };
+    }
     /**
      * Sets the callback's security question answer.
      */
-    KbaCreateCallback.prototype.setAnswer = function (answer) {
+    setAnswer(answer) {
         this.setValue('answer', answer);
-    };
-    KbaCreateCallback.prototype.setValue = function (type, value) {
+    }
+    setValue(type, value) {
         if (!this.payload.input) {
             throw new Error('KBA payload is missing input');
         }
-        var input = this.payload.input.find(function (x) { return x.name.endsWith(type); });
+        const input = this.payload.input.find((x) => x.name.endsWith(type));
         if (!input) {
-            throw new Error("No input has name ending in \"".concat(type, "\""));
+            throw new Error(`No input has name ending in "${type}"`);
         }
         input.value = value;
-    };
-    return KbaCreateCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2278,42 +1950,24 @@ var KbaCreateCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$y = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to deliver and collect miscellaneous data.
  */
-var MetadataCallback$1 = /** @class */ (function (_super) {
-    __extends$y(MetadataCallback, _super);
+class MetadataCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function MetadataCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback's data.
      */
-    MetadataCallback.prototype.getData = function () {
+    getData() {
         return this.getOutputByName('data', {});
-    };
-    return MetadataCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2324,48 +1978,30 @@ var MetadataCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$x = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect a username.
  */
-var NameCallback$1 = /** @class */ (function (_super) {
-    __extends$x(NameCallback, _super);
+class NameCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function NameCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback's prompt.
      */
-    NameCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Sets the username.
      */
-    NameCallback.prototype.setName = function (name) {
+    setName(name) {
         this.setInputValue(name);
-    };
-    return NameCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2376,60 +2012,42 @@ var NameCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$w = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect a password.
  */
-var PasswordCallback$1 = /** @class */ (function (_super) {
-    __extends$w(PasswordCallback, _super);
+class PasswordCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function PasswordCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback's failed policies.
      */
-    PasswordCallback.prototype.getFailedPolicies = function () {
+    getFailedPolicies() {
         return this.getOutputByName('failedPolicies', []);
-    };
+    }
     /**
      * Gets the callback's applicable policies.
      */
-    PasswordCallback.prototype.getPolicies = function () {
+    getPolicies() {
         return this.getOutputByName('policies', []);
-    };
+    }
     /**
      * Gets the callback's prompt.
      */
-    PasswordCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Sets the password.
      */
-    PasswordCallback.prototype.setPassword = function (password) {
+    setPassword(password) {
         this.setInputValue(password);
-    };
-    return PasswordCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2440,48 +2058,30 @@ var PasswordCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$v = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to instruct the system to poll while a backend process completes.
  */
-var PollingWaitCallback$1 = /** @class */ (function (_super) {
-    __extends$v(PollingWaitCallback, _super);
+class PollingWaitCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function PollingWaitCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the message to display while polling.
      */
-    PollingWaitCallback.prototype.getMessage = function () {
+    getMessage() {
         return this.getOutputByName('message', '');
-    };
+    }
     /**
      * Gets the polling interval in milliseconds.
      */
-    PollingWaitCallback.prototype.getWaitTime = function () {
+    getWaitTime() {
         return Number(this.getOutputByName('waitTime', 0));
-    };
-    return PollingWaitCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2492,48 +2092,30 @@ var PollingWaitCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$u = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to integrate reCAPTCHA.
  */
-var ReCaptchaCallback$1 = /** @class */ (function (_super) {
-    __extends$u(ReCaptchaCallback, _super);
+class ReCaptchaCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function ReCaptchaCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the reCAPTCHA site key.
      */
-    ReCaptchaCallback.prototype.getSiteKey = function () {
+    getSiteKey() {
         return this.getOutputByName('recaptchaSiteKey', '');
-    };
+    }
     /**
      * Sets the reCAPTCHA result.
      */
-    ReCaptchaCallback.prototype.setResult = function (result) {
+    setResult(result) {
         this.setInputValue(result);
-    };
-    return ReCaptchaCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2544,42 +2126,24 @@ var ReCaptchaCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$t = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect an answer to a choice.
  */
-var RedirectCallback$1 = /** @class */ (function (_super) {
-    __extends$t(RedirectCallback, _super);
+class RedirectCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function RedirectCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the redirect URL.
      */
-    RedirectCallback.prototype.getRedirectUrl = function () {
+    getRedirectUrl() {
         return this.getOutputByName('redirectUrl', '');
-    };
-    return RedirectCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2590,52 +2154,34 @@ var RedirectCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$s = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect an answer to a choice.
  */
-var SelectIdPCallback$1 = /** @class */ (function (_super) {
-    __extends$s(SelectIdPCallback, _super);
+class SelectIdPCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function SelectIdPCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the available providers.
      */
-    SelectIdPCallback.prototype.getProviders = function () {
+    getProviders() {
         return this.getOutputByName('providers', []);
-    };
+    }
     /**
      * Sets the provider by name.
      */
-    SelectIdPCallback.prototype.setProvider = function (value) {
-        var item = this.getProviders().find(function (item) { return item.provider === value; });
+    setProvider(value) {
+        const item = this.getProviders().find((item) => item.provider === value);
         if (!item) {
-            throw new Error("\"".concat(value, "\" is not a valid choice"));
+            throw new Error(`"${value}" is not a valid choice`);
         }
         this.setInputValue(item.provider);
-    };
-    return SelectIdPCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2646,48 +2192,30 @@ var SelectIdPCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$r = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to display a message.
  */
-var TextOutputCallback$1 = /** @class */ (function (_super) {
-    __extends$r(TextOutputCallback, _super);
+class TextOutputCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function TextOutputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the message content.
      */
-    TextOutputCallback.prototype.getMessage = function () {
+    getMessage() {
         return this.getOutputByName('message', '');
-    };
+    }
     /**
      * Gets the message type.
      */
-    TextOutputCallback.prototype.getMessageType = function () {
+    getMessageType() {
         return this.getOutputByName('messageType', '');
-    };
-    return TextOutputCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2698,36 +2226,18 @@ var TextOutputCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$q = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to display a message.
  */
-var SuspendedTextOutputCallback$1 = /** @class */ (function (_super) {
-    __extends$q(SuspendedTextOutputCallback, _super);
+class SuspendedTextOutputCallback extends TextOutputCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function SuspendedTextOutputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
-    return SuspendedTextOutputCallback;
-}(TextOutputCallback$1));
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2738,62 +2248,43 @@ var SuspendedTextOutputCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$p = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect acceptance of terms and conditions.
  */
-var TermsAndConditionsCallback$1 = /** @class */ (function (_super) {
-    __extends$p(TermsAndConditionsCallback, _super);
+class TermsAndConditionsCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function TermsAndConditionsCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the terms and conditions content.
      */
-    TermsAndConditionsCallback.prototype.getTerms = function () {
+    getTerms() {
         return this.getOutputByName('terms', '');
-    };
+    }
     /**
      * Gets the version of the terms and conditions.
      */
-    TermsAndConditionsCallback.prototype.getVersion = function () {
+    getVersion() {
         return this.getOutputByName('version', '');
-    };
+    }
     /**
      * Gets the date of the terms and conditions.
      */
-    TermsAndConditionsCallback.prototype.getCreateDate = function () {
-        var date = this.getOutputByName('createDate', '');
+    getCreateDate() {
+        const date = this.getOutputByName('createDate', '');
         return new Date(date);
-    };
+    }
     /**
      * Sets the callback's acceptance.
      */
-    TermsAndConditionsCallback.prototype.setAccepted = function (accepted) {
-        if (accepted === void 0) { accepted = true; }
+    setAccepted(accepted = true) {
         this.setInputValue(accepted);
-    };
-    return TermsAndConditionsCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2804,48 +2295,30 @@ var TermsAndConditionsCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$o = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to retrieve input from the user.
  */
-var TextInputCallback$1 = /** @class */ (function (_super) {
-    __extends$o(TextInputCallback, _super);
+class TextInputCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function TextInputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback's prompt.
      */
-    TextInputCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Sets the callback's input value.
      */
-    TextInputCallback.prototype.setInput = function (input) {
+    setInput(input) {
         this.setInputValue(input);
-    };
-    return TextInputCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2856,74 +2329,62 @@ var TextInputCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$n = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect a valid platform password.
  */
-var ValidatedCreatePasswordCallback$1 = /** @class */ (function (_super) {
-    __extends$n(ValidatedCreatePasswordCallback, _super);
+class ValidatedCreatePasswordCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function ValidatedCreatePasswordCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback's failed policies.
      */
-    ValidatedCreatePasswordCallback.prototype.getFailedPolicies = function () {
-        return this.getOutputByName('failedPolicies', []);
-    };
+    getFailedPolicies() {
+        const failedPolicies = this.getOutputByName('failedPolicies', []);
+        try {
+            return failedPolicies.map((v) => JSON.parse(v));
+        }
+        catch (err) {
+            throw new Error('Unable to parse "failed policies" from the ForgeRock server. The JSON within `ValidatedCreatePasswordCallback` was either malformed or missing.');
+        }
+    }
     /**
      * Gets the callback's applicable policies.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ValidatedCreatePasswordCallback.prototype.getPolicies = function () {
+    getPolicies() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.getOutputByName('policies', {});
-    };
+    }
     /**
      * Gets the callback's prompt.
      */
-    ValidatedCreatePasswordCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Gets whether the password is required.
      */
-    ValidatedCreatePasswordCallback.prototype.isRequired = function () {
+    isRequired() {
         return this.getOutputByName('required', false);
-    };
+    }
     /**
      * Sets the callback's password.
      */
-    ValidatedCreatePasswordCallback.prototype.setPassword = function (password) {
+    setPassword(password) {
         this.setInputValue(password);
-    };
+    }
     /**
      * Set if validating value only.
      */
-    ValidatedCreatePasswordCallback.prototype.setValidateOnly = function (value) {
+    setValidateOnly(value) {
         this.setInputValue(value, /validateOnly/);
-    };
-    return ValidatedCreatePasswordCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -2934,74 +2395,62 @@ var ValidatedCreatePasswordCallback$1 = /** @class */ (function (_super) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$m = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
 /**
  * Represents a callback used to collect a valid platform username.
  */
-var ValidatedCreateUsernameCallback$1 = /** @class */ (function (_super) {
-    __extends$m(ValidatedCreateUsernameCallback, _super);
+class ValidatedCreateUsernameCallback extends FRCallback {
     /**
      * @param payload The raw payload returned by OpenAM
      */
-    function ValidatedCreateUsernameCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
+    constructor(payload) {
+        super(payload);
+        this.payload = payload;
     }
     /**
      * Gets the callback's prompt.
      */
-    ValidatedCreateUsernameCallback.prototype.getPrompt = function () {
+    getPrompt() {
         return this.getOutputByName('prompt', '');
-    };
+    }
     /**
      * Gets the callback's failed policies.
      */
-    ValidatedCreateUsernameCallback.prototype.getFailedPolicies = function () {
-        return this.getOutputByName('failedPolicies', []);
-    };
+    getFailedPolicies() {
+        const failedPolicies = this.getOutputByName('failedPolicies', []);
+        try {
+            return failedPolicies.map((v) => JSON.parse(v));
+        }
+        catch (err) {
+            throw new Error('Unable to parse "failed policies" from the ForgeRock server. The JSON within `ValidatedCreateUsernameCallback` was either malformed or missing.');
+        }
+    }
     /**
      * Gets the callback's applicable policies.
      */
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ValidatedCreateUsernameCallback.prototype.getPolicies = function () {
+    getPolicies() {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return this.getOutputByName('policies', {});
-    };
+    }
     /**
      * Gets whether the username is required.
      */
-    ValidatedCreateUsernameCallback.prototype.isRequired = function () {
+    isRequired() {
         return this.getOutputByName('required', false);
-    };
+    }
     /**
      * Sets the callback's username.
      */
-    ValidatedCreateUsernameCallback.prototype.setName = function (name) {
+    setName(name) {
         this.setInputValue(name);
-    };
+    }
     /**
      * Set if validating value only.
      */
-    ValidatedCreateUsernameCallback.prototype.setValidateOnly = function (value) {
+    setValidateOnly(value) {
         this.setInputValue(value, /validateOnly/);
-    };
-    return ValidatedCreateUsernameCallback;
-}(FRCallback$1));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -3015,52 +2464,52 @@ var ValidatedCreateUsernameCallback$1 = /** @class */ (function (_super) {
 /**
  * @hidden
  */
-function createCallback$1(callback) {
+function createCallback(callback) {
     switch (callback.type) {
-        case CallbackType$1.BooleanAttributeInputCallback:
-            return new AttributeInputCallback$1(callback);
-        case CallbackType$1.ChoiceCallback:
-            return new ChoiceCallback$1(callback);
-        case CallbackType$1.ConfirmationCallback:
-            return new ConfirmationCallback$1(callback);
-        case CallbackType$1.DeviceProfileCallback:
-            return new DeviceProfileCallback$1(callback);
-        case CallbackType$1.HiddenValueCallback:
-            return new HiddenValueCallback$1(callback);
-        case CallbackType$1.KbaCreateCallback:
-            return new KbaCreateCallback$1(callback);
-        case CallbackType$1.MetadataCallback:
-            return new MetadataCallback$1(callback);
-        case CallbackType$1.NameCallback:
-            return new NameCallback$1(callback);
-        case CallbackType$1.NumberAttributeInputCallback:
-            return new AttributeInputCallback$1(callback);
-        case CallbackType$1.PasswordCallback:
-            return new PasswordCallback$1(callback);
-        case CallbackType$1.PollingWaitCallback:
-            return new PollingWaitCallback$1(callback);
-        case CallbackType$1.ReCaptchaCallback:
-            return new ReCaptchaCallback$1(callback);
-        case CallbackType$1.RedirectCallback:
-            return new RedirectCallback$1(callback);
-        case CallbackType$1.SelectIdPCallback:
-            return new SelectIdPCallback$1(callback);
-        case CallbackType$1.StringAttributeInputCallback:
-            return new AttributeInputCallback$1(callback);
-        case CallbackType$1.SuspendedTextOutputCallback:
-            return new SuspendedTextOutputCallback$1(callback);
-        case CallbackType$1.TermsAndConditionsCallback:
-            return new TermsAndConditionsCallback$1(callback);
-        case CallbackType$1.TextInputCallback:
-            return new TextInputCallback$1(callback);
-        case CallbackType$1.TextOutputCallback:
-            return new TextOutputCallback$1(callback);
-        case CallbackType$1.ValidatedCreatePasswordCallback:
-            return new ValidatedCreatePasswordCallback$1(callback);
-        case CallbackType$1.ValidatedCreateUsernameCallback:
-            return new ValidatedCreateUsernameCallback$1(callback);
+        case CallbackType.BooleanAttributeInputCallback:
+            return new AttributeInputCallback(callback);
+        case CallbackType.ChoiceCallback:
+            return new ChoiceCallback(callback);
+        case CallbackType.ConfirmationCallback:
+            return new ConfirmationCallback(callback);
+        case CallbackType.DeviceProfileCallback:
+            return new DeviceProfileCallback(callback);
+        case CallbackType.HiddenValueCallback:
+            return new HiddenValueCallback(callback);
+        case CallbackType.KbaCreateCallback:
+            return new KbaCreateCallback(callback);
+        case CallbackType.MetadataCallback:
+            return new MetadataCallback(callback);
+        case CallbackType.NameCallback:
+            return new NameCallback(callback);
+        case CallbackType.NumberAttributeInputCallback:
+            return new AttributeInputCallback(callback);
+        case CallbackType.PasswordCallback:
+            return new PasswordCallback(callback);
+        case CallbackType.PollingWaitCallback:
+            return new PollingWaitCallback(callback);
+        case CallbackType.ReCaptchaCallback:
+            return new ReCaptchaCallback(callback);
+        case CallbackType.RedirectCallback:
+            return new RedirectCallback(callback);
+        case CallbackType.SelectIdPCallback:
+            return new SelectIdPCallback(callback);
+        case CallbackType.StringAttributeInputCallback:
+            return new AttributeInputCallback(callback);
+        case CallbackType.SuspendedTextOutputCallback:
+            return new SuspendedTextOutputCallback(callback);
+        case CallbackType.TermsAndConditionsCallback:
+            return new TermsAndConditionsCallback(callback);
+        case CallbackType.TextInputCallback:
+            return new TextInputCallback(callback);
+        case CallbackType.TextOutputCallback:
+            return new TextOutputCallback(callback);
+        case CallbackType.ValidatedCreatePasswordCallback:
+            return new ValidatedCreatePasswordCallback(callback);
+        case CallbackType.ValidatedCreateUsernameCallback:
+            return new ValidatedCreateUsernameCallback(callback);
         default:
-            return new FRCallback$1(callback);
+            return new FRCallback(callback);
     }
 }
 
@@ -3076,17 +2525,17 @@ function createCallback$1(callback) {
 /**
  * Represents a single step of an authentication tree.
  */
-var FRStep$1 = /** @class */ (function () {
+class FRStep {
     /**
      * @param payload The raw payload returned by OpenAM
      * @param callbackFactory A function that returns am implementation of FRCallback
      */
-    function FRStep(payload, callbackFactory) {
+    constructor(payload, callbackFactory) {
         this.payload = payload;
         /**
          * The type of step.
          */
-        this.type = StepType$1.Step;
+        this.type = StepType.Step;
         /**
          * The callbacks contained in this step.
          */
@@ -3100,61 +2549,60 @@ var FRStep$1 = /** @class */ (function () {
      *
      * @param type The type of callback to find.
      */
-    FRStep.prototype.getCallbackOfType = function (type) {
-        var callbacks = this.getCallbacksOfType(type);
+    getCallbackOfType(type) {
+        const callbacks = this.getCallbacksOfType(type);
         if (callbacks.length !== 1) {
-            throw new Error("Expected 1 callback of type \"".concat(type, "\", but found ").concat(callbacks.length));
+            throw new Error(`Expected 1 callback of type "${type}", but found ${callbacks.length}`);
         }
         return callbacks[0];
-    };
+    }
     /**
      * Gets all callbacks of the specified type in this step.
      *
      * @param type The type of callback to find.
      */
-    FRStep.prototype.getCallbacksOfType = function (type) {
-        return this.callbacks.filter(function (x) { return x.getType() === type; });
-    };
+    getCallbacksOfType(type) {
+        return this.callbacks.filter((x) => x.getType() === type);
+    }
     /**
      * Sets the value of the first callback of the specified type in this step.
      *
      * @param type The type of callback to find.
      * @param value The value to set for the callback.
      */
-    FRStep.prototype.setCallbackValue = function (type, value) {
-        var callbacks = this.getCallbacksOfType(type);
+    setCallbackValue(type, value) {
+        const callbacks = this.getCallbacksOfType(type);
         if (callbacks.length !== 1) {
-            throw new Error("Expected 1 callback of type \"".concat(type, "\", but found ").concat(callbacks.length));
+            throw new Error(`Expected 1 callback of type "${type}", but found ${callbacks.length}`);
         }
         callbacks[0].setInputValue(value);
-    };
+    }
     /**
      * Gets the step's description.
      */
-    FRStep.prototype.getDescription = function () {
+    getDescription() {
         return this.payload.description;
-    };
+    }
     /**
      * Gets the step's header.
      */
-    FRStep.prototype.getHeader = function () {
+    getHeader() {
         return this.payload.header;
-    };
+    }
     /**
      * Gets the step's stage.
      */
-    FRStep.prototype.getStage = function () {
+    getStage() {
         return this.payload.stage;
-    };
-    FRStep.prototype.convertCallbacks = function (callbacks, callbackFactory) {
-        var converted = callbacks.map(function (x) {
+    }
+    convertCallbacks(callbacks, callbackFactory) {
+        const converted = callbacks.map((x) => {
             // This gives preference to the provided factory and falls back to our default implementation
-            return (callbackFactory || createCallback$1)(x) || createCallback$1(x);
+            return (callbackFactory || createCallback)(x) || createCallback(x);
         });
         return converted;
-    };
-    return FRStep;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -3165,59 +2613,10 @@ var FRStep$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __assign$8 = (undefined && undefined.__assign) || function () {
-    __assign$8 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$8.apply(this, arguments);
-};
-var __awaiter$n = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$n = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Provides access to the OpenAM authentication tree API.
  */
-var FRAuth$1 = /** @class */ (function () {
-    function FRAuth() {
-    }
+class FRAuth {
     /**
      * Requests the next step in the authentication tree.
      *
@@ -3250,28 +2649,20 @@ var FRAuth$1 = /** @class */ (function () {
      * @param options Configuration overrides
      * @return The next step in the authentication tree
      */
-    FRAuth.next = function (previousStep, options) {
-        return __awaiter$n(this, void 0, void 0, function () {
-            var nextPayload, callbackFactory;
-            return __generator$n(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, Auth$1.next(previousStep ? previousStep.payload : undefined, options)];
-                    case 1:
-                        nextPayload = _a.sent();
-                        if (nextPayload.authId) {
-                            callbackFactory = options ? options.callbackFactory : undefined;
-                            return [2 /*return*/, new FRStep$1(nextPayload, callbackFactory)];
-                        }
-                        if (!nextPayload.authId && nextPayload.ok) {
-                            // If there's no authId, and the response is OK, tree is complete
-                            return [2 /*return*/, new FRLoginSuccess$1(nextPayload)];
-                        }
-                        // If there's no authId, and the response is not OK, tree has failure
-                        return [2 /*return*/, new FRLoginFailure$1(nextPayload)];
-                }
-            });
-        });
-    };
+    static async next(previousStep, options) {
+        const nextPayload = await Auth.next(previousStep ? previousStep.payload : undefined, options);
+        if (nextPayload.authId) {
+            // If there's an authId, tree has not been completed
+            const callbackFactory = options ? options.callbackFactory : undefined;
+            return new FRStep(nextPayload, callbackFactory);
+        }
+        if (!nextPayload.authId && nextPayload.ok) {
+            // If there's no authId, and the response is OK, tree is complete
+            return new FRLoginSuccess(nextPayload);
+        }
+        // If there's no authId, and the response is not OK, tree has failure
+        return new FRLoginFailure(nextPayload);
+    }
     /**
      * Redirects to the URL identified in the RedirectCallback and saves the full
      * step information to localStorage for retrieval when user returns from login.
@@ -3281,12 +2672,12 @@ var FRAuth$1 = /** @class */ (function () {
      * forgerock.FRAuth.redirect(step);
      * ```
      */
-    FRAuth.redirect = function (step) {
-        var cb = step.getCallbackOfType(CallbackType$1.RedirectCallback);
-        var redirectUrl = cb.getRedirectUrl();
-        window.localStorage.setItem(this.previousStepKey, JSON.stringify(step));
-        window.location.assign(redirectUrl);
-    };
+    static redirect(step) {
+        const cb = step.getCallbackOfType(CallbackType.RedirectCallback);
+        const redirectUrl = cb.getRedirectUrl();
+        localStorage.setItem(this.previousStepKey, JSON.stringify(step));
+        location.assign(redirectUrl);
+    }
     /**
      * Resumes a tree after returning from an external client or provider.
      * Requires the full URL of the current window. It will parse URL for
@@ -3297,54 +2688,70 @@ var FRAuth$1 = /** @class */ (function () {
      * forgerock.FRAuth.resume(window.location.href)
      * ```
      */
-    FRAuth.resume = function (url, options) {
-        var _a, _b, _c;
-        return __awaiter$n(this, void 0, void 0, function () {
-            function requiresPreviousStep() {
-                return (code && state) || form_post_entry || responsekey;
+    static async resume(url, options) {
+        const parsedUrl = new URL(url);
+        const code = parsedUrl.searchParams.get('code');
+        const error = parsedUrl.searchParams.get('error');
+        const errorCode = parsedUrl.searchParams.get('errorCode');
+        const errorMessage = parsedUrl.searchParams.get('errorMessage');
+        const form_post_entry = parsedUrl.searchParams.get('form_post_entry');
+        const nonce = parsedUrl.searchParams.get('nonce');
+        const RelayState = parsedUrl.searchParams.get('RelayState');
+        const responsekey = parsedUrl.searchParams.get('responsekey');
+        const scope = parsedUrl.searchParams.get('scope');
+        const state = parsedUrl.searchParams.get('state');
+        const suspendedId = parsedUrl.searchParams.get('suspendedId');
+        const authIndexValue = parsedUrl.searchParams.get('authIndexValue') ?? undefined;
+        let previousStep;
+        function requiresPreviousStep() {
+            return (code && state) || form_post_entry || responsekey;
+        }
+        /**
+         * If we are returning back from a provider, the previous redirect step data is required.
+         * Retrieve the previous step from localStorage, and then delete it to remove stale data.
+         * If suspendedId is present, no previous step data is needed, so skip below conditional.
+         */
+        if (requiresPreviousStep()) {
+            const redirectStepString = localStorage.getItem(this.previousStepKey);
+            if (!redirectStepString) {
+                throw new Error('Error: could not retrieve original redirect information.');
             }
-            var parsedUrl, code, error, errorCode, errorMessage, form_post_entry, nonce, RelayState, responsekey, scope, state, suspendedId, authIndexValue, previousStep, redirectStepString, nextOptions;
-            return __generator$n(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        parsedUrl = new URL(url);
-                        code = parsedUrl.searchParams.get('code');
-                        error = parsedUrl.searchParams.get('error');
-                        errorCode = parsedUrl.searchParams.get('errorCode');
-                        errorMessage = parsedUrl.searchParams.get('errorMessage');
-                        form_post_entry = parsedUrl.searchParams.get('form_post_entry');
-                        nonce = parsedUrl.searchParams.get('nonce');
-                        RelayState = parsedUrl.searchParams.get('RelayState');
-                        responsekey = parsedUrl.searchParams.get('responsekey');
-                        scope = parsedUrl.searchParams.get('scope');
-                        state = parsedUrl.searchParams.get('state');
-                        suspendedId = parsedUrl.searchParams.get('suspendedId');
-                        authIndexValue = (_a = parsedUrl.searchParams.get('authIndexValue')) !== null && _a !== void 0 ? _a : undefined;
-                        /**
-                         * If we are returning back from a provider, the previous redirect step data is required.
-                         * Retrieve the previous step from localStorage, and then delete it to remove stale data.
-                         * If suspendedId is present, no previous step data is needed, so skip below conditional.
-                         */
-                        if (requiresPreviousStep()) {
-                            redirectStepString = window.localStorage.getItem(this.previousStepKey);
-                            if (!redirectStepString) {
-                                throw new Error('Error: could not retrieve original redirect information.');
-                            }
-                            try {
-                                previousStep = JSON.parse(redirectStepString);
-                            }
-                            catch (err) {
-                                throw new Error('Error: could not parse redirect params or step information');
-                            }
-                            window.localStorage.removeItem(this.previousStepKey);
-                        }
-                        nextOptions = __assign$8(__assign$8(__assign$8({}, options), { query: __assign$8(__assign$8(__assign$8(__assign$8(__assign$8(__assign$8(__assign$8(__assign$8(__assign$8(__assign$8(__assign$8(__assign$8({}, (code && { code: code })), (error && { error: error })), (errorCode && { errorCode: errorCode })), (errorMessage && { errorMessage: errorMessage })), (form_post_entry && { form_post_entry: form_post_entry })), (nonce && { nonce: nonce })), (RelayState && { RelayState: RelayState })), (responsekey && { responsekey: responsekey })), (scope && { scope: scope })), (state && { state: state })), (suspendedId && { suspendedId: suspendedId })), (options && options.query)) }), (((_b = options === null || options === void 0 ? void 0 : options.tree) !== null && _b !== void 0 ? _b : authIndexValue) && { tree: (_c = options === null || options === void 0 ? void 0 : options.tree) !== null && _c !== void 0 ? _c : authIndexValue }));
-                        return [4 /*yield*/, this.next(previousStep, nextOptions)];
-                    case 1: return [2 /*return*/, _d.sent()];
-                }
-            });
-        });
-    };
+            try {
+                previousStep = JSON.parse(redirectStepString);
+            }
+            catch (err) {
+                throw new Error('Error: could not parse redirect params or step information');
+            }
+            localStorage.removeItem(this.previousStepKey);
+        }
+        /**
+         * Construct options object from the options parameter and key-value pairs from URL.
+         * Ensure query parameters from current URL are the last properties spread in the object.
+         */
+        const nextOptions = {
+            ...options,
+            query: {
+                // Conditionally spread properties into object. Don't spread props with undefined/null.
+                ...(code && { code }),
+                ...(error && { error }),
+                ...(errorCode && { errorCode }),
+                ...(errorMessage && { errorMessage }),
+                ...(form_post_entry && { form_post_entry }),
+                ...(nonce && { nonce }),
+                ...(RelayState && { RelayState }),
+                ...(responsekey && { responsekey }),
+                ...(scope && { scope }),
+                ...(state && { state }),
+                ...(suspendedId && { suspendedId }),
+                // Allow developer to add or override params with their own.
+                ...(options && options.query),
+            },
+            ...((options?.tree ?? authIndexValue) && {
+                tree: options?.tree ?? authIndexValue,
+            }),
+        };
+        return await this.next(previousStep, nextOptions);
+    }
     /**
      * Requests the first step in the authentication tree.
      * This is essentially an alias to calling FRAuth.next without a previous step.
@@ -3352,19 +2759,11 @@ var FRAuth$1 = /** @class */ (function () {
      * @param options Configuration overrides
      * @return The next step in the authentication tree
      */
-    FRAuth.start = function (options) {
-        return __awaiter$n(this, void 0, void 0, function () {
-            return __generator$n(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, FRAuth.next(undefined, options)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    FRAuth.previousStepKey = 'FRAuth_PreviousStep';
-    return FRAuth;
-}());
+    static async start(options) {
+        return await FRAuth.next(undefined, options);
+    }
+}
+FRAuth.previousStepKey = `${PREFIX}-PreviousStep`;
 
 /*
  * @forgerock/javascript-sdk
@@ -3375,7 +2774,7 @@ var FRAuth$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var browserProps = [
+const browserProps = [
     'userAgent',
     'appName',
     'appCodeName',
@@ -3388,21 +2787,21 @@ var browserProps = [
     'vendorSub',
     'browserLanguage',
 ];
-var configurableCategories = [
+const configurableCategories = [
     'fontNames',
     'displayProps',
     'browserProps',
     'hardwareProps',
     'platformProps',
 ];
-var delay = 30 * 1000;
-var devicePlatforms = {
+const delay = 30 * 1000;
+const devicePlatforms = {
     mac: ['Macintosh', 'MacIntel', 'MacPPC', 'Mac68K'],
     windows: ['Win32', 'Win64', 'Windows', 'WinCE'],
     ios: ['iPhone', 'iPad', 'iPod'],
 };
-var displayProps = ['width', 'height', 'pixelDepth', 'orientation.angle'];
-var fontNames = [
+const displayProps = ['width', 'height', 'pixelDepth', 'orientation.angle'];
+const fontNames = [
     'cursive',
     'monospace',
     'serif',
@@ -3436,14 +2835,14 @@ var fontNames = [
     'Verdana',
     'Verona',
 ];
-var hardwareProps = [
+const hardwareProps = [
     'cpuClass',
     'deviceMemory',
     'hardwareConcurrency',
     'maxTouchPoints',
     'oscpu',
 ];
-var platformProps = ['language', 'platform', 'userLanguage', 'systemLanguage'];
+const platformProps = ['language', 'platform', 'userLanguage', 'systemLanguage'];
 
 /*
  * @forgerock/javascript-sdk
@@ -3458,22 +2857,20 @@ var platformProps = ['language', 'platform', 'userLanguage', 'systemLanguage'];
  * @class Collector - base class for FRDevice
  * Generic collector functions for collecting a device profile attributes
  */
-var Collector = /** @class */ (function () {
-    function Collector() {
-    }
+class Collector {
     /**
      * @method reduceToObject - goes one to two levels into source to collect attribute
      * @param props - array of strings; can use dot notation for two level lookup
      * @param src - source of attributes to check
      */
     // eslint-disable-next-line
-    Collector.prototype.reduceToObject = function (props, src) {
-        return props.reduce(function (prev, curr) {
+    reduceToObject(props, src) {
+        return props.reduce((prev, curr) => {
             if (curr.includes('.')) {
-                var propArr = curr.split('.');
-                var prop1 = propArr[0];
-                var prop2 = propArr[1];
-                var prop = src[prop1] && src[prop1][prop2];
+                const propArr = curr.split('.');
+                const prop1 = propArr[0];
+                const prop2 = propArr[1];
+                const prop = src[prop1] && src[prop1][prop2];
                 prev[prop2] = prop != undefined ? prop : '';
             }
             else {
@@ -3481,21 +2878,20 @@ var Collector = /** @class */ (function () {
             }
             return prev;
         }, {});
-    };
+    }
     /**
      * @method reduceToString - goes one level into source to collect attribute
      * @param props - array of strings
      * @param src - source of attributes to check
      */
     // eslint-disable-next-line
-    Collector.prototype.reduceToString = function (props, src) {
-        return props.reduce(function (prev, curr) {
-            prev = "".concat(prev).concat(src[curr].filename, ";");
+    reduceToString(props, src) {
+        return props.reduce((prev, curr) => {
+            prev = `${prev}${src[curr].filename};`;
             return prev;
         }, '');
-    };
-    return Collector;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -3506,68 +2902,6 @@ var Collector = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends$l = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __assign$7 = (undefined && undefined.__assign) || function () {
-    __assign$7 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$7.apply(this, arguments);
-};
-var __awaiter$m = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$m = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * @class FRDevice - Collects user device metadata
  *
@@ -3589,54 +2923,52 @@ var __generator$m = (undefined && undefined.__generator) || function (thisArg, b
  * });
  * ```
  */
-var FRDevice = /** @class */ (function (_super) {
-    __extends$l(FRDevice, _super);
-    function FRDevice(config) {
-        var _this = _super.call(this) || this;
-        _this.config = {
-            fontNames: fontNames,
-            devicePlatforms: devicePlatforms,
-            displayProps: displayProps,
-            browserProps: browserProps,
-            hardwareProps: hardwareProps,
-            platformProps: platformProps,
+class FRDevice extends Collector {
+    constructor(config) {
+        super();
+        this.config = {
+            fontNames,
+            devicePlatforms,
+            displayProps,
+            browserProps,
+            hardwareProps,
+            platformProps,
         };
         if (config) {
-            Object.keys(config).forEach(function (key) {
+            Object.keys(config).forEach((key) => {
                 if (!configurableCategories.includes(key)) {
                     throw new Error('Device profile configuration category does not exist.');
                 }
-                _this.config[key] = config[key];
+                this.config[key] = config[key];
             });
         }
-        return _this;
     }
-    FRDevice.prototype.getBrowserMeta = function () {
+    getBrowserMeta() {
         if (typeof navigator === 'undefined') {
             console.warn('Cannot collect browser metadata. navigator is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.browserProps, navigator);
-    };
-    FRDevice.prototype.getBrowserPluginsNames = function () {
+    }
+    getBrowserPluginsNames() {
         if (!(typeof navigator !== 'undefined' && navigator.plugins)) {
             console.warn('Cannot collect browser plugin information. navigator.plugins is not defined.');
             return '';
         }
         return this.reduceToString(Object.keys(navigator.plugins), navigator.plugins);
-    };
-    FRDevice.prototype.getDeviceName = function () {
+    }
+    getDeviceName() {
         if (typeof navigator === 'undefined') {
             console.warn('Cannot collect device name. navigator is not defined.');
             return '';
         }
-        var userAgent = navigator.userAgent;
-        var platform = navigator.platform;
+        const userAgent = navigator.userAgent;
+        const platform = navigator.platform;
         switch (true) {
             case this.config.devicePlatforms.mac.includes(platform):
                 return 'Mac (Browser)';
             case this.config.devicePlatforms.ios.includes(platform):
-                return "".concat(platform, " (Browser)");
+                return `${platform} (Browser)`;
             case this.config.devicePlatforms.windows.includes(platform):
                 return 'Windows (Browser)';
             case /Android/.test(platform) || /Android/.test(userAgent):
@@ -3646,24 +2978,25 @@ var FRDevice = /** @class */ (function (_super) {
             case /Linux/.test(platform):
                 return 'Linux (Browser)';
             default:
-                return "".concat(platform || 'Unknown', " (Browser)");
+                return `${platform || 'Unknown'} (Browser)`;
         }
-    };
-    FRDevice.prototype.getDisplayMeta = function () {
+    }
+    getDisplayMeta() {
         if (typeof screen === 'undefined') {
             console.warn('Cannot collect screen information. screen is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.displayProps, screen);
-    };
-    FRDevice.prototype.getHardwareMeta = function () {
+    }
+    getHardwareMeta() {
         if (typeof navigator === 'undefined') {
             console.warn('Cannot collect OS metadata. Navigator is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.hardwareProps, navigator);
-    };
-    FRDevice.prototype.getIdentifier = function () {
+    }
+    getIdentifier() {
+        const storageKey = `${PREFIX}-DeviceID`;
         if (!(typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues)) {
             console.warn('Cannot generate profile ID. Crypto and/or getRandomValues is not supported.');
             return '';
@@ -3672,108 +3005,97 @@ var FRDevice = /** @class */ (function (_super) {
             console.warn('Cannot store profile ID. localStorage is not supported.');
             return '';
         }
-        var id = localStorage.getItem('profile-id');
+        let id = localStorage.getItem(storageKey);
         if (!id) {
             // generate ID, 3 sections of random numbers: "714524572-2799534390-3707617532"
             id = globalThis.crypto.getRandomValues(new Uint32Array(3)).join('-');
-            localStorage.setItem('profile-id', id);
+            localStorage.setItem(storageKey, id);
         }
         return id;
-    };
-    FRDevice.prototype.getInstalledFonts = function () {
+    }
+    getInstalledFonts() {
         if (typeof document === undefined) {
             console.warn('Cannot collect font data. Global document object is undefined.');
             return '';
         }
-        var canvas = document.createElement('canvas');
+        const canvas = document.createElement('canvas');
         if (!canvas) {
             console.warn('Cannot collect font data. Browser does not support canvas element');
             return '';
         }
-        var context = canvas.getContext && canvas.getContext('2d');
+        const context = canvas.getContext && canvas.getContext('2d');
         if (!context) {
             console.warn('Cannot collect font data. Browser does not support 2d canvas context');
             return '';
         }
-        var text = 'abcdefghi0123456789';
+        const text = 'abcdefghi0123456789';
         context.font = '72px Comic Sans';
-        var baseWidth = context.measureText(text).width;
-        var installedFonts = this.config.fontNames.reduce(function (prev, curr) {
-            context.font = "72px ".concat(curr, ", Comic Sans");
-            var newWidth = context.measureText(text).width;
+        const baseWidth = context.measureText(text).width;
+        const installedFonts = this.config.fontNames.reduce((prev, curr) => {
+            context.font = `72px ${curr}, Comic Sans`;
+            const newWidth = context.measureText(text).width;
             if (newWidth !== baseWidth) {
-                prev = "".concat(prev).concat(curr, ";");
+                prev = `${prev}${curr};`;
             }
             return prev;
         }, '');
         return installedFonts;
-    };
-    FRDevice.prototype.getLocationCoordinates = function () {
-        return __awaiter$m(this, void 0, void 0, function () {
-            var _this = this;
-            return __generator$m(this, function (_a) {
-                if (!(typeof navigator !== 'undefined' && navigator.geolocation)) {
-                    console.warn('Cannot collect geolocation information. navigator.geolocation is not defined.');
-                    return [2 /*return*/, Promise.resolve({})];
-                }
-                // eslint-disable-next-line no-async-promise-executor
-                return [2 /*return*/, new Promise(function (resolve) { return __awaiter$m(_this, void 0, void 0, function () {
-                        return __generator$m(this, function (_a) {
-                            navigator.geolocation.getCurrentPosition(function (position) {
-                                return resolve({
-                                    latitude: position.coords.latitude,
-                                    longitude: position.coords.longitude,
-                                });
-                            }, function (error) {
-                                console.warn('Cannot collect geolocation information. ' + error.code + ': ' + error.message);
-                                resolve({});
-                            }, {
-                                enableHighAccuracy: true,
-                                timeout: delay,
-                                maximumAge: 0,
-                            });
-                            return [2 /*return*/];
-                        });
-                    }); })];
+    }
+    async getLocationCoordinates() {
+        if (!(typeof navigator !== 'undefined' && navigator.geolocation)) {
+            console.warn('Cannot collect geolocation information. navigator.geolocation is not defined.');
+            return Promise.resolve({});
+        }
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve) => {
+            navigator.geolocation.getCurrentPosition((position) => resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            }), (error) => {
+                console.warn('Cannot collect geolocation information. ' + error.code + ': ' + error.message);
+                resolve({});
+            }, {
+                enableHighAccuracy: true,
+                timeout: delay,
+                maximumAge: 0,
             });
         });
-    };
-    FRDevice.prototype.getOSMeta = function () {
+    }
+    getOSMeta() {
         if (typeof navigator === 'undefined') {
             console.warn('Cannot collect OS metadata. navigator is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.platformProps, navigator);
-    };
-    FRDevice.prototype.getProfile = function (_a) {
-        var location = _a.location, metadata = _a.metadata;
-        return __awaiter$m(this, void 0, void 0, function () {
-            var profile, _b;
-            return __generator$m(this, function (_c) {
-                switch (_c.label) {
-                    case 0:
-                        profile = {
-                            identifier: this.getIdentifier(),
-                        };
-                        if (metadata) {
-                            profile.metadata = {
-                                hardware: __assign$7(__assign$7({}, this.getHardwareMeta()), { display: this.getDisplayMeta() }),
-                                browser: __assign$7(__assign$7({}, this.getBrowserMeta()), { plugins: this.getBrowserPluginsNames() }),
-                                platform: __assign$7(__assign$7({}, this.getOSMeta()), { deviceName: this.getDeviceName(), fonts: this.getInstalledFonts(), timezone: this.getTimezoneOffset() }),
-                            };
-                        }
-                        if (!location) return [3 /*break*/, 2];
-                        _b = profile;
-                        return [4 /*yield*/, this.getLocationCoordinates()];
-                    case 1:
-                        _b.location = _c.sent();
-                        _c.label = 2;
-                    case 2: return [2 /*return*/, profile];
-                }
-            });
-        });
-    };
-    FRDevice.prototype.getTimezoneOffset = function () {
+    }
+    async getProfile({ location, metadata }) {
+        const profile = {
+            identifier: this.getIdentifier(),
+        };
+        if (metadata) {
+            profile.metadata = {
+                hardware: {
+                    ...this.getHardwareMeta(),
+                    display: this.getDisplayMeta(),
+                },
+                browser: {
+                    ...this.getBrowserMeta(),
+                    plugins: this.getBrowserPluginsNames(),
+                },
+                platform: {
+                    ...this.getOSMeta(),
+                    deviceName: this.getDeviceName(),
+                    fonts: this.getInstalledFonts(),
+                    timezone: this.getTimezoneOffset(),
+                },
+            };
+        }
+        if (location) {
+            profile.location = await this.getLocationCoordinates();
+        }
+        return profile;
+    }
+    getTimezoneOffset() {
         try {
             return new Date().getTimezoneOffset();
         }
@@ -3781,9 +3103,8 @@ var FRDevice = /** @class */ (function (_super) {
             console.warn('Cannot collect timezone information. getTimezoneOffset is not defined.');
             return null;
         }
-    };
-    return FRDevice;
-}(Collector));
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -3802,11 +3123,11 @@ function parseDisplayRecoveryCodesText(text) {
      *    "</div>\n" +
      * ... `
      */
-    var recoveryCodesMatches = text.match(/\s[\w\W]"([\w]*)\\/g);
-    var recoveryCodes = Array.isArray(recoveryCodesMatches) &&
-        recoveryCodesMatches.map(function (substr) {
+    const recoveryCodesMatches = text.match(/\s[\w\W]"([\w]*)\\/g);
+    const recoveryCodes = Array.isArray(recoveryCodesMatches) &&
+        recoveryCodesMatches.map((substr) => {
             // e.g. `"iZmEtxvQ00\`
-            var arr = substr.match(/"([\w]*)\\/);
+            const arr = substr.match(/"([\w]*)\\/);
             return Array.isArray(arr) ? arr[1] : '';
         });
     return recoveryCodes || [];
@@ -3835,220 +3156,41 @@ function parseDisplayRecoveryCodesText(text) {
  * }
  * ```
  */
-var FRRecoveryCodes = /** @class */ (function () {
-    function FRRecoveryCodes() {
-    }
+class FRRecoveryCodes {
     /**
      * Retrieves the recovery codes by parsing the JavaScript message text in callback.
      *
      * @param step The step to evaluate
      * @return Recovery Code values in array
      */
-    FRRecoveryCodes.getCodes = function (step) {
-        var _a;
-        var text = (_a = this.getDisplayCallback(step)) === null || _a === void 0 ? void 0 : _a.getOutputByName('message', '');
+    static getCodes(step) {
+        const text = this.getDisplayCallback(step)?.getOutputByName('message', '');
         return parseDisplayRecoveryCodesText(text || '');
-    };
+    }
     /**
      * Determines if the given step is a Display Recovery Codes step.
      *
      * @param step The step to evaluate
      * @return Is this step a Display Recovery Codes step
      */
-    FRRecoveryCodes.isDisplayStep = function (step) {
+    static isDisplayStep(step) {
         return !!this.getDisplayCallback(step);
-    };
+    }
     /**
      * Gets the recovery codes step.
      *
      * @param step The step to evaluate
      * @return gets the Display Recovery Codes' callback
      */
-    FRRecoveryCodes.getDisplayCallback = function (step) {
+    static getDisplayCallback(step) {
         return step
-            .getCallbacksOfType(CallbackType$1.TextOutputCallback)
-            .find(function (x) {
-            var cb = x.getOutputByName('message', undefined);
+            .getCallbacksOfType(CallbackType.TextOutputCallback)
+            .find((x) => {
+            const cb = x.getOutputByName('message', undefined);
             return cb && (cb.includes('Recovery Codes') || cb.includes('recovery codes'));
         });
-    };
-    return FRRecoveryCodes;
-}());
-
-/*
- * @forgerock/javascript-sdk
- *
- * constants.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-/**
- * @module
- * @ignore
- * These are private constants for TokenStorage
- */
-var DB_NAME$1 = 'forgerock-sdk';
-/** @hidden */
-var TOKEN_KEY$1 = 'tokens';
-
-/*
- * @forgerock/javascript-sdk
- *
- * indexed-db.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$l = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$l = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
     }
-};
-/**
- * Provides wrapper for tokens with IndexedDB.
- */
-var IndexedDBWrapper$1 = /** @class */ (function () {
-    function IndexedDBWrapper() {
-    }
-    /**
-     * Retrieve tokens.
-     */
-    IndexedDBWrapper.get = function (clientId) {
-        return __awaiter$l(this, void 0, void 0, function () {
-            return __generator$l(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var onError = function () { return reject(); };
-                        var openReq = window.indexedDB.open(DB_NAME$1);
-                        openReq.onsuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                openReq.result.close();
-                                return reject('Client ID not found');
-                            }
-                            var getReq = openReq.result
-                                .transaction(clientId, 'readonly')
-                                .objectStore(clientId)
-                                .get(TOKEN_KEY$1);
-                            getReq.onsuccess = function (event) {
-                                if (!event || !event.target) {
-                                    throw new Error('Missing storage event target');
-                                }
-                                openReq.result.close();
-                                resolve(event.target.result);
-                            };
-                            getReq.onerror = onError;
-                        };
-                        openReq.onupgradeneeded = function () {
-                            openReq.result.close();
-                            reject('IndexedDB upgrade needed');
-                        };
-                        openReq.onerror = onError;
-                    })];
-            });
-        });
-    };
-    /**
-     * Saves tokens.
-     */
-    IndexedDBWrapper.set = function (clientId, tokens) {
-        return __awaiter$l(this, void 0, void 0, function () {
-            return __generator$l(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var openReq = window.indexedDB.open(DB_NAME$1);
-                        var onSetSuccess = function () {
-                            openReq.result.close();
-                            resolve();
-                        };
-                        var onError = function () { return reject(); };
-                        var onUpgradeNeeded = function () {
-                            openReq.result.createObjectStore(clientId);
-                        };
-                        var onOpenSuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                var version = openReq.result.version + 1;
-                                openReq.result.close();
-                                openReq = window.indexedDB.open(DB_NAME$1, version);
-                                openReq.onupgradeneeded = onUpgradeNeeded;
-                                openReq.onsuccess = onOpenSuccess;
-                                openReq.onerror = onError;
-                                return;
-                            }
-                            var txnReq = openReq.result.transaction(clientId, 'readwrite');
-                            txnReq.onerror = onError;
-                            var objectStore = txnReq.objectStore(clientId);
-                            var putReq = objectStore.put(tokens, TOKEN_KEY$1);
-                            putReq.onsuccess = onSetSuccess;
-                            putReq.onerror = onError;
-                        };
-                        openReq.onupgradeneeded = onUpgradeNeeded;
-                        openReq.onsuccess = onOpenSuccess;
-                        openReq.onerror = onError;
-                    })];
-            });
-        });
-    };
-    /**
-     * Removes stored tokens.
-     */
-    IndexedDBWrapper.remove = function (clientId) {
-        return __awaiter$l(this, void 0, void 0, function () {
-            return __generator$l(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var onError = function () { return reject(); };
-                        var openReq = window.indexedDB.open(DB_NAME$1);
-                        openReq.onsuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                return resolve();
-                            }
-                            var removeReq = openReq.result
-                                .transaction(clientId, 'readwrite')
-                                .objectStore(clientId)
-                                .delete(TOKEN_KEY$1);
-                            removeReq.onsuccess = function () {
-                                resolve();
-                            };
-                            removeReq.onerror = onError;
-                        };
-                        openReq.onerror = onError;
-                    })];
-            });
-        });
-    };
-    return IndexedDBWrapper;
-}());
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -4059,96 +3201,42 @@ var IndexedDBWrapper$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$k = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$k = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Provides wrapper for tokens with localStorage.
  */
-var LocalStorageWrapper$1 = /** @class */ (function () {
-    function LocalStorageWrapper() {
-    }
+class LocalStorageWrapper {
     /**
      * Retrieve tokens.
      */
-    LocalStorageWrapper.get = function (clientId) {
-        return __awaiter$k(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$k(this, function (_a) {
-                tokenString = localStorage.getItem("".concat(DB_NAME$1, "-").concat(clientId));
-                try {
-                    return [2 /*return*/, Promise.resolve(JSON.parse(tokenString || ''))];
-                }
-                catch (err) {
-                    console.warn('Could not parse token from localStorage. This could be due to accessing a removed token');
-                    // Original behavior had an untyped return of undefined for no token
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    return [2 /*return*/, undefined];
-                }
-                return [2 /*return*/];
-            });
-        });
-    };
+    static async get(clientId) {
+        const tokenString = localStorage.getItem(`${PREFIX}-${clientId}`);
+        // If there is no stored token, or the token is not an object, return null
+        if (!tokenString) {
+            // This is a normal state, so resolve with undefined
+            return;
+        }
+        try {
+            return JSON.parse(tokenString || '');
+        }
+        catch (err) {
+            // This is an error state, so reject
+            throw new Error('Could not parse token object from localStorage');
+        }
+    }
     /**
      * Saves tokens.
      */
-    LocalStorageWrapper.set = function (clientId, tokens) {
-        return __awaiter$k(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$k(this, function (_a) {
-                tokenString = JSON.stringify(tokens);
-                localStorage.setItem("".concat(DB_NAME$1, "-").concat(clientId), tokenString);
-                return [2 /*return*/];
-            });
-        });
-    };
+    static async set(clientId, tokens) {
+        const tokenString = JSON.stringify(tokens);
+        localStorage.setItem(`${PREFIX}-${clientId}`, tokenString);
+    }
     /**
      * Removes stored tokens.
      */
-    LocalStorageWrapper.remove = function (clientId) {
-        return __awaiter$k(this, void 0, void 0, function () {
-            return __generator$k(this, function (_a) {
-                localStorage.removeItem("".concat(DB_NAME$1, "-").concat(clientId));
-                return [2 /*return*/];
-            });
-        });
-    };
-    return LocalStorageWrapper;
-}());
+    static async remove(clientId) {
+        localStorage.removeItem(`${PREFIX}-${clientId}`);
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -4159,96 +3247,42 @@ var LocalStorageWrapper$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$j = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$j = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Provides wrapper for tokens with sessionStorage.
  */
-var SessionStorageWrapper$1 = /** @class */ (function () {
-    function SessionStorageWrapper() {
-    }
+class SessionStorageWrapper {
     /**
      * Retrieve tokens.
      */
-    SessionStorageWrapper.get = function (clientId) {
-        return __awaiter$j(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$j(this, function (_a) {
-                tokenString = sessionStorage.getItem("".concat(DB_NAME$1, "-").concat(clientId));
-                try {
-                    return [2 /*return*/, Promise.resolve(JSON.parse(tokenString || ''))];
-                }
-                catch (err) {
-                    console.warn('Could not parse token from sessionStorage. This could be due to accessing a removed token');
-                    // Original behavior had an untyped return of undefined for no token
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    return [2 /*return*/, undefined];
-                }
-                return [2 /*return*/];
-            });
-        });
-    };
+    static async get(clientId) {
+        const tokenString = sessionStorage.getItem(`${PREFIX}-${clientId}`);
+        // If there is no stored token, or the token is not an object, return null
+        if (!tokenString) {
+            // This is a normal state, so resolve with undefined
+            return;
+        }
+        try {
+            return JSON.parse(tokenString || '');
+        }
+        catch (err) {
+            // This is an error state, so reject
+            throw new Error('Could not parse token from sessionStorage');
+        }
+    }
     /**
      * Saves tokens.
      */
-    SessionStorageWrapper.set = function (clientId, tokens) {
-        return __awaiter$j(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$j(this, function (_a) {
-                tokenString = JSON.stringify(tokens);
-                sessionStorage.setItem("".concat(DB_NAME$1, "-").concat(clientId), tokenString);
-                return [2 /*return*/];
-            });
-        });
-    };
+    static async set(clientId, tokens) {
+        const tokenString = JSON.stringify(tokens);
+        sessionStorage.setItem(`${PREFIX}-${clientId}`, tokenString);
+    }
     /**
      * Removes stored tokens.
      */
-    SessionStorageWrapper.remove = function (clientId) {
-        return __awaiter$j(this, void 0, void 0, function () {
-            return __generator$j(this, function (_a) {
-                sessionStorage.removeItem("".concat(DB_NAME$1, "-").concat(clientId));
-                return [2 /*return*/];
-            });
-        });
-    };
-    return SessionStorageWrapper;
-}());
+    static async remove(clientId) {
+        sessionStorage.removeItem(`${PREFIX}-${clientId}`);
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -4259,164 +3293,86 @@ var SessionStorageWrapper$1 = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$i = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$i = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Provides access to the token storage API.
  * The type of storage (localStorage, sessionStorage, etc) can be configured
  * through `tokenStore` object on the SDK configuration.
  */
-var TokenStorage$1 = /** @class */ (function () {
-    function TokenStorage() {
-    }
+class TokenStorage {
     /**
      * Gets stored tokens.
      */
-    TokenStorage.get = function () {
-        return __awaiter$i(this, void 0, void 0, function () {
-            var _a, clientId, tokenStore;
-            return __generator$i(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-                        if (!(tokenStore === 'sessionStorage')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, SessionStorageWrapper$1.get(clientId)];
-                    case 1: return [2 /*return*/, _b.sent()];
-                    case 2:
-                        if (!(tokenStore === 'localStorage')) return [3 /*break*/, 4];
-                        return [4 /*yield*/, LocalStorageWrapper$1.get(clientId)];
-                    case 3: return [2 /*return*/, _b.sent()];
-                    case 4:
-                        if (!(tokenStore === 'indexedDB')) return [3 /*break*/, 6];
-                        return [4 /*yield*/, IndexedDBWrapper$1.get(clientId)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6:
-                        if (!(tokenStore && tokenStore.get)) return [3 /*break*/, 8];
-                        return [4 /*yield*/, tokenStore.get(clientId)];
-                    case 7: 
-                    // User supplied token store
-                    return [2 /*return*/, _b.sent()];
-                    case 8: return [4 /*yield*/, LocalStorageWrapper$1.get(clientId)];
-                    case 9: 
-                    // if tokenStore is undefined, default to localStorage
-                    return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
+    static async get() {
+        const { clientId, tokenStore } = this.getClientConfig();
+        if (tokenStore === 'sessionStorage') {
+            return await SessionStorageWrapper.get(clientId);
+        }
+        else if (tokenStore === 'localStorage') {
+            return await LocalStorageWrapper.get(clientId);
+            // Preserving this condition for communicating its removal
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+        }
+        else if (tokenStore === 'indexedDB') {
+            console.warn('IndexedDB is not supported in this version.');
+        }
+        else if (tokenStore && tokenStore.get) {
+            // User supplied token store
+            return await tokenStore.get(clientId);
+        }
+        return await LocalStorageWrapper.get(clientId);
+    }
     /**
      * Saves tokens.
      */
-    TokenStorage.set = function (tokens) {
-        return __awaiter$i(this, void 0, void 0, function () {
-            var _a, clientId, tokenStore;
-            return __generator$i(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-                        if (!(tokenStore === 'sessionStorage')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, SessionStorageWrapper$1.set(clientId, tokens)];
-                    case 1: return [2 /*return*/, _b.sent()];
-                    case 2:
-                        if (!(tokenStore === 'localStorage')) return [3 /*break*/, 4];
-                        return [4 /*yield*/, LocalStorageWrapper$1.set(clientId, tokens)];
-                    case 3: return [2 /*return*/, _b.sent()];
-                    case 4:
-                        if (!(tokenStore === 'indexedDB')) return [3 /*break*/, 6];
-                        return [4 /*yield*/, IndexedDBWrapper$1.set(clientId, tokens)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6:
-                        if (!(tokenStore && tokenStore.set)) return [3 /*break*/, 8];
-                        return [4 /*yield*/, tokenStore.set(clientId, tokens)];
-                    case 7: 
-                    // User supplied token store
-                    return [2 /*return*/, _b.sent()];
-                    case 8: return [4 /*yield*/, LocalStorageWrapper$1.set(clientId, tokens)];
-                    case 9: 
-                    // if tokenStore is undefined, default to localStorage
-                    return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
+    static async set(tokens) {
+        const { clientId, tokenStore } = this.getClientConfig();
+        if (tokenStore === 'sessionStorage') {
+            return await SessionStorageWrapper.set(clientId, tokens);
+        }
+        else if (tokenStore === 'localStorage') {
+            return await LocalStorageWrapper.set(clientId, tokens);
+            // Preserving this condition for communicating its removal
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+        }
+        else if (tokenStore === 'indexedDB') {
+            console.warn('IndexedDB is not supported in this version.');
+        }
+        else if (tokenStore && tokenStore.set) {
+            // User supplied token store
+            return await tokenStore.set(clientId, tokens);
+        }
+        return await LocalStorageWrapper.set(clientId, tokens);
+    }
     /**
      * Removes stored tokens.
      */
-    TokenStorage.remove = function () {
-        return __awaiter$i(this, void 0, void 0, function () {
-            var _a, clientId, tokenStore;
-            return __generator$i(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-                        if (!(tokenStore === 'sessionStorage')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, SessionStorageWrapper$1.remove(clientId)];
-                    case 1: return [2 /*return*/, _b.sent()];
-                    case 2:
-                        if (!(tokenStore === 'localStorage')) return [3 /*break*/, 4];
-                        return [4 /*yield*/, LocalStorageWrapper$1.remove(clientId)];
-                    case 3: return [2 /*return*/, _b.sent()];
-                    case 4:
-                        if (!(tokenStore === 'indexedDB')) return [3 /*break*/, 6];
-                        return [4 /*yield*/, IndexedDBWrapper$1.remove(clientId)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6:
-                        if (!(tokenStore && tokenStore.remove)) return [3 /*break*/, 8];
-                        return [4 /*yield*/, tokenStore.remove(clientId)];
-                    case 7: 
-                    // User supplied token store
-                    return [2 /*return*/, _b.sent()];
-                    case 8: return [4 /*yield*/, LocalStorageWrapper$1.remove(clientId)];
-                    case 9: 
-                    // if tokenStore is undefined, default to localStorage
-                    return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
-    TokenStorage.getClientConfig = function () {
-        var _a = Config.get(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-        if (!clientId) {
-            throw new Error('clientId is required to manage token storage');
+    static async remove() {
+        const { clientId, tokenStore } = this.getClientConfig();
+        if (tokenStore === 'sessionStorage') {
+            return await SessionStorageWrapper.remove(clientId);
         }
-        return { clientId: clientId, tokenStore: tokenStore };
-    };
-    return TokenStorage;
-}());
+        else if (tokenStore === 'localStorage') {
+            return await LocalStorageWrapper.remove(clientId);
+            // Preserving this condition for communicating its removal
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-ignore
+        }
+        else if (tokenStore === 'indexedDB') {
+            console.warn('IndexedDB is not supported in this version.');
+        }
+        else if (tokenStore && tokenStore.remove) {
+            // User supplied token store
+            return await tokenStore.remove(clientId);
+        }
+        return await LocalStorageWrapper.remove(clientId);
+    }
+    static getClientConfig() {
+        const { clientId = 'unconfiguredClient', tokenStore = 'localStorage' } = Config.get();
+        return { clientId, tokenStore };
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -4432,7 +3388,7 @@ var TokenStorage$1 = /** @class */ (function () {
  * @ignore
  * These are private utility functions
  */
-function isOkOr4xx$1(response) {
+function isOkOr4xx(response) {
     return response.ok || Math.floor(response.status / 100) === 4;
 }
 
@@ -4445,125 +3401,66 @@ function isOkOr4xx$1(response) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$h = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$h = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Helper class for generating verifier, challenge and state strings used for
  * Proof Key for Code Exchange (PKCE).
  */
-var PKCE$1 = /** @class */ (function () {
-    function PKCE() {
-    }
+class PKCE {
     /**
      * Creates a random state.
      */
-    PKCE.createState = function () {
+    static createState() {
         return this.createRandomString(16);
-    };
+    }
     /**
      * Creates a random verifier.
      */
-    PKCE.createVerifier = function () {
+    static createVerifier() {
         return this.createRandomString(32);
-    };
+    }
     /**
      * Creates a SHA-256 hash of the verifier.
      *
      * @param verifier The verifier to hash
      */
-    PKCE.createChallenge = function (verifier) {
-        return __awaiter$h(this, void 0, void 0, function () {
-            var sha256, challenge;
-            return __generator$h(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.sha256(verifier)];
-                    case 1:
-                        sha256 = _a.sent();
-                        challenge = this.base64UrlEncode(sha256);
-                        return [2 /*return*/, challenge];
-                }
-            });
-        });
-    };
+    static async createChallenge(verifier) {
+        const sha256 = await this.sha256(verifier);
+        const challenge = this.base64UrlEncode(sha256);
+        return challenge;
+    }
     /**
      * Creates a base64 encoded, URL-friendly version of the specified array.
      *
      * @param array The array of numbers to encode
      */
-    PKCE.base64UrlEncode = function (array) {
-        var numbers = Array.prototype.slice.call(array);
-        var ascii = window.btoa(String.fromCharCode.apply(null, numbers));
-        var urlEncoded = ascii.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+    static base64UrlEncode(array) {
+        const numbers = Array.prototype.slice.call(array);
+        const ascii = btoa(String.fromCharCode.apply(null, numbers));
+        const urlEncoded = ascii.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
         return urlEncoded;
-    };
+    }
     /**
      * Creates a SHA-256 hash of the specified string.
      *
      * @param value The string to hash
      */
-    PKCE.sha256 = function (value) {
-        return __awaiter$h(this, void 0, void 0, function () {
-            var uint8Array, hashBuffer, hashArray;
-            return __generator$h(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        uint8Array = new TextEncoder().encode(value);
-                        return [4 /*yield*/, window.crypto.subtle.digest('SHA-256', uint8Array)];
-                    case 1:
-                        hashBuffer = _a.sent();
-                        hashArray = new Uint8Array(hashBuffer);
-                        return [2 /*return*/, hashArray];
-                }
-            });
-        });
-    };
+    static async sha256(value) {
+        const uint8Array = new TextEncoder().encode(value);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', uint8Array);
+        const hashArray = new Uint8Array(hashBuffer);
+        return hashArray;
+    }
     /**
      * Creates a random string.
      *
      * @param size The number for entropy (default: 32)
      */
-    PKCE.createRandomString = function (num) {
-        if (num === void 0) { num = 32; }
-        var random = new Uint8Array(num);
-        window.crypto.getRandomValues(random);
+    static createRandomString(num = 32) {
+        const random = new Uint8Array(num);
+        crypto.getRandomValues(random);
         return btoa(random.join('')).replace(/[^a-zA-Z0-9]+/, '');
-    };
-    return PKCE;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -4577,11 +3474,11 @@ var PKCE$1 = /** @class */ (function () {
 /**
  * Specifies the type of OAuth flow to invoke.
  */
-var ResponseType$1;
+var ResponseType;
 (function (ResponseType) {
     ResponseType["Code"] = "code";
     ResponseType["Token"] = "token";
-})(ResponseType$1 || (ResponseType$1 = {}));
+})(ResponseType || (ResponseType = {}));
 
 /*
  * @forgerock/javascript-sdk
@@ -4592,54 +3489,7 @@ var ResponseType$1;
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __assign$6 = (undefined && undefined.__assign) || function () {
-    __assign$6 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$6.apply(this, arguments);
-};
-var __awaiter$g = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$g = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var allowedErrors = {
+const allowedErrors = {
     // AM error for consent requirement
     AuthenticationConsentRequired: 'Authentication or consent required',
     // Manual iframe error
@@ -4650,39 +3500,36 @@ var allowedErrors = {
     NetworkError: 'NetworkError when attempting to fetch resource.',
     // Webkit browser error
     CORSError: 'Cross-origin redirection',
+    // prompt=none errors
+    InteractionNotAllowed: 'The request requires some interaction that is not allowed.',
 };
 /**
  * OAuth 2.0 client.
  */
-var OAuth2Client = /** @class */ (function () {
-    function OAuth2Client() {
+class OAuth2Client {
+    static async createAuthorizeUrl(options) {
+        const { clientId, middleware, redirectUri, scope } = Config.get(options);
+        const requestParams = {
+            ...options.query,
+            client_id: clientId,
+            redirect_uri: redirectUri,
+            response_type: options.responseType,
+            scope,
+            state: options.state,
+            ...(options.prompt ? { prompt: options.prompt } : {}),
+        };
+        if (options.verifier) {
+            const challenge = await PKCE.createChallenge(options.verifier);
+            requestParams.code_challenge = challenge;
+            requestParams.code_challenge_method = 'S256';
+        }
+        const runMiddleware = middlewareWrapper({
+            url: new URL(this.getUrl('authorize', requestParams, options)),
+            init: {},
+        }, { type: ActionTypes.Authorize });
+        const { url } = runMiddleware(middleware);
+        return url.toString();
     }
-    OAuth2Client.createAuthorizeUrl = function (options) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var _a, clientId, middleware, redirectUri, scope, requestParams, challenge, runMiddleware, url;
-            return __generator$g(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = Config.get(options), clientId = _a.clientId, middleware = _a.middleware, redirectUri = _a.redirectUri, scope = _a.scope;
-                        requestParams = __assign$6(__assign$6({}, options.query), { client_id: clientId, redirect_uri: redirectUri, response_type: options.responseType, scope: scope, state: options.state });
-                        if (!options.verifier) return [3 /*break*/, 2];
-                        return [4 /*yield*/, PKCE$1.createChallenge(options.verifier)];
-                    case 1:
-                        challenge = _b.sent();
-                        requestParams.code_challenge = challenge;
-                        requestParams.code_challenge_method = 'S256';
-                        _b.label = 2;
-                    case 2:
-                        runMiddleware = middlewareWrapper$1({
-                            url: new URL(this.getUrl('authorize', requestParams, options)),
-                            init: {},
-                        }, { type: ActionTypes.Authorize });
-                        url = runMiddleware(middleware).url;
-                        return [2 /*return*/, url.toString()];
-                }
-            });
-        });
-    };
     /**
      * Calls the authorize URL with an iframe. If successful,
      * it returns the callback URL with authentication code,
@@ -4691,274 +3538,208 @@ var OAuth2Client = /** @class */ (function () {
      * Original Name: getAuthorizeUrl
      * New Name: getAuthCodeByIframe
      */
-    OAuth2Client.getAuthCodeByIframe = function (options) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var url, serverConfig;
-            var _this = this;
-            return __generator$g(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.createAuthorizeUrl(options)];
-                    case 1:
-                        url = _a.sent();
-                        serverConfig = Config.get(options).serverConfig;
-                        return [2 /*return*/, new Promise(function (resolve, reject) {
-                                var iframe = document.createElement('iframe');
-                                // Define these here to avoid linter warnings
-                                var noop = function () {
-                                    return;
-                                };
-                                var onLoad = noop;
-                                var cleanUp = noop;
-                                var timeout = 0;
-                                cleanUp = function () {
-                                    window.clearTimeout(timeout);
-                                    iframe.removeEventListener('load', onLoad);
-                                    iframe.remove();
-                                };
-                                onLoad = function () {
-                                    if (iframe.contentWindow) {
-                                        var newHref = iframe.contentWindow.location.href;
-                                        if (_this.containsAuthCode(newHref)) {
-                                            cleanUp();
-                                            resolve(newHref);
-                                        }
-                                        else if (_this.containsAuthError(newHref)) {
-                                            cleanUp();
-                                            resolve(newHref);
-                                        }
-                                    }
-                                };
-                                timeout = window.setTimeout(function () {
-                                    cleanUp();
-                                    reject(new Error(allowedErrors.AuthorizationTimeout));
-                                }, serverConfig.timeout);
-                                iframe.style.display = 'none';
-                                iframe.addEventListener('load', onLoad);
-                                document.body.appendChild(iframe);
-                                iframe.src = url;
-                            })];
+    static async getAuthCodeByIframe(options) {
+        const url = await this.createAuthorizeUrl({ ...options, prompt: 'none' });
+        const { serverConfig } = Config.get(options);
+        return new Promise((resolve, reject) => {
+            const iframe = document.createElement('iframe');
+            // Define these here to avoid linter warnings
+            const noop = () => {
+                return;
+            };
+            let onLoad = noop;
+            let cleanUp = noop;
+            let timeout = 0;
+            cleanUp = () => {
+                clearTimeout(timeout);
+                iframe.removeEventListener('load', onLoad);
+                iframe.remove();
+            };
+            onLoad = () => {
+                if (iframe.contentWindow) {
+                    const newHref = iframe.contentWindow.location.href;
+                    if (this.containsAuthCode(newHref)) {
+                        cleanUp();
+                        resolve(newHref);
+                    }
+                    else if (this.containsAuthError(newHref)) {
+                        cleanUp();
+                        resolve(newHref);
+                    }
                 }
-            });
+            };
+            timeout = setTimeout(() => {
+                cleanUp();
+                reject(new Error(allowedErrors.AuthorizationTimeout));
+            }, serverConfig.timeout);
+            iframe.style.display = 'none';
+            iframe.addEventListener('load', onLoad);
+            document.body.appendChild(iframe);
+            iframe.src = url;
         });
-    };
+    }
     /**
      * Exchanges an authorization code for OAuth tokens.
      */
-    OAuth2Client.getOAuth2Tokens = function (options) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var _a, clientId, redirectUri, requestParams, body, init, response, responseBody, message, responseObject, tokenExpiry;
-            return __generator$g(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = Config.get(options), clientId = _a.clientId, redirectUri = _a.redirectUri;
-                        requestParams = {
-                            client_id: clientId,
-                            code: options.authorizationCode,
-                            grant_type: 'authorization_code',
-                            redirect_uri: redirectUri,
-                        };
-                        if (options.verifier) {
-                            requestParams.code_verifier = options.verifier;
-                        }
-                        body = stringify$1(requestParams);
-                        init = {
-                            body: body,
-                            headers: new Headers({
-                                'Content-Length': body.length.toString(),
-                                'Content-Type': 'application/x-www-form-urlencoded',
-                            }),
-                            method: 'POST',
-                        };
-                        return [4 /*yield*/, this.request('accessToken', undefined, false, init, options)];
-                    case 1:
-                        response = _b.sent();
-                        return [4 /*yield*/, this.getBody(response)];
-                    case 2:
-                        responseBody = _b.sent();
-                        if (response.status !== 200) {
-                            message = typeof responseBody === 'string'
-                                ? "Expected 200, received ".concat(response.status)
-                                : this.parseError(responseBody);
-                            throw new Error(message);
-                        }
-                        responseObject = responseBody;
-                        if (!responseObject.access_token) {
-                            throw new Error('Access token not found in response');
-                        }
-                        tokenExpiry = undefined;
-                        if (responseObject.expires_in) {
-                            tokenExpiry = Date.now() + responseObject.expires_in * 1000;
-                        }
-                        return [2 /*return*/, {
-                                accessToken: responseObject.access_token,
-                                idToken: responseObject.id_token,
-                                refreshToken: responseObject.refresh_token,
-                                tokenExpiry: tokenExpiry,
-                            }];
-                }
-            });
-        });
-    };
+    static async getOAuth2Tokens(options) {
+        const { clientId, redirectUri } = Config.get(options);
+        const requestParams = {
+            client_id: clientId,
+            code: options.authorizationCode,
+            grant_type: 'authorization_code',
+            redirect_uri: redirectUri,
+        };
+        if (options.verifier) {
+            requestParams.code_verifier = options.verifier;
+        }
+        const body = stringify(requestParams);
+        const init = {
+            body,
+            headers: new Headers({
+                'Content-Length': body.length.toString(),
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }),
+            method: 'POST',
+        };
+        const response = await this.request('accessToken', undefined, false, init, options);
+        const responseBody = await this.getBody(response);
+        if (response.status !== 200) {
+            const message = typeof responseBody === 'string'
+                ? `Expected 200, received ${response.status}`
+                : this.parseError(responseBody);
+            throw new Error(message);
+        }
+        const responseObject = responseBody;
+        if (!responseObject.access_token) {
+            throw new Error('Access token not found in response');
+        }
+        let tokenExpiry = undefined;
+        if (responseObject.expires_in) {
+            tokenExpiry = Date.now() + responseObject.expires_in * 1000;
+        }
+        return {
+            accessToken: responseObject.access_token,
+            idToken: responseObject.id_token,
+            refreshToken: responseObject.refresh_token,
+            tokenExpiry: tokenExpiry,
+        };
+    }
     /**
      * Gets OIDC user information.
      */
-    OAuth2Client.getUserInfo = function (options) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var response, json;
-            return __generator$g(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.request('userInfo', undefined, true, undefined, options)];
-                    case 1:
-                        response = _a.sent();
-                        if (response.status !== 200) {
-                            throw new Error("Failed to get user info; received ".concat(response.status));
-                        }
-                        return [4 /*yield*/, response.json()];
-                    case 2:
-                        json = _a.sent();
-                        return [2 /*return*/, json];
-                }
-            });
-        });
-    };
+    static async getUserInfo(options) {
+        const response = await this.request('userInfo', undefined, true, undefined, options);
+        if (response.status !== 200) {
+            throw new Error(`Failed to get user info; received ${response.status}`);
+        }
+        const json = await response.json();
+        return json;
+    }
     /**
      * Invokes the OIDC end session endpoint.
      */
-    OAuth2Client.endSession = function (options) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var idToken, query, response;
-            return __generator$g(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, TokenStorage$1.get()];
-                    case 1:
-                        idToken = (_a.sent()).idToken;
-                        query = {};
-                        if (idToken) {
-                            query.id_token_hint = idToken;
-                        }
-                        return [4 /*yield*/, this.request('endSession', query, true, undefined, options)];
-                    case 2:
-                        response = _a.sent();
-                        if (!isOkOr4xx$1(response)) {
-                            throw new Error("Failed to end session; received ".concat(response.status));
-                        }
-                        return [2 /*return*/, response];
-                }
-            });
-        });
-    };
+    static async endSession(options) {
+        const tokens = await TokenStorage.get();
+        const idToken = tokens && tokens.idToken;
+        const query = {};
+        if (idToken) {
+            query.id_token_hint = idToken;
+        }
+        const response = await this.request('endSession', query, true, undefined, options);
+        if (!isOkOr4xx(response)) {
+            throw new Error(`Failed to end session; received ${response.status}`);
+        }
+        return response;
+    }
     /**
      * Immediately revokes the stored access token.
      */
-    OAuth2Client.revokeToken = function (options) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var clientId, accessToken, init, response;
-            return __generator$g(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        clientId = Config.get(options).clientId;
-                        return [4 /*yield*/, TokenStorage$1.get()];
-                    case 1:
-                        accessToken = (_a.sent()).accessToken;
-                        init = {
-                            body: stringify$1({ client_id: clientId, token: accessToken }),
-                            credentials: 'include',
-                            headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' }),
-                            method: 'POST',
-                        };
-                        return [4 /*yield*/, this.request('revoke', undefined, false, init, options)];
-                    case 2:
-                        response = _a.sent();
-                        if (!isOkOr4xx$1(response)) {
-                            throw new Error("Failed to revoke token; received ".concat(response.status));
-                        }
-                        return [2 /*return*/, response];
-                }
-            });
-        });
-    };
-    OAuth2Client.request = function (endpoint, query, includeToken, init, options) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var _a, middleware, serverConfig, url, getActionType, accessToken, runMiddleware, req;
-            return __generator$g(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = Config.get(options), middleware = _a.middleware, serverConfig = _a.serverConfig;
-                        url = this.getUrl(endpoint, query, options);
-                        getActionType = function (endpoint) {
-                            switch (endpoint) {
-                                case 'accessToken':
-                                    return ActionTypes.ExchangeToken;
-                                case 'endSession':
-                                    return ActionTypes.EndSession;
-                                case 'revoke':
-                                    return ActionTypes.RevokeToken;
-                                default:
-                                    return ActionTypes.UserInfo;
-                            }
-                        };
-                        init = init || {};
-                        if (!includeToken) return [3 /*break*/, 2];
-                        return [4 /*yield*/, TokenStorage$1.get()];
-                    case 1:
-                        accessToken = (_b.sent()).accessToken;
-                        init.credentials = 'include';
-                        init.headers = (init.headers || new Headers());
-                        init.headers.set('Authorization', "Bearer ".concat(accessToken));
-                        _b.label = 2;
-                    case 2:
-                        runMiddleware = middlewareWrapper$1({ url: new URL(url), init: init }, { type: getActionType(endpoint) });
-                        req = runMiddleware(middleware);
-                        return [4 /*yield*/, withTimeout$1(fetch(req.url.toString(), req.init), serverConfig.timeout)];
-                    case 3: return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
-    OAuth2Client.containsAuthCode = function (url) {
+    static async revokeToken(options) {
+        const { clientId } = Config.get(options);
+        const tokens = await TokenStorage.get();
+        const accessToken = tokens && tokens.accessToken;
+        const body = {
+            client_id: clientId,
+        };
+        // This is needed to support Token Vault; the SDK may not have the token locally
+        if (accessToken) {
+            body.token = accessToken;
+        }
+        const init = {
+            body: stringify(body),
+            credentials: 'include',
+            headers: new Headers({
+                'Content-Type': 'application/x-www-form-urlencoded',
+            }),
+            method: 'POST',
+        };
+        const response = await this.request('revoke', undefined, false, init, options);
+        if (!isOkOr4xx(response)) {
+            throw new Error(`Failed to revoke token; received ${response.status}`);
+        }
+        return response;
+    }
+    static async request(endpoint, query, includeToken, init, options) {
+        const { middleware, serverConfig } = Config.get(options);
+        const url = this.getUrl(endpoint, query, options);
+        const getActionType = (endpoint) => {
+            switch (endpoint) {
+                case 'accessToken':
+                    return ActionTypes.ExchangeToken;
+                case 'endSession':
+                    return ActionTypes.EndSession;
+                case 'revoke':
+                    return ActionTypes.RevokeToken;
+                default:
+                    return ActionTypes.UserInfo;
+            }
+        };
+        init = init || {};
+        if (includeToken) {
+            const tokens = await TokenStorage.get();
+            const accessToken = tokens && tokens.accessToken;
+            init.credentials = 'include';
+            init.headers = (init.headers || new Headers());
+            init.headers.set('Authorization', `Bearer ${accessToken}`);
+        }
+        const runMiddleware = middlewareWrapper({ url: new URL(url), init }, { type: getActionType(endpoint) });
+        const req = runMiddleware(middleware);
+        return await withTimeout(fetch(req.url.toString(), req.init), serverConfig.timeout);
+    }
+    static containsAuthCode(url) {
         return !!url && /code=([^&]+)/.test(url);
-    };
-    OAuth2Client.containsAuthError = function (url) {
+    }
+    static containsAuthError(url) {
         return !!url && /error=([^&]+)/.test(url);
-    };
-    OAuth2Client.getBody = function (response) {
-        return __awaiter$g(this, void 0, void 0, function () {
-            var contentType;
-            return __generator$g(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        contentType = response.headers.get('Content-Type');
-                        if (!(contentType && contentType.indexOf('application/json') > -1)) return [3 /*break*/, 2];
-                        return [4 /*yield*/, response.json()];
-                    case 1: return [2 /*return*/, _a.sent()];
-                    case 2: return [4 /*yield*/, response.text()];
-                    case 3: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    OAuth2Client.parseError = function (json) {
+    }
+    static async getBody(response) {
+        const contentType = response.headers.get('Content-Type');
+        if (contentType && contentType.indexOf('application/json') > -1) {
+            return await response.json();
+        }
+        return await response.text();
+    }
+    static parseError(json) {
         if (json) {
             if (json.error && json.error_description) {
-                return "".concat(json.error, ": ").concat(json.error_description);
+                return `${json.error}: ${json.error_description}`;
             }
             if (json.code && json.message) {
-                return "".concat(json.code, ": ").concat(json.message);
+                return `${json.code}: ${json.message}`;
             }
         }
         return undefined;
-    };
-    OAuth2Client.getUrl = function (endpoint, query, options) {
-        var _a = Config.get(options), realmPath = _a.realmPath, serverConfig = _a.serverConfig;
-        var path = getEndpointPath$1(endpoint, realmPath, serverConfig.paths);
-        var url = resolve$1(serverConfig.baseUrl, path);
+    }
+    static getUrl(endpoint, query, options) {
+        const { realmPath, serverConfig } = Config.get(options);
+        const path = getEndpointPath(endpoint, realmPath, serverConfig.paths);
+        let url = resolve(serverConfig.baseUrl, path);
         if (query) {
-            url += "?".concat(stringify$1(query));
+            url += `?${stringify(query)}`;
         }
         return url;
-    };
-    return OAuth2Client;
-}());
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -4969,83 +3750,34 @@ var OAuth2Client = /** @class */ (function () {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __awaiter$f = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$f = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Provides access to the session management API.
  */
-var SessionManager = /** @class */ (function () {
-    function SessionManager() {
-    }
+class SessionManager {
     /**
      * Ends the current session.
      */
-    SessionManager.logout = function (options) {
-        return __awaiter$f(this, void 0, void 0, function () {
-            var _a, middleware, realmPath, serverConfig, init, path, url, runMiddleware, req, response;
-            return __generator$f(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = Config.get(options), middleware = _a.middleware, realmPath = _a.realmPath, serverConfig = _a.serverConfig;
-                        init = {
-                            credentials: 'include',
-                            headers: new Headers({
-                                'Accept-API-Version': 'protocol=1.0,resource=2.0',
-                                'X-Requested-With': REQUESTED_WITH$1,
-                            }),
-                            method: 'POST',
-                        };
-                        path = "".concat(getEndpointPath$1('sessions', realmPath, serverConfig.paths), "?_action=logout");
-                        url = resolve$1(serverConfig.baseUrl, path);
-                        runMiddleware = middlewareWrapper$1({ url: new URL(url), init: init }, { type: ActionTypes.Logout });
-                        req = runMiddleware(middleware);
-                        return [4 /*yield*/, withTimeout$1(fetch(req.url.toString(), req.init), serverConfig.timeout)];
-                    case 1:
-                        response = _b.sent();
-                        if (!isOkOr4xx$1(response)) {
-                            throw new Error("Failed to log out; received ".concat(response.status));
-                        }
-                        return [2 /*return*/, response];
-                }
-            });
-        });
-    };
-    return SessionManager;
-}());
+    static async logout(options) {
+        const { middleware, realmPath, serverConfig } = Config.get(options);
+        const init = {
+            credentials: 'include',
+            headers: new Headers({
+                'Accept-API-Version': 'protocol=1.0,resource=2.0',
+                'X-Requested-With': REQUESTED_WITH,
+            }),
+            method: 'POST',
+        };
+        const path = `${getEndpointPath('sessions', realmPath, serverConfig.paths)}?_action=logout`;
+        const url = resolve(serverConfig.baseUrl, path);
+        const runMiddleware = middlewareWrapper({ url: new URL(url), init }, { type: ActionTypes.Logout });
+        const req = runMiddleware(middleware);
+        const response = await withTimeout(fetch(req.url.toString(), req.init), serverConfig.timeout);
+        if (!isOkOr4xx(response)) {
+            throw new Error(`Failed to log out; received ${response.status}`);
+        }
+        return response;
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -5061,7 +3793,7 @@ var SessionManager = /** @class */ (function () {
  * @ignore
  * These are private utility functions for Token Manager
  */
-function tokensWillExpireWithinThreshold$1(oauthThreshold, tokenExpiry) {
+function tokensWillExpireWithinThreshold(oauthThreshold, tokenExpiry) {
     if (oauthThreshold && tokenExpiry) {
         return tokenExpiry - oauthThreshold < Date.now();
     }
@@ -5077,56 +3809,7 @@ function tokensWillExpireWithinThreshold$1(oauthThreshold, tokenExpiry) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __assign$5 = (undefined && undefined.__assign) || function () {
-    __assign$5 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$5.apply(this, arguments);
-};
-var __awaiter$e = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$e = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-var TokenManager$1 = /** @class */ (function () {
-    function TokenManager() {
-    }
+class TokenManager {
     /**
      * Token Manager class that provides high-level abstraction for Authorization Code flow,
      * PKCE value generation, token exchange and token storage.
@@ -5139,7 +3822,6 @@ var TokenManager$1 = /** @class */ (function () {
      const tokens = forgerock.TokenManager.getTokens({
        forceRenew: true, // If you want to get new tokens, despite existing ones
        login: 'embedded', // If user authentication is handled in-app
-       support: 'legacy', // Set globally or locally; `"legacy"` or `undefined` will use iframe
        serverConfig: {
          timeout: 5000, // If using "legacy", use a short timeout to catch error
        },
@@ -5152,7 +3834,6 @@ var TokenManager$1 = /** @class */ (function () {
      const tokens = forgerock.TokenManager.getTokens({
        forceRenew: false, // Will immediately return stored tokens, if they exist
        login: 'redirect', // If user authentication is handled in external Web app
-       support: 'modern', // Set globally or locally; `"modern"` will use native fetch
      });
      ```
   
@@ -5167,269 +3848,157 @@ var TokenManager$1 = /** @class */ (function () {
      });
      ```
      */
-    TokenManager.getTokens = function (options) {
-        var _a, _b, _c;
-        return __awaiter$e(this, void 0, void 0, function () {
-            var tokens, _d, clientId, middleware, serverConfig, support, oauthThreshold, error_1, error_2, storedString, storedValues, verifier, state, authorizeUrlOptions, authorizeUrl, parsedUrl, _e, runMiddleware, init, response, parsedQuery, err_1;
-            return __generator$e(this, function (_f) {
-                switch (_f.label) {
-                    case 0:
-                        tokens = null;
-                        _d = Config.get(options), clientId = _d.clientId, middleware = _d.middleware, serverConfig = _d.serverConfig, support = _d.support, oauthThreshold = _d.oauthThreshold;
-                        _f.label = 1;
-                    case 1:
-                        _f.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, TokenStorage$1.get()];
-                    case 2:
-                        tokens = _f.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        error_1 = _f.sent();
-                        console.info('No stored tokens available', error_1);
-                        return [3 /*break*/, 4];
-                    case 4:
-                        /**
-                         * If tokens are stored, no option for `forceRenew` or `query` object with `code`, and do not expire within the configured threshold,
-                         * immediately return the stored tokens
-                         */
-                        if (tokens &&
-                            !(options === null || options === void 0 ? void 0 : options.forceRenew) &&
-                            !((_a = options === null || options === void 0 ? void 0 : options.query) === null || _a === void 0 ? void 0 : _a.code) &&
-                            !tokensWillExpireWithinThreshold$1(oauthThreshold, tokens.tokenExpiry)) {
-                            return [2 /*return*/, tokens];
-                        }
-                        if (!tokens) return [3 /*break*/, 9];
-                        _f.label = 5;
-                    case 5:
-                        _f.trys.push([5, 8, , 9]);
-                        return [4 /*yield*/, OAuth2Client.revokeToken(options)];
-                    case 6:
-                        _f.sent();
-                        return [4 /*yield*/, TokenManager.deleteTokens()];
-                    case 7:
-                        _f.sent();
-                        return [3 /*break*/, 9];
-                    case 8:
-                        error_2 = _f.sent();
-                        console.warn('Existing tokens could not be revoked or deleted', error_2);
-                        return [3 /*break*/, 9];
-                    case 9:
-                        if (!(((_b = options === null || options === void 0 ? void 0 : options.query) === null || _b === void 0 ? void 0 : _b.code) && ((_c = options === null || options === void 0 ? void 0 : options.query) === null || _c === void 0 ? void 0 : _c.state))) return [3 /*break*/, 11];
-                        storedString = window.sessionStorage.getItem(clientId);
-                        window.sessionStorage.removeItem(clientId);
-                        storedValues = JSON.parse(storedString);
-                        return [4 /*yield*/, this.tokenExchange(options, storedValues)];
-                    case 10: return [2 /*return*/, _f.sent()];
-                    case 11:
-                        verifier = PKCE$1.createVerifier();
-                        state = PKCE$1.createState();
-                        authorizeUrlOptions = __assign$5(__assign$5({}, options), { responseType: ResponseType$1.Code, state: state, verifier: verifier });
-                        return [4 /*yield*/, OAuth2Client.createAuthorizeUrl(authorizeUrlOptions)];
-                    case 12:
-                        authorizeUrl = _f.sent();
-                        _f.label = 13;
-                    case 13:
-                        _f.trys.push([13, 18, , 19]);
-                        parsedUrl = void 0;
-                        if (!(support === 'legacy' || support === undefined)) return [3 /*break*/, 15];
-                        _e = URL.bind;
-                        return [4 /*yield*/, OAuth2Client.getAuthCodeByIframe(authorizeUrlOptions)];
-                    case 14:
-                        // To support legacy browsers, iframe works best with short timeout
-                        parsedUrl = new (_e.apply(URL, [void 0, _f.sent()]))();
-                        return [3 /*break*/, 17];
-                    case 15:
-                        runMiddleware = middlewareWrapper$1({
-                            url: new URL(authorizeUrl),
-                            init: {
-                                credentials: 'include',
-                                mode: 'cors',
-                            },
-                        }, {
-                            type: ActionTypes.Authorize,
-                        });
-                        init = runMiddleware(middleware).init;
-                        return [4 /*yield*/, withTimeout$1(fetch(authorizeUrl, init), serverConfig.timeout)];
-                    case 16:
-                        response = _f.sent();
-                        parsedUrl = new URL(response.url);
-                        _f.label = 17;
-                    case 17:
-                        // Throw if we have an error param or have no authorization code
-                        if (parsedUrl.searchParams.get('error')) {
-                            throw Error("".concat(parsedUrl.searchParams.get('error_description')));
-                        }
-                        else if (!parsedUrl.searchParams.get('code')) {
-                            throw Error(allowedErrors.AuthenticationConsentRequired);
-                        }
-                        parsedQuery = parseQuery$1(parsedUrl.toString());
-                        if (!options) {
-                            options = {};
-                        }
-                        options.query = parsedQuery;
-                        return [3 /*break*/, 19];
-                    case 18:
-                        err_1 = _f.sent();
-                        // If authorize request fails, handle according to `login` type
-                        if (!(err_1 instanceof Error) || (options === null || options === void 0 ? void 0 : options.login) !== 'redirect') {
-                            // Throw for any error if login is NOT of type "redirect"
-                            throw err_1;
-                        }
-                        // Check if error is not one of our allowed errors
-                        if (allowedErrors.AuthenticationConsentRequired !== err_1.message &&
-                            allowedErrors.AuthorizationTimeout !== err_1.message &&
-                            allowedErrors.FailedToFetch !== err_1.message &&
-                            allowedErrors.NetworkError !== err_1.message &&
-                            // Safari has a very long error message, so we check for a substring
-                            !err_1.message.includes(allowedErrors.CORSError)) {
-                            // Throw if the error is NOT an explicitly allowed error along with redirect of true
-                            // as that is a normal response and just requires a redirect
-                            throw err_1;
-                        }
-                        // Since `login` is configured for "redirect", store authorize values and redirect
-                        window.sessionStorage.setItem(clientId, JSON.stringify(authorizeUrlOptions));
-                        return [2 /*return*/, window.location.assign(authorizeUrl)];
-                    case 19: return [4 /*yield*/, this.tokenExchange(options, { state: state, verifier: verifier })];
-                    case 20: 
-                    /**
-                     * Exchange authorization code for tokens
-                     */
-                    return [2 /*return*/, _f.sent()];
-                }
-            });
-        });
-    };
-    TokenManager.deleteTokens = function () {
-        return __awaiter$e(this, void 0, void 0, function () {
-            return __generator$e(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, TokenStorage$1.remove()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    TokenManager.tokenExchange = function (options, stored) {
-        var _a, _b, _c, _d;
-        return __awaiter$e(this, void 0, void 0, function () {
-            var authorizationCode, verifier, getTokensOptions, tokens, error_3;
-            return __generator$e(this, function (_e) {
-                switch (_e.label) {
-                    case 0:
-                        /**
-                         * Ensure incoming state and stored state are equal and authorization code exists
-                         */
-                        if (((_a = options.query) === null || _a === void 0 ? void 0 : _a.state) !== stored.state) {
-                            throw new Error('State mismatch');
-                        }
-                        if (!((_b = options.query) === null || _b === void 0 ? void 0 : _b.code) || Array.isArray((_c = options.query) === null || _c === void 0 ? void 0 : _c.code)) {
-                            throw new Error('Failed to acquire authorization code');
-                        }
-                        authorizationCode = (_d = options.query) === null || _d === void 0 ? void 0 : _d.code;
-                        verifier = stored.verifier;
-                        getTokensOptions = __assign$5(__assign$5({}, options), { authorizationCode: authorizationCode, verifier: verifier });
-                        return [4 /*yield*/, OAuth2Client.getOAuth2Tokens(getTokensOptions)];
-                    case 1:
-                        tokens = _e.sent();
-                        if (!tokens || !tokens.accessToken) {
-                            throw new Error('Unable to exchange authorization for tokens');
-                        }
-                        _e.label = 2;
-                    case 2:
-                        _e.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, TokenStorage$1.set(tokens)];
-                    case 3:
-                        _e.sent();
-                        return [3 /*break*/, 5];
-                    case 4:
-                        error_3 = _e.sent();
-                        console.error('Failed to store tokens', error_3);
-                        return [3 /*break*/, 5];
-                    case 5: return [2 /*return*/, tokens];
-                }
-            });
-        });
-    };
-    return TokenManager;
-}());
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-/**
- * Provides access to the current user's profile.
- */
-var UserManager = /** @class */ (function () {
-    function UserManager() {
-    }
-    /**
-     * Gets the current user's profile.
-     */
-    UserManager.getCurrentUser = function (options) {
-        return OAuth2Client.getUserInfo(options);
-    };
-    return UserManager;
-}());
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$d = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$d = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
+    static async getTokens(options) {
+        const { clientId, oauthThreshold } = Config.get(options);
+        const storageKey = `${PREFIX}-${clientId}`;
+        /**
+         * First, let's see if tokens exist locally
+         */
+        const tokens = await TokenStorage.get();
+        /**
+         * If tokens are stored, no option for `forceRenew` or `query` object with `code`, and do not expire within the configured threshold,
+         * immediately return the stored tokens
+         */
+        if (tokens &&
+            !options?.forceRenew &&
+            !options?.query?.code &&
+            !tokensWillExpireWithinThreshold(oauthThreshold, tokens.tokenExpiry)) {
+            return tokens;
+        }
+        /**
+         * If we are still here because of forceRenew or we have an authorization code, or the tokens expire within the configured threshold,
+         * revoke and delete existing tokens to prepare for the new ones
+         */
+        if (tokens) {
+            try {
+                await OAuth2Client.revokeToken(options);
+                await TokenManager.deleteTokens();
             }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
+            catch (error) {
+                console.warn('Existing tokens could not be revoked or deleted', error);
+            }
+        }
+        /**
+         * If authorization code and state are passed in, call token exchange
+         * and return acquired tokens
+         */
+        if (options?.query?.code && options?.query?.state) {
+            const storedString = sessionStorage.getItem(storageKey);
+            sessionStorage.removeItem(storageKey);
+            const storedValues = JSON.parse(storedString);
+            return await this.tokenExchange(options, storedValues);
+        }
+        /**
+         * If we are here, then we are just beginning the auth code flow,
+         * so let's generate authorize PKCE values and URL
+         */
+        const verifier = PKCE.createVerifier();
+        const state = PKCE.createState();
+        // so to not change the type of the above function
+        // we assign it here if its undefined or null.
+        const config = Object.assign({}, options);
+        delete config.forceRenew;
+        delete config.login;
+        const authorizeUrlOptions = {
+            ...config,
+            responseType: ResponseType.Code,
+            state,
+            verifier,
+        };
+        /**
+         * Attempt to call the authorize URL to retrieve authorization code
+         */
+        try {
+            // Check expected browser support
+            // To support legacy browsers, iframe works best with short timeout
+            const parsedUrl = new URL(await OAuth2Client.getAuthCodeByIframe(authorizeUrlOptions));
+            // Throw if we have an error param or have no authorization code
+            if (parsedUrl.searchParams.get('error')) {
+                throw Error(`${parsedUrl.searchParams.get('error_description')}`);
+            }
+            else if (!parsedUrl.searchParams.get('code')) {
+                throw Error(allowedErrors.AuthenticationConsentRequired);
+            }
+            const parsedQuery = parseQuery(parsedUrl.toString());
+            if (!options) {
+                options = {};
+            }
+            options.query = parsedQuery;
+        }
+        catch (err) {
+            // If authorize request fails, handle according to `login` type
+            if (!(err instanceof Error) || options?.login !== 'redirect') {
+                // Throw for any error if login is NOT of type "redirect"
+                throw err;
+            }
+            // Check if error is not one of our allowed errors
+            if (allowedErrors.AuthenticationConsentRequired !== err.message &&
+                allowedErrors.AuthorizationTimeout !== err.message &&
+                allowedErrors.FailedToFetch !== err.message &&
+                allowedErrors.NetworkError !== err.message &&
+                allowedErrors.InteractionNotAllowed !== err.message &&
+                // Safari has a very long error message, so we check for a substring
+                !err.message.includes(allowedErrors.CORSError)) {
+                // Throw if the error is NOT an explicitly allowed error along with redirect of true
+                // as that is a normal response and just requires a redirect
+                throw err;
+            }
+            // Since `login` is configured for "redirect", store authorize values and redirect
+            sessionStorage.setItem(storageKey, JSON.stringify(authorizeUrlOptions));
+            const authorizeUrl = await OAuth2Client.createAuthorizeUrl(authorizeUrlOptions);
+            return location.assign(authorizeUrl);
+        }
+        /**
+         * Exchange authorization code for tokens
+         */
+        return await this.tokenExchange(options, { state, verifier });
     }
-};
+    static async deleteTokens() {
+        await TokenStorage.remove();
+    }
+    static async tokenExchange(options, stored) {
+        /**
+         * Ensure incoming state and stored state are equal and authorization code exists
+         */
+        if (options.query?.state !== stored.state) {
+            throw new Error('State mismatch');
+        }
+        if (!options.query?.code || Array.isArray(options.query?.code)) {
+            throw new Error('Failed to acquire authorization code');
+        }
+        /**
+         * Generate token exchange options
+         */
+        const authorizationCode = options.query?.code;
+        const verifier = stored.verifier;
+        const getTokensOptions = { ...options, authorizationCode, verifier };
+        const tokens = await OAuth2Client.getOAuth2Tokens(getTokensOptions);
+        if (!tokens || !tokens.accessToken) {
+            throw new Error('Unable to exchange authorization for tokens');
+        }
+        try {
+            await TokenStorage.set(tokens);
+        }
+        catch (error) {
+            console.error('Failed to store tokens', error);
+        }
+        return tokens;
+    }
+}
+
+/*
+ * @forgerock/javascript-sdk
+ *
+ * index.ts
+ *
+ * Copyright (c) 2020 ForgeRock. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
 /**
  * High-level API for logging a user in/out and getting profile information.
  */
-var FRUser = /** @class */ (function () {
-    function FRUser() {
-    }
+class FRUser {
     /**
      * Logs the user in with the specified step handler, acquires OAuth tokens, and retrieves
      * user profile.  **Currently not implemented.**
@@ -5438,101 +4007,41 @@ var FRUser = /** @class */ (function () {
      * @param handler The function to invoke when handling authentication steps
      * @param options Configuration overrides
      */
-    FRUser.login = function (handler, options) {
-        return __awaiter$d(this, void 0, void 0, function () {
-            return __generator$d(this, function (_a) {
-                console.info(handler, options); // Avoid lint errors
-                throw new Error('FRUser.login() not implemented');
-            });
-        });
-    };
-    /**
-     * Logs the user in with the specified UI, acquires OAuth tokens, and retrieves user profile.
-     *
-     * @typeparam T The type of user object expected
-     * @param ui The UI instance to use to acquire a session
-     * @param options Configuration overrides
-     */
-    FRUser.loginWithUI = function (ui, options) {
-        return __awaiter$d(this, void 0, void 0, function () {
-            var currentUser;
-            return __generator$d(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 4, , 5]);
-                        return [4 /*yield*/, ui.getSession(options)];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, TokenManager$1.getTokens({ forceRenew: true })];
-                    case 2:
-                        _a.sent();
-                        return [4 /*yield*/, UserManager.getCurrentUser()];
-                    case 3:
-                        currentUser = _a.sent();
-                        return [2 /*return*/, currentUser];
-                    case 4:
-                        _a.sent();
-                        throw new Error('Login failed');
-                    case 5: return [2 /*return*/];
-                }
-            });
-        });
-    };
+    static async login(handler, options) {
+        console.info(handler, options); // Avoid lint errors
+        throw new Error('FRUser.login() not implemented');
+    }
     /**
      * Ends the user's session and revokes OAuth tokens.
      *
      * @param options Configuration overrides
      */
-    FRUser.logout = function (options) {
-        return __awaiter$d(this, void 0, void 0, function () {
-            return __generator$d(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        // Both invalidates the session on the server AND removes browser cookie
-                        return [4 /*yield*/, SessionManager.logout(options)];
-                    case 1:
-                        // Both invalidates the session on the server AND removes browser cookie
-                        _a.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a.sent();
-                        console.warn('Session logout was not successful');
-                        return [3 /*break*/, 3];
-                    case 3:
-                        _a.trys.push([3, 5, , 6]);
-                        // Invalidates session on the server tied to the ID Token
-                        // Needed for Express environment as session logout is unavailable
-                        return [4 /*yield*/, OAuth2Client.endSession(options)];
-                    case 4:
-                        // Invalidates session on the server tied to the ID Token
-                        // Needed for Express environment as session logout is unavailable
-                        _a.sent();
-                        return [3 /*break*/, 6];
-                    case 5:
-                        _a.sent();
-                        console.warn('OAuth endSession was not successful');
-                        return [3 /*break*/, 6];
-                    case 6:
-                        _a.trys.push([6, 8, , 9]);
-                        return [4 /*yield*/, OAuth2Client.revokeToken(options)];
-                    case 7:
-                        _a.sent();
-                        return [3 /*break*/, 9];
-                    case 8:
-                        _a.sent();
-                        console.warn('OAuth revokeToken was not successful');
-                        return [3 /*break*/, 9];
-                    case 9: return [4 /*yield*/, TokenManager$1.deleteTokens()];
-                    case 10:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    return FRUser;
-}());
+    static async logout(options) {
+        // Just log any exceptions that are thrown, but don't abandon the flow
+        try {
+            // Both invalidates the session on the server AND removes browser cookie
+            await SessionManager.logout(options);
+        }
+        catch (error) {
+            console.warn('Session logout was not successful');
+        }
+        try {
+            // Invalidates session on the server tied to the ID Token
+            // Needed for Express environment as session logout is unavailable
+            await OAuth2Client.endSession(options);
+        }
+        catch (error) {
+            console.warn('OAuth endSession was not successful');
+        }
+        try {
+            await OAuth2Client.revokeToken(options);
+        }
+        catch (error) {
+            console.warn('OAuth revokeToken was not successful');
+        }
+        await TokenManager.deleteTokens();
+    }
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -5578,15 +4087,20 @@ var WebAuthnStepType;
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
+/**
+ * @module
+ * @ignore
+ * These are private utility functions for HttpClient
+ */
 function ensureArray(arr) {
     return arr || [];
 }
 function arrayBufferToString(arrayBuffer) {
     // https://goo.gl/yabPex - To future-proof, we'll pass along whatever the browser
     // gives us and let AM disregard randomly-injected properties
-    var uint8Array = new Uint8Array(arrayBuffer);
-    var txtDecoder = new TextDecoder();
-    var json = txtDecoder.decode(uint8Array);
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const txtDecoder = new TextDecoder();
+    const json = txtDecoder.decode(uint8Array);
     return json;
 }
 function getIndexOne(arr) {
@@ -5595,12 +4109,12 @@ function getIndexOne(arr) {
 // TODO: Remove this once AM is providing fully-serialized JSON
 function parseCredentials(value) {
     try {
-        var creds = value
+        const creds = value
             .split('}')
-            .filter(function (x) { return !!x && x !== ']'; })
-            .map(function (x) {
+            .filter((x) => !!x && x !== ']')
+            .map((x) => {
             // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            var idArray = parseNumberArray(x);
+            const idArray = parseNumberArray(x);
             return {
                 id: new Int8Array(idArray).buffer,
                 type: 'public-key',
@@ -5609,13 +4123,13 @@ function parseCredentials(value) {
         return creds;
     }
     catch (error) {
-        var e = new Error('Transforming credential object to string failed');
+        const e = new Error('Transforming credential object to string failed');
         e.name = WebAuthnOutcomeType.EncodingError;
         throw e;
     }
 }
 function parseNumberArray(value) {
-    var matches = /new Int8Array\((.+)\)/.exec(value);
+    const matches = /new Int8Array\((.+)\)/.exec(value);
     if (matches === null || matches.length < 2) {
         return [];
     }
@@ -5632,7 +4146,7 @@ function parsePubKeyArray(value) {
         return JSON.parse(value);
     }
     value = value.replace(/(\w+):/g, '"$1":');
-    return JSON.parse("[".concat(value, "]"));
+    return JSON.parse(`[${value}]`);
 }
 /**
  * AM is currently serializing RP as one of the following formats, depending on
@@ -5651,95 +4165,96 @@ function parseRelyingPartyId(relyingPartyId) {
 }
 
 /* eslint-disable no-useless-escape */
-/*
- * @forgerock/javascript-sdk
- *
- * script-parser.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __assign$4 = (undefined && undefined.__assign) || function () {
-    __assign$4 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$4.apply(this, arguments);
-};
 function parseWebAuthnRegisterText(text) {
-    var txtEncoder = new TextEncoder();
+    const txtEncoder = new TextEncoder();
     // TODO: Incrementally move to `*` instead of `{0,}`
     // e.g. `attestation: "none"`
-    var attestation = getIndexOne(text.match(/attestation"{0,}:\s{0,}"(\w+)"/));
+    const attestation = getIndexOne(text.match(/attestation"{0,}:\s{0,}"(\w+)"/));
     // e.g. `timeout: 60000`
-    var timeout = Number(getIndexOne(text.match(/timeout"{0,}:\s{0,}(\d+)/)));
+    const timeout = Number(getIndexOne(text.match(/timeout"{0,}:\s{0,}(\d+)/)));
     // e.g. from 7.0: `"userVerification":"preferred"`
     // e.g. from 6.5: `userVerification: "preferred"`
-    var userVerification = getIndexOne(text.match(/userVerification"{0,}:\s{0,}"(\w+)"/));
+    const userVerification = getIndexOne(text.match(/userVerification"{0,}:\s{0,}"(\w+)"/));
     // e.g. `"requireResidentKey":true`
-    var requireResidentKey = getIndexOne(text.match(/requireResidentKey"{0,}:\s{0,}(\w+)/));
+    const requireResidentKey = getIndexOne(text.match(/requireResidentKey"{0,}:\s{0,}(\w+)/));
     // e.g. `"authenticatorAttachment":"cross-platform"`
-    var authenticatorAttachment = getIndexOne(text.match(/authenticatorAttachment"{0,}:\s{0,}"([\w-]+)/));
+    const authenticatorAttachment = getIndexOne(text.match(/authenticatorAttachment"{0,}:\s{0,}"([\w-]+)/));
     // e.g. `rp: {\n id: \"https://user.example.com:3002\",\n name: \"ForgeRock\"\n }`
-    var rp = getIndexOne(text.match(/rp"{0,}:\s{0,}{([^}]+)}/)).trim();
+    const rp = getIndexOne(text.match(/rp"{0,}:\s{0,}{([^}]+)}/)).trim();
     // e.g. `id: \"example.com\"
-    var rpId = getIndexOne(rp.match(/id"{0,}:\s{0,}"([^"]*)"/));
+    const rpId = getIndexOne(rp.match(/id"{0,}:\s{0,}"([^"]*)"/));
     // e.g. `name: \"ForgeRock\"`
-    var rpName = getIndexOne(rp.match(/name"{0,}:\s{0,}"([^"]*)"/));
+    const rpName = getIndexOne(rp.match(/name"{0,}:\s{0,}"([^"]*)"/));
     // e.g. `user: {\n id: Uint8Array.from(\"NTdhN...RiNjI5\",
     // function (c) { return c.charCodeAt(0) }),\n
     // name: \"57a5b4e4-...-a4f2e5d4b629\",\n
     // displayName: \"57a5b4e4-...-a4f2e5d4b629\"\n }`
-    var user = getIndexOne(text.match(/user"{0,}:\s{0,}{([^]{0,})},/)).trim();
+    const user = getIndexOne(text.match(/user"{0,}:\s{0,}{([^]{0,})},/)).trim();
     // e.g `id: Uint8Array.from(\"NTdhN...RiNjI5\",`
-    var userId = getIndexOne(user.match(/id"{0,}:\s{0,}Uint8Array.from\("([^"]+)"/));
+    const userId = getIndexOne(user.match(/id"{0,}:\s{0,}Uint8Array.from\("([^"]+)"/));
     // e.g. `name: \"57a5b4e4-...-a4f2e5d4b629\",`
-    var userName = getIndexOne(user.match(/name"{0,}:\s{0,}"([\d\w._-]+)"/));
+    const userName = getIndexOne(user.match(/name"{0,}:\s{0,}"([\d\w._-]+)"/));
     // e.g. `displayName: \"57a5b4e4-...-a4f2e5d4b629\"`
-    var userDisplayName = getIndexOne(user.match(/displayName"{0,}:\s{0,}"([\d\w\s.@_-]+)"/));
+    const userDisplayName = getIndexOne(user.match(/displayName"{0,}:\s{0,}"([\d\w\s.@_-]+)"/));
     // e.g. `pubKeyCredParams: [
     // { \"type\": \"public-key\", \"alg\": -257 }, { \"type\": \"public-key\", \"alg\": -7 }
     // ]`
-    var pubKeyCredParamsString = getIndexOne(
+    const pubKeyCredParamsString = getIndexOne(
     // Capture the `pubKeyCredParams` without also matching `excludeCredentials` as well.
     // `excludeCredentials` values are very similar to this property, so we need to make sure
     // our last value doesn't end with "buffer", so we are only capturing objects that
     // end in a digit and possibly a space.
     text.match(/pubKeyCredParams"*:\s*\[([^]+\d\s*})\s*]/)).trim();
     // e.g. `{ \"type\": \"public-key\", \"alg\": -257 }, { \"type\": \"public-key\", \"alg\": -7 }`
-    var pubKeyCredParams = parsePubKeyArray(pubKeyCredParamsString);
+    const pubKeyCredParams = parsePubKeyArray(pubKeyCredParamsString);
     if (!pubKeyCredParams) {
-        var e = new Error('Missing pubKeyCredParams property from registration options');
+        const e = new Error('Missing pubKeyCredParams property from registration options');
         e.name = WebAuthnOutcomeType.DataError;
         throw e;
     }
     // e.g. `excludeCredentials: [{
     // \"type\": \"public-key\", \"id\": new Int8Array([-18, 69, -99, 82, 38, -66]).buffer },
     // { \"type\": \"public-key\", \"id\": new Int8Array([64, 17, -15, 56, -32, 91]).buffer }],\n`
-    var excludeCredentialsString = getIndexOne(text.match(/excludeCredentials"{0,}:\s{0,}\[([^]+)\s{0,}]/)).trim();
+    const excludeCredentialsString = getIndexOne(text.match(/excludeCredentials"{0,}:\s{0,}\[([^]+)\s{0,}]/)).trim();
     // e.g. `{ \"type\": \"public-key\", \"id\": new Int8Array([-18, 69, -99, 82, 38, -66]).buffer },
     // { \"type\": \"public-key\", \"id\": new Int8Array([64, 17, -15, 56, -32, 91]).buffer }`
-    var excludeCredentials = parseCredentials(excludeCredentialsString);
+    const excludeCredentials = parseCredentials(excludeCredentialsString);
     // e.g. `challenge: new Int8Array([87, -95, 18, ... -3,  49, 12, 81]).buffer,`
-    var challengeArr = ensureArray(text.match(/challenge"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
+    const challengeArr = ensureArray(text.match(/challenge"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
     // e.g. `[87, -95, 18, ... -3,  49, 12, 81]`
-    var challengeJSON = JSON.parse(challengeArr[2]);
+    const challengeJSON = JSON.parse(challengeArr[2]);
     // e.g. [87, -95, 18, ... -3,  49, 12, 81]
-    var challenge = new Int8Array(challengeJSON).buffer;
-    return __assign$4(__assign$4({ attestation: attestation, authenticatorSelection: __assign$4(__assign$4({ userVerification: userVerification }, (authenticatorAttachment && { authenticatorAttachment: authenticatorAttachment })), (requireResidentKey === 'true' && { requireResidentKey: !!requireResidentKey })), challenge: challenge }, (excludeCredentials.length && { excludeCredentials: excludeCredentials })), { pubKeyCredParams: pubKeyCredParams, rp: __assign$4({ name: rpName }, (rpId && { id: rpId })), timeout: timeout, user: {
+    const challenge = new Int8Array(challengeJSON).buffer;
+    return {
+        attestation,
+        authenticatorSelection: {
+            userVerification,
+            // Only include authenticatorAttachment prop if the value is truthy
+            ...(authenticatorAttachment && { authenticatorAttachment }),
+            // Only include requireResidentKey prop if the value is of string "true"
+            ...(requireResidentKey === 'true' && {
+                requireResidentKey: !!requireResidentKey,
+            }),
+        },
+        challenge,
+        ...(excludeCredentials.length && { excludeCredentials }),
+        pubKeyCredParams,
+        rp: {
+            name: rpName,
+            // only add key-value pair if truthy value is provided
+            ...(rpId && { id: rpId }),
+        },
+        timeout,
+        user: {
             displayName: userDisplayName,
             id: txtEncoder.encode(userId),
             name: userName,
-        } });
+        },
+    };
 }
 function parseWebAuthnAuthenticateText(text) {
-    var allowCredentials;
-    var allowCredentialsText;
+    let allowCredentials;
+    let allowCredentialsText;
     if (text.includes('acceptableCredentials')) {
         // e.g. `var acceptableCredentials = [
         //  { "type": "public-key", "id": new Int8Array([1, 97, 2, 123, ... -17]).buffer }
@@ -5754,37 +4269,44 @@ function parseWebAuthnAuthenticateText(text) {
         allowCredentialsText = getIndexOne(text.match(/allowCredentials"{0,}:\s{0,}\[([^]+)\s{0,}]/)).trim();
     }
     // e.g. `"userVerification":"preferred"`
-    var userVerification = getIndexOne(text.match(/userVerification"{0,}:\s{0,}"(\w+)"/));
+    const userVerification = getIndexOne(text.match(/userVerification"{0,}:\s{0,}"(\w+)"/));
     if (allowCredentialsText) {
         // Splitting objects in array in case the user has multiple keys
-        var allowCredentialArr = allowCredentialsText.split('},') || [allowCredentialsText];
+        const allowCredentialArr = allowCredentialsText.split('},') || [allowCredentialsText];
         // Iterating over array of substrings
-        allowCredentials = allowCredentialArr.map(function (str) {
+        allowCredentials = allowCredentialArr.map((str) => {
             // e.g. `{ \"type\": \"public-key\",
-            var type = getIndexOne(str.match(/type"{0,}:\s{0,}"([\w-]+)"/));
+            const type = getIndexOne(str.match(/type"{0,}:\s{0,}"([\w-]+)"/));
             // e.g. \"id\": new Int8Array([-107, 93, 68, -67, ... -19, 7, 4]).buffer
-            var idArr = ensureArray(str.match(/id"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
+            const idArr = ensureArray(str.match(/id"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
             // e.g. `[-107, 93, 68, -67, ... -19, 7, 4]`
-            var idJSON = JSON.parse(idArr[2]);
+            const idJSON = JSON.parse(idArr[2]);
             // e.g. [-107, 93, 68, -67, ... -19, 7, 4]
-            var id = new Int8Array(idJSON).buffer;
+            const id = new Int8Array(idJSON).buffer;
             return {
-                type: type,
-                id: id,
+                type,
+                id,
             };
         });
     }
     // e.g. `timeout: 60000`
-    var timeout = Number(getIndexOne(text.match(/timeout"{0,}:\s{0,}(\d+)/)));
+    const timeout = Number(getIndexOne(text.match(/timeout"{0,}:\s{0,}(\d+)/)));
     // e.g. `challenge: new Int8Array([87, -95, 18, ... -3,  49, 12, 81]).buffer,`
-    var challengeArr = ensureArray(text.match(/challenge"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
+    const challengeArr = ensureArray(text.match(/challenge"{0,}:\s{0,}new\s{0,}(Uint|Int)8Array\(([^\)]+)/));
     // e.g. `[87, -95, 18, ... -3,  49, 12, 81]`
-    var challengeJSON = JSON.parse(challengeArr[2]);
+    const challengeJSON = JSON.parse(challengeArr[2]);
     // e.g. [87, -95, 18, ... -3,  49, 12, 81]
-    var challenge = new Int8Array(challengeJSON).buffer;
+    const challenge = new Int8Array(challengeJSON).buffer;
     // e.g. `rpId: \"example.com\"`
-    var rpId = getIndexOne(text.match(/rpId"{0,}:\s{0,}\\{0,}"([^"\\]*)/));
-    return __assign$4(__assign$4(__assign$4({ challenge: challenge, timeout: timeout }, (allowCredentials && { allowCredentials: allowCredentials })), (userVerification && { userVerification: userVerification })), (rpId && { rpId: rpId }));
+    const rpId = getIndexOne(text.match(/rpId"{0,}:\s{0,}\\{0,}"([^"\\]*)/));
+    return {
+        challenge,
+        timeout,
+        // only add key-value pairs if the truthy values are provided
+        ...(allowCredentials && { allowCredentials }),
+        ...(userVerification && { userVerification }),
+        ...(rpId && { rpId }),
+    };
 }
 
 /*
@@ -5796,53 +4318,6 @@ function parseWebAuthnAuthenticateText(text) {
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __assign$3 = (undefined && undefined.__assign) || function () {
-    __assign$3 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$3.apply(this, arguments);
-};
-var __awaiter$c = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$c = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
 /**
  * Utility for integrating a web browser's WebAuthn API.
  *
@@ -5860,28 +4335,26 @@ var __generator$c = (undefined && undefined.__generator) || function (thisArg, b
  * }
  * ```
  */
-var FRWebAuthn = /** @class */ (function () {
-    function FRWebAuthn() {
-    }
+class FRWebAuthn {
     /**
      * Determines if the given step is a WebAuthn step.
      *
      * @param step The step to evaluate
      * @return A WebAuthnStepType value
      */
-    FRWebAuthn.getWebAuthnStepType = function (step) {
-        var outcomeCallback = this.getOutcomeCallback(step);
-        var metadataCallback = this.getMetadataCallback(step);
-        var textOutputCallback = this.getTextOutputCallback(step);
+    static getWebAuthnStepType(step) {
+        const outcomeCallback = this.getOutcomeCallback(step);
+        const metadataCallback = this.getMetadataCallback(step);
+        const textOutputCallback = this.getTextOutputCallback(step);
         if (outcomeCallback && metadataCallback) {
-            var metadata = metadataCallback.getOutputValue('data');
-            if (metadata === null || metadata === void 0 ? void 0 : metadata.pubKeyCredParams) {
+            const metadata = metadataCallback.getOutputValue('data');
+            if (metadata?.pubKeyCredParams) {
                 return WebAuthnStepType.Registration;
             }
             return WebAuthnStepType.Authentication;
         }
         else if (outcomeCallback && textOutputCallback) {
-            var message = textOutputCallback.getMessage();
+            const message = textOutputCallback.getMessage();
             if (message.includes('pubKeyCredParams')) {
                 return WebAuthnStepType.Registration;
             }
@@ -5890,127 +4363,116 @@ var FRWebAuthn = /** @class */ (function () {
         else {
             return WebAuthnStepType.None;
         }
-    };
+    }
     /**
      * Populates the step with the necessary authentication outcome.
      *
      * @param step The step that contains WebAuthn authentication data
      * @return The populated step
      */
-    FRWebAuthn.authenticate = function (step) {
-        return __awaiter$c(this, void 0, void 0, function () {
-            var _a, hiddenCallback, metadataCallback, textOutputCallback, outcome, publicKey, meta, credential, error_1, e;
-            return __generator$c(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getCallbacks(step), hiddenCallback = _a.hiddenCallback, metadataCallback = _a.metadataCallback, textOutputCallback = _a.textOutputCallback;
-                        if (!(hiddenCallback && (metadataCallback || textOutputCallback))) return [3 /*break*/, 5];
-                        outcome = void 0;
-                        _b.label = 1;
-                    case 1:
-                        _b.trys.push([1, 3, , 4]);
-                        publicKey = void 0;
-                        if (metadataCallback) {
-                            meta = metadataCallback.getOutputValue('data');
-                            publicKey = this.createAuthenticationPublicKey(meta);
-                        }
-                        else if (textOutputCallback) {
-                            publicKey = parseWebAuthnAuthenticateText(textOutputCallback.getMessage());
-                        }
-                        return [4 /*yield*/, this.getAuthenticationCredential(publicKey)];
-                    case 2:
-                        credential = _b.sent();
-                        outcome = this.getAuthenticationOutcome(credential);
-                        return [3 /*break*/, 4];
-                    case 3:
-                        error_1 = _b.sent();
-                        if (!(error_1 instanceof Error))
-                            throw error_1;
-                        // NotSupportedError is a special case
-                        if (error_1.name === WebAuthnOutcomeType.NotSupportedError) {
-                            hiddenCallback.setInputValue(WebAuthnOutcome.Unsupported);
-                            throw error_1;
-                        }
-                        hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(error_1.name, ":").concat(error_1.message));
-                        throw error_1;
-                    case 4:
-                        hiddenCallback.setInputValue(outcome);
-                        return [2 /*return*/, step];
-                    case 5:
-                        e = new Error('Incorrect callbacks for WebAuthn authentication');
-                        e.name = WebAuthnOutcomeType.DataError;
-                        hiddenCallback === null || hiddenCallback === void 0 ? void 0 : hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(e.name, ":").concat(e.message));
-                        throw e;
+    static async authenticate(step) {
+        const { hiddenCallback, metadataCallback, textOutputCallback } = this.getCallbacks(step);
+        if (hiddenCallback && (metadataCallback || textOutputCallback)) {
+            let outcome;
+            try {
+                let publicKey;
+                if (metadataCallback) {
+                    const meta = metadataCallback.getOutputValue('data');
+                    publicKey = this.createAuthenticationPublicKey(meta);
                 }
-            });
-        });
-    };
+                else if (textOutputCallback) {
+                    publicKey = parseWebAuthnAuthenticateText(textOutputCallback.getMessage());
+                }
+                // TypeScript doesn't like `publicKey` being assigned in conditionals above
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
+                const credential = await this.getAuthenticationCredential(publicKey);
+                outcome = this.getAuthenticationOutcome(credential);
+            }
+            catch (error) {
+                if (!(error instanceof Error))
+                    throw error;
+                // NotSupportedError is a special case
+                if (error.name === WebAuthnOutcomeType.NotSupportedError) {
+                    hiddenCallback.setInputValue(WebAuthnOutcome.Unsupported);
+                    throw error;
+                }
+                hiddenCallback.setInputValue(`${WebAuthnOutcome.Error}::${error.name}:${error.message}`);
+                throw error;
+            }
+            hiddenCallback.setInputValue(outcome);
+            return step;
+        }
+        else {
+            const e = new Error('Incorrect callbacks for WebAuthn authentication');
+            e.name = WebAuthnOutcomeType.DataError;
+            hiddenCallback?.setInputValue(`${WebAuthnOutcome.Error}::${e.name}:${e.message}`);
+            throw e;
+        }
+    }
     /**
      * Populates the step with the necessary registration outcome.
      *
      * @param step The step that contains WebAuthn registration data
      * @return The populated step
      */
-    FRWebAuthn.register = function (step) {
-        return __awaiter$c(this, void 0, void 0, function () {
-            var _a, hiddenCallback, metadataCallback, textOutputCallback, outcome, publicKey, meta, credential, error_2, e;
-            return __generator$c(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getCallbacks(step), hiddenCallback = _a.hiddenCallback, metadataCallback = _a.metadataCallback, textOutputCallback = _a.textOutputCallback;
-                        if (!(hiddenCallback && (metadataCallback || textOutputCallback))) return [3 /*break*/, 5];
-                        outcome = void 0;
-                        _b.label = 1;
-                    case 1:
-                        _b.trys.push([1, 3, , 4]);
-                        publicKey = void 0;
-                        if (metadataCallback) {
-                            meta = metadataCallback.getOutputValue('data');
-                            publicKey = this.createRegistrationPublicKey(meta);
-                        }
-                        else if (textOutputCallback) {
-                            publicKey = parseWebAuthnRegisterText(textOutputCallback.getMessage());
-                        }
-                        return [4 /*yield*/, this.getRegistrationCredential(publicKey)];
-                    case 2:
-                        credential = _b.sent();
-                        outcome = this.getRegistrationOutcome(credential);
-                        return [3 /*break*/, 4];
-                    case 3:
-                        error_2 = _b.sent();
-                        if (!(error_2 instanceof Error))
-                            throw error_2;
-                        // NotSupportedError is a special case
-                        if (error_2.name === WebAuthnOutcomeType.NotSupportedError) {
-                            hiddenCallback.setInputValue(WebAuthnOutcome.Unsupported);
-                            throw error_2;
-                        }
-                        hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(error_2.name, ":").concat(error_2.message));
-                        throw error_2;
-                    case 4:
-                        hiddenCallback.setInputValue(outcome);
-                        return [2 /*return*/, step];
-                    case 5:
-                        e = new Error('Incorrect callbacks for WebAuthn registration');
-                        e.name = WebAuthnOutcomeType.DataError;
-                        hiddenCallback === null || hiddenCallback === void 0 ? void 0 : hiddenCallback.setInputValue("".concat(WebAuthnOutcome.Error, "::").concat(e.name, ":").concat(e.message));
-                        throw e;
+    // Can make this generic const in Typescript 5.0 > and the name itself will
+    // be inferred from the type so `typeof deviceName` will not just return string
+    // but the actual name of the deviceName passed in as a generic.
+    static async register(step, deviceName) {
+        const { hiddenCallback, metadataCallback, textOutputCallback } = this.getCallbacks(step);
+        if (hiddenCallback && (metadataCallback || textOutputCallback)) {
+            let outcome;
+            try {
+                let publicKey;
+                if (metadataCallback) {
+                    const meta = metadataCallback.getOutputValue('data');
+                    publicKey = this.createRegistrationPublicKey(meta);
+                    const credential = await this.getRegistrationCredential(publicKey);
+                    outcome = this.getRegistrationOutcome(credential);
                 }
-            });
-        });
-    };
+                else if (textOutputCallback) {
+                    publicKey = parseWebAuthnRegisterText(textOutputCallback.getMessage());
+                    const credential = await this.getRegistrationCredential(publicKey);
+                    outcome = this.getRegistrationOutcome(credential);
+                }
+                else {
+                    throw new Error('No Credential found from Public Key');
+                }
+            }
+            catch (error) {
+                if (!(error instanceof Error))
+                    throw error;
+                // NotSupportedError is a special case
+                if (error.name === WebAuthnOutcomeType.NotSupportedError) {
+                    hiddenCallback.setInputValue(WebAuthnOutcome.Unsupported);
+                    throw error;
+                }
+                hiddenCallback.setInputValue(`${WebAuthnOutcome.Error}::${error.name}:${error.message}`);
+                throw error;
+            }
+            hiddenCallback.setInputValue(deviceName && deviceName.length > 0 ? `${outcome}::${deviceName}` : outcome);
+            return step;
+        }
+        else {
+            const e = new Error('Incorrect callbacks for WebAuthn registration');
+            e.name = WebAuthnOutcomeType.DataError;
+            hiddenCallback?.setInputValue(`${WebAuthnOutcome.Error}::${e.name}:${e.message}`);
+            throw e;
+        }
+    }
     /**
      * Returns an object containing the two WebAuthn callbacks.
      *
      * @param step The step that contains WebAuthn callbacks
      * @return The WebAuthn callbacks
      */
-    FRWebAuthn.getCallbacks = function (step) {
-        var hiddenCallback = this.getOutcomeCallback(step);
-        var metadataCallback = this.getMetadataCallback(step);
-        var textOutputCallback = this.getTextOutputCallback(step);
-        var returnObj = {
-            hiddenCallback: hiddenCallback,
+    static getCallbacks(step) {
+        const hiddenCallback = this.getOutcomeCallback(step);
+        const metadataCallback = this.getMetadataCallback(step);
+        const textOutputCallback = this.getTextOutputCallback(step);
+        const returnObj = {
+            hiddenCallback,
         };
         if (metadataCallback) {
             returnObj.metadataCallback = metadataCallback;
@@ -6019,7 +4481,7 @@ var FRWebAuthn = /** @class */ (function () {
             returnObj.textOutputCallback = textOutputCallback;
         }
         return returnObj;
-    };
+    }
     /**
      * Returns the WebAuthn metadata callback containing data to pass to the browser
      * Web Authentication API.
@@ -6027,24 +4489,24 @@ var FRWebAuthn = /** @class */ (function () {
      * @param step The step that contains WebAuthn callbacks
      * @return The metadata callback
      */
-    FRWebAuthn.getMetadataCallback = function (step) {
-        return step.getCallbacksOfType(CallbackType$1.MetadataCallback).find(function (x) {
-            var cb = x.getOutputByName('data', undefined);
+    static getMetadataCallback(step) {
+        return step.getCallbacksOfType(CallbackType.MetadataCallback).find((x) => {
+            const cb = x.getOutputByName('data', undefined);
             // eslint-disable-next-line no-prototype-builtins
             return cb && cb.hasOwnProperty('relyingPartyId');
         });
-    };
+    }
     /**
      * Returns the WebAuthn hidden value callback where the outcome should be populated.
      *
      * @param step The step that contains WebAuthn callbacks
      * @return The hidden value callback
      */
-    FRWebAuthn.getOutcomeCallback = function (step) {
+    static getOutcomeCallback(step) {
         return step
-            .getCallbacksOfType(CallbackType$1.HiddenValueCallback)
-            .find(function (x) { return x.getOutputByName('id', '') === 'webAuthnOutcome'; });
-    };
+            .getCallbacksOfType(CallbackType.HiddenValueCallback)
+            .find((x) => x.getOutputByName('id', '') === 'webAuthnOutcome');
+    }
     /**
      * Returns the WebAuthn metadata callback containing data to pass to the browser
      * Web Authentication API.
@@ -6052,124 +4514,107 @@ var FRWebAuthn = /** @class */ (function () {
      * @param step The step that contains WebAuthn callbacks
      * @return The metadata callback
      */
-    FRWebAuthn.getTextOutputCallback = function (step) {
+    static getTextOutputCallback(step) {
         return step
-            .getCallbacksOfType(CallbackType$1.TextOutputCallback)
-            .find(function (x) {
-            var cb = x.getOutputByName('message', undefined);
+            .getCallbacksOfType(CallbackType.TextOutputCallback)
+            .find((x) => {
+            const cb = x.getOutputByName('message', undefined);
             return cb && cb.includes('webAuthnOutcome');
         });
-    };
+    }
     /**
      * Retrieves the credential from the browser Web Authentication API.
      *
      * @param options The public key options associated with the request
      * @return The credential
      */
-    FRWebAuthn.getAuthenticationCredential = function (options) {
-        return __awaiter$c(this, void 0, void 0, function () {
-            var e, credential;
-            return __generator$c(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        // Feature check before we attempt registering a device
-                        if (!window.PublicKeyCredential) {
-                            e = new Error('PublicKeyCredential not supported by this browser');
-                            e.name = WebAuthnOutcomeType.NotSupportedError;
-                            throw e;
-                        }
-                        return [4 /*yield*/, navigator.credentials.get({ publicKey: options })];
-                    case 1:
-                        credential = _a.sent();
-                        return [2 /*return*/, credential];
-                }
-            });
-        });
-    };
+    static async getAuthenticationCredential(options) {
+        // Feature check before we attempt registering a device
+        if (!window.PublicKeyCredential) {
+            const e = new Error('PublicKeyCredential not supported by this browser');
+            e.name = WebAuthnOutcomeType.NotSupportedError;
+            throw e;
+        }
+        const credential = await navigator.credentials.get({ publicKey: options });
+        return credential;
+    }
     /**
      * Converts an authentication credential into the outcome expected by OpenAM.
      *
      * @param credential The credential to convert
      * @return The outcome string
      */
-    FRWebAuthn.getAuthenticationOutcome = function (credential) {
+    static getAuthenticationOutcome(credential) {
         if (credential === null) {
-            var e = new Error('No credential generated from authentication');
+            const e = new Error('No credential generated from authentication');
             e.name = WebAuthnOutcomeType.UnknownError;
             throw e;
         }
         try {
-            var clientDataJSON = arrayBufferToString(credential.response.clientDataJSON);
-            var assertionResponse = credential.response;
-            var authenticatorData = new Int8Array(assertionResponse.authenticatorData).toString();
-            var signature = new Int8Array(assertionResponse.signature).toString();
+            const clientDataJSON = arrayBufferToString(credential.response.clientDataJSON);
+            const assertionResponse = credential.response;
+            const authenticatorData = new Int8Array(assertionResponse.authenticatorData).toString();
+            const signature = new Int8Array(assertionResponse.signature).toString();
             // Current native typing for PublicKeyCredential does not include `userHandle`
             // eslint-disable-next-line
             // @ts-ignore
-            var userHandle = arrayBufferToString(credential.response.userHandle);
-            var stringOutput = "".concat(clientDataJSON, "::").concat(authenticatorData, "::").concat(signature, "::").concat(credential.id);
+            const userHandle = arrayBufferToString(credential.response.userHandle);
+            let stringOutput = `${clientDataJSON}::${authenticatorData}::${signature}::${credential.id}`;
             // Check if Username is stored on device
             if (userHandle) {
-                stringOutput = "".concat(stringOutput, "::").concat(userHandle);
+                stringOutput = `${stringOutput}::${userHandle}`;
+                return stringOutput;
             }
             return stringOutput;
         }
         catch (error) {
-            var e = new Error('Transforming credential object to string failed');
+            const e = new Error('Transforming credential object to string failed');
             e.name = WebAuthnOutcomeType.EncodingError;
             throw e;
         }
-    };
+    }
     /**
      * Retrieves the credential from the browser Web Authentication API.
      *
      * @param options The public key options associated with the request
      * @return The credential
      */
-    FRWebAuthn.getRegistrationCredential = function (options) {
-        return __awaiter$c(this, void 0, void 0, function () {
-            var e, credential;
-            return __generator$c(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        // Feature check before we attempt registering a device
-                        if (!window.PublicKeyCredential) {
-                            e = new Error('PublicKeyCredential not supported by this browser');
-                            e.name = WebAuthnOutcomeType.NotSupportedError;
-                            throw e;
-                        }
-                        return [4 /*yield*/, navigator.credentials.create({ publicKey: options })];
-                    case 1:
-                        credential = _a.sent();
-                        return [2 /*return*/, credential];
-                }
-            });
+    static async getRegistrationCredential(options) {
+        // Feature check before we attempt registering a device
+        if (!window.PublicKeyCredential) {
+            const e = new Error('PublicKeyCredential not supported by this browser');
+            e.name = WebAuthnOutcomeType.NotSupportedError;
+            throw e;
+        }
+        const credential = await navigator.credentials.create({
+            publicKey: options,
         });
-    };
+        return credential;
+    }
     /**
      * Converts a registration credential into the outcome expected by OpenAM.
      *
      * @param credential The credential to convert
      * @return The outcome string
      */
-    FRWebAuthn.getRegistrationOutcome = function (credential) {
+    static getRegistrationOutcome(credential) {
         if (credential === null) {
-            var e = new Error('No credential generated from registration');
+            const e = new Error('No credential generated from registration');
             e.name = WebAuthnOutcomeType.UnknownError;
             throw e;
         }
         try {
-            var clientDataJSON = arrayBufferToString(credential.response.clientDataJSON);
-            var attestationResponse = credential.response;
-            var attestationObject = new Int8Array(attestationResponse.attestationObject).toString();
-            return "".concat(clientDataJSON, "::").concat(attestationObject, "::").concat(credential.id);
+            const clientDataJSON = arrayBufferToString(credential.response.clientDataJSON);
+            const attestationResponse = credential.response;
+            const attestationObject = new Int8Array(attestationResponse.attestationObject).toString();
+            return `${clientDataJSON}::${attestationObject}::${credential.id}`;
         }
         catch (error) {
-            var e = new Error('Transforming credential object to string failed');
+            const e = new Error('Transforming credential object to string failed');
             e.name = WebAuthnOutcomeType.EncodingError;
             throw e;
         }
-    };
+    }
     /**
      * Converts authentication tree metadata into options required by the browser
      * Web Authentication API.
@@ -6177,12 +4622,19 @@ var FRWebAuthn = /** @class */ (function () {
      * @param metadata The metadata provided in the authentication tree MetadataCallback
      * @return The Web Authentication API request options
      */
-    FRWebAuthn.createAuthenticationPublicKey = function (metadata) {
-        var acceptableCredentials = metadata.acceptableCredentials, allowCredentials = metadata.allowCredentials, challenge = metadata.challenge, relyingPartyId = metadata.relyingPartyId, timeout = metadata.timeout, userVerification = metadata.userVerification;
-        var rpId = parseRelyingPartyId(relyingPartyId);
-        var allowCredentialsValue = parseCredentials(allowCredentials || acceptableCredentials || '');
-        return __assign$3(__assign$3(__assign$3({ challenge: Uint8Array.from(atob(challenge), function (c) { return c.charCodeAt(0); }).buffer, timeout: timeout }, (allowCredentialsValue && { allowCredentials: allowCredentialsValue })), (userVerification && { userVerification: userVerification })), (rpId && { rpId: rpId }));
-    };
+    static createAuthenticationPublicKey(metadata) {
+        const { acceptableCredentials, allowCredentials, challenge, relyingPartyId, timeout, userVerification, } = metadata;
+        const rpId = parseRelyingPartyId(relyingPartyId);
+        const allowCredentialsValue = parseCredentials(allowCredentials || acceptableCredentials || '');
+        return {
+            challenge: Uint8Array.from(atob(challenge), (c) => c.charCodeAt(0)).buffer,
+            timeout,
+            // only add key-value pair if proper value is provided
+            ...(allowCredentialsValue && { allowCredentials: allowCredentialsValue }),
+            ...(userVerification && { userVerification }),
+            ...(rpId && { rpId }),
+        };
+    }
     /**
      * Converts authentication tree metadata into options required by the browser
      * Web Authentication API.
@@ -6190,1271 +4642,37 @@ var FRWebAuthn = /** @class */ (function () {
      * @param metadata The metadata provided in the authentication tree MetadataCallback
      * @return The Web Authentication API request options
      */
-    FRWebAuthn.createRegistrationPublicKey = function (metadata) {
-        var pubKeyCredParamsString = metadata.pubKeyCredParams;
-        var pubKeyCredParams = parsePubKeyArray(pubKeyCredParamsString);
+    static createRegistrationPublicKey(metadata) {
+        const { pubKeyCredParams: pubKeyCredParamsString } = metadata;
+        const pubKeyCredParams = parsePubKeyArray(pubKeyCredParamsString);
         if (!pubKeyCredParams) {
-            var e = new Error('Missing pubKeyCredParams property from registration options');
+            const e = new Error('Missing pubKeyCredParams property from registration options');
             e.name = WebAuthnOutcomeType.DataError;
             throw e;
         }
-        var excludeCredentials = parseCredentials(metadata.excludeCredentials);
-        var attestationPreference = metadata.attestationPreference, authenticatorSelection = metadata.authenticatorSelection, challenge = metadata.challenge, relyingPartyId = metadata.relyingPartyId, relyingPartyName = metadata.relyingPartyName, timeout = metadata.timeout, userId = metadata.userId, userName = metadata.userName, displayName = metadata.displayName;
-        var rpId = parseRelyingPartyId(relyingPartyId);
-        var rp = __assign$3({ name: relyingPartyName }, (rpId && { id: rpId }));
-        return __assign$3(__assign$3({ attestation: attestationPreference, authenticatorSelection: JSON.parse(authenticatorSelection), challenge: Uint8Array.from(atob(challenge), function (c) { return c.charCodeAt(0); }).buffer }, (excludeCredentials.length && { excludeCredentials: excludeCredentials })), { pubKeyCredParams: pubKeyCredParams, rp: rp, timeout: timeout, user: {
-                displayName: displayName || userName,
-                id: Int8Array.from(userId.split('').map(function (c) { return c.charCodeAt(0); })),
-                name: userName,
-            } });
-    };
-    return FRWebAuthn;
-}());
-
-/*
- * @forgerock/javascript-sdk
- *
- * helpers.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$b = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$b = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-function addAuthzInfoToHeaders$1(init, advices, tokens) {
-    var headers = new Headers(init.headers);
-    if (advices.AuthenticateToServiceConditionAdvice) {
-        headers.set('X-Tree', advices.AuthenticateToServiceConditionAdvice[0]);
-    }
-    else if (advices.TransactionConditionAdvice) {
-        headers.set('X-TxID', advices.TransactionConditionAdvice[0]);
-    }
-    if (tokens && tokens.idToken) {
-        headers.set('X-IdToken', tokens.idToken);
-    }
-    return headers;
-}
-function addAuthzInfoToURL$1(url, advices, tokens) {
-    var updatedURL = new URL(url);
-    // Only modify URL for Transactional Authorization
-    if (advices.TransactionConditionAdvice) {
-        var txId = advices.TransactionConditionAdvice[0];
-        // Add Txn ID to *original* request options as URL param
-        updatedURL.searchParams.append('_txid', txId);
-    }
-    // If tokens are used, send idToken (OIDC)
-    if (tokens && tokens.idToken) {
-        updatedURL.searchParams.append('_idtoken', tokens.idToken);
-    }
-    // FYI: in certain circumstances, the URL may be returned unchanged
-    return updatedURL.toString();
-}
-function buildAuthzOptions$1(authzObj, baseURL, timeout, realmPath, customPaths) {
-    var treeAuthAdvices = authzObj.advices && authzObj.advices.AuthenticateToServiceConditionAdvice;
-    var txnAuthAdvices = authzObj.advices && authzObj.advices.TransactionConditionAdvice;
-    var attributeValue = '';
-    var attributeName = '';
-    if (treeAuthAdvices) {
-        attributeValue = treeAuthAdvices.reduce(function (prev, curr) {
-            var prevWithSpace = prev ? " ".concat(prev) : prev;
-            prev = "".concat(curr).concat(prevWithSpace);
-            return prev;
-        }, '');
-        attributeName = 'AuthenticateToServiceConditionAdvice';
-    }
-    else if (txnAuthAdvices) {
-        attributeValue = txnAuthAdvices.reduce(function (prev, curr) {
-            var prevWithSpace = prev ? " ".concat(prev) : prev;
-            prev = "".concat(curr).concat(prevWithSpace);
-            return prev;
-        }, '');
-        attributeName = 'TransactionConditionAdvice';
-    }
-    var openTags = "<Advices><AttributeValuePair>";
-    var nameTag = "<Attribute name=\"".concat(attributeName, "\"/>");
-    var valueTag = "<Value>".concat(attributeValue, "</Value>");
-    var endTags = "</AttributeValuePair></Advices>";
-    var fullXML = "".concat(openTags).concat(nameTag).concat(valueTag).concat(endTags);
-    var path = getEndpointPath$1('authenticate', realmPath, customPaths);
-    var queryParams = {
-        authIndexType: 'composite_advice',
-        authIndexValue: fullXML,
-    };
-    var options = {
-        init: {
-            method: 'POST',
-            credentials: 'include',
-            headers: new Headers({
-                'Accept-API-Version': 'resource=2.0, protocol=1.0',
-            }),
-        },
-        timeout: timeout,
-        url: resolve$1(baseURL, "".concat(path, "?").concat(stringify$1(queryParams))),
-    };
-    return options;
-}
-function examineForIGAuthz$1(res) {
-    var type = res.headers.get('Content-Type') || '';
-    return type.includes('html') && res.url.includes('composite_advice');
-}
-function examineForRESTAuthz$1(res) {
-    return __awaiter$b(this, void 0, void 0, function () {
-        var clone, json;
-        return __generator$b(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    clone = res.clone();
-                    return [4 /*yield*/, clone.json()];
-                case 1:
-                    json = _a.sent();
-                    return [2 /*return*/, !!json.advices];
-            }
-        });
-    });
-}
-function getXMLValueFromURL$1(urlString) {
-    var url = new URL(urlString);
-    var value = url.searchParams.get('authIndexValue') || '';
-    var parser = new DOMParser();
-    var decodedValue = decodeURIComponent(value);
-    var doc = parser.parseFromString(decodedValue, 'application/xml');
-    var el = doc.querySelector('Value');
-    return el ? el.innerHTML : '';
-}
-function hasAuthzAdvice$1(json) {
-    if (json.advices && json.advices.AuthenticateToServiceConditionAdvice) {
-        return (Array.isArray(json.advices.AuthenticateToServiceConditionAdvice) &&
-            json.advices.AuthenticateToServiceConditionAdvice.length > 0);
-    }
-    else if (json.advices && json.advices.TransactionConditionAdvice) {
-        return (Array.isArray(json.advices.TransactionConditionAdvice) &&
-            json.advices.TransactionConditionAdvice.length > 0);
-    }
-    else {
-        return false;
-    }
-}
-function isAuthzStep$1(res) {
-    return __awaiter$b(this, void 0, void 0, function () {
-        var clone, json;
-        return __generator$b(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    clone = res.clone();
-                    return [4 /*yield*/, clone.json()];
-                case 1:
-                    json = _a.sent();
-                    return [2 /*return*/, !!json.callbacks];
-            }
-        });
-    });
-}
-function newTokenRequired$1(res, requiresNewToken) {
-    if (typeof requiresNewToken === 'function') {
-        return requiresNewToken(res);
-    }
-    return res.status === 401;
-}
-function normalizeIGJSON$1(res) {
-    var advices = {};
-    if (res.url.includes('AuthenticateToServiceConditionAdvice')) {
-        advices.AuthenticateToServiceConditionAdvice = [getXMLValueFromURL$1(res.url)];
-    }
-    else {
-        advices.TransactionConditionAdvice = [getXMLValueFromURL$1(res.url)];
-    }
-    return {
-        resource: '',
-        actions: {},
-        attributes: {},
-        advices: advices,
-        ttl: 0,
-    };
-}
-function normalizeRESTJSON$1(res) {
-    return __awaiter$b(this, void 0, void 0, function () {
-        return __generator$b(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, res.json()];
-                case 1: return [2 /*return*/, _a.sent()];
-            }
-        });
-    });
-}
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$k = (undefined && undefined.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter$a = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$a = (undefined && undefined.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-/**
- * HTTP client that includes bearer token injection and refresh.
- * This module also supports authorization for policy protected endpoints.
- *
- * Example:
- *
- * ```js
- * return forgerock.HttpClient.request({
- *   url: `https://example.com/protected/resource`,
- *   init: {
- *     method: 'GET',
- *     credentials: 'include',
- *   },
- *   authorization: {
- *     handleStep: async (step) => {
- *       step.getCallbackOfType('PasswordCallback').setPassword(pw);
- *       return Promise.resolve(step);
- *     },
- *   },
- * });
- * ```
- */
-/** @class */ ((function (_super) {
-    __extends$k(HttpClient, _super);
-    function HttpClient() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
-    /**
-     * Makes a request using the specified options.
-     *
-     * @param options The options to use when making the request
-     */
-    HttpClient.request = function (options) {
-        return __awaiter$a(this, void 0, void 0, function () {
-            var res, authorizationJSON, hasIG, _a, middleware, realmPath, serverConfig, authzOptions, url, type, tree, runMiddleware, _b, authUrl, authInit, initialStep, tokens;
-            return __generator$a(this, function (_c) {
-                switch (_c.label) {
-                    case 0: return [4 /*yield*/, this._request(options, false)];
-                    case 1:
-                        res = _c.sent();
-                        hasIG = false;
-                        if (!newTokenRequired$1(res, options.requiresNewToken)) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this._request(options, true)];
-                    case 2:
-                        res = _c.sent();
-                        _c.label = 3;
-                    case 3:
-                        if (!(options.authorization && options.authorization.handleStep)) return [3 /*break*/, 16];
-                        if (!(res.redirected && examineForIGAuthz$1(res))) return [3 /*break*/, 4];
-                        hasIG = true;
-                        authorizationJSON = normalizeIGJSON$1(res);
-                        return [3 /*break*/, 7];
-                    case 4: return [4 /*yield*/, examineForRESTAuthz$1(res)];
-                    case 5:
-                        if (!_c.sent()) return [3 /*break*/, 7];
-                        return [4 /*yield*/, normalizeRESTJSON$1(res)];
-                    case 6:
-                        authorizationJSON = _c.sent();
-                        _c.label = 7;
-                    case 7:
-                        if (!(authorizationJSON && authorizationJSON.advices)) return [3 /*break*/, 16];
-                        _a = Config.get(options.authorization.config), middleware = _a.middleware, realmPath = _a.realmPath, serverConfig = _a.serverConfig;
-                        authzOptions = buildAuthzOptions$1(authorizationJSON, serverConfig.baseUrl, options.timeout, realmPath, serverConfig.paths);
-                        url = new URL(authzOptions.url);
-                        type = url.searchParams.get('authIndexType');
-                        tree = url.searchParams.get('authIndexValue');
-                        runMiddleware = middlewareWrapper$1({
-                            url: new URL(authzOptions.url),
-                            init: authzOptions.init,
-                        }, {
-                            type: ActionTypes.StartAuthenticate,
-                            payload: { type: type, tree: tree },
-                        });
-                        _b = runMiddleware(middleware), authUrl = _b.url, authInit = _b.init;
-                        authzOptions.url = authUrl.toString();
-                        authzOptions.init = authInit;
-                        return [4 /*yield*/, this._request(authzOptions, false)];
-                    case 8:
-                        initialStep = _c.sent();
-                        return [4 /*yield*/, isAuthzStep$1(initialStep)];
-                    case 9:
-                        if (!(_c.sent())) {
-                            throw new Error('Error: Initial response from auth server not a "step".');
-                        }
-                        if (!hasAuthzAdvice$1(authorizationJSON)) {
-                            throw new Error("Error: Transactional or Service Advice is empty.");
-                        }
-                        // Walk through auth tree
-                        return [4 /*yield*/, this.stepIterator(initialStep, options.authorization.handleStep, type, tree)];
-                    case 10:
-                        // Walk through auth tree
-                        _c.sent();
-                        tokens = void 0;
-                        _c.label = 11;
-                    case 11:
-                        _c.trys.push([11, 13, , 14]);
-                        return [4 /*yield*/, TokenStorage$1.get()];
-                    case 12:
-                        tokens = _c.sent();
-                        return [3 /*break*/, 14];
-                    case 13:
-                        _c.sent();
-                        return [3 /*break*/, 14];
-                    case 14:
-                        if (hasIG) {
-                            // Update URL with IDs and tokens for IG
-                            options.url = addAuthzInfoToURL$1(options.url, authorizationJSON.advices, tokens);
-                        }
-                        else {
-                            // Update headers with IDs and tokens for REST API
-                            options.init.headers = addAuthzInfoToHeaders$1(options.init, authorizationJSON.advices, tokens);
-                        }
-                        return [4 /*yield*/, this._request(options, false)];
-                    case 15:
-                        // Retry original resource request
-                        res = _c.sent();
-                        _c.label = 16;
-                    case 16: return [2 /*return*/, res];
-                }
-            });
-        });
-    };
-    HttpClient.setAuthHeaders = function (headers, forceRenew) {
-        return __awaiter$a(this, void 0, void 0, function () {
-            var tokens;
-            return __generator$a(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, TokenStorage$1.get()];
-                    case 1:
-                        tokens = _a.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a.sent();
-                        return [3 /*break*/, 3];
-                    case 3:
-                        if (!(tokens && tokens.accessToken)) return [3 /*break*/, 5];
-                        return [4 /*yield*/, TokenManager$1.getTokens({ forceRenew: forceRenew })];
-                    case 4:
-                        // Access tokens are an OAuth artifact
-                        tokens = _a.sent();
-                        // TODO: Temp fix; refactor this in next txn auth story
-                        if (tokens && tokens.accessToken) {
-                            headers.set('Authorization', "Bearer ".concat(tokens.accessToken));
-                        }
-                        _a.label = 5;
-                    case 5: return [2 /*return*/, headers];
-                }
-            });
-        });
-    };
-    HttpClient.stepIterator = function (res, handleStep, type, tree) {
-        return __awaiter$a(this, void 0, void 0, function () {
-            var jsonRes, initialStep;
-            var _this = this;
-            return __generator$a(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, res.json()];
-                    case 1:
-                        jsonRes = _a.sent();
-                        initialStep = new FRStep$1(jsonRes);
-                        // eslint-disable-next-line no-async-promise-executor
-                        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter$a(_this, void 0, void 0, function () {
-                                function handleNext(step) {
-                                    return __awaiter$a(this, void 0, void 0, function () {
-                                        var input, output;
-                                        return __generator$a(this, function (_a) {
-                                            switch (_a.label) {
-                                                case 0: return [4 /*yield*/, handleStep(step)];
-                                                case 1:
-                                                    input = _a.sent();
-                                                    return [4 /*yield*/, FRAuth$1.next(input, { type: type, tree: tree })];
-                                                case 2:
-                                                    output = _a.sent();
-                                                    if (output.type === StepType$1.LoginSuccess) {
-                                                        resolve();
-                                                    }
-                                                    else if (output.type === StepType$1.LoginFailure) {
-                                                        reject('Authentication tree failure.');
-                                                    }
-                                                    else {
-                                                        handleNext(output);
-                                                    }
-                                                    return [2 /*return*/];
-                                            }
-                                        });
-                                    });
-                                }
-                                return __generator$a(this, function (_a) {
-                                    handleNext(initialStep);
-                                    return [2 /*return*/];
-                                });
-                            }); })];
-                }
-            });
-        });
-    };
-    HttpClient._request = function (options, forceRenew) {
-        return __awaiter$a(this, void 0, void 0, function () {
-            var url, init, timeout, headers;
-            return __generator$a(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        url = options.url, init = options.init, timeout = options.timeout;
-                        headers = new Headers(init.headers || {});
-                        if (!!options.bypassAuthentication) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.setAuthHeaders(headers, forceRenew)];
-                    case 1:
-                        headers = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        init.headers = headers;
-                        return [2 /*return*/, withTimeout$1(fetch(url, init), timeout)];
-                }
-            });
-        });
-    };
-    return HttpClient;
-})(Dispatcher$1));
-
-var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
-
-var httpClient = {};
-
-var config = {};
-
-var constants$2 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * constants.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(constants$2, "__esModule", { value: true });
-constants$2.DEFAULT_OAUTH_THRESHOLD = constants$2.DEFAULT_TIMEOUT = void 0;
-/** @hidden */
-var DEFAULT_TIMEOUT = 60 * 1000;
-constants$2.DEFAULT_TIMEOUT = DEFAULT_TIMEOUT;
-var DEFAULT_OAUTH_THRESHOLD = 30 * 1000;
-constants$2.DEFAULT_OAUTH_THRESHOLD = DEFAULT_OAUTH_THRESHOLD;
-
-(function (exports) {
-	/*
-	 * @forgerock/javascript-sdk
-	 *
-	 * index.ts
-	 *
-	 * Copyright (c) 2020 ForgeRock. All rights reserved.
-	 * This software may be modified and distributed under the terms
-	 * of the MIT license. See the LICENSE file for details.
-	 */
-	var __assign = (commonjsGlobal && commonjsGlobal.__assign) || function () {
-	    __assign = Object.assign || function(t) {
-	        for (var s, i = 1, n = arguments.length; i < n; i++) {
-	            s = arguments[i];
-	            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-	                t[p] = s[p];
-	        }
-	        return t;
-	    };
-	    return __assign.apply(this, arguments);
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.DEFAULT_TIMEOUT = void 0;
-	var constants_1 = constants$2;
-	Object.defineProperty(exports, "DEFAULT_TIMEOUT", { enumerable: true, get: function () { return constants_1.DEFAULT_TIMEOUT; } });
-	/**
-	 * Sets defaults for options that are required but have no supplied value
-	 * @param options The options to set defaults for
-	 * @returns options The options with defaults
-	 */
-	function setDefaults(options) {
-	    return __assign(__assign({}, options), { oauthThreshold: options.oauthThreshold || constants_1.DEFAULT_OAUTH_THRESHOLD });
-	}
-	/**
-	 * Utility for merging configuration defaults with one-off options.
-	 *
-	 * Example:
-	 *
-	 * ```js
-	 * // Establish configuration defaults
-	 * Config.set({
-	 *   clientId: 'myApp',
-	 *   serverConfig: { baseUrl: 'https://openam-domain.com/am' },
-	 *   tree: 'UsernamePassword'
-	 * });
-	 *
-	 * // Specify overrides as needed
-	 * const configOverrides = { tree: 'PasswordlessWebAuthn' };
-	 * const step = await FRAuth.next(undefined, configOverrides);
-	 */
-	var Config = /** @class */ (function () {
-	    function Config() {
-	    }
-	    /**
-	     * Sets the default options.
-	     *
-	     * @param options The options to use as defaults
-	     */
-	    Config.set = function (options) {
-	        if (!this.isValid(options)) {
-	            throw new Error('Configuration is invalid');
-	        }
-	        if (options.serverConfig) {
-	            this.validateServerConfig(options.serverConfig);
-	        }
-	        this.options = __assign({}, setDefaults(options));
-	    };
-	    /**
-	     * Merges the provided options with the default options.  Ensures a server configuration exists.
-	     *
-	     * @param options The options to merge with defaults
-	     */
-	    Config.get = function (options) {
-	        if (!this.options && !options) {
-	            throw new Error('Configuration has not been set');
-	        }
-	        var merged = __assign(__assign({}, this.options), options);
-	        if (!merged.serverConfig || !merged.serverConfig.baseUrl) {
-	            throw new Error('Server configuration has not been set');
-	        }
-	        return merged;
-	    };
-	    Config.isValid = function (options) {
-	        return !!(options && options.serverConfig);
-	    };
-	    Config.validateServerConfig = function (serverConfig) {
-	        if (!serverConfig.timeout) {
-	            serverConfig.timeout = constants_1.DEFAULT_TIMEOUT;
-	        }
-	        var url = serverConfig.baseUrl;
-	        if (url && url.charAt(url.length - 1) !== '/') {
-	            serverConfig.baseUrl = url + '/';
-	        }
-	    };
-	    return Config;
-	}());
-	exports.default = Config;
-	
-} (config));
-
-var enums$4 = {};
-
-(function (exports) {
-	/*
-	 * @forgerock/javascript-sdk
-	 *
-	 * enums.ts
-	 *
-	 * Copyright (c) 2020 ForgeRock. All rights reserved.
-	 * This software may be modified and distributed under the terms
-	 * of the MIT license. See the LICENSE file for details.
-	 */
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.ActionTypes = void 0;
-	(function (ActionTypes) {
-	    ActionTypes["Authenticate"] = "AUTHENTICATE";
-	    ActionTypes["Authorize"] = "AUTHORIZE";
-	    ActionTypes["EndSession"] = "END_SESSION";
-	    ActionTypes["Logout"] = "LOGOUT";
-	    ActionTypes["ExchangeToken"] = "EXCHANGE_TOKEN";
-	    ActionTypes["RefreshToken"] = "REFRESH_TOKEN";
-	    ActionTypes["ResumeAuthenticate"] = "RESUME_AUTHENTICATE";
-	    ActionTypes["RevokeToken"] = "REVOKE_TOKEN";
-	    ActionTypes["StartAuthenticate"] = "START_AUTHENTICATE";
-	    ActionTypes["UserInfo"] = "USER_INFO";
-	})(exports.ActionTypes || (exports.ActionTypes = {}));
-	
-} (enums$4));
-
-var event = {};
-
-var helpers$3 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * helpers.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(helpers$3, "__esModule", { value: true });
-helpers$3.remove = helpers$3.clear = helpers$3.add = void 0;
-/** @hidden */
-function add(container, type, listener) {
-    container[type] = container[type] || [];
-    if (container[type].indexOf(listener) < 0) {
-        container[type].push(listener);
-    }
-}
-helpers$3.add = add;
-/** @hidden */
-function remove(container, type, listener) {
-    if (!container[type]) {
-        return;
-    }
-    var index = container[type].indexOf(listener);
-    if (index >= 0) {
-        container[type].splice(index, 1);
-    }
-}
-helpers$3.remove = remove;
-/** @hidden */
-function clear(container, type) {
-    Object.keys(container).forEach(function (k) {
-        if (!type || k === type) {
-            delete container[k];
-        }
-    });
-}
-helpers$3.clear = clear;
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(event, "__esModule", { value: true });
-var helpers_1$3 = helpers$3;
-/**
- * Event dispatcher for subscribing and publishing categorized events.
- */
-var Dispatcher = /** @class */ (function () {
-    function Dispatcher() {
-        this.callbacks = {};
-    }
-    /**
-     * Subscribes to an event type.
-     *
-     * @param type The event type
-     * @param listener The function to subscribe to events of this type
-     */
-    Dispatcher.prototype.addEventListener = function (type, listener) {
-        (0, helpers_1$3.add)(this.callbacks, type, listener);
-    };
-    /**
-     * Unsubscribes from an event type.
-     *
-     * @param type The event type
-     * @param listener The function to unsubscribe from events of this type
-     */
-    Dispatcher.prototype.removeEventListener = function (type, listener) {
-        (0, helpers_1$3.remove)(this.callbacks, type, listener);
-    };
-    /**
-     * Unsubscribes all listener functions to a single event type or all event types.
-     *
-     * @param type The event type, or all event types if not specified
-     */
-    Dispatcher.prototype.clearEventListeners = function (type) {
-        (0, helpers_1$3.clear)(this.callbacks, type);
-    };
-    /**
-     * Publishes an event.
-     *
-     * @param event The event object to publish
-     */
-    Dispatcher.prototype.dispatchEvent = function (event) {
-        if (!this.callbacks[event.type]) {
-            return;
-        }
-        for (var _i = 0, _a = this.callbacks[event.type]; _i < _a.length; _i++) {
-            var listener = _a[_i];
-            listener(event);
-        }
-    };
-    return Dispatcher;
-}());
-event.default = Dispatcher;
-
-var frAuth = {};
-
-var auth = {};
-
-var constants$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * constants.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(constants$1, "__esModule", { value: true });
-constants$1.REQUESTED_WITH = void 0;
-/**
- * @module
- * @ignore
- * These are private constants
- */
-var REQUESTED_WITH = 'forgerock-sdk';
-constants$1.REQUESTED_WITH = REQUESTED_WITH;
-
-var timeout = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * timeout.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(timeout, "__esModule", { value: true });
-timeout.withTimeout = void 0;
-var config_1$3 = config;
-/**
- * @module
- * @ignore
- * These are private utility functions
- */
-function withTimeout(promise, timeout) {
-    if (timeout === void 0) { timeout = config_1$3.DEFAULT_TIMEOUT; }
-    var effectiveTimeout = timeout || config_1$3.DEFAULT_TIMEOUT;
-    var timeoutP = new Promise(function (_, reject) {
-        return window.setTimeout(function () { return reject(new Error('Timeout')); }, effectiveTimeout);
-    });
-    return Promise.race([promise, timeoutP]);
-}
-timeout.withTimeout = withTimeout;
-
-var url = {};
-
-var realm = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * realm.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(realm, "__esModule", { value: true });
-realm.getRealmUrlPath = void 0;
-/** @hidden */
-function getRealmUrlPath(realmPath) {
-    // Split the path and scrub segments
-    var names = (realmPath || '')
-        .split('/')
-        .map(function (x) { return x.trim(); })
-        .filter(function (x) { return x !== ''; });
-    // Ensure 'root' is the first realm
-    if (names[0] !== 'root') {
-        names.unshift('root');
-    }
-    // Concatenate into a URL path
-    var urlPath = names.map(function (x) { return "realms/".concat(x); }).join('/');
-    return urlPath;
-}
-realm.getRealmUrlPath = getRealmUrlPath;
-
-/*
- * @forgerock/javascript-sdk
- *
- * url.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __spreadArray = (commonjsGlobal && commonjsGlobal.__spreadArray) || function (to, from, pack) {
-    if (pack || arguments.length === 2) for (var i = 0, l = from.length, ar; i < l; i++) {
-        if (ar || !(i in from)) {
-            if (!ar) ar = Array.prototype.slice.call(from, 0, i);
-            ar[i] = from[i];
-        }
-    }
-    return to.concat(ar || Array.prototype.slice.call(from));
-};
-Object.defineProperty(url, "__esModule", { value: true });
-url.stringify = url.resolve = url.parseQuery = url.getEndpointPath = url.getBaseUrl = void 0;
-var realm_1 = realm;
-/**
- * Returns the base URL including protocol, hostname and any non-standard port.
- * The returned URL does not include a trailing slash.
- */
-function getBaseUrl(url) {
-    var isNonStandardPort = (url.protocol === 'http:' && ['', '80'].indexOf(url.port) === -1) ||
-        (url.protocol === 'https:' && ['', '443'].indexOf(url.port) === -1);
-    var port = isNonStandardPort ? ":".concat(url.port) : '';
-    var baseUrl = "".concat(url.protocol, "//").concat(url.hostname).concat(port);
-    return baseUrl;
-}
-url.getBaseUrl = getBaseUrl;
-function getEndpointPath(endpoint, realmPath, customPaths) {
-    var realmUrlPath = (0, realm_1.getRealmUrlPath)(realmPath);
-    var defaultPaths = {
-        authenticate: "json/".concat(realmUrlPath, "/authenticate"),
-        authorize: "oauth2/".concat(realmUrlPath, "/authorize"),
-        accessToken: "oauth2/".concat(realmUrlPath, "/access_token"),
-        endSession: "oauth2/".concat(realmUrlPath, "/connect/endSession"),
-        userInfo: "oauth2/".concat(realmUrlPath, "/userinfo"),
-        revoke: "oauth2/".concat(realmUrlPath, "/token/revoke"),
-        sessions: "json/".concat(realmUrlPath, "/sessions/"),
-    };
-    if (customPaths && customPaths[endpoint]) {
-        // TypeScript is not correctly reading the condition above
-        // It's thinking that customPaths[endpoint] may result in undefined
-        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-        // @ts-ignore
-        return customPaths[endpoint];
-    }
-    else {
-        return defaultPaths[endpoint];
-    }
-}
-url.getEndpointPath = getEndpointPath;
-function resolve(baseUrl, path) {
-    var url = new URL(baseUrl);
-    if (path.startsWith('/')) {
-        return "".concat(getBaseUrl(url)).concat(path);
-    }
-    var basePath = url.pathname.split('/');
-    var destPath = path.split('/').filter(function (x) { return !!x; });
-    var newPath = __spreadArray(__spreadArray([], basePath.slice(0, -1), true), destPath, true).join('/');
-    return "".concat(getBaseUrl(url)).concat(newPath);
-}
-url.resolve = resolve;
-function parseQuery(fullUrl) {
-    var url = new URL(fullUrl);
-    var query = {};
-    url.searchParams.forEach(function (v, k) { return (query[k] = v); });
-    return query;
-}
-url.parseQuery = parseQuery;
-function stringify(data) {
-    var pairs = [];
-    for (var k in data) {
-        if (data[k]) {
-            pairs.push(k + '=' + encodeURIComponent(data[k]));
-        }
-    }
-    return pairs.join('&');
-}
-url.stringify = stringify;
-
-var middleware = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * middleware.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(middleware, "__esModule", { value: true });
-/**
- * @function middlewareWrapper - A "Node" and "Redux" style middleware that is called just before
- * the request is made from the SDK. This allows you access to the request for modification.
- * @param request - A request object container of the URL and the Request Init object
- * @param action - The action object that is passed into the middleware communicating intent
- * @param action.type - A "Redux" style type that contains the serialized action
- * @param action.payload - The payload of the action that can contain metadata
- * @returns {function} - Function that takes middleware parameter & runs middleware against request
- */
-function middlewareWrapper(request, 
-// eslint-disable-next-line
-_a) {
-    var type = _a.type, payload = _a.payload;
-    // no mutation and no reassignment
-    var actionCopy = Object.freeze({ type: type, payload: payload });
-    return function (middleware) {
-        if (!Array.isArray(middleware)) {
-            return request;
-        }
-        // Copy middleware so the `shift` below doesn't mutate source
-        var mwareCopy = middleware.map(function (fn) { return fn; });
-        function iterator() {
-            var nextMiddlewareToBeCalled = mwareCopy.shift();
-            nextMiddlewareToBeCalled && nextMiddlewareToBeCalled(request, actionCopy, iterator);
-            return request;
-        }
-        return iterator();
-    };
-}
-middleware.default = middlewareWrapper;
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __assign$2 = (commonjsGlobal && commonjsGlobal.__assign) || function () {
-    __assign$2 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$2.apply(this, arguments);
-};
-var __awaiter$9 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$9 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(auth, "__esModule", { value: true });
-var config_1$2 = config;
-var enums_1$8 = enums$4;
-var constants_1$3 = constants$1;
-var timeout_1$2 = timeout;
-var url_1$2 = url;
-var middleware_1$2 = middleware;
-/**
- * Provides direct access to the OpenAM authentication tree API.
- */
-var Auth = /** @class */ (function () {
-    function Auth() {
-    }
-    /**
-     * Gets the next step in the authentication tree.
-     *
-     * @param {Step} previousStep The previous step, including any required input.
-     * @param {StepOptions} options Configuration default overrides.
-     * @return {Step} The next step in the authentication tree.
-     */
-    Auth.next = function (previousStep, options) {
-        return __awaiter$9(this, void 0, void 0, function () {
-            var _a, middleware, realmPath, serverConfig, tree, type, query, url, runMiddleware, req, res, json;
-            return __generator$9(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = config_1$2.default.get(options), middleware = _a.middleware, realmPath = _a.realmPath, serverConfig = _a.serverConfig, tree = _a.tree, type = _a.type;
-                        query = options ? options.query : {};
-                        url = this.constructUrl(serverConfig, realmPath, tree, query);
-                        runMiddleware = (0, middleware_1$2.default)({
-                            url: new URL(url),
-                            init: this.configureRequest(previousStep),
-                        }, {
-                            type: previousStep ? enums_1$8.ActionTypes.Authenticate : enums_1$8.ActionTypes.StartAuthenticate,
-                            payload: {
-                                tree: tree,
-                                type: type ? type : 'service',
-                            },
-                        });
-                        req = runMiddleware(middleware);
-                        return [4 /*yield*/, (0, timeout_1$2.withTimeout)(fetch(req.url.toString(), req.init), serverConfig.timeout)];
-                    case 1:
-                        res = _b.sent();
-                        return [4 /*yield*/, this.getResponseJson(res)];
-                    case 2:
-                        json = _b.sent();
-                        return [2 /*return*/, json];
-                }
-            });
-        });
-    };
-    Auth.constructUrl = function (serverConfig, realmPath, tree, query) {
-        var treeParams = tree ? { authIndexType: 'service', authIndexValue: tree } : undefined;
-        var params = __assign$2(__assign$2({}, query), treeParams);
-        var queryString = Object.keys(params).length > 0 ? "?".concat((0, url_1$2.stringify)(params)) : '';
-        var path = (0, url_1$2.getEndpointPath)('authenticate', realmPath, serverConfig.paths);
-        var url = (0, url_1$2.resolve)(serverConfig.baseUrl, "".concat(path).concat(queryString));
-        return url;
-    };
-    Auth.configureRequest = function (step) {
-        var init = {
-            body: step ? JSON.stringify(step) : undefined,
-            credentials: 'include',
-            headers: new Headers({
-                Accept: 'application/json',
-                'Accept-API-Version': 'protocol=1.0,resource=2.1',
-                'Content-Type': 'application/json',
-                'X-Requested-With': constants_1$3.REQUESTED_WITH,
-            }),
-            method: 'POST',
+        const excludeCredentials = parseCredentials(metadata.excludeCredentials);
+        const { attestationPreference, authenticatorSelection, challenge, relyingPartyId, relyingPartyName, timeout, userId, userName, displayName, } = metadata;
+        const rpId = parseRelyingPartyId(relyingPartyId);
+        const rp = {
+            name: relyingPartyName,
+            ...(rpId && { id: rpId }),
         };
-        return init;
-    };
-    Auth.getResponseJson = function (res) {
-        return __awaiter$9(this, void 0, void 0, function () {
-            var contentType, isJson, json, _a;
-            return __generator$9(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        contentType = res.headers.get('content-type');
-                        isJson = contentType && contentType.indexOf('application/json') > -1;
-                        if (!isJson) return [3 /*break*/, 2];
-                        return [4 /*yield*/, res.json()];
-                    case 1:
-                        _a = _b.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a = {};
-                        _b.label = 3;
-                    case 3:
-                        json = _a;
-                        json.status = res.status;
-                        json.ok = res.ok;
-                        return [2 /*return*/, json];
-                }
-            });
-        });
-    };
-    return Auth;
-}());
-auth.default = Auth;
-
-var enums$3 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * enums.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(enums$3, "__esModule", { value: true });
-enums$3.ErrorCode = enums$3.CallbackType = void 0;
-/**
- * Known errors that can occur during authentication.
- */
-var ErrorCode;
-(function (ErrorCode) {
-    ErrorCode["BadRequest"] = "BAD_REQUEST";
-    ErrorCode["Timeout"] = "TIMEOUT";
-    ErrorCode["Unauthorized"] = "UNAUTHORIZED";
-    ErrorCode["Unknown"] = "UNKNOWN";
-})(ErrorCode || (ErrorCode = {}));
-enums$3.ErrorCode = ErrorCode;
-/**
- * Types of callbacks directly supported by the SDK.
- */
-var CallbackType;
-(function (CallbackType) {
-    CallbackType["BooleanAttributeInputCallback"] = "BooleanAttributeInputCallback";
-    CallbackType["ChoiceCallback"] = "ChoiceCallback";
-    CallbackType["ConfirmationCallback"] = "ConfirmationCallback";
-    CallbackType["DeviceProfileCallback"] = "DeviceProfileCallback";
-    CallbackType["HiddenValueCallback"] = "HiddenValueCallback";
-    CallbackType["KbaCreateCallback"] = "KbaCreateCallback";
-    CallbackType["MetadataCallback"] = "MetadataCallback";
-    CallbackType["NameCallback"] = "NameCallback";
-    CallbackType["NumberAttributeInputCallback"] = "NumberAttributeInputCallback";
-    CallbackType["PasswordCallback"] = "PasswordCallback";
-    CallbackType["PollingWaitCallback"] = "PollingWaitCallback";
-    CallbackType["ReCaptchaCallback"] = "ReCaptchaCallback";
-    CallbackType["RedirectCallback"] = "RedirectCallback";
-    CallbackType["SelectIdPCallback"] = "SelectIdPCallback";
-    CallbackType["StringAttributeInputCallback"] = "StringAttributeInputCallback";
-    CallbackType["SuspendedTextOutputCallback"] = "SuspendedTextOutputCallback";
-    CallbackType["TermsAndConditionsCallback"] = "TermsAndConditionsCallback";
-    CallbackType["TextInputCallback"] = "TextInputCallback";
-    CallbackType["TextOutputCallback"] = "TextOutputCallback";
-    CallbackType["ValidatedCreatePasswordCallback"] = "ValidatedCreatePasswordCallback";
-    CallbackType["ValidatedCreateUsernameCallback"] = "ValidatedCreateUsernameCallback";
-})(CallbackType || (CallbackType = {}));
-enums$3.CallbackType = CallbackType;
-
-var frLoginFailure = {};
-
-var frPolicy = {};
-
-var enums$2 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * enums.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(enums$2, "__esModule", { value: true });
-enums$2.PolicyKey = void 0;
-var PolicyKey;
-(function (PolicyKey) {
-    PolicyKey["CannotContainCharacters"] = "CANNOT_CONTAIN_CHARACTERS";
-    PolicyKey["CannotContainDuplicates"] = "CANNOT_CONTAIN_DUPLICATES";
-    PolicyKey["CannotContainOthers"] = "CANNOT_CONTAIN_OTHERS";
-    PolicyKey["LeastCapitalLetters"] = "AT_LEAST_X_CAPITAL_LETTERS";
-    PolicyKey["LeastNumbers"] = "AT_LEAST_X_NUMBERS";
-    PolicyKey["MatchRegexp"] = "MATCH_REGEXP";
-    PolicyKey["MaximumLength"] = "MAX_LENGTH";
-    PolicyKey["MaximumNumber"] = "MAXIMUM_NUMBER_VALUE";
-    PolicyKey["MinimumLength"] = "MIN_LENGTH";
-    PolicyKey["MinimumNumber"] = "MINIMUM_NUMBER_VALUE";
-    PolicyKey["Required"] = "REQUIRED";
-    PolicyKey["Unique"] = "UNIQUE";
-    PolicyKey["UnknownPolicy"] = "UNKNOWN_POLICY";
-    PolicyKey["ValidArrayItems"] = "VALID_ARRAY_ITEMS";
-    PolicyKey["ValidDate"] = "VALID_DATE";
-    PolicyKey["ValidEmailAddress"] = "VALID_EMAIL_ADDRESS_FORMAT";
-    PolicyKey["ValidNameFormat"] = "VALID_NAME_FORMAT";
-    PolicyKey["ValidNumber"] = "VALID_NUMBER";
-    PolicyKey["ValidPhoneFormat"] = "VALID_PHONE_FORMAT";
-    PolicyKey["ValidQueryFilter"] = "VALID_QUERY_FILTER";
-    PolicyKey["ValidType"] = "VALID_TYPE";
-})(PolicyKey || (PolicyKey = {}));
-enums$2.PolicyKey = PolicyKey;
-
-var messageCreator = {};
-
-var strings = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * strings.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(strings, "__esModule", { value: true });
-strings.plural = void 0;
-/**
- * @module
- * @ignore
- * These are private utility functions
- */
-function plural(n, singularText, pluralText) {
-    if (n === 1) {
-        return singularText;
+        return {
+            attestation: attestationPreference,
+            authenticatorSelection: JSON.parse(authenticatorSelection),
+            challenge: Uint8Array.from(atob(challenge), (c) => c.charCodeAt(0)).buffer,
+            ...(excludeCredentials.length && { excludeCredentials }),
+            pubKeyCredParams,
+            rp,
+            timeout,
+            user: {
+                displayName: displayName || userName,
+                id: Int8Array.from(userId.split('').map((c) => c.charCodeAt(0))),
+                name: userName,
+            },
+        };
     }
-    return pluralText !== undefined ? pluralText : singularText + 's';
 }
-strings.plural = plural;
-
-var helpers$2 = {};
 
 /*
  * @forgerock/javascript-sdk
@@ -7465,3622 +4683,8 @@ var helpers$2 = {};
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-Object.defineProperty(helpers$2, "__esModule", { value: true });
-helpers$2.getProp = void 0;
-function getProp(obj, prop, defaultValue) {
-    if (!obj || obj[prop] === undefined) {
-        return defaultValue;
-    }
-    return obj[prop];
-}
-helpers$2.getProp = getProp;
-
-/*
- * @forgerock/javascript-sdk
- *
- * message-creator.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var _a;
-Object.defineProperty(messageCreator, "__esModule", { value: true });
-var strings_1 = strings;
-var enums_1$7 = enums$2;
-var helpers_1$2 = helpers$2;
-var defaultMessageCreator = (_a = {},
-    _a[enums_1$7.PolicyKey.CannotContainCharacters] = function (property, params) {
-        var forbiddenChars = (0, helpers_1$2.getProp)(params, 'forbiddenChars', '');
-        return "".concat(property, " must not contain following characters: \"").concat(forbiddenChars, "\"");
-    },
-    _a[enums_1$7.PolicyKey.CannotContainDuplicates] = function (property, params) {
-        var duplicateValue = (0, helpers_1$2.getProp)(params, 'duplicateValue', '');
-        return "".concat(property, "  must not contain duplicates: \"").concat(duplicateValue, "\"");
-    },
-    _a[enums_1$7.PolicyKey.CannotContainOthers] = function (property, params) {
-        var disallowedFields = (0, helpers_1$2.getProp)(params, 'disallowedFields', '');
-        return "".concat(property, " must not contain: \"").concat(disallowedFields, "\"");
-    },
-    _a[enums_1$7.PolicyKey.LeastCapitalLetters] = function (property, params) {
-        var numCaps = (0, helpers_1$2.getProp)(params, 'numCaps', 0);
-        return "".concat(property, " must contain at least ").concat(numCaps, " capital ").concat((0, strings_1.plural)(numCaps, 'letter'));
-    },
-    _a[enums_1$7.PolicyKey.LeastNumbers] = function (property, params) {
-        var numNums = (0, helpers_1$2.getProp)(params, 'numNums', 0);
-        return "".concat(property, " must contain at least ").concat(numNums, " numeric ").concat((0, strings_1.plural)(numNums, 'value'));
-    },
-    _a[enums_1$7.PolicyKey.MatchRegexp] = function (property) { return "".concat(property, " has failed the \"MATCH_REGEXP\" policy"); },
-    _a[enums_1$7.PolicyKey.MaximumLength] = function (property, params) {
-        var maxLength = (0, helpers_1$2.getProp)(params, 'maxLength', 0);
-        return "".concat(property, " must be at most ").concat(maxLength, " ").concat((0, strings_1.plural)(maxLength, 'character'));
-    },
-    _a[enums_1$7.PolicyKey.MaximumNumber] = function (property) {
-        return "".concat(property, " has failed the \"MAXIMUM_NUMBER_VALUE\" policy");
-    },
-    _a[enums_1$7.PolicyKey.MinimumLength] = function (property, params) {
-        var minLength = (0, helpers_1$2.getProp)(params, 'minLength', 0);
-        return "".concat(property, " must be at least ").concat(minLength, " ").concat((0, strings_1.plural)(minLength, 'character'));
-    },
-    _a[enums_1$7.PolicyKey.MinimumNumber] = function (property) {
-        return "".concat(property, " has failed the \"MINIMUM_NUMBER_VALUE\" policy");
-    },
-    _a[enums_1$7.PolicyKey.Required] = function (property) { return "".concat(property, " is required"); },
-    _a[enums_1$7.PolicyKey.Unique] = function (property) { return "".concat(property, " must be unique"); },
-    _a[enums_1$7.PolicyKey.UnknownPolicy] = function (property, params) {
-        var policyRequirement = (0, helpers_1$2.getProp)(params, 'policyRequirement', 'Unknown');
-        return "".concat(property, ": Unknown policy requirement \"").concat(policyRequirement, "\"");
-    },
-    _a[enums_1$7.PolicyKey.ValidArrayItems] = function (property) {
-        return "".concat(property, " has failed the \"VALID_ARRAY_ITEMS\" policy");
-    },
-    _a[enums_1$7.PolicyKey.ValidDate] = function (property) { return "".concat(property, " has an invalid date"); },
-    _a[enums_1$7.PolicyKey.ValidEmailAddress] = function (property) { return "".concat(property, " has an invalid email address"); },
-    _a[enums_1$7.PolicyKey.ValidNameFormat] = function (property) { return "".concat(property, " has an invalid name format"); },
-    _a[enums_1$7.PolicyKey.ValidNumber] = function (property) { return "".concat(property, " has an invalid number"); },
-    _a[enums_1$7.PolicyKey.ValidPhoneFormat] = function (property) { return "".concat(property, " has an invalid phone number"); },
-    _a[enums_1$7.PolicyKey.ValidQueryFilter] = function (property) {
-        return "".concat(property, " has failed the \"VALID_QUERY_FILTER\" policy");
-    },
-    _a[enums_1$7.PolicyKey.ValidType] = function (property) { return "".concat(property, " has failed the \"VALID_TYPE\" policy"); },
-    _a);
-messageCreator.default = defaultMessageCreator;
-
-(function (exports) {
-	/*
-	 * @forgerock/javascript-sdk
-	 *
-	 * index.ts
-	 *
-	 * Copyright (c) 2020 ForgeRock. All rights reserved.
-	 * This software may be modified and distributed under the terms
-	 * of the MIT license. See the LICENSE file for details.
-	 */
-	var __assign = (commonjsGlobal && commonjsGlobal.__assign) || function () {
-	    __assign = Object.assign || function(t) {
-	        for (var s, i = 1, n = arguments.length; i < n; i++) {
-	            s = arguments[i];
-	            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-	                t[p] = s[p];
-	        }
-	        return t;
-	    };
-	    return __assign.apply(this, arguments);
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.PolicyKey = void 0;
-	var enums_1 = enums$2;
-	Object.defineProperty(exports, "PolicyKey", { enumerable: true, get: function () { return enums_1.PolicyKey; } });
-	var message_creator_1 = messageCreator;
-	/**
-	 * Utility for processing policy failures into human readable messages.
-	 *
-	 * Example:
-	 *
-	 * ```js
-	 * // Create message overrides and extensions as needed
-	 * const messageCreator = {
-	 *   [PolicyKey.unique]: (property: string) => (
-	 *     `this is a custom message for "UNIQUE" policy of ${property}`
-	 *   ),
-	 *   CUSTOM_POLICY: (property: string, params: any) => (
-	 *     `this is a custom message for "${params.policyRequirement}" policy of ${property}`
-	 *   ),
-	 * };
-	 *
-	 * const thisStep = await FRAuth.next(previousStep);
-	 *
-	 * if (thisStep.type === StepType.LoginFailure) {
-	 *   const messagesStepMethod = thisStep.getProcessedMessage(messageCreator);
-	 *   const messagesClassMethod = FRPolicy.parseErrors(thisStep, messageCreator)
-	 * }
-	 */
-	var FRPolicy = /** @class */ (function () {
-	    function FRPolicy() {
-	    }
-	    /**
-	     * Parses policy errors and generates human readable error messages.
-	     *
-	     * @param {Step} err The step containing the error.
-	     * @param {MessageCreator} messageCreator
-	     * Extensible and overridable custom error messages for policy failures.
-	     * @return {ProcessedPropertyError[]} Array of objects containing all processed policy errors.
-	     */
-	    FRPolicy.parseErrors = function (err, messageCreator) {
-	        var _this = this;
-	        var errors = [];
-	        if (err.detail && err.detail.failedPolicyRequirements) {
-	            err.detail.failedPolicyRequirements.map(function (x) {
-	                errors.push.apply(errors, [
-	                    {
-	                        detail: x,
-	                        messages: _this.parseFailedPolicyRequirement(x, messageCreator),
-	                    },
-	                ]);
-	            });
-	        }
-	        return errors;
-	    };
-	    /**
-	     * Parses a failed policy and returns a string array of error messages.
-	     *
-	     * @param {FailedPolicyRequirement} failedPolicy The detail data of the failed policy.
-	     * @param {MessageCreator} customMessage
-	     * Extensible and overridable custom error messages for policy failures.
-	     * @return {string[]} Array of strings with all processed policy errors.
-	     */
-	    FRPolicy.parseFailedPolicyRequirement = function (failedPolicy, messageCreator) {
-	        var _this = this;
-	        var errors = [];
-	        failedPolicy.policyRequirements.map(function (policyRequirement) {
-	            errors.push(_this.parsePolicyRequirement(failedPolicy.property, policyRequirement, messageCreator));
-	        });
-	        return errors;
-	    };
-	    /**
-	     * Parses a policy error into a human readable error message.
-	     *
-	     * @param {string} property The property with the policy failure.
-	     * @param {PolicyRequirement} policy The policy failure data.
-	     * @param {MessageCreator} customMessage
-	     * Extensible and overridable custom error messages for policy failures.
-	     * @return {string} Human readable error message.
-	     */
-	    FRPolicy.parsePolicyRequirement = function (property, policy, messageCreator) {
-	        if (messageCreator === void 0) { messageCreator = {}; }
-	        // AM is returning policy requirement failures as JSON strings
-	        var policyObject = typeof policy === 'string' ? JSON.parse(policy) : __assign({}, policy);
-	        var policyRequirement = policyObject.policyRequirement;
-	        // Determine which message creator function to use
-	        var effectiveMessageCreator = messageCreator[policyRequirement] ||
-	            message_creator_1.default[policyRequirement] ||
-	            message_creator_1.default[enums_1.PolicyKey.UnknownPolicy];
-	        // Flatten the parameters and create the message
-	        var params = policyObject.params
-	            ? __assign(__assign({}, policyObject.params), { policyRequirement: policyRequirement }) : { policyRequirement: policyRequirement };
-	        var message = effectiveMessageCreator(property, params);
-	        return message;
-	    };
-	    return FRPolicy;
-	}());
-	exports.default = FRPolicy;
-	
-} (frPolicy));
-
-var enums$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * enums.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(enums$1, "__esModule", { value: true });
-enums$1.StepType = void 0;
-/**
- * Types of steps returned by the authentication tree.
- */
-var StepType;
-(function (StepType) {
-    StepType["LoginFailure"] = "LoginFailure";
-    StepType["LoginSuccess"] = "LoginSuccess";
-    StepType["Step"] = "Step";
-})(StepType || (StepType = {}));
-enums$1.StepType = StepType;
-
-/*
- * @forgerock/javascript-sdk
- *
- * fr-login-failure.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(frLoginFailure, "__esModule", { value: true });
-var fr_policy_1 = frPolicy;
-var enums_1$6 = enums$1;
-var FRLoginFailure = /** @class */ (function () {
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function FRLoginFailure(payload) {
-        this.payload = payload;
-        /**
-         * The type of step.
-         */
-        this.type = enums_1$6.StepType.LoginFailure;
-    }
-    /**
-     * Gets the error code.
-     */
-    FRLoginFailure.prototype.getCode = function () {
-        return Number(this.payload.code);
-    };
-    /**
-     * Gets the failure details.
-     */
-    FRLoginFailure.prototype.getDetail = function () {
-        return this.payload.detail;
-    };
-    /**
-     * Gets the failure message.
-     */
-    FRLoginFailure.prototype.getMessage = function () {
-        return this.payload.message;
-    };
-    /**
-     * Gets processed failure message.
-     */
-    FRLoginFailure.prototype.getProcessedMessage = function (messageCreator) {
-        return fr_policy_1.default.parseErrors(this.payload, messageCreator);
-    };
-    /**
-     * Gets the failure reason.
-     */
-    FRLoginFailure.prototype.getReason = function () {
-        return this.payload.reason;
-    };
-    return FRLoginFailure;
-}());
-frLoginFailure.default = FRLoginFailure;
-
-var frLoginSuccess = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * fr-login-success.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(frLoginSuccess, "__esModule", { value: true });
-var enums_1$5 = enums$1;
-var FRLoginSuccess = /** @class */ (function () {
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function FRLoginSuccess(payload) {
-        this.payload = payload;
-        /**
-         * The type of step.
-         */
-        this.type = enums_1$5.StepType.LoginSuccess;
-    }
-    /**
-     * Gets the step's realm.
-     */
-    FRLoginSuccess.prototype.getRealm = function () {
-        return this.payload.realm;
-    };
-    /**
-     * Gets the step's session token.
-     */
-    FRLoginSuccess.prototype.getSessionToken = function () {
-        return this.payload.tokenId;
-    };
-    /**
-     * Gets the step's success URL.
-     */
-    FRLoginSuccess.prototype.getSuccessUrl = function () {
-        return this.payload.successUrl;
-    };
-    return FRLoginSuccess;
-}());
-frLoginSuccess.default = FRLoginSuccess;
-
-var frStep = {};
-
-var factory = {};
-
-var callbacks = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(callbacks, "__esModule", { value: true });
-/**
- * Base class for authentication tree callback wrappers.
- */
-var FRCallback = /** @class */ (function () {
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function FRCallback(payload) {
-        this.payload = payload;
-    }
-    /**
-     * Gets the name of this callback type.
-     */
-    FRCallback.prototype.getType = function () {
-        return this.payload.type;
-    };
-    /**
-     * Gets the value of the specified input element, or the first element if `selector` is not
-     * provided.
-     *
-     * @param selector The index position or name of the desired element
-     */
-    FRCallback.prototype.getInputValue = function (selector) {
-        if (selector === void 0) { selector = 0; }
-        return this.getArrayElement(this.payload.input, selector).value;
-    };
-    /**
-     * Sets the value of the specified input element, or the first element if `selector` is not
-     * provided.
-     *
-     * @param selector The index position or name of the desired element
-     */
-    FRCallback.prototype.setInputValue = function (value, selector) {
-        if (selector === void 0) { selector = 0; }
-        this.getArrayElement(this.payload.input, selector).value = value;
-    };
-    /**
-     * Gets the value of the specified output element, or the first element if `selector`
-     * is not provided.
-     *
-     * @param selector The index position or name of the desired element
-     */
-    FRCallback.prototype.getOutputValue = function (selector) {
-        if (selector === void 0) { selector = 0; }
-        return this.getArrayElement(this.payload.output, selector).value;
-    };
-    /**
-     * Gets the value of the first output element with the specified name or the
-     * specified default value.
-     *
-     * @param name The name of the desired element
-     */
-    FRCallback.prototype.getOutputByName = function (name, defaultValue) {
-        var output = this.payload.output.find(function (x) { return x.name === name; });
-        return output ? output.value : defaultValue;
-    };
-    FRCallback.prototype.getArrayElement = function (array, selector) {
-        if (selector === void 0) { selector = 0; }
-        if (array === undefined) {
-            throw new Error("No NameValue array was provided to search (selector ".concat(selector, ")"));
-        }
-        if (typeof selector === 'number') {
-            if (selector < 0 || selector > array.length - 1) {
-                throw new Error("Selector index ".concat(selector, " is out of range"));
-            }
-            return array[selector];
-        }
-        if (typeof selector === 'string') {
-            var input = array.find(function (x) { return x.name === selector; });
-            if (!input) {
-                throw new Error("Missing callback input entry \"".concat(selector, "\""));
-            }
-            return input;
-        }
-        // Duck typing for RegEx
-        if (typeof selector === 'object' && selector.test && selector.exec) {
-            var input = array.find(function (x) { return selector.test(x.name); });
-            if (!input) {
-                throw new Error("Missing callback input entry \"".concat(selector, "\""));
-            }
-            return input;
-        }
-        throw new Error('Invalid selector value type');
-    };
-    return FRCallback;
-}());
-callbacks.default = FRCallback;
-
-var attributeInputCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * attribute-input-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$j = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(attributeInputCallback, "__esModule", { value: true });
-var _1$i = callbacks;
-/**
- * Represents a callback used to collect attributes.
- *
- * @typeparam T Maps to StringAttributeInputCallback, NumberAttributeInputCallback and
- *     BooleanAttributeInputCallback, respectively
- */
-var AttributeInputCallback = /** @class */ (function (_super) {
-    __extends$j(AttributeInputCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function AttributeInputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the attribute name.
-     */
-    AttributeInputCallback.prototype.getName = function () {
-        return this.getOutputByName('name', '');
-    };
-    /**
-     * Gets the attribute prompt.
-     */
-    AttributeInputCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Gets whether the attribute is required.
-     */
-    AttributeInputCallback.prototype.isRequired = function () {
-        return this.getOutputByName('required', false);
-    };
-    /**
-     * Gets the callback's failed policies.
-     */
-    AttributeInputCallback.prototype.getFailedPolicies = function () {
-        return this.getOutputByName('failedPolicies', []);
-    };
-    /**
-     * Gets the callback's applicable policies.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    AttributeInputCallback.prototype.getPolicies = function () {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this.getOutputByName('policies', {});
-    };
-    /**
-     * Set if validating value only.
-     */
-    AttributeInputCallback.prototype.setValidateOnly = function (value) {
-        this.setInputValue(value, /validateOnly/);
-    };
-    /**
-     * Sets the attribute's value.
-     */
-    AttributeInputCallback.prototype.setValue = function (value) {
-        this.setInputValue(value);
-    };
-    return AttributeInputCallback;
-}(_1$i.default));
-attributeInputCallback.default = AttributeInputCallback;
-
-var choiceCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * choice-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$i = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(choiceCallback, "__esModule", { value: true });
-var _1$h = callbacks;
-/**
- * Represents a callback used to collect an answer to a choice.
- */
-var ChoiceCallback = /** @class */ (function (_super) {
-    __extends$i(ChoiceCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function ChoiceCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the choice's prompt.
-     */
-    ChoiceCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Gets the choice's default answer.
-     */
-    ChoiceCallback.prototype.getDefaultChoice = function () {
-        return this.getOutputByName('defaultChoice', 0);
-    };
-    /**
-     * Gets the choice's possible answers.
-     */
-    ChoiceCallback.prototype.getChoices = function () {
-        return this.getOutputByName('choices', []);
-    };
-    /**
-     * Sets the choice's answer by index position.
-     */
-    ChoiceCallback.prototype.setChoiceIndex = function (index) {
-        var length = this.getChoices().length;
-        if (index < 0 || index > length - 1) {
-            throw new Error("".concat(index, " is out of bounds"));
-        }
-        this.setInputValue(index);
-    };
-    /**
-     * Sets the choice's answer by value.
-     */
-    ChoiceCallback.prototype.setChoiceValue = function (value) {
-        var index = this.getChoices().indexOf(value);
-        if (index === -1) {
-            throw new Error("\"".concat(value, "\" is not a valid choice"));
-        }
-        this.setInputValue(index);
-    };
-    return ChoiceCallback;
-}(_1$h.default));
-choiceCallback.default = ChoiceCallback;
-
-var confirmationCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * confirmation-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$h = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(confirmationCallback, "__esModule", { value: true });
-var _1$g = callbacks;
-/**
- * Represents a callback used to collect a confirmation to a message.
- */
-var ConfirmationCallback = /** @class */ (function (_super) {
-    __extends$h(ConfirmationCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function ConfirmationCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the index position of the confirmation's default answer.
-     */
-    ConfirmationCallback.prototype.getDefaultOption = function () {
-        return Number(this.getOutputByName('defaultOption', 0));
-    };
-    /**
-     * Gets the confirmation's message type.
-     */
-    ConfirmationCallback.prototype.getMessageType = function () {
-        return Number(this.getOutputByName('messageType', 0));
-    };
-    /**
-     * Gets the confirmation's possible answers.
-     */
-    ConfirmationCallback.prototype.getOptions = function () {
-        return this.getOutputByName('options', []);
-    };
-    /**
-     * Gets the confirmation's option type.
-     */
-    ConfirmationCallback.prototype.getOptionType = function () {
-        return Number(this.getOutputByName('optionType', 0));
-    };
-    /**
-     * Gets the confirmation's prompt.
-     */
-    ConfirmationCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Set option index.
-     */
-    ConfirmationCallback.prototype.setOptionIndex = function (index) {
-        if (index !== 0 && index !== 1) {
-            throw new Error("\"".concat(index, "\" is not a valid choice"));
-        }
-        this.setInputValue(index);
-    };
-    /**
-     * Set option value.
-     */
-    ConfirmationCallback.prototype.setOptionValue = function (value) {
-        var index = this.getOptions().indexOf(value);
-        if (index === -1) {
-            throw new Error("\"".concat(value, "\" is not a valid choice"));
-        }
-        this.setInputValue(index);
-    };
-    return ConfirmationCallback;
-}(_1$g.default));
-confirmationCallback.default = ConfirmationCallback;
-
-var deviceProfileCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * device-profile-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$g = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(deviceProfileCallback, "__esModule", { value: true });
-var _1$f = callbacks;
-/**
- * Represents a callback used to collect device profile data.
- */
-var DeviceProfileCallback = /** @class */ (function (_super) {
-    __extends$g(DeviceProfileCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function DeviceProfileCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback's data.
-     */
-    DeviceProfileCallback.prototype.getMessage = function () {
-        return this.getOutputByName('message', '');
-    };
-    /**
-     * Does callback require metadata?
-     */
-    DeviceProfileCallback.prototype.isMetadataRequired = function () {
-        return this.getOutputByName('metadata', false);
-    };
-    /**
-     * Does callback require location data?
-     */
-    DeviceProfileCallback.prototype.isLocationRequired = function () {
-        return this.getOutputByName('location', false);
-    };
-    /**
-     * Sets the profile.
-     */
-    DeviceProfileCallback.prototype.setProfile = function (profile) {
-        this.setInputValue(JSON.stringify(profile));
-    };
-    return DeviceProfileCallback;
-}(_1$f.default));
-deviceProfileCallback.default = DeviceProfileCallback;
-
-var hiddenValueCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * hidden-value-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$f = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(hiddenValueCallback, "__esModule", { value: true });
-var _1$e = callbacks;
-/**
- * Represents a callback used to collect information indirectly from the user.
- */
-var HiddenValueCallback = /** @class */ (function (_super) {
-    __extends$f(HiddenValueCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function HiddenValueCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    return HiddenValueCallback;
-}(_1$e.default));
-hiddenValueCallback.default = HiddenValueCallback;
-
-var kbaCreateCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * kba-create-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$e = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(kbaCreateCallback, "__esModule", { value: true });
-var _1$d = callbacks;
-/**
- * Represents a callback used to collect KBA-style security questions and answers.
- */
-var KbaCreateCallback = /** @class */ (function (_super) {
-    __extends$e(KbaCreateCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function KbaCreateCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback prompt.
-     */
-    KbaCreateCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Gets the callback's list of pre-defined security questions.
-     */
-    KbaCreateCallback.prototype.getPredefinedQuestions = function () {
-        return this.getOutputByName('predefinedQuestions', []);
-    };
-    /**
-     * Sets the callback's security question.
-     */
-    KbaCreateCallback.prototype.setQuestion = function (question) {
-        this.setValue('question', question);
-    };
-    /**
-     * Sets the callback's security question answer.
-     */
-    KbaCreateCallback.prototype.setAnswer = function (answer) {
-        this.setValue('answer', answer);
-    };
-    KbaCreateCallback.prototype.setValue = function (type, value) {
-        if (!this.payload.input) {
-            throw new Error('KBA payload is missing input');
-        }
-        var input = this.payload.input.find(function (x) { return x.name.endsWith(type); });
-        if (!input) {
-            throw new Error("No input has name ending in \"".concat(type, "\""));
-        }
-        input.value = value;
-    };
-    return KbaCreateCallback;
-}(_1$d.default));
-kbaCreateCallback.default = KbaCreateCallback;
-
-var metadataCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * metadata-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$d = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(metadataCallback, "__esModule", { value: true });
-var _1$c = callbacks;
-/**
- * Represents a callback used to deliver and collect miscellaneous data.
- */
-var MetadataCallback = /** @class */ (function (_super) {
-    __extends$d(MetadataCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function MetadataCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback's data.
-     */
-    MetadataCallback.prototype.getData = function () {
-        return this.getOutputByName('data', {});
-    };
-    return MetadataCallback;
-}(_1$c.default));
-metadataCallback.default = MetadataCallback;
-
-var nameCallback$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * name-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$c = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(nameCallback$1, "__esModule", { value: true });
-var _1$b = callbacks;
-/**
- * Represents a callback used to collect a username.
- */
-var NameCallback = /** @class */ (function (_super) {
-    __extends$c(NameCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function NameCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback's prompt.
-     */
-    NameCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Sets the username.
-     */
-    NameCallback.prototype.setName = function (name) {
-        this.setInputValue(name);
-    };
-    return NameCallback;
-}(_1$b.default));
-nameCallback$1.default = NameCallback;
-
-var passwordCallback$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * password-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$b = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(passwordCallback$1, "__esModule", { value: true });
-var _1$a = callbacks;
-/**
- * Represents a callback used to collect a password.
- */
-var PasswordCallback = /** @class */ (function (_super) {
-    __extends$b(PasswordCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function PasswordCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback's failed policies.
-     */
-    PasswordCallback.prototype.getFailedPolicies = function () {
-        return this.getOutputByName('failedPolicies', []);
-    };
-    /**
-     * Gets the callback's applicable policies.
-     */
-    PasswordCallback.prototype.getPolicies = function () {
-        return this.getOutputByName('policies', []);
-    };
-    /**
-     * Gets the callback's prompt.
-     */
-    PasswordCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Sets the password.
-     */
-    PasswordCallback.prototype.setPassword = function (password) {
-        this.setInputValue(password);
-    };
-    return PasswordCallback;
-}(_1$a.default));
-passwordCallback$1.default = PasswordCallback;
-
-var pollingWaitCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * polling-wait-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$a = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(pollingWaitCallback, "__esModule", { value: true });
-var _1$9 = callbacks;
-/**
- * Represents a callback used to instruct the system to poll while a backend process completes.
- */
-var PollingWaitCallback = /** @class */ (function (_super) {
-    __extends$a(PollingWaitCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function PollingWaitCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the message to display while polling.
-     */
-    PollingWaitCallback.prototype.getMessage = function () {
-        return this.getOutputByName('message', '');
-    };
-    /**
-     * Gets the polling interval in milliseconds.
-     */
-    PollingWaitCallback.prototype.getWaitTime = function () {
-        return Number(this.getOutputByName('waitTime', 0));
-    };
-    return PollingWaitCallback;
-}(_1$9.default));
-pollingWaitCallback.default = PollingWaitCallback;
-
-var recaptchaCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * recaptcha-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$9 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(recaptchaCallback, "__esModule", { value: true });
-var _1$8 = callbacks;
-/**
- * Represents a callback used to integrate reCAPTCHA.
- */
-var ReCaptchaCallback = /** @class */ (function (_super) {
-    __extends$9(ReCaptchaCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function ReCaptchaCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the reCAPTCHA site key.
-     */
-    ReCaptchaCallback.prototype.getSiteKey = function () {
-        return this.getOutputByName('recaptchaSiteKey', '');
-    };
-    /**
-     * Sets the reCAPTCHA result.
-     */
-    ReCaptchaCallback.prototype.setResult = function (result) {
-        this.setInputValue(result);
-    };
-    return ReCaptchaCallback;
-}(_1$8.default));
-recaptchaCallback.default = ReCaptchaCallback;
-
-var redirectCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * redirect-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$8 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(redirectCallback, "__esModule", { value: true });
-var _1$7 = callbacks;
-/**
- * Represents a callback used to collect an answer to a choice.
- */
-var RedirectCallback = /** @class */ (function (_super) {
-    __extends$8(RedirectCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function RedirectCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the redirect URL.
-     */
-    RedirectCallback.prototype.getRedirectUrl = function () {
-        return this.getOutputByName('redirectUrl', '');
-    };
-    return RedirectCallback;
-}(_1$7.default));
-redirectCallback.default = RedirectCallback;
-
-var selectIdpCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * select-idp-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$7 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(selectIdpCallback, "__esModule", { value: true });
-var _1$6 = callbacks;
-/**
- * Represents a callback used to collect an answer to a choice.
- */
-var SelectIdPCallback = /** @class */ (function (_super) {
-    __extends$7(SelectIdPCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function SelectIdPCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the available providers.
-     */
-    SelectIdPCallback.prototype.getProviders = function () {
-        return this.getOutputByName('providers', []);
-    };
-    /**
-     * Sets the provider by name.
-     */
-    SelectIdPCallback.prototype.setProvider = function (value) {
-        var item = this.getProviders().find(function (item) { return item.provider === value; });
-        if (!item) {
-            throw new Error("\"".concat(value, "\" is not a valid choice"));
-        }
-        this.setInputValue(item.provider);
-    };
-    return SelectIdPCallback;
-}(_1$6.default));
-selectIdpCallback.default = SelectIdPCallback;
-
-var suspendedTextOutputCallback = {};
-
-var textOutputCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * text-output-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$6 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(textOutputCallback, "__esModule", { value: true });
-var _1$5 = callbacks;
-/**
- * Represents a callback used to display a message.
- */
-var TextOutputCallback = /** @class */ (function (_super) {
-    __extends$6(TextOutputCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function TextOutputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the message content.
-     */
-    TextOutputCallback.prototype.getMessage = function () {
-        return this.getOutputByName('message', '');
-    };
-    /**
-     * Gets the message type.
-     */
-    TextOutputCallback.prototype.getMessageType = function () {
-        return this.getOutputByName('messageType', '');
-    };
-    return TextOutputCallback;
-}(_1$5.default));
-textOutputCallback.default = TextOutputCallback;
-
-/*
- * @forgerock/javascript-sdk
- *
- * suspended-text-output-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$5 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(suspendedTextOutputCallback, "__esModule", { value: true });
-var text_output_callback_1$1 = textOutputCallback;
-/**
- * Represents a callback used to display a message.
- */
-var SuspendedTextOutputCallback = /** @class */ (function (_super) {
-    __extends$5(SuspendedTextOutputCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function SuspendedTextOutputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    return SuspendedTextOutputCallback;
-}(text_output_callback_1$1.default));
-suspendedTextOutputCallback.default = SuspendedTextOutputCallback;
-
-var termsAndConditionsCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * terms-and-conditions-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$4 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(termsAndConditionsCallback, "__esModule", { value: true });
-var _1$4 = callbacks;
-/**
- * Represents a callback used to collect acceptance of terms and conditions.
- */
-var TermsAndConditionsCallback = /** @class */ (function (_super) {
-    __extends$4(TermsAndConditionsCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function TermsAndConditionsCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the terms and conditions content.
-     */
-    TermsAndConditionsCallback.prototype.getTerms = function () {
-        return this.getOutputByName('terms', '');
-    };
-    /**
-     * Gets the version of the terms and conditions.
-     */
-    TermsAndConditionsCallback.prototype.getVersion = function () {
-        return this.getOutputByName('version', '');
-    };
-    /**
-     * Gets the date of the terms and conditions.
-     */
-    TermsAndConditionsCallback.prototype.getCreateDate = function () {
-        var date = this.getOutputByName('createDate', '');
-        return new Date(date);
-    };
-    /**
-     * Sets the callback's acceptance.
-     */
-    TermsAndConditionsCallback.prototype.setAccepted = function (accepted) {
-        if (accepted === void 0) { accepted = true; }
-        this.setInputValue(accepted);
-    };
-    return TermsAndConditionsCallback;
-}(_1$4.default));
-termsAndConditionsCallback.default = TermsAndConditionsCallback;
-
-var textInputCallback = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * text-input-callback.ts
- *
- * Copyright (c) 2022 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$3 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(textInputCallback, "__esModule", { value: true });
-var _1$3 = callbacks;
-/**
- * Represents a callback used to retrieve input from the user.
- */
-var TextInputCallback = /** @class */ (function (_super) {
-    __extends$3(TextInputCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function TextInputCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback's prompt.
-     */
-    TextInputCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Sets the callback's input value.
-     */
-    TextInputCallback.prototype.setInput = function (input) {
-        this.setInputValue(input);
-    };
-    return TextInputCallback;
-}(_1$3.default));
-textInputCallback.default = TextInputCallback;
-
-var validatedCreatePasswordCallback$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * validated-create-password-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$2 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(validatedCreatePasswordCallback$1, "__esModule", { value: true });
-var _1$2 = callbacks;
-/**
- * Represents a callback used to collect a valid platform password.
- */
-var ValidatedCreatePasswordCallback = /** @class */ (function (_super) {
-    __extends$2(ValidatedCreatePasswordCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function ValidatedCreatePasswordCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback's failed policies.
-     */
-    ValidatedCreatePasswordCallback.prototype.getFailedPolicies = function () {
-        return this.getOutputByName('failedPolicies', []);
-    };
-    /**
-     * Gets the callback's applicable policies.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ValidatedCreatePasswordCallback.prototype.getPolicies = function () {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this.getOutputByName('policies', {});
-    };
-    /**
-     * Gets the callback's prompt.
-     */
-    ValidatedCreatePasswordCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Gets whether the password is required.
-     */
-    ValidatedCreatePasswordCallback.prototype.isRequired = function () {
-        return this.getOutputByName('required', false);
-    };
-    /**
-     * Sets the callback's password.
-     */
-    ValidatedCreatePasswordCallback.prototype.setPassword = function (password) {
-        this.setInputValue(password);
-    };
-    /**
-     * Set if validating value only.
-     */
-    ValidatedCreatePasswordCallback.prototype.setValidateOnly = function (value) {
-        this.setInputValue(value, /validateOnly/);
-    };
-    return ValidatedCreatePasswordCallback;
-}(_1$2.default));
-validatedCreatePasswordCallback$1.default = ValidatedCreatePasswordCallback;
-
-var validatedCreateUsernameCallback$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * validated-create-username-callback.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __extends$1 = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-Object.defineProperty(validatedCreateUsernameCallback$1, "__esModule", { value: true });
-var _1$1 = callbacks;
-/**
- * Represents a callback used to collect a valid platform username.
- */
-var ValidatedCreateUsernameCallback = /** @class */ (function (_super) {
-    __extends$1(ValidatedCreateUsernameCallback, _super);
-    /**
-     * @param payload The raw payload returned by OpenAM
-     */
-    function ValidatedCreateUsernameCallback(payload) {
-        var _this = _super.call(this, payload) || this;
-        _this.payload = payload;
-        return _this;
-    }
-    /**
-     * Gets the callback's prompt.
-     */
-    ValidatedCreateUsernameCallback.prototype.getPrompt = function () {
-        return this.getOutputByName('prompt', '');
-    };
-    /**
-     * Gets the callback's failed policies.
-     */
-    ValidatedCreateUsernameCallback.prototype.getFailedPolicies = function () {
-        return this.getOutputByName('failedPolicies', []);
-    };
-    /**
-     * Gets the callback's applicable policies.
-     */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ValidatedCreateUsernameCallback.prototype.getPolicies = function () {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        return this.getOutputByName('policies', {});
-    };
-    /**
-     * Gets whether the username is required.
-     */
-    ValidatedCreateUsernameCallback.prototype.isRequired = function () {
-        return this.getOutputByName('required', false);
-    };
-    /**
-     * Sets the callback's username.
-     */
-    ValidatedCreateUsernameCallback.prototype.setName = function (name) {
-        this.setInputValue(name);
-    };
-    /**
-     * Set if validating value only.
-     */
-    ValidatedCreateUsernameCallback.prototype.setValidateOnly = function (value) {
-        this.setInputValue(value, /validateOnly/);
-    };
-    return ValidatedCreateUsernameCallback;
-}(_1$1.default));
-validatedCreateUsernameCallback$1.default = ValidatedCreateUsernameCallback;
-
-/*
- * @forgerock/javascript-sdk
- *
- * factory.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(factory, "__esModule", { value: true });
-var _1 = callbacks;
-var enums_1$4 = enums$3;
-var attribute_input_callback_1 = attributeInputCallback;
-var choice_callback_1 = choiceCallback;
-var confirmation_callback_1 = confirmationCallback;
-var device_profile_callback_1 = deviceProfileCallback;
-var hidden_value_callback_1 = hiddenValueCallback;
-var kba_create_callback_1 = kbaCreateCallback;
-var metadata_callback_1 = metadataCallback;
-var name_callback_1 = nameCallback$1;
-var password_callback_1 = passwordCallback$1;
-var polling_wait_callback_1 = pollingWaitCallback;
-var recaptcha_callback_1 = recaptchaCallback;
-var redirect_callback_1 = redirectCallback;
-var select_idp_callback_1 = selectIdpCallback;
-var suspended_text_output_callback_1 = suspendedTextOutputCallback;
-var terms_and_conditions_callback_1 = termsAndConditionsCallback;
-var text_input_callback_1 = textInputCallback;
-var text_output_callback_1 = textOutputCallback;
-var validated_create_password_callback_1 = validatedCreatePasswordCallback$1;
-var validated_create_username_callback_1 = validatedCreateUsernameCallback$1;
-/**
- * @hidden
- */
-function createCallback(callback) {
-    switch (callback.type) {
-        case enums_1$4.CallbackType.BooleanAttributeInputCallback:
-            return new attribute_input_callback_1.default(callback);
-        case enums_1$4.CallbackType.ChoiceCallback:
-            return new choice_callback_1.default(callback);
-        case enums_1$4.CallbackType.ConfirmationCallback:
-            return new confirmation_callback_1.default(callback);
-        case enums_1$4.CallbackType.DeviceProfileCallback:
-            return new device_profile_callback_1.default(callback);
-        case enums_1$4.CallbackType.HiddenValueCallback:
-            return new hidden_value_callback_1.default(callback);
-        case enums_1$4.CallbackType.KbaCreateCallback:
-            return new kba_create_callback_1.default(callback);
-        case enums_1$4.CallbackType.MetadataCallback:
-            return new metadata_callback_1.default(callback);
-        case enums_1$4.CallbackType.NameCallback:
-            return new name_callback_1.default(callback);
-        case enums_1$4.CallbackType.NumberAttributeInputCallback:
-            return new attribute_input_callback_1.default(callback);
-        case enums_1$4.CallbackType.PasswordCallback:
-            return new password_callback_1.default(callback);
-        case enums_1$4.CallbackType.PollingWaitCallback:
-            return new polling_wait_callback_1.default(callback);
-        case enums_1$4.CallbackType.ReCaptchaCallback:
-            return new recaptcha_callback_1.default(callback);
-        case enums_1$4.CallbackType.RedirectCallback:
-            return new redirect_callback_1.default(callback);
-        case enums_1$4.CallbackType.SelectIdPCallback:
-            return new select_idp_callback_1.default(callback);
-        case enums_1$4.CallbackType.StringAttributeInputCallback:
-            return new attribute_input_callback_1.default(callback);
-        case enums_1$4.CallbackType.SuspendedTextOutputCallback:
-            return new suspended_text_output_callback_1.default(callback);
-        case enums_1$4.CallbackType.TermsAndConditionsCallback:
-            return new terms_and_conditions_callback_1.default(callback);
-        case enums_1$4.CallbackType.TextInputCallback:
-            return new text_input_callback_1.default(callback);
-        case enums_1$4.CallbackType.TextOutputCallback:
-            return new text_output_callback_1.default(callback);
-        case enums_1$4.CallbackType.ValidatedCreatePasswordCallback:
-            return new validated_create_password_callback_1.default(callback);
-        case enums_1$4.CallbackType.ValidatedCreateUsernameCallback:
-            return new validated_create_username_callback_1.default(callback);
-        default:
-            return new _1.default(callback);
-    }
-}
-factory.default = createCallback;
-
-/*
- * @forgerock/javascript-sdk
- *
- * fr-step.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(frStep, "__esModule", { value: true });
-var factory_1 = factory;
-var enums_1$3 = enums$1;
-/**
- * Represents a single step of an authentication tree.
- */
-var FRStep = /** @class */ (function () {
-    /**
-     * @param payload The raw payload returned by OpenAM
-     * @param callbackFactory A function that returns am implementation of FRCallback
-     */
-    function FRStep(payload, callbackFactory) {
-        this.payload = payload;
-        /**
-         * The type of step.
-         */
-        this.type = enums_1$3.StepType.Step;
-        /**
-         * The callbacks contained in this step.
-         */
-        this.callbacks = [];
-        if (payload.callbacks) {
-            this.callbacks = this.convertCallbacks(payload.callbacks, callbackFactory);
-        }
-    }
-    /**
-     * Gets the first callback of the specified type in this step.
-     *
-     * @param type The type of callback to find.
-     */
-    FRStep.prototype.getCallbackOfType = function (type) {
-        var callbacks = this.getCallbacksOfType(type);
-        if (callbacks.length !== 1) {
-            throw new Error("Expected 1 callback of type \"".concat(type, "\", but found ").concat(callbacks.length));
-        }
-        return callbacks[0];
-    };
-    /**
-     * Gets all callbacks of the specified type in this step.
-     *
-     * @param type The type of callback to find.
-     */
-    FRStep.prototype.getCallbacksOfType = function (type) {
-        return this.callbacks.filter(function (x) { return x.getType() === type; });
-    };
-    /**
-     * Sets the value of the first callback of the specified type in this step.
-     *
-     * @param type The type of callback to find.
-     * @param value The value to set for the callback.
-     */
-    FRStep.prototype.setCallbackValue = function (type, value) {
-        var callbacks = this.getCallbacksOfType(type);
-        if (callbacks.length !== 1) {
-            throw new Error("Expected 1 callback of type \"".concat(type, "\", but found ").concat(callbacks.length));
-        }
-        callbacks[0].setInputValue(value);
-    };
-    /**
-     * Gets the step's description.
-     */
-    FRStep.prototype.getDescription = function () {
-        return this.payload.description;
-    };
-    /**
-     * Gets the step's header.
-     */
-    FRStep.prototype.getHeader = function () {
-        return this.payload.header;
-    };
-    /**
-     * Gets the step's stage.
-     */
-    FRStep.prototype.getStage = function () {
-        return this.payload.stage;
-    };
-    FRStep.prototype.convertCallbacks = function (callbacks, callbackFactory) {
-        var converted = callbacks.map(function (x) {
-            // This gives preference to the provided factory and falls back to our default implementation
-            return (callbackFactory || factory_1.default)(x) || (0, factory_1.default)(x);
-        });
-        return converted;
-    };
-    return FRStep;
-}());
-frStep.default = FRStep;
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __assign$1 = (commonjsGlobal && commonjsGlobal.__assign) || function () {
-    __assign$1 = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign$1.apply(this, arguments);
-};
-var __awaiter$8 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$8 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(frAuth, "__esModule", { value: true });
-var index_1$1 = auth;
-var enums_1$2 = enums$3;
-var fr_login_failure_1 = frLoginFailure;
-var fr_login_success_1 = frLoginSuccess;
-var fr_step_1$1 = frStep;
-/**
- * Provides access to the OpenAM authentication tree API.
- */
-var FRAuth = /** @class */ (function () {
-    function FRAuth() {
-    }
-    /**
-     * Requests the next step in the authentication tree.
-     *
-     * Call `FRAuth.next()` recursively.  At each step, check for session token or error, otherwise
-     * populate the step's callbacks and call `next()` again.
-     *
-     * Example:
-     *
-     * ```js
-     * async function nextStep(previousStep) {
-     *   const thisStep = await FRAuth.next(previousStep);
-     *
-     *   switch (thisStep.type) {
-     *     case StepType.LoginSuccess:
-     *       const token = thisStep.getSessionToken();
-     *       break;
-     *     case StepType.LoginFailure:
-     *       const detail = thisStep.getDetail();
-     *       break;
-     *     case StepType.Step:
-     *       // Populate `thisStep` callbacks here, and then continue
-     *       thisStep.setInputValue('foo');
-     *       nextStep(thisStep);
-     *       break;
-     *   }
-     * }
-     * ```
-     *
-     * @param previousStep The previous step with its callback values populated
-     * @param options Configuration overrides
-     * @return The next step in the authentication tree
-     */
-    FRAuth.next = function (previousStep, options) {
-        return __awaiter$8(this, void 0, void 0, function () {
-            var nextPayload, callbackFactory;
-            return __generator$8(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, index_1$1.default.next(previousStep ? previousStep.payload : undefined, options)];
-                    case 1:
-                        nextPayload = _a.sent();
-                        if (nextPayload.authId) {
-                            callbackFactory = options ? options.callbackFactory : undefined;
-                            return [2 /*return*/, new fr_step_1$1.default(nextPayload, callbackFactory)];
-                        }
-                        if (!nextPayload.authId && nextPayload.ok) {
-                            // If there's no authId, and the response is OK, tree is complete
-                            return [2 /*return*/, new fr_login_success_1.default(nextPayload)];
-                        }
-                        // If there's no authId, and the response is not OK, tree has failure
-                        return [2 /*return*/, new fr_login_failure_1.default(nextPayload)];
-                }
-            });
-        });
-    };
-    /**
-     * Redirects to the URL identified in the RedirectCallback and saves the full
-     * step information to localStorage for retrieval when user returns from login.
-     *
-     * Example:
-     * ```js
-     * forgerock.FRAuth.redirect(step);
-     * ```
-     */
-    FRAuth.redirect = function (step) {
-        var cb = step.getCallbackOfType(enums_1$2.CallbackType.RedirectCallback);
-        var redirectUrl = cb.getRedirectUrl();
-        window.localStorage.setItem(this.previousStepKey, JSON.stringify(step));
-        window.location.assign(redirectUrl);
-    };
-    /**
-     * Resumes a tree after returning from an external client or provider.
-     * Requires the full URL of the current window. It will parse URL for
-     * key-value pairs as well as, if required, retrieves previous step.
-     *
-     * Example;
-     * ```js
-     * forgerock.FRAuth.resume(window.location.href)
-     * ```
-     */
-    FRAuth.resume = function (url, options) {
-        var _a, _b, _c;
-        return __awaiter$8(this, void 0, void 0, function () {
-            function requiresPreviousStep() {
-                return (code && state) || form_post_entry || responsekey;
-            }
-            var parsedUrl, code, error, errorCode, errorMessage, form_post_entry, nonce, RelayState, responsekey, scope, state, suspendedId, authIndexValue, previousStep, redirectStepString, nextOptions;
-            return __generator$8(this, function (_d) {
-                switch (_d.label) {
-                    case 0:
-                        parsedUrl = new URL(url);
-                        code = parsedUrl.searchParams.get('code');
-                        error = parsedUrl.searchParams.get('error');
-                        errorCode = parsedUrl.searchParams.get('errorCode');
-                        errorMessage = parsedUrl.searchParams.get('errorMessage');
-                        form_post_entry = parsedUrl.searchParams.get('form_post_entry');
-                        nonce = parsedUrl.searchParams.get('nonce');
-                        RelayState = parsedUrl.searchParams.get('RelayState');
-                        responsekey = parsedUrl.searchParams.get('responsekey');
-                        scope = parsedUrl.searchParams.get('scope');
-                        state = parsedUrl.searchParams.get('state');
-                        suspendedId = parsedUrl.searchParams.get('suspendedId');
-                        authIndexValue = (_a = parsedUrl.searchParams.get('authIndexValue')) !== null && _a !== void 0 ? _a : undefined;
-                        /**
-                         * If we are returning back from a provider, the previous redirect step data is required.
-                         * Retrieve the previous step from localStorage, and then delete it to remove stale data.
-                         * If suspendedId is present, no previous step data is needed, so skip below conditional.
-                         */
-                        if (requiresPreviousStep()) {
-                            redirectStepString = window.localStorage.getItem(this.previousStepKey);
-                            if (!redirectStepString) {
-                                throw new Error('Error: could not retrieve original redirect information.');
-                            }
-                            try {
-                                previousStep = JSON.parse(redirectStepString);
-                            }
-                            catch (err) {
-                                throw new Error('Error: could not parse redirect params or step information');
-                            }
-                            window.localStorage.removeItem(this.previousStepKey);
-                        }
-                        nextOptions = __assign$1(__assign$1(__assign$1({}, options), { query: __assign$1(__assign$1(__assign$1(__assign$1(__assign$1(__assign$1(__assign$1(__assign$1(__assign$1(__assign$1(__assign$1(__assign$1({}, (code && { code: code })), (error && { error: error })), (errorCode && { errorCode: errorCode })), (errorMessage && { errorMessage: errorMessage })), (form_post_entry && { form_post_entry: form_post_entry })), (nonce && { nonce: nonce })), (RelayState && { RelayState: RelayState })), (responsekey && { responsekey: responsekey })), (scope && { scope: scope })), (state && { state: state })), (suspendedId && { suspendedId: suspendedId })), (options && options.query)) }), (((_b = options === null || options === void 0 ? void 0 : options.tree) !== null && _b !== void 0 ? _b : authIndexValue) && { tree: (_c = options === null || options === void 0 ? void 0 : options.tree) !== null && _c !== void 0 ? _c : authIndexValue }));
-                        return [4 /*yield*/, this.next(previousStep, nextOptions)];
-                    case 1: return [2 /*return*/, _d.sent()];
-                }
-            });
-        });
-    };
-    /**
-     * Requests the first step in the authentication tree.
-     * This is essentially an alias to calling FRAuth.next without a previous step.
-     *
-     * @param options Configuration overrides
-     * @return The next step in the authentication tree
-     */
-    FRAuth.start = function (options) {
-        return __awaiter$8(this, void 0, void 0, function () {
-            return __generator$8(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, FRAuth.next(undefined, options)];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    FRAuth.previousStepKey = 'FRAuth_PreviousStep';
-    return FRAuth;
-}());
-frAuth.default = FRAuth;
-
-var tokenManager = {};
-
-var oauth2Client = {};
-
-var tokenStorage = {};
-
-var indexedDb = {};
-
-var constants = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * constants.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(constants, "__esModule", { value: true });
-constants.TOKEN_KEY = constants.DB_NAME = void 0;
-/**
- * @module
- * @ignore
- * These are private constants for TokenStorage
- */
-var DB_NAME = 'forgerock-sdk';
-constants.DB_NAME = DB_NAME;
-/** @hidden */
-var TOKEN_KEY = 'tokens';
-constants.TOKEN_KEY = TOKEN_KEY;
-
-/*
- * @forgerock/javascript-sdk
- *
- * indexed-db.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$7 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$7 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(indexedDb, "__esModule", { value: true });
-var constants_1$2 = constants;
-/**
- * Provides wrapper for tokens with IndexedDB.
- */
-var IndexedDBWrapper = /** @class */ (function () {
-    function IndexedDBWrapper() {
-    }
-    /**
-     * Retrieve tokens.
-     */
-    IndexedDBWrapper.get = function (clientId) {
-        return __awaiter$7(this, void 0, void 0, function () {
-            return __generator$7(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var onError = function () { return reject(); };
-                        var openReq = window.indexedDB.open(constants_1$2.DB_NAME);
-                        openReq.onsuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                openReq.result.close();
-                                return reject('Client ID not found');
-                            }
-                            var getReq = openReq.result
-                                .transaction(clientId, 'readonly')
-                                .objectStore(clientId)
-                                .get(constants_1$2.TOKEN_KEY);
-                            getReq.onsuccess = function (event) {
-                                if (!event || !event.target) {
-                                    throw new Error('Missing storage event target');
-                                }
-                                openReq.result.close();
-                                resolve(event.target.result);
-                            };
-                            getReq.onerror = onError;
-                        };
-                        openReq.onupgradeneeded = function () {
-                            openReq.result.close();
-                            reject('IndexedDB upgrade needed');
-                        };
-                        openReq.onerror = onError;
-                    })];
-            });
-        });
-    };
-    /**
-     * Saves tokens.
-     */
-    IndexedDBWrapper.set = function (clientId, tokens) {
-        return __awaiter$7(this, void 0, void 0, function () {
-            return __generator$7(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var openReq = window.indexedDB.open(constants_1$2.DB_NAME);
-                        var onSetSuccess = function () {
-                            openReq.result.close();
-                            resolve();
-                        };
-                        var onError = function () { return reject(); };
-                        var onUpgradeNeeded = function () {
-                            openReq.result.createObjectStore(clientId);
-                        };
-                        var onOpenSuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                var version = openReq.result.version + 1;
-                                openReq.result.close();
-                                openReq = window.indexedDB.open(constants_1$2.DB_NAME, version);
-                                openReq.onupgradeneeded = onUpgradeNeeded;
-                                openReq.onsuccess = onOpenSuccess;
-                                openReq.onerror = onError;
-                                return;
-                            }
-                            var txnReq = openReq.result.transaction(clientId, 'readwrite');
-                            txnReq.onerror = onError;
-                            var objectStore = txnReq.objectStore(clientId);
-                            var putReq = objectStore.put(tokens, constants_1$2.TOKEN_KEY);
-                            putReq.onsuccess = onSetSuccess;
-                            putReq.onerror = onError;
-                        };
-                        openReq.onupgradeneeded = onUpgradeNeeded;
-                        openReq.onsuccess = onOpenSuccess;
-                        openReq.onerror = onError;
-                    })];
-            });
-        });
-    };
-    /**
-     * Removes stored tokens.
-     */
-    IndexedDBWrapper.remove = function (clientId) {
-        return __awaiter$7(this, void 0, void 0, function () {
-            return __generator$7(this, function (_a) {
-                return [2 /*return*/, new Promise(function (resolve, reject) {
-                        var onError = function () { return reject(); };
-                        var openReq = window.indexedDB.open(constants_1$2.DB_NAME);
-                        openReq.onsuccess = function () {
-                            if (!openReq.result.objectStoreNames.contains(clientId)) {
-                                return resolve();
-                            }
-                            var removeReq = openReq.result
-                                .transaction(clientId, 'readwrite')
-                                .objectStore(clientId)
-                                .delete(constants_1$2.TOKEN_KEY);
-                            removeReq.onsuccess = function () {
-                                resolve();
-                            };
-                            removeReq.onerror = onError;
-                        };
-                        openReq.onerror = onError;
-                    })];
-            });
-        });
-    };
-    return IndexedDBWrapper;
-}());
-indexedDb.default = IndexedDBWrapper;
-
-var localStorage$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * local-storage.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$6 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$6 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(localStorage$1, "__esModule", { value: true });
-var constants_1$1 = constants;
-/**
- * Provides wrapper for tokens with localStorage.
- */
-var LocalStorageWrapper = /** @class */ (function () {
-    function LocalStorageWrapper() {
-    }
-    /**
-     * Retrieve tokens.
-     */
-    LocalStorageWrapper.get = function (clientId) {
-        return __awaiter$6(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$6(this, function (_a) {
-                tokenString = localStorage.getItem("".concat(constants_1$1.DB_NAME, "-").concat(clientId));
-                try {
-                    return [2 /*return*/, Promise.resolve(JSON.parse(tokenString || ''))];
-                }
-                catch (err) {
-                    console.warn('Could not parse token from localStorage. This could be due to accessing a removed token');
-                    // Original behavior had an untyped return of undefined for no token
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    return [2 /*return*/, undefined];
-                }
-                return [2 /*return*/];
-            });
-        });
-    };
-    /**
-     * Saves tokens.
-     */
-    LocalStorageWrapper.set = function (clientId, tokens) {
-        return __awaiter$6(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$6(this, function (_a) {
-                tokenString = JSON.stringify(tokens);
-                localStorage.setItem("".concat(constants_1$1.DB_NAME, "-").concat(clientId), tokenString);
-                return [2 /*return*/];
-            });
-        });
-    };
-    /**
-     * Removes stored tokens.
-     */
-    LocalStorageWrapper.remove = function (clientId) {
-        return __awaiter$6(this, void 0, void 0, function () {
-            return __generator$6(this, function (_a) {
-                localStorage.removeItem("".concat(constants_1$1.DB_NAME, "-").concat(clientId));
-                return [2 /*return*/];
-            });
-        });
-    };
-    return LocalStorageWrapper;
-}());
-localStorage$1.default = LocalStorageWrapper;
-
-var sessionStorage$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * session-storage.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$5 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$5 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(sessionStorage$1, "__esModule", { value: true });
-var constants_1 = constants;
-/**
- * Provides wrapper for tokens with sessionStorage.
- */
-var SessionStorageWrapper = /** @class */ (function () {
-    function SessionStorageWrapper() {
-    }
-    /**
-     * Retrieve tokens.
-     */
-    SessionStorageWrapper.get = function (clientId) {
-        return __awaiter$5(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$5(this, function (_a) {
-                tokenString = sessionStorage.getItem("".concat(constants_1.DB_NAME, "-").concat(clientId));
-                try {
-                    return [2 /*return*/, Promise.resolve(JSON.parse(tokenString || ''))];
-                }
-                catch (err) {
-                    console.warn('Could not parse token from sessionStorage. This could be due to accessing a removed token');
-                    // Original behavior had an untyped return of undefined for no token
-                    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                    // @ts-ignore
-                    return [2 /*return*/, undefined];
-                }
-                return [2 /*return*/];
-            });
-        });
-    };
-    /**
-     * Saves tokens.
-     */
-    SessionStorageWrapper.set = function (clientId, tokens) {
-        return __awaiter$5(this, void 0, void 0, function () {
-            var tokenString;
-            return __generator$5(this, function (_a) {
-                tokenString = JSON.stringify(tokens);
-                sessionStorage.setItem("".concat(constants_1.DB_NAME, "-").concat(clientId), tokenString);
-                return [2 /*return*/];
-            });
-        });
-    };
-    /**
-     * Removes stored tokens.
-     */
-    SessionStorageWrapper.remove = function (clientId) {
-        return __awaiter$5(this, void 0, void 0, function () {
-            return __generator$5(this, function (_a) {
-                sessionStorage.removeItem("".concat(constants_1.DB_NAME, "-").concat(clientId));
-                return [2 /*return*/];
-            });
-        });
-    };
-    return SessionStorageWrapper;
-}());
-sessionStorage$1.default = SessionStorageWrapper;
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020-2021 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$4 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$4 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(tokenStorage, "__esModule", { value: true });
-var index_1 = config;
-var indexed_db_1 = indexedDb;
-var local_storage_1 = localStorage$1;
-var session_storage_1 = sessionStorage$1;
-/**
- * Provides access to the token storage API.
- * The type of storage (localStorage, sessionStorage, etc) can be configured
- * through `tokenStore` object on the SDK configuration.
- */
-var TokenStorage = /** @class */ (function () {
-    function TokenStorage() {
-    }
-    /**
-     * Gets stored tokens.
-     */
-    TokenStorage.get = function () {
-        return __awaiter$4(this, void 0, void 0, function () {
-            var _a, clientId, tokenStore;
-            return __generator$4(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-                        if (!(tokenStore === 'sessionStorage')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, session_storage_1.default.get(clientId)];
-                    case 1: return [2 /*return*/, _b.sent()];
-                    case 2:
-                        if (!(tokenStore === 'localStorage')) return [3 /*break*/, 4];
-                        return [4 /*yield*/, local_storage_1.default.get(clientId)];
-                    case 3: return [2 /*return*/, _b.sent()];
-                    case 4:
-                        if (!(tokenStore === 'indexedDB')) return [3 /*break*/, 6];
-                        return [4 /*yield*/, indexed_db_1.default.get(clientId)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6:
-                        if (!(tokenStore && tokenStore.get)) return [3 /*break*/, 8];
-                        return [4 /*yield*/, tokenStore.get(clientId)];
-                    case 7: 
-                    // User supplied token store
-                    return [2 /*return*/, _b.sent()];
-                    case 8: return [4 /*yield*/, local_storage_1.default.get(clientId)];
-                    case 9: 
-                    // if tokenStore is undefined, default to localStorage
-                    return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
-    /**
-     * Saves tokens.
-     */
-    TokenStorage.set = function (tokens) {
-        return __awaiter$4(this, void 0, void 0, function () {
-            var _a, clientId, tokenStore;
-            return __generator$4(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-                        if (!(tokenStore === 'sessionStorage')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, session_storage_1.default.set(clientId, tokens)];
-                    case 1: return [2 /*return*/, _b.sent()];
-                    case 2:
-                        if (!(tokenStore === 'localStorage')) return [3 /*break*/, 4];
-                        return [4 /*yield*/, local_storage_1.default.set(clientId, tokens)];
-                    case 3: return [2 /*return*/, _b.sent()];
-                    case 4:
-                        if (!(tokenStore === 'indexedDB')) return [3 /*break*/, 6];
-                        return [4 /*yield*/, indexed_db_1.default.set(clientId, tokens)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6:
-                        if (!(tokenStore && tokenStore.set)) return [3 /*break*/, 8];
-                        return [4 /*yield*/, tokenStore.set(clientId, tokens)];
-                    case 7: 
-                    // User supplied token store
-                    return [2 /*return*/, _b.sent()];
-                    case 8: return [4 /*yield*/, local_storage_1.default.set(clientId, tokens)];
-                    case 9: 
-                    // if tokenStore is undefined, default to localStorage
-                    return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
-    /**
-     * Removes stored tokens.
-     */
-    TokenStorage.remove = function () {
-        return __awaiter$4(this, void 0, void 0, function () {
-            var _a, clientId, tokenStore;
-            return __generator$4(this, function (_b) {
-                switch (_b.label) {
-                    case 0:
-                        _a = this.getClientConfig(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-                        if (!(tokenStore === 'sessionStorage')) return [3 /*break*/, 2];
-                        return [4 /*yield*/, session_storage_1.default.remove(clientId)];
-                    case 1: return [2 /*return*/, _b.sent()];
-                    case 2:
-                        if (!(tokenStore === 'localStorage')) return [3 /*break*/, 4];
-                        return [4 /*yield*/, local_storage_1.default.remove(clientId)];
-                    case 3: return [2 /*return*/, _b.sent()];
-                    case 4:
-                        if (!(tokenStore === 'indexedDB')) return [3 /*break*/, 6];
-                        return [4 /*yield*/, indexed_db_1.default.remove(clientId)];
-                    case 5: return [2 /*return*/, _b.sent()];
-                    case 6:
-                        if (!(tokenStore && tokenStore.remove)) return [3 /*break*/, 8];
-                        return [4 /*yield*/, tokenStore.remove(clientId)];
-                    case 7: 
-                    // User supplied token store
-                    return [2 /*return*/, _b.sent()];
-                    case 8: return [4 /*yield*/, local_storage_1.default.remove(clientId)];
-                    case 9: 
-                    // if tokenStore is undefined, default to localStorage
-                    return [2 /*return*/, _b.sent()];
-                }
-            });
-        });
-    };
-    TokenStorage.getClientConfig = function () {
-        var _a = index_1.default.get(), clientId = _a.clientId, tokenStore = _a.tokenStore;
-        if (!clientId) {
-            throw new Error('clientId is required to manage token storage');
-        }
-        return { clientId: clientId, tokenStore: tokenStore };
-    };
-    return TokenStorage;
-}());
-tokenStorage.default = TokenStorage;
-
-var http = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * http.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(http, "__esModule", { value: true });
-http.isOkOr4xx = void 0;
-/**
- * @module
- * @ignore
- * These are private utility functions
- */
-function isOkOr4xx(response) {
-    return response.ok || Math.floor(response.status / 100) === 4;
-}
-http.isOkOr4xx = isOkOr4xx;
-
-var pkce = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * pkce.ts
- *
- * Copyright (c) 2020-2021 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$3 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$3 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(pkce, "__esModule", { value: true });
-/**
- * Helper class for generating verifier, challenge and state strings used for
- * Proof Key for Code Exchange (PKCE).
- */
-var PKCE = /** @class */ (function () {
-    function PKCE() {
-    }
-    /**
-     * Creates a random state.
-     */
-    PKCE.createState = function () {
-        return this.createRandomString(16);
-    };
-    /**
-     * Creates a random verifier.
-     */
-    PKCE.createVerifier = function () {
-        return this.createRandomString(32);
-    };
-    /**
-     * Creates a SHA-256 hash of the verifier.
-     *
-     * @param verifier The verifier to hash
-     */
-    PKCE.createChallenge = function (verifier) {
-        return __awaiter$3(this, void 0, void 0, function () {
-            var sha256, challenge;
-            return __generator$3(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.sha256(verifier)];
-                    case 1:
-                        sha256 = _a.sent();
-                        challenge = this.base64UrlEncode(sha256);
-                        return [2 /*return*/, challenge];
-                }
-            });
-        });
-    };
-    /**
-     * Creates a base64 encoded, URL-friendly version of the specified array.
-     *
-     * @param array The array of numbers to encode
-     */
-    PKCE.base64UrlEncode = function (array) {
-        var numbers = Array.prototype.slice.call(array);
-        var ascii = window.btoa(String.fromCharCode.apply(null, numbers));
-        var urlEncoded = ascii.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-        return urlEncoded;
-    };
-    /**
-     * Creates a SHA-256 hash of the specified string.
-     *
-     * @param value The string to hash
-     */
-    PKCE.sha256 = function (value) {
-        return __awaiter$3(this, void 0, void 0, function () {
-            var uint8Array, hashBuffer, hashArray;
-            return __generator$3(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        uint8Array = new TextEncoder().encode(value);
-                        return [4 /*yield*/, window.crypto.subtle.digest('SHA-256', uint8Array)];
-                    case 1:
-                        hashBuffer = _a.sent();
-                        hashArray = new Uint8Array(hashBuffer);
-                        return [2 /*return*/, hashArray];
-                }
-            });
-        });
-    };
-    /**
-     * Creates a random string.
-     *
-     * @param size The number for entropy (default: 32)
-     */
-    PKCE.createRandomString = function (num) {
-        if (num === void 0) { num = 32; }
-        var random = new Uint8Array(num);
-        window.crypto.getRandomValues(random);
-        return btoa(random.join('')).replace(/[^a-zA-Z0-9]+/, '');
-    };
-    return PKCE;
-}());
-pkce.default = PKCE;
-
-var enums = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * enums.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(enums, "__esModule", { value: true });
-enums.ResponseType = void 0;
-/**
- * Specifies the type of OAuth flow to invoke.
- */
-var ResponseType;
-(function (ResponseType) {
-    ResponseType["Code"] = "code";
-    ResponseType["Token"] = "token";
-})(ResponseType || (ResponseType = {}));
-enums.ResponseType = ResponseType;
-
-(function (exports) {
-	/*
-	 * @forgerock/javascript-sdk
-	 *
-	 * index.ts
-	 *
-	 * Copyright (c) 2020-2021 ForgeRock. All rights reserved.
-	 * This software may be modified and distributed under the terms
-	 * of the MIT license. See the LICENSE file for details.
-	 */
-	var __assign = (commonjsGlobal && commonjsGlobal.__assign) || function () {
-	    __assign = Object.assign || function(t) {
-	        for (var s, i = 1, n = arguments.length; i < n; i++) {
-	            s = arguments[i];
-	            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-	                t[p] = s[p];
-	        }
-	        return t;
-	    };
-	    return __assign.apply(this, arguments);
-	};
-	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-	    return new (P || (P = Promise))(function (resolve, reject) {
-	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-	        step((generator = generator.apply(thisArg, _arguments || [])).next());
-	    });
-	};
-	var __generator = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-	    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-	    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-	    function verb(n) { return function (v) { return step([n, v]); }; }
-	    function step(op) {
-	        if (f) throw new TypeError("Generator is already executing.");
-	        while (_) try {
-	            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-	            if (y = 0, t) op = [op[0] & 2, t.value];
-	            switch (op[0]) {
-	                case 0: case 1: t = op; break;
-	                case 4: _.label++; return { value: op[1], done: false };
-	                case 5: _.label++; y = op[1]; op = [0]; continue;
-	                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-	                default:
-	                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-	                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-	                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-	                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-	                    if (t[2]) _.ops.pop();
-	                    _.trys.pop(); continue;
-	            }
-	            op = body.call(thisArg, _);
-	        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-	        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-	    }
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	exports.ResponseType = exports.allowedErrors = void 0;
-	var enums_1 = enums$4;
-	var index_1 = config;
-	var token_storage_1 = tokenStorage;
-	var http_1 = http;
-	var pkce_1 = pkce;
-	var timeout_1 = timeout;
-	var url_1 = url;
-	var enums_2 = enums;
-	Object.defineProperty(exports, "ResponseType", { enumerable: true, get: function () { return enums_2.ResponseType; } });
-	var middleware_1 = middleware;
-	var allowedErrors = {
-	    // AM error for consent requirement
-	    AuthenticationConsentRequired: 'Authentication or consent required',
-	    // Manual iframe error
-	    AuthorizationTimeout: 'Authorization timed out',
-	    // Chromium browser error
-	    FailedToFetch: 'Failed to fetch',
-	    // Mozilla browser error
-	    NetworkError: 'NetworkError when attempting to fetch resource.',
-	    // Webkit browser error
-	    CORSError: 'Cross-origin redirection',
-	};
-	exports.allowedErrors = allowedErrors;
-	/**
-	 * OAuth 2.0 client.
-	 */
-	var OAuth2Client = /** @class */ (function () {
-	    function OAuth2Client() {
-	    }
-	    OAuth2Client.createAuthorizeUrl = function (options) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var _a, clientId, middleware, redirectUri, scope, requestParams, challenge, runMiddleware, url;
-	            return __generator(this, function (_b) {
-	                switch (_b.label) {
-	                    case 0:
-	                        _a = index_1.default.get(options), clientId = _a.clientId, middleware = _a.middleware, redirectUri = _a.redirectUri, scope = _a.scope;
-	                        requestParams = __assign(__assign({}, options.query), { client_id: clientId, redirect_uri: redirectUri, response_type: options.responseType, scope: scope, state: options.state });
-	                        if (!options.verifier) return [3 /*break*/, 2];
-	                        return [4 /*yield*/, pkce_1.default.createChallenge(options.verifier)];
-	                    case 1:
-	                        challenge = _b.sent();
-	                        requestParams.code_challenge = challenge;
-	                        requestParams.code_challenge_method = 'S256';
-	                        _b.label = 2;
-	                    case 2:
-	                        runMiddleware = (0, middleware_1.default)({
-	                            url: new URL(this.getUrl('authorize', requestParams, options)),
-	                            init: {},
-	                        }, { type: enums_1.ActionTypes.Authorize });
-	                        url = runMiddleware(middleware).url;
-	                        return [2 /*return*/, url.toString()];
-	                }
-	            });
-	        });
-	    };
-	    /**
-	     * Calls the authorize URL with an iframe. If successful,
-	     * it returns the callback URL with authentication code,
-	     * optionally using PKCE.
-	     * Method renamed in v3.
-	     * Original Name: getAuthorizeUrl
-	     * New Name: getAuthCodeByIframe
-	     */
-	    OAuth2Client.getAuthCodeByIframe = function (options) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var url, serverConfig;
-	            var _this = this;
-	            return __generator(this, function (_a) {
-	                switch (_a.label) {
-	                    case 0: return [4 /*yield*/, this.createAuthorizeUrl(options)];
-	                    case 1:
-	                        url = _a.sent();
-	                        serverConfig = index_1.default.get(options).serverConfig;
-	                        return [2 /*return*/, new Promise(function (resolve, reject) {
-	                                var iframe = document.createElement('iframe');
-	                                // Define these here to avoid linter warnings
-	                                var noop = function () {
-	                                    return;
-	                                };
-	                                var onLoad = noop;
-	                                var cleanUp = noop;
-	                                var timeout = 0;
-	                                cleanUp = function () {
-	                                    window.clearTimeout(timeout);
-	                                    iframe.removeEventListener('load', onLoad);
-	                                    iframe.remove();
-	                                };
-	                                onLoad = function () {
-	                                    if (iframe.contentWindow) {
-	                                        var newHref = iframe.contentWindow.location.href;
-	                                        if (_this.containsAuthCode(newHref)) {
-	                                            cleanUp();
-	                                            resolve(newHref);
-	                                        }
-	                                        else if (_this.containsAuthError(newHref)) {
-	                                            cleanUp();
-	                                            resolve(newHref);
-	                                        }
-	                                    }
-	                                };
-	                                timeout = window.setTimeout(function () {
-	                                    cleanUp();
-	                                    reject(new Error(allowedErrors.AuthorizationTimeout));
-	                                }, serverConfig.timeout);
-	                                iframe.style.display = 'none';
-	                                iframe.addEventListener('load', onLoad);
-	                                document.body.appendChild(iframe);
-	                                iframe.src = url;
-	                            })];
-	                }
-	            });
-	        });
-	    };
-	    /**
-	     * Exchanges an authorization code for OAuth tokens.
-	     */
-	    OAuth2Client.getOAuth2Tokens = function (options) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var _a, clientId, redirectUri, requestParams, body, init, response, responseBody, message, responseObject, tokenExpiry;
-	            return __generator(this, function (_b) {
-	                switch (_b.label) {
-	                    case 0:
-	                        _a = index_1.default.get(options), clientId = _a.clientId, redirectUri = _a.redirectUri;
-	                        requestParams = {
-	                            client_id: clientId,
-	                            code: options.authorizationCode,
-	                            grant_type: 'authorization_code',
-	                            redirect_uri: redirectUri,
-	                        };
-	                        if (options.verifier) {
-	                            requestParams.code_verifier = options.verifier;
-	                        }
-	                        body = (0, url_1.stringify)(requestParams);
-	                        init = {
-	                            body: body,
-	                            headers: new Headers({
-	                                'Content-Length': body.length.toString(),
-	                                'Content-Type': 'application/x-www-form-urlencoded',
-	                            }),
-	                            method: 'POST',
-	                        };
-	                        return [4 /*yield*/, this.request('accessToken', undefined, false, init, options)];
-	                    case 1:
-	                        response = _b.sent();
-	                        return [4 /*yield*/, this.getBody(response)];
-	                    case 2:
-	                        responseBody = _b.sent();
-	                        if (response.status !== 200) {
-	                            message = typeof responseBody === 'string'
-	                                ? "Expected 200, received ".concat(response.status)
-	                                : this.parseError(responseBody);
-	                            throw new Error(message);
-	                        }
-	                        responseObject = responseBody;
-	                        if (!responseObject.access_token) {
-	                            throw new Error('Access token not found in response');
-	                        }
-	                        tokenExpiry = undefined;
-	                        if (responseObject.expires_in) {
-	                            tokenExpiry = Date.now() + responseObject.expires_in * 1000;
-	                        }
-	                        return [2 /*return*/, {
-	                                accessToken: responseObject.access_token,
-	                                idToken: responseObject.id_token,
-	                                refreshToken: responseObject.refresh_token,
-	                                tokenExpiry: tokenExpiry,
-	                            }];
-	                }
-	            });
-	        });
-	    };
-	    /**
-	     * Gets OIDC user information.
-	     */
-	    OAuth2Client.getUserInfo = function (options) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var response, json;
-	            return __generator(this, function (_a) {
-	                switch (_a.label) {
-	                    case 0: return [4 /*yield*/, this.request('userInfo', undefined, true, undefined, options)];
-	                    case 1:
-	                        response = _a.sent();
-	                        if (response.status !== 200) {
-	                            throw new Error("Failed to get user info; received ".concat(response.status));
-	                        }
-	                        return [4 /*yield*/, response.json()];
-	                    case 2:
-	                        json = _a.sent();
-	                        return [2 /*return*/, json];
-	                }
-	            });
-	        });
-	    };
-	    /**
-	     * Invokes the OIDC end session endpoint.
-	     */
-	    OAuth2Client.endSession = function (options) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var idToken, query, response;
-	            return __generator(this, function (_a) {
-	                switch (_a.label) {
-	                    case 0: return [4 /*yield*/, token_storage_1.default.get()];
-	                    case 1:
-	                        idToken = (_a.sent()).idToken;
-	                        query = {};
-	                        if (idToken) {
-	                            query.id_token_hint = idToken;
-	                        }
-	                        return [4 /*yield*/, this.request('endSession', query, true, undefined, options)];
-	                    case 2:
-	                        response = _a.sent();
-	                        if (!(0, http_1.isOkOr4xx)(response)) {
-	                            throw new Error("Failed to end session; received ".concat(response.status));
-	                        }
-	                        return [2 /*return*/, response];
-	                }
-	            });
-	        });
-	    };
-	    /**
-	     * Immediately revokes the stored access token.
-	     */
-	    OAuth2Client.revokeToken = function (options) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var clientId, accessToken, init, response;
-	            return __generator(this, function (_a) {
-	                switch (_a.label) {
-	                    case 0:
-	                        clientId = index_1.default.get(options).clientId;
-	                        return [4 /*yield*/, token_storage_1.default.get()];
-	                    case 1:
-	                        accessToken = (_a.sent()).accessToken;
-	                        init = {
-	                            body: (0, url_1.stringify)({ client_id: clientId, token: accessToken }),
-	                            credentials: 'include',
-	                            headers: new Headers({ 'Content-Type': 'application/x-www-form-urlencoded' }),
-	                            method: 'POST',
-	                        };
-	                        return [4 /*yield*/, this.request('revoke', undefined, false, init, options)];
-	                    case 2:
-	                        response = _a.sent();
-	                        if (!(0, http_1.isOkOr4xx)(response)) {
-	                            throw new Error("Failed to revoke token; received ".concat(response.status));
-	                        }
-	                        return [2 /*return*/, response];
-	                }
-	            });
-	        });
-	    };
-	    OAuth2Client.request = function (endpoint, query, includeToken, init, options) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var _a, middleware, serverConfig, url, getActionType, accessToken, runMiddleware, req;
-	            return __generator(this, function (_b) {
-	                switch (_b.label) {
-	                    case 0:
-	                        _a = index_1.default.get(options), middleware = _a.middleware, serverConfig = _a.serverConfig;
-	                        url = this.getUrl(endpoint, query, options);
-	                        getActionType = function (endpoint) {
-	                            switch (endpoint) {
-	                                case 'accessToken':
-	                                    return enums_1.ActionTypes.ExchangeToken;
-	                                case 'endSession':
-	                                    return enums_1.ActionTypes.EndSession;
-	                                case 'revoke':
-	                                    return enums_1.ActionTypes.RevokeToken;
-	                                default:
-	                                    return enums_1.ActionTypes.UserInfo;
-	                            }
-	                        };
-	                        init = init || {};
-	                        if (!includeToken) return [3 /*break*/, 2];
-	                        return [4 /*yield*/, token_storage_1.default.get()];
-	                    case 1:
-	                        accessToken = (_b.sent()).accessToken;
-	                        init.credentials = 'include';
-	                        init.headers = (init.headers || new Headers());
-	                        init.headers.set('Authorization', "Bearer ".concat(accessToken));
-	                        _b.label = 2;
-	                    case 2:
-	                        runMiddleware = (0, middleware_1.default)({ url: new URL(url), init: init }, { type: getActionType(endpoint) });
-	                        req = runMiddleware(middleware);
-	                        return [4 /*yield*/, (0, timeout_1.withTimeout)(fetch(req.url.toString(), req.init), serverConfig.timeout)];
-	                    case 3: return [2 /*return*/, _b.sent()];
-	                }
-	            });
-	        });
-	    };
-	    OAuth2Client.containsAuthCode = function (url) {
-	        return !!url && /code=([^&]+)/.test(url);
-	    };
-	    OAuth2Client.containsAuthError = function (url) {
-	        return !!url && /error=([^&]+)/.test(url);
-	    };
-	    OAuth2Client.getBody = function (response) {
-	        return __awaiter(this, void 0, void 0, function () {
-	            var contentType;
-	            return __generator(this, function (_a) {
-	                switch (_a.label) {
-	                    case 0:
-	                        contentType = response.headers.get('Content-Type');
-	                        if (!(contentType && contentType.indexOf('application/json') > -1)) return [3 /*break*/, 2];
-	                        return [4 /*yield*/, response.json()];
-	                    case 1: return [2 /*return*/, _a.sent()];
-	                    case 2: return [4 /*yield*/, response.text()];
-	                    case 3: return [2 /*return*/, _a.sent()];
-	                }
-	            });
-	        });
-	    };
-	    OAuth2Client.parseError = function (json) {
-	        if (json) {
-	            if (json.error && json.error_description) {
-	                return "".concat(json.error, ": ").concat(json.error_description);
-	            }
-	            if (json.code && json.message) {
-	                return "".concat(json.code, ": ").concat(json.message);
-	            }
-	        }
-	        return undefined;
-	    };
-	    OAuth2Client.getUrl = function (endpoint, query, options) {
-	        var _a = index_1.default.get(options), realmPath = _a.realmPath, serverConfig = _a.serverConfig;
-	        var path = (0, url_1.getEndpointPath)(endpoint, realmPath, serverConfig.paths);
-	        var url = (0, url_1.resolve)(serverConfig.baseUrl, path);
-	        if (query) {
-	            url += "?".concat((0, url_1.stringify)(query));
-	        }
-	        return url;
-	    };
-	    return OAuth2Client;
-	}());
-	exports.default = OAuth2Client;
-	
-} (oauth2Client));
-
-var helpers$1 = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * helpers.ts
- *
- * Copyright (c) 2022 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-Object.defineProperty(helpers$1, "__esModule", { value: true });
-helpers$1.tokensWillExpireWithinThreshold = void 0;
-/**
- * @module
- * @ignore
- * These are private utility functions for Token Manager
- */
-function tokensWillExpireWithinThreshold(oauthThreshold, tokenExpiry) {
-    if (oauthThreshold && tokenExpiry) {
-        return tokenExpiry - oauthThreshold < Date.now();
-    }
-    return false;
-}
-helpers$1.tokensWillExpireWithinThreshold = tokensWillExpireWithinThreshold;
-
-/*
- * @forgerock/javascript-sdk
- *
- * index.ts
- *
- * Copyright (c) 2020-2021 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __assign = (commonjsGlobal && commonjsGlobal.__assign) || function () {
-    __assign = Object.assign || function(t) {
-        for (var s, i = 1, n = arguments.length; i < n; i++) {
-            s = arguments[i];
-            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
-                t[p] = s[p];
-        }
-        return t;
-    };
-    return __assign.apply(this, arguments);
-};
-var __awaiter$2 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$2 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(tokenManager, "__esModule", { value: true });
-var config_1$1 = config;
-var middleware_1$1 = middleware;
-var oauth2_client_1 = oauth2Client;
-var token_storage_1$1 = tokenStorage;
-var pkce_1 = pkce;
-var timeout_1$1 = timeout;
-var url_1$1 = url;
-var enums_1$1 = enums$4;
-var helpers_1$1 = helpers$1;
-var TokenManager = /** @class */ (function () {
-    function TokenManager() {
-    }
-    /**
-     * Token Manager class that provides high-level abstraction for Authorization Code flow,
-     * PKCE value generation, token exchange and token storage.
-     *
-     * Supports both embedded authentication as well as external authentication via redirects
-     *
-     Example 1:
-  
-     ```js
-     const tokens = forgerock.TokenManager.getTokens({
-       forceRenew: true, // If you want to get new tokens, despite existing ones
-       login: 'embedded', // If user authentication is handled in-app
-       support: 'legacy', // Set globally or locally; `"legacy"` or `undefined` will use iframe
-       serverConfig: {
-         timeout: 5000, // If using "legacy", use a short timeout to catch error
-       },
-     });
-     ```
-  
-     Example 2:
-  
-     ```js
-     const tokens = forgerock.TokenManager.getTokens({
-       forceRenew: false, // Will immediately return stored tokens, if they exist
-       login: 'redirect', // If user authentication is handled in external Web app
-       support: 'modern', // Set globally or locally; `"modern"` will use native fetch
-     });
-     ```
-  
-     Example 3:
-  
-     ```js
-     const tokens = forgerock.TokenManager.getTokens({
-       query: {
-         code: 'lFJQYdoQG1u7nUm8 ... ', // Authorization code from redirect URL
-         state: 'MTY2NDkxNTQ2Nde3D ... ', // State from redirect URL
-       },
-     });
-     ```
-     */
-    TokenManager.getTokens = function (options) {
-        var _a, _b, _c;
-        return __awaiter$2(this, void 0, void 0, function () {
-            var tokens, _d, clientId, middleware, serverConfig, support, oauthThreshold, error_1, error_2, storedString, storedValues, verifier, state, authorizeUrlOptions, authorizeUrl, parsedUrl, _e, runMiddleware, init, response, parsedQuery, err_1;
-            return __generator$2(this, function (_f) {
-                switch (_f.label) {
-                    case 0:
-                        tokens = null;
-                        _d = config_1$1.default.get(options), clientId = _d.clientId, middleware = _d.middleware, serverConfig = _d.serverConfig, support = _d.support, oauthThreshold = _d.oauthThreshold;
-                        _f.label = 1;
-                    case 1:
-                        _f.trys.push([1, 3, , 4]);
-                        return [4 /*yield*/, token_storage_1$1.default.get()];
-                    case 2:
-                        tokens = _f.sent();
-                        return [3 /*break*/, 4];
-                    case 3:
-                        error_1 = _f.sent();
-                        console.info('No stored tokens available', error_1);
-                        return [3 /*break*/, 4];
-                    case 4:
-                        /**
-                         * If tokens are stored, no option for `forceRenew` or `query` object with `code`, and do not expire within the configured threshold,
-                         * immediately return the stored tokens
-                         */
-                        if (tokens &&
-                            !(options === null || options === void 0 ? void 0 : options.forceRenew) &&
-                            !((_a = options === null || options === void 0 ? void 0 : options.query) === null || _a === void 0 ? void 0 : _a.code) &&
-                            !(0, helpers_1$1.tokensWillExpireWithinThreshold)(oauthThreshold, tokens.tokenExpiry)) {
-                            return [2 /*return*/, tokens];
-                        }
-                        if (!tokens) return [3 /*break*/, 9];
-                        _f.label = 5;
-                    case 5:
-                        _f.trys.push([5, 8, , 9]);
-                        return [4 /*yield*/, oauth2_client_1.default.revokeToken(options)];
-                    case 6:
-                        _f.sent();
-                        return [4 /*yield*/, TokenManager.deleteTokens()];
-                    case 7:
-                        _f.sent();
-                        return [3 /*break*/, 9];
-                    case 8:
-                        error_2 = _f.sent();
-                        console.warn('Existing tokens could not be revoked or deleted', error_2);
-                        return [3 /*break*/, 9];
-                    case 9:
-                        if (!(((_b = options === null || options === void 0 ? void 0 : options.query) === null || _b === void 0 ? void 0 : _b.code) && ((_c = options === null || options === void 0 ? void 0 : options.query) === null || _c === void 0 ? void 0 : _c.state))) return [3 /*break*/, 11];
-                        storedString = window.sessionStorage.getItem(clientId);
-                        window.sessionStorage.removeItem(clientId);
-                        storedValues = JSON.parse(storedString);
-                        return [4 /*yield*/, this.tokenExchange(options, storedValues)];
-                    case 10: return [2 /*return*/, _f.sent()];
-                    case 11:
-                        verifier = pkce_1.default.createVerifier();
-                        state = pkce_1.default.createState();
-                        authorizeUrlOptions = __assign(__assign({}, options), { responseType: oauth2_client_1.ResponseType.Code, state: state, verifier: verifier });
-                        return [4 /*yield*/, oauth2_client_1.default.createAuthorizeUrl(authorizeUrlOptions)];
-                    case 12:
-                        authorizeUrl = _f.sent();
-                        _f.label = 13;
-                    case 13:
-                        _f.trys.push([13, 18, , 19]);
-                        parsedUrl = void 0;
-                        if (!(support === 'legacy' || support === undefined)) return [3 /*break*/, 15];
-                        _e = URL.bind;
-                        return [4 /*yield*/, oauth2_client_1.default.getAuthCodeByIframe(authorizeUrlOptions)];
-                    case 14:
-                        // To support legacy browsers, iframe works best with short timeout
-                        parsedUrl = new (_e.apply(URL, [void 0, _f.sent()]))();
-                        return [3 /*break*/, 17];
-                    case 15:
-                        runMiddleware = (0, middleware_1$1.default)({
-                            url: new URL(authorizeUrl),
-                            init: {
-                                credentials: 'include',
-                                mode: 'cors',
-                            },
-                        }, {
-                            type: enums_1$1.ActionTypes.Authorize,
-                        });
-                        init = runMiddleware(middleware).init;
-                        return [4 /*yield*/, (0, timeout_1$1.withTimeout)(fetch(authorizeUrl, init), serverConfig.timeout)];
-                    case 16:
-                        response = _f.sent();
-                        parsedUrl = new URL(response.url);
-                        _f.label = 17;
-                    case 17:
-                        // Throw if we have an error param or have no authorization code
-                        if (parsedUrl.searchParams.get('error')) {
-                            throw Error("".concat(parsedUrl.searchParams.get('error_description')));
-                        }
-                        else if (!parsedUrl.searchParams.get('code')) {
-                            throw Error(oauth2_client_1.allowedErrors.AuthenticationConsentRequired);
-                        }
-                        parsedQuery = (0, url_1$1.parseQuery)(parsedUrl.toString());
-                        if (!options) {
-                            options = {};
-                        }
-                        options.query = parsedQuery;
-                        return [3 /*break*/, 19];
-                    case 18:
-                        err_1 = _f.sent();
-                        // If authorize request fails, handle according to `login` type
-                        if (!(err_1 instanceof Error) || (options === null || options === void 0 ? void 0 : options.login) !== 'redirect') {
-                            // Throw for any error if login is NOT of type "redirect"
-                            throw err_1;
-                        }
-                        // Check if error is not one of our allowed errors
-                        if (oauth2_client_1.allowedErrors.AuthenticationConsentRequired !== err_1.message &&
-                            oauth2_client_1.allowedErrors.AuthorizationTimeout !== err_1.message &&
-                            oauth2_client_1.allowedErrors.FailedToFetch !== err_1.message &&
-                            oauth2_client_1.allowedErrors.NetworkError !== err_1.message &&
-                            // Safari has a very long error message, so we check for a substring
-                            !err_1.message.includes(oauth2_client_1.allowedErrors.CORSError)) {
-                            // Throw if the error is NOT an explicitly allowed error along with redirect of true
-                            // as that is a normal response and just requires a redirect
-                            throw err_1;
-                        }
-                        // Since `login` is configured for "redirect", store authorize values and redirect
-                        window.sessionStorage.setItem(clientId, JSON.stringify(authorizeUrlOptions));
-                        return [2 /*return*/, window.location.assign(authorizeUrl)];
-                    case 19: return [4 /*yield*/, this.tokenExchange(options, { state: state, verifier: verifier })];
-                    case 20: 
-                    /**
-                     * Exchange authorization code for tokens
-                     */
-                    return [2 /*return*/, _f.sent()];
-                }
-            });
-        });
-    };
-    TokenManager.deleteTokens = function () {
-        return __awaiter$2(this, void 0, void 0, function () {
-            return __generator$2(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, token_storage_1$1.default.remove()];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
-    };
-    TokenManager.tokenExchange = function (options, stored) {
-        var _a, _b, _c, _d;
-        return __awaiter$2(this, void 0, void 0, function () {
-            var authorizationCode, verifier, getTokensOptions, tokens, error_3;
-            return __generator$2(this, function (_e) {
-                switch (_e.label) {
-                    case 0:
-                        /**
-                         * Ensure incoming state and stored state are equal and authorization code exists
-                         */
-                        if (((_a = options.query) === null || _a === void 0 ? void 0 : _a.state) !== stored.state) {
-                            throw new Error('State mismatch');
-                        }
-                        if (!((_b = options.query) === null || _b === void 0 ? void 0 : _b.code) || Array.isArray((_c = options.query) === null || _c === void 0 ? void 0 : _c.code)) {
-                            throw new Error('Failed to acquire authorization code');
-                        }
-                        authorizationCode = (_d = options.query) === null || _d === void 0 ? void 0 : _d.code;
-                        verifier = stored.verifier;
-                        getTokensOptions = __assign(__assign({}, options), { authorizationCode: authorizationCode, verifier: verifier });
-                        return [4 /*yield*/, oauth2_client_1.default.getOAuth2Tokens(getTokensOptions)];
-                    case 1:
-                        tokens = _e.sent();
-                        if (!tokens || !tokens.accessToken) {
-                            throw new Error('Unable to exchange authorization for tokens');
-                        }
-                        _e.label = 2;
-                    case 2:
-                        _e.trys.push([2, 4, , 5]);
-                        return [4 /*yield*/, token_storage_1$1.default.set(tokens)];
-                    case 3:
-                        _e.sent();
-                        return [3 /*break*/, 5];
-                    case 4:
-                        error_3 = _e.sent();
-                        console.error('Failed to store tokens', error_3);
-                        return [3 /*break*/, 5];
-                    case 5: return [2 /*return*/, tokens];
-                }
-            });
-        });
-    };
-    return TokenManager;
-}());
-tokenManager.default = TokenManager;
-
-var helpers = {};
-
-/*
- * @forgerock/javascript-sdk
- *
- * helpers.ts
- *
- * Copyright (c) 2020 ForgeRock. All rights reserved.
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- */
-var __awaiter$1 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator$1 = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(helpers, "__esModule", { value: true });
-helpers.normalizeRESTJSON = helpers.normalizeIGJSON = helpers.newTokenRequired = helpers.isAuthzStep = helpers.hasAuthzAdvice = helpers.examineForRESTAuthz = helpers.examineForIGAuthz = helpers.buildAuthzOptions = helpers.addAuthzInfoToURL = helpers.addAuthzInfoToHeaders = void 0;
-var url_1 = url;
 function addAuthzInfoToHeaders(init, advices, tokens) {
-    var headers = new Headers(init.headers);
+    const headers = new Headers(init.headers);
     if (advices.AuthenticateToServiceConditionAdvice) {
         headers.set('X-Tree', advices.AuthenticateToServiceConditionAdvice[0]);
     }
@@ -11092,12 +4696,11 @@ function addAuthzInfoToHeaders(init, advices, tokens) {
     }
     return headers;
 }
-helpers.addAuthzInfoToHeaders = addAuthzInfoToHeaders;
 function addAuthzInfoToURL(url, advices, tokens) {
-    var updatedURL = new URL(url);
+    const updatedURL = new URL(url);
     // Only modify URL for Transactional Authorization
     if (advices.TransactionConditionAdvice) {
-        var txId = advices.TransactionConditionAdvice[0];
+        const txId = advices.TransactionConditionAdvice[0];
         // Add Txn ID to *original* request options as URL param
         updatedURL.searchParams.append('_txid', txId);
     }
@@ -11108,39 +4711,38 @@ function addAuthzInfoToURL(url, advices, tokens) {
     // FYI: in certain circumstances, the URL may be returned unchanged
     return updatedURL.toString();
 }
-helpers.addAuthzInfoToURL = addAuthzInfoToURL;
 function buildAuthzOptions(authzObj, baseURL, timeout, realmPath, customPaths) {
-    var treeAuthAdvices = authzObj.advices && authzObj.advices.AuthenticateToServiceConditionAdvice;
-    var txnAuthAdvices = authzObj.advices && authzObj.advices.TransactionConditionAdvice;
-    var attributeValue = '';
-    var attributeName = '';
+    const treeAuthAdvices = authzObj.advices && authzObj.advices.AuthenticateToServiceConditionAdvice;
+    const txnAuthAdvices = authzObj.advices && authzObj.advices.TransactionConditionAdvice;
+    let attributeValue = '';
+    let attributeName = '';
     if (treeAuthAdvices) {
-        attributeValue = treeAuthAdvices.reduce(function (prev, curr) {
-            var prevWithSpace = prev ? " ".concat(prev) : prev;
-            prev = "".concat(curr).concat(prevWithSpace);
+        attributeValue = treeAuthAdvices.reduce((prev, curr) => {
+            const prevWithSpace = prev ? ` ${prev}` : prev;
+            prev = `${curr}${prevWithSpace}`;
             return prev;
         }, '');
         attributeName = 'AuthenticateToServiceConditionAdvice';
     }
     else if (txnAuthAdvices) {
-        attributeValue = txnAuthAdvices.reduce(function (prev, curr) {
-            var prevWithSpace = prev ? " ".concat(prev) : prev;
-            prev = "".concat(curr).concat(prevWithSpace);
+        attributeValue = txnAuthAdvices.reduce((prev, curr) => {
+            const prevWithSpace = prev ? ` ${prev}` : prev;
+            prev = `${curr}${prevWithSpace}`;
             return prev;
         }, '');
         attributeName = 'TransactionConditionAdvice';
     }
-    var openTags = "<Advices><AttributeValuePair>";
-    var nameTag = "<Attribute name=\"".concat(attributeName, "\"/>");
-    var valueTag = "<Value>".concat(attributeValue, "</Value>");
-    var endTags = "</AttributeValuePair></Advices>";
-    var fullXML = "".concat(openTags).concat(nameTag).concat(valueTag).concat(endTags);
-    var path = (0, url_1.getEndpointPath)('authenticate', realmPath, customPaths);
-    var queryParams = {
+    const openTags = `<Advices><AttributeValuePair>`;
+    const nameTag = `<Attribute name="${attributeName}"/>`;
+    const valueTag = `<Value>${attributeValue}</Value>`;
+    const endTags = `</AttributeValuePair></Advices>`;
+    const fullXML = `${openTags}${nameTag}${valueTag}${endTags}`;
+    const path = getEndpointPath('authenticate', realmPath, customPaths);
+    const queryParams = {
         authIndexType: 'composite_advice',
         authIndexValue: fullXML,
     };
-    var options = {
+    const options = {
         init: {
             method: 'POST',
             credentials: 'include',
@@ -11148,41 +4750,48 @@ function buildAuthzOptions(authzObj, baseURL, timeout, realmPath, customPaths) {
                 'Accept-API-Version': 'resource=2.0, protocol=1.0',
             }),
         },
-        timeout: timeout,
-        url: (0, url_1.resolve)(baseURL, "".concat(path, "?").concat((0, url_1.stringify)(queryParams))),
+        timeout,
+        url: resolve(baseURL, `${path}?${stringify(queryParams)}`),
     };
     return options;
 }
-helpers.buildAuthzOptions = buildAuthzOptions;
 function examineForIGAuthz(res) {
-    var type = res.headers.get('Content-Type') || '';
+    const type = res.headers.get('Content-Type') || '';
     return type.includes('html') && res.url.includes('composite_advice');
 }
-helpers.examineForIGAuthz = examineForIGAuthz;
-function examineForRESTAuthz(res) {
-    return __awaiter$1(this, void 0, void 0, function () {
-        var clone, json;
-        return __generator$1(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    clone = res.clone();
-                    return [4 /*yield*/, clone.json()];
-                case 1:
-                    json = _a.sent();
-                    return [2 /*return*/, !!json.advices];
-            }
-        });
-    });
+function examineForIGAuthzHeader(headers) {
+    const authnHeader = headers.get('WWW-Authenticate') || '';
+    return authnHeader.includes('advices');
 }
-helpers.examineForRESTAuthz = examineForRESTAuthz;
+async function examineForRESTAuthz(res) {
+    const clone = res.clone();
+    const json = await clone.json();
+    return !!json.advices;
+}
 function getXMLValueFromURL(urlString) {
-    var url = new URL(urlString);
-    var value = url.searchParams.get('authIndexValue') || '';
-    var parser = new DOMParser();
-    var decodedValue = decodeURIComponent(value);
-    var doc = parser.parseFromString(decodedValue, 'application/xml');
-    var el = doc.querySelector('Value');
+    const url = new URL(urlString);
+    const value = url.searchParams.get('authIndexValue') || '';
+    const parser = new DOMParser();
+    const decodedValue = decodeURIComponent(value);
+    const doc = parser.parseFromString(decodedValue, 'application/xml');
+    const el = doc.querySelector('Value');
     return el ? el.innerHTML : '';
+}
+function getAdvicesFromHeader(header) {
+    const headerArr = header.split(',') || [];
+    const advicesSubstr = headerArr.find((substr) => substr.includes('advices')) || '';
+    let advicesValueParsed;
+    try {
+        const advicesValueArray = advicesSubstr.match(/"(\S+)"/);
+        const advicesValue = advicesValueArray ? advicesValueArray[1] : '';
+        const advicesValueDecoded = atob(advicesValue);
+        advicesValueParsed = JSON.parse(advicesValueDecoded);
+        return advicesValueParsed;
+    }
+    catch (err) {
+        console.error('Could not parse advices value from WWW-Authenticate header');
+    }
+    return {};
 }
 function hasAuthzAdvice(json) {
     if (json.advices && json.advices.AuthenticateToServiceConditionAdvice) {
@@ -11197,32 +4806,20 @@ function hasAuthzAdvice(json) {
         return false;
     }
 }
-helpers.hasAuthzAdvice = hasAuthzAdvice;
-function isAuthzStep(res) {
-    return __awaiter$1(this, void 0, void 0, function () {
-        var clone, json;
-        return __generator$1(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    clone = res.clone();
-                    return [4 /*yield*/, clone.json()];
-                case 1:
-                    json = _a.sent();
-                    return [2 /*return*/, !!json.callbacks];
-            }
-        });
-    });
+async function isAuthzStep(res) {
+    // TODO: add comment
+    const clone = res.clone();
+    const json = await clone.json();
+    return !!json.callbacks;
 }
-helpers.isAuthzStep = isAuthzStep;
 function newTokenRequired(res, requiresNewToken) {
     if (typeof requiresNewToken === 'function') {
         return requiresNewToken(res);
     }
     return res.status === 401;
 }
-helpers.newTokenRequired = newTokenRequired;
-function normalizeIGJSON(res) {
-    var advices = {};
+function normalizeIGRedirectResponseToAdviceJSON(res) {
+    const advices = {};
     if (res.url.includes('AuthenticateToServiceConditionAdvice')) {
         advices.AuthenticateToServiceConditionAdvice = [getXMLValueFromURL(res.url)];
     }
@@ -11233,22 +4830,24 @@ function normalizeIGJSON(res) {
         resource: '',
         actions: {},
         attributes: {},
-        advices: advices,
+        advices,
         ttl: 0,
     };
 }
-helpers.normalizeIGJSON = normalizeIGJSON;
-function normalizeRESTJSON(res) {
-    return __awaiter$1(this, void 0, void 0, function () {
-        return __generator$1(this, function (_a) {
-            switch (_a.label) {
-                case 0: return [4 /*yield*/, res.json()];
-                case 1: return [2 /*return*/, _a.sent()];
-            }
-        });
-    });
+function normalizeIGJSONResponseToAdviceJSON(res) {
+    const authHeader = res.headers.get('WWW-Authenticate') || '';
+    const advicesObject = getAdvicesFromHeader(authHeader);
+    return {
+        resource: '',
+        actions: {},
+        attributes: {},
+        advices: advicesObject,
+        ttl: 0,
+    };
 }
-helpers.normalizeRESTJSON = normalizeRESTJSON;
+async function normalizeRESTJSON(res) {
+    return await res.json();
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -11259,69 +4858,6 @@ helpers.normalizeRESTJSON = normalizeRESTJSON;
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  */
-var __extends = (commonjsGlobal && commonjsGlobal.__extends) || (function () {
-    var extendStatics = function (d, b) {
-        extendStatics = Object.setPrototypeOf ||
-            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
-            function (d, b) { for (var p in b) if (Object.prototype.hasOwnProperty.call(b, p)) d[p] = b[p]; };
-        return extendStatics(d, b);
-    };
-    return function (d, b) {
-        if (typeof b !== "function" && b !== null)
-            throw new TypeError("Class extends value " + String(b) + " is not a constructor or null");
-        extendStatics(d, b);
-        function __() { this.constructor = d; }
-        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-    };
-})();
-var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (commonjsGlobal && commonjsGlobal.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-    return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (_) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
-};
-Object.defineProperty(httpClient, "__esModule", { value: true });
-var config_1 = config;
-var enums_1 = enums$4;
-var event_1 = event;
-var fr_auth_1 = frAuth;
-var enums_2 = enums$1;
-var fr_step_1 = frStep;
-var token_manager_1 = tokenManager;
-var token_storage_1 = tokenStorage;
-var timeout_1 = timeout;
-var helpers_1 = helpers;
-var middleware_1 = middleware;
 /**
  * HTTP client that includes bearer token injection and refresh.
  * This module also supports authorization for policy protected endpoints.
@@ -11344,205 +4880,145 @@ var middleware_1 = middleware;
  * });
  * ```
  */
-var HttpClient = /** @class */ (function (_super) {
-    __extends(HttpClient, _super);
-    function HttpClient() {
-        return _super !== null && _super.apply(this, arguments) || this;
-    }
+class HttpClient {
     /**
      * Makes a request using the specified options.
      *
      * @param options The options to use when making the request
      */
-    HttpClient.request = function (options) {
-        return __awaiter(this, void 0, void 0, function () {
-            var res, authorizationJSON, hasIG, _a, middleware, realmPath, serverConfig, authzOptions, url, type, tree, runMiddleware, _b, authUrl, authInit, initialStep, tokens;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0: return [4 /*yield*/, this._request(options, false)];
-                    case 1:
-                        res = _c.sent();
-                        hasIG = false;
-                        if (!(0, helpers_1.newTokenRequired)(res, options.requiresNewToken)) return [3 /*break*/, 3];
-                        return [4 /*yield*/, this._request(options, true)];
-                    case 2:
-                        res = _c.sent();
-                        _c.label = 3;
-                    case 3:
-                        if (!(options.authorization && options.authorization.handleStep)) return [3 /*break*/, 16];
-                        if (!(res.redirected && (0, helpers_1.examineForIGAuthz)(res))) return [3 /*break*/, 4];
-                        hasIG = true;
-                        authorizationJSON = (0, helpers_1.normalizeIGJSON)(res);
-                        return [3 /*break*/, 7];
-                    case 4: return [4 /*yield*/, (0, helpers_1.examineForRESTAuthz)(res)];
-                    case 5:
-                        if (!_c.sent()) return [3 /*break*/, 7];
-                        return [4 /*yield*/, (0, helpers_1.normalizeRESTJSON)(res)];
-                    case 6:
-                        authorizationJSON = _c.sent();
-                        _c.label = 7;
-                    case 7:
-                        if (!(authorizationJSON && authorizationJSON.advices)) return [3 /*break*/, 16];
-                        _a = config_1.default.get(options.authorization.config), middleware = _a.middleware, realmPath = _a.realmPath, serverConfig = _a.serverConfig;
-                        authzOptions = (0, helpers_1.buildAuthzOptions)(authorizationJSON, serverConfig.baseUrl, options.timeout, realmPath, serverConfig.paths);
-                        url = new URL(authzOptions.url);
-                        type = url.searchParams.get('authIndexType');
-                        tree = url.searchParams.get('authIndexValue');
-                        runMiddleware = (0, middleware_1.default)({
-                            url: new URL(authzOptions.url),
-                            init: authzOptions.init,
-                        }, {
-                            type: enums_1.ActionTypes.StartAuthenticate,
-                            payload: { type: type, tree: tree },
-                        });
-                        _b = runMiddleware(middleware), authUrl = _b.url, authInit = _b.init;
-                        authzOptions.url = authUrl.toString();
-                        authzOptions.init = authInit;
-                        return [4 /*yield*/, this._request(authzOptions, false)];
-                    case 8:
-                        initialStep = _c.sent();
-                        return [4 /*yield*/, (0, helpers_1.isAuthzStep)(initialStep)];
-                    case 9:
-                        if (!(_c.sent())) {
-                            throw new Error('Error: Initial response from auth server not a "step".');
-                        }
-                        if (!(0, helpers_1.hasAuthzAdvice)(authorizationJSON)) {
-                            throw new Error("Error: Transactional or Service Advice is empty.");
-                        }
-                        // Walk through auth tree
-                        return [4 /*yield*/, this.stepIterator(initialStep, options.authorization.handleStep, type, tree)];
-                    case 10:
-                        // Walk through auth tree
-                        _c.sent();
-                        tokens = void 0;
-                        _c.label = 11;
-                    case 11:
-                        _c.trys.push([11, 13, , 14]);
-                        return [4 /*yield*/, token_storage_1.default.get()];
-                    case 12:
-                        tokens = _c.sent();
-                        return [3 /*break*/, 14];
-                    case 13:
-                        _c.sent();
-                        return [3 /*break*/, 14];
-                    case 14:
-                        if (hasIG) {
-                            // Update URL with IDs and tokens for IG
-                            options.url = (0, helpers_1.addAuthzInfoToURL)(options.url, authorizationJSON.advices, tokens);
-                        }
-                        else {
-                            // Update headers with IDs and tokens for REST API
-                            options.init.headers = (0, helpers_1.addAuthzInfoToHeaders)(options.init, authorizationJSON.advices, tokens);
-                        }
-                        return [4 /*yield*/, this._request(options, false)];
-                    case 15:
-                        // Retry original resource request
-                        res = _c.sent();
-                        _c.label = 16;
-                    case 16: return [2 /*return*/, res];
+    static async request(options) {
+        let res = await this._request(options, false);
+        let authorizationJSON;
+        let hasIG = false;
+        if (newTokenRequired(res, options.requiresNewToken)) {
+            res = await this._request(options, true);
+        }
+        if (options.authorization && options.authorization.handleStep) {
+            if (res.status === 401 && examineForIGAuthzHeader(res.headers)) {
+                hasIG = true;
+                authorizationJSON = normalizeIGJSONResponseToAdviceJSON(res);
+            }
+            else if (res.redirected && examineForIGAuthz(res)) {
+                hasIG = true;
+                authorizationJSON = normalizeIGRedirectResponseToAdviceJSON(res);
+            }
+            else if (await examineForRESTAuthz(res)) {
+                authorizationJSON = await normalizeRESTJSON(res);
+            }
+            if (authorizationJSON && authorizationJSON.advices) {
+                const { middleware, realmPath, serverConfig } = Config.get(options.authorization.config);
+                const authzOptions = buildAuthzOptions(authorizationJSON, serverConfig.baseUrl, options.timeout, realmPath, serverConfig.paths);
+                const url = new URL(authzOptions.url);
+                const type = url.searchParams.get('authIndexType');
+                const tree = url.searchParams.get('authIndexValue');
+                const runMiddleware = middlewareWrapper({
+                    url: new URL(authzOptions.url),
+                    init: authzOptions.init,
+                }, {
+                    type: ActionTypes.StartAuthenticate,
+                    payload: { type, tree },
+                });
+                const { url: authUrl, init: authInit } = runMiddleware(middleware);
+                authzOptions.url = authUrl.toString();
+                authzOptions.init = authInit;
+                const initialStep = await this._request(authzOptions, false);
+                if (!(await isAuthzStep(initialStep))) {
+                    throw new Error('Error: Initial response from auth server not a "step".');
                 }
-            });
-        });
-    };
-    HttpClient.setAuthHeaders = function (headers, forceRenew) {
-        return __awaiter(this, void 0, void 0, function () {
-            var tokens;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        _a.trys.push([0, 2, , 3]);
-                        return [4 /*yield*/, token_storage_1.default.get()];
-                    case 1:
-                        tokens = _a.sent();
-                        return [3 /*break*/, 3];
-                    case 2:
-                        _a.sent();
-                        return [3 /*break*/, 3];
-                    case 3:
-                        if (!(tokens && tokens.accessToken)) return [3 /*break*/, 5];
-                        return [4 /*yield*/, token_manager_1.default.getTokens({ forceRenew: forceRenew })];
-                    case 4:
-                        // Access tokens are an OAuth artifact
-                        tokens = _a.sent();
-                        // TODO: Temp fix; refactor this in next txn auth story
-                        if (tokens && tokens.accessToken) {
-                            headers.set('Authorization', "Bearer ".concat(tokens.accessToken));
-                        }
-                        _a.label = 5;
-                    case 5: return [2 /*return*/, headers];
+                if (!hasAuthzAdvice(authorizationJSON)) {
+                    throw new Error(`Error: Transactional or Service Advice is empty.`);
                 }
-            });
-        });
-    };
-    HttpClient.stepIterator = function (res, handleStep, type, tree) {
-        return __awaiter(this, void 0, void 0, function () {
-            var jsonRes, initialStep;
-            var _this = this;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, res.json()];
-                    case 1:
-                        jsonRes = _a.sent();
-                        initialStep = new fr_step_1.default(jsonRes);
-                        // eslint-disable-next-line no-async-promise-executor
-                        return [2 /*return*/, new Promise(function (resolve, reject) { return __awaiter(_this, void 0, void 0, function () {
-                                function handleNext(step) {
-                                    return __awaiter(this, void 0, void 0, function () {
-                                        var input, output;
-                                        return __generator(this, function (_a) {
-                                            switch (_a.label) {
-                                                case 0: return [4 /*yield*/, handleStep(step)];
-                                                case 1:
-                                                    input = _a.sent();
-                                                    return [4 /*yield*/, fr_auth_1.default.next(input, { type: type, tree: tree })];
-                                                case 2:
-                                                    output = _a.sent();
-                                                    if (output.type === enums_2.StepType.LoginSuccess) {
-                                                        resolve();
-                                                    }
-                                                    else if (output.type === enums_2.StepType.LoginFailure) {
-                                                        reject('Authentication tree failure.');
-                                                    }
-                                                    else {
-                                                        handleNext(output);
-                                                    }
-                                                    return [2 /*return*/];
-                                            }
-                                        });
-                                    });
-                                }
-                                return __generator(this, function (_a) {
-                                    handleNext(initialStep);
-                                    return [2 /*return*/];
-                                });
-                            }); })];
+                // Walk through auth tree
+                await this.stepIterator(initialStep, options.authorization.handleStep);
+                // See if OAuth tokens are being used
+                const tokens = await TokenStorage.get();
+                if (hasIG) {
+                    // Update URL with IDs and tokens for IG
+                    options.url = addAuthzInfoToURL(options.url, authorizationJSON.advices, tokens);
                 }
-            });
-        });
-    };
-    HttpClient._request = function (options, forceRenew) {
-        return __awaiter(this, void 0, void 0, function () {
-            var url, init, timeout, headers;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        url = options.url, init = options.init, timeout = options.timeout;
-                        headers = new Headers(init.headers || {});
-                        if (!!options.bypassAuthentication) return [3 /*break*/, 2];
-                        return [4 /*yield*/, this.setAuthHeaders(headers, forceRenew)];
-                    case 1:
-                        headers = _a.sent();
-                        _a.label = 2;
-                    case 2:
-                        init.headers = headers;
-                        return [2 /*return*/, (0, timeout_1.withTimeout)(fetch(url, init), timeout)];
+                else {
+                    // Update headers with IDs and tokens for REST API
+                    options.init.headers = addAuthzInfoToHeaders(options.init, authorizationJSON.advices, tokens);
                 }
-            });
+                // Retry original resource request
+                res = await this._request(options, false);
+            }
+            else {
+                throw new Error(`Error: Unable to process advice`);
+            }
+        }
+        return res;
+    }
+    static async setAuthHeaders(headers, forceRenew) {
+        let tokens = await TokenStorage.get();
+        /**
+         * Condition to see if Auth is session based or OAuth token based
+         */
+        if (tokens && tokens.accessToken) {
+            // Access tokens are an OAuth artifact
+            tokens = await TokenManager.getTokens({ forceRenew });
+            // TODO: Temp fix; refactor this in next txn auth story
+            if (tokens && tokens.accessToken) {
+                headers.set('Authorization', `Bearer ${tokens.accessToken}`);
+            }
+        }
+        return headers;
+    }
+    static async stepIterator(res, handleStep) {
+        const jsonRes = await res.json();
+        const initialStep = new FRStep(jsonRes);
+        // eslint-disable-next-line no-async-promise-executor
+        return new Promise(async (resolve, reject) => {
+            async function handleNext(step) {
+                const input = await handleStep(step);
+                const output = await FRAuth.next(input, { tree: '', type: '' });
+                if (output.type === StepType.LoginSuccess) {
+                    resolve();
+                }
+                else if (output.type === StepType.LoginFailure) {
+                    reject('Authentication tree failure.');
+                }
+                else {
+                    handleNext(output);
+                }
+            }
+            handleNext(initialStep);
         });
-    };
-    return HttpClient;
-}(event_1.default));
-var _default$2 = httpClient.default = HttpClient;
+    }
+    static async _request(options, forceRenew) {
+        const { url, init, timeout } = options;
+        let headers = new Headers(init.headers || {});
+        if (options.authorization) {
+            headers.set('x-authenticate-response', 'header');
+        }
+        if (!options.bypassAuthentication) {
+            headers = await this.setAuthHeaders(headers, forceRenew);
+        }
+        init.headers = headers;
+        return withTimeout(fetch(url, init), timeout);
+    }
+}
+
+/*
+ * @forgerock/javascript-sdk
+ *
+ * index.ts
+ *
+ * Copyright (c) 2020 ForgeRock. All rights reserved.
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ */
+/**
+ * Provides access to the current user's profile.
+ */
+class UserManager {
+    /**
+     * Gets the current user's profile.
+     */
+    static getCurrentUser(options) {
+        return OAuth2Client.getUserInfo(options);
+    }
+}
 
 /**
  * @function logErrorAndThrow - Logs an error message and throws an error.
@@ -15535,9 +9011,9 @@ const configSchema = z
             name: z.string(),
             value: z.unknown(),
         })),
-        type: z.nativeEnum(CallbackType$1),
+        type: z.nativeEnum(CallbackType),
     }))
-        .returns(z.instanceof(FRCallback$1))
+        .returns(z.instanceof(FRCallback))
         .optional(),
     clientId: z.string().optional(),
     middleware: z.array(z.function()).optional(),
@@ -15586,7 +9062,6 @@ const configSchema = z
             set: z.function().args(z.string()).returns(z.promise(z.void())),
             remove: z.function().args(z.string()).returns(z.promise(z.void())),
         }),
-        z.literal('indexedDB'),
         z.literal('sessionStorage'),
         z.literal('localStorage'),
     ])
@@ -15700,19 +9175,15 @@ function htmlDecode(input) {
     return e.childNodes.length === 0 ? '' : e.childNodes[0].nodeValue;
 }
 
-var libExports$1 = {};
-var lib$1 = {
-  get exports(){ return libExports$1; },
-  set exports(v){ libExports$1 = v; },
-};
+function getDefaultExportFromCjs (x) {
+	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
+}
+
+var lib$1 = {exports: {}};
 
 var _default$1 = {};
 
-var libExports = {};
-var lib = {
-  get exports(){ return libExports; },
-  set exports(v){ libExports = v; },
-};
+var lib = {exports: {}};
 
 var _default = {};
 
@@ -16366,8 +9837,10 @@ var css = FilterCSS$2;
 	// 在浏览器端使用
 	if (typeof window !== 'undefined') {
 	  window.filterCSS = module.exports;
-	}
-} (lib, libExports));
+	} 
+} (lib, lib.exports));
+
+var libExports$1 = lib.exports;
 
 var util = {
   indexOf: function (arr, item) {
@@ -16410,8 +9883,8 @@ var util = {
  * @author Zongmin Lei<leizongmin@gmail.com>
  */
 
-var FilterCSS$1 = libExports.FilterCSS;
-var getDefaultCSSWhiteList = libExports.getDefaultWhiteList;
+var FilterCSS$1 = libExports$1.FilterCSS;
+var getDefaultCSSWhiteList = libExports$1.getDefaultWhiteList;
 var _$2 = util;
 
 function getDefaultWhiteList() {
@@ -17128,7 +10601,7 @@ parser$1.parseAttr = parseAttr$1;
  * @author Zongmin Lei<leizongmin@gmail.com>
  */
 
-var FilterCSS = libExports.FilterCSS;
+var FilterCSS = libExports$1.FilterCSS;
 var DEFAULT = _default$1;
 var parser = parser$1;
 var parseTag = parser.parseTag;
@@ -17403,10 +10876,11 @@ var xss = FilterXSS;
 	}
 	if (isWorkerEnv()) {
 	  self.filterXSS = module.exports;
-	}
-} (lib$1, libExports$1));
+	} 
+} (lib$1, lib$1.exports));
 
-var sanitize = libExports$1;
+var libExports = lib$1.exports;
+var sanitize = /*@__PURE__*/getDefaultExportFromCjs(libExports);
 
 var alreadyHaveAnAccount = "Already have an account? <a href='?journey'>Sign in here!</a>";
 var backToDefault = "Back to Sign In";
@@ -17891,7 +11365,7 @@ function initCheckValidation() {
  * @returns {boolean}
  */
 function shouldRedirectFromStep(step) {
-    return step.getCallbacksOfType(CallbackType$1.RedirectCallback).length > 0;
+    return step.getCallbacksOfType(CallbackType.RedirectCallback).length > 0;
 }
 /**
  * @function shouldPopulateWithPreviousCallbacks -
@@ -17905,7 +11379,7 @@ function shouldPopulateWithPreviousCallbacks(nextStep, previousCallbacks, restar
     if (!Array.isArray(previousCallbacks)) {
         return false;
     }
-    if (restartedStep.type !== StepType$1.Step) {
+    if (restartedStep.type !== StepType.Step) {
         return false;
     }
     if (stepNumber !== 1) {
@@ -17927,25 +11401,25 @@ function shouldPopulateWithPreviousCallbacks(nextStep, previousCallbacks, restar
 }
 
 const selfSubmittingCallbacks = [
-    CallbackType$1.ConfirmationCallback,
-    CallbackType$1.DeviceProfileCallback,
-    CallbackType$1.PollingWaitCallback,
-    CallbackType$1.SelectIdPCallback,
+    CallbackType.ConfirmationCallback,
+    CallbackType.DeviceProfileCallback,
+    CallbackType.PollingWaitCallback,
+    CallbackType.SelectIdPCallback,
 ];
 const userInputCallbacks = [
-    CallbackType$1.BooleanAttributeInputCallback,
-    CallbackType$1.ChoiceCallback,
-    CallbackType$1.ConfirmationCallback,
-    CallbackType$1.KbaCreateCallback,
-    CallbackType$1.NameCallback,
-    CallbackType$1.NumberAttributeInputCallback,
-    CallbackType$1.PasswordCallback,
-    CallbackType$1.ReCaptchaCallback,
-    CallbackType$1.SelectIdPCallback,
-    CallbackType$1.StringAttributeInputCallback,
-    CallbackType$1.TermsAndConditionsCallback,
-    CallbackType$1.ValidatedCreatePasswordCallback,
-    CallbackType$1.ValidatedCreateUsernameCallback,
+    CallbackType.BooleanAttributeInputCallback,
+    CallbackType.ChoiceCallback,
+    CallbackType.ConfirmationCallback,
+    CallbackType.KbaCreateCallback,
+    CallbackType.NameCallback,
+    CallbackType.NumberAttributeInputCallback,
+    CallbackType.PasswordCallback,
+    CallbackType.ReCaptchaCallback,
+    CallbackType.SelectIdPCallback,
+    CallbackType.StringAttributeInputCallback,
+    CallbackType.TermsAndConditionsCallback,
+    CallbackType.ValidatedCreatePasswordCallback,
+    CallbackType.ValidatedCreateUsernameCallback,
 ];
 /**
  * @function forceUserInputOptionalityCallbacks - Determines if a callback should be forced to be optional
@@ -17964,7 +11438,7 @@ const forceUserInputOptionalityCallbacks = {
  * @returns {boolean}
  */
 function isCbReadyByDefault(callback) {
-    if (callback.getType() === CallbackType$1.ConfirmationCallback) {
+    if (callback.getType() === CallbackType.ConfirmationCallback) {
         const cb = callback;
         if (cb.getOptions().length === 1) {
             return true;
@@ -18009,10 +11483,10 @@ function isStepSelfSubmittable(callbacks, userInputOptional) {
  * @returns {boolean}
  */
 function requiresUserInput(callback) {
-    if (callback.getType() === CallbackType$1.SelectIdPCallback) {
+    if (callback.getType() === CallbackType.SelectIdPCallback) {
         return false;
     }
-    if (callback.getType() === CallbackType$1.ConfirmationCallback) {
+    if (callback.getType() === CallbackType.ConfirmationCallback) {
         const cb = callback;
         if (cb.getOptions().length === 1) {
             return false;
@@ -18226,7 +11700,7 @@ function initialize$4(initOptions) {
          * form failure due to 400 response from ForgeRock.
          */
         let previousCallbacks;
-        if (prevStep && prevStep.type === StepType$1.Step) {
+        if (prevStep && prevStep.type === StepType.Step) {
             previousCallbacks = prevStep?.callbacks;
         }
         const previousPayload = prevStep?.payload;
@@ -18247,7 +11721,7 @@ function initialize$4(initOptions) {
                 /**
                  * Attempt to resume journey
                  */
-                nextStep = await FRAuth$1.resume(resumeUrl, options);
+                nextStep = await FRAuth.resume(resumeUrl, options);
             }
             else if (prevStep) {
                 // If continuing on a tree remove it from the options
@@ -18255,10 +11729,10 @@ function initialize$4(initOptions) {
                 /**
                  * Initial attempt to retrieve next step
                  */
-                nextStep = await FRAuth$1.next(prevStep, options);
+                nextStep = await FRAuth.next(prevStep, options);
             }
             else {
-                nextStep = await FRAuth$1.start(options);
+                nextStep = await FRAuth.start(options);
             }
         }
         catch (err) {
@@ -18266,11 +11740,11 @@ function initialize$4(initOptions) {
             /**
              * Setup an object to display failure message
              */
-            nextStep = new FRLoginFailure$1({
+            nextStep = new FRLoginFailure({
                 message: interpolate('unknownNetworkError'),
             });
         }
-        if (nextStep.type === StepType$1.Step) {
+        if (nextStep.type === StepType.Step) {
             const stageAttribute = nextStep.getStage();
             let stageJson = null;
             let stageName = null;
@@ -18303,7 +11777,7 @@ function initialize$4(initOptions) {
                 response: null,
             });
         }
-        else if (nextStep.type === StepType$1.LoginSuccess) {
+        else if (nextStep.type === StepType.LoginSuccess) {
             /**
              * SUCCESSFUL COMPLETION BLOCK
              */
@@ -18319,7 +11793,7 @@ function initialize$4(initOptions) {
                 response: nextStep.payload,
             });
         }
-        else if (nextStep.type === StepType$1.LoginFailure) {
+        else if (nextStep.type === StepType.LoginFailure) {
             /**
              * FAILURE COMPLETION BLOCK
              *
@@ -18332,14 +11806,14 @@ function initialize$4(initOptions) {
                  * Restart tree to get fresh step
                  */
                 const restartOptions = await stack.latest();
-                restartedStep = await FRAuth$1.next(undefined, restartOptions);
+                restartedStep = await FRAuth.next(undefined, restartOptions);
             }
             catch (err) {
                 console.error(`Restart failed step request | ${err}`);
                 /**
                  * Setup an object to display failure message
                  */
-                restartedStep = new FRLoginFailure$1({
+                restartedStep = new FRLoginFailure({
                     message: interpolate('unknownNetworkError'),
                 });
             }
@@ -18376,7 +11850,7 @@ function initialize$4(initOptions) {
                  * Only if the authId expires do we resubmit with same callback values
                  */
                 if (details?.errorCode === authIdTimeoutErrorCode) {
-                    restartedStep = await FRAuth$1.next(restartedStep, options);
+                    restartedStep = await FRAuth.next(restartedStep, options);
                 }
             }
             /**
@@ -18385,7 +11859,7 @@ function initialize$4(initOptions) {
              * After the above attempts to salvage the form submission, let's return
              * the final result to the user.
              */
-            if (restartedStep.type === StepType$1.Step) {
+            if (restartedStep.type === StepType.Step) {
                 const stageAttribute = restartedStep.getStage();
                 let stageJson = null;
                 let stageName = null;
@@ -18421,7 +11895,7 @@ function initialize$4(initOptions) {
                     response: null,
                 });
             }
-            else if (restartedStep.type === StepType$1.LoginSuccess) {
+            else if (restartedStep.type === StepType.LoginSuccess) {
                 journeyStore.set({
                     completed: true,
                     error: null,
@@ -18570,7 +12044,7 @@ function initialize$2(initOptions) {
             response: null,
         });
         try {
-            tokens = await TokenManager$1.getTokens(options);
+            tokens = await TokenManager.getTokens(options);
         }
         catch (err) {
             if (err instanceof Error) {
@@ -19016,14 +12490,14 @@ function widgetApiFactory(componentApi) {
         configuration,
         getStores,
         journey,
-        request: _default$2.request.bind(_default$2),
+        request: HttpClient.request.bind(HttpClient),
         user,
     };
 }
 
 /* src/lib/components/_utilities/locale-strings.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$b(ctx) {
+function create_else_block$c(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[5].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
@@ -19076,7 +12550,7 @@ function create_else_block$b(ctx) {
 }
 
 // (11:0) {#if html}
-function create_if_block$q(ctx) {
+function create_if_block$r(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[5].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
@@ -19178,7 +12652,7 @@ function create_fragment$12(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$q, create_else_block$b];
+	const if_block_creators = [create_if_block$r, create_else_block$c];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -19375,7 +12849,7 @@ class X_icon extends SvelteComponent {
 
 /* src/lib/components/compositions/dialog/dialog.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$a(ctx) {
+function create_else_block$b(ctx) {
 	let div;
 	let button;
 	let xicon;
@@ -19388,7 +12862,7 @@ function create_else_block$a(ctx) {
 	xicon = new X_icon({
 			props: {
 				classes: "tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light",
-				$$slots: { default: [create_default_slot_1$e] },
+				$$slots: { default: [create_default_slot_1$f] },
 				$$scope: { ctx }
 			}
 		});
@@ -19474,7 +12948,7 @@ function create_else_block$a(ctx) {
 }
 
 // (39:2) {#if withHeader}
-function create_if_block$p(ctx) {
+function create_if_block$q(ctx) {
 	let div1;
 	let div0;
 	let div0_style_value;
@@ -19566,7 +13040,7 @@ function create_if_block$p(ctx) {
 }
 
 // (72:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
-function create_default_slot_1$e(ctx) {
+function create_default_slot_1$f(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "closeModal" } });
@@ -19658,7 +13132,7 @@ function create_fragment$10(ctx) {
 	let div;
 	let dialog_class_value;
 	let current;
-	const if_block_creators = [create_if_block$p, create_else_block$a];
+	const if_block_creators = [create_if_block$q, create_else_block$b];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -20157,7 +13631,7 @@ class Warning_icon extends SvelteComponent {
 
 /* src/lib/components/primitives/alert/alert.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$9(ctx) {
+function create_else_block$a(ctx) {
 	let infoicon;
 	let current;
 	infoicon = new Info_icon({});
@@ -20215,7 +13689,7 @@ function create_if_block_1$c(ctx) {
 }
 
 // (41:4) {#if type === 'error'}
-function create_if_block$o(ctx) {
+function create_if_block$p(ctx) {
 	let alerticon;
 	let current;
 	alerticon = new Alert_icon({});
@@ -20252,7 +13726,7 @@ function create_fragment$Y(ctx) {
 	let span;
 	let div_class_value;
 	let current;
-	const if_block_creators = [create_if_block$o, create_if_block_1$c, create_else_block$9];
+	const if_block_creators = [create_if_block$p, create_if_block_1$c, create_else_block$a];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -20487,7 +13961,7 @@ class Spinner extends SvelteComponent {
 
 /* src/lib/components/primitives/button/button.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$n(ctx) {
+function create_if_block$o(ctx) {
 	let spinner;
 	let current;
 
@@ -20545,7 +14019,7 @@ function create_fragment$W(ctx) {
 	let current;
 	let mounted;
 	let dispose;
-	let if_block = /*busy*/ ctx[0] && create_if_block$n();
+	let if_block = /*busy*/ ctx[0] && create_if_block$o();
 	const default_slot_template = /*#slots*/ ctx[7].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[6], null);
 	const default_slot_or_fallback = default_slot || fallback_block$1();
@@ -20587,7 +14061,7 @@ function create_fragment$W(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$n();
+					if_block = create_if_block$o();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(button, t);
@@ -20938,7 +14412,7 @@ class Form extends SvelteComponent {
 
 /* src/lib/components/_utilities/server-strings.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$8(ctx) {
+function create_else_block$9(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[4].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
@@ -20991,7 +14465,7 @@ function create_else_block$8(ctx) {
 }
 
 // (10:0) {#if html}
-function create_if_block$m(ctx) {
+function create_if_block$n(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[4].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
@@ -21093,7 +14567,7 @@ function create_fragment$U(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$m, create_else_block$8];
+	const if_block_creators = [create_if_block$n, create_else_block$9];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -21288,7 +14762,7 @@ class Shield_icon extends SvelteComponent {
 
 /* src/lib/journey/stages/_utilities/back-to.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$l(ctx) {
+function create_if_block$m(ctx) {
 	let p;
 	let button;
 	let t_value = interpolate(/*string*/ ctx[1]) + "";
@@ -21326,7 +14800,7 @@ function create_if_block$l(ctx) {
 
 function create_fragment$S(ctx) {
 	let if_block_anchor;
-	let if_block = /*$stack*/ ctx[2].length > 1 && create_if_block$l(ctx);
+	let if_block = /*$stack*/ ctx[2].length > 1 && create_if_block$m(ctx);
 
 	return {
 		c() {
@@ -21342,7 +14816,7 @@ function create_fragment$S(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$l(ctx);
+					if_block = create_if_block$m(ctx);
 					if_block.c();
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
 				}
@@ -21865,7 +15339,7 @@ function getAttributeValidationFailureText(callback) {
 
 /* src/lib/components/primitives/message/input-message.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$k(ctx) {
+function create_if_block$l(ctx) {
 	let p;
 	let p_class_value;
 	let p_id_value;
@@ -21898,7 +15372,7 @@ function create_if_block$k(ctx) {
 
 function create_fragment$R(ctx) {
 	let if_block_anchor;
-	let if_block = /*dirtyMessage*/ ctx[1] && create_if_block$k(ctx);
+	let if_block = /*dirtyMessage*/ ctx[1] && create_if_block$l(ctx);
 
 	return {
 		c() {
@@ -21914,7 +15388,7 @@ function create_fragment$R(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$k(ctx);
+					if_block = create_if_block$l(ctx);
 					if_block.c();
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
 				}
@@ -23796,7 +17270,7 @@ function create_if_block_1$b(ctx) {
 			props: {
 				key: /*key*/ ctx[4],
 				classes: `${/*labelClasses*/ ctx[6]}`,
-				$$slots: { default: [create_default_slot_1$d] },
+				$$slots: { default: [create_default_slot_1$e] },
 				$$scope: { ctx }
 			}
 		});
@@ -23836,7 +17310,7 @@ function create_if_block_1$b(ctx) {
 }
 
 // (40:2) <Label {key} classes={`${labelClasses}`}>
-function create_default_slot_1$d(ctx) {
+function create_default_slot_1$e(ctx) {
 	let t;
 
 	return {
@@ -23897,7 +17371,7 @@ function create_each_block$8(ctx) {
 }
 
 // (61:0) {#if labelOrder === 'last'}
-function create_if_block$j(ctx) {
+function create_if_block$k(ctx) {
 	let label_1;
 	let current;
 
@@ -23987,7 +17461,7 @@ function create_fragment$I(ctx) {
 		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
 	}
 
-	let if_block1 = /*labelOrder*/ ctx[7] === 'last' && create_if_block$j(ctx);
+	let if_block1 = /*labelOrder*/ ctx[7] === 'last' && create_if_block$k(ctx);
 
 	return {
 		c() {
@@ -24109,7 +17583,7 @@ function create_fragment$I(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block$j(ctx);
+					if_block1 = create_if_block$k(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
@@ -24566,7 +18040,7 @@ let Stacked_label$1 = class Stacked_label extends SvelteComponent {
 
 /* src/lib/journey/callbacks/choice/choice.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$7(ctx) {
+function create_else_block$8(ctx) {
 	let select;
 	let current;
 
@@ -24615,7 +18089,7 @@ function create_else_block$7(ctx) {
 }
 
 // (52:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
-function create_if_block$i(ctx) {
+function create_if_block$j(ctx) {
 	let radio;
 	let current;
 
@@ -24670,7 +18144,7 @@ function create_fragment$F(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$i, create_else_block$7];
+	const if_block_creators = [create_if_block$j, create_else_block$8];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -24946,7 +18420,7 @@ function get_each_context$7(ctx, list, i) {
 }
 
 // (81:0) {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
-function create_if_block$h(ctx) {
+function create_if_block$i(ctx) {
 	let show_if;
 	let current_block_type_index;
 	let if_block;
@@ -25026,7 +18500,7 @@ function create_else_block_1(ctx) {
 	grid = new Grid({
 			props: {
 				num: /*options*/ ctx[3].length,
-				$$slots: { default: [create_default_slot_1$c] },
+				$$slots: { default: [create_default_slot_1$d] },
 				$$scope: { ctx }
 			}
 		});
@@ -25070,7 +18544,7 @@ function create_if_block_1$a(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_2$9, create_else_block$6];
+	const if_block_creators = [create_if_block_2$9, create_else_block$7];
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
@@ -25221,7 +18695,7 @@ function create_each_block$7(ctx) {
 }
 
 // (104:4) <Grid num={options.length}>
-function create_default_slot_1$c(ctx) {
+function create_default_slot_1$d(ctx) {
 	let each_1_anchor;
 	let current;
 	let each_value = /*options*/ ctx[3];
@@ -25305,7 +18779,7 @@ function create_default_slot_1$c(ctx) {
 }
 
 // (92:4) {:else}
-function create_else_block$6(ctx) {
+function create_else_block$7(ctx) {
 	let checkbox;
 	let current;
 
@@ -25426,7 +18900,7 @@ function create_default_slot$k(ctx) {
 function create_fragment$D(ctx) {
 	let if_block_anchor;
 	let current;
-	let if_block = /*stepMetadata*/ ctx[1]?.platform?.stageName !== 'OneTimePassword' && create_if_block$h(ctx);
+	let if_block = /*stepMetadata*/ ctx[1]?.platform?.stageName !== 'OneTimePassword' && create_if_block$i(ctx);
 
 	return {
 		c() {
@@ -25447,7 +18921,7 @@ function create_fragment$D(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$h(ctx);
+					if_block = create_if_block$i(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -25666,7 +19140,7 @@ function create_if_block_7$1(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: `${/*labelClasses*/ ctx[5]} tw_w-full tw_ml-1`,
-				$$slots: { default: [create_default_slot_1$b] },
+				$$slots: { default: [create_default_slot_1$c] },
 				$$scope: { ctx }
 			}
 		});
@@ -25706,7 +19180,7 @@ function create_if_block_7$1(ctx) {
 }
 
 // (25:2) <Label {key} classes={`${labelClasses} tw_w-full tw_ml-1`}>
-function create_default_slot_1$b(ctx) {
+function create_default_slot_1$c(ctx) {
 	let t;
 
 	return {
@@ -26206,7 +19680,7 @@ function create_if_block_1$9(ctx) {
 }
 
 // (129:0) {#if labelOrder === 'last'}
-function create_if_block$g(ctx) {
+function create_if_block$h(ctx) {
 	let label_1;
 	let current;
 
@@ -26290,7 +19764,7 @@ function create_fragment$C(ctx) {
 	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$6(ctx);
 	let if_block5 = /*type*/ ctx[11] === 'phone' && create_if_block_2$8(ctx);
 	let if_block6 = /*type*/ ctx[11] === 'text' && create_if_block_1$9(ctx);
-	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$g(ctx);
+	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$h(ctx);
 
 	return {
 		c() {
@@ -26440,7 +19914,7 @@ function create_fragment$C(ctx) {
 						transition_in(if_block7, 1);
 					}
 				} else {
-					if_block7 = create_if_block$g(ctx);
+					if_block7 = create_if_block$h(ctx);
 					if_block7.c();
 					transition_in(if_block7, 1);
 					if_block7.m(if_block7_anchor.parentNode, if_block7_anchor);
@@ -27299,7 +20773,7 @@ class Lock_icon extends SvelteComponent {
 
 /* src/lib/journey/callbacks/kba/kba-create.svelte generated by Svelte v3.55.1 */
 
-function create_if_block$f(ctx) {
+function create_if_block$g(ctx) {
 	let input;
 	let current;
 
@@ -27380,7 +20854,7 @@ function create_fragment$y(ctx) {
 			}
 		});
 
-	let if_block = /*displayCustomQuestionInput*/ ctx[3] && create_if_block$f(ctx);
+	let if_block = /*displayCustomQuestionInput*/ ctx[3] && create_if_block$g(ctx);
 
 	function input_value_binding(value) {
 		/*input_value_binding*/ ctx[21](value);
@@ -27459,7 +20933,7 @@ function create_fragment$y(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$f(ctx);
+					if_block = create_if_block$g(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(fieldset, t6);
@@ -27818,7 +21292,7 @@ class Name extends SvelteComponent {
 
 /* src/lib/components/icons/eye-icon.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$5(ctx) {
+function create_else_block$6(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -27900,7 +21374,7 @@ function create_else_block$5(ctx) {
 }
 
 // (6:0) {#if !visible}
-function create_if_block$e(ctx) {
+function create_if_block$f(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -27986,7 +21460,7 @@ function create_fragment$w(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$e, create_else_block$5];
+	const if_block_creators = [create_if_block$f, create_else_block$6];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -28075,7 +21549,7 @@ class Eye_icon extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/confirm-input.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot_1$a(ctx) {
+function create_default_slot_1$b(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[15].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[16], null);
@@ -28237,7 +21711,7 @@ function create_fragment$v(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot$1],
-					default: [create_default_slot_1$a]
+					default: [create_default_slot_1$b]
 				},
 				$$scope: { ctx }
 			}
@@ -28388,7 +21862,7 @@ class Confirm_input extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/base.svelte generated by Svelte v3.55.1 */
 
-function create_default_slot_1$9(ctx) {
+function create_default_slot_1$a(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[21].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[22], null);
@@ -28529,7 +22003,7 @@ function create_input_button_slot(ctx) {
 }
 
 // (101:0) {#if callbackMetadata?.platform?.confirmPassword}
-function create_if_block$d(ctx) {
+function create_if_block$e(ctx) {
 	let confirminput;
 	let current;
 
@@ -28605,13 +22079,13 @@ function create_fragment$u(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot],
-					default: [create_default_slot_1$9]
+					default: [create_default_slot_1$a]
 				},
 				$$scope: { ctx }
 			}
 		});
 
-	let if_block = /*callbackMetadata*/ ctx[1]?.platform?.confirmPassword && create_if_block$d(ctx);
+	let if_block = /*callbackMetadata*/ ctx[1]?.platform?.confirmPassword && create_if_block$e(ctx);
 
 	return {
 		c() {
@@ -28660,7 +22134,7 @@ function create_fragment$u(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$d(ctx);
+					if_block = create_if_block$e(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -29849,7 +23323,7 @@ function create_default_slot_2$4(ctx) {
 }
 
 // (43:2) <Grid num={1}>
-function create_default_slot_1$8(ctx) {
+function create_default_slot_1$9(ctx) {
 	let show_if;
 	let show_if_1;
 	let show_if_2;
@@ -29953,7 +23427,7 @@ function create_each_block$6(ctx) {
 	grid = new Grid({
 			props: {
 				num: 1,
-				$$slots: { default: [create_default_slot_1$8] },
+				$$slots: { default: [create_default_slot_1$9] },
 				$$scope: { ctx }
 			}
 		});
@@ -29991,7 +23465,7 @@ function create_each_block$6(ctx) {
 }
 
 // (81:0) {#if stepMetadata && stepMetadata.derived.numOfCallbacks > 1}
-function create_if_block$c(ctx) {
+function create_if_block$d(ctx) {
 	let grid;
 	let current;
 
@@ -30060,7 +23534,7 @@ function create_fragment$m(ctx) {
 		each_blocks[i] = null;
 	});
 
-	let if_block = /*stepMetadata*/ ctx[0] && /*stepMetadata*/ ctx[0].derived.numOfCallbacks > 1 && create_if_block$c(ctx);
+	let if_block = /*stepMetadata*/ ctx[0] && /*stepMetadata*/ ctx[0].derived.numOfCallbacks > 1 && create_if_block$d(ctx);
 
 	return {
 		c() {
@@ -30116,7 +23590,7 @@ function create_fragment$m(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$c(ctx);
+					if_block = create_if_block$d(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -30355,7 +23829,7 @@ function create_if_block_1$7(ctx) {
 }
 
 // (24:0) {#if simplifiedFailures.length}
-function create_if_block$b(ctx) {
+function create_if_block$c(ctx) {
 	let div;
 	let p;
 	let t0;
@@ -30505,7 +23979,7 @@ function create_fragment$l(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$b, create_if_block_1$7];
+	const if_block_creators = [create_if_block$c, create_if_block_1$7];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -30956,7 +24430,7 @@ class Link extends SvelteComponent {
 
 /* src/lib/journey/callbacks/terms-and-conditions/terms-conditions.svelte generated by Svelte v3.55.1 */
 
-function create_else_block$4(ctx) {
+function create_else_block$5(ctx) {
 	let p;
 
 	return {
@@ -30978,7 +24452,7 @@ function create_else_block$4(ctx) {
 }
 
 // (27:0) {#if $linksStore?.termsAndConditions}
-function create_if_block$a(ctx) {
+function create_if_block$b(ctx) {
 	let link;
 	let t;
 	let checkbox;
@@ -30989,7 +24463,7 @@ function create_if_block$a(ctx) {
 				classes: "tw_block tw_mb-4",
 				href: /*$linksStore*/ ctx[2]?.termsAndConditions,
 				target: "_blank",
-				$$slots: { default: [create_default_slot_1$7] },
+				$$slots: { default: [create_default_slot_1$8] },
 				$$scope: { ctx }
 			}
 		});
@@ -31056,7 +24530,7 @@ function create_if_block$a(ctx) {
 }
 
 // (28:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
-function create_default_slot_1$7(ctx) {
+function create_default_slot_1$8(ctx) {
 	let t_value = interpolate('termsAndConditionsLinkText') + "";
 	let t;
 
@@ -31109,7 +24583,7 @@ function create_fragment$i(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$a, create_else_block$4];
+	const if_block_creators = [create_if_block$b, create_else_block$5];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -31247,6 +24721,119 @@ class Terms_conditions extends SvelteComponent {
 
 /* src/lib/journey/callbacks/text-output/text-output.svelte generated by Svelte v3.55.1 */
 
+function create_else_block$4(ctx) {
+	let alert;
+	let current;
+
+	alert = new Alert({
+			props: {
+				id: "",
+				needsFocus: false,
+				type: /*callbackMessageType*/ ctx[1],
+				$$slots: { default: [create_default_slot_1$7] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(alert.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(alert, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const alert_changes = {};
+			if (dirty & /*callbackMessageType*/ 2) alert_changes.type = /*callbackMessageType*/ ctx[1];
+
+			if (dirty & /*$$scope, cleanMessage*/ 257) {
+				alert_changes.$$scope = { dirty, ctx };
+			}
+
+			alert.$set(alert_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(alert.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(alert.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(alert, detaching);
+		}
+	};
+}
+
+// (32:0) {#if callbackMessageType === 'info'}
+function create_if_block$a(ctx) {
+	let text_1;
+	let current;
+
+	text_1 = new Text({
+			props: {
+				classes: "tw_font-bold tw_mt-6",
+				$$slots: { default: [create_default_slot$b] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(text_1.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(text_1, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const text_1_changes = {};
+
+			if (dirty & /*$$scope, cleanMessage*/ 257) {
+				text_1_changes.$$scope = { dirty, ctx };
+			}
+
+			text_1.$set(text_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(text_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(text_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(text_1, detaching);
+		}
+	};
+}
+
+// (37:2) <Alert id="" needsFocus={false} type="{callbackMessageType}">
+function create_default_slot_1$7(ctx) {
+	let t;
+
+	return {
+		c() {
+			t = text(/*cleanMessage*/ ctx[0]);
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*cleanMessage*/ 1) set_data(t, /*cleanMessage*/ ctx[0]);
+		},
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+// (33:2) <Text classes="tw_font-bold tw_mt-6">
 function create_default_slot$b(ctx) {
 	let html_tag;
 	let html_anchor;
@@ -31272,47 +24859,85 @@ function create_default_slot$b(ctx) {
 }
 
 function create_fragment$h(ctx) {
-	let text_1;
+	let current_block_type_index;
+	let if_block;
+	let if_block_anchor;
 	let current;
+	const if_block_creators = [create_if_block$a, create_else_block$4];
+	const if_blocks = [];
 
-	text_1 = new Text({
-			props: {
-				classes: "tw_font-bold tw_mt-6",
-				$$slots: { default: [create_default_slot$b] },
-				$$scope: { ctx }
-			}
-		});
+	function select_block_type(ctx, dirty) {
+		if (/*callbackMessageType*/ ctx[1] === 'info') return 0;
+		return 1;
+	}
+
+	current_block_type_index = select_block_type(ctx);
+	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
 	return {
 		c() {
-			create_component(text_1.$$.fragment);
+			if_block.c();
+			if_block_anchor = empty();
 		},
 		m(target, anchor) {
-			mount_component(text_1, target, anchor);
+			if_blocks[current_block_type_index].m(target, anchor);
+			insert(target, if_block_anchor, anchor);
 			current = true;
 		},
 		p(ctx, [dirty]) {
-			const text_1_changes = {};
+			let previous_block_index = current_block_type_index;
+			current_block_type_index = select_block_type(ctx);
 
-			if (dirty & /*$$scope, cleanMessage*/ 129) {
-				text_1_changes.$$scope = { dirty, ctx };
+			if (current_block_type_index === previous_block_index) {
+				if_blocks[current_block_type_index].p(ctx, dirty);
+			} else {
+				group_outros();
+
+				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+					if_blocks[previous_block_index] = null;
+				});
+
+				check_outros();
+				if_block = if_blocks[current_block_type_index];
+
+				if (!if_block) {
+					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+					if_block.c();
+				} else {
+					if_block.p(ctx, dirty);
+				}
+
+				transition_in(if_block, 1);
+				if_block.m(if_block_anchor.parentNode, if_block_anchor);
 			}
-
-			text_1.$set(text_1_changes);
 		},
 		i(local) {
 			if (current) return;
-			transition_in(text_1.$$.fragment, local);
+			transition_in(if_block);
 			current = true;
 		},
 		o(local) {
-			transition_out(text_1.$$.fragment, local);
+			transition_out(if_block);
 			current = false;
 		},
 		d(detaching) {
-			destroy_component(text_1, detaching);
+			if_blocks[current_block_type_index].d(detaching);
+			if (detaching) detach(if_block_anchor);
 		}
 	};
+}
+
+function getCallbackMessage(messageType) {
+	switch (messageType) {
+		case '0':
+			return 'info';
+		case '1':
+			return 'warning';
+		case '2':
+			return 'error';
+		default:
+			return 'info';
+	}
 }
 
 function instance$i($$self, $$props, $$invalidate) {
@@ -31323,22 +24948,25 @@ function instance$i($$self, $$props, $$invalidate) {
 	let { callback } = $$props;
 	let dirtyMessage = callback.getMessage();
 	let cleanMessage = sanitize(dirtyMessage);
+	let callbackMessageType = 'info';
 
 	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(5, callback = $$props.callback);
+		if ('callback' in $$props) $$invalidate(6, callback = $$props.callback);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback, dirtyMessage*/ 96) {
+		if ($$self.$$.dirty & /*callback, dirtyMessage*/ 192) {
 			{
-				$$invalidate(6, dirtyMessage = callback.getMessage());
+				$$invalidate(7, dirtyMessage = callback.getMessage());
 				$$invalidate(0, cleanMessage = sanitize(dirtyMessage));
+				$$invalidate(1, callbackMessageType = getCallbackMessage(callback.getMessageType()));
 			}
 		}
 	};
 
 	return [
 		cleanMessage,
+		callbackMessageType,
 		callbackMetadata,
 		selfSubmitFunction,
 		stepMetadata,
@@ -31353,28 +24981,28 @@ class Text_output extends SvelteComponent {
 		super();
 
 		init(this, options, instance$i, create_fragment$h, safe_not_equal, {
-			callbackMetadata: 1,
-			selfSubmitFunction: 2,
-			stepMetadata: 3,
-			style: 4,
-			callback: 5
+			callbackMetadata: 2,
+			selfSubmitFunction: 3,
+			stepMetadata: 4,
+			style: 5,
+			callback: 6
 		});
 	}
 
 	get callbackMetadata() {
-		return this.$$.ctx[1];
-	}
-
-	get selfSubmitFunction() {
 		return this.$$.ctx[2];
 	}
 
-	get stepMetadata() {
+	get selfSubmitFunction() {
 		return this.$$.ctx[3];
 	}
 
-	get style() {
+	get stepMetadata() {
 		return this.$$.ctx[4];
+	}
+
+	get style() {
+		return this.$$.ctx[5];
 	}
 }
 
@@ -33122,24 +26750,24 @@ function create_fragment$c(ctx) {
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (/*cbType*/ ctx[1] === CallbackType$1.BooleanAttributeInputCallback) return 0;
-		if (/*cbType*/ ctx[1] === CallbackType$1.ChoiceCallback) return 1;
-		if (/*cbType*/ ctx[1] === CallbackType$1.ConfirmationCallback) return 2;
-		if (/*cbType*/ ctx[1] === CallbackType$1.HiddenValueCallback) return 3;
-		if (/*cbType*/ ctx[1] === CallbackType$1.KbaCreateCallback) return 4;
-		if (/*cbType*/ ctx[1] === CallbackType$1.NameCallback) return 5;
-		if (/*cbType*/ ctx[1] === CallbackType$1.PasswordCallback) return 6;
-		if (/*cbType*/ ctx[1] === CallbackType$1.PollingWaitCallback) return 7;
-		if (/*cbType*/ ctx[1] === CallbackType$1.RedirectCallback) return 8;
-		if (/*cbType*/ ctx[1] === CallbackType$1.SelectIdPCallback) return 9;
-		if (/*cbType*/ ctx[1] === CallbackType$1.StringAttributeInputCallback) return 10;
-		if (/*cbType*/ ctx[1] === CallbackType$1.ValidatedCreatePasswordCallback) return 11;
-		if (/*cbType*/ ctx[1] === CallbackType$1.ValidatedCreateUsernameCallback) return 12;
-		if (/*cbType*/ ctx[1] === CallbackType$1.TermsAndConditionsCallback) return 13;
-		if (/*cbType*/ ctx[1] === CallbackType$1.TextOutputCallback) return 14;
-		if (/*cbType*/ ctx[1] === CallbackType$1.SuspendedTextOutputCallback) return 15;
-		if (/*cbType*/ ctx[1] === CallbackType$1.DeviceProfileCallback) return 16;
-		if (/*cbType*/ ctx[1] === CallbackType$1.MetadataCallback) return 17;
+		if (/*cbType*/ ctx[1] === CallbackType.BooleanAttributeInputCallback) return 0;
+		if (/*cbType*/ ctx[1] === CallbackType.ChoiceCallback) return 1;
+		if (/*cbType*/ ctx[1] === CallbackType.ConfirmationCallback) return 2;
+		if (/*cbType*/ ctx[1] === CallbackType.HiddenValueCallback) return 3;
+		if (/*cbType*/ ctx[1] === CallbackType.KbaCreateCallback) return 4;
+		if (/*cbType*/ ctx[1] === CallbackType.NameCallback) return 5;
+		if (/*cbType*/ ctx[1] === CallbackType.PasswordCallback) return 6;
+		if (/*cbType*/ ctx[1] === CallbackType.PollingWaitCallback) return 7;
+		if (/*cbType*/ ctx[1] === CallbackType.RedirectCallback) return 8;
+		if (/*cbType*/ ctx[1] === CallbackType.SelectIdPCallback) return 9;
+		if (/*cbType*/ ctx[1] === CallbackType.StringAttributeInputCallback) return 10;
+		if (/*cbType*/ ctx[1] === CallbackType.ValidatedCreatePasswordCallback) return 11;
+		if (/*cbType*/ ctx[1] === CallbackType.ValidatedCreateUsernameCallback) return 12;
+		if (/*cbType*/ ctx[1] === CallbackType.TermsAndConditionsCallback) return 13;
+		if (/*cbType*/ ctx[1] === CallbackType.TextOutputCallback) return 14;
+		if (/*cbType*/ ctx[1] === CallbackType.SuspendedTextOutputCallback) return 15;
+		if (/*cbType*/ ctx[1] === CallbackType.DeviceProfileCallback) return 16;
+		if (/*cbType*/ ctx[1] === CallbackType.MetadataCallback) return 17;
 		return 18;
 	}
 
@@ -33254,58 +26882,58 @@ function instance$c($$self, $$props, $$invalidate) {
 				$$invalidate(1, cbType = props.callback.getType());
 
 				switch (cbType) {
-					case CallbackType$1.BooleanAttributeInputCallback:
+					case CallbackType.BooleanAttributeInputCallback:
 						$$invalidate(2, _BooleanAttributeInputCallback = props.callback);
 						break;
-					case CallbackType$1.ChoiceCallback:
+					case CallbackType.ChoiceCallback:
 						$$invalidate(3, _ChoiceCallback = props.callback);
 						break;
-					case CallbackType$1.ConfirmationCallback:
+					case CallbackType.ConfirmationCallback:
 						$$invalidate(4, _ConfirmationCallback = props.callback);
 						break;
-					case CallbackType$1.HiddenValueCallback:
+					case CallbackType.HiddenValueCallback:
 						$$invalidate(5, _HiddenValueCallback = props.callback);
 						break;
-					case CallbackType$1.KbaCreateCallback:
+					case CallbackType.KbaCreateCallback:
 						$$invalidate(6, _KbaCreateCallback = props.callback);
 						break;
-					case CallbackType$1.NameCallback:
+					case CallbackType.NameCallback:
 						$$invalidate(7, _NameCallback = props.callback);
 						break;
-					case CallbackType$1.PasswordCallback:
+					case CallbackType.PasswordCallback:
 						$$invalidate(8, _PasswordCallback = props.callback);
 						break;
-					case CallbackType$1.PollingWaitCallback:
+					case CallbackType.PollingWaitCallback:
 						$$invalidate(9, _PollingWaitCallback = props.callback);
 						break;
-					case CallbackType$1.RedirectCallback:
+					case CallbackType.RedirectCallback:
 						$$invalidate(10, _RedirectCallback = props.callback);
 						break;
-					case CallbackType$1.SelectIdPCallback:
+					case CallbackType.SelectIdPCallback:
 						$$invalidate(11, _SelectIdPCallback = props.callback);
 						break;
-					case CallbackType$1.StringAttributeInputCallback:
+					case CallbackType.StringAttributeInputCallback:
 						$$invalidate(12, _StringAttributeInputCallback = props.callback);
 						break;
-					case CallbackType$1.ValidatedCreatePasswordCallback:
+					case CallbackType.ValidatedCreatePasswordCallback:
 						$$invalidate(13, _ValidatedCreatePasswordCallback = props.callback);
 						break;
-					case CallbackType$1.ValidatedCreateUsernameCallback:
+					case CallbackType.ValidatedCreateUsernameCallback:
 						$$invalidate(14, _ValidatedCreateUsernameCallback = props.callback);
 						break;
-					case CallbackType$1.TermsAndConditionsCallback:
+					case CallbackType.TermsAndConditionsCallback:
 						$$invalidate(15, _TermsAndConditionsCallback = props.callback);
 						break;
-					case CallbackType$1.TextOutputCallback:
+					case CallbackType.TextOutputCallback:
 						$$invalidate(16, _TextOutputCallback = props.callback);
 						break;
-					case CallbackType$1.SuspendedTextOutputCallback:
+					case CallbackType.SuspendedTextOutputCallback:
 						$$invalidate(17, _SuspendedTextOutputCallback = props.callback);
 						break;
-					case CallbackType$1.DeviceProfileCallback:
+					case CallbackType.DeviceProfileCallback:
 						$$invalidate(19, _DeviceProfileCallback = props.callback);
 						break;
-					case CallbackType$1.MetadataCallback:
+					case CallbackType.MetadataCallback:
 						$$invalidate(18, _MetadataCallback = props.callback);
 						break;
 					default:
@@ -33988,7 +27616,7 @@ function instance$b($$self, $$props, $$invalidate) {
 	$$self.$$.update = () => {
 		if ($$self.$$.dirty & /*step, form*/ 36) {
 			{
-				shouldRedirectFromStep(step) && FRAuth$1.redirect(step);
+				shouldRedirectFromStep(step) && FRAuth.redirect(step);
 				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
 			}
 		}
@@ -36493,7 +30121,7 @@ function create_if_block_2$1(ctx) {
 	};
 }
 
-// (88:2) {#if form?.message}
+// (86:2) {#if form?.message}
 function create_if_block_1$1(ctx) {
 	let alert;
 	let current;
@@ -36520,7 +30148,7 @@ function create_if_block_1$1(ctx) {
 			const alert_changes = {};
 			if (dirty & /*alertNeedsFocus*/ 8) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[3];
 
-			if (dirty & /*$$scope, formMessageKey, form*/ 16404) {
+			if (dirty & /*$$scope, formMessageKey, form*/ 4116) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
@@ -36541,7 +30169,7 @@ function create_if_block_1$1(ctx) {
 	};
 }
 
-// (89:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_1$2(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[4], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -36562,7 +30190,7 @@ function create_default_slot_1$2(ctx) {
 	};
 }
 
-// (105:2) {:else}
+// (103:2) {:else}
 function create_else_block$2(ctx) {
 	let header;
 	let h1;
@@ -36620,7 +30248,7 @@ function create_else_block$2(ctx) {
 	};
 }
 
-// (94:2) {#if webAuthnType === WebAuthnStepType.Authentication}
+// (92:2) {#if webAuthnType === WebAuthnStepType.Authentication}
 function create_if_block$3(ctx) {
 	let header;
 	let h1;
@@ -36676,7 +30304,7 @@ function create_if_block$3(ctx) {
 	};
 }
 
-// (72:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
+// (70:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
 function create_default_slot$3(ctx) {
 	let t0;
 	let div;
@@ -36815,7 +30443,7 @@ function create_fragment$4(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[12](value);
+		/*form_1_formEl_binding*/ ctx[10](value);
 	}
 
 	let form_1_props = {
@@ -36846,7 +30474,7 @@ function create_fragment$4(ctx) {
 			if (dirty & /*formAriaDescriptor*/ 32) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[5];
 			if (dirty & /*formNeedsFocus*/ 64) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[6];
 
-			if (dirty & /*$$scope, alertNeedsFocus, formMessageKey, form, componentStyle*/ 16414) {
+			if (dirty & /*$$scope, alertNeedsFocus, formMessageKey, form, componentStyle*/ 4126) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -36882,8 +30510,6 @@ function instance$4($$self, $$props, $$invalidate) {
 	let { componentStyle } = $$props;
 	let { form } = $$props;
 	let { formEl = null } = $$props;
-	let { journey } = $$props;
-	let { metadata } = $$props;
 	let { step } = $$props;
 	let alertNeedsFocus = false;
 	let formMessageKey = '';
@@ -36944,9 +30570,7 @@ function instance$4($$self, $$props, $$invalidate) {
 		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
 		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('journey' in $$props) $$invalidate(9, journey = $$props.journey);
-		if ('metadata' in $$props) $$invalidate(10, metadata = $$props.metadata);
-		if ('step' in $$props) $$invalidate(11, step = $$props.step);
+		if ('step' in $$props) $$invalidate(9, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
@@ -36967,8 +30591,6 @@ function instance$4($$self, $$props, $$invalidate) {
 		formNeedsFocus,
 		webAuthnType,
 		allowWebAuthn,
-		journey,
-		metadata,
 		step,
 		form_1_formEl_binding
 	];
@@ -36983,9 +30605,7 @@ class Webauthn extends SvelteComponent {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
-			journey: 9,
-			metadata: 10,
-			step: 11
+			step: 9
 		});
 	}
 }
@@ -37057,11 +30677,11 @@ class Shield_check_icon extends SvelteComponent {
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[11] = list[i];
+	child_ctx[10] = list[i];
 	return child_ctx;
 }
 
-// (43:2) {#if form?.icon && componentStyle !== 'inline'}
+// (42:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block$2(ctx) {
 	let div;
 	let clipboardicon;
@@ -37101,11 +30721,11 @@ function create_if_block$2(ctx) {
 	};
 }
 
-// (73:4) {#each codes as code}
+// (72:4) {#each codes as code}
 function create_each_block(ctx) {
 	let li;
 	let span;
-	let t0_value = /*code*/ ctx[11] + "";
+	let t0_value = /*code*/ ctx[10] + "";
 	let t0;
 	let t1;
 
@@ -37125,7 +30745,7 @@ function create_each_block(ctx) {
 			append(li, t1);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*codes*/ 16 && t0_value !== (t0_value = /*code*/ ctx[11] + "")) set_data(t0, t0_value);
+			if (dirty & /*codes*/ 16 && t0_value !== (t0_value = /*code*/ ctx[10] + "")) set_data(t0, t0_value);
 		},
 		d(detaching) {
 			if (detaching) detach(li);
@@ -37133,7 +30753,7 @@ function create_each_block(ctx) {
 	};
 }
 
-// (82:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (81:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$1(ctx) {
 	let t;
 	let current;
@@ -37163,7 +30783,7 @@ function create_default_slot_1$1(ctx) {
 	};
 }
 
-// (36:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
+// (35:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
 function create_default_slot$2(ctx) {
 	let t0;
 	let header;
@@ -37335,7 +30955,7 @@ function create_default_slot$2(ctx) {
 			const button_changes = {};
 			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
 
-			if (dirty & /*$$scope*/ 16384) {
+			if (dirty & /*$$scope*/ 8192) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -37389,14 +31009,14 @@ function create_fragment$2(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[10](value);
+		/*form_1_formEl_binding*/ ctx[9](value);
 	}
 
 	let form_1_props = {
 		ariaDescribedBy: /*formAriaDescriptor*/ ctx[5],
 		id: formElementId,
 		needsFocus: /*formNeedsFocus*/ ctx[6],
-		onSubmitWhenValid: /*func*/ ctx[9],
+		onSubmitWhenValid: /*func*/ ctx[8],
 		$$slots: { default: [create_default_slot$2] },
 		$$scope: { ctx }
 	};
@@ -37420,9 +31040,9 @@ function create_fragment$2(ctx) {
 			const form_1_changes = {};
 			if (dirty & /*formAriaDescriptor*/ 32) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[5];
 			if (dirty & /*formNeedsFocus*/ 64) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[6];
-			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*func*/ ctx[9];
+			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*func*/ ctx[8];
 
-			if (dirty & /*$$scope, journey, codes, form, componentStyle*/ 16414) {
+			if (dirty & /*$$scope, journey, codes, form, componentStyle*/ 8222) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -37458,7 +31078,6 @@ function instance$2($$self, $$props, $$invalidate) {
 	let { form } = $$props;
 	let { formEl = null } = $$props;
 	let { journey } = $$props;
-	let { metadata } = $$props;
 	let { step } = $$props;
 	let codes = [];
 	let formAriaDescriptor = 'genericStepHeader';
@@ -37486,12 +31105,11 @@ function instance$2($$self, $$props, $$invalidate) {
 		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
 		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
-		if ('metadata' in $$props) $$invalidate(7, metadata = $$props.metadata);
-		if ('step' in $$props) $$invalidate(8, step = $$props.step);
+		if ('step' in $$props) $$invalidate(7, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*step*/ 256) {
+		if ($$self.$$.dirty & /*step*/ 128) {
 			{
 				$$invalidate(4, codes = FRRecoveryCodes.getCodes(step));
 			}
@@ -37506,7 +31124,6 @@ function instance$2($$self, $$props, $$invalidate) {
 		codes,
 		formAriaDescriptor,
 		formNeedsFocus,
-		metadata,
 		step,
 		func,
 		form_1_formEl_binding
@@ -37522,8 +31139,7 @@ class Recovery_codes extends SvelteComponent {
 			form: 2,
 			formEl: 0,
 			journey: 3,
-			metadata: 7,
-			step: 8
+			step: 7
 		});
 	}
 }
@@ -37684,7 +31300,7 @@ function create_if_block$1(ctx) {
 
 	function select_block_type_1(ctx, dirty) {
 		if (/*$journeyStore*/ ctx[5] && !/*$journeyStore*/ ctx[5].step) return 0;
-		if (/*$journeyStore*/ ctx[5].step?.type === StepType$1.Step) return 1;
+		if (/*$journeyStore*/ ctx[5].step?.type === StepType.Step) return 1;
 		return -1;
 	}
 

@@ -9,9 +9,7 @@
   const journeyEvents = journey();
 
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
-  let codeParam = $page.url.searchParams.get('code');
   let journeyParam = $page.url.searchParams.get('journey');
-  let stateParam = $page.url.searchParams.get('state');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
   let formEl: HTMLDivElement;
@@ -28,15 +26,21 @@
       console.log('Form mounted');
     }
   });
-  journeyEvents.subscribe((event) => {
-    if (event?.user?.successful) {
-      console.log(event.user);
-      userResponse = event.user;
-    }
-    if (event.journey.error || event.oauth.error || event.user.error) {
-      console.log('Login failure event fired');
-    }
-  });
+  journeyEvents.subscribe(
+    (event: {
+      user: { successful: any; error: any };
+      journey: { error: any };
+      oauth: { error: any };
+    }) => {
+      if (event?.user?.successful) {
+        console.log(event.user);
+        userResponse = event.user;
+      }
+      if (event.journey.error || event.oauth.error || event.user.error) {
+        console.log('Login failure event fired');
+      }
+    },
+  );
 
   onMount(async () => {
     let content;
