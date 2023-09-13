@@ -171,8 +171,9 @@ function children(element) {
 }
 function set_data(text, data) {
     data = '' + data;
-    if (text.wholeText !== data)
-        text.data = data;
+    if (text.data === data)
+        return;
+    text.data = data;
 }
 function set_input_value(input, value) {
     input.value = value == null ? '' : value;
@@ -190,16 +191,17 @@ class HtmlTag {
         if (!this.e) {
             if (this.is_svg)
                 this.e = svg_element(target.nodeName);
+            /** #7364  target for <template> may be provided as #document-fragment(11) */
             else
-                this.e = element(target.nodeName);
-            this.t = target;
+                this.e = element((target.nodeType === 11 ? 'TEMPLATE' : target.nodeName));
+            this.t = target.tagName !== 'TEMPLATE' ? target : target.content;
             this.c(html);
         }
         this.i(anchor);
     }
     h(html) {
         this.e.innerHTML = html;
-        this.n = Array.from(this.e.childNodes);
+        this.n = Array.from(this.e.nodeName === 'TEMPLATE' ? this.e.content.childNodes : this.e.childNodes);
     }
     i(anchor) {
         for (let i = 0; i < this.n.length; i += 1) {
@@ -251,9 +253,9 @@ function afterUpdate(fn) {
 
 const dirty_components = [];
 const binding_callbacks = [];
-const render_callbacks = [];
+let render_callbacks = [];
 const flush_callbacks = [];
-const resolved_promise = Promise.resolve();
+const resolved_promise = /* @__PURE__ */ Promise.resolve();
 let update_scheduled = false;
 function schedule_update() {
     if (!update_scheduled) {
@@ -346,6 +348,16 @@ function update($$) {
         $$.fragment && $$.fragment.p($$.ctx, dirty);
         $$.after_update.forEach(add_render_callback);
     }
+}
+/**
+ * Useful for example to execute remaining `afterUpdate` callbacks before executing `destroy`.
+ */
+function flush_render_callbacks(fns) {
+    const filtered = [];
+    const targets = [];
+    render_callbacks.forEach((c) => fns.indexOf(c) === -1 ? filtered.push(c) : targets.push(c));
+    targets.forEach((c) => c());
+    render_callbacks = filtered;
 }
 const outroing = new Set();
 let outros;
@@ -461,6 +473,7 @@ function mount_component(component, target, anchor, customElement) {
 function destroy_component(component, detaching) {
     const $$ = component.$$;
     if ($$.fragment !== null) {
+        flush_render_callbacks($$.after_update);
         run_all($$.on_destroy);
         $$.fragment && $$.fragment.d(detaching);
         // TODO null out other refs, including component.$$ (but need to
@@ -571,7 +584,7 @@ const subscriber_queue = [];
 /**
  * Creates a `Readable` store that allows reading by subscription.
  * @param value initial value
- * @param {StartStopNotifier}start start and stop notifications for subscriptions
+ * @param {StartStopNotifier} [start]
  */
 function readable(value, start) {
     return {
@@ -581,7 +594,7 @@ function readable(value, start) {
 /**
  * Create a `Writable` store that allows both updating and reading by subscription.
  * @param {*=}value initial value
- * @param {StartStopNotifier=}start start and stop notifications for subscriptions
+ * @param {StartStopNotifier=} start
  */
 function writable(value, start = noop) {
     let stop;
@@ -616,7 +629,7 @@ function writable(value, start = noop) {
         run(value);
         return () => {
             subscribers.delete(subscriber);
-            if (subscribers.size === 0) {
+            if (subscribers.size === 0 && stop) {
                 stop();
                 stop = null;
             }
@@ -631,7 +644,7 @@ function derived(stores, fn, initial_value) {
         : stores;
     const auto = fn.length < 2;
     return readable(initial_value, (set) => {
-        let inited = false;
+        let started = false;
         const values = [];
         let pending = 0;
         let cleanup = noop;
@@ -651,17 +664,21 @@ function derived(stores, fn, initial_value) {
         const unsubscribers = stores_array.map((store, i) => subscribe(store, (value) => {
             values[i] = value;
             pending &= ~(1 << i);
-            if (inited) {
+            if (started) {
                 sync();
             }
         }, () => {
             pending |= (1 << i);
         }));
-        inited = true;
+        started = true;
         sync();
         return function stop() {
             run_all(unsubscribers);
             cleanup();
+            // We need to set this to false because callbacks can still happen despite having unsubscribed:
+            // Callbacks might already be placed in the queue which doesn't know it should no longer
+            // invoke this derived store.
+            started = false;
         };
     });
 }
@@ -4086,11 +4103,6 @@ var WebAuthnStepType;
  * Copyright (c) 2020 ForgeRock. All rights reserved.
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
- */
-/**
- * @module
- * @ignore
- * These are private utility functions for HttpClient
  */
 function ensureArray(arr) {
     return arr || [];
@@ -9175,15 +9187,19 @@ function htmlDecode(input) {
     return e.childNodes.length === 0 ? '' : e.childNodes[0].nodeValue;
 }
 
-function getDefaultExportFromCjs (x) {
-	return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, 'default') ? x['default'] : x;
-}
-
-var lib$1 = {exports: {}};
+var libExports$1 = {};
+var lib$1 = {
+  get exports(){ return libExports$1; },
+  set exports(v){ libExports$1 = v; },
+};
 
 var _default$1 = {};
 
-var lib = {exports: {}};
+var libExports = {};
+var lib = {
+  get exports(){ return libExports; },
+  set exports(v){ libExports = v; },
+};
 
 var _default = {};
 
@@ -9837,10 +9853,8 @@ var css = FilterCSS$2;
 	// 在浏览器端使用
 	if (typeof window !== 'undefined') {
 	  window.filterCSS = module.exports;
-	} 
-} (lib, lib.exports));
-
-var libExports$1 = lib.exports;
+	}
+} (lib, libExports));
 
 var util = {
   indexOf: function (arr, item) {
@@ -9883,8 +9897,8 @@ var util = {
  * @author Zongmin Lei<leizongmin@gmail.com>
  */
 
-var FilterCSS$1 = libExports$1.FilterCSS;
-var getDefaultCSSWhiteList = libExports$1.getDefaultWhiteList;
+var FilterCSS$1 = libExports.FilterCSS;
+var getDefaultCSSWhiteList = libExports.getDefaultWhiteList;
 var _$2 = util;
 
 function getDefaultWhiteList() {
@@ -10601,7 +10615,7 @@ parser$1.parseAttr = parseAttr$1;
  * @author Zongmin Lei<leizongmin@gmail.com>
  */
 
-var FilterCSS = libExports$1.FilterCSS;
+var FilterCSS = libExports.FilterCSS;
 var DEFAULT = _default$1;
 var parser = parser$1;
 var parseTag = parser.parseTag;
@@ -10876,11 +10890,10 @@ var xss = FilterXSS;
 	}
 	if (isWorkerEnv()) {
 	  self.filterXSS = module.exports;
-	} 
-} (lib$1, lib$1.exports));
+	}
+} (lib$1, libExports$1));
 
-var libExports = lib$1.exports;
-var sanitize = /*@__PURE__*/getDefaultExportFromCjs(libExports);
+var sanitize = libExports$1;
 
 var alreadyHaveAnAccount = "Already have an account? <a href='?journey'>Sign in here!</a>";
 var backToDefault = "Back to Sign In";
@@ -12495,7 +12508,7 @@ function widgetApiFactory(componentApi) {
     };
 }
 
-/* src/lib/components/_utilities/locale-strings.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/_utilities/locale-strings.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$c(ctx) {
 	let current;
@@ -12748,7 +12761,7 @@ class Locale_strings extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/x-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/x-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$11(ctx) {
 	let svg;
@@ -12847,7 +12860,7 @@ class X_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/compositions/dialog/dialog.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/dialog/dialog.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$b(ctx) {
 	let div;
@@ -13332,7 +13345,7 @@ class Dialog extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/alert-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/alert-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$$(ctx) {
 	let svg;
@@ -13431,7 +13444,7 @@ class Alert_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/info-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/info-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$_(ctx) {
 	let svg;
@@ -13530,7 +13543,7 @@ class Info_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/warning-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/warning-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$Z(ctx) {
 	let svg;
@@ -13629,7 +13642,7 @@ class Warning_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/alert/alert.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/alert/alert.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$a(ctx) {
 	let infoicon;
@@ -13894,7 +13907,7 @@ class Alert extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/spinner/spinner.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/spinner/spinner.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$X(ctx) {
 	let div;
@@ -13959,7 +13972,7 @@ class Spinner extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/button/button.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/button/button.svelte generated by Svelte v3.59.2 */
 
 function create_if_block$o(ctx) {
 	let spinner;
@@ -14183,7 +14196,7 @@ class Button extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/form/form.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/form/form.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$V(ctx) {
 	let form;
@@ -14286,7 +14299,6 @@ function instance$X($$self, $$props, $$invalidate) {
  * @param {Object} event - HTML form event
  * @return {undefined}
  */
-	// TODO: Using an `any` to give us time to figure out these weird event types that just changed
 	function formSubmit(event) {
 		/**
  * Reference for validation: https://www.aleksandrhovhannisyan.com/blog/html-input-validation-without-a-form/
@@ -14410,7 +14422,7 @@ class Form extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/_utilities/server-strings.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/_utilities/server-strings.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$9(ctx) {
 	let current;
@@ -14661,7 +14673,7 @@ class Server_strings extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/shield-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/shield-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$T(ctx) {
 	let svg;
@@ -14760,7 +14772,7 @@ class Shield_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/_utilities/back-to.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/_utilities/back-to.svelte generated by Svelte v3.59.2 */
 
 function create_if_block$m(ctx) {
 	let p;
@@ -15337,7 +15349,7 @@ function getAttributeValidationFailureText(callback) {
     }, '');
 }
 
-/* src/lib/components/primitives/message/input-message.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/message/input-message.svelte generated by Svelte v3.59.2 */
 
 function create_if_block$l(ctx) {
 	let p;
@@ -15461,7 +15473,7 @@ class Input_message extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/label/label.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/label/label.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$Q(ctx) {
 	let label;
@@ -15547,7 +15559,7 @@ class Label extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/compositions/checkbox/animated.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/checkbox/animated.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$s(ctx) {
 	let span;
@@ -15813,7 +15825,7 @@ let Animated$1 = class Animated extends SvelteComponent {
 	}
 };
 
-/* src/lib/components/primitives/checkbox/checkbox.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/checkbox/checkbox.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$r(ctx) {
 	let current;
@@ -16021,7 +16033,7 @@ class Checkbox extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/compositions/checkbox/standard.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/checkbox/standard.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$q(ctx) {
 	let current;
@@ -16224,7 +16236,7 @@ let Standard$1 = class Standard extends SvelteComponent {
 	}
 };
 
-/* src/lib/journey/callbacks/boolean/boolean.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/boolean/boolean.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$p(ctx) {
 	let t_value = interpolate(textToKey(/*outputName*/ ctx[2]), null, /*prompt*/ ctx[4]) + "";
@@ -16385,7 +16397,7 @@ let Boolean$1 = class Boolean extends SvelteComponent {
 	}
 };
 
-/* src/lib/components/compositions/radio/animated.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/radio/animated.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$a(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -16591,7 +16603,9 @@ function create_fragment$L(ctx) {
 			append(fieldset, div);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(div, null);
+				if (each_blocks[i]) {
+					each_blocks[i].m(div, null);
+				}
 			}
 
 			append(div, t2);
@@ -16742,7 +16756,7 @@ class Animated extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/radio/radio.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/radio/radio.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$n(ctx) {
 	let current;
@@ -16968,7 +16982,7 @@ class Radio extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/compositions/radio/standard.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/radio/standard.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$9(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -17118,7 +17132,9 @@ function create_fragment$J(ctx) {
 			append(fieldset, t1);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(fieldset, null);
+				if (each_blocks[i]) {
+					each_blocks[i].m(fieldset, null);
+				}
 			}
 
 			append(fieldset, t2);
@@ -17253,7 +17269,7 @@ class Standard extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/select/select.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/select/select.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$8(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -17492,7 +17508,9 @@ function create_fragment$I(ctx) {
 			insert(target, select, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(select, null);
+				if (each_blocks[i]) {
+					each_blocks[i].m(select, null);
+				}
 			}
 
 			/*select_binding*/ ctx[14](select);
@@ -17727,7 +17745,7 @@ class Select extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/compositions/select-floating/floating-label.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/select-floating/floating-label.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$H(ctx) {
 	let div;
@@ -17883,7 +17901,7 @@ let Floating_label$1 = class Floating_label extends SvelteComponent {
 	}
 };
 
-/* src/lib/components/compositions/select-stacked/stacked-label.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/select-stacked/stacked-label.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$G(ctx) {
 	let div;
@@ -18038,7 +18056,7 @@ let Stacked_label$1 = class Stacked_label extends SvelteComponent {
 	}
 };
 
-/* src/lib/journey/callbacks/choice/choice.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/choice/choice.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$8(ctx) {
 	let select;
@@ -18314,7 +18332,7 @@ class Choice extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/grid/grid.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/grid/grid.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$E(ctx) {
 	let div;
@@ -18411,7 +18429,7 @@ class Grid extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/confirmation/confirmation.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/confirmation/confirmation.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$7(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -18719,7 +18737,9 @@ function create_default_slot_1$d(ctx) {
 		},
 		m(target, anchor) {
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(target, anchor);
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
 			}
 
 			insert(target, each_1_anchor, anchor);
@@ -19085,7 +19105,7 @@ class Confirmation extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/hidden-value/hidden-value.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/hidden-value/hidden-value.svelte generated by Svelte v3.59.2 */
 
 function instance$E($$self, $$props, $$invalidate) {
 	const callback = null;
@@ -19130,7 +19150,7 @@ class Hidden_value extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/input/input.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/input/input.svelte generated by Svelte v3.59.2 */
 
 function create_if_block_7$1(ctx) {
 	let label_1;
@@ -20123,7 +20143,7 @@ class Input extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/compositions/input-floating/floating-label.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/input-floating/floating-label.svelte generated by Svelte v3.59.2 */
 const get_input_button_slot_changes$1 = dirty => ({});
 const get_input_button_slot_context$1 = ctx => ({});
 
@@ -20391,7 +20411,7 @@ class Floating_label extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/compositions/input-stacked/stacked-label.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/compositions/input-stacked/stacked-label.svelte generated by Svelte v3.59.2 */
 const get_input_button_slot_changes = dirty => ({});
 const get_input_button_slot_context = ctx => ({});
 
@@ -20667,7 +20687,7 @@ class Stacked_label extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/lock-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/lock-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$z(ctx) {
 	let svg;
@@ -20771,7 +20791,7 @@ class Lock_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/kba/kba-create.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/kba/kba-create.svelte generated by Svelte v3.59.2 */
 
 function create_if_block$g(ctx) {
 	let input;
@@ -21165,7 +21185,7 @@ class Kba_create extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/username/name.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/username/name.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$x(ctx) {
 	let input;
@@ -21290,7 +21310,7 @@ class Name extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/eye-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/eye-icon.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$6(ctx) {
 	let svg;
@@ -21547,7 +21567,7 @@ class Eye_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/password/confirm-input.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/password/confirm-input.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot_1$b(ctx) {
 	let current;
@@ -21860,7 +21880,7 @@ class Confirm_input extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/password/base.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/password/base.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot_1$a(ctx) {
 	let current;
@@ -22307,7 +22327,7 @@ class Base extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/password/password.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/password/password.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$t(ctx) {
 	let base;
@@ -22401,7 +22421,7 @@ class Password extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/text/text.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/text/text.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$s(ctx) {
 	let p;
@@ -22480,7 +22500,7 @@ class Text extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/polling-wait/polling-wait.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/polling-wait/polling-wait.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$g(ctx) {
 	let t;
@@ -22625,7 +22645,7 @@ class Polling_wait extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/redirect/redirect.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/redirect/redirect.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$f(ctx) {
 	let t;
@@ -22764,7 +22784,7 @@ class Redirect extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/apple-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/apple-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$p(ctx) {
 	let svg;
@@ -22830,7 +22850,7 @@ class Apple_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/facebook-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/facebook-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$o(ctx) {
 	let svg;
@@ -22892,7 +22912,7 @@ class Facebook_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/google-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/google-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$n(ctx) {
 	let svg;
@@ -22978,7 +22998,7 @@ class Google_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/select-idp/select-idp.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/select-idp/select-idp.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$6(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -23548,7 +23568,9 @@ function create_fragment$m(ctx) {
 		},
 		m(target, anchor) {
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(target, anchor);
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
 			}
 
 			insert(target, t, anchor);
@@ -23718,7 +23740,7 @@ class Select_idp extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/_utilities/policies.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/_utilities/policies.svelte generated by Svelte v3.59.2 */
 
 function get_each_context_1(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -23774,7 +23796,9 @@ function create_if_block_1$7(ctx) {
 			append(div, ul);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(ul, null);
+				if (each_blocks[i]) {
+					each_blocks[i].m(ul, null);
+				}
 			}
 
 			current = true;
@@ -23870,7 +23894,9 @@ function create_if_block$c(ctx) {
 			append(div, ul);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(ul, null);
+				if (each_blocks[i]) {
+					each_blocks[i].m(ul, null);
+				}
 			}
 
 			current = true;
@@ -24128,7 +24154,7 @@ class Policies extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/string-attribute/string-attribute-input.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/string-attribute/string-attribute-input.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$d(ctx) {
 	let policies_1;
@@ -24335,7 +24361,7 @@ class String_attribute_input extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/primitives/link/link.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/primitives/link/link.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$j(ctx) {
 	let a;
@@ -24428,7 +24454,7 @@ class Link extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/terms-and-conditions/terms-conditions.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/terms-and-conditions/terms-conditions.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$5(ctx) {
 	let p;
@@ -24719,7 +24745,7 @@ class Terms_conditions extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/text-output/text-output.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/text-output/text-output.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$4(ctx) {
 	let alert;
@@ -25006,7 +25032,7 @@ class Text_output extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/unknown/unknown.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/unknown/unknown.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$g(ctx) {
 	let p;
@@ -25074,7 +25100,7 @@ class Unknown extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/password/validated-create-password.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/password/validated-create-password.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$a(ctx) {
 	let policies;
@@ -25244,7 +25270,7 @@ class Validated_create_password extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/username/validated-create-username.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/username/validated-create-username.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$9(ctx) {
 	let policies;
@@ -25442,7 +25468,7 @@ class Validated_create_username extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/device-profile/device-profile.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/device-profile/device-profile.svelte generated by Svelte v3.59.2 */
 
 function create_if_block$9(ctx) {
 	let div;
@@ -25627,7 +25653,7 @@ class Device_profile extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/callbacks/metadata/metadata.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/callbacks/metadata/metadata.svelte generated by Svelte v3.59.2 */
 
 function instance$d($$self, $$props, $$invalidate) {
 	const callback = null;
@@ -25672,7 +25698,7 @@ class Metadata extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/_utilities/callback-mapper.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/_utilities/callback-mapper.svelte generated by Svelte v3.59.2 */
 
 function get_else_ctx(ctx) {
 	const child_ctx = ctx.slice();
@@ -26975,7 +27001,7 @@ class Callback_mapper extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/generic.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/generic.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$4(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -27313,7 +27339,9 @@ function create_default_slot$7(ctx) {
 			insert(target, t3, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(target, anchor);
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
 			}
 
 			insert(target, t4, anchor);
@@ -27657,7 +27685,7 @@ class Generic extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/key-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/key-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$a(ctx) {
 	let svg;
@@ -27761,7 +27789,7 @@ class Key_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/one-time-password.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/one-time-password.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$3(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -28144,7 +28172,9 @@ function create_default_slot$6(ctx) {
 			insert(target, t1, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(target, anchor);
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
 			}
 
 			insert(target, t2, anchor);
@@ -28427,7 +28457,7 @@ class One_time_password extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/new-user-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/new-user-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$8(ctx) {
 	let svg;
@@ -28531,7 +28561,7 @@ class New_user_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/registration.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/registration.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$2(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -28913,7 +28943,9 @@ function create_default_slot$5(ctx) {
 			insert(target, t1, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(target, anchor);
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
 			}
 
 			insert(target, t2, anchor);
@@ -29218,7 +29250,7 @@ class Registration extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/login.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/login.svelte generated by Svelte v3.59.2 */
 
 function get_each_context$1(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -29665,7 +29697,9 @@ function create_default_slot$4(ctx) {
 			insert(target, t1, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(target, anchor);
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
 			}
 
 			insert(target, t2, anchor);
@@ -30003,7 +30037,7 @@ class Login extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/fingerprint-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/fingerprint-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$5(ctx) {
 	let svg;
@@ -30080,7 +30114,7 @@ class Fingerprint_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/webauthn.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/webauthn.svelte generated by Svelte v3.59.2 */
 
 function create_if_block_2$1(ctx) {
 	let div;
@@ -30610,7 +30644,7 @@ class Webauthn extends SvelteComponent {
 	}
 }
 
-/* src/lib/components/icons/shield-check-icon.svelte generated by Svelte v3.55.1 */
+/* src/lib/components/icons/shield-check-icon.svelte generated by Svelte v3.59.2 */
 
 function create_fragment$3(ctx) {
 	let svg;
@@ -30673,7 +30707,7 @@ class Shield_check_icon extends SvelteComponent {
 	}
 }
 
-/* src/lib/journey/stages/recovery-codes.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/stages/recovery-codes.svelte generated by Svelte v3.59.2 */
 
 function get_each_context(ctx, list, i) {
 	const child_ctx = ctx.slice();
@@ -30900,7 +30934,9 @@ function create_default_slot$2(ctx) {
 			insert(target, ol, anchor);
 
 			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].m(ol, null);
+				if (each_blocks[i]) {
+					each_blocks[i].m(ol, null);
+				}
 			}
 
 			insert(target, t10, anchor);
@@ -31173,7 +31209,7 @@ function mapStepToStage(currentStep) {
     return Generic;
 }
 
-/* src/lib/journey/journey.svelte generated by Svelte v3.55.1 */
+/* src/lib/journey/journey.svelte generated by Svelte v3.59.2 */
 
 function create_else_block$1(ctx) {
 	let alert;
@@ -31520,7 +31556,7 @@ function create_if_block_2(ctx) {
 				add_flush_callback(() => updating_formEl = false);
 			}
 
-			if (switch_value !== (switch_value = mapStepToStage(/*$journeyStore*/ ctx[5].step))) {
+			if (dirty & /*$journeyStore*/ 32 && switch_value !== (switch_value = mapStepToStage(/*$journeyStore*/ ctx[5].step))) {
 				if (switch_instance) {
 					group_outros();
 					const old_component = switch_instance;
@@ -31742,7 +31778,7 @@ class Journey extends SvelteComponent {
 	}
 }
 
-/* src/lib/widget/index.svelte generated by Svelte v3.55.1 */
+/* src/lib/widget/index.svelte generated by Svelte v3.59.2 */
 
 function create_else_block(ctx) {
 	let div;
