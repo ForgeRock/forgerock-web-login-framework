@@ -91,41 +91,43 @@
   }
 </script>
 
-<Input
-  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-  hasRightIcon={true}
-  {key}
-  label={interpolate(textToKey(callbackType), null, textInputLabel)}
-  message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
-  onChange={setValue}
-  {isInvalid}
-  {isRequired}
-  {showMessage}
-  {type}
-  value={typeof value === 'string' ? value : ''}
->
-  <button
-    class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
-    on:click={toggleVisibility}
-    slot="input-button"
-    type="button"
-  >
-    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-      <T key="showPassword" />
-    </EyeIcon>
-  </button>
-  <slot />
-</Input>
-
-{#if callbackMetadata?.platform?.confirmPassword}
-  <ConfirmInput
-    forceValidityFailure={doPasswordsMatch === false}
-    passwordsDoNotMatch={doPasswordsMatch === false}
+{#key callback}
+  <Input
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    hasRightIcon={true}
     {key}
-    isRequired={value.length > 0}
-    onChange={confirmInput}
-    {resetValue}
-    showMessage={doPasswordsMatch === false}
-    {style}
-  />
-{/if}
+    label={interpolate(textToKey(callbackType), null, textInputLabel)}
+    message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
+    onChange={setValue}
+    {isInvalid}
+    {isRequired}
+    {showMessage}
+    {type}
+    value={typeof value === 'string' ? value : ''}
+  >
+    <button
+      class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
+      on:click={toggleVisibility}
+      slot="input-button"
+      type="button"
+    >
+      <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+        <T key="showPassword" />
+      </EyeIcon>
+    </button>
+    <slot />
+  </Input>
+
+  {#if callbackMetadata?.platform?.confirmPassword}
+    <ConfirmInput
+      forceValidityFailure={doPasswordsMatch === false}
+      passwordsDoNotMatch={doPasswordsMatch === false}
+      {key}
+      isRequired={value.length > 0}
+      onChange={confirmInput}
+      {resetValue}
+      showMessage={doPasswordsMatch === false}
+      {style}
+    />
+  {/if}
+{/key}

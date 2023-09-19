@@ -1,6 +1,4 @@
 <script lang="ts">
-  import type { FormEvent } from 'react';
-
   export let ariaDescribedBy: string;
   export let formEl: HTMLFormElement | null = null;
   export let id = 'formId';

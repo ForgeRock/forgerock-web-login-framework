@@ -1,6 +1,5 @@
 import { expect, jest } from '@storybook/jest';
 import { userEvent, within } from '@storybook/testing-library';
-import { action } from '@storybook/addon-actions';
 import Select from './select.story.svelte';
 
 export default {

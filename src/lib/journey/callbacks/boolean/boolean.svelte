@@ -47,13 +47,15 @@
   }
 </script>
 
-<Checkbox
-  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-  isInvalid={!!validationFailure}
-  key={inputName}
-  message={validationFailure}
-  onChange={setValue}
-  value={previousValue}
->
-  {interpolate(textToKey(outputName), null, prompt)}
-</Checkbox>
+{#key callback}
+  <Checkbox
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    isInvalid={!!validationFailure}
+    key={inputName}
+    message={validationFailure}
+    onChange={setValue}
+    value={previousValue}
+  >
+    {interpolate(textToKey(outputName), null, prompt)}
+  </Checkbox>
+{/key}

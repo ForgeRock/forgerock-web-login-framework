@@ -8,7 +8,6 @@
   import type { PasswordCallback } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
 
-
   import Base from './base.svelte';
 
   import type {
@@ -35,4 +34,4 @@
   }
 </script>
 
-<Base callback={callback} {callbackMetadata} {style} key={inputName} />
+<Base {callback} {callbackMetadata} {style} key={inputName} />
