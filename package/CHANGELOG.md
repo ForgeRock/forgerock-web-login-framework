@@ -1,3 +1,10 @@
+# [1.2.0-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.1...v1.2.0-beta.2) (2023-09-19)
+
+
+### Bug Fixes
+
+* accessible-fields-when-data-is-unchanged ([9f8c32e](https://github.com/forgerock/forgerock-web-login-framework/commit/9f8c32e8293035c659150e69c474b4d902703426))
+
 # [1.2.0-beta.1](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.1.0...v1.2.0-beta.1) (2023-09-13)
 
 
