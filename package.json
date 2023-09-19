@@ -82,7 +82,7 @@
     "@typescript-eslint/eslint-plugin": "^6.7.0",
     "@typescript-eslint/parser": "^5.57.1",
     "@vitejs/plugin-basic-ssl": "^0.1.2",
-    "@vitest/ui": "^0.25.2",
+    "@vitest/ui": "^0.34.4",
     "autoprefixer": "^10.4.13",
     "axe-playwright": "^1.2.3",
     "babel-loader": "^9.1.2",
