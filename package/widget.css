@@ -85,7 +85,8 @@ Base link color when inside of localized content.
 --tw-text-opacity: 1;
 color: rgb(37 99 235 / var(--tw-text-opacity));
 }
-:where(.tw_dark) a {
+:where(.tw_dark) :where(.fr_widget-root) a,
+:where(.tw_dark) :where(.fr_widget-root) a {
 --tw-text-opacity: 1;
 color: rgb(96 165 250 / var(--tw-text-opacity));
 }
