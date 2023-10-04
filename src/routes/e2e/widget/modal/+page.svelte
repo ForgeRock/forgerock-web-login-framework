@@ -12,8 +12,12 @@
   let journeyParam = $page.url.searchParams.get('journey');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
-  // tslint:disable-next-line: no-any
-  let userResponse: { [key: string]: any } | null;
+  type UserResponseObj = {
+    family_name: string;
+    given_name: string;
+    email: string;
+  };
+  let userResponse: UserResponseObj | null;
   let widgetEl: HTMLDivElement;
 
   async function logout() {
@@ -32,7 +36,7 @@
   journeyEvents.subscribe((event) => {
     if (event?.user?.successful) {
       console.log(event.user);
-      userResponse = event.user;
+      userResponse = event.user.response as UserResponseObj;
     }
     if (event.journey.error || event.oauth.error || event.user.error) {
       console.log('Login failure event fired');
@@ -125,9 +129,9 @@
   {#if userResponse}
     <ul>
       <li id="fullName">
-        <strong>Full name</strong>: {`${userResponse.response?.given_name} ${userResponse.response?.family_name}`}
+        <strong>Full name</strong>: {`${userResponse?.given_name} ${userResponse?.family_name}`}
       </li>
-      <li id="email"><strong>Email</strong>: {userResponse.response?.email}</li>
+      <li id="email"><strong>Email</strong>: {userResponse?.email}</li>
     </ul>
     <button on:click={logout}>Logout</button>
   {:else}

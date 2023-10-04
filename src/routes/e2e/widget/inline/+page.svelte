@@ -3,6 +3,13 @@
   import { page } from '$app/stores';
 
   import Widget, { configuration, component, journey, user } from '$package/index';
+  import type { UserStoreValue } from '$lib/widget/types';
+
+  type UserResponseObj = {
+    family_name: string;
+    given_name: string;
+    email: string;
+  };
 
   const config = configuration();
   const componentEvents = component();
@@ -11,11 +18,9 @@
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
-
   let formEl: HTMLDivElement;
-  // TODO: Use a more specific type
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let userResponse: { [key: string]: any } | null;
+  let userEvent: UserStoreValue;
+  let userResponse: UserResponseObj | null;
 
   async function logout() {
     await user.logout();
@@ -29,7 +34,8 @@
   });
   journeyEvents.subscribe((event) => {
     if (event?.user?.successful) {
-      userResponse = event.user;
+      userEvent = event.user;
+      userResponse = event.user.response as UserResponseObj;
     }
     if (event.journey.error || event.oauth.error || event.user.error) {
       console.log('Login failure event fired');
@@ -73,13 +79,13 @@
   });
 </script>
 
-{#if userResponse?.successful}
+{#if userEvent?.successful}
   <ul>
     <li id="fullName">
-      <strong>Full name</strong>: {`${userResponse.response?.given_name} ${userResponse.response?.family_name}`}
+      <strong>Full name</strong>: {`${userResponse?.given_name} ${userResponse?.family_name}`}
     </li>
-    <li id="email"><strong>Email</strong>: {userResponse.response?.email}</li>
+    <li id="email"><strong>Email</strong>: {userResponse?.email}</li>
   </ul>
   <button on:click={logout}>Logout</button>
 {/if}
-<div bind:this={formEl} class={`${userResponse?.successful ? 'tw_hidden' : ''} tw_p-6`} />
+<div bind:this={formEl} class={`${userEvent?.successful ? 'tw_hidden' : ''} tw_p-6`} />

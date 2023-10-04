@@ -1,5 +1,10 @@
-import { Config, FRUser, SessionManager, type ConfigOptions } from '@forgerock/javascript-sdk';
-import { HttpClient } from '@forgerock/javascript-sdk';
+import {
+  Config,
+  FRUser,
+  HttpClient,
+  SessionManager,
+  type ConfigOptions,
+} from '@forgerock/javascript-sdk';
 import { derived, get, type Readable } from 'svelte/store';
 
 import { logErrorAndThrow } from '$lib/_utilities/errors.utilities';
@@ -139,8 +144,8 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       logErrorAndThrow('missingStores');
     }
 
-    const requestsOauth = options?.oauth || true;
-    const requestsUser = options?.user || true;
+    const requestsOauth = options?.oauth ?? true;
+    const requestsUser = options?.user ?? true;
     const {
       subscribe,
     }: Readable<{ journey: JourneyStoreValue; oauth: OAuthTokenStoreValue; user: UserStoreValue }> =
