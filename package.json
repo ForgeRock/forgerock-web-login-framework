@@ -45,7 +45,7 @@
     "zod": "3.22.3"
   },
   "devDependencies": {
-    "@babel/core": "^7.21.3",
+    "@babel/core": "^7.23.0",
     "@rollup/plugin-alias": "^5.0.0",
     "@playwright/test": "^1.37.1",
     "@rollup/plugin-commonjs": "^24.0.1",
