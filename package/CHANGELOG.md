@@ -1,3 +1,10 @@
+# [1.2.0-beta.3](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.2...v1.2.0-beta.3) (2023-10-05)
+
+
+### Features
+
+* **css-variables:** build initial "design tokens" for run-time customization ([d6107d8](https://github.com/forgerock/forgerock-web-login-framework/commit/d6107d8bf3a3fdfcb7151cabdeb8534557c30e57))
+
 # [1.2.0-beta.2](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.1...v1.2.0-beta.2) (2023-09-19)
 
 
