@@ -55,7 +55,9 @@
       height: 100%;
       min-height: 100%;
       background-color: #f6f8fa;
+
     }
+    
     /**
      * This ensures those with dark theme on, they don't get a flash of a
      * bright white background before the remaining CSS loads and darkens it.

@@ -1,35 +1,40 @@
 const colorLib = require('color');
-
 module.exports = function (theme) {
   return {
     /**
      * Alert
      */
     '.alert': {
-      backgroundColor: theme('colors.background.light'),
-      borderColor: colorLib(theme('colors.background.light')).darken(0.1).toString(),
+      '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+      '--border-color':'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 10%))',
+      '--font-size': 'var(--tw-font-size-base-type)',
+      backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.background.light')).darken(0.1).toString()})`,
       borderRadius: theme('borderRadius.DEFAULT'),
       borderWidth: '1px',
       color: theme('colors.black'),
-      fontSize: theme('fontSize.base'),
+      fontSize: `var(--font-size, ${theme('fontSize.base')})`,
       marginBottom: theme('spacing.6'),
       padding: theme('spacing.4'),
 
       '&:focus': {
+        '--outline-color': 'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1)',
         borderRadius: theme('borderRadius.DEFAULT'),
-        outlineColor: colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString(),
+        outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString()})`,
         outlineOffset: '2px',
         outlineStyle: 'solid',
         outlineWidth: '3px',
       },
     },
     '.alert_dark': {
-      backgroundColor: theme('colors.background.dark'),
+      '--bg-color':'hsl(var(--tw-colors-background-dark-hs),var(--tw-colors-background-dark-l))',
+      backgroundColor: `var(--bg-color, ${theme('colors.background.dark')})`,
       borderColor: theme('colors.black'),
       color: theme('colors.white'),
 
       '&:focus': {
-        outlineColor: colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.1).toString(),
+        '--outline-color': 'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.1).toString()})`,
       },
       '& svg': {
         color: theme('colors.white'),
@@ -37,74 +42,98 @@ module.exports = function (theme) {
       },
     },
     '.alert-error': {
-      backgroundColor: theme('colors.error.light'),
-      borderColor: theme('colors.error.dark'),
+      '--bg-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
+      '--border-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+      backgroundColor: `var(--bg-color, ${theme('colors.error.light')})`,
+      borderColor: `var(--border-color, ${theme('colors.error.dark')})`,
 
       '& svg': {
-        color: theme('colors.error.dark'),
+        '--color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+        color: `var(--color, ${theme('colors.error.dark')})`,
         fill: 'currentColor',
       },
     },
     '.alert-error_dark': {
-      backgroundColor: theme('colors.error.dark'),
-      borderColor: colorLib(theme('colors.error.dark')).darken(0.2).toString(),
+      '--bg-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+      '--border-color': 'hsl(var(--tw-colors-error-dark-hs), calc(var(--tw-colors-error-dark-l) - 20%))',
+      backgroundColor: `var(--bg-color, ${theme('colors.error.dark')})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.error.dark')).darken(0.2).toString()})`,
 
       '& svg': {
-        color: theme('colors.error.light'),
+        '--color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
+        color: `var(--color, ${theme('colors.error.light')})`,
         fill: 'currentColor',
       },
     },
     '.alert-info': {
-      backgroundColor: colorLib(theme('colors.primary.light')).lighten(0.9).toString(),
-      borderColor: theme('colors.primary.light'),
+      '--bg-color': 'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
+      '--border-color': 'hsl(var(--tw-colors-primary-light-hs),var(--tw-colors-primary-light-l))',
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light')).lighten(0.9).toString()})`,
+      borderColor: `var(--border-color, ${theme('colors.primary.light')})`,
 
       '& svg': {
-        color: theme('colors.primary.dark'),
+        '--color': 'hsl(var(--tw-colors-primary-dark-hs),var(--tw-colors-primary-dark-l))',
+        color: `var(--color, ${theme('colors.primary.dark')})`,
         fill: 'currentColor',
       },
     },
     '.alert-info_dark': {
-      backgroundColor: colorLib(theme('colors.primary.light')).darken(0.4).toString(),
-      borderColor: colorLib(theme('colors.primary.dark')).darken(0.2).toString(),
+      '--bg-color': 'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) - 40%))',
+      '--border-color': 'hsl(var(--tw-colors-primary-dark-hs), calc(var(--tw-colors-primary-dark-l) - 20%))',
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light')).darken(0.4).toString()})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.primary.dark')).darken(0.2).toString()})`,
 
       '& svg': {
-        color: colorLib(theme('colors.primary.light')).lighten(0.9).toString(),
+        '--color': 'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
+        color: `var(--color, ${colorLib(theme('colors.primary.light')).lighten(0.9).toString()})`,
         fill: 'currentColor',
       },
     },
     '.alert-success': {
-      backgroundColor: theme('colors.success.light'),
-      borderColor: theme('colors.success.dark'),
+      '--bg-color': 'hsl(var(--tw-colors-success-light-hs),var(--tw-colors-success-light-l))',
+      '--border-color': 'hsl(var(--tw-colors-success-dark-hs),var(--tw-colors-success-dark-l))',
+      backgroundColor: `var(--alert-success-background-color, ${theme('colors.success.light')})`,
+      borderColor: `var(--border-color, ${theme('colors.success.dark')})`,
 
       '& svg': {
-        color: theme('colors.success.dark'),
+        '--color': 'hsl(var(--tw-colors-success-dark-hs),var(--tw-colors-success-dark-l))',
+        color: `var(--color, ${theme('colors.success.dark')})`,
         fill: 'currentColor',
       },
     },
     '.alert-success_dark': {
-      backgroundColor: theme('colors.success.dark'),
-      borderColor: colorLib(theme('colors.success.dark')).darken(0.2).toString(),
+      '--bg-color': 'hsl(var(--tw-colors-success-dark-hs),var(--tw-colors-success-dark-l))',
+      '--border-color': 'hsl(var(--tw-colors-success-dark-hs), calc(var(--tw-colors-success-dark-l) - 20%))',
+      backgroundColor: `var(--bg-color, ${theme('colors.success.dark')})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.success.dark')).darken(0.2).toString()})`,
 
       '& svg': {
-        color: theme('colors.success.light'),
+        '--color': 'hsl(var(--tw-colors-success-light-hs),var(--tw-colors-success-light-l))',
+        color: `var(--color, ${theme('colors.success.light')})`,
         fill: 'currentColor',
       },
     },
     '.alert-warning': {
-      backgroundColor: theme('colors.warning.light'),
-      borderColor: theme('colors.warning.dark'),
+      '--bg-color': 'hsl(var(--tw-colors-warning-light-hs),var(--tw-colors-warning-light-l))',
+      '--border-color': 'hsl(var(--tw-colors-warning-dark-hs),var(--tw-colors-warning-dark-l))',
+      backgroundColor: `var(--bg-color, ${theme('colors.warning.light')})`,
+      borderColor: `var(--border-color, ${theme('colors.warning.dark')})`,
 
       '& svg': {
-        color: theme('colors.warning.dark'),
+        '--color': `hsl(var(--tw-colors-warning-dark-hs),var(tw-tw-colors-warning-dark-l))`,
+        color: `var(--color, ${theme('colors.warning.dark')})`,
         fill: 'currentColor',
       },
     },
     '.alert-warning_dark': {
-      backgroundColor: theme('colors.warning.dark'),
-      borderColor: colorLib(theme('colors.warning.dark')).darken(0.2).toString(),
+      '--bg-color': 'hsl(var(--tw-colors-warning-dark-hs),var(--tw-colors-warning-dark-l))',
+      '--border-color': 'hsl(var(--tw-colors-warning-dark-hs), calc(var(--tw-colors-warning-dark-l) - 20%))',
+      backgroundColor: `var(--bg-color, ${theme('colors.warning.dark')})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.warning.dark')).darken(0.2).toString()})`,
 
       '& svg': {
-        color: theme('colors.warning.light'),
+        '--color': 'hsl(var(--tw-colors-warning-light-hs),var(--tw-colors-warning-light-l))',
+        color: `var(--color, ${theme('colors.warning.light')})`,
         fill: 'currentColor',
       },
     },
@@ -148,33 +177,41 @@ module.exports = function (theme) {
       },
     },
     '.button-primary': {
-      borderColor: theme('colors.primary.dark'),
-      backgroundColor: theme('colors.primary.dark'),
+      '--bg-color': 'hsl(var(--tw-colors-primary-dark-hs),var(--tw-colors-primary-dark-l))',
+      '--border-color': 'hsl(var(--tw-colors-primary-dark-hs),var(--tw-colors-primary-dark-l))',
+      backgroundColor: `var(--bg-color, ${theme('colors.primary.dark')})`,
+      borderColor: `var(--border-color, ${theme('colors.primary.dark')})`,
       color: theme('colors.white'),
       '&:hover::before, &:focus::before': {
         opacity: `0.2`,
       },
     },
     '.button-primary_dark': {
-      borderColor: theme('colors.primary.light'),
-      backgroundColor: theme('colors.primary.light'),
+      '--bg-color': 'hsl(var(--tw-colors-primary-light-hs),var(--tw-colors-primary-light-l))',
+      '--border-color': 'hsl(var(--tw-colors-primary-light-hs),var(--tw-colors-primary-light-l))',
+      backgroundColor: `var(--bg-color, ${theme('colors.primary.light')})`,
+      borderColor: `var(--border-color, ${theme('colors.primary.light')})`,
       '&:hover::before, &:focus::before': {
         opacity: `0.2`,
       },
     },
     '.button-outline': {
-      borderColor: theme('colors.secondary.dark'),
+      '--border-color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
+      borderColor: `var(--border-color, ${theme('colors.secondary.dark')})`,
     },
     '.button-outline_dark': {
-      borderColor: theme('colors.secondary.light'),
+      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       color: theme('colors.white'),
       '&:hover::before, &:focus::before': {
         opacity: `0.3`,
       },
     },
     '.button-secondary': {
-      borderColor: theme('colors.secondary.light'),
-      backgroundColor: theme('colors.secondary.light'),
+      '--bg-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      backgroundColor: `var(--bg-color, ${theme('colors.secondary.light')})`,
+      borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       color: theme('colors.black'),
       '&:hover::before, &:focus::before': {
         opacity: `0.1`,
@@ -185,14 +222,19 @@ module.exports = function (theme) {
      * Checkbox primitive theme settings
      */
     '.checkbox-label': {
-      fontSize: theme('fontSize.base'),
-      color: theme('colors.secondary.dark'),
+      '--font-size': 'var(--tw-font-size-base-type)',
+      '--color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
+      fontSize: `var(--font-size', ${theme('fontSize.base')})`,
+      color: `var(--color, ${theme('colors.secondary.dark')})`,
     },
     '.checkbox-label_dark': {
-      color: theme('colors.secondary.light'),
+      '--color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      color: `var(--color, ${theme('colors.secondary.light')})`,
     },
     '.checkbox-input': {
-      accentColor: theme('colors.primary.dark'),
+      '--accent-color': 'hsl(var(--tw-colors-primary-dark-hs),var(--tw-colors-primary-dark-l))',
+      accentColor: `var(--accent-color, ${theme('colors.primary.dark')})`,
+
       borderRadius: theme('borderRadius.DEFAULT'),
       flex: 1,
       height: theme('spacing.4'),
@@ -211,10 +253,12 @@ module.exports = function (theme) {
         display: 'none',
       },
       '&[aria-invalid="true"]': {
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) + 1%))',
+
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.01).toString(),
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).lighten(0.01).toString()})`,
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
@@ -222,22 +266,27 @@ module.exports = function (theme) {
         display: 'block',
       },
       '&[aria-invalid="true"] ~ button': {
-        borderColor: theme('colors.error.dark'),
+        '--border-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+        borderColor: `var(--border-color, ${theme('colors.error.dark')})`,
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]': {
-        outlineColor: colorLib(theme('colors.error.light')).fade(0.8).toString(),
+        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.8)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.8).toString()})`,
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
-        outlineColor: colorLib(theme('colors.error.light')).fade(0.5).toString(),
+        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.5)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.5).toString()})`,
       },
       '&[aria-invalid="true"]:focus': {
-        backgroundColor: colorLib(theme('colors.background.light')).lighten(0.05).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) + 5%))',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).lighten(0.05).toString()})`,
       },
     },
     '.checkbox-input_dark': {
-      accentColor: theme('colors.primary.light'),
+      '--accent-color': 'hsl(var(--tw-colors-primary-light-hs),var(--tw-colors-primary-light-l))',
+      accentColor: `var(--accent-color, ${theme('colors.primary.light')})`,
     },
     /**
      * Form primitive theme settings
@@ -247,43 +296,58 @@ module.exports = function (theme) {
      * String input and select primitive theme settings
      */
     '.input-base': {
-      backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
+      '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      '--border': `${theme('borderWidth.DEFAULT')} solid hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))`,
+      '--font-size': 'var(--tw-font-size-base-type)',
+      
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
+
+      border: `var(--border, ${theme('borderWidth.DEFAULT')} solid ${theme('colors.secondary.DEFAULT')})`,
       border: `${theme('borderWidth.DEFAULT')} solid ${theme('colors.secondary.DEFAULT')}`,
       borderRadius: theme('borderRadius.DEFAULT'),
       color: theme('colors.black'),
-      fontSize: theme('fontSize.base'),
+      fontSize: `var(--font-size, ${theme('fontSize.base')})`,
       lineHeight: theme('spacing.6'),
       padding: theme('spacing.3'),
 
       '&:hover': {
-        backgroundColor: theme('colors.background.light'),
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&:focus': {
-        backgroundColor: theme('colors.background.light'),
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&[aria-invalid="true"]': {
-        borderColor: theme('colors.error.dark'),
+        '--border-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
+        borderColor: `var(--border-color, ${theme('colors.error.dark')})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
       '&[aria-invalid="true"] ~ button': {
-        borderColor: theme('colors.error.dark'),
+        '--border-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+        borderColor: `var(--border-color, ${theme('colors.error.dark')})`,
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]': {
-        outlineColor: colorLib(theme('colors.error.light')).fade(0.8).toString(),
+        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.8)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.8).toString()})`,
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
-        outlineColor: colorLib(theme('colors.error.dark')).fade(0.3).toString(),
-        backgroundColor: theme('colors.background.light'),
+        '--outline-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l), 0.3)',
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.dark')).fade(0.3).toString()})`,
+        backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&[aria-invalid="true"]:hover': {
-        backgroundColor: theme('colors.background.light'),
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       // TODO: is this needed? I don't think so.
       // '&:invalid:hover': {
@@ -291,88 +355,115 @@ module.exports = function (theme) {
       // },
     },
     '.input-base_dark': {
-      backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
-      // borderColor: colorLib(theme('colors.black')).fade(0.1).toString(),
-      borderColor: theme('colors.secondary.dark'),
+      '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.5)',
+      '--border-color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
+      borderColor: `var(--border-color, ${theme('colors.secondary.dark')})`,
       color: theme('colors.white'),
 
       '&:focus': {
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
       },
       '&:hover': {
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
       },
       '&[aria-invalid="true"]': {
-        borderColor: theme('colors.error.light'),
+        '--border-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
+        '--bg-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l),0.5)',
+        borderColor: `var(--border-color, ${theme('colors.error.light')})`,
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.light'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
       },
       '&[aria-invalid="true"]:focus': {
-        outlineColor: `${colorLib(theme('colors.error.light')).fade(0.3).toString()} !important`,
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
+        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.3) !important',
+        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.3).toString()}) !important`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
       },
       '&[aria-invalid="true"]:hover': {
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
       },
       '&[aria-invalid="true"] ~ button': {
-        borderColor: theme('colors.error.light'),
+        '--border-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
+        borderColor: `var(--border-color, ${theme('colors.error.light')})`,
       },
       // TODO: is this needed? I don't think so.
       // '&:invalid:hover': {
       //   backgroundColor: colorLib(theme('colors.black')).fade(0.9).toString(),
       // },
     },
+
     '.input-label': {
-      color: theme('colors.label.dark'),
-      fontSize: theme('fontSize.base'),
+      '--font-size': 'var(--tw-font-size-base-type)',
+      '--color': 'hsl(var(--tw-colors-label-dark-hs), var(--tw-colors-label-dark-l))',
+      fontSize: `var(--font-size, ${theme('fontSize.base')})`, 
+      color: `var(--color, ${theme('colors.label.dark')})`,
+
     },
+
     '.input-label_dark': {
-      color: theme('colors.label.light'),
+      '--color': 'hsl(var(--tw-colors-label-light-hs),var(--tw-colors-label-light-l))',
+      color: `var(--color, ${theme('colors.label.light')})`,
 
       ':where(input:autofill) + &': {
-        color: theme('colors.secondary.dark'),
+        '--color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
+        color: `var(--color, ${theme('colors.secondary.dark')})`,
       },
       ':where(input:autofill) + &': {
-        color: theme('colors.secondary.dark'),
+        '--color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
+        color: `var(--color, ${theme('colors.secondary.dark')})`,
       },
     },
     /**
      * Input error message
      */
     '.input-error-message': {
-      color: theme('colors.error.dark'),
-      fontSize: theme('fontSize.sm'),
+      '--color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+      '--font-size': 'var(--tw-font-size-sm-type)',
+      color: `var(--color, ${theme('colors.error.dark')})`,
+      fontSize: `var(--font-size, ${theme('fontSize.sm')})`,
       margin: theme('spacing.1'),
       width: '100%',
     },
     '.input-error-message_dark': {
-      color: theme('colors.error.light'),
+      '--color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
+      color: `var(--color, ${theme('colors.error.light')})`,
     },
     '.input-info-message': {
-      color: theme('colors.secondary.dark'),
-      fontSize: theme('fontSize.sm'),
+      '--color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
+      '--font-size': 'var(--tw-font-size-sm-type)',
+      color: `var(--color, ${theme('colors.secondary.dark')})`,
+      fontSize: `var(--font-size, ${theme('fontSize.sm')})`,
       margin: theme('spacing.1'),
       width: '100%',
 
       '&.isInvalid': {
-        color: theme('colors.error.dark'),
+        '--color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
+        color: `var(--color, ${theme('colors.error.dark')})`,
       },
     },
     '.input-info-message_dark': {
-      color: theme('colors.secondary.light'),
+      '--color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      color: `var(--color, ${theme('colors.secondary.light')})`,
 
       '&.isInvalid': {
-        color: theme('colors.error.light'),
+        '--color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
+        color: `var(--color, ${theme('colors.error.light')})`,
       },
     },
     /**
      * Don't forget to update the anchor classes in src/widget/custom.base.css
      */
     '.link': {
-      color: theme('colors.link.dark'),
-      fontSize: theme('fontSize.base'),
+      '--color': 'hsl(var(--tw-colors-link-dark-hs),var(--tw-colors-link-dark-l))',
+      '--font-size': 'var(--tw-font-size-base-type)',
+      color: `var(--color, ${theme('colors.link.dark')})`,
+      fontSize: `var(--font-size, ${theme('fontSize.base')})`,
       textDecoration: 'underline',
 
       '&:hover': {
@@ -380,64 +471,76 @@ module.exports = function (theme) {
       },
     },
     '.link_dark': {
-      color: theme('colors.link.light'),
+      '--color': 'hsl(var(--tw-colors-link-light-hs),var(--tw-colors-link-light-l))',
+      color: `var(--color, ${theme('colors.link.light')})`,
     },
     '.select-base': {
+      '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      '--color': 'hsl(var(--tw-colors-label-dark-hs), var(--tw-colors-label-dark-l))',
+      
       appearance: 'none',
       /**
        * The below background property prevents Storybook a11y from determining contrast.
        * This is likely due to the presence of the image.
        */
-      background: `no-repeat right ${theme(
-        'spacing.3',
-      )} center url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
-        theme('colors.secondary.dark'),
-      ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-      backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
+      background: `no-repeat right ${theme('spacing.3',)} center url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
+      theme('colors.secondary.dark'),).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
       backgroundSize: '16px 12px',
-      color: theme('colors.label.dark'),
+      color: `var(--color, ${theme('colors.label.dark')})`,
       // TODO: Use design tokens, not absolute values
       height: 'calc(3rem + 2px)',
 
       '&:hover': {
-        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.05).toString()})`,
       },
       '&:focus': {
-        backgroundColor: colorLib(theme('colors.background.light')).darken(0.05).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.05).toString()})`,
       },
       '&[aria-invalid="true"]': {
+        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.dark'),
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.background.light')).darken(0.02).toString(),
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
         backgroundPosition: 'right 0.75rem center, center right 2.25rem',
         backgroundSize: `16px 12px, ${theme('spacing.4')} ${theme('spacing.4')}`,
       },
     },
     '.select-base_dark': {
+      '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.5)',
+      '--color': 'hsl(var(--tw-colors-label-light-hs), var(--tw-colors-label-light-l))',
       background: `no-repeat right ${theme(
         'spacing.3',
       )} center / 16px 12px url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
         theme('colors.secondary.light'),
       ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-      backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
-      color: theme('colors.label.light'),
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
+      color: `var(--color, ${ theme('colors.label.light')})`,
 
       '&:hover,': {
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25)',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
       },
+
       '&:focus': {
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.25).toString(),
+        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25)',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
       },
+
       '&[aria-invalid="true"]': {
+        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.5)',
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.light'),
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.light'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: colorLib(theme('colors.body.dark')).fade(0.5).toString(),
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
         backgroundPosition: 'right 0.75rem center, center right 2.25rem',
         backgroundSize: `16px 12px, ${theme('spacing.4')} ${theme('spacing.4')}`,
       },
