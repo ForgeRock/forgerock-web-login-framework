@@ -1,3 +1,11 @@
+# [1.2.0-beta.4](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.3...v1.2.0-beta.4) (2023-10-05)
+
+
+### Bug Fixes
+
+* **css:** fix base css with link specificity issue ([e7d69bf](https://github.com/forgerock/forgerock-web-login-framework/commit/e7d69bf3675d175628afe284bc3d94c07ff370ab))
+* **widget-api:** fix oauth and user disablement in journey config ([c527d38](https://github.com/forgerock/forgerock-web-login-framework/commit/c527d3806258a18e9b4a6b387e74b6e4951948d9))
+
 # [1.2.0-beta.3](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.2...v1.2.0-beta.3) (2023-10-05)
 
 
