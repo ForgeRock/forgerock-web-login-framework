@@ -28,6 +28,7 @@
   import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
   import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
   import DeviceProfile from '$journey/callbacks/device-profile/device-profile.svelte';
+  import Recaptcha from '$journey/callbacks/recaptcha/recaptcha.svelte';
   import Metadata from '$journey/callbacks/metadata/metadata.svelte';
 
   import type {
@@ -49,6 +50,7 @@
     FRCallback,
     DeviceProfileCallback,
     MetadataCallback,
+    ReCaptchaCallback,
   } from '@forgerock/javascript-sdk';
 
   import type {
@@ -91,6 +93,7 @@
   let _SuspendedTextOutputCallback: SuspendedTextOutputCallback;
   let _MetadataCallback: MetadataCallback;
   let _DeviceProfileCallback: DeviceProfileCallback;
+  let _RecaptchaCallback: ReCaptchaCallback;
   let _FRCallback: FRCallback;
 
   $: {
@@ -114,6 +117,9 @@
         break;
       case CallbackType.NameCallback:
         _NameCallback = props.callback as NameCallback;
+        break;
+      case CallbackType.ReCaptchaCallback:
+        _RecaptchaCallback = props.callback as ReCaptchaCallback;
         break;
       case CallbackType.PasswordCallback:
         _PasswordCallback = props.callback as PasswordCallback;
@@ -265,6 +271,12 @@
     callback: _MetadataCallback,
   }}
   <Metadata {...newProps} />
+{:else if cbType === CallbackType.ReCaptchaCallback}
+  {@const newProps = {
+    ...props,
+    callback: _RecaptchaCallback,
+  }}
+  <Recaptcha {...newProps} />
 {:else}
   {@const newProps = {
     ...props,
