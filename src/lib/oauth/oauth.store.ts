@@ -3,7 +3,10 @@ import { writable, type Writable } from 'svelte/store';
 
 import type { Maybe } from '$lib/interfaces';
 
+const authorizationTimedOut = 'Authorization timed out';
 const interactionNeeded = 'The request requires some interaction that is not allowed.';
+const timeoutErrorMessage =
+  'Timeouts are likely an issue with OAuth client misconfiguration. If you are getting a 4xx error in the network tab, copy the full `/authorize` URL and paste it directly into your browsers URL field to directly visit the page. The error should be displayed on the page.';
 const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
 
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
@@ -29,6 +32,17 @@ export const oauthStore: Writable<OAuthTokenStoreValue> = writable({
   successful: false,
   response: null,
 });
+
+function getTroubleshootingMessage(message: string) {
+  switch (message) {
+    case interactionNeeded:
+      return sessionCookieConsentMessage;
+    case authorizationTimedOut:
+      return timeoutErrorMessage;
+    default:
+      return '';
+  }
+}
 
 /**
  * @function initialize - Initializes the OAuth store with a get function and a reset function
@@ -72,7 +86,7 @@ export function initialize(initOptions?: GetTokensOptions) {
           completed: true,
           error: {
             message: err.message,
-            troubleshoot: err.message === interactionNeeded ? sessionCookieConsentMessage : '',
+            troubleshoot: getTroubleshootingMessage(err.message),
           },
           loading: false,
           successful: false,
