@@ -5,7 +5,7 @@ jobs:
   install:
     strategy:
       matrix:
-        node: [16.x, 18.x]
+        node: [20.x, 18.x]
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
