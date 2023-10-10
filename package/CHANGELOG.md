@@ -1,3 +1,10 @@
+# [1.2.0-beta.5](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.4...v1.2.0-beta.5) (2023-10-10)
+
+
+### Bug Fixes
+
+* **zod:** improve the use of zod for configuration strictness ([25c330b](https://github.com/forgerock/forgerock-web-login-framework/commit/25c330b17a3289cccf8dd459f0ae71a05fd3f32a))
+
 # [1.2.0-beta.4](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.3...v1.2.0-beta.4) (2023-10-05)
 
 
