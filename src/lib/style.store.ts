@@ -19,11 +19,13 @@ export const styleSchema = z
       .object({
         header: z.boolean().optional(),
       })
+      .strict()
       .optional(),
     stage: z
       .object({
         icon: z.boolean().optional(),
       })
+      .strict()
       .optional(),
   })
   .strict();

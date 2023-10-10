@@ -19,11 +19,12 @@
   let journeyParam = $page.url.searchParams.get('journey');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
   let formEl: HTMLDivElement;
-  let userEvent: UserStoreValue;
+  let userEvent: UserStoreValue | null;
   let userResponse: UserResponseObj | null;
 
   async function logout() {
     await user.logout();
+    userEvent = null;
     userResponse = null;
   }
 
@@ -59,7 +60,6 @@
         scope: 'openid profile email me.read',
         serverConfig: {
           baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-          timeout: 5000,
         },
         realmPath: 'alpha',
       },
