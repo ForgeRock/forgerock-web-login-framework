@@ -1,7 +1,6 @@
 name: Release
 on:
   workflow_dispatch:
-
   push:
     branches:
       # - main
@@ -9,7 +8,6 @@ on:
       - beta
       - alpha
       - '*.x'
-
 permissions:
   id-token: write # Enable OIDC
   contents: write
@@ -20,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['18.x']
+        node: ['20.x']
         os: ['ubuntu-latest']
     steps:
       - name: Checkout
