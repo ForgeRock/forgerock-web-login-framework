@@ -64,6 +64,7 @@ export interface StepMetadata {
     numOfCallbacks: number;
     numOfSelfSubmittableCbs: number;
     numOfUserInputCbs: number;
+    stageName?: string;
   };
   platform?: Record<string, unknown>;
 }

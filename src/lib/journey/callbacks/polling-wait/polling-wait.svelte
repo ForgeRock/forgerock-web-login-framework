@@ -14,28 +14,42 @@
   import type { Maybe } from '$lib/interfaces';
 
   // Unused props. Setting to const prevents errors in console
-  export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
+  export const stepMetadata: Maybe<StepMetadata> = null;
 
   export let callback: PollingWaitCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  export let options: Maybe<{ inline: boolean }> = null;
 
   let message: string;
-
-  // Ensure this is written outside of the Reactive blog, or it get's called multiple times
-  setTimeout(() => {
-    if (callbackMetadata) { callbackMetadata.derived.isReadyForSubmission = true; }
-    selfSubmitFunction && selfSubmitFunction();
-  }, callback.getWaitTime());
+  let timer: ReturnType<typeof setTimeout>;
 
   $: {
     callback = callback as PollingWaitCallback;
     message = callback.getMessage();
+
+    // Clear any existing timeouts to avoid duplicates
+    clearTimeout(timer);
+
+    // Create new timeout, now that the previous has been cleared
+    timer = setTimeout(() => {
+      if (callbackMetadata) {
+        callbackMetadata.derived.isReadyForSubmission = true;
+      }
+      selfSubmitFunction && selfSubmitFunction();
+    }, callback.getWaitTime());
   }
 </script>
 
 <div class="tw_text-center">
-  <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-24 tw_mb-6 tw_w-24" />
-  <Text>{message}</Text>
+  {#if options?.inline}
+    <Text>
+      <Spinner colorClass="white" layoutClasses="tw_h-4 tw_w-4 tw_mr-2" />
+      <span>{message}</span>
+    </Text>
+  {:else}
+    <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-24 tw_mb-6 tw_w-24" />
+    <Text>{message}</Text>
+  {/if}
 </div>

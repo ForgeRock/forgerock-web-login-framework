@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { DeviceProfileCallback } from '@forgerock/javascript-sdk';
+  import { Config, type DeviceProfileCallback } from '@forgerock/javascript-sdk';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import DeviceProfile from './device-profile.svelte';
@@ -10,6 +10,9 @@
   export let callback: DeviceProfileCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: () => void;
+
+  // Now required due to logger utility
+  Config.set({ serverConfig: { baseUrl: 'https://example.com/am/' } });
 
   let mergedCallbackMetadata = {
     derived: {

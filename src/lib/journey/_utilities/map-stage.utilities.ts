@@ -4,9 +4,10 @@ import Registration from '$journey/stages/registration.svelte';
 import Login from '$journey/stages/login.svelte';
 import WebAuthn from '$journey/stages/webauthn.svelte';
 import RecoveryCodes from '$journey/stages/recovery-codes.svelte';
+import QrCode from '$journey/stages/qr-code.svelte';
 
 import type { StepTypes } from '$journey/journey.interfaces';
-import { FRRecoveryCodes, FRWebAuthn  } from '@forgerock/javascript-sdk';
+import { FRRecoveryCodes, FRWebAuthn, FRQRCode } from '@forgerock/javascript-sdk';
 
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
@@ -39,6 +40,10 @@ export function mapStepToStage(currentStep: StepTypes) {
 
   if (FRRecoveryCodes.isDisplayStep(currentStep)) {
     return RecoveryCodes;
+  }
+
+  if (FRQRCode.isQRCodeStep(currentStep)) {
+    return QrCode;
   }
 
   return Generic;

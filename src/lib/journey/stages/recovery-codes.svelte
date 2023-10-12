@@ -79,7 +79,7 @@
   </p>
 
   <ol
-    class="tw_font-mono tw_border tw_border-secondary-light dark:tw_border-secondary-dark tw_bg-body-light dark:tw_bg-body-dark tw_list-decimal tw_text-secondary-light dark:tw_text-secondary-light tw_py-4 tw_list-inside tw_rounded-md tw_mb-4 tw_columns-2"
+    class="tw_font-mono tw_border tw_border-secondary-light dark:tw_border-secondary-dark tw_bg-white dark:tw_bg-body-dark tw_list-decimal tw_text-secondary-light dark:tw_text-secondary-light tw_py-4 tw_list-inside tw_rounded-md tw_mb-4 tw_columns-2"
   >
     {#each codes as code}
       <li class="tw_text-center">

@@ -1,11 +1,12 @@
 <script lang="ts">
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import { Config, type FRStep } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Generic from './generic.svelte';
   import { initialize as initializeLinks } from '$lib/links.store';
   import OneTimePassword from './one-time-password.svelte';
+  import QrCode from './qr-code.svelte';
   import Registration from './registration.svelte';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import RecoveryCodes from './recovery-codes.svelte';
@@ -21,6 +22,9 @@
   export let stage: string;
   export let step: FRStep;
   export let style: z.infer<typeof partialStyleSchema>;
+
+  // Now required due to logger utility
+  Config.set({ serverConfig: { baseUrl: 'https://example.com/am/' } });
 
   let stageName;
   let stageJson;
@@ -61,6 +65,8 @@
     <RecoveryCodes componentStyle="modal" {form} {journey} {step} />
   {:else if stage === 'WebAuthn'}
     <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {step} />
+  {:else if stage === 'QRCode'}
+    <QrCode componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else}
     <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
   {/if}
