@@ -1,3 +1,10 @@
+# [1.2.0-beta.7](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.6...v1.2.0-beta.7) (2023-10-19)
+
+
+### Bug Fixes
+
+* **e2e-defaults:** improve e2e test usage convention and default redirect url ([e988eb1](https://github.com/forgerock/forgerock-web-login-framework/commit/e988eb14cd616d490ffca9e930f2b0df6f82685f))
+
 # [1.2.0-beta.6](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.5...v1.2.0-beta.6) (2023-10-19)
 
 
