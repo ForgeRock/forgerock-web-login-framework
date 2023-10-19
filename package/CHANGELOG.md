@@ -1,3 +1,10 @@
+# [1.2.0-beta.6](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.5...v1.2.0-beta.6) (2023-10-19)
+
+
+### Features
+
+* **recaptcha:** support-recaptcha-v2 ([3364d0f](https://github.com/forgerock/forgerock-web-login-framework/commit/3364d0f381e3cbeb07adad1ac89085cca4528fe7))
+
 # [1.2.0-beta.5](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.4...v1.2.0-beta.5) (2023-10-10)
 
 
