@@ -12343,7 +12343,10 @@ function widgetApiFactory(componentApi) {
                     // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
                     realmPath: 'alpha',
                     // TODO: Once we move to SSR, this default should be more intelligent
-                    redirectUri: typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+                    redirectUri: typeof window === 'object'
+                        ? // Construct URL with origin and path only, stripping off hash and query params
+                            `${window.location.origin}${window.location.pathname}`
+                        : 'https://localhost:3000/callback',
                     scope: 'openid email',
                 },
                 // Let user provided config override defaults
@@ -16530,7 +16533,7 @@ function get_each_context$a(ctx, list, i) {
 	return child_ctx;
 }
 
-// (41:8) <Label           key={`${key}-${option.value}`}           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"         >
+// (40:8) <Label           key={`${key}-${option.value}`}           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"         >
 function create_default_slot$o(ctx) {
 	let span;
 	let t0;
@@ -16590,7 +16593,6 @@ function create_each_block$a(ctx) {
 			t0 = space();
 			create_component(label.$$.fragment);
 			t1 = space();
-			attr(input, "aria-invalid", /*isInvalid*/ ctx[4]);
 			attr(input, "class", "tw_radio-input_animated dark:tw_radio-input_animated_dark tw_sr-only");
 			input.checked = input_checked_value = /*defaultOption*/ ctx[0] === /*option*/ ctx[13].value;
 			attr(input, "id", input_id_value = `${/*key*/ ctx[5]}-${/*option*/ ctx[13].value}`);
@@ -16619,10 +16621,6 @@ function create_each_block$a(ctx) {
 		},
 		p(new_ctx, dirty) {
 			ctx = new_ctx;
-
-			if (!current || dirty & /*isInvalid*/ 16) {
-				attr(input, "aria-invalid", /*isInvalid*/ ctx[4]);
-			}
 
 			if (!current || dirty & /*defaultOption, options*/ 257 && input_checked_value !== (input_checked_value = /*defaultOption*/ ctx[0] === /*option*/ ctx[13].value)) {
 				input.checked = input_checked_value;
@@ -16741,7 +16739,7 @@ function create_fragment$M(ctx) {
 		p(ctx, [dirty]) {
 			if (!current || dirty & /*groupLabel*/ 4) set_data(t0, /*groupLabel*/ ctx[2]);
 
-			if (dirty & /*key, options, isInvalid, defaultOption, name, isRequired, inputEl, onChange*/ 1529) {
+			if (dirty & /*key, options, defaultOption, name, isRequired, inputEl, onChange*/ 1513) {
 				each_value = /*options*/ ctx[8];
 				let i;
 
@@ -16885,8 +16883,8 @@ class Animated extends SvelteComponent {
 
 function create_default_slot$n(ctx) {
 	let current;
-	const default_slot_template = /*#slots*/ ctx[9].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[11], null);
+	const default_slot_template = /*#slots*/ ctx[8].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[10], null);
 
 	return {
 		c() {
@@ -16901,15 +16899,15 @@ function create_default_slot$n(ctx) {
 		},
 		p(ctx, dirty) {
 			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 2048)) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 1024)) {
 					update_slot_base(
 						default_slot,
 						default_slot_template,
 						ctx,
-						/*$$scope*/ ctx[11],
+						/*$$scope*/ ctx[10],
 						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[11])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[11], dirty, null),
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[10])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[10], dirty, null),
 						null
 					);
 				}
@@ -16941,7 +16939,7 @@ function create_fragment$L(ctx) {
 
 	label = new Label({
 			props: {
-				key: /*key*/ ctx[3],
+				key: /*key*/ ctx[2],
 				$$slots: { default: [create_default_slot$n] },
 				$$scope: { ctx }
 			}
@@ -16952,26 +16950,25 @@ function create_fragment$L(ctx) {
 			input = element("input");
 			t = space();
 			create_component(label.$$.fragment);
-			attr(input, "aria-describedby", input_aria_describedby_value = `${/*key*/ ctx[3]}-message`);
-			attr(input, "aria-invalid", /*isInvalid*/ ctx[2]);
+			attr(input, "aria-describedby", input_aria_describedby_value = `${/*key*/ ctx[2]}-message`);
 			attr(input, "class", "tw_checkbox-input dark:tw_checkbox-input_dark tw_focusable-element dark:tw_focusable-element_dark");
 			input.checked = /*checked*/ ctx[0];
-			attr(input, "id", /*key*/ ctx[3]);
-			attr(input, "name", /*name*/ ctx[4]);
+			attr(input, "id", /*key*/ ctx[2]);
+			attr(input, "name", /*name*/ ctx[3]);
 			input.required = /*isRequired*/ ctx[1];
 			attr(input, "type", "radio");
-			input.value = /*value*/ ctx[6];
+			input.value = /*value*/ ctx[5];
 		},
 		m(target, anchor) {
 			insert(target, input, anchor);
-			/*input_binding*/ ctx[10](input);
+			/*input_binding*/ ctx[9](input);
 			insert(target, t, anchor);
 			mount_component(label, target, anchor);
 			current = true;
 
 			if (!mounted) {
 				dispose = listen(input, "change", function () {
-					if (is_function(/*onChange*/ ctx[5])) /*onChange*/ ctx[5].apply(this, arguments);
+					if (is_function(/*onChange*/ ctx[4])) /*onChange*/ ctx[4].apply(this, arguments);
 				});
 
 				mounted = true;
@@ -16980,38 +16977,34 @@ function create_fragment$L(ctx) {
 		p(new_ctx, [dirty]) {
 			ctx = new_ctx;
 
-			if (!current || dirty & /*key*/ 8 && input_aria_describedby_value !== (input_aria_describedby_value = `${/*key*/ ctx[3]}-message`)) {
+			if (!current || dirty & /*key*/ 4 && input_aria_describedby_value !== (input_aria_describedby_value = `${/*key*/ ctx[2]}-message`)) {
 				attr(input, "aria-describedby", input_aria_describedby_value);
-			}
-
-			if (!current || dirty & /*isInvalid*/ 4) {
-				attr(input, "aria-invalid", /*isInvalid*/ ctx[2]);
 			}
 
 			if (!current || dirty & /*checked*/ 1) {
 				input.checked = /*checked*/ ctx[0];
 			}
 
-			if (!current || dirty & /*key*/ 8) {
-				attr(input, "id", /*key*/ ctx[3]);
+			if (!current || dirty & /*key*/ 4) {
+				attr(input, "id", /*key*/ ctx[2]);
 			}
 
-			if (!current || dirty & /*name*/ 16) {
-				attr(input, "name", /*name*/ ctx[4]);
+			if (!current || dirty & /*name*/ 8) {
+				attr(input, "name", /*name*/ ctx[3]);
 			}
 
 			if (!current || dirty & /*isRequired*/ 2) {
 				input.required = /*isRequired*/ ctx[1];
 			}
 
-			if (!current || dirty & /*value*/ 64) {
-				input.value = /*value*/ ctx[6];
+			if (!current || dirty & /*value*/ 32) {
+				input.value = /*value*/ ctx[5];
 			}
 
 			const label_changes = {};
-			if (dirty & /*key*/ 8) label_changes.key = /*key*/ ctx[3];
+			if (dirty & /*key*/ 4) label_changes.key = /*key*/ ctx[2];
 
-			if (dirty & /*$$scope*/ 2048) {
+			if (dirty & /*$$scope*/ 1024) {
 				label_changes.$$scope = { dirty, ctx };
 			}
 
@@ -17028,7 +17021,7 @@ function create_fragment$L(ctx) {
 		},
 		d(detaching) {
 			if (detaching) detach(input);
-			/*input_binding*/ ctx[10](null);
+			/*input_binding*/ ctx[9](null);
 			if (detaching) detach(t);
 			destroy_component(label, detaching);
 			mounted = false;
@@ -17042,7 +17035,6 @@ function instance$N($$self, $$props, $$invalidate) {
 	let { checked = false } = $$props;
 	let { isFirstInvalidInput } = $$props;
 	let { isRequired = false } = $$props;
-	let { isInvalid = false } = $$props;
 	let { key } = $$props;
 	let { name } = $$props;
 	let { onChange } = $$props;
@@ -17058,26 +17050,24 @@ function instance$N($$self, $$props, $$invalidate) {
 	function input_binding($$value) {
 		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
 			inputEl = $$value;
-			$$invalidate(7, inputEl);
+			$$invalidate(6, inputEl);
 		});
 	}
 
 	$$self.$$set = $$props => {
 		if ('checked' in $$props) $$invalidate(0, checked = $$props.checked);
-		if ('isFirstInvalidInput' in $$props) $$invalidate(8, isFirstInvalidInput = $$props.isFirstInvalidInput);
+		if ('isFirstInvalidInput' in $$props) $$invalidate(7, isFirstInvalidInput = $$props.isFirstInvalidInput);
 		if ('isRequired' in $$props) $$invalidate(1, isRequired = $$props.isRequired);
-		if ('isInvalid' in $$props) $$invalidate(2, isInvalid = $$props.isInvalid);
-		if ('key' in $$props) $$invalidate(3, key = $$props.key);
-		if ('name' in $$props) $$invalidate(4, name = $$props.name);
-		if ('onChange' in $$props) $$invalidate(5, onChange = $$props.onChange);
-		if ('value' in $$props) $$invalidate(6, value = $$props.value);
-		if ('$$scope' in $$props) $$invalidate(11, $$scope = $$props.$$scope);
+		if ('key' in $$props) $$invalidate(2, key = $$props.key);
+		if ('name' in $$props) $$invalidate(3, name = $$props.name);
+		if ('onChange' in $$props) $$invalidate(4, onChange = $$props.onChange);
+		if ('value' in $$props) $$invalidate(5, value = $$props.value);
+		if ('$$scope' in $$props) $$invalidate(10, $$scope = $$props.$$scope);
 	};
 
 	return [
 		checked,
 		isRequired,
-		isInvalid,
 		key,
 		name,
 		onChange,
@@ -17096,13 +17086,12 @@ class Radio extends SvelteComponent {
 
 		init(this, options, instance$N, create_fragment$L, safe_not_equal, {
 			checked: 0,
-			isFirstInvalidInput: 8,
+			isFirstInvalidInput: 7,
 			isRequired: 1,
-			isInvalid: 2,
-			key: 3,
-			name: 4,
-			onChange: 5,
-			value: 6
+			key: 2,
+			name: 3,
+			onChange: 4,
+			value: 5
 		});
 	}
 }
@@ -17115,7 +17104,7 @@ function get_each_context$9(ctx, list, i) {
 	return child_ctx;
 }
 
-// (21:6) <Radio         checked={defaultOption === option.value}         {isFirstInvalidInput}         {isRequired}         {isInvalid}         key={`${key}-${option.value}`}         {name}         {onChange}         value={option.value}       >
+// (21:6) <Radio         checked={defaultOption === option.value}         {isFirstInvalidInput}         {isRequired}         key={`${key}-${option.value}`}         {name}         {onChange}         value={option.value}       >
 function create_default_slot$m(ctx) {
 	let t_value = /*option*/ ctx[11].text + "";
 	let t;
@@ -17148,7 +17137,6 @@ function create_each_block$9(ctx) {
 				checked: /*defaultOption*/ ctx[0] === /*option*/ ctx[11].value,
 				isFirstInvalidInput: /*isFirstInvalidInput*/ ctx[3],
 				isRequired: /*isRequired*/ ctx[4],
-				isInvalid: /*isInvalid*/ ctx[5],
 				key: `${/*key*/ ctx[6]}-${/*option*/ ctx[11].value}`,
 				name: /*name*/ ctx[7],
 				onChange: /*onChange*/ ctx[8],
@@ -17176,7 +17164,6 @@ function create_each_block$9(ctx) {
 			if (dirty & /*defaultOption, options*/ 513) radio_changes.checked = /*defaultOption*/ ctx[0] === /*option*/ ctx[11].value;
 			if (dirty & /*isFirstInvalidInput*/ 8) radio_changes.isFirstInvalidInput = /*isFirstInvalidInput*/ ctx[3];
 			if (dirty & /*isRequired*/ 16) radio_changes.isRequired = /*isRequired*/ ctx[4];
-			if (dirty & /*isInvalid*/ 32) radio_changes.isInvalid = /*isInvalid*/ ctx[5];
 			if (dirty & /*key, options*/ 576) radio_changes.key = `${/*key*/ ctx[6]}-${/*option*/ ctx[11].value}`;
 			if (dirty & /*name*/ 128) radio_changes.name = /*name*/ ctx[7];
 			if (dirty & /*onChange*/ 256) radio_changes.onChange = /*onChange*/ ctx[8];
@@ -17270,7 +17257,7 @@ function create_fragment$K(ctx) {
 		p(ctx, [dirty]) {
 			if (!current || dirty & /*groupLabel*/ 4) set_data(t0, /*groupLabel*/ ctx[2]);
 
-			if (dirty & /*defaultOption, options, isFirstInvalidInput, isRequired, isInvalid, key, name, onChange*/ 1017) {
+			if (dirty & /*defaultOption, options, isFirstInvalidInput, isRequired, key, name, onChange*/ 985) {
 				each_value = /*options*/ ctx[9];
 				let i;
 

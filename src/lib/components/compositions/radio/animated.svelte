@@ -34,7 +34,6 @@
     {#each options as option}
       <div class="tw_input-spacing">
         <input
-          aria-invalid={isInvalid}
           bind:this={inputEl}
           class="tw_radio-input_animated dark:tw_radio-input_animated_dark tw_sr-only"
           checked={defaultOption === option.value}

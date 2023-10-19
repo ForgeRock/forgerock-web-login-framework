@@ -73,7 +73,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
           realmPath: 'alpha',
           // TODO: Once we move to SSR, this default should be more intelligent
           redirectUri:
-            typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+            typeof window === 'object'
+              ? // Construct URL with origin and path only, stripping off hash and query params
+                `${window.location.origin}${window.location.pathname}`
+              : 'https://localhost:3000/callback',
           scope: 'openid email',
         },
         // Let user provided config override defaults
