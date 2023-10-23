@@ -40,7 +40,7 @@
     "test:storybook": "test-storybook"
   },
   "dependencies": {
-    "@forgerock/javascript-sdk": "^4.1.2",
+    "@forgerock/javascript-sdk": "^4.2.0",
     "xss": "1.0.14",
     "zod": "3.22.3"
   },
