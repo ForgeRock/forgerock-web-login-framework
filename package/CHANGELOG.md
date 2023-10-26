@@ -1,3 +1,10 @@
+# [1.2.0-beta.8](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.7...v1.2.0-beta.8) (2023-10-26)
+
+
+### Features
+
+* **stage:** add new QR Code stage for MFA device registration ([b70bd31](https://github.com/forgerock/forgerock-web-login-framework/commit/b70bd3121474ee71ac37ebd385b17df5dc74fdab))
+
 # [1.2.0-beta.7](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.6...v1.2.0-beta.7) (2023-10-19)
 
 
