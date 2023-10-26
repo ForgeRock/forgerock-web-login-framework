@@ -1,5 +1,4 @@
-import { CallbackType, FRCallback } from '@forgerock/javascript-sdk';
-import { Config } from '@forgerock/javascript-sdk';
+import { CallbackType, Config, FRCallback } from '@forgerock/javascript-sdk';
 import { z } from 'zod';
 
 /**

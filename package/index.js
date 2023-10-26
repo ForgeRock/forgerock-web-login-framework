@@ -28,6 +28,21 @@
  * SOFTWARE.
  */
 
+function _mergeNamespaces(n, m) {
+    m.forEach(function (e) {
+        e && typeof e !== 'string' && !Array.isArray(e) && Object.keys(e).forEach(function (k) {
+            if (k !== 'default' && !(k in n)) {
+                var d = Object.getOwnPropertyDescriptor(e, k);
+                Object.defineProperty(n, k, d.get ? d : {
+                    enumerable: true,
+                    get: function () { return e[k]; }
+                });
+            }
+        });
+    });
+    return Object.freeze(n);
+}
+
 function noop() { }
 function assign(tar, src) {
     // @ts-ignore
@@ -837,6 +852,7 @@ function setDefaults(options) {
     return {
         ...options,
         oauthThreshold: options.oauthThreshold || DEFAULT_OAUTH_THRESHOLD,
+        logLevel: options.logLevel || 'none',
     };
 }
 /**
@@ -2918,6 +2934,70 @@ class Collector {
     }
 }
 
+class FRLogger {
+    static enabled() {
+        const { logLevel } = Config.get();
+        /*
+         * Return an object
+         * which satisfies the LogLevelRating type
+         * and has a key of the current log level
+         * and a value of the log level rating
+         */
+        const logLevels = {
+            none: 0,
+            error: 25,
+            warn: 50,
+            info: 75,
+            debug: 100,
+        };
+        return logLevels[logLevel];
+    }
+    static info(...msgs) {
+        const { logger } = Config.get();
+        if (this.enabled() >= 50) {
+            if (logger && logger.info) {
+                logger.info(...msgs);
+            }
+            else {
+                console.info(...msgs);
+            }
+        }
+    }
+    static warn(...msgs) {
+        const { logger } = Config.get();
+        if (this.enabled() >= 50) {
+            if (logger && logger.warn) {
+                logger.warn(...msgs);
+            }
+            else {
+                console.warn(...msgs);
+            }
+        }
+    }
+    static error(...msgs) {
+        const { logger } = Config.get();
+        if (this.enabled() >= 25) {
+            if (logger && logger.error) {
+                logger.error(...msgs);
+            }
+            else {
+                console.error(...msgs);
+            }
+        }
+    }
+    static log(...msgs) {
+        const { logger } = Config.get();
+        if (this.enabled() >= 75) {
+            if (logger && logger.log) {
+                logger.log(...msgs);
+            }
+            else {
+                console.log(...msgs);
+            }
+        }
+    }
+}
+
 /*
  * @forgerock/javascript-sdk
  *
@@ -2970,21 +3050,21 @@ class FRDevice extends Collector {
     }
     getBrowserMeta() {
         if (typeof navigator === 'undefined') {
-            console.warn('Cannot collect browser metadata. navigator is not defined.');
+            FRLogger.warn('Cannot collect browser metadata. navigator is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.browserProps, navigator);
     }
     getBrowserPluginsNames() {
         if (!(typeof navigator !== 'undefined' && navigator.plugins)) {
-            console.warn('Cannot collect browser plugin information. navigator.plugins is not defined.');
+            FRLogger.warn('Cannot collect browser plugin information. navigator.plugins is not defined.');
             return '';
         }
         return this.reduceToString(Object.keys(navigator.plugins), navigator.plugins);
     }
     getDeviceName() {
         if (typeof navigator === 'undefined') {
-            console.warn('Cannot collect device name. navigator is not defined.');
+            FRLogger.warn('Cannot collect device name. navigator is not defined.');
             return '';
         }
         const userAgent = navigator.userAgent;
@@ -3008,14 +3088,14 @@ class FRDevice extends Collector {
     }
     getDisplayMeta() {
         if (typeof screen === 'undefined') {
-            console.warn('Cannot collect screen information. screen is not defined.');
+            FRLogger.warn('Cannot collect screen information. screen is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.displayProps, screen);
     }
     getHardwareMeta() {
         if (typeof navigator === 'undefined') {
-            console.warn('Cannot collect OS metadata. Navigator is not defined.');
+            FRLogger.warn('Cannot collect OS metadata. Navigator is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.hardwareProps, navigator);
@@ -3023,11 +3103,11 @@ class FRDevice extends Collector {
     getIdentifier() {
         const storageKey = `${PREFIX}-DeviceID`;
         if (!(typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues)) {
-            console.warn('Cannot generate profile ID. Crypto and/or getRandomValues is not supported.');
+            FRLogger.warn('Cannot generate profile ID. Crypto and/or getRandomValues is not supported.');
             return '';
         }
         if (!localStorage) {
-            console.warn('Cannot store profile ID. localStorage is not supported.');
+            FRLogger.warn('Cannot store profile ID. localStorage is not supported.');
             return '';
         }
         let id = localStorage.getItem(storageKey);
@@ -3040,17 +3120,17 @@ class FRDevice extends Collector {
     }
     getInstalledFonts() {
         if (typeof document === undefined) {
-            console.warn('Cannot collect font data. Global document object is undefined.');
+            FRLogger.warn('Cannot collect font data. Global document object is undefined.');
             return '';
         }
         const canvas = document.createElement('canvas');
         if (!canvas) {
-            console.warn('Cannot collect font data. Browser does not support canvas element');
+            FRLogger.warn('Cannot collect font data. Browser does not support canvas element');
             return '';
         }
         const context = canvas.getContext && canvas.getContext('2d');
         if (!context) {
-            console.warn('Cannot collect font data. Browser does not support 2d canvas context');
+            FRLogger.warn('Cannot collect font data. Browser does not support 2d canvas context');
             return '';
         }
         const text = 'abcdefghi0123456789';
@@ -3068,7 +3148,7 @@ class FRDevice extends Collector {
     }
     async getLocationCoordinates() {
         if (!(typeof navigator !== 'undefined' && navigator.geolocation)) {
-            console.warn('Cannot collect geolocation information. navigator.geolocation is not defined.');
+            FRLogger.warn('Cannot collect geolocation information. navigator.geolocation is not defined.');
             return Promise.resolve({});
         }
         // eslint-disable-next-line no-async-promise-executor
@@ -3077,7 +3157,7 @@ class FRDevice extends Collector {
                 latitude: position.coords.latitude,
                 longitude: position.coords.longitude,
             }), (error) => {
-                console.warn('Cannot collect geolocation information. ' + error.code + ': ' + error.message);
+                FRLogger.warn('Cannot collect geolocation information. ' + error.code + ': ' + error.message);
                 resolve({});
             }, {
                 enableHighAccuracy: true,
@@ -3088,7 +3168,7 @@ class FRDevice extends Collector {
     }
     getOSMeta() {
         if (typeof navigator === 'undefined') {
-            console.warn('Cannot collect OS metadata. navigator is not defined.');
+            FRLogger.warn('Cannot collect OS metadata. navigator is not defined.');
             return {};
         }
         return this.reduceToObject(this.config.platformProps, navigator);
@@ -3125,9 +3205,73 @@ class FRDevice extends Collector {
             return new Date().getTimezoneOffset();
         }
         catch (err) {
-            console.warn('Cannot collect timezone information. getTimezoneOffset is not defined.');
+            FRLogger.warn('Cannot collect timezone information. getTimezoneOffset is not defined.');
             return null;
         }
+    }
+}
+
+/**
+ * @class FRQRCode - A utility class for handling QR Code steps
+ *
+ * Example:
+ *
+ * ```js
+ * const isQRCodeStep = FRQRCode.isQRCodeStep(step);
+ * let qrCodeData;
+ * if (isQRCodeStep) {
+ *   qrCodeData = FRQRCode.getQRCodeData(step);
+ * }
+ * ```
+ */
+class FRQRCode {
+    /**
+     * @method isQRCodeStep - determines if step contains QR Code callbacks
+     * @param {FRStep} step - step object from AM response
+     * @returns {boolean}
+     */
+    static isQRCodeStep(step) {
+        const hiddenValueCb = step.getCallbacksOfType(CallbackType.HiddenValueCallback);
+        // QR Codes step should have at least one HiddenValueCallback
+        if (hiddenValueCb.length === 0) {
+            return false;
+        }
+        return !!this.getQRCodeURICb(hiddenValueCb);
+    }
+    /**
+     * @method getQRCodeData - gets the necessary information from the QR Code callbacks
+     * @param {FRStep} step - step object from AM response
+     * @returns {QRCodeData}
+     */
+    static getQRCodeData(step) {
+        const hiddenValueCb = step.getCallbacksOfType(CallbackType.HiddenValueCallback);
+        // QR Codes step should have at least one HiddenValueCallback
+        if (hiddenValueCb.length === 0) {
+            throw new Error('QR Code step must contain a HiddenValueCallback. Use `FRQRCode.isQRCodeStep` to guard.');
+        }
+        const qrCodeURICb = this.getQRCodeURICb(hiddenValueCb);
+        const outputValue = qrCodeURICb ? qrCodeURICb.getOutputValue('value') : '';
+        const qrCodeUse = typeof outputValue === 'string' && outputValue.includes('otpauth://') ? 'otp' : 'push';
+        const messageCbs = step.getCallbacksOfType(CallbackType.TextOutputCallback);
+        const displayMessageCb = messageCbs.find((cb) => {
+            const textOutputCallback = cb;
+            return textOutputCallback.getMessageType() !== '4';
+        });
+        return {
+            message: displayMessageCb ? displayMessageCb.getMessage() : '',
+            use: qrCodeUse,
+            uri: typeof outputValue === 'string' ? outputValue : '',
+        };
+    }
+    static getQRCodeURICb(hiddenValueCbs) {
+        // Look for a HiddenValueCallback with an OTP URI
+        return hiddenValueCbs.find((cb) => {
+            const outputValue = cb.getOutputValue('value');
+            if (typeof outputValue === 'string') {
+                return outputValue?.includes('otpauth://') || outputValue?.includes('pushauth://');
+            }
+            return false;
+        });
     }
 }
 
@@ -3339,7 +3483,7 @@ class TokenStorage {
             // @ts-ignore
         }
         else if (tokenStore === 'indexedDB') {
-            console.warn('IndexedDB is not supported in this version.');
+            FRLogger.warn('IndexedDB is not supported in this version.');
         }
         else if (tokenStore && tokenStore.get) {
             // User supplied token store
@@ -3362,7 +3506,7 @@ class TokenStorage {
             // @ts-ignore
         }
         else if (tokenStore === 'indexedDB') {
-            console.warn('IndexedDB is not supported in this version.');
+            FRLogger.warn('IndexedDB is not supported in this version.');
         }
         else if (tokenStore && tokenStore.set) {
             // User supplied token store
@@ -3385,7 +3529,7 @@ class TokenStorage {
             // @ts-ignore
         }
         else if (tokenStore === 'indexedDB') {
-            console.warn('IndexedDB is not supported in this version.');
+            FRLogger.warn('IndexedDB is not supported in this version.');
         }
         else if (tokenStore && tokenStore.remove) {
             // User supplied token store
@@ -3900,7 +4044,7 @@ class TokenManager {
                 await TokenManager.deleteTokens();
             }
             catch (error) {
-                console.warn('Existing tokens could not be revoked or deleted', error);
+                FRLogger.warn('Existing tokens could not be revoked or deleted', error);
             }
         }
         /**
@@ -4005,7 +4149,7 @@ class TokenManager {
             await TokenStorage.set(tokens);
         }
         catch (error) {
-            console.error('Failed to store tokens', error);
+            FRLogger.error('Failed to store tokens', error);
         }
         return tokens;
     }
@@ -4033,7 +4177,7 @@ class FRUser {
      * @param options Configuration overrides
      */
     static async login(handler, options) {
-        console.info(handler, options); // Avoid lint errors
+        FRLogger.info(handler, options); // Avoid lint errors
         throw new Error('FRUser.login() not implemented');
     }
     /**
@@ -4048,7 +4192,7 @@ class FRUser {
             await SessionManager.logout(options);
         }
         catch (error) {
-            console.warn('Session logout was not successful');
+            FRLogger.warn('Session logout was not successful');
         }
         try {
             // Invalidates session on the server tied to the ID Token
@@ -4056,13 +4200,13 @@ class FRUser {
             await OAuth2Client.endSession(options);
         }
         catch (error) {
-            console.warn('OAuth endSession was not successful');
+            FRLogger.warn('OAuth endSession was not successful');
         }
         try {
             await OAuth2Client.revokeToken(options);
         }
         catch (error) {
-            console.warn('OAuth revokeToken was not successful');
+            FRLogger.warn('OAuth revokeToken was not successful');
         }
         await TokenManager.deleteTokens();
     }
@@ -4809,7 +4953,7 @@ function getAdvicesFromHeader(header) {
         return advicesValueParsed;
     }
     catch (err) {
-        console.error('Could not parse advices value from WWW-Authenticate header');
+        FRLogger.error('Could not parse advices value from WWW-Authenticate header');
     }
     return {};
 }
@@ -10972,6 +11116,8 @@ var confirmPassword = "Confirm password";
 var constraintViolationForPassword = "Password does not meet the requirements.";
 var constraintViolationForValue = "Value does not meet the requirements.";
 var continueWith = "Continue with ";
+var copyAndPasteUrlBelow = "Or, copy and paste the URL below into your authentictor app.";
+var copyUrl = "Copy URL";
 var customSecurityQuestion = "Custom security question";
 var doesNotMeetMinimumCharacterLength = "At least {min} character(s)";
 var dontGetLockedOut = "Don't get locked out of your account!";
@@ -10997,9 +11143,11 @@ var minimumNumberOfLowercase = "At least {num} lowercase letter(s)";
 var minimumNumberOfUppercase = "At least {num} uppercase letter(s)";
 var minimumNumberOfSymbols = "At least {num} symbol(s)";
 var nameCallback = "Username";
+var next = "Next";
 var nextButton = "Next";
 var notToExceedMaximumCharacterLength = "No more than {max} characters";
 var noLessThanMinimumCharacterLength = "At least {min} character(s)";
+var onMobileOpenInAuthenticator = "On mobile? Open link in Authenticator.";
 var passwordCallback = "Password";
 var passwordCannotContainCommonPasswords = "Password cannot contain common passwords";
 var passwordCannotContainCommonPasswordsOrBeReversible = "Password cannot contain common passwords or reversible text";
@@ -11010,12 +11158,16 @@ var pleaseConfirm = "Please confirm";
 var preferencesMarketing = "Send me special offers and services";
 var preferencesUpdates = "Send me news and updates";
 var provideCustomQuestion = "Provide custom security question";
+var qrCodeNotWorking = "Not working or need an alternative method?";
+var qrCodeFailedToRender = "QR Code failed to render. Please notify your support administrator. You are welcome to use the alternative methods below.";
+var qrCodeImportFailure = "We are unable to render your QR Code. Please use one of the alternative methods below.";
 var redirectingTo = "Redirecting you to";
 var registerButton = "Register";
 var registerHeader = "Register";
 var registerSuccess = "Registration successful!";
 var requiredField = "Value is required";
 var registerYourDevice = "Register your device";
+var scanQrCodeWithAuthenticator = "Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login.";
 var securityAnswer = "Security answer";
 var securityQuestions = "Security question(s)";
 var securityQuestionsPrompt = "Provide security question(s) and answer(s):";
@@ -11025,6 +11177,7 @@ var shouldContainALowercase = "Should contain a lowercase letter";
 var shouldContainASymbol = "Should contain a symbol";
 var showPassword = "Show password";
 var sn = "Last name";
+var submit = "Submit";
 var submitButton = "Submit";
 var successMessage = "Success!";
 var termsAndConditions = "Please accept our Terms & Conditions";
@@ -11036,6 +11189,7 @@ var useValidEmail = "Please use a valid email address.";
 var unrecoverableError = "There was an error in the form submission.";
 var unknownLoginError = "Unknown login failure has occurred.";
 var unknownNetworkError = "Unknown network request failure has occurred.";
+var url = "URL:";
 var useDeviceForIdentityVerification = "Use your device for identity verification.";
 var userName = "Username";
 var usernameRequirements = "Username requirements:";
@@ -11059,6 +11213,8 @@ var fallback = {
 	constraintViolationForPassword: constraintViolationForPassword,
 	constraintViolationForValue: constraintViolationForValue,
 	continueWith: continueWith,
+	copyAndPasteUrlBelow: copyAndPasteUrlBelow,
+	copyUrl: copyUrl,
 	customSecurityQuestion: customSecurityQuestion,
 	doesNotMeetMinimumCharacterLength: doesNotMeetMinimumCharacterLength,
 	dontGetLockedOut: dontGetLockedOut,
@@ -11084,9 +11240,11 @@ var fallback = {
 	minimumNumberOfUppercase: minimumNumberOfUppercase,
 	minimumNumberOfSymbols: minimumNumberOfSymbols,
 	nameCallback: nameCallback,
+	next: next,
 	nextButton: nextButton,
 	notToExceedMaximumCharacterLength: notToExceedMaximumCharacterLength,
 	noLessThanMinimumCharacterLength: noLessThanMinimumCharacterLength,
+	onMobileOpenInAuthenticator: onMobileOpenInAuthenticator,
 	passwordCallback: passwordCallback,
 	passwordCannotContainCommonPasswords: passwordCannotContainCommonPasswords,
 	passwordCannotContainCommonPasswordsOrBeReversible: passwordCannotContainCommonPasswordsOrBeReversible,
@@ -11097,12 +11255,16 @@ var fallback = {
 	preferencesMarketing: preferencesMarketing,
 	preferencesUpdates: preferencesUpdates,
 	provideCustomQuestion: provideCustomQuestion,
+	qrCodeNotWorking: qrCodeNotWorking,
+	qrCodeFailedToRender: qrCodeFailedToRender,
+	qrCodeImportFailure: qrCodeImportFailure,
 	redirectingTo: redirectingTo,
 	registerButton: registerButton,
 	registerHeader: registerHeader,
 	registerSuccess: registerSuccess,
 	requiredField: requiredField,
 	registerYourDevice: registerYourDevice,
+	scanQrCodeWithAuthenticator: scanQrCodeWithAuthenticator,
 	securityAnswer: securityAnswer,
 	securityQuestions: securityQuestions,
 	securityQuestionsPrompt: securityQuestionsPrompt,
@@ -11112,6 +11274,7 @@ var fallback = {
 	shouldContainASymbol: shouldContainASymbol,
 	showPassword: showPassword,
 	sn: sn,
+	submit: submit,
 	submitButton: submitButton,
 	successMessage: successMessage,
 	termsAndConditions: termsAndConditions,
@@ -11123,6 +11286,7 @@ var fallback = {
 	unrecoverableError: unrecoverableError,
 	unknownLoginError: unknownLoginError,
 	unknownNetworkError: unknownNetworkError,
+	url: url,
 	useDeviceForIdentityVerification: useDeviceForIdentityVerification,
 	userName: userName,
 	usernameRequirements: usernameRequirements,
@@ -11150,6 +11314,8 @@ const stringsSchema = z
     constraintViolationForPassword: z.string(),
     constraintViolationForValue: z.string(),
     continueWith: z.string(),
+    copyUrl: z.string(),
+    copyAndPasteUrlBelow: z.string(),
     customSecurityQuestion: z.string(),
     dontGetLockedOut: z.string(),
     doesNotMeetMinimumCharacterLength: z.string(),
@@ -11174,9 +11340,11 @@ const stringsSchema = z
     minimumNumberOfUppercase: z.string(),
     minimumNumberOfSymbols: z.string(),
     nameCallback: z.string(),
+    next: z.string(),
     nextButton: z.string(),
     notToExceedMaximumCharacterLength: z.string(),
     noLessThanMinimumCharacterLength: z.string(),
+    onMobileOpenInAuthenticator: z.string(),
     passwordCallback: z.string(),
     passwordCannotContainCommonPasswords: z.string(),
     passwordCannotContainCommonPasswordsOrBeReversible: z.string(),
@@ -11187,6 +11355,9 @@ const stringsSchema = z
     preferencesMarketing: z.string(),
     preferencesUpdates: z.string(),
     provideCustomQuestion: z.string(),
+    qrCodeNotWorking: z.string(),
+    qrCodeFailedToRender: z.string(),
+    qrCodeImportFailure: z.string(),
     redirectingTo: z.string(),
     registerButton: z.string(),
     registerHeader: z.string(),
@@ -11194,6 +11365,7 @@ const stringsSchema = z
     registerYourDevice: z.string(),
     requiredField: z.string(),
     securityAnswer: z.string(),
+    scanQrCodeWithAuthenticator: z.string(),
     securityQuestions: z.string(),
     securityQuestionsPrompt: z.string(),
     shouldContainANumber: z.string(),
@@ -11202,6 +11374,7 @@ const stringsSchema = z
     shouldContainASymbol: z.string(),
     showPassword: z.string(),
     sn: z.string(),
+    submit: z.string(),
     submitButton: z.string(),
     successMessage: z.string(),
     termsAndConditions: z.string(),
@@ -11213,6 +11386,7 @@ const stringsSchema = z
     unrecoverableError: z.string(),
     unknownLoginError: z.string(),
     unknownNetworkError: z.string(),
+    url: z.string(),
     useDeviceForIdentityVerification: z.string(),
     userName: z.string(),
     usernameRequirements: z.string(),
@@ -12592,7 +12766,7 @@ function widgetApiFactory(componentApi) {
 
 /* src/lib/components/_utilities/locale-strings.svelte generated by Svelte v3.59.2 */
 
-function create_else_block$c(ctx) {
+function create_else_block$d(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[5].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
@@ -12645,7 +12819,7 @@ function create_else_block$c(ctx) {
 }
 
 // (11:0) {#if html}
-function create_if_block$s(ctx) {
+function create_if_block$u(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[5].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[4], null);
@@ -12742,12 +12916,12 @@ function fallback_block$2(ctx) {
 	};
 }
 
-function create_fragment$13(ctx) {
+function create_fragment$16(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$s, create_else_block$c];
+	const if_block_creators = [create_if_block$u, create_else_block$d];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -12811,7 +12985,7 @@ function create_fragment$13(ctx) {
 	};
 }
 
-function instance$15($$self, $$props, $$invalidate) {
+function instance$18($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { html = false } = $$props;
 	let { key } = $$props;
@@ -12839,13 +13013,13 @@ function instance$15($$self, $$props, $$invalidate) {
 class Locale_strings extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$15, create_fragment$13, safe_not_equal, { html: 0, key: 2, values: 3 });
+		init(this, options, instance$18, create_fragment$16, safe_not_equal, { html: 0, key: 2, values: 3 });
 	}
 }
 
 /* src/lib/components/icons/x-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$12(ctx) {
+function create_fragment$15(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -12921,7 +13095,7 @@ function create_fragment$12(ctx) {
 	};
 }
 
-function instance$14($$self, $$props, $$invalidate) {
+function instance$17($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -12938,13 +13112,13 @@ function instance$14($$self, $$props, $$invalidate) {
 class X_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$14, create_fragment$12, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$17, create_fragment$15, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/compositions/dialog/dialog.svelte generated by Svelte v3.59.2 */
 
-function create_else_block$b(ctx) {
+function create_else_block$c(ctx) {
 	let div;
 	let button;
 	let xicon;
@@ -12957,12 +13131,12 @@ function create_else_block$b(ctx) {
 	xicon = new X_icon({
 			props: {
 				classes: "tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light",
-				$$slots: { default: [create_default_slot_1$f] },
+				$$slots: { default: [create_default_slot_1$h] },
 				$$scope: { ctx }
 			}
 		});
 
-	let if_block = /*$styleStore*/ ctx[5]?.logo && create_if_block_1$d(ctx);
+	let if_block = /*$styleStore*/ ctx[5]?.logo && create_if_block_1$e(ctx);
 
 	return {
 		c() {
@@ -13008,7 +13182,7 @@ function create_else_block$b(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block_1$d(ctx);
+					if_block = create_if_block_1$e(ctx);
 					if_block.c();
 					if_block.m(div, null);
 				}
@@ -13043,7 +13217,7 @@ function create_else_block$b(ctx) {
 }
 
 // (39:2) {#if withHeader}
-function create_if_block$r(ctx) {
+function create_if_block$t(ctx) {
 	let div1;
 	let div0;
 	let div0_style_value;
@@ -13057,7 +13231,7 @@ function create_if_block$r(ctx) {
 	xicon = new X_icon({
 			props: {
 				classes: "tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light",
-				$$slots: { default: [create_default_slot$t] },
+				$$slots: { default: [create_default_slot$u] },
 				$$scope: { ctx }
 			}
 		});
@@ -13135,7 +13309,7 @@ function create_if_block$r(ctx) {
 }
 
 // (72:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
-function create_default_slot_1$f(ctx) {
+function create_default_slot_1$h(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "closeModal" } });
@@ -13165,7 +13339,7 @@ function create_default_slot_1$f(ctx) {
 }
 
 // (77:6) {#if $styleStore?.logo}
-function create_if_block_1$d(ctx) {
+function create_if_block_1$e(ctx) {
 	let div;
 	let div_style_value;
 
@@ -13190,7 +13364,7 @@ function create_if_block_1$d(ctx) {
 }
 
 // (55:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
-function create_default_slot$t(ctx) {
+function create_default_slot$u(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "closeModal" } });
@@ -13219,7 +13393,7 @@ function create_default_slot$t(ctx) {
 	};
 }
 
-function create_fragment$11(ctx) {
+function create_fragment$14(ctx) {
 	let dialog;
 	let current_block_type_index;
 	let if_block;
@@ -13227,7 +13401,7 @@ function create_fragment$11(ctx) {
 	let div;
 	let dialog_class_value;
 	let current;
-	const if_block_creators = [create_if_block$r, create_else_block$b];
+	const if_block_creators = [create_if_block$t, create_else_block$c];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -13339,7 +13513,7 @@ function create_fragment$11(ctx) {
 	};
 }
 
-function instance$13($$self, $$props, $$invalidate) {
+function instance$16($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(5, $styleStore = $$value));
 	let { $$slots: slots = {}, $$scope } = $$props;
@@ -13413,7 +13587,7 @@ class Dialog extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$13, create_fragment$11, safe_not_equal, {
+		init(this, options, instance$16, create_fragment$14, safe_not_equal, {
 			dialogEl: 0,
 			dialogId: 1,
 			forceOpen: 2,
@@ -13429,7 +13603,7 @@ class Dialog extends SvelteComponent {
 
 /* src/lib/components/icons/alert-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$10(ctx) {
+function create_fragment$13(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -13505,7 +13679,7 @@ function create_fragment$10(ctx) {
 	};
 }
 
-function instance$12($$self, $$props, $$invalidate) {
+function instance$15($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -13522,13 +13696,13 @@ function instance$12($$self, $$props, $$invalidate) {
 class Alert_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$12, create_fragment$10, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$15, create_fragment$13, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/info-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$$(ctx) {
+function create_fragment$12(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -13604,7 +13778,7 @@ function create_fragment$$(ctx) {
 	};
 }
 
-function instance$11($$self, $$props, $$invalidate) {
+function instance$14($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -13621,13 +13795,13 @@ function instance$11($$self, $$props, $$invalidate) {
 class Info_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$11, create_fragment$$, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$14, create_fragment$12, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/warning-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$_(ctx) {
+function create_fragment$11(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -13703,7 +13877,7 @@ function create_fragment$_(ctx) {
 	};
 }
 
-function instance$10($$self, $$props, $$invalidate) {
+function instance$13($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -13720,13 +13894,13 @@ function instance$10($$self, $$props, $$invalidate) {
 class Warning_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$10, create_fragment$_, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$13, create_fragment$11, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/primitives/alert/alert.svelte generated by Svelte v3.59.2 */
 
-function create_else_block$a(ctx) {
+function create_else_block$b(ctx) {
 	let infoicon;
 	let current;
 	infoicon = new Info_icon({});
@@ -13754,8 +13928,8 @@ function create_else_block$a(ctx) {
 	};
 }
 
-// (43:33) 
-function create_if_block_1$c(ctx) {
+// (44:33) 
+function create_if_block_1$d(ctx) {
 	let warningicon;
 	let current;
 	warningicon = new Warning_icon({});
@@ -13783,8 +13957,8 @@ function create_if_block_1$c(ctx) {
 	};
 }
 
-// (41:4) {#if type === 'error'}
-function create_if_block$q(ctx) {
+// (42:4) {#if type === 'error'}
+function create_if_block$s(ctx) {
 	let alerticon;
 	let current;
 	alerticon = new Alert_icon({});
@@ -13812,7 +13986,7 @@ function create_if_block$q(ctx) {
 	};
 }
 
-function create_fragment$Z(ctx) {
+function create_fragment$10(ctx) {
 	let div;
 	let p;
 	let current_block_type_index;
@@ -13820,8 +13994,9 @@ function create_fragment$Z(ctx) {
 	let t;
 	let span;
 	let div_class_value;
+	let div_role_value;
 	let current;
-	const if_block_creators = [create_if_block$q, create_if_block_1$c, create_else_block$a];
+	const if_block_creators = [create_if_block$s, create_if_block_1$d, create_else_block$b];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -13847,6 +14022,7 @@ function create_fragment$Z(ctx) {
 			attr(div, "class", div_class_value = `${generateClassString$3(/*type*/ ctx[1])} tw_alert dark:tw_alert_dark tw_input-spacing tw_outline-none`);
 			attr(div, "id", /*id*/ ctx[0]);
 			attr(div, "tabindex", "-1");
+			attr(div, "role", div_role_value = /*type*/ ctx[1] === 'error' ? 'alert' : '');
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -13907,6 +14083,10 @@ function create_fragment$Z(ctx) {
 			if (!current || dirty & /*id*/ 1) {
 				attr(div, "id", /*id*/ ctx[0]);
 			}
+
+			if (!current || dirty & /*type*/ 2 && div_role_value !== (div_role_value = /*type*/ ctx[1] === 'error' ? 'alert' : '')) {
+				attr(div, "role", div_role_value);
+			}
 		},
 		i(local) {
 			if (current) return;
@@ -13948,7 +14128,7 @@ function generateClassString$3(...args) {
 	);
 }
 
-function instance$$($$self, $$props, $$invalidate) {
+function instance$12($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { id } = $$props;
 	let { needsFocus = false } = $$props;
@@ -13985,13 +14165,13 @@ function instance$$($$self, $$props, $$invalidate) {
 class Alert extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$$, create_fragment$Z, safe_not_equal, { id: 0, needsFocus: 3, type: 1 });
+		init(this, options, instance$12, create_fragment$10, safe_not_equal, { id: 0, needsFocus: 3, type: 1 });
 	}
 }
 
 /* src/lib/components/primitives/spinner/spinner.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$Y(ctx) {
+function create_fragment$$(ctx) {
 	let div;
 	let span;
 	let t;
@@ -14035,7 +14215,7 @@ function create_fragment$Y(ctx) {
 	};
 }
 
-function instance$_($$self, $$props, $$invalidate) {
+function instance$11($$self, $$props, $$invalidate) {
 	let { colorClass } = $$props;
 	let { layoutClasses } = $$props;
 
@@ -14050,13 +14230,13 @@ function instance$_($$self, $$props, $$invalidate) {
 class Spinner extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$_, create_fragment$Y, safe_not_equal, { colorClass: 0, layoutClasses: 1 });
+		init(this, options, instance$11, create_fragment$$, safe_not_equal, { colorClass: 0, layoutClasses: 1 });
 	}
 }
 
 /* src/lib/components/primitives/button/button.svelte generated by Svelte v3.59.2 */
 
-function create_if_block$p(ctx) {
+function create_if_block$r(ctx) {
 	let spinner;
 	let current;
 
@@ -14107,14 +14287,14 @@ function fallback_block$1(ctx) {
 	};
 }
 
-function create_fragment$X(ctx) {
+function create_fragment$_(ctx) {
 	let button;
 	let t;
 	let button_class_value;
 	let current;
 	let mounted;
 	let dispose;
-	let if_block = /*busy*/ ctx[0] && create_if_block$p();
+	let if_block = /*busy*/ ctx[0] && create_if_block$r();
 	const default_slot_template = /*#slots*/ ctx[7].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[6], null);
 	const default_slot_or_fallback = default_slot || fallback_block$1();
@@ -14156,7 +14336,7 @@ function create_fragment$X(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$p();
+					if_block = create_if_block$r();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(button, t);
@@ -14237,7 +14417,7 @@ function generateClassString$2(...args) {
 	);
 }
 
-function instance$Z($$self, $$props, $$invalidate) {
+function instance$10($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { busy = false } = $$props;
 	let { classes = '' } = $$props;
@@ -14267,7 +14447,7 @@ class Button extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$Z, create_fragment$X, safe_not_equal, {
+		init(this, options, instance$10, create_fragment$_, safe_not_equal, {
 			busy: 0,
 			classes: 1,
 			onClick: 2,
@@ -14280,7 +14460,7 @@ class Button extends SvelteComponent {
 
 /* src/lib/components/primitives/form/form.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$W(ctx) {
+function create_fragment$Z(ctx) {
 	let form;
 	let form_class_value;
 	let current;
@@ -14367,7 +14547,7 @@ function create_fragment$W(ctx) {
 	};
 }
 
-function instance$Y($$self, $$props, $$invalidate) {
+function instance$$($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { ariaDescribedBy } = $$props;
 	let { formEl = null } = $$props;
@@ -14494,7 +14674,7 @@ class Form extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$Y, create_fragment$W, safe_not_equal, {
+		init(this, options, instance$$, create_fragment$Z, safe_not_equal, {
 			ariaDescribedBy: 1,
 			formEl: 0,
 			id: 2,
@@ -14506,7 +14686,7 @@ class Form extends SvelteComponent {
 
 /* src/lib/components/_utilities/server-strings.svelte generated by Svelte v3.59.2 */
 
-function create_else_block$9(ctx) {
+function create_else_block$a(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[4].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
@@ -14559,7 +14739,7 @@ function create_else_block$9(ctx) {
 }
 
 // (10:0) {#if html}
-function create_if_block$o(ctx) {
+function create_if_block$q(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[4].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[3], null);
@@ -14656,12 +14836,12 @@ function fallback_block(ctx) {
 	};
 }
 
-function create_fragment$V(ctx) {
+function create_fragment$Y(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$o, create_else_block$9];
+	const if_block_creators = [create_if_block$q, create_else_block$a];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -14725,7 +14905,7 @@ function create_fragment$V(ctx) {
 	};
 }
 
-function instance$X($$self, $$props, $$invalidate) {
+function instance$_($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { html = false } = $$props;
 	let { string } = $$props;
@@ -14751,13 +14931,13 @@ function instance$X($$self, $$props, $$invalidate) {
 class Server_strings extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$X, create_fragment$V, safe_not_equal, { html: 0, string: 2 });
+		init(this, options, instance$_, create_fragment$Y, safe_not_equal, { html: 0, string: 2 });
 	}
 }
 
 /* src/lib/components/icons/shield-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$U(ctx) {
+function create_fragment$X(ctx) {
 	let svg;
 	let path;
 	let title;
@@ -14833,7 +15013,7 @@ function create_fragment$U(ctx) {
 	};
 }
 
-function instance$W($$self, $$props, $$invalidate) {
+function instance$Z($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -14850,13 +15030,13 @@ function instance$W($$self, $$props, $$invalidate) {
 class Shield_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$W, create_fragment$U, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$Z, create_fragment$X, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/stages/_utilities/back-to.svelte generated by Svelte v3.59.2 */
 
-function create_if_block$n(ctx) {
+function create_if_block$p(ctx) {
 	let p;
 	let button;
 	let t_value = interpolate(/*string*/ ctx[1]) + "";
@@ -14892,9 +15072,9 @@ function create_if_block$n(ctx) {
 	};
 }
 
-function create_fragment$T(ctx) {
+function create_fragment$W(ctx) {
 	let if_block_anchor;
-	let if_block = /*$stack*/ ctx[2].length > 1 && create_if_block$n(ctx);
+	let if_block = /*$stack*/ ctx[2].length > 1 && create_if_block$p(ctx);
 
 	return {
 		c() {
@@ -14910,7 +15090,7 @@ function create_fragment$T(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$n(ctx);
+					if_block = create_if_block$p(ctx);
 					if_block.c();
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
 				}
@@ -14928,7 +15108,7 @@ function create_fragment$T(ctx) {
 	};
 }
 
-function instance$V($$self, $$props, $$invalidate) {
+function instance$Y($$self, $$props, $$invalidate) {
 	let $stack;
 	let $configuredJourneysStore;
 	component_subscribe($$self, configuredJourneysStore, $$value => $$invalidate(5, $configuredJourneysStore = $$value));
@@ -14969,7 +15149,7 @@ function instance$V($$self, $$props, $$invalidate) {
 class Back_to extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$V, create_fragment$T, safe_not_equal, { journey: 0 });
+		init(this, options, instance$Y, create_fragment$W, safe_not_equal, { journey: 0 });
 	}
 }
 
@@ -15433,7 +15613,7 @@ function getAttributeValidationFailureText(callback) {
 
 /* src/lib/components/primitives/message/input-message.svelte generated by Svelte v3.59.2 */
 
-function create_if_block$m(ctx) {
+function create_if_block$o(ctx) {
 	let p;
 	let p_class_value;
 	let p_id_value;
@@ -15464,9 +15644,9 @@ function create_if_block$m(ctx) {
 	};
 }
 
-function create_fragment$S(ctx) {
+function create_fragment$V(ctx) {
 	let if_block_anchor;
-	let if_block = /*dirtyMessage*/ ctx[1] && create_if_block$m(ctx);
+	let if_block = /*dirtyMessage*/ ctx[1] && create_if_block$o(ctx);
 
 	return {
 		c() {
@@ -15482,7 +15662,7 @@ function create_fragment$S(ctx) {
 				if (if_block) {
 					if_block.p(ctx, dirty);
 				} else {
-					if_block = create_if_block$m(ctx);
+					if_block = create_if_block$o(ctx);
 					if_block.c();
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
 				}
@@ -15514,7 +15694,7 @@ function generateClassString$1(...args) {
 	);
 }
 
-function instance$U($$self, $$props, $$invalidate) {
+function instance$X($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { dirtyMessage } = $$props;
 	let { key = undefined } = $$props;
@@ -15545,7 +15725,7 @@ class Input_message extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$U, create_fragment$S, safe_not_equal, {
+		init(this, options, instance$X, create_fragment$V, safe_not_equal, {
 			classes: 0,
 			dirtyMessage: 1,
 			key: 2,
@@ -15557,7 +15737,7 @@ class Input_message extends SvelteComponent {
 
 /* src/lib/components/primitives/label/label.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$R(ctx) {
+function create_fragment$U(ctx) {
 	let label;
 	let label_class_value;
 	let current;
@@ -15620,7 +15800,7 @@ function create_fragment$R(ctx) {
 	};
 }
 
-function instance$T($$self, $$props, $$invalidate) {
+function instance$W($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { key } = $$props;
 	let { classes = '' } = $$props;
@@ -15637,13 +15817,13 @@ function instance$T($$self, $$props, $$invalidate) {
 class Label extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$T, create_fragment$R, safe_not_equal, { key: 0, classes: 1 });
+		init(this, options, instance$W, create_fragment$U, safe_not_equal, { key: 0, classes: 1 });
 	}
 }
 
 /* src/lib/components/compositions/checkbox/animated.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$s(ctx) {
+function create_default_slot$t(ctx) {
 	let span;
 	let t;
 	let current;
@@ -15700,7 +15880,7 @@ function create_default_slot$s(ctx) {
 	};
 }
 
-function create_fragment$Q(ctx) {
+function create_fragment$T(ctx) {
 	let div1;
 	let input;
 	let input_data_message_value;
@@ -15717,7 +15897,7 @@ function create_fragment$Q(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: "tw_grid tw_grid-cols-[2.5em_1fr] tw_relative",
-				$$slots: { default: [create_default_slot$s] },
+				$$slots: { default: [create_default_slot$t] },
 				$$scope: { ctx }
 			}
 		});
@@ -15824,7 +16004,7 @@ function create_fragment$Q(ctx) {
 	};
 }
 
-function instance$S($$self, $$props, $$invalidate) {
+function instance$V($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { message = '' } = $$props;
@@ -15893,7 +16073,7 @@ let Animated$1 = class Animated extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$S, create_fragment$Q, safe_not_equal, {
+		init(this, options, instance$V, create_fragment$T, safe_not_equal, {
 			checkValidity: 8,
 			message: 1,
 			isFirstInvalidInput: 9,
@@ -15909,7 +16089,7 @@ let Animated$1 = class Animated extends SvelteComponent {
 
 /* src/lib/components/primitives/checkbox/checkbox.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$r(ctx) {
+function create_default_slot$s(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[7].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[9], null);
@@ -15956,7 +16136,7 @@ function create_default_slot$r(ctx) {
 	};
 }
 
-function create_fragment$P(ctx) {
+function create_fragment$S(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let t;
@@ -15968,7 +16148,7 @@ function create_fragment$P(ctx) {
 	label = new Label({
 			props: {
 				key: /*key*/ ctx[2],
-				$$slots: { default: [create_default_slot$r] },
+				$$slots: { default: [create_default_slot$s] },
 				$$scope: { ctx }
 			}
 		});
@@ -16053,7 +16233,7 @@ function create_fragment$P(ctx) {
 	};
 }
 
-function instance$R($$self, $$props, $$invalidate) {
+function instance$U($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { isFirstInvalidInput } = $$props;
 	let { isRequired = false } = $$props;
@@ -16104,7 +16284,7 @@ class Checkbox extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$R, create_fragment$P, safe_not_equal, {
+		init(this, options, instance$U, create_fragment$S, safe_not_equal, {
 			isFirstInvalidInput: 6,
 			isRequired: 0,
 			isInvalid: 1,
@@ -16117,7 +16297,7 @@ class Checkbox extends SvelteComponent {
 
 /* src/lib/components/compositions/checkbox/standard.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$q(ctx) {
+function create_default_slot$r(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[10].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[11], null);
@@ -16164,7 +16344,7 @@ function create_default_slot$q(ctx) {
 	};
 }
 
-function create_fragment$O(ctx) {
+function create_fragment$R(ctx) {
 	let div;
 	let checkbox;
 	let t;
@@ -16180,7 +16360,7 @@ function create_fragment$O(ctx) {
 				key: /*key*/ ctx[4],
 				onChange: /*onChangeWrapper*/ ctx[7],
 				value: /*value*/ ctx[6],
-				$$slots: { default: [create_default_slot$q] },
+				$$slots: { default: [create_default_slot$r] },
 				$$scope: { ctx }
 			}
 		});
@@ -16251,7 +16431,7 @@ function create_fragment$O(ctx) {
 	};
 }
 
-function instance$Q($$self, $$props, $$invalidate) {
+function instance$T($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { message = '' } = $$props;
@@ -16304,7 +16484,7 @@ let Standard$1 = class Standard extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$Q, create_fragment$O, safe_not_equal, {
+		init(this, options, instance$T, create_fragment$R, safe_not_equal, {
 			checkValidity: 8,
 			message: 1,
 			isFirstInvalidInput: 2,
@@ -16320,7 +16500,7 @@ let Standard$1 = class Standard extends SvelteComponent {
 
 /* src/lib/journey/callbacks/boolean/boolean.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$p(ctx) {
+function create_default_slot$q(ctx) {
 	let t_value = interpolate(textToKey(/*outputName*/ ctx[3]), null, /*prompt*/ ctx[5]) + "";
 	let t;
 
@@ -16353,7 +16533,7 @@ function create_key_block$5(ctx) {
 				message: /*validationFailure*/ ctx[6],
 				onChange: /*setValue*/ ctx[8],
 				value: /*previousValue*/ ctx[4],
-				$$slots: { default: [create_default_slot$p] },
+				$$slots: { default: [create_default_slot$q] },
 				$$scope: { ctx }
 			}
 		});
@@ -16395,7 +16575,7 @@ function create_key_block$5(ctx) {
 	};
 }
 
-function create_fragment$N(ctx) {
+function create_fragment$Q(ctx) {
 	let previous_key = /*callback*/ ctx[0];
 	let key_block_anchor;
 	let current;
@@ -16440,7 +16620,7 @@ function create_fragment$N(ctx) {
 	};
 }
 
-function instance$P($$self, $$props, $$invalidate) {
+function instance$S($$self, $$props, $$invalidate) {
 	const stepMetadata = null;
 	const selfSubmitFunction = null;
 	let { callback } = $$props;
@@ -16507,7 +16687,7 @@ let Boolean$1 = class Boolean extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$P, create_fragment$N, safe_not_equal, {
+		init(this, options, instance$S, create_fragment$Q, safe_not_equal, {
 			stepMetadata: 9,
 			selfSubmitFunction: 10,
 			callback: 0,
@@ -16527,14 +16707,14 @@ let Boolean$1 = class Boolean extends SvelteComponent {
 
 /* src/lib/components/compositions/radio/animated.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$a(ctx, list, i) {
+function get_each_context$b(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[13] = list[i];
 	return child_ctx;
 }
 
 // (40:8) <Label           key={`${key}-${option.value}`}           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"         >
-function create_default_slot$o(ctx) {
+function create_default_slot$p(ctx) {
 	let span;
 	let t0;
 	let t1_value = /*option*/ ctx[13].text + "";
@@ -16564,7 +16744,7 @@ function create_default_slot$o(ctx) {
 }
 
 // (27:4) {#each options as option}
-function create_each_block$a(ctx) {
+function create_each_block$b(ctx) {
 	let div;
 	let input;
 	let input_checked_value;
@@ -16581,7 +16761,7 @@ function create_each_block$a(ctx) {
 			props: {
 				key: `${/*key*/ ctx[5]}-${/*option*/ ctx[13].value}`,
 				classes: "tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative",
-				$$slots: { default: [create_default_slot$o] },
+				$$slots: { default: [create_default_slot$p] },
 				$$scope: { ctx }
 			}
 		});
@@ -16670,7 +16850,7 @@ function create_each_block$a(ctx) {
 	};
 }
 
-function create_fragment$M(ctx) {
+function create_fragment$P(ctx) {
 	let fieldset;
 	let legend;
 	let t0;
@@ -16684,7 +16864,7 @@ function create_fragment$M(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$a(get_each_context$a(ctx, each_value, i));
+		each_blocks[i] = create_each_block$b(get_each_context$b(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -16744,13 +16924,13 @@ function create_fragment$M(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$a(ctx, each_value, i);
+					const child_ctx = get_each_context$b(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$a(child_ctx);
+						each_blocks[i] = create_each_block$b(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(div, t2);
@@ -16801,7 +16981,7 @@ function create_fragment$M(ctx) {
 	};
 }
 
-function instance$O($$self, $$props, $$invalidate) {
+function instance$R($$self, $$props, $$invalidate) {
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
 	let { groupLabel = '' } = $$props;
@@ -16863,7 +17043,7 @@ class Animated extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$O, create_fragment$M, safe_not_equal, {
+		init(this, options, instance$R, create_fragment$P, safe_not_equal, {
 			defaultOption: 0,
 			message: 1,
 			groupLabel: 2,
@@ -16881,7 +17061,7 @@ class Animated extends SvelteComponent {
 
 /* src/lib/components/primitives/radio/radio.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$n(ctx) {
+function create_default_slot$o(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[8].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[10], null);
@@ -16928,7 +17108,7 @@ function create_default_slot$n(ctx) {
 	};
 }
 
-function create_fragment$L(ctx) {
+function create_fragment$O(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let t;
@@ -16940,7 +17120,7 @@ function create_fragment$L(ctx) {
 	label = new Label({
 			props: {
 				key: /*key*/ ctx[2],
-				$$slots: { default: [create_default_slot$n] },
+				$$slots: { default: [create_default_slot$o] },
 				$$scope: { ctx }
 			}
 		});
@@ -17030,7 +17210,7 @@ function create_fragment$L(ctx) {
 	};
 }
 
-function instance$N($$self, $$props, $$invalidate) {
+function instance$Q($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checked = false } = $$props;
 	let { isFirstInvalidInput } = $$props;
@@ -17084,7 +17264,7 @@ class Radio extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$N, create_fragment$L, safe_not_equal, {
+		init(this, options, instance$Q, create_fragment$O, safe_not_equal, {
 			checked: 0,
 			isFirstInvalidInput: 7,
 			isRequired: 1,
@@ -17098,14 +17278,14 @@ class Radio extends SvelteComponent {
 
 /* src/lib/components/compositions/radio/standard.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$9(ctx, list, i) {
+function get_each_context$a(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
 // (21:6) <Radio         checked={defaultOption === option.value}         {isFirstInvalidInput}         {isRequired}         key={`${key}-${option.value}`}         {name}         {onChange}         value={option.value}       >
-function create_default_slot$m(ctx) {
+function create_default_slot$n(ctx) {
 	let t_value = /*option*/ ctx[11].text + "";
 	let t;
 
@@ -17126,7 +17306,7 @@ function create_default_slot$m(ctx) {
 }
 
 // (19:2) {#each options as option}
-function create_each_block$9(ctx) {
+function create_each_block$a(ctx) {
 	let div;
 	let radio;
 	let t;
@@ -17141,7 +17321,7 @@ function create_each_block$9(ctx) {
 				name: /*name*/ ctx[7],
 				onChange: /*onChange*/ ctx[8],
 				value: /*option*/ ctx[11].value,
-				$$slots: { default: [create_default_slot$m] },
+				$$slots: { default: [create_default_slot$n] },
 				$$scope: { ctx }
 			}
 		});
@@ -17191,7 +17371,7 @@ function create_each_block$9(ctx) {
 	};
 }
 
-function create_fragment$K(ctx) {
+function create_fragment$N(ctx) {
 	let fieldset;
 	let legend;
 	let t0;
@@ -17204,7 +17384,7 @@ function create_fragment$K(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
+		each_blocks[i] = create_each_block$a(get_each_context$a(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -17262,13 +17442,13 @@ function create_fragment$K(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$9(ctx, each_value, i);
+					const child_ctx = get_each_context$a(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$9(child_ctx);
+						each_blocks[i] = create_each_block$a(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(fieldset, t2);
@@ -17319,7 +17499,7 @@ function create_fragment$K(ctx) {
 	};
 }
 
-function instance$M($$self, $$props, $$invalidate) {
+function instance$P($$self, $$props, $$invalidate) {
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
 	let { groupLabel = '' } = $$props;
@@ -17365,7 +17545,7 @@ class Standard extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$M, create_fragment$K, safe_not_equal, {
+		init(this, options, instance$P, create_fragment$N, safe_not_equal, {
 			defaultOption: 0,
 			message: 1,
 			groupLabel: 2,
@@ -17383,14 +17563,14 @@ class Standard extends SvelteComponent {
 
 /* src/lib/components/primitives/select/select.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$8(ctx, list, i) {
+function get_each_context$9(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[15] = list[i];
 	return child_ctx;
 }
 
 // (39:0) {#if labelOrder === 'first'}
-function create_if_block_1$b(ctx) {
+function create_if_block_1$c(ctx) {
 	let label_1;
 	let current;
 
@@ -17398,7 +17578,7 @@ function create_if_block_1$b(ctx) {
 			props: {
 				key: /*key*/ ctx[4],
 				classes: `${/*labelClasses*/ ctx[6]}`,
-				$$slots: { default: [create_default_slot_1$e] },
+				$$slots: { default: [create_default_slot_1$g] },
 				$$scope: { ctx }
 			}
 		});
@@ -17438,7 +17618,7 @@ function create_if_block_1$b(ctx) {
 }
 
 // (40:2) <Label {key} classes={`${labelClasses}`}>
-function create_default_slot_1$e(ctx) {
+function create_default_slot_1$g(ctx) {
 	let t;
 
 	return {
@@ -17458,7 +17638,7 @@ function create_default_slot_1$e(ctx) {
 }
 
 // (54:2) {#each options as option}
-function create_each_block$8(ctx) {
+function create_each_block$9(ctx) {
 	let option;
 	let t0_value = /*option*/ ctx[15].text + "";
 	let t0;
@@ -17499,7 +17679,7 @@ function create_each_block$8(ctx) {
 }
 
 // (61:0) {#if labelOrder === 'last'}
-function create_if_block$l(ctx) {
+function create_if_block$n(ctx) {
 	let label_1;
 	let current;
 
@@ -17509,7 +17689,7 @@ function create_if_block$l(ctx) {
 				classes: `${/*shouldDisplayOption*/ ctx[10]
 				? /*labelClasses*/ ctx[6]
 				: 'tw_sr-only'}`,
-				$$slots: { default: [create_default_slot$l] },
+				$$slots: { default: [create_default_slot$m] },
 				$$scope: { ctx }
 			}
 		});
@@ -17552,7 +17732,7 @@ function create_if_block$l(ctx) {
 }
 
 // (62:2) <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>
-function create_default_slot$l(ctx) {
+function create_default_slot$m(ctx) {
 	let t;
 
 	return {
@@ -17571,7 +17751,7 @@ function create_default_slot$l(ctx) {
 	};
 }
 
-function create_fragment$J(ctx) {
+function create_fragment$M(ctx) {
 	let t0;
 	let select;
 	let select_aria_describedby_value;
@@ -17581,15 +17761,15 @@ function create_fragment$J(ctx) {
 	let current;
 	let mounted;
 	let dispose;
-	let if_block0 = /*labelOrder*/ ctx[7] === 'first' && create_if_block_1$b(ctx);
+	let if_block0 = /*labelOrder*/ ctx[7] === 'first' && create_if_block_1$c(ctx);
 	let each_value = /*options*/ ctx[8];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
+		each_blocks[i] = create_each_block$9(get_each_context$9(ctx, each_value, i));
 	}
 
-	let if_block1 = /*labelOrder*/ ctx[7] === 'last' && create_if_block$l(ctx);
+	let if_block1 = /*labelOrder*/ ctx[7] === 'last' && create_if_block$n(ctx);
 
 	return {
 		c() {
@@ -17645,7 +17825,7 @@ function create_fragment$J(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_1$b(ctx);
+					if_block0 = create_if_block_1$c(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -17665,12 +17845,12 @@ function create_fragment$J(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$8(ctx, each_value, i);
+					const child_ctx = get_each_context$9(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$8(child_ctx);
+						each_blocks[i] = create_each_block$9(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(select, null);
 					}
@@ -17713,7 +17893,7 @@ function create_fragment$J(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block$l(ctx);
+					if_block1 = create_if_block$n(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(if_block1_anchor.parentNode, if_block1_anchor);
@@ -17754,7 +17934,7 @@ function create_fragment$J(ctx) {
 	};
 }
 
-function instance$L($$self, $$props, $$invalidate) {
+function instance$O($$self, $$props, $$invalidate) {
 	let { selectClasses = '' } = $$props;
 	let { defaultOption = null } = $$props;
 	let { isFirstInvalidInput } = $$props;
@@ -17841,7 +18021,7 @@ class Select extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$L, create_fragment$J, safe_not_equal, {
+		init(this, options, instance$O, create_fragment$M, safe_not_equal, {
 			selectClasses: 0,
 			defaultOption: 1,
 			isFirstInvalidInput: 12,
@@ -17859,7 +18039,7 @@ class Select extends SvelteComponent {
 
 /* src/lib/components/compositions/select-floating/floating-label.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$I(ctx) {
+function create_fragment$L(ctx) {
 	let div;
 	let select;
 	let t;
@@ -17942,7 +18122,7 @@ function create_fragment$I(ctx) {
 	};
 }
 
-function instance$K($$self, $$props, $$invalidate) {
+function instance$N($$self, $$props, $$invalidate) {
 	let { checkValidity = null } = $$props;
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
@@ -17997,7 +18177,7 @@ let Floating_label$1 = class Floating_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$K, create_fragment$I, safe_not_equal, {
+		init(this, options, instance$N, create_fragment$L, safe_not_equal, {
 			checkValidity: 10,
 			defaultOption: 1,
 			message: 2,
@@ -18015,7 +18195,7 @@ let Floating_label$1 = class Floating_label extends SvelteComponent {
 
 /* src/lib/components/compositions/select-stacked/stacked-label.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$H(ctx) {
+function create_fragment$K(ctx) {
 	let div;
 	let select;
 	let t;
@@ -18097,7 +18277,7 @@ function create_fragment$H(ctx) {
 	};
 }
 
-function instance$J($$self, $$props, $$invalidate) {
+function instance$M($$self, $$props, $$invalidate) {
 	let { checkValidity = null } = $$props;
 	let { defaultOption = null } = $$props;
 	let { message = '' } = $$props;
@@ -18152,7 +18332,7 @@ let Stacked_label$1 = class Stacked_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$J, create_fragment$H, safe_not_equal, {
+		init(this, options, instance$M, create_fragment$K, safe_not_equal, {
 			checkValidity: 10,
 			defaultOption: 1,
 			message: 2,
@@ -18170,7 +18350,7 @@ let Stacked_label$1 = class Stacked_label extends SvelteComponent {
 
 /* src/lib/journey/callbacks/choice/choice.svelte generated by Svelte v3.59.2 */
 
-function create_else_block$8(ctx) {
+function create_else_block$9(ctx) {
 	let select;
 	let current;
 
@@ -18219,7 +18399,7 @@ function create_else_block$8(ctx) {
 }
 
 // (52:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
-function create_if_block$k(ctx) {
+function create_if_block$m(ctx) {
 	let radio;
 	let current;
 
@@ -18269,12 +18449,12 @@ function create_if_block$k(ctx) {
 	};
 }
 
-function create_fragment$G(ctx) {
+function create_fragment$J(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$k, create_else_block$8];
+	const if_block_creators = [create_if_block$m, create_else_block$9];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -18338,7 +18518,7 @@ function create_fragment$G(ctx) {
 	};
 }
 
-function instance$I($$self, $$props, $$invalidate) {
+function instance$L($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -18426,7 +18606,7 @@ class Choice extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$I, create_fragment$G, safe_not_equal, {
+		init(this, options, instance$L, create_fragment$J, safe_not_equal, {
 			selfSubmitFunction: 9,
 			stepMetadata: 10,
 			callback: 11,
@@ -18446,7 +18626,7 @@ class Choice extends SvelteComponent {
 
 /* src/lib/components/primitives/grid/grid.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$F(ctx) {
+function create_fragment$I(ctx) {
 	let div;
 	let div_class_value;
 	let current;
@@ -18457,7 +18637,7 @@ function create_fragment$F(ctx) {
 		c() {
 			div = element("div");
 			if (default_slot) default_slot.c();
-			attr(div, "class", div_class_value = `${generateClassString(/*num*/ ctx[0])} tw_gap-4 tw_grid tw_input-spacing`);
+			attr(div, "class", div_class_value = `${generateClassString(/*num*/ ctx[0])} tw_gap-4 tw_grid tw_grid-cols-1 tw_input-spacing`);
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
@@ -18484,7 +18664,7 @@ function create_fragment$F(ctx) {
 				}
 			}
 
-			if (!current || dirty & /*num*/ 1 && div_class_value !== (div_class_value = `${generateClassString(/*num*/ ctx[0])} tw_gap-4 tw_grid tw_input-spacing`)) {
+			if (!current || dirty & /*num*/ 1 && div_class_value !== (div_class_value = `${generateClassString(/*num*/ ctx[0])} tw_gap-4 tw_grid tw_grid-cols-1 tw_input-spacing`)) {
 				attr(div, "class", div_class_value);
 			}
 		},
@@ -18509,20 +18689,20 @@ function generateClassString(...args) {
 		(prev, curr) => {
 			switch (curr) {
 				case 4:
-					return `${prev} tw_grid-cols-4`;
+					return `${prev} md:tw_grid-cols-4`;
 				case 3:
-					return `${prev} tw_grid-cols-3`;
+					return `${prev} md:tw_grid-cols-3`;
 				case 2:
-					return `${prev} tw_grid-cols-2`;
+					return `${prev} md:tw_grid-cols-2`;
 				default:
-					return `${prev} tw_grid-cols-1`;
+					return `${prev} md:tw_grid-cols-1`;
 			}
 		},
 		''
 	);
 }
 
-function instance$H($$self, $$props, $$invalidate) {
+function instance$K($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { num = 2 } = $$props;
 
@@ -18537,100 +18717,27 @@ function instance$H($$self, $$props, $$invalidate) {
 class Grid extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$H, create_fragment$F, safe_not_equal, { num: 0 });
+		init(this, options, instance$K, create_fragment$I, safe_not_equal, { num: 0 });
 	}
 }
 
 /* src/lib/journey/callbacks/confirmation/confirmation.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$7(ctx, list, i) {
+function get_each_context$8(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[15] = list[i];
 	return child_ctx;
 }
 
-// (81:0) {#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
-function create_if_block$j(ctx) {
-	let show_if;
-	let current_block_type_index;
-	let if_block;
-	let if_block_anchor;
-	let current;
-	const if_block_creators = [create_if_block_1$a, create_else_block_1];
-	const if_blocks = [];
-
-	function select_block_type(ctx, dirty) {
-		if (dirty & /*stepMetadata*/ 2) show_if = null;
-		if (show_if == null) show_if = !!!/*stepMetadata*/ ctx[1]?.derived.isStepSelfSubmittable();
-		if (show_if) return 0;
-		return 1;
-	}
-
-	current_block_type_index = select_block_type(ctx, -1);
-	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-
-	return {
-		c() {
-			if_block.c();
-			if_block_anchor = empty();
-		},
-		m(target, anchor) {
-			if_blocks[current_block_type_index].m(target, anchor);
-			insert(target, if_block_anchor, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			let previous_block_index = current_block_type_index;
-			current_block_type_index = select_block_type(ctx, dirty);
-
-			if (current_block_type_index === previous_block_index) {
-				if_blocks[current_block_type_index].p(ctx, dirty);
-			} else {
-				group_outros();
-
-				transition_out(if_blocks[previous_block_index], 1, 1, () => {
-					if_blocks[previous_block_index] = null;
-				});
-
-				check_outros();
-				if_block = if_blocks[current_block_type_index];
-
-				if (!if_block) {
-					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
-					if_block.c();
-				} else {
-					if_block.p(ctx, dirty);
-				}
-
-				transition_in(if_block, 1);
-				if_block.m(if_block_anchor.parentNode, if_block_anchor);
-			}
-		},
-		i(local) {
-			if (current) return;
-			transition_in(if_block);
-			current = true;
-		},
-		o(local) {
-			transition_out(if_block);
-			current = false;
-		},
-		d(detaching) {
-			if_blocks[current_block_type_index].d(detaching);
-			if (detaching) detach(if_block_anchor);
-		}
-	};
-}
-
-// (103:2) {:else}
+// (101:0) {:else}
 function create_else_block_1(ctx) {
 	let grid;
 	let current;
 
 	grid = new Grid({
 			props: {
-				num: /*options*/ ctx[3].length,
-				$$slots: { default: [create_default_slot_1$d] },
+				num: /*options*/ ctx[3].length >= 2 ? 2 : 1,
+				$$slots: { default: [create_default_slot_1$f] },
 				$$scope: { ctx }
 			}
 		});
@@ -18645,7 +18752,7 @@ function create_else_block_1(ctx) {
 		},
 		p(ctx, dirty) {
 			const grid_changes = {};
-			if (dirty & /*options*/ 8) grid_changes.num = /*options*/ ctx[3].length;
+			if (dirty & /*options*/ 8) grid_changes.num = /*options*/ ctx[3].length >= 2 ? 2 : 1;
 
 			if (dirty & /*$$scope, options, defaultChoice, buttonStyle*/ 262200) {
 				grid_changes.$$scope = { dirty, ctx };
@@ -18668,13 +18775,13 @@ function create_else_block_1(ctx) {
 	};
 }
 
-// (82:2) {#if !stepMetadata?.derived.isStepSelfSubmittable()}
-function create_if_block_1$a(ctx) {
+// (80:0) {#if !stepMetadata?.derived.isStepSelfSubmittable()}
+function create_if_block$l(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_2$9, create_else_block$7];
+	const if_block_creators = [create_if_block_1$b, create_else_block$8];
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
@@ -18738,8 +18845,8 @@ function create_if_block_1$a(ctx) {
 	};
 }
 
-// (106:8) <Button           style={options.length > 1 && defaultChoice === Number(opt.value)             ? 'primary'             : buttonStyle}           type="button"           width="auto"           onClick={() => setBtnValue(Number(opt.value))}         >
-function create_default_slot_2$5(ctx) {
+// (104:6) <Button         style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}         type="button"         width="auto"         onClick={() => setBtnValue(Number(opt.value))}       >
+function create_default_slot_2$6(ctx) {
 	let t0_value = /*opt*/ ctx[15].text + "";
 	let t0;
 	let t1;
@@ -18763,8 +18870,8 @@ function create_default_slot_2$5(ctx) {
 	};
 }
 
-// (105:6) {#each options as opt}
-function create_each_block$7(ctx) {
+// (103:4) {#each options as opt}
+function create_each_block$8(ctx) {
 	let button;
 	let current;
 
@@ -18780,7 +18887,7 @@ function create_each_block$7(ctx) {
 				type: "button",
 				width: "auto",
 				onClick: func,
-				$$slots: { default: [create_default_slot_2$5] },
+				$$slots: { default: [create_default_slot_2$6] },
 				$$scope: { ctx }
 			}
 		});
@@ -18824,15 +18931,15 @@ function create_each_block$7(ctx) {
 	};
 }
 
-// (104:4) <Grid num={options.length}>
-function create_default_slot_1$d(ctx) {
+// (102:2) <Grid num={options.length >= 2 ? 2 : 1}>
+function create_default_slot_1$f(ctx) {
 	let each_1_anchor;
 	let current;
 	let each_value = /*options*/ ctx[3];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$7(get_each_context$7(ctx, each_value, i));
+		each_blocks[i] = create_each_block$8(get_each_context$8(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
@@ -18863,13 +18970,13 @@ function create_default_slot_1$d(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$7(ctx, each_value, i);
+					const child_ctx = get_each_context$8(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$7(child_ctx);
+						each_blocks[i] = create_each_block$8(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(each_1_anchor.parentNode, each_1_anchor);
@@ -18910,8 +19017,8 @@ function create_default_slot_1$d(ctx) {
 	};
 }
 
-// (92:4) {:else}
-function create_else_block$7(ctx) {
+// (90:2) {:else}
+function create_else_block$8(ctx) {
 	let checkbox;
 	let current;
 
@@ -18922,7 +19029,7 @@ function create_else_block$7(ctx) {
 				key: /*inputName*/ ctx[6],
 				onChange: /*setCheckboxValue*/ ctx[10],
 				value: false,
-				$$slots: { default: [create_default_slot$k] },
+				$$slots: { default: [create_default_slot$l] },
 				$$scope: { ctx }
 			}
 		});
@@ -18961,8 +19068,8 @@ function create_else_block$7(ctx) {
 	};
 }
 
-// (83:4) {#if options.length > 1}
-function create_if_block_2$9(ctx) {
+// (81:2) {#if options.length > 1}
+function create_if_block_1$b(ctx) {
 	let select;
 	let current;
 
@@ -19008,8 +19115,8 @@ function create_if_block_2$9(ctx) {
 	};
 }
 
-// (93:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={inputName}         onChange={setCheckboxValue}         value={false}       >
-function create_default_slot$k(ctx) {
+// (91:4) <Checkbox       isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}       isInvalid={false}       key={inputName}       onChange={setCheckboxValue}       value={false}     >
+function create_default_slot$l(ctx) {
 	let t_value = /*options*/ ctx[3][0].text + "";
 	let t;
 
@@ -19029,43 +19136,60 @@ function create_default_slot$k(ctx) {
 	};
 }
 
-function create_fragment$E(ctx) {
+function create_fragment$H(ctx) {
+	let show_if;
+	let current_block_type_index;
+	let if_block;
 	let if_block_anchor;
 	let current;
-	let if_block = /*stepMetadata*/ ctx[1]?.platform?.stageName !== 'OneTimePassword' && create_if_block$j(ctx);
+	const if_block_creators = [create_if_block$l, create_else_block_1];
+	const if_blocks = [];
+
+	function select_block_type(ctx, dirty) {
+		if (dirty & /*stepMetadata*/ 2) show_if = null;
+		if (show_if == null) show_if = !!!/*stepMetadata*/ ctx[1]?.derived.isStepSelfSubmittable();
+		if (show_if) return 0;
+		return 1;
+	}
+
+	current_block_type_index = select_block_type(ctx, -1);
+	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
 	return {
 		c() {
-			if (if_block) if_block.c();
+			if_block.c();
 			if_block_anchor = empty();
 		},
 		m(target, anchor) {
-			if (if_block) if_block.m(target, anchor);
+			if_blocks[current_block_type_index].m(target, anchor);
 			insert(target, if_block_anchor, anchor);
 			current = true;
 		},
 		p(ctx, [dirty]) {
-			if (/*stepMetadata*/ ctx[1]?.platform?.stageName !== 'OneTimePassword') {
-				if (if_block) {
-					if_block.p(ctx, dirty);
+			let previous_block_index = current_block_type_index;
+			current_block_type_index = select_block_type(ctx, dirty);
 
-					if (dirty & /*stepMetadata*/ 2) {
-						transition_in(if_block, 1);
-					}
-				} else {
-					if_block = create_if_block$j(ctx);
-					if_block.c();
-					transition_in(if_block, 1);
-					if_block.m(if_block_anchor.parentNode, if_block_anchor);
-				}
-			} else if (if_block) {
+			if (current_block_type_index === previous_block_index) {
+				if_blocks[current_block_type_index].p(ctx, dirty);
+			} else {
 				group_outros();
 
-				transition_out(if_block, 1, 1, () => {
-					if_block = null;
+				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+					if_blocks[previous_block_index] = null;
 				});
 
 				check_outros();
+				if_block = if_blocks[current_block_type_index];
+
+				if (!if_block) {
+					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+					if_block.c();
+				} else {
+					if_block.p(ctx, dirty);
+				}
+
+				transition_in(if_block, 1);
+				if_block.m(if_block_anchor.parentNode, if_block_anchor);
 			}
 		},
 		i(local) {
@@ -19078,13 +19202,13 @@ function create_fragment$E(ctx) {
 			current = false;
 		},
 		d(detaching) {
-			if (if_block) if_block.d(detaching);
+			if_blocks[current_block_type_index].d(detaching);
 			if (detaching) detach(if_block_anchor);
 		}
 	};
 }
 
-function instance$G($$self, $$props, $$invalidate) {
+function instance$J($$self, $$props, $$invalidate) {
 	const style = {};
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
@@ -19203,7 +19327,7 @@ class Confirmation extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$G, create_fragment$E, safe_not_equal, {
+		init(this, options, instance$J, create_fragment$H, safe_not_equal, {
 			style: 11,
 			callback: 12,
 			callbackMetadata: 0,
@@ -19219,7 +19343,7 @@ class Confirmation extends SvelteComponent {
 
 /* src/lib/journey/callbacks/hidden-value/hidden-value.svelte generated by Svelte v3.59.2 */
 
-function instance$F($$self, $$props, $$invalidate) {
+function instance$I($$self, $$props, $$invalidate) {
 	const callback = null;
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
@@ -19232,7 +19356,7 @@ class Hidden_value extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$F, null, safe_not_equal, {
+		init(this, options, instance$I, null, safe_not_equal, {
 			callback: 0,
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
@@ -19272,7 +19396,7 @@ function create_if_block_7$1(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: `${/*labelClasses*/ ctx[5]} tw_w-full tw_ml-1`,
-				$$slots: { default: [create_default_slot_1$c] },
+				$$slots: { default: [create_default_slot_1$e] },
 				$$scope: { ctx }
 			}
 		});
@@ -19312,7 +19436,7 @@ function create_if_block_7$1(ctx) {
 }
 
 // (25:2) <Label {key} classes={`${labelClasses} tw_w-full tw_ml-1`}>
-function create_default_slot_1$c(ctx) {
+function create_default_slot_1$e(ctx) {
 	let t;
 
 	return {
@@ -19412,7 +19536,7 @@ function create_if_block_6$1(ctx) {
 }
 
 // (49:0) {#if type === 'email'}
-function create_if_block_5$1(ctx) {
+function create_if_block_5$2(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -19492,7 +19616,7 @@ function create_if_block_5$1(ctx) {
 }
 
 // (65:0) {#if type === 'number'}
-function create_if_block_4$2(ctx) {
+function create_if_block_4$4(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -19572,7 +19696,7 @@ function create_if_block_4$2(ctx) {
 }
 
 // (81:0) {#if type === 'password'}
-function create_if_block_3$6(ctx) {
+function create_if_block_3$7(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -19652,7 +19776,7 @@ function create_if_block_3$6(ctx) {
 }
 
 // (97:0) {#if type === 'phone'}
-function create_if_block_2$8(ctx) {
+function create_if_block_2$9(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -19732,7 +19856,7 @@ function create_if_block_2$8(ctx) {
 }
 
 // (113:0) {#if type === 'text'}
-function create_if_block_1$9(ctx) {
+function create_if_block_1$a(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -19812,7 +19936,7 @@ function create_if_block_1$9(ctx) {
 }
 
 // (129:0) {#if labelOrder === 'last'}
-function create_if_block$i(ctx) {
+function create_if_block$k(ctx) {
 	let label_1;
 	let current;
 
@@ -19820,7 +19944,7 @@ function create_if_block$i(ctx) {
 			props: {
 				key: /*key*/ ctx[3],
 				classes: `${/*labelClasses*/ ctx[5]}`,
-				$$slots: { default: [create_default_slot$j] },
+				$$slots: { default: [create_default_slot$k] },
 				$$scope: { ctx }
 			}
 		});
@@ -19860,7 +19984,7 @@ function create_if_block$i(ctx) {
 }
 
 // (130:2) <Label {key} classes={`${labelClasses}`}>
-function create_default_slot$j(ctx) {
+function create_default_slot$k(ctx) {
 	let t;
 
 	return {
@@ -19879,7 +20003,7 @@ function create_default_slot$j(ctx) {
 	};
 }
 
-function create_fragment$D(ctx) {
+function create_fragment$G(ctx) {
 	let t0;
 	let t1;
 	let t2;
@@ -19891,12 +20015,12 @@ function create_fragment$D(ctx) {
 	let current;
 	let if_block0 = /*labelOrder*/ ctx[6] === 'first' && create_if_block_7$1(ctx);
 	let if_block1 = /*type*/ ctx[11] === 'date' && create_if_block_6$1(ctx);
-	let if_block2 = /*type*/ ctx[11] === 'email' && create_if_block_5$1(ctx);
-	let if_block3 = /*type*/ ctx[11] === 'number' && create_if_block_4$2(ctx);
-	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$6(ctx);
-	let if_block5 = /*type*/ ctx[11] === 'phone' && create_if_block_2$8(ctx);
-	let if_block6 = /*type*/ ctx[11] === 'text' && create_if_block_1$9(ctx);
-	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$i(ctx);
+	let if_block2 = /*type*/ ctx[11] === 'email' && create_if_block_5$2(ctx);
+	let if_block3 = /*type*/ ctx[11] === 'number' && create_if_block_4$4(ctx);
+	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$7(ctx);
+	let if_block5 = /*type*/ ctx[11] === 'phone' && create_if_block_2$9(ctx);
+	let if_block6 = /*type*/ ctx[11] === 'text' && create_if_block_1$a(ctx);
+	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$k(ctx);
 
 	return {
 		c() {
@@ -19977,7 +20101,7 @@ function create_fragment$D(ctx) {
 				if (if_block2) {
 					if_block2.p(ctx, dirty);
 				} else {
-					if_block2 = create_if_block_5$1(ctx);
+					if_block2 = create_if_block_5$2(ctx);
 					if_block2.c();
 					if_block2.m(t2.parentNode, t2);
 				}
@@ -19990,7 +20114,7 @@ function create_fragment$D(ctx) {
 				if (if_block3) {
 					if_block3.p(ctx, dirty);
 				} else {
-					if_block3 = create_if_block_4$2(ctx);
+					if_block3 = create_if_block_4$4(ctx);
 					if_block3.c();
 					if_block3.m(t3.parentNode, t3);
 				}
@@ -20003,7 +20127,7 @@ function create_fragment$D(ctx) {
 				if (if_block4) {
 					if_block4.p(ctx, dirty);
 				} else {
-					if_block4 = create_if_block_3$6(ctx);
+					if_block4 = create_if_block_3$7(ctx);
 					if_block4.c();
 					if_block4.m(t4.parentNode, t4);
 				}
@@ -20016,7 +20140,7 @@ function create_fragment$D(ctx) {
 				if (if_block5) {
 					if_block5.p(ctx, dirty);
 				} else {
-					if_block5 = create_if_block_2$8(ctx);
+					if_block5 = create_if_block_2$9(ctx);
 					if_block5.c();
 					if_block5.m(t5.parentNode, t5);
 				}
@@ -20029,7 +20153,7 @@ function create_fragment$D(ctx) {
 				if (if_block6) {
 					if_block6.p(ctx, dirty);
 				} else {
-					if_block6 = create_if_block_1$9(ctx);
+					if_block6 = create_if_block_1$a(ctx);
 					if_block6.c();
 					if_block6.m(t6.parentNode, t6);
 				}
@@ -20046,7 +20170,7 @@ function create_fragment$D(ctx) {
 						transition_in(if_block7, 1);
 					}
 				} else {
-					if_block7 = create_if_block$i(ctx);
+					if_block7 = create_if_block$k(ctx);
 					if_block7.c();
 					transition_in(if_block7, 1);
 					if_block7.m(if_block7_anchor.parentNode, if_block7_anchor);
@@ -20093,7 +20217,7 @@ function create_fragment$D(ctx) {
 	};
 }
 
-function instance$E($$self, $$props, $$invalidate) {
+function instance$H($$self, $$props, $$invalidate) {
 	let { forceValidityFailure = false } = $$props;
 	let { isFirstInvalidInput } = $$props;
 	let { inputClasses = '' } = $$props;
@@ -20237,7 +20361,7 @@ class Input extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$E, create_fragment$D, safe_not_equal, {
+		init(this, options, instance$H, create_fragment$G, safe_not_equal, {
 			forceValidityFailure: 1,
 			isFirstInvalidInput: 13,
 			inputClasses: 2,
@@ -20259,7 +20383,7 @@ class Input extends SvelteComponent {
 const get_input_button_slot_changes$1 = dirty => ({});
 const get_input_button_slot_context$1 = ctx => ({});
 
-function create_fragment$C(ctx) {
+function create_fragment$F(ctx) {
 	let div1;
 	let input;
 	let updating_value;
@@ -20434,7 +20558,7 @@ function create_fragment$C(ctx) {
 	};
 }
 
-function instance$D($$self, $$props, $$invalidate) {
+function instance$G($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { forceValidityFailure = false } = $$props;
@@ -20505,7 +20629,7 @@ class Floating_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$D, create_fragment$C, safe_not_equal, {
+		init(this, options, instance$G, create_fragment$F, safe_not_equal, {
 			checkValidity: 12,
 			forceValidityFailure: 2,
 			message: 3,
@@ -20527,7 +20651,7 @@ class Floating_label extends SvelteComponent {
 const get_input_button_slot_changes = dirty => ({});
 const get_input_button_slot_context = ctx => ({});
 
-function create_fragment$B(ctx) {
+function create_fragment$E(ctx) {
 	let div1;
 	let input;
 	let updating_value;
@@ -20706,7 +20830,7 @@ function create_fragment$B(ctx) {
 	};
 }
 
-function instance$C($$self, $$props, $$invalidate) {
+function instance$F($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { checkValidity = null } = $$props;
 	let { forceValidityFailure = false } = $$props;
@@ -20780,7 +20904,7 @@ class Stacked_label extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$C, create_fragment$B, safe_not_equal, {
+		init(this, options, instance$F, create_fragment$E, safe_not_equal, {
 			checkValidity: 13,
 			forceValidityFailure: 2,
 			isFirstInvalidInput: 3,
@@ -20801,7 +20925,7 @@ class Stacked_label extends SvelteComponent {
 
 /* src/lib/components/icons/lock-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$A(ctx) {
+function create_fragment$D(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -20882,7 +21006,7 @@ function create_fragment$A(ctx) {
 	};
 }
 
-function instance$B($$self, $$props, $$invalidate) {
+function instance$E($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -20899,13 +21023,13 @@ function instance$B($$self, $$props, $$invalidate) {
 class Lock_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$B, create_fragment$A, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$E, create_fragment$D, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/callbacks/kba/kba-create.svelte generated by Svelte v3.59.2 */
 
-function create_if_block$h(ctx) {
+function create_if_block$j(ctx) {
 	let input;
 	let current;
 
@@ -20950,7 +21074,7 @@ function create_if_block$h(ctx) {
 	};
 }
 
-function create_fragment$z(ctx) {
+function create_fragment$C(ctx) {
 	let fieldset;
 	let legend;
 	let t0;
@@ -20986,7 +21110,7 @@ function create_fragment$z(ctx) {
 			}
 		});
 
-	let if_block = /*displayCustomQuestionInput*/ ctx[3] && create_if_block$h(ctx);
+	let if_block = /*displayCustomQuestionInput*/ ctx[3] && create_if_block$j(ctx);
 
 	function input_value_binding(value) {
 		/*input_value_binding*/ ctx[21](value);
@@ -21065,7 +21189,7 @@ function create_fragment$z(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$h(ctx);
+					if_block = create_if_block$j(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(fieldset, t6);
@@ -21123,7 +21247,7 @@ function create_fragment$z(ctx) {
 	};
 }
 
-function instance$A($$self, $$props, $$invalidate) {
+function instance$D($$self, $$props, $$invalidate) {
 	let $value;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -21279,7 +21403,7 @@ class Kba_create extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$A, create_fragment$z, safe_not_equal, {
+		init(this, options, instance$D, create_fragment$C, safe_not_equal, {
 			selfSubmitFunction: 13,
 			stepMetadata: 14,
 			callback: 15,
@@ -21352,7 +21476,7 @@ function create_key_block$4(ctx) {
 	};
 }
 
-function create_fragment$y(ctx) {
+function create_fragment$B(ctx) {
 	let previous_key = /*callback*/ ctx[0];
 	let key_block_anchor;
 	let current;
@@ -21397,7 +21521,7 @@ function create_fragment$y(ctx) {
 	};
 }
 
-function instance$z($$self, $$props, $$invalidate) {
+function instance$C($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -21449,7 +21573,7 @@ class Name extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$z, create_fragment$y, safe_not_equal, {
+		init(this, options, instance$C, create_fragment$B, safe_not_equal, {
 			selfSubmitFunction: 8,
 			stepMetadata: 9,
 			callback: 0,
@@ -21469,7 +21593,7 @@ class Name extends SvelteComponent {
 
 /* src/lib/components/icons/eye-icon.svelte generated by Svelte v3.59.2 */
 
-function create_else_block$6(ctx) {
+function create_else_block$7(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -21551,7 +21675,7 @@ function create_else_block$6(ctx) {
 }
 
 // (6:0) {#if !visible}
-function create_if_block$g(ctx) {
+function create_if_block$i(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -21632,12 +21756,12 @@ function create_if_block$g(ctx) {
 	};
 }
 
-function create_fragment$x(ctx) {
+function create_fragment$A(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$g, create_else_block$6];
+	const if_block_creators = [create_if_block$i, create_else_block$7];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -21701,7 +21825,7 @@ function create_fragment$x(ctx) {
 	};
 }
 
-function instance$y($$self, $$props, $$invalidate) {
+function instance$B($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -21720,13 +21844,13 @@ function instance$y($$self, $$props, $$invalidate) {
 class Eye_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$y, create_fragment$x, safe_not_equal, { classes: 0, size: 1, visible: 2 });
+		init(this, options, instance$B, create_fragment$A, safe_not_equal, { classes: 0, size: 1, visible: 2 });
 	}
 }
 
 /* src/lib/journey/callbacks/password/confirm-input.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot_1$b(ctx) {
+function create_default_slot_1$d(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[15].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[16], null);
@@ -21774,7 +21898,7 @@ function create_default_slot_1$b(ctx) {
 }
 
 // (69:4) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-function create_default_slot$i(ctx) {
+function create_default_slot$j(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "showPassword" } });
@@ -21815,7 +21939,7 @@ function create_input_button_slot$1(ctx) {
 			props: {
 				classes: "tw_password-icon dark:tw_password-icon_dark",
 				visible: /*isVisible*/ ctx[6],
-				$$slots: { default: [create_default_slot$i] },
+				$$slots: { default: [create_default_slot$j] },
 				$$scope: { ctx }
 			}
 		});
@@ -21866,7 +21990,7 @@ function create_input_button_slot$1(ctx) {
 	};
 }
 
-function create_fragment$w(ctx) {
+function create_fragment$z(ctx) {
 	let input;
 	let current;
 
@@ -21888,7 +22012,7 @@ function create_fragment$w(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot$1],
-					default: [create_default_slot_1$b]
+					default: [create_default_slot_1$d]
 				},
 				$$scope: { ctx }
 			}
@@ -21937,7 +22061,7 @@ function create_fragment$w(ctx) {
 	};
 }
 
-function instance$x($$self, $$props, $$invalidate) {
+function instance$A($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { forceValidityFailure = false } = $$props;
 	let { passwordsDoNotMatch = false } = $$props;
@@ -22024,7 +22148,7 @@ class Confirm_input extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$x, create_fragment$w, safe_not_equal, {
+		init(this, options, instance$A, create_fragment$z, safe_not_equal, {
 			forceValidityFailure: 0,
 			passwordsDoNotMatch: 1,
 			isRequired: 2,
@@ -22039,7 +22163,7 @@ class Confirm_input extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/base.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot_1$a(ctx) {
+function create_default_slot_1$c(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[21].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[22], null);
@@ -22087,7 +22211,7 @@ function create_default_slot_1$a(ctx) {
 }
 
 // (95:6) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-function create_default_slot$h(ctx) {
+function create_default_slot$i(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "showPassword" } });
@@ -22128,7 +22252,7 @@ function create_input_button_slot(ctx) {
 			props: {
 				classes: "tw_password-icon dark:tw_password-icon_dark",
 				visible: /*isVisible*/ ctx[11],
-				$$slots: { default: [create_default_slot$h] },
+				$$slots: { default: [create_default_slot$i] },
 				$$scope: { ctx }
 			}
 		});
@@ -22180,7 +22304,7 @@ function create_input_button_slot(ctx) {
 }
 
 // (102:2) {#if callbackMetadata?.platform?.confirmPassword}
-function create_if_block$f(ctx) {
+function create_if_block$h(ctx) {
 	let confirminput;
 	let current;
 
@@ -22257,13 +22381,13 @@ function create_key_block$3(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot],
-					default: [create_default_slot_1$a]
+					default: [create_default_slot_1$c]
 				},
 				$$scope: { ctx }
 			}
 		});
 
-	let if_block = /*callbackMetadata*/ ctx[2]?.platform?.confirmPassword && create_if_block$f(ctx);
+	let if_block = /*callbackMetadata*/ ctx[2]?.platform?.confirmPassword && create_if_block$h(ctx);
 
 	return {
 		c() {
@@ -22312,7 +22436,7 @@ function create_key_block$3(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$f(ctx);
+					if_block = create_if_block$h(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -22347,7 +22471,7 @@ function create_key_block$3(ctx) {
 	};
 }
 
-function create_fragment$v(ctx) {
+function create_fragment$y(ctx) {
 	let previous_key = /*callback*/ ctx[1];
 	let key_block_anchor;
 	let current;
@@ -22392,7 +22516,7 @@ function create_fragment$v(ctx) {
 	};
 }
 
-function instance$w($$self, $$props, $$invalidate) {
+function instance$z($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
@@ -22517,7 +22641,7 @@ class Base extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$w, create_fragment$v, safe_not_equal, {
+		init(this, options, instance$z, create_fragment$y, safe_not_equal, {
 			callback: 1,
 			callbackMetadata: 2,
 			key: 0,
@@ -22532,7 +22656,7 @@ class Base extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/password.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$u(ctx) {
+function create_fragment$x(ctx) {
 	let base;
 	let current;
 
@@ -22576,7 +22700,7 @@ function create_fragment$u(ctx) {
 	};
 }
 
-function instance$v($$self, $$props, $$invalidate) {
+function instance$y($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -22606,7 +22730,7 @@ class Password extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$v, create_fragment$u, safe_not_equal, {
+		init(this, options, instance$y, create_fragment$x, safe_not_equal, {
 			selfSubmitFunction: 4,
 			stepMetadata: 5,
 			callback: 0,
@@ -22626,7 +22750,7 @@ class Password extends SvelteComponent {
 
 /* src/lib/components/primitives/text/text.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$t(ctx) {
+function create_fragment$w(ctx) {
 	let p;
 	let p_class_value;
 	let current;
@@ -22684,7 +22808,7 @@ function create_fragment$t(ctx) {
 	};
 }
 
-function instance$u($$self, $$props, $$invalidate) {
+function instance$x($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 
@@ -22699,11 +22823,332 @@ function instance$u($$self, $$props, $$invalidate) {
 class Text extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$u, create_fragment$t, safe_not_equal, { classes: 0 });
+		init(this, options, instance$x, create_fragment$w, safe_not_equal, { classes: 0 });
 	}
 }
 
 /* src/lib/journey/callbacks/polling-wait/polling-wait.svelte generated by Svelte v3.59.2 */
+
+function create_else_block$6(ctx) {
+	let spinner;
+	let t;
+	let text_1;
+	let current;
+
+	spinner = new Spinner({
+			props: {
+				colorClass: "tw_text-primary-light",
+				layoutClasses: "tw_h-24 tw_mb-6 tw_w-24"
+			}
+		});
+
+	text_1 = new Text({
+			props: {
+				$$slots: { default: [create_default_slot_1$b] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(spinner.$$.fragment);
+			t = space();
+			create_component(text_1.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(spinner, target, anchor);
+			insert(target, t, anchor);
+			mount_component(text_1, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const text_1_changes = {};
+
+			if (dirty & /*$$scope, message*/ 258) {
+				text_1_changes.$$scope = { dirty, ctx };
+			}
+
+			text_1.$set(text_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(spinner.$$.fragment, local);
+			transition_in(text_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(spinner.$$.fragment, local);
+			transition_out(text_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(spinner, detaching);
+			if (detaching) detach(t);
+			destroy_component(text_1, detaching);
+		}
+	};
+}
+
+// (28:2) {#if options?.inline}
+function create_if_block$g(ctx) {
+	let text_1;
+	let current;
+
+	text_1 = new Text({
+			props: {
+				$$slots: { default: [create_default_slot$h] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(text_1.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(text_1, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const text_1_changes = {};
+
+			if (dirty & /*$$scope, message*/ 258) {
+				text_1_changes.$$scope = { dirty, ctx };
+			}
+
+			text_1.$set(text_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(text_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(text_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(text_1, detaching);
+		}
+	};
+}
+
+// (35:4) <Text>
+function create_default_slot_1$b(ctx) {
+	let t;
+
+	return {
+		c() {
+			t = text(/*message*/ ctx[1]);
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*message*/ 2) set_data(t, /*message*/ ctx[1]);
+		},
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+// (29:4) <Text>
+function create_default_slot$h(ctx) {
+	let spinner;
+	let t0;
+	let span;
+	let t1;
+	let current;
+
+	spinner = new Spinner({
+			props: {
+				colorClass: "white",
+				layoutClasses: "tw_h-4 tw_w-4 tw_mr-2"
+			}
+		});
+
+	return {
+		c() {
+			create_component(spinner.$$.fragment);
+			t0 = space();
+			span = element("span");
+			t1 = text(/*message*/ ctx[1]);
+		},
+		m(target, anchor) {
+			mount_component(spinner, target, anchor);
+			insert(target, t0, anchor);
+			insert(target, span, anchor);
+			append(span, t1);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (!current || dirty & /*message*/ 2) set_data(t1, /*message*/ ctx[1]);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(spinner.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(spinner.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(spinner, detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(span);
+		}
+	};
+}
+
+function create_fragment$v(ctx) {
+	let div;
+	let current_block_type_index;
+	let if_block;
+	let current;
+	const if_block_creators = [create_if_block$g, create_else_block$6];
+	const if_blocks = [];
+
+	function select_block_type(ctx, dirty) {
+		if (/*options*/ ctx[0]?.inline) return 0;
+		return 1;
+	}
+
+	current_block_type_index = select_block_type(ctx);
+	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+	return {
+		c() {
+			div = element("div");
+			if_block.c();
+			attr(div, "class", "tw_text-center");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			if_blocks[current_block_type_index].m(div, null);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			let previous_block_index = current_block_type_index;
+			current_block_type_index = select_block_type(ctx);
+
+			if (current_block_type_index === previous_block_index) {
+				if_blocks[current_block_type_index].p(ctx, dirty);
+			} else {
+				group_outros();
+
+				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+					if_blocks[previous_block_index] = null;
+				});
+
+				check_outros();
+				if_block = if_blocks[current_block_type_index];
+
+				if (!if_block) {
+					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+					if_block.c();
+				} else {
+					if_block.p(ctx, dirty);
+				}
+
+				transition_in(if_block, 1);
+				if_block.m(div, null);
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			if_blocks[current_block_type_index].d();
+		}
+	};
+}
+
+function instance$w($$self, $$props, $$invalidate) {
+	const style = {};
+	const stepMetadata = null;
+	let { callback } = $$props;
+	let { callbackMetadata } = $$props;
+	let { selfSubmitFunction = null } = $$props;
+	let { options = null } = $$props;
+	let message;
+	let timer;
+
+	$$self.$$set = $$props => {
+		if ('callback' in $$props) $$invalidate(2, callback = $$props.callback);
+		if ('callbackMetadata' in $$props) $$invalidate(3, callbackMetadata = $$props.callbackMetadata);
+		if ('selfSubmitFunction' in $$props) $$invalidate(6, selfSubmitFunction = $$props.selfSubmitFunction);
+		if ('options' in $$props) $$invalidate(0, options = $$props.options);
+	};
+
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*callback, timer, callbackMetadata, selfSubmitFunction*/ 204) {
+			{
+				((($$invalidate(2, callback), $$invalidate(7, timer)), $$invalidate(3, callbackMetadata)), $$invalidate(6, selfSubmitFunction));
+				$$invalidate(1, message = callback.getMessage());
+
+				// Clear any existing timeouts to avoid duplicates
+				clearTimeout(timer);
+
+				// Create new timeout, now that the previous has been cleared
+				$$invalidate(7, timer = setTimeout(
+					() => {
+						if (callbackMetadata) {
+							$$invalidate(3, callbackMetadata.derived.isReadyForSubmission = true, callbackMetadata);
+						}
+
+						selfSubmitFunction && selfSubmitFunction();
+					},
+					callback.getWaitTime()
+				));
+			}
+		}
+	};
+
+	return [
+		options,
+		message,
+		callback,
+		callbackMetadata,
+		style,
+		stepMetadata,
+		selfSubmitFunction,
+		timer
+	];
+}
+
+class Polling_wait extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$w, create_fragment$v, safe_not_equal, {
+			style: 4,
+			stepMetadata: 5,
+			callback: 2,
+			callbackMetadata: 3,
+			selfSubmitFunction: 6,
+			options: 0
+		});
+	}
+
+	get style() {
+		return this.$$.ctx[4];
+	}
+
+	get stepMetadata() {
+		return this.$$.ctx[5];
+	}
+}
+
+/* src/lib/journey/callbacks/redirect/redirect.svelte generated by Svelte v3.59.2 */
 
 function create_default_slot$g(ctx) {
 	let t;
@@ -22724,7 +23169,7 @@ function create_default_slot$g(ctx) {
 	};
 }
 
-function create_fragment$s(ctx) {
+function create_fragment$u(ctx) {
 	let div;
 	let spinner;
 	let t;
@@ -22741,151 +23186,6 @@ function create_fragment$s(ctx) {
 	text_1 = new Text({
 			props: {
 				$$slots: { default: [create_default_slot$g] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			div = element("div");
-			create_component(spinner.$$.fragment);
-			t = space();
-			create_component(text_1.$$.fragment);
-			attr(div, "class", "tw_text-center");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			mount_component(spinner, div, null);
-			append(div, t);
-			mount_component(text_1, div, null);
-			current = true;
-		},
-		p(ctx, [dirty]) {
-			const text_1_changes = {};
-
-			if (dirty & /*$$scope, message*/ 65) {
-				text_1_changes.$$scope = { dirty, ctx };
-			}
-
-			text_1.$set(text_1_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(spinner.$$.fragment, local);
-			transition_in(text_1.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(spinner.$$.fragment, local);
-			transition_out(text_1.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			destroy_component(spinner);
-			destroy_component(text_1);
-		}
-	};
-}
-
-function instance$t($$self, $$props, $$invalidate) {
-	const stepMetadata = null;
-	const style = {};
-	let { callback } = $$props;
-	let { callbackMetadata } = $$props;
-	let { selfSubmitFunction = null } = $$props;
-	let message;
-
-	// Ensure this is written outside of the Reactive blog, or it get's called multiple times
-	setTimeout(
-		() => {
-			if (callbackMetadata) {
-				$$invalidate(2, callbackMetadata.derived.isReadyForSubmission = true, callbackMetadata);
-			}
-
-			selfSubmitFunction && selfSubmitFunction();
-		},
-		callback.getWaitTime()
-	);
-
-	$$self.$$set = $$props => {
-		if ('callback' in $$props) $$invalidate(1, callback = $$props.callback);
-		if ('callbackMetadata' in $$props) $$invalidate(2, callbackMetadata = $$props.callbackMetadata);
-		if ('selfSubmitFunction' in $$props) $$invalidate(5, selfSubmitFunction = $$props.selfSubmitFunction);
-	};
-
-	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*callback*/ 2) {
-			{
-				$$invalidate(1, callback);
-				$$invalidate(0, message = callback.getMessage());
-			}
-		}
-	};
-
-	return [message, callback, callbackMetadata, stepMetadata, style, selfSubmitFunction];
-}
-
-class Polling_wait extends SvelteComponent {
-	constructor(options) {
-		super();
-
-		init(this, options, instance$t, create_fragment$s, safe_not_equal, {
-			stepMetadata: 3,
-			style: 4,
-			callback: 1,
-			callbackMetadata: 2,
-			selfSubmitFunction: 5
-		});
-	}
-
-	get stepMetadata() {
-		return this.$$.ctx[3];
-	}
-
-	get style() {
-		return this.$$.ctx[4];
-	}
-}
-
-/* src/lib/journey/callbacks/redirect/redirect.svelte generated by Svelte v3.59.2 */
-
-function create_default_slot$f(ctx) {
-	let t;
-
-	return {
-		c() {
-			t = text(/*message*/ ctx[0]);
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		p(ctx, dirty) {
-			if (dirty & /*message*/ 1) set_data(t, /*message*/ ctx[0]);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-function create_fragment$r(ctx) {
-	let div;
-	let spinner;
-	let t;
-	let text_1;
-	let current;
-
-	spinner = new Spinner({
-			props: {
-				colorClass: "tw_text-primary-light",
-				layoutClasses: "tw_h-24 tw_mb-6 tw_w-24"
-			}
-		});
-
-	text_1 = new Text({
-			props: {
-				$$slots: { default: [create_default_slot$f] },
 				$$scope: { ctx }
 			}
 		});
@@ -22934,7 +23234,7 @@ function create_fragment$r(ctx) {
 	};
 }
 
-function instance$s($$self, $$props, $$invalidate) {
+function instance$v($$self, $$props, $$invalidate) {
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -22961,7 +23261,7 @@ class Redirect extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$s, create_fragment$r, safe_not_equal, {
+		init(this, options, instance$v, create_fragment$u, safe_not_equal, {
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
 			stepMetadata: 3,
@@ -22989,7 +23289,7 @@ class Redirect extends SvelteComponent {
 
 /* src/lib/components/icons/apple-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$q(ctx) {
+function create_fragment$t(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -23034,7 +23334,7 @@ function create_fragment$q(ctx) {
 	};
 }
 
-function instance$r($$self, $$props, $$invalidate) {
+function instance$u($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -23049,13 +23349,13 @@ function instance$r($$self, $$props, $$invalidate) {
 class Apple_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$r, create_fragment$q, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$u, create_fragment$t, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/facebook-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$p(ctx) {
+function create_fragment$s(ctx) {
 	let svg;
 	let path;
 
@@ -23096,7 +23396,7 @@ function create_fragment$p(ctx) {
 	};
 }
 
-function instance$q($$self, $$props, $$invalidate) {
+function instance$t($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -23111,13 +23411,13 @@ function instance$q($$self, $$props, $$invalidate) {
 class Facebook_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$q, create_fragment$p, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$t, create_fragment$s, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/components/icons/google-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$o(ctx) {
+function create_fragment$r(ctx) {
 	let svg;
 	let g;
 	let path0;
@@ -23182,7 +23482,7 @@ function create_fragment$o(ctx) {
 	};
 }
 
-function instance$p($$self, $$props, $$invalidate) {
+function instance$s($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -23197,20 +23497,20 @@ function instance$p($$self, $$props, $$invalidate) {
 class Google_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$p, create_fragment$o, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$s, create_fragment$r, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/callbacks/select-idp/select-idp.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$6(ctx, list, i) {
+function get_each_context$7(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[10] = list[i];
 	return child_ctx;
 }
 
 // (66:56) 
-function create_if_block_3$5(ctx) {
+function create_if_block_3$6(ctx) {
 	let button;
 	let current;
 
@@ -23224,7 +23524,7 @@ function create_if_block_3$5(ctx) {
 				type: "button",
 				width: "auto",
 				onClick: func_2,
-				$$slots: { default: [create_default_slot_4] },
+				$$slots: { default: [create_default_slot_4$1] },
 				$$scope: { ctx }
 			}
 		});
@@ -23264,7 +23564,7 @@ function create_if_block_3$5(ctx) {
 }
 
 // (55:58) 
-function create_if_block_2$7(ctx) {
+function create_if_block_2$8(ctx) {
 	let button;
 	let current;
 
@@ -23278,7 +23578,7 @@ function create_if_block_2$7(ctx) {
 				type: "button",
 				width: "auto",
 				onClick: func_1,
-				$$slots: { default: [create_default_slot_3] },
+				$$slots: { default: [create_default_slot_3$2] },
 				$$scope: { ctx }
 			}
 		});
@@ -23318,7 +23618,7 @@ function create_if_block_2$7(ctx) {
 }
 
 // (44:4) {#if idp.text.toUpperCase().includes('APPLE')}
-function create_if_block_1$8(ctx) {
+function create_if_block_1$9(ctx) {
 	let button;
 	let current;
 
@@ -23332,7 +23632,7 @@ function create_if_block_1$8(ctx) {
 				type: "button",
 				width: "auto",
 				onClick: func,
-				$$slots: { default: [create_default_slot_2$4] },
+				$$slots: { default: [create_default_slot_2$5] },
 				$$scope: { ctx }
 			}
 		});
@@ -23372,7 +23672,7 @@ function create_if_block_1$8(ctx) {
 }
 
 // (67:6) <Button         classes="tw_button-google dark:tw_button-google_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
-function create_default_slot_4(ctx) {
+function create_default_slot_4$1(ctx) {
 	let googleicon;
 	let t0;
 	let t1;
@@ -23430,7 +23730,7 @@ function create_default_slot_4(ctx) {
 }
 
 // (56:6) <Button         classes="tw_button-facebook dark:tw_button-facebook_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
-function create_default_slot_3(ctx) {
+function create_default_slot_3$2(ctx) {
 	let facebookicon;
 	let t0;
 	let t1;
@@ -23488,7 +23788,7 @@ function create_default_slot_3(ctx) {
 }
 
 // (45:6) <Button         classes="tw_button-apple dark:tw_button-apple_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
-function create_default_slot_2$4(ctx) {
+function create_default_slot_2$5(ctx) {
 	let appleicon;
 	let t0;
 	let t1;
@@ -23546,7 +23846,7 @@ function create_default_slot_2$4(ctx) {
 }
 
 // (43:2) <Grid num={1}>
-function create_default_slot_1$9(ctx) {
+function create_default_slot_1$a(ctx) {
 	let show_if;
 	let show_if_1;
 	let show_if_2;
@@ -23554,7 +23854,7 @@ function create_default_slot_1$9(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_1$8, create_if_block_2$7, create_if_block_3$5];
+	const if_block_creators = [create_if_block_1$9, create_if_block_2$8, create_if_block_3$6];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -23643,14 +23943,14 @@ function create_default_slot_1$9(ctx) {
 }
 
 // (42:0) {#each idps as idp}
-function create_each_block$6(ctx) {
+function create_each_block$7(ctx) {
 	let grid;
 	let current;
 
 	grid = new Grid({
 			props: {
 				num: 1,
-				$$slots: { default: [create_default_slot_1$9] },
+				$$slots: { default: [create_default_slot_1$a] },
 				$$scope: { ctx }
 			}
 		});
@@ -23688,14 +23988,14 @@ function create_each_block$6(ctx) {
 }
 
 // (81:0) {#if stepMetadata && stepMetadata.derived.numOfCallbacks > 1}
-function create_if_block$e(ctx) {
+function create_if_block$f(ctx) {
 	let grid;
 	let current;
 
 	grid = new Grid({
 			props: {
 				num: 1,
-				$$slots: { default: [create_default_slot$e] },
+				$$slots: { default: [create_default_slot$f] },
 				$$scope: { ctx }
 			}
 		});
@@ -23724,7 +24024,7 @@ function create_if_block$e(ctx) {
 }
 
 // (82:2) <Grid num={1}>
-function create_default_slot$e(ctx) {
+function create_default_slot$f(ctx) {
 	let hr;
 
 	return {
@@ -23742,7 +24042,7 @@ function create_default_slot$e(ctx) {
 	};
 }
 
-function create_fragment$n(ctx) {
+function create_fragment$q(ctx) {
 	let t;
 	let if_block_anchor;
 	let current;
@@ -23750,14 +24050,14 @@ function create_fragment$n(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
+		each_blocks[i] = create_each_block$7(get_each_context$7(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block = /*stepMetadata*/ ctx[0] && /*stepMetadata*/ ctx[0].derived.numOfCallbacks > 1 && create_if_block$e(ctx);
+	let if_block = /*stepMetadata*/ ctx[0] && /*stepMetadata*/ ctx[0].derived.numOfCallbacks > 1 && create_if_block$f(ctx);
 
 	return {
 		c() {
@@ -23787,13 +24087,13 @@ function create_fragment$n(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$6(ctx, each_value, i);
+					const child_ctx = get_each_context$7(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$6(child_ctx);
+						each_blocks[i] = create_each_block$7(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t.parentNode, t);
@@ -23815,7 +24115,7 @@ function create_fragment$n(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$e(ctx);
+					if_block = create_if_block$f(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -23859,7 +24159,7 @@ function create_fragment$n(ctx) {
 	};
 }
 
-function instance$o($$self, $$props, $$invalidate) {
+function instance$r($$self, $$props, $$invalidate) {
 	const style = {};
 	let { callback } = $$props;
 	let { callbackMetadata } = $$props;
@@ -23929,7 +24229,7 @@ class Select_idp extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$o, create_fragment$n, safe_not_equal, {
+		init(this, options, instance$r, create_fragment$q, safe_not_equal, {
 			style: 4,
 			callback: 5,
 			callbackMetadata: 3,
@@ -23951,14 +24251,14 @@ function get_each_context_1(ctx, list, i) {
 	return child_ctx;
 }
 
-function get_each_context$5(ctx, list, i) {
+function get_each_context$6(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[8] = list[i];
 	return child_ctx;
 }
 
 // (35:51) 
-function create_if_block_1$7(ctx) {
+function create_if_block_1$8(ctx) {
 	let div;
 	let p;
 	let t0;
@@ -24056,7 +24356,7 @@ function create_if_block_1$7(ctx) {
 }
 
 // (24:0) {#if simplifiedFailures.length}
-function create_if_block$d(ctx) {
+function create_if_block$e(ctx) {
 	let div;
 	let p;
 	let t0;
@@ -24069,7 +24369,7 @@ function create_if_block$d(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$5(get_each_context$5(ctx, each_value, i));
+		each_blocks[i] = create_each_block$6(get_each_context$6(ctx, each_value, i));
 	}
 
 	return {
@@ -24114,12 +24414,12 @@ function create_if_block$d(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$5(ctx, each_value, i);
+					const child_ctx = get_each_context$6(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block$5(child_ctx);
+						each_blocks[i] = create_each_block$6(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(ul, null);
 					}
@@ -24179,7 +24479,7 @@ function create_each_block_1(ctx) {
 }
 
 // (30:6) {#each simplifiedFailures as failure}
-function create_each_block$5(ctx) {
+function create_each_block$6(ctx) {
 	let li;
 	let t_value = /*failure*/ ctx[8].message + "";
 	let t;
@@ -24203,12 +24503,12 @@ function create_each_block$5(ctx) {
 	};
 }
 
-function create_fragment$m(ctx) {
+function create_fragment$p(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$d, create_if_block_1$7];
+	const if_block_creators = [create_if_block$e, create_if_block_1$8];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -24289,7 +24589,7 @@ function create_fragment$m(ctx) {
 	};
 }
 
-function instance$n($$self, $$props, $$invalidate) {
+function instance$q($$self, $$props, $$invalidate) {
 	let { callback } = $$props;
 	let { key = undefined } = $$props;
 	let { label } = $$props;
@@ -24347,7 +24647,7 @@ class Policies extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$n, create_fragment$m, safe_not_equal, {
+		init(this, options, instance$q, create_fragment$p, safe_not_equal, {
 			callback: 5,
 			key: 0,
 			label: 6,
@@ -24359,7 +24659,7 @@ class Policies extends SvelteComponent {
 
 /* src/lib/journey/callbacks/string-attribute/string-attribute-input.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$d(ctx) {
+function create_default_slot$e(ctx) {
 	let policies_1;
 	let current;
 
@@ -24421,7 +24721,7 @@ function create_key_block$2(ctx) {
 				type: /*type*/ ctx[7],
 				showMessage: !!/*isInvalid*/ ctx[8],
 				value: /*previousValue*/ ctx[6],
-				$$slots: { default: [create_default_slot$d] },
+				$$slots: { default: [create_default_slot$e] },
 				$$scope: { ctx }
 			}
 		});
@@ -24471,7 +24771,7 @@ function create_key_block$2(ctx) {
 	};
 }
 
-function create_fragment$l(ctx) {
+function create_fragment$o(ctx) {
 	let previous_key = /*callback*/ ctx[0];
 	let key_block_anchor;
 	let current;
@@ -24516,7 +24816,7 @@ function create_fragment$l(ctx) {
 	};
 }
 
-function instance$m($$self, $$props, $$invalidate) {
+function instance$p($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -24592,7 +24892,7 @@ class String_attribute_input extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$m, create_fragment$l, safe_not_equal, {
+		init(this, options, instance$p, create_fragment$o, safe_not_equal, {
 			selfSubmitFunction: 11,
 			stepMetadata: 12,
 			callback: 0,
@@ -24612,7 +24912,7 @@ class String_attribute_input extends SvelteComponent {
 
 /* src/lib/components/primitives/link/link.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$k(ctx) {
+function create_fragment$n(ctx) {
 	let a;
 	let a_class_value;
 	let current;
@@ -24680,7 +24980,7 @@ function create_fragment$k(ctx) {
 	};
 }
 
-function instance$l($$self, $$props, $$invalidate) {
+function instance$o($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { href } = $$props;
@@ -24699,7 +24999,7 @@ function instance$l($$self, $$props, $$invalidate) {
 class Link extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$l, create_fragment$k, safe_not_equal, { classes: 0, href: 1, target: 2 });
+		init(this, options, instance$o, create_fragment$n, safe_not_equal, { classes: 0, href: 1, target: 2 });
 	}
 }
 
@@ -24727,7 +25027,7 @@ function create_else_block$5(ctx) {
 }
 
 // (27:0) {#if $linksStore?.termsAndConditions}
-function create_if_block$c(ctx) {
+function create_if_block$d(ctx) {
 	let link;
 	let t;
 	let checkbox;
@@ -24738,7 +25038,7 @@ function create_if_block$c(ctx) {
 				classes: "tw_block tw_mb-4",
 				href: /*$linksStore*/ ctx[2]?.termsAndConditions,
 				target: "_blank",
-				$$slots: { default: [create_default_slot_1$8] },
+				$$slots: { default: [create_default_slot_1$9] },
 				$$scope: { ctx }
 			}
 		});
@@ -24749,7 +25049,7 @@ function create_if_block$c(ctx) {
 				key: /*inputName*/ ctx[1],
 				onChange: /*setValue*/ ctx[4],
 				value: false,
-				$$slots: { default: [create_default_slot$c] },
+				$$slots: { default: [create_default_slot$d] },
 				$$scope: { ctx }
 			}
 		});
@@ -24805,7 +25105,7 @@ function create_if_block$c(ctx) {
 }
 
 // (28:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
-function create_default_slot_1$8(ctx) {
+function create_default_slot_1$9(ctx) {
 	let t_value = interpolate('termsAndConditionsLinkText') + "";
 	let t;
 
@@ -24824,7 +25124,7 @@ function create_default_slot_1$8(ctx) {
 }
 
 // (31:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
-function create_default_slot$c(ctx) {
+function create_default_slot$d(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "termsAndConditions" } });
@@ -24853,12 +25153,12 @@ function create_default_slot$c(ctx) {
 	};
 }
 
-function create_fragment$j(ctx) {
+function create_fragment$m(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$c, create_else_block$5];
+	const if_block_creators = [create_if_block$d, create_else_block$5];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -24922,7 +25222,7 @@ function create_fragment$j(ctx) {
 	};
 }
 
-function instance$k($$self, $$props, $$invalidate) {
+function instance$n($$self, $$props, $$invalidate) {
 	let $linksStore;
 	component_subscribe($$self, linksStore, $$value => $$invalidate(2, $linksStore = $$value));
 	const selfSubmitFunction = null;
@@ -24976,7 +25276,7 @@ class Terms_conditions extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$k, create_fragment$j, safe_not_equal, {
+		init(this, options, instance$n, create_fragment$m, safe_not_equal, {
 			selfSubmitFunction: 5,
 			stepMetadata: 6,
 			style: 7,
@@ -25005,7 +25305,7 @@ function create_else_block$4(ctx) {
 				id: "",
 				needsFocus: false,
 				type: /*callbackMessageType*/ ctx[1],
-				$$slots: { default: [create_default_slot_1$7] },
+				$$slots: { default: [create_default_slot_1$8] },
 				$$scope: { ctx }
 			}
 		});
@@ -25044,14 +25344,16 @@ function create_else_block$4(ctx) {
 }
 
 // (32:0) {#if callbackMessageType === 'info'}
-function create_if_block$b(ctx) {
+function create_if_block$c(ctx) {
 	let text_1;
 	let current;
 
 	text_1 = new Text({
 			props: {
-				classes: "tw_font-bold tw_mt-6",
-				$$slots: { default: [create_default_slot$b] },
+				classes: /*cleanMessage*/ ctx[0].length < 100
+				? 'tw_font-bold tw_mt-6'
+				: 'tw_mt-6',
+				$$slots: { default: [create_default_slot$c] },
 				$$scope: { ctx }
 			}
 		});
@@ -25066,6 +25368,10 @@ function create_if_block$b(ctx) {
 		},
 		p(ctx, dirty) {
 			const text_1_changes = {};
+
+			if (dirty & /*cleanMessage*/ 1) text_1_changes.classes = /*cleanMessage*/ ctx[0].length < 100
+			? 'tw_font-bold tw_mt-6'
+			: 'tw_mt-6';
 
 			if (dirty & /*$$scope, cleanMessage*/ 257) {
 				text_1_changes.$$scope = { dirty, ctx };
@@ -25088,8 +25394,8 @@ function create_if_block$b(ctx) {
 	};
 }
 
-// (37:2) <Alert id="" needsFocus={false} type="{callbackMessageType}">
-function create_default_slot_1$7(ctx) {
+// (37:2) <Alert id="" needsFocus={false} type={callbackMessageType}>
+function create_default_slot_1$8(ctx) {
 	let t;
 
 	return {
@@ -25108,8 +25414,8 @@ function create_default_slot_1$7(ctx) {
 	};
 }
 
-// (33:2) <Text classes="tw_font-bold tw_mt-6">
-function create_default_slot$b(ctx) {
+// (33:2) <Text classes={cleanMessage.length < 100 ? 'tw_font-bold tw_mt-6' : 'tw_mt-6'}>
+function create_default_slot$c(ctx) {
 	let html_tag;
 	let html_anchor;
 
@@ -25133,12 +25439,12 @@ function create_default_slot$b(ctx) {
 	};
 }
 
-function create_fragment$i(ctx) {
+function create_fragment$l(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$b, create_else_block$4];
+	const if_block_creators = [create_if_block$c, create_else_block$4];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -25215,7 +25521,7 @@ function getCallbackMessage(messageType) {
 	}
 }
 
-function instance$j($$self, $$props, $$invalidate) {
+function instance$m($$self, $$props, $$invalidate) {
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -25255,7 +25561,7 @@ class Text_output extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$j, create_fragment$i, safe_not_equal, {
+		init(this, options, instance$m, create_fragment$l, safe_not_equal, {
 			callbackMetadata: 2,
 			selfSubmitFunction: 3,
 			stepMetadata: 4,
@@ -25283,7 +25589,7 @@ class Text_output extends SvelteComponent {
 
 /* src/lib/journey/callbacks/unknown/unknown.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$h(ctx) {
+function create_fragment$k(ctx) {
 	let p;
 
 	return {
@@ -25304,7 +25610,7 @@ function create_fragment$h(ctx) {
 	};
 }
 
-function instance$i($$self, $$props, $$invalidate) {
+function instance$l($$self, $$props, $$invalidate) {
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -25323,7 +25629,7 @@ class Unknown extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$i, create_fragment$h, safe_not_equal, {
+		init(this, options, instance$l, create_fragment$k, safe_not_equal, {
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
 			stepMetadata: 3,
@@ -25351,7 +25657,7 @@ class Unknown extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/validated-create-password.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$a(ctx) {
+function create_default_slot$b(ctx) {
 	let policies;
 	let current;
 
@@ -25407,7 +25713,7 @@ function create_key_block$1(ctx) {
 				key: /*inputName*/ ctx[4],
 				showMessage: /*isInvalid*/ ctx[5],
 				style: /*style*/ ctx[2],
-				$$slots: { default: [create_default_slot$a] },
+				$$slots: { default: [create_default_slot$b] },
 				$$scope: { ctx }
 			}
 		});
@@ -25450,7 +25756,7 @@ function create_key_block$1(ctx) {
 	};
 }
 
-function create_fragment$g(ctx) {
+function create_fragment$j(ctx) {
 	let previous_key = /*callback*/ ctx[0];
 	let key_block_anchor;
 	let current;
@@ -25495,7 +25801,7 @@ function create_fragment$g(ctx) {
 	};
 }
 
-function instance$h($$self, $$props, $$invalidate) {
+function instance$k($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -25547,7 +25853,7 @@ class Validated_create_password extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$h, create_fragment$g, safe_not_equal, {
+		init(this, options, instance$k, create_fragment$j, safe_not_equal, {
 			selfSubmitFunction: 7,
 			stepMetadata: 8,
 			callback: 0,
@@ -25567,7 +25873,7 @@ class Validated_create_password extends SvelteComponent {
 
 /* src/lib/journey/callbacks/username/validated-create-username.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot$9(ctx) {
+function create_default_slot$a(ctx) {
 	let policies;
 	let current;
 
@@ -25631,7 +25937,7 @@ function create_key_block(ctx) {
 				value: typeof /*value*/ ctx[7] === 'string'
 				? /*value*/ ctx[7]
 				: '',
-				$$slots: { default: [create_default_slot$9] },
+				$$slots: { default: [create_default_slot$a] },
 				$$scope: { ctx }
 			}
 		});
@@ -25681,7 +25987,7 @@ function create_key_block(ctx) {
 	};
 }
 
-function create_fragment$f(ctx) {
+function create_fragment$i(ctx) {
 	let previous_key = /*callback*/ ctx[0];
 	let key_block_anchor;
 	let current;
@@ -25726,7 +26032,7 @@ function create_fragment$f(ctx) {
 	};
 }
 
-function instance$g($$self, $$props, $$invalidate) {
+function instance$j($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	let { callback } = $$props;
@@ -25791,7 +26097,7 @@ class Validated_create_username extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$g, create_fragment$f, safe_not_equal, {
+		init(this, options, instance$j, create_fragment$i, safe_not_equal, {
 			selfSubmitFunction: 10,
 			stepMetadata: 11,
 			callback: 0,
@@ -25811,7 +26117,7 @@ class Validated_create_username extends SvelteComponent {
 
 /* src/lib/journey/callbacks/device-profile/device-profile.svelte generated by Svelte v3.59.2 */
 
-function create_if_block$a(ctx) {
+function create_if_block$b(ctx) {
 	let div;
 	let spinner;
 	let t;
@@ -25827,7 +26133,7 @@ function create_if_block$a(ctx) {
 
 	text_1 = new Text({
 			props: {
-				$$slots: { default: [create_default_slot$8] },
+				$$slots: { default: [create_default_slot$9] },
 				$$scope: { ctx }
 			}
 		});
@@ -25876,7 +26182,7 @@ function create_if_block$a(ctx) {
 }
 
 // (26:4) <Text>
-function create_default_slot$8(ctx) {
+function create_default_slot$9(ctx) {
 	let t;
 
 	return {
@@ -25893,10 +26199,10 @@ function create_default_slot$8(ctx) {
 	};
 }
 
-function create_fragment$e(ctx) {
+function create_fragment$h(ctx) {
 	let if_block_anchor;
 	let current;
-	let if_block = /*stepMetadata*/ ctx[0]?.derived.numOfCallbacks === 1 && create_if_block$a(ctx);
+	let if_block = /*stepMetadata*/ ctx[0]?.derived.numOfCallbacks === 1 && create_if_block$b(ctx);
 
 	return {
 		c() {
@@ -25917,7 +26223,7 @@ function create_fragment$e(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$a(ctx);
+					if_block = create_if_block$b(ctx);
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(if_block_anchor.parentNode, if_block_anchor);
@@ -25948,7 +26254,7 @@ function create_fragment$e(ctx) {
 	};
 }
 
-function instance$f($$self, $$props, $$invalidate) {
+function instance$i($$self, $$props, $$invalidate) {
 	let { callback } = $$props;
 	let { callbackMetadata = null } = $$props;
 	let { stepMetadata = null } = $$props;
@@ -25985,7 +26291,7 @@ class Device_profile extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$f, create_fragment$e, safe_not_equal, {
+		init(this, options, instance$i, create_fragment$h, safe_not_equal, {
 			callback: 3,
 			callbackMetadata: 2,
 			stepMetadata: 0,
@@ -25996,7 +26302,7 @@ class Device_profile extends SvelteComponent {
 
 /* src/lib/journey/callbacks/recaptcha/recaptcha.svelte generated by Svelte v3.59.2 */
 
-function create_if_block$9(ctx) {
+function create_if_block$a(ctx) {
 	let script;
 	let script_src_value;
 
@@ -26017,10 +26323,10 @@ function create_if_block$9(ctx) {
 	};
 }
 
-function create_fragment$d(ctx) {
+function create_fragment$g(ctx) {
 	let t;
 	let div;
-	let if_block = /*recaptchaApi*/ ctx[1].length && create_if_block$9(ctx);
+	let if_block = /*recaptchaApi*/ ctx[1].length && create_if_block$a(ctx);
 
 	return {
 		c() {
@@ -26053,7 +26359,7 @@ function create_fragment$d(ctx) {
 	};
 }
 
-function instance$e($$self, $$props, $$invalidate) {
+function instance$h($$self, $$props, $$invalidate) {
 	let { callback } = $$props;
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
@@ -26133,7 +26439,7 @@ class Recaptcha extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$e, create_fragment$d, safe_not_equal, {
+		init(this, options, instance$h, create_fragment$g, safe_not_equal, {
 			callback: 3,
 			selfSubmitFunction: 4,
 			stepMetadata: 5,
@@ -26156,7 +26462,7 @@ class Recaptcha extends SvelteComponent {
 
 /* src/lib/journey/callbacks/metadata/metadata.svelte generated by Svelte v3.59.2 */
 
-function instance$d($$self, $$props, $$invalidate) {
+function instance$g($$self, $$props, $$invalidate) {
 	const callback = null;
 	const callbackMetadata = null;
 	const selfSubmitFunction = null;
@@ -26169,7 +26475,7 @@ class Metadata extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$d, null, safe_not_equal, {
+		init(this, options, instance$g, null, safe_not_equal, {
 			callback: 0,
 			callbackMetadata: 1,
 			selfSubmitFunction: 2,
@@ -26429,7 +26735,7 @@ function get_if_ctx_1(ctx) {
 	return child_ctx;
 }
 
-function get_if_ctx(ctx) {
+function get_if_ctx$1(ctx) {
 	const child_ctx = ctx.slice();
 
 	const constants_0 = {
@@ -27044,7 +27350,7 @@ function create_if_block_6(ctx) {
 }
 
 // (147:47) 
-function create_if_block_5(ctx) {
+function create_if_block_5$1(ctx) {
 	let name;
 	let current;
 	const name_spread_levels = [/*newProps*/ ctx[22]];
@@ -27087,7 +27393,7 @@ function create_if_block_5(ctx) {
 }
 
 // (141:52) 
-function create_if_block_4$1(ctx) {
+function create_if_block_4$3(ctx) {
 	let kbacreate;
 	let current;
 	const kbacreate_spread_levels = [/*newProps*/ ctx[22]];
@@ -27130,7 +27436,7 @@ function create_if_block_4$1(ctx) {
 }
 
 // (135:54) 
-function create_if_block_3$4(ctx) {
+function create_if_block_3$5(ctx) {
 	let hiddenvalue;
 	let current;
 	const hiddenvalue_spread_levels = [/*newProps*/ ctx[22]];
@@ -27173,7 +27479,7 @@ function create_if_block_3$4(ctx) {
 }
 
 // (129:55) 
-function create_if_block_2$6(ctx) {
+function create_if_block_2$7(ctx) {
 	let confirmation;
 	let current;
 	const confirmation_spread_levels = [/*newProps*/ ctx[22]];
@@ -27216,7 +27522,7 @@ function create_if_block_2$6(ctx) {
 }
 
 // (123:49) 
-function create_if_block_1$6(ctx) {
+function create_if_block_1$7(ctx) {
 	let choice;
 	let current;
 	const choice_spread_levels = [/*newProps*/ ctx[22]];
@@ -27259,7 +27565,7 @@ function create_if_block_1$6(ctx) {
 }
 
 // (117:0) {#if cbType === CallbackType.BooleanAttributeInputCallback}
-function create_if_block$8(ctx) {
+function create_if_block$9(ctx) {
 	let boolean;
 	let current;
 	const boolean_spread_levels = [/*newProps*/ ctx[22]];
@@ -27301,19 +27607,19 @@ function create_if_block$8(ctx) {
 	};
 }
 
-function create_fragment$c(ctx) {
+function create_fragment$f(ctx) {
 	let current_block_type_index;
 	let if_block;
 	let if_block_anchor;
 	let current;
 
 	const if_block_creators = [
-		create_if_block$8,
-		create_if_block_1$6,
-		create_if_block_2$6,
-		create_if_block_3$4,
-		create_if_block_4$1,
-		create_if_block_5,
+		create_if_block$9,
+		create_if_block_1$7,
+		create_if_block_2$7,
+		create_if_block_3$5,
+		create_if_block_4$3,
+		create_if_block_5$1,
 		create_if_block_6,
 		create_if_block_7,
 		create_if_block_8,
@@ -27356,7 +27662,7 @@ function create_fragment$c(ctx) {
 	}
 
 	function select_block_ctx(ctx, index) {
-		if (index === 0) return get_if_ctx(ctx);
+		if (index === 0) return get_if_ctx$1(ctx);
 		if (index === 1) return get_if_ctx_1(ctx);
 		if (index === 2) return get_if_ctx_2(ctx);
 		if (index === 3) return get_if_ctx_3(ctx);
@@ -27434,7 +27740,7 @@ function create_fragment$c(ctx) {
 	};
 }
 
-function instance$c($$self, $$props, $$invalidate) {
+function instance$f($$self, $$props, $$invalidate) {
 	let { props } = $$props;
 	let cbType;
 	let _BooleanAttributeInputCallback;
@@ -27561,13 +27867,13 @@ function instance$c($$self, $$props, $$invalidate) {
 class Callback_mapper extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$c, create_fragment$c, safe_not_equal, { props: 0 });
+		init(this, options, instance$f, create_fragment$f, safe_not_equal, { props: 0 });
 	}
 }
 
 /* src/lib/journey/stages/generic.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$4(ctx, list, i) {
+function get_each_context$5(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[16] = list[i];
 	child_ctx[18] = i;
@@ -27575,7 +27881,7 @@ function get_each_context$4(ctx, list, i) {
 }
 
 // (70:2) {#if form?.icon && componentStyle !== 'inline'}
-function create_if_block_2$5(ctx) {
+function create_if_block_2$6(ctx) {
 	let div;
 	let shieldicon;
 	let current;
@@ -27615,7 +27921,7 @@ function create_if_block_2$5(ctx) {
 }
 
 // (86:2) {#if form?.message}
-function create_if_block_1$5(ctx) {
+function create_if_block_1$6(ctx) {
 	let alert;
 	let current;
 
@@ -27624,7 +27930,7 @@ function create_if_block_1$5(ctx) {
 				id: formFailureMessageId$2,
 				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
-				$$slots: { default: [create_default_slot_2$3] },
+				$$slots: { default: [create_default_slot_2$4] },
 				$$scope: { ctx }
 			}
 		});
@@ -27663,7 +27969,7 @@ function create_if_block_1$5(ctx) {
 }
 
 // (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
-function create_default_slot_2$3(ctx) {
+function create_default_slot_2$4(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
@@ -27684,7 +27990,7 @@ function create_default_slot_2$3(ctx) {
 }
 
 // (92:2) {#each step?.callbacks as callback, idx}
-function create_each_block$4(ctx) {
+function create_each_block$5(ctx) {
 	let callbackmapper;
 	let current;
 
@@ -27737,7 +28043,7 @@ function create_each_block$4(ctx) {
 }
 
 // (104:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-function create_if_block$7(ctx) {
+function create_if_block$8(ctx) {
 	let button;
 	let current;
 
@@ -27747,7 +28053,7 @@ function create_if_block$7(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_1$6] },
+				$$slots: { default: [create_default_slot_1$7] },
 				$$scope: { ctx }
 			}
 		});
@@ -27786,7 +28092,7 @@ function create_if_block$7(ctx) {
 }
 
 // (105:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$6(ctx) {
+function create_default_slot_1$7(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "nextButton" } });
@@ -27816,7 +28122,7 @@ function create_default_slot_1$6(ctx) {
 }
 
 // (63:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
-function create_default_slot$7(ctx) {
+function create_default_slot$8(ctx) {
 	let t0;
 	let header;
 	let h1;
@@ -27831,7 +28137,7 @@ function create_default_slot$7(ctx) {
 	let t5;
 	let backto;
 	let current;
-	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$5();
+	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$6();
 
 	sanitize0 = new Server_strings({
 			props: {
@@ -27847,19 +28153,19 @@ function create_default_slot$7(ctx) {
 			}
 		});
 
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$5(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$6(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+		each_blocks[i] = create_each_block$5(get_each_context$5(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = show_if && create_if_block$7(ctx);
+	let if_block2 = show_if && create_if_block$8(ctx);
 	backto = new Back_to({ props: { journey: /*journey*/ ctx[3] } });
 
 	return {
@@ -27921,7 +28227,7 @@ function create_default_slot$7(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$5();
+					if_block0 = create_if_block_2$6();
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -27951,7 +28257,7 @@ function create_default_slot$7(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_1$5(ctx);
+					if_block1 = create_if_block_1$6(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t3.parentNode, t3);
@@ -27971,13 +28277,13 @@ function create_default_slot$7(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$4(ctx, each_value, i);
+					const child_ctx = get_each_context$5(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$4(child_ctx);
+						each_blocks[i] = create_each_block$5(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t4.parentNode, t4);
@@ -28003,7 +28309,7 @@ function create_default_slot$7(ctx) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block$7(ctx);
+					if_block2 = create_if_block$8(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
 					if_block2.m(t5.parentNode, t5);
@@ -28071,7 +28377,7 @@ function create_default_slot$7(ctx) {
 	};
 }
 
-function create_fragment$b(ctx) {
+function create_fragment$e(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -28085,7 +28391,7 @@ function create_fragment$b(ctx) {
 		id: formElementId$2,
 		needsFocus: /*formNeedsFocus*/ ctx[9],
 		onSubmitWhenValid: /*submitFormWrapper*/ ctx[13],
-		$$slots: { default: [create_default_slot$7] },
+		$$slots: { default: [create_default_slot$8] },
 		$$scope: { ctx }
 	};
 
@@ -28140,7 +28446,7 @@ const formFailureMessageId$2 = 'genericStepFailureMessage';
 const formHeaderId$2 = 'genericStepHeader';
 const formElementId$2 = 'genericStepForm';
 
-function instance$b($$self, $$props, $$invalidate) {
+function instance$e($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(11, $styleStore = $$value));
 	let { componentStyle } = $$props;
@@ -28238,7 +28544,7 @@ class Generic extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$b, create_fragment$b, safe_not_equal, {
+		init(this, options, instance$e, create_fragment$e, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
@@ -28251,7 +28557,7 @@ class Generic extends SvelteComponent {
 
 /* src/lib/components/icons/key-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$a(ctx) {
+function create_fragment$d(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -28332,7 +28638,7 @@ function create_fragment$a(ctx) {
 	};
 }
 
-function instance$a($$self, $$props, $$invalidate) {
+function instance$d($$self, $$props, $$invalidate) {
 	let { $$slots: slots = {}, $$scope } = $$props;
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
@@ -28349,21 +28655,21 @@ function instance$a($$self, $$props, $$invalidate) {
 class Key_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$a, create_fragment$a, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$d, create_fragment$d, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/stages/one-time-password.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$3(ctx, list, i) {
+function get_each_context$4(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[11] = list[i];
-	child_ctx[13] = i;
+	child_ctx[13] = list[i];
+	child_ctx[15] = i;
 	return child_ctx;
 }
 
-// (38:2) {#if componentStyle !== 'inline'}
-function create_if_block_2$4(ctx) {
+// (57:2) {#if componentStyle !== 'inline'}
+function create_if_block_3$4(ctx) {
 	let t0;
 	let h1;
 	let t1;
@@ -28371,7 +28677,7 @@ function create_if_block_2$4(ctx) {
 	let p;
 	let t3;
 	let current;
-	let if_block = /*form*/ ctx[2]?.icon && create_if_block_3$3();
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4$2();
 
 	t1 = new Locale_strings({
 			props: { key: "twoFactorAuthentication" }
@@ -28401,6 +28707,916 @@ function create_if_block_2$4(ctx) {
 			insert(target, t2, anchor);
 			insert(target, p, anchor);
 			mount_component(t3, p, null);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*form*/ ctx[2]?.icon) {
+				if (if_block) {
+					if (dirty & /*form*/ 4) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block_4$2();
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(t0.parentNode, t0);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			transition_in(t1.$$.fragment, local);
+			transition_in(t3.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			transition_out(t1.$$.fragment, local);
+			transition_out(t3.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(h1);
+			destroy_component(t1);
+			if (detaching) detach(t2);
+			if (detaching) detach(p);
+			destroy_component(t3);
+		}
+	};
+}
+
+// (58:4) {#if form?.icon}
+function create_if_block_4$2(ctx) {
+	let div;
+	let keyicon;
+	let current;
+
+	keyicon = new Key_icon({
+			props: {
+				classes: "tw_text-gray-400 tw_fill-current",
+				size: "72px"
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(keyicon.$$.fragment);
+			attr(div, "class", "tw_flex tw_justify-center");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(keyicon, div, null);
+			current = true;
+		},
+		i(local) {
+			if (current) return;
+			transition_in(keyicon.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(keyicon.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(keyicon);
+		}
+	};
+}
+
+// (73:2) {#if form?.message}
+function create_if_block_2$5(ctx) {
+	let alert;
+	let current;
+
+	alert = new Alert({
+			props: {
+				id: "formFailureMessageAlert",
+				needsFocus: /*alertNeedsFocus*/ ctx[5],
+				type: "error",
+				$$slots: { default: [create_default_slot_3$1] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(alert.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(alert, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const alert_changes = {};
+			if (dirty & /*alertNeedsFocus*/ 32) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[5];
+
+			if (dirty & /*$$scope, formMessageKey, form*/ 65668) {
+				alert_changes.$$scope = { dirty, ctx };
+			}
+
+			alert.$set(alert_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(alert.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(alert.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(alert, detaching);
+		}
+	};
+}
+
+// (74:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+function create_default_slot_3$1(ctx) {
+	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
+	let t;
+
+	return {
+		c() {
+			t = text(t_value);
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*formMessageKey, form*/ 132 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
+		},
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+// (79:2) {#each modifiedCallbacks as callback, idx}
+function create_each_block$4(ctx) {
+	let callbackmapper;
+	let current;
+
+	callbackmapper = new Callback_mapper({
+			props: {
+				props: {
+					callback: /*callback*/ ctx[13],
+					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
+					selfSubmitFunction: /*determineSubmission*/ ctx[10],
+					stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+					style: /*$style*/ ctx[9]
+				}
+			}
+		});
+
+	return {
+		c() {
+			create_component(callbackmapper.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(callbackmapper, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const callbackmapper_changes = {};
+
+			if (dirty & /*modifiedCallbacks, metadata, $style*/ 784) callbackmapper_changes.props = {
+				callback: /*callback*/ ctx[13],
+				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
+				selfSubmitFunction: /*determineSubmission*/ ctx[10],
+				stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
+				style: /*$style*/ ctx[9]
+			};
+
+			callbackmapper.$set(callbackmapper_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(callbackmapper.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(callbackmapper.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(callbackmapper, detaching);
+		}
+	};
+}
+
+// (95:108) 
+function create_if_block_1$5(ctx) {
+	let button;
+	let current;
+
+	button = new Button({
+			props: {
+				busy: /*journey*/ ctx[3]?.loading,
+				style: "primary",
+				type: "submit",
+				width: "full",
+				$$slots: { default: [create_default_slot_2$3] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(button.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(button, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const button_changes = {};
+			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
+
+			if (dirty & /*$$scope*/ 65536) {
+				button_changes.$$scope = { dirty, ctx };
+			}
+
+			button.$set(button_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(button.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(button.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(button, detaching);
+		}
+	};
+}
+
+// (91:2) {#if buttons?.length}
+function create_if_block$7(ctx) {
+	let button;
+	let current;
+
+	button = new Button({
+			props: {
+				busy: /*journey*/ ctx[3]?.loading,
+				style: "primary",
+				type: "submit",
+				width: "full",
+				$$slots: { default: [create_default_slot_1$6] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(button.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(button, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const button_changes = {};
+			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
+
+			if (dirty & /*$$scope, buttons*/ 65600) {
+				button_changes.$$scope = { dirty, ctx };
+			}
+
+			button.$set(button_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(button.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(button.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(button, detaching);
+		}
+	};
+}
+
+// (96:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+function create_default_slot_2$3(ctx) {
+	let t;
+	let current;
+	t = new Locale_strings({ props: { key: "loginButton" } });
+
+	return {
+		c() {
+			create_component(t.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(t, target, anchor);
+			current = true;
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(t.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(t, detaching);
+		}
+	};
+}
+
+// (92:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+function create_default_slot_1$6(ctx) {
+	let t;
+	let current;
+
+	t = new Locale_strings({
+			props: { key: /*buttons*/ ctx[6][0].text }
+		});
+
+	return {
+		c() {
+			create_component(t.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(t, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const t_changes = {};
+			if (dirty & /*buttons*/ 64) t_changes.key = /*buttons*/ ctx[6][0].text;
+			t.$set(t_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(t.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(t, detaching);
+		}
+	};
+}
+
+// (56:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+function create_default_slot$7(ctx) {
+	let t0;
+	let t1;
+	let t2;
+	let show_if;
+	let current_block_type_index;
+	let if_block2;
+	let if_block2_anchor;
+	let current;
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$4(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$5(ctx);
+	let each_value = /*modifiedCallbacks*/ ctx[8];
+	let each_blocks = [];
+
+	for (let i = 0; i < each_value.length; i += 1) {
+		each_blocks[i] = create_each_block$4(get_each_context$4(ctx, each_value, i));
+	}
+
+	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+		each_blocks[i] = null;
+	});
+
+	const if_block_creators = [create_if_block$7, create_if_block_1$5];
+	const if_blocks = [];
+
+	function select_block_type(ctx, dirty) {
+		if (dirty & /*metadata*/ 16) show_if = null;
+		if (/*buttons*/ ctx[6]?.length) return 0;
+		if (show_if == null) show_if = !!(/*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable());
+		if (show_if) return 1;
+		return -1;
+	}
+
+	if (~(current_block_type_index = select_block_type(ctx, -1))) {
+		if_block2 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+	}
+
+	return {
+		c() {
+			if (if_block0) if_block0.c();
+			t0 = space();
+			if (if_block1) if_block1.c();
+			t1 = space();
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].c();
+			}
+
+			t2 = space();
+			if (if_block2) if_block2.c();
+			if_block2_anchor = empty();
+		},
+		m(target, anchor) {
+			if (if_block0) if_block0.m(target, anchor);
+			insert(target, t0, anchor);
+			if (if_block1) if_block1.m(target, anchor);
+			insert(target, t1, anchor);
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
+			}
+
+			insert(target, t2, anchor);
+
+			if (~current_block_type_index) {
+				if_blocks[current_block_type_index].m(target, anchor);
+			}
+
+			insert(target, if_block2_anchor, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*componentStyle*/ ctx[1] !== 'inline') {
+				if (if_block0) {
+					if_block0.p(ctx, dirty);
+
+					if (dirty & /*componentStyle*/ 2) {
+						transition_in(if_block0, 1);
+					}
+				} else {
+					if_block0 = create_if_block_3$4(ctx);
+					if_block0.c();
+					transition_in(if_block0, 1);
+					if_block0.m(t0.parentNode, t0);
+				}
+			} else if (if_block0) {
+				group_outros();
+
+				transition_out(if_block0, 1, 1, () => {
+					if_block0 = null;
+				});
+
+				check_outros();
+			}
+
+			if (/*form*/ ctx[2]?.message) {
+				if (if_block1) {
+					if_block1.p(ctx, dirty);
+
+					if (dirty & /*form*/ 4) {
+						transition_in(if_block1, 1);
+					}
+				} else {
+					if_block1 = create_if_block_2$5(ctx);
+					if_block1.c();
+					transition_in(if_block1, 1);
+					if_block1.m(t1.parentNode, t1);
+				}
+			} else if (if_block1) {
+				group_outros();
+
+				transition_out(if_block1, 1, 1, () => {
+					if_block1 = null;
+				});
+
+				check_outros();
+			}
+
+			if (dirty & /*modifiedCallbacks, metadata, determineSubmission, $style*/ 1808) {
+				each_value = /*modifiedCallbacks*/ ctx[8];
+				let i;
+
+				for (i = 0; i < each_value.length; i += 1) {
+					const child_ctx = get_each_context$4(ctx, each_value, i);
+
+					if (each_blocks[i]) {
+						each_blocks[i].p(child_ctx, dirty);
+						transition_in(each_blocks[i], 1);
+					} else {
+						each_blocks[i] = create_each_block$4(child_ctx);
+						each_blocks[i].c();
+						transition_in(each_blocks[i], 1);
+						each_blocks[i].m(t2.parentNode, t2);
+					}
+				}
+
+				group_outros();
+
+				for (i = each_value.length; i < each_blocks.length; i += 1) {
+					out(i);
+				}
+
+				check_outros();
+			}
+
+			let previous_block_index = current_block_type_index;
+			current_block_type_index = select_block_type(ctx, dirty);
+
+			if (current_block_type_index === previous_block_index) {
+				if (~current_block_type_index) {
+					if_blocks[current_block_type_index].p(ctx, dirty);
+				}
+			} else {
+				if (if_block2) {
+					group_outros();
+
+					transition_out(if_blocks[previous_block_index], 1, 1, () => {
+						if_blocks[previous_block_index] = null;
+					});
+
+					check_outros();
+				}
+
+				if (~current_block_type_index) {
+					if_block2 = if_blocks[current_block_type_index];
+
+					if (!if_block2) {
+						if_block2 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+						if_block2.c();
+					} else {
+						if_block2.p(ctx, dirty);
+					}
+
+					transition_in(if_block2, 1);
+					if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
+				} else {
+					if_block2 = null;
+				}
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block0);
+			transition_in(if_block1);
+
+			for (let i = 0; i < each_value.length; i += 1) {
+				transition_in(each_blocks[i]);
+			}
+
+			transition_in(if_block2);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block0);
+			transition_out(if_block1);
+			each_blocks = each_blocks.filter(Boolean);
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				transition_out(each_blocks[i]);
+			}
+
+			transition_out(if_block2);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block0) if_block0.d(detaching);
+			if (detaching) detach(t0);
+			if (if_block1) if_block1.d(detaching);
+			if (detaching) detach(t1);
+			destroy_each(each_blocks, detaching);
+			if (detaching) detach(t2);
+
+			if (~current_block_type_index) {
+				if_blocks[current_block_type_index].d(detaching);
+			}
+
+			if (detaching) detach(if_block2_anchor);
+		}
+	};
+}
+
+function create_fragment$c(ctx) {
+	let form_1;
+	let updating_formEl;
+	let current;
+
+	function form_1_formEl_binding(value) {
+		/*form_1_formEl_binding*/ ctx[12](value);
+	}
+
+	let form_1_props = {
+		ariaDescribedBy: "formFailureMessageAlert",
+		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
+		$$slots: { default: [create_default_slot$7] },
+		$$scope: { ctx }
+	};
+
+	if (/*formEl*/ ctx[0] !== void 0) {
+		form_1_props.formEl = /*formEl*/ ctx[0];
+	}
+
+	form_1 = new Form({ props: form_1_props });
+	binding_callbacks.push(() => bind(form_1, 'formEl', form_1_formEl_binding));
+
+	return {
+		c() {
+			create_component(form_1.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(form_1, target, anchor);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			const form_1_changes = {};
+			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*form*/ ctx[2]?.submit;
+
+			if (dirty & /*$$scope, journey, buttons, metadata, modifiedCallbacks, $style, alertNeedsFocus, formMessageKey, form, componentStyle*/ 66558) {
+				form_1_changes.$$scope = { dirty, ctx };
+			}
+
+			if (!updating_formEl && dirty & /*formEl*/ 1) {
+				updating_formEl = true;
+				form_1_changes.formEl = /*formEl*/ ctx[0];
+				add_flush_callback(() => updating_formEl = false);
+			}
+
+			form_1.$set(form_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(form_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(form_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(form_1, detaching);
+		}
+	};
+}
+
+function instance$c($$self, $$props, $$invalidate) {
+	let $style;
+	component_subscribe($$self, styleStore, $$value => $$invalidate(9, $style = $$value));
+	let { componentStyle } = $$props;
+	let { form } = $$props;
+	let { formEl = null } = $$props;
+	let { journey } = $$props;
+	let { metadata } = $$props;
+	let { step } = $$props;
+	let alertNeedsFocus = false;
+	let buttons;
+	let formMessageKey = '';
+	let modifiedCallbacks = [];
+
+	function determineSubmission() {
+		// TODO: the below is more strict; all self-submitting cbs have to complete before submitting
+		// if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
+		// The below variation is more liberal first self-submittable cb to call this wins.
+		if (metadata?.step?.derived.isStepSelfSubmittable()) {
+			form?.submit();
+		}
+	}
+
+	afterUpdate(() => {
+		$$invalidate(5, alertNeedsFocus = !!form?.message);
+	});
+
+	function form_1_formEl_binding(value) {
+		formEl = value;
+		$$invalidate(0, formEl);
+	}
+
+	$$self.$$set = $$props => {
+		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(2, form = $$props.form);
+		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
+		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(4, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(11, step = $$props.step);
+	};
+
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*form, step*/ 2052) {
+			{
+				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
+				const confirmationCallbacks = step.getCallbacksOfType(CallbackType.ConfirmationCallback);
+
+				if (confirmationCallbacks.length) {
+					const confirmationCb = confirmationCallbacks[0];
+					$$invalidate(6, buttons = confirmationCb.getOptions().map((option, index) => ({ value: `${index}`, text: option })));
+				}
+
+				/**
+ * Filter out ConfirmationCallbacks; we'll use them seperately
+ */
+				$$invalidate(8, modifiedCallbacks = step.callbacks.filter(callback => {
+					if (callback.getType() === CallbackType.ConfirmationCallback) {
+						return false;
+					}
+
+					return true;
+				}));
+			}
+		}
+	};
+
+	return [
+		formEl,
+		componentStyle,
+		form,
+		journey,
+		metadata,
+		alertNeedsFocus,
+		buttons,
+		formMessageKey,
+		modifiedCallbacks,
+		$style,
+		determineSubmission,
+		step,
+		form_1_formEl_binding
+	];
+}
+
+class One_time_password extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$c, create_fragment$c, safe_not_equal, {
+			componentStyle: 1,
+			form: 2,
+			formEl: 0,
+			journey: 3,
+			metadata: 4,
+			step: 11
+		});
+	}
+}
+
+/* src/lib/components/icons/new-user-icon.svelte generated by Svelte v3.59.2 */
+
+function create_fragment$b(ctx) {
+	let svg;
+	let path0;
+	let path1;
+	let title;
+	let current;
+	const default_slot_template = /*#slots*/ ctx[3].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[2], null);
+
+	return {
+		c() {
+			svg = svg_element("svg");
+			path0 = svg_element("path");
+			path1 = svg_element("path");
+			title = svg_element("title");
+			if (default_slot) default_slot.c();
+			attr(path0, "d", "M0 0h24v24H0z");
+			attr(path0, "fill", "none");
+			attr(path1, "d", "M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z");
+			attr(svg, "class", /*classes*/ ctx[0]);
+			attr(svg, "xmlns", "http://www.w3.org/2000/svg");
+			attr(svg, "height", /*size*/ ctx[1]);
+			attr(svg, "viewBox", "0 0 24 24");
+			attr(svg, "width", /*size*/ ctx[1]);
+		},
+		m(target, anchor) {
+			insert(target, svg, anchor);
+			append(svg, path0);
+			append(svg, path1);
+			append(svg, title);
+
+			if (default_slot) {
+				default_slot.m(title, null);
+			}
+
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			if (default_slot) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 4)) {
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[2],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[2])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[2], dirty, null),
+						null
+					);
+				}
+			}
+
+			if (!current || dirty & /*classes*/ 1) {
+				attr(svg, "class", /*classes*/ ctx[0]);
+			}
+
+			if (!current || dirty & /*size*/ 2) {
+				attr(svg, "height", /*size*/ ctx[1]);
+			}
+
+			if (!current || dirty & /*size*/ 2) {
+				attr(svg, "width", /*size*/ ctx[1]);
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(default_slot, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(default_slot, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(svg);
+			if (default_slot) default_slot.d(detaching);
+		}
+	};
+}
+
+function instance$b($$self, $$props, $$invalidate) {
+	let { $$slots: slots = {}, $$scope } = $$props;
+	let { classes = '' } = $$props;
+	let { size = '24px' } = $$props;
+
+	$$self.$$set = $$props => {
+		if ('classes' in $$props) $$invalidate(0, classes = $$props.classes);
+		if ('size' in $$props) $$invalidate(1, size = $$props.size);
+		if ('$$scope' in $$props) $$invalidate(2, $$scope = $$props.$$scope);
+	};
+
+	return [classes, size, $$scope, slots];
+}
+
+class New_user_icon extends SvelteComponent {
+	constructor(options) {
+		super();
+		init(this, options, instance$b, create_fragment$b, safe_not_equal, { classes: 0, size: 1 });
+	}
+}
+
+/* src/lib/journey/stages/registration.svelte generated by Svelte v3.59.2 */
+
+function get_each_context$3(ctx, list, i) {
+	const child_ctx = ctx.slice();
+	child_ctx[13] = list[i];
+	child_ctx[15] = i;
+	return child_ctx;
+}
+
+// (50:2) {#if componentStyle !== 'inline'}
+function create_if_block_2$4(ctx) {
+	let t0;
+	let h1;
+	let t1;
+	let t2;
+	let p;
+	let t3;
+	let current;
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_3$3();
+	t1 = new Locale_strings({ props: { key: "registerHeader" } });
+
+	t3 = new Locale_strings({
+			props: { key: "alreadyHaveAnAccount", html: true }
+		});
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			t0 = space();
+			h1 = element("h1");
+			create_component(t1.$$.fragment);
+			t2 = space();
+			p = element("p");
+			create_component(t3.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p, "class", "tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, t0, anchor);
+			insert(target, h1, anchor);
+			mount_component(t1, h1, null);
+			insert(target, t2, anchor);
+			insert(target, p, anchor);
+			mount_component(t3, p, null);
+			/*p_binding*/ ctx[11](p);
 			current = true;
 		},
 		p(ctx, dirty) {
@@ -28446,17 +29662,18 @@ function create_if_block_2$4(ctx) {
 			if (detaching) detach(t2);
 			if (detaching) detach(p);
 			destroy_component(t3);
+			/*p_binding*/ ctx[11](null);
 		}
 	};
 }
 
-// (39:4) {#if form?.icon}
+// (51:4) {#if form?.icon}
 function create_if_block_3$3(ctx) {
 	let div;
-	let keyicon;
+	let newusericon;
 	let current;
 
-	keyicon = new Key_icon({
+	newusericon = new New_user_icon({
 			props: {
 				classes: "tw_text-gray-400 tw_fill-current",
 				size: "72px"
@@ -28466,31 +29683,31 @@ function create_if_block_3$3(ctx) {
 	return {
 		c() {
 			div = element("div");
-			create_component(keyicon.$$.fragment);
+			create_component(newusericon.$$.fragment);
 			attr(div, "class", "tw_flex tw_justify-center");
 		},
 		m(target, anchor) {
 			insert(target, div, anchor);
-			mount_component(keyicon, div, null);
+			mount_component(newusericon, div, null);
 			current = true;
 		},
 		i(local) {
 			if (current) return;
-			transition_in(keyicon.$$.fragment, local);
+			transition_in(newusericon.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
-			transition_out(keyicon.$$.fragment, local);
+			transition_out(newusericon.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
 			if (detaching) detach(div);
-			destroy_component(keyicon);
+			destroy_component(newusericon);
 		}
 	};
 }
 
-// (54:2) {#if form?.message}
+// (67:2) {#if form.message}
 function create_if_block_1$4(ctx) {
 	let alert;
 	let current;
@@ -28517,7 +29734,7 @@ function create_if_block_1$4(ctx) {
 			const alert_changes = {};
 			if (dirty & /*alertNeedsFocus*/ 64) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[6];
 
-			if (dirty & /*$$scope, formMessageKey, form*/ 16516) {
+			if (dirty & /*$$scope, formMessageKey, form*/ 65668) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
@@ -28538,7 +29755,7 @@ function create_if_block_1$4(ctx) {
 	};
 }
 
-// (55:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (68:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$2(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -28559,7 +29776,7 @@ function create_default_slot_2$2(ctx) {
 	};
 }
 
-// (60:2) {#each step?.callbacks as callback, idx}
+// (73:2) {#each step?.callbacks as callback, idx}
 function create_each_block$3(ctx) {
 	let callbackmapper;
 	let current;
@@ -28567,11 +29784,11 @@ function create_each_block$3(ctx) {
 	callbackmapper = new Callback_mapper({
 			props: {
 				props: {
-					callback: /*callback*/ ctx[11],
-					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[13]],
-					selfSubmitFunction: /*determineSubmission*/ ctx[9],
+					callback: /*callback*/ ctx[13],
+					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
+					selfSubmitFunction: /*determineSubmission*/ ctx[10],
 					stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
-					style: /*$style*/ ctx[8]
+					style: /*$styleStore*/ ctx[9]
 				}
 			}
 		});
@@ -28587,12 +29804,12 @@ function create_each_block$3(ctx) {
 		p(ctx, dirty) {
 			const callbackmapper_changes = {};
 
-			if (dirty & /*step, metadata, $style*/ 304) callbackmapper_changes.props = {
-				callback: /*callback*/ ctx[11],
-				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[13]],
-				selfSubmitFunction: /*determineSubmission*/ ctx[9],
+			if (dirty & /*step, metadata, $styleStore*/ 560) callbackmapper_changes.props = {
+				callback: /*callback*/ ctx[13],
+				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
+				selfSubmitFunction: /*determineSubmission*/ ctx[10],
 				stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
-				style: /*$style*/ ctx[8]
+				style: /*$styleStore*/ ctx[9]
 			};
 
 			callbackmapper.$set(callbackmapper_changes);
@@ -28612,7 +29829,7 @@ function create_each_block$3(ctx) {
 	};
 }
 
-// (72:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+// (85:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
 function create_if_block$6(ctx) {
 	let button;
 	let current;
@@ -28640,7 +29857,7 @@ function create_if_block$6(ctx) {
 			const button_changes = {};
 			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
 
-			if (dirty & /*$$scope*/ 16384) {
+			if (dirty & /*$$scope*/ 65536) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -28661,11 +29878,11 @@ function create_if_block$6(ctx) {
 	};
 }
 
-// (73:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (86:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$5(ctx) {
 	let t;
 	let current;
-	t = new Locale_strings({ props: { key: "loginButton" } });
+	t = new Locale_strings({ props: { key: "registerButton" } });
 
 	return {
 		c() {
@@ -28691,7 +29908,7 @@ function create_default_slot_1$5(ctx) {
 	};
 }
 
-// (37:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (49:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$6(ctx) {
 	let t0;
 	let t1;
@@ -28700,7 +29917,7 @@ function create_default_slot$6(ctx) {
 	let if_block2_anchor;
 	let current;
 	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$4(ctx);
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$4(ctx);
+	let if_block1 = /*form*/ ctx[2].message && create_if_block_1$4(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
@@ -28770,7 +29987,7 @@ function create_default_slot$6(ctx) {
 				check_outros();
 			}
 
-			if (/*form*/ ctx[2]?.message) {
+			if (/*form*/ ctx[2].message) {
 				if (if_block1) {
 					if_block1.p(ctx, dirty);
 
@@ -28793,7 +30010,7 @@ function create_default_slot$6(ctx) {
 				check_outros();
 			}
 
-			if (dirty & /*step, metadata, determineSubmission, $style*/ 816) {
+			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 1584) {
 				each_value = /*step*/ ctx[5]?.callbacks;
 				let i;
 
@@ -28882,778 +30099,7 @@ function create_default_slot$6(ctx) {
 	};
 }
 
-function create_fragment$9(ctx) {
-	let form_1;
-	let updating_formEl;
-	let current;
-
-	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[10](value);
-	}
-
-	let form_1_props = {
-		ariaDescribedBy: "formFailureMessageAlert",
-		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
-		$$slots: { default: [create_default_slot$6] },
-		$$scope: { ctx }
-	};
-
-	if (/*formEl*/ ctx[0] !== void 0) {
-		form_1_props.formEl = /*formEl*/ ctx[0];
-	}
-
-	form_1 = new Form({ props: form_1_props });
-	binding_callbacks.push(() => bind(form_1, 'formEl', form_1_formEl_binding));
-
-	return {
-		c() {
-			create_component(form_1.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(form_1, target, anchor);
-			current = true;
-		},
-		p(ctx, [dirty]) {
-			const form_1_changes = {};
-			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*form*/ ctx[2]?.submit;
-
-			if (dirty & /*$$scope, journey, metadata, step, $style, alertNeedsFocus, formMessageKey, form, componentStyle*/ 16894) {
-				form_1_changes.$$scope = { dirty, ctx };
-			}
-
-			if (!updating_formEl && dirty & /*formEl*/ 1) {
-				updating_formEl = true;
-				form_1_changes.formEl = /*formEl*/ ctx[0];
-				add_flush_callback(() => updating_formEl = false);
-			}
-
-			form_1.$set(form_1_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(form_1.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(form_1.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(form_1, detaching);
-		}
-	};
-}
-
-function instance$9($$self, $$props, $$invalidate) {
-	let $style;
-	component_subscribe($$self, styleStore, $$value => $$invalidate(8, $style = $$value));
-	let { componentStyle } = $$props;
-	let { form } = $$props;
-	let { formEl = null } = $$props;
-	let { journey } = $$props;
-	let { metadata } = $$props;
-	let { step } = $$props;
-	let alertNeedsFocus = false;
-	let formMessageKey = '';
-
-	function determineSubmission() {
-		// TODO: the below is more strict; all self-submitting cbs have to complete before submitting
-		// if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
-		// The below variation is more liberal first self-submittable cb to call this wins.
-		if (metadata?.step?.derived.isStepSelfSubmittable()) {
-			form?.submit();
-		}
-	}
-
-	afterUpdate(() => {
-		$$invalidate(6, alertNeedsFocus = !!form?.message);
-	});
-
-	function form_1_formEl_binding(value) {
-		formEl = value;
-		$$invalidate(0, formEl);
-	}
-
-	$$self.$$set = $$props => {
-		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
-		if ('form' in $$props) $$invalidate(2, form = $$props.form);
-		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
-		if ('metadata' in $$props) $$invalidate(4, metadata = $$props.metadata);
-		if ('step' in $$props) $$invalidate(5, step = $$props.step);
-	};
-
-	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*form*/ 4) {
-			{
-				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
-			}
-		}
-	};
-
-	return [
-		formEl,
-		componentStyle,
-		form,
-		journey,
-		metadata,
-		step,
-		alertNeedsFocus,
-		formMessageKey,
-		$style,
-		determineSubmission,
-		form_1_formEl_binding
-	];
-}
-
-class One_time_password extends SvelteComponent {
-	constructor(options) {
-		super();
-
-		init(this, options, instance$9, create_fragment$9, safe_not_equal, {
-			componentStyle: 1,
-			form: 2,
-			formEl: 0,
-			journey: 3,
-			metadata: 4,
-			step: 5
-		});
-	}
-}
-
-/* src/lib/components/icons/new-user-icon.svelte generated by Svelte v3.59.2 */
-
-function create_fragment$8(ctx) {
-	let svg;
-	let path0;
-	let path1;
-	let title;
-	let current;
-	const default_slot_template = /*#slots*/ ctx[3].default;
-	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[2], null);
-
-	return {
-		c() {
-			svg = svg_element("svg");
-			path0 = svg_element("path");
-			path1 = svg_element("path");
-			title = svg_element("title");
-			if (default_slot) default_slot.c();
-			attr(path0, "d", "M0 0h24v24H0z");
-			attr(path0, "fill", "none");
-			attr(path1, "d", "M15 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm-9-2V7H4v3H1v2h3v3h2v-3h3v-2H6zm9 4c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z");
-			attr(svg, "class", /*classes*/ ctx[0]);
-			attr(svg, "xmlns", "http://www.w3.org/2000/svg");
-			attr(svg, "height", /*size*/ ctx[1]);
-			attr(svg, "viewBox", "0 0 24 24");
-			attr(svg, "width", /*size*/ ctx[1]);
-		},
-		m(target, anchor) {
-			insert(target, svg, anchor);
-			append(svg, path0);
-			append(svg, path1);
-			append(svg, title);
-
-			if (default_slot) {
-				default_slot.m(title, null);
-			}
-
-			current = true;
-		},
-		p(ctx, [dirty]) {
-			if (default_slot) {
-				if (default_slot.p && (!current || dirty & /*$$scope*/ 4)) {
-					update_slot_base(
-						default_slot,
-						default_slot_template,
-						ctx,
-						/*$$scope*/ ctx[2],
-						!current
-						? get_all_dirty_from_scope(/*$$scope*/ ctx[2])
-						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[2], dirty, null),
-						null
-					);
-				}
-			}
-
-			if (!current || dirty & /*classes*/ 1) {
-				attr(svg, "class", /*classes*/ ctx[0]);
-			}
-
-			if (!current || dirty & /*size*/ 2) {
-				attr(svg, "height", /*size*/ ctx[1]);
-			}
-
-			if (!current || dirty & /*size*/ 2) {
-				attr(svg, "width", /*size*/ ctx[1]);
-			}
-		},
-		i(local) {
-			if (current) return;
-			transition_in(default_slot, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(default_slot, local);
-			current = false;
-		},
-		d(detaching) {
-			if (detaching) detach(svg);
-			if (default_slot) default_slot.d(detaching);
-		}
-	};
-}
-
-function instance$8($$self, $$props, $$invalidate) {
-	let { $$slots: slots = {}, $$scope } = $$props;
-	let { classes = '' } = $$props;
-	let { size = '24px' } = $$props;
-
-	$$self.$$set = $$props => {
-		if ('classes' in $$props) $$invalidate(0, classes = $$props.classes);
-		if ('size' in $$props) $$invalidate(1, size = $$props.size);
-		if ('$$scope' in $$props) $$invalidate(2, $$scope = $$props.$$scope);
-	};
-
-	return [classes, size, $$scope, slots];
-}
-
-class New_user_icon extends SvelteComponent {
-	constructor(options) {
-		super();
-		init(this, options, instance$8, create_fragment$8, safe_not_equal, { classes: 0, size: 1 });
-	}
-}
-
-/* src/lib/journey/stages/registration.svelte generated by Svelte v3.59.2 */
-
-function get_each_context$2(ctx, list, i) {
-	const child_ctx = ctx.slice();
-	child_ctx[13] = list[i];
-	child_ctx[15] = i;
-	return child_ctx;
-}
-
-// (50:2) {#if componentStyle !== 'inline'}
-function create_if_block_2$3(ctx) {
-	let t0;
-	let h1;
-	let t1;
-	let t2;
-	let p;
-	let t3;
-	let current;
-	let if_block = /*form*/ ctx[2]?.icon && create_if_block_3$2();
-	t1 = new Locale_strings({ props: { key: "registerHeader" } });
-
-	t3 = new Locale_strings({
-			props: { key: "alreadyHaveAnAccount", html: true }
-		});
-
-	return {
-		c() {
-			if (if_block) if_block.c();
-			t0 = space();
-			h1 = element("h1");
-			create_component(t1.$$.fragment);
-			t2 = space();
-			p = element("p");
-			create_component(t3.$$.fragment);
-			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
-			attr(p, "class", "tw_text-base tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
-		},
-		m(target, anchor) {
-			if (if_block) if_block.m(target, anchor);
-			insert(target, t0, anchor);
-			insert(target, h1, anchor);
-			mount_component(t1, h1, null);
-			insert(target, t2, anchor);
-			insert(target, p, anchor);
-			mount_component(t3, p, null);
-			/*p_binding*/ ctx[11](p);
-			current = true;
-		},
-		p(ctx, dirty) {
-			if (/*form*/ ctx[2]?.icon) {
-				if (if_block) {
-					if (dirty & /*form*/ 4) {
-						transition_in(if_block, 1);
-					}
-				} else {
-					if_block = create_if_block_3$2();
-					if_block.c();
-					transition_in(if_block, 1);
-					if_block.m(t0.parentNode, t0);
-				}
-			} else if (if_block) {
-				group_outros();
-
-				transition_out(if_block, 1, 1, () => {
-					if_block = null;
-				});
-
-				check_outros();
-			}
-		},
-		i(local) {
-			if (current) return;
-			transition_in(if_block);
-			transition_in(t1.$$.fragment, local);
-			transition_in(t3.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(if_block);
-			transition_out(t1.$$.fragment, local);
-			transition_out(t3.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			if (if_block) if_block.d(detaching);
-			if (detaching) detach(t0);
-			if (detaching) detach(h1);
-			destroy_component(t1);
-			if (detaching) detach(t2);
-			if (detaching) detach(p);
-			destroy_component(t3);
-			/*p_binding*/ ctx[11](null);
-		}
-	};
-}
-
-// (51:4) {#if form?.icon}
-function create_if_block_3$2(ctx) {
-	let div;
-	let newusericon;
-	let current;
-
-	newusericon = new New_user_icon({
-			props: {
-				classes: "tw_text-gray-400 tw_fill-current",
-				size: "72px"
-			}
-		});
-
-	return {
-		c() {
-			div = element("div");
-			create_component(newusericon.$$.fragment);
-			attr(div, "class", "tw_flex tw_justify-center");
-		},
-		m(target, anchor) {
-			insert(target, div, anchor);
-			mount_component(newusericon, div, null);
-			current = true;
-		},
-		i(local) {
-			if (current) return;
-			transition_in(newusericon.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(newusericon.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			if (detaching) detach(div);
-			destroy_component(newusericon);
-		}
-	};
-}
-
-// (67:2) {#if form.message}
-function create_if_block_1$3(ctx) {
-	let alert;
-	let current;
-
-	alert = new Alert({
-			props: {
-				id: "formFailureMessageAlert",
-				needsFocus: /*alertNeedsFocus*/ ctx[6],
-				type: "error",
-				$$slots: { default: [create_default_slot_2$1] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(alert.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(alert, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const alert_changes = {};
-			if (dirty & /*alertNeedsFocus*/ 64) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[6];
-
-			if (dirty & /*$$scope, formMessageKey, form*/ 65668) {
-				alert_changes.$$scope = { dirty, ctx };
-			}
-
-			alert.$set(alert_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(alert.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(alert.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(alert, detaching);
-		}
-	};
-}
-
-// (68:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
-function create_default_slot_2$1(ctx) {
-	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
-	let t;
-
-	return {
-		c() {
-			t = text(t_value);
-		},
-		m(target, anchor) {
-			insert(target, t, anchor);
-		},
-		p(ctx, dirty) {
-			if (dirty & /*formMessageKey, form*/ 132 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
-		},
-		d(detaching) {
-			if (detaching) detach(t);
-		}
-	};
-}
-
-// (73:2) {#each step?.callbacks as callback, idx}
-function create_each_block$2(ctx) {
-	let callbackmapper;
-	let current;
-
-	callbackmapper = new Callback_mapper({
-			props: {
-				props: {
-					callback: /*callback*/ ctx[13],
-					callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
-					selfSubmitFunction: /*determineSubmission*/ ctx[10],
-					stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
-					style: /*$styleStore*/ ctx[9]
-				}
-			}
-		});
-
-	return {
-		c() {
-			create_component(callbackmapper.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(callbackmapper, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const callbackmapper_changes = {};
-
-			if (dirty & /*step, metadata, $styleStore*/ 560) callbackmapper_changes.props = {
-				callback: /*callback*/ ctx[13],
-				callbackMetadata: /*metadata*/ ctx[4]?.callbacks[/*idx*/ ctx[15]],
-				selfSubmitFunction: /*determineSubmission*/ ctx[10],
-				stepMetadata: /*metadata*/ ctx[4]?.step && { .../*metadata*/ ctx[4].step },
-				style: /*$styleStore*/ ctx[9]
-			};
-
-			callbackmapper.$set(callbackmapper_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(callbackmapper.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(callbackmapper.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(callbackmapper, detaching);
-		}
-	};
-}
-
-// (85:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-function create_if_block$5(ctx) {
-	let button;
-	let current;
-
-	button = new Button({
-			props: {
-				busy: /*journey*/ ctx[3]?.loading,
-				style: "primary",
-				type: "submit",
-				width: "full",
-				$$slots: { default: [create_default_slot_1$4] },
-				$$scope: { ctx }
-			}
-		});
-
-	return {
-		c() {
-			create_component(button.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(button, target, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			const button_changes = {};
-			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
-
-			if (dirty & /*$$scope*/ 65536) {
-				button_changes.$$scope = { dirty, ctx };
-			}
-
-			button.$set(button_changes);
-		},
-		i(local) {
-			if (current) return;
-			transition_in(button.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(button.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(button, detaching);
-		}
-	};
-}
-
-// (86:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$4(ctx) {
-	let t;
-	let current;
-	t = new Locale_strings({ props: { key: "registerButton" } });
-
-	return {
-		c() {
-			create_component(t.$$.fragment);
-		},
-		m(target, anchor) {
-			mount_component(t, target, anchor);
-			current = true;
-		},
-		p: noop,
-		i(local) {
-			if (current) return;
-			transition_in(t.$$.fragment, local);
-			current = true;
-		},
-		o(local) {
-			transition_out(t.$$.fragment, local);
-			current = false;
-		},
-		d(detaching) {
-			destroy_component(t, detaching);
-		}
-	};
-}
-
-// (49:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-function create_default_slot$5(ctx) {
-	let t0;
-	let t1;
-	let t2;
-	let show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
-	let if_block2_anchor;
-	let current;
-	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$3(ctx);
-	let if_block1 = /*form*/ ctx[2].message && create_if_block_1$3(ctx);
-	let each_value = /*step*/ ctx[5]?.callbacks;
-	let each_blocks = [];
-
-	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
-	}
-
-	const out = i => transition_out(each_blocks[i], 1, 1, () => {
-		each_blocks[i] = null;
-	});
-
-	let if_block2 = show_if && create_if_block$5(ctx);
-
-	return {
-		c() {
-			if (if_block0) if_block0.c();
-			t0 = space();
-			if (if_block1) if_block1.c();
-			t1 = space();
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				each_blocks[i].c();
-			}
-
-			t2 = space();
-			if (if_block2) if_block2.c();
-			if_block2_anchor = empty();
-		},
-		m(target, anchor) {
-			if (if_block0) if_block0.m(target, anchor);
-			insert(target, t0, anchor);
-			if (if_block1) if_block1.m(target, anchor);
-			insert(target, t1, anchor);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				if (each_blocks[i]) {
-					each_blocks[i].m(target, anchor);
-				}
-			}
-
-			insert(target, t2, anchor);
-			if (if_block2) if_block2.m(target, anchor);
-			insert(target, if_block2_anchor, anchor);
-			current = true;
-		},
-		p(ctx, dirty) {
-			if (/*componentStyle*/ ctx[1] !== 'inline') {
-				if (if_block0) {
-					if_block0.p(ctx, dirty);
-
-					if (dirty & /*componentStyle*/ 2) {
-						transition_in(if_block0, 1);
-					}
-				} else {
-					if_block0 = create_if_block_2$3(ctx);
-					if_block0.c();
-					transition_in(if_block0, 1);
-					if_block0.m(t0.parentNode, t0);
-				}
-			} else if (if_block0) {
-				group_outros();
-
-				transition_out(if_block0, 1, 1, () => {
-					if_block0 = null;
-				});
-
-				check_outros();
-			}
-
-			if (/*form*/ ctx[2].message) {
-				if (if_block1) {
-					if_block1.p(ctx, dirty);
-
-					if (dirty & /*form*/ 4) {
-						transition_in(if_block1, 1);
-					}
-				} else {
-					if_block1 = create_if_block_1$3(ctx);
-					if_block1.c();
-					transition_in(if_block1, 1);
-					if_block1.m(t1.parentNode, t1);
-				}
-			} else if (if_block1) {
-				group_outros();
-
-				transition_out(if_block1, 1, 1, () => {
-					if_block1 = null;
-				});
-
-				check_outros();
-			}
-
-			if (dirty & /*step, metadata, determineSubmission, $styleStore*/ 1584) {
-				each_value = /*step*/ ctx[5]?.callbacks;
-				let i;
-
-				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$2(ctx, each_value, i);
-
-					if (each_blocks[i]) {
-						each_blocks[i].p(child_ctx, dirty);
-						transition_in(each_blocks[i], 1);
-					} else {
-						each_blocks[i] = create_each_block$2(child_ctx);
-						each_blocks[i].c();
-						transition_in(each_blocks[i], 1);
-						each_blocks[i].m(t2.parentNode, t2);
-					}
-				}
-
-				group_outros();
-
-				for (i = each_value.length; i < each_blocks.length; i += 1) {
-					out(i);
-				}
-
-				check_outros();
-			}
-
-			if (dirty & /*metadata*/ 16) show_if = /*metadata*/ ctx[4]?.step?.derived.isUserInputOptional || !/*metadata*/ ctx[4]?.step?.derived.isStepSelfSubmittable();
-
-			if (show_if) {
-				if (if_block2) {
-					if_block2.p(ctx, dirty);
-
-					if (dirty & /*metadata*/ 16) {
-						transition_in(if_block2, 1);
-					}
-				} else {
-					if_block2 = create_if_block$5(ctx);
-					if_block2.c();
-					transition_in(if_block2, 1);
-					if_block2.m(if_block2_anchor.parentNode, if_block2_anchor);
-				}
-			} else if (if_block2) {
-				group_outros();
-
-				transition_out(if_block2, 1, 1, () => {
-					if_block2 = null;
-				});
-
-				check_outros();
-			}
-		},
-		i(local) {
-			if (current) return;
-			transition_in(if_block0);
-			transition_in(if_block1);
-
-			for (let i = 0; i < each_value.length; i += 1) {
-				transition_in(each_blocks[i]);
-			}
-
-			transition_in(if_block2);
-			current = true;
-		},
-		o(local) {
-			transition_out(if_block0);
-			transition_out(if_block1);
-			each_blocks = each_blocks.filter(Boolean);
-
-			for (let i = 0; i < each_blocks.length; i += 1) {
-				transition_out(each_blocks[i]);
-			}
-
-			transition_out(if_block2);
-			current = false;
-		},
-		d(detaching) {
-			if (if_block0) if_block0.d(detaching);
-			if (detaching) detach(t0);
-			if (if_block1) if_block1.d(detaching);
-			if (detaching) detach(t1);
-			destroy_each(each_blocks, detaching);
-			if (detaching) detach(t2);
-			if (if_block2) if_block2.d(detaching);
-			if (detaching) detach(if_block2_anchor);
-		}
-	};
-}
-
-function create_fragment$7(ctx) {
+function create_fragment$a(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -29665,7 +30111,7 @@ function create_fragment$7(ctx) {
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
 		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
-		$$slots: { default: [create_default_slot$5] },
+		$$slots: { default: [create_default_slot$6] },
 		$$scope: { ctx }
 	};
 
@@ -29715,7 +30161,7 @@ function create_fragment$7(ctx) {
 	};
 }
 
-function instance$7($$self, $$props, $$invalidate) {
+function instance$a($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(9, $styleStore = $$value));
 	let { componentStyle } = $$props;
@@ -29803,7 +30249,7 @@ class Registration extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
+		init(this, options, instance$a, create_fragment$a, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
@@ -29816,7 +30262,7 @@ class Registration extends SvelteComponent {
 
 /* src/lib/journey/stages/login.svelte generated by Svelte v3.59.2 */
 
-function get_each_context$1(ctx, list, i) {
+function get_each_context$2(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[15] = list[i];
 	child_ctx[17] = i;
@@ -29824,12 +30270,12 @@ function get_each_context$1(ctx, list, i) {
 }
 
 // (45:2) {#if componentStyle !== 'inline'}
-function create_if_block_3$1(ctx) {
+function create_if_block_3$2(ctx) {
 	let t0;
 	let h1;
 	let t1;
 	let current;
-	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4();
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4$1();
 	t1 = new Locale_strings({ props: { key: "loginHeader" } });
 
 	return {
@@ -29854,7 +30300,7 @@ function create_if_block_3$1(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block_4();
+					if_block = create_if_block_4$1();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(t0.parentNode, t0);
@@ -29890,7 +30336,7 @@ function create_if_block_3$1(ctx) {
 }
 
 // (46:4) {#if form?.icon}
-function create_if_block_4(ctx) {
+function create_if_block_4$1(ctx) {
 	let div;
 	let keyicon;
 	let current;
@@ -29930,7 +30376,7 @@ function create_if_block_4(ctx) {
 }
 
 // (56:2) {#if form?.message}
-function create_if_block_2$2(ctx) {
+function create_if_block_2$3(ctx) {
 	let alert;
 	let current;
 
@@ -29939,7 +30385,7 @@ function create_if_block_2$2(ctx) {
 				id: "formFailureMessageAlert",
 				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
-				$$slots: { default: [create_default_slot_2] },
+				$$slots: { default: [create_default_slot_2$1] },
 				$$scope: { ctx }
 			}
 		});
@@ -29978,7 +30424,7 @@ function create_if_block_2$2(ctx) {
 }
 
 // (57:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
-function create_default_slot_2(ctx) {
+function create_default_slot_2$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
@@ -29999,7 +30445,7 @@ function create_default_slot_2(ctx) {
 }
 
 // (62:2) {#each step?.callbacks as callback, idx}
-function create_each_block$1(ctx) {
+function create_each_block$2(ctx) {
 	let callbackmapper;
 	let current;
 
@@ -30052,7 +30498,7 @@ function create_each_block$1(ctx) {
 }
 
 // (74:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-function create_if_block_1$2(ctx) {
+function create_if_block_1$3(ctx) {
 	let button;
 	let current;
 
@@ -30062,7 +30508,7 @@ function create_if_block_1$2(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_1$3] },
+				$$slots: { default: [create_default_slot_1$4] },
 				$$scope: { ctx }
 			}
 		});
@@ -30101,7 +30547,7 @@ function create_if_block_1$2(ctx) {
 }
 
 // (75:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$3(ctx) {
+function create_default_slot_1$4(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "loginButton" } });
@@ -30131,7 +30577,7 @@ function create_default_slot_1$3(ctx) {
 }
 
 // (80:2) {#if componentStyle !== 'inline'}
-function create_if_block$4(ctx) {
+function create_if_block$5(ctx) {
 	let p0;
 	let button0;
 	let t1;
@@ -30213,7 +30659,7 @@ function create_if_block$4(ctx) {
 }
 
 // (44:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-function create_default_slot$4(ctx) {
+function create_default_slot$5(ctx) {
 	let t0;
 	let t1;
 	let t2;
@@ -30221,21 +30667,21 @@ function create_default_slot$4(ctx) {
 	let t3;
 	let if_block3_anchor;
 	let current;
-	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$1(ctx);
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$2(ctx);
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$2(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$3(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
+		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
 	}
 
 	const out = i => transition_out(each_blocks[i], 1, 1, () => {
 		each_blocks[i] = null;
 	});
 
-	let if_block2 = show_if && create_if_block_1$2(ctx);
-	let if_block3 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$4(ctx);
+	let if_block2 = show_if && create_if_block_1$3(ctx);
+	let if_block3 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$5(ctx);
 
 	return {
 		c() {
@@ -30282,7 +30728,7 @@ function create_default_slot$4(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_3$1(ctx);
+					if_block0 = create_if_block_3$2(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -30305,7 +30751,7 @@ function create_default_slot$4(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_2$2(ctx);
+					if_block1 = create_if_block_2$3(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t1.parentNode, t1);
@@ -30325,13 +30771,13 @@ function create_default_slot$4(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context$1(ctx, each_value, i);
+					const child_ctx = get_each_context$2(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 						transition_in(each_blocks[i], 1);
 					} else {
-						each_blocks[i] = create_each_block$1(child_ctx);
+						each_blocks[i] = create_each_block$2(child_ctx);
 						each_blocks[i].c();
 						transition_in(each_blocks[i], 1);
 						each_blocks[i].m(t2.parentNode, t2);
@@ -30357,7 +30803,7 @@ function create_default_slot$4(ctx) {
 						transition_in(if_block2, 1);
 					}
 				} else {
-					if_block2 = create_if_block_1$2(ctx);
+					if_block2 = create_if_block_1$3(ctx);
 					if_block2.c();
 					transition_in(if_block2, 1);
 					if_block2.m(t3.parentNode, t3);
@@ -30380,7 +30826,7 @@ function create_default_slot$4(ctx) {
 						transition_in(if_block3, 1);
 					}
 				} else {
-					if_block3 = create_if_block$4(ctx);
+					if_block3 = create_if_block$5(ctx);
 					if_block3.c();
 					transition_in(if_block3, 1);
 					if_block3.m(if_block3_anchor.parentNode, if_block3_anchor);
@@ -30436,7 +30882,7 @@ function create_default_slot$4(ctx) {
 	};
 }
 
-function create_fragment$6(ctx) {
+function create_fragment$9(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -30448,7 +30894,7 @@ function create_fragment$6(ctx) {
 	let form_1_props = {
 		ariaDescribedBy: "formFailureMessageAlert",
 		onSubmitWhenValid: /*form*/ ctx[2]?.submit,
-		$$slots: { default: [create_default_slot$4] },
+		$$slots: { default: [create_default_slot$5] },
 		$$scope: { ctx }
 	};
 
@@ -30498,7 +30944,7 @@ function create_fragment$6(ctx) {
 	};
 }
 
-function instance$6($$self, $$props, $$invalidate) {
+function instance$9($$self, $$props, $$invalidate) {
 	let $styleStore;
 	component_subscribe($$self, styleStore, $$value => $$invalidate(9, $styleStore = $$value));
 	let { componentStyle } = $$props;
@@ -30590,7 +31036,7 @@ class Login extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$6, create_fragment$6, safe_not_equal, {
+		init(this, options, instance$9, create_fragment$9, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
@@ -30603,7 +31049,7 @@ class Login extends SvelteComponent {
 
 /* src/lib/components/icons/fingerprint-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$5(ctx) {
+function create_fragment$8(ctx) {
 	let svg;
 	let path0;
 	let path1;
@@ -30659,7 +31105,7 @@ function create_fragment$5(ctx) {
 	};
 }
 
-function instance$5($$self, $$props, $$invalidate) {
+function instance$8($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -30674,13 +31120,13 @@ function instance$5($$self, $$props, $$invalidate) {
 class Fingerprint_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$5, create_fragment$5, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$8, create_fragment$8, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/stages/webauthn.svelte generated by Svelte v3.59.2 */
 
-function create_if_block_2$1(ctx) {
+function create_if_block_2$2(ctx) {
 	let div;
 	let fingerprinticon;
 	let current;
@@ -30720,7 +31166,7 @@ function create_if_block_2$1(ctx) {
 }
 
 // (86:2) {#if form?.message}
-function create_if_block_1$1(ctx) {
+function create_if_block_1$2(ctx) {
 	let alert;
 	let current;
 
@@ -30729,7 +31175,7 @@ function create_if_block_1$1(ctx) {
 				id: formFailureMessageId$1,
 				needsFocus: /*alertNeedsFocus*/ ctx[3],
 				type: "error",
-				$$slots: { default: [create_default_slot_1$2] },
+				$$slots: { default: [create_default_slot_1$3] },
 				$$scope: { ctx }
 			}
 		});
@@ -30768,7 +31214,7 @@ function create_if_block_1$1(ctx) {
 }
 
 // (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
-function create_default_slot_1$2(ctx) {
+function create_default_slot_1$3(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[4], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
@@ -30847,7 +31293,7 @@ function create_else_block$2(ctx) {
 }
 
 // (92:2) {#if webAuthnType === WebAuthnStepType.Authentication}
-function create_if_block$3(ctx) {
+function create_if_block$4(ctx) {
 	let header;
 	let h1;
 	let t0;
@@ -30903,7 +31349,7 @@ function create_if_block$3(ctx) {
 }
 
 // (70:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
-function create_default_slot$3(ctx) {
+function create_default_slot$4(ctx) {
 	let t0;
 	let div;
 	let spinner;
@@ -30913,7 +31359,7 @@ function create_default_slot$3(ctx) {
 	let if_block2;
 	let if_block2_anchor;
 	let current;
-	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$1();
+	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$2();
 
 	spinner = new Spinner({
 			props: {
@@ -30922,8 +31368,8 @@ function create_default_slot$3(ctx) {
 			}
 		});
 
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$1(ctx);
-	const if_block_creators = [create_if_block$3, create_else_block$2];
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$2(ctx);
+	const if_block_creators = [create_if_block$4, create_else_block$2];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -30966,7 +31412,7 @@ function create_default_slot$3(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$1();
+					if_block0 = create_if_block_2$2();
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -30989,7 +31435,7 @@ function create_default_slot$3(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_1$1(ctx);
+					if_block1 = create_if_block_1$2(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t2.parentNode, t2);
@@ -31035,7 +31481,7 @@ function create_default_slot$3(ctx) {
 	};
 }
 
-function create_fragment$4(ctx) {
+function create_fragment$7(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -31048,7 +31494,7 @@ function create_fragment$4(ctx) {
 		ariaDescribedBy: /*formAriaDescriptor*/ ctx[5],
 		id: formElementId$1,
 		needsFocus: /*formNeedsFocus*/ ctx[6],
-		$$slots: { default: [create_default_slot$3] },
+		$$slots: { default: [create_default_slot$4] },
 		$$scope: { ctx }
 	};
 
@@ -31103,7 +31549,7 @@ const formFailureMessageId$1 = 'genericStepFailureMessage';
 const formHeaderId$1 = 'genericStepHeader';
 const formElementId$1 = 'genericStepForm';
 
-function instance$4($$self, $$props, $$invalidate) {
+function instance$7($$self, $$props, $$invalidate) {
 	let { allowWebAuthn = true } = $$props;
 	let { componentStyle } = $$props;
 	let { form } = $$props;
@@ -31198,7 +31644,7 @@ class Webauthn extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$4, create_fragment$4, safe_not_equal, {
+		init(this, options, instance$7, create_fragment$7, safe_not_equal, {
 			allowWebAuthn: 8,
 			componentStyle: 1,
 			form: 2,
@@ -31210,7 +31656,7 @@ class Webauthn extends SvelteComponent {
 
 /* src/lib/components/icons/shield-check-icon.svelte generated by Svelte v3.59.2 */
 
-function create_fragment$3(ctx) {
+function create_fragment$6(ctx) {
 	let svg;
 	let path;
 
@@ -31252,7 +31698,7 @@ function create_fragment$3(ctx) {
 	};
 }
 
-function instance$3($$self, $$props, $$invalidate) {
+function instance$6($$self, $$props, $$invalidate) {
 	let { classes = '' } = $$props;
 	let { size = '24px' } = $$props;
 
@@ -31267,20 +31713,20 @@ function instance$3($$self, $$props, $$invalidate) {
 class Shield_check_icon extends SvelteComponent {
 	constructor(options) {
 		super();
-		init(this, options, instance$3, create_fragment$3, safe_not_equal, { classes: 0, size: 1 });
+		init(this, options, instance$6, create_fragment$6, safe_not_equal, { classes: 0, size: 1 });
 	}
 }
 
 /* src/lib/journey/stages/recovery-codes.svelte generated by Svelte v3.59.2 */
 
-function get_each_context(ctx, list, i) {
+function get_each_context$1(ctx, list, i) {
 	const child_ctx = ctx.slice();
 	child_ctx[10] = list[i];
 	return child_ctx;
 }
 
 // (42:2) {#if form?.icon && componentStyle !== 'inline'}
-function create_if_block$2(ctx) {
+function create_if_block$3(ctx) {
 	let div;
 	let clipboardicon;
 	let current;
@@ -31320,7 +31766,7 @@ function create_if_block$2(ctx) {
 }
 
 // (72:4) {#each codes as code}
-function create_each_block(ctx) {
+function create_each_block$1(ctx) {
 	let li;
 	let span;
 	let t0_value = /*code*/ ctx[10] + "";
@@ -31352,7 +31798,7 @@ function create_each_block(ctx) {
 }
 
 // (81:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_1$1(ctx) {
+function create_default_slot_1$2(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "nextButton" } });
@@ -31382,7 +31828,7 @@ function create_default_slot_1$1(ctx) {
 }
 
 // (35:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
-function create_default_slot$2(ctx) {
+function create_default_slot$3(ctx) {
 	let t0;
 	let header;
 	let h1;
@@ -31403,7 +31849,7 @@ function create_default_slot$2(ctx) {
 	let t10;
 	let button;
 	let current;
-	let if_block = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$2();
+	let if_block = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$3();
 
 	t1 = new Locale_strings({
 			props: { key: "yourMultiFactorAuthIsEnabled" }
@@ -31428,7 +31874,7 @@ function create_default_slot$2(ctx) {
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
-		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+		each_blocks[i] = create_each_block$1(get_each_context$1(ctx, each_value, i));
 	}
 
 	button = new Button({
@@ -31437,7 +31883,7 @@ function create_default_slot$2(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_1$1] },
+				$$slots: { default: [create_default_slot_1$2] },
 				$$scope: { ctx }
 			}
 		});
@@ -31475,7 +31921,7 @@ function create_default_slot$2(ctx) {
 			attr(hr, "class", "tw_border-collapse tw_border-secondary-light dark:tw_border-secondary-dark tw_mb-8");
 			attr(h2, "class", "tw_secondary-header dark:tw_secondary-header_dark tw_text-lg");
 			attr(p1, "class", "tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6");
-			attr(ol, "class", "tw_font-mono tw_border tw_border-secondary-light dark:tw_border-secondary-dark tw_bg-body-light dark:tw_bg-body-dark tw_list-decimal tw_text-secondary-light dark:tw_text-secondary-light tw_py-4 tw_list-inside tw_rounded-md tw_mb-4 tw_columns-2");
+			attr(ol, "class", "tw_font-mono tw_border tw_border-secondary-light dark:tw_border-secondary-dark tw_bg-white dark:tw_bg-body-dark tw_list-decimal tw_text-secondary-light dark:tw_text-secondary-light tw_py-4 tw_list-inside tw_rounded-md tw_mb-4 tw_columns-2");
 		},
 		m(target, anchor) {
 			if (if_block) if_block.m(target, anchor);
@@ -31514,7 +31960,7 @@ function create_default_slot$2(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block$2();
+					if_block = create_if_block$3();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(t0.parentNode, t0);
@@ -31534,12 +31980,12 @@ function create_default_slot$2(ctx) {
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
-					const child_ctx = get_each_context(ctx, each_value, i);
+					const child_ctx = get_each_context$1(ctx, each_value, i);
 
 					if (each_blocks[i]) {
 						each_blocks[i].p(child_ctx, dirty);
 					} else {
-						each_blocks[i] = create_each_block(child_ctx);
+						each_blocks[i] = create_each_block$1(child_ctx);
 						each_blocks[i].c();
 						each_blocks[i].m(ol, null);
 					}
@@ -31603,7 +32049,7 @@ function create_default_slot$2(ctx) {
 	};
 }
 
-function create_fragment$2(ctx) {
+function create_fragment$5(ctx) {
 	let form_1;
 	let updating_formEl;
 	let current;
@@ -31617,7 +32063,7 @@ function create_fragment$2(ctx) {
 		id: formElementId,
 		needsFocus: /*formNeedsFocus*/ ctx[6],
 		onSubmitWhenValid: /*func*/ ctx[8],
-		$$slots: { default: [create_default_slot$2] },
+		$$slots: { default: [create_default_slot$3] },
 		$$scope: { ctx }
 	};
 
@@ -31673,7 +32119,7 @@ const formFailureMessageId = 'genericStepFailureMessage';
 const formHeaderId = 'genericStepHeader';
 const formElementId = 'genericStepForm';
 
-function instance$2($$self, $$props, $$invalidate) {
+function instance$5($$self, $$props, $$invalidate) {
 	let { componentStyle } = $$props;
 	let { form } = $$props;
 	let { formEl = null } = $$props;
@@ -31734,12 +32180,1343 @@ class Recovery_codes extends SvelteComponent {
 	constructor(options) {
 		super();
 
-		init(this, options, instance$2, create_fragment$2, safe_not_equal, {
+		init(this, options, instance$5, create_fragment$5, safe_not_equal, {
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
 			journey: 3,
 			step: 7
+		});
+	}
+}
+
+/* src/lib/components/icons/clipboard-icon.svelte generated by Svelte v3.59.2 */
+
+function create_fragment$4(ctx) {
+	let svg;
+	let path;
+	let title;
+	let current;
+	const default_slot_template = /*#slots*/ ctx[3].default;
+	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[2], null);
+
+	return {
+		c() {
+			svg = svg_element("svg");
+			path = svg_element("path");
+			title = svg_element("title");
+			if (default_slot) default_slot.c();
+			attr(path, "fill-rule", "evenodd");
+			attr(path, "d", "M10 1.5a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h3a.5.5 0 0 0 .5-.5v-1Zm-5 0A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5v1A1.5 1.5 0 0 1 9.5 4h-3A1.5 1.5 0 0 1 5 2.5v-1Zm-2 0h1v1A2.5 2.5 0 0 0 6.5 5h3A2.5 2.5 0 0 0 12 2.5v-1h1a2 2 0 0 1 2 2V14a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V3.5a2 2 0 0 1 2-2Z");
+			attr(svg, "class", /*classes*/ ctx[0]);
+			attr(svg, "width", /*size*/ ctx[1]);
+			attr(svg, "height", /*size*/ ctx[1]);
+			attr(svg, "viewBox", "0 0 16 16");
+			attr(svg, "xmlns", "http://www.w3.org/2000/svg");
+		},
+		m(target, anchor) {
+			insert(target, svg, anchor);
+			append(svg, path);
+			append(svg, title);
+
+			if (default_slot) {
+				default_slot.m(title, null);
+			}
+
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			if (default_slot) {
+				if (default_slot.p && (!current || dirty & /*$$scope*/ 4)) {
+					update_slot_base(
+						default_slot,
+						default_slot_template,
+						ctx,
+						/*$$scope*/ ctx[2],
+						!current
+						? get_all_dirty_from_scope(/*$$scope*/ ctx[2])
+						: get_slot_changes(default_slot_template, /*$$scope*/ ctx[2], dirty, null),
+						null
+					);
+				}
+			}
+
+			if (!current || dirty & /*classes*/ 1) {
+				attr(svg, "class", /*classes*/ ctx[0]);
+			}
+
+			if (!current || dirty & /*size*/ 2) {
+				attr(svg, "width", /*size*/ ctx[1]);
+			}
+
+			if (!current || dirty & /*size*/ 2) {
+				attr(svg, "height", /*size*/ ctx[1]);
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(default_slot, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(default_slot, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(svg);
+			if (default_slot) default_slot.d(detaching);
+		}
+	};
+}
+
+function instance$4($$self, $$props, $$invalidate) {
+	let { $$slots: slots = {}, $$scope } = $$props;
+	let { classes = '' } = $$props;
+	let { size = '24px' } = $$props;
+
+	$$self.$$set = $$props => {
+		if ('classes' in $$props) $$invalidate(0, classes = $$props.classes);
+		if ('size' in $$props) $$invalidate(1, size = $$props.size);
+		if ('$$scope' in $$props) $$invalidate(2, $$scope = $$props.$$scope);
+	};
+
+	return [classes, size, $$scope, slots];
+}
+
+class Clipboard_icon extends SvelteComponent {
+	constructor(options) {
+		super();
+		init(this, options, instance$4, create_fragment$4, safe_not_equal, { classes: 0, size: 1 });
+	}
+}
+
+/* src/lib/components/icons/mobile-icon.svelte generated by Svelte v3.59.2 */
+
+function create_fragment$3(ctx) {
+	let svg;
+	let path;
+
+	return {
+		c() {
+			svg = svg_element("svg");
+			path = svg_element("path");
+			attr(path, "d", "M3 2a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V2zm6 11a1 1 0 1 0-2 0 1 1 0 0 0 2 0z");
+			attr(svg, "class", /*classes*/ ctx[0]);
+			attr(svg, "height", /*size*/ ctx[1]);
+			attr(svg, "viewBox", "0 0 16 16");
+			attr(svg, "width", /*size*/ ctx[1]);
+			attr(svg, "xmlns", "http://www.w3.org/2000/svg");
+		},
+		m(target, anchor) {
+			insert(target, svg, anchor);
+			append(svg, path);
+		},
+		p(ctx, [dirty]) {
+			if (dirty & /*classes*/ 1) {
+				attr(svg, "class", /*classes*/ ctx[0]);
+			}
+
+			if (dirty & /*size*/ 2) {
+				attr(svg, "height", /*size*/ ctx[1]);
+			}
+
+			if (dirty & /*size*/ 2) {
+				attr(svg, "width", /*size*/ ctx[1]);
+			}
+		},
+		i: noop,
+		o: noop,
+		d(detaching) {
+			if (detaching) detach(svg);
+		}
+	};
+}
+
+function instance$3($$self, $$props, $$invalidate) {
+	let { classes = '' } = $$props;
+	let { size = '24px' } = $$props;
+
+	$$self.$$set = $$props => {
+		if ('classes' in $$props) $$invalidate(0, classes = $$props.classes);
+		if ('size' in $$props) $$invalidate(1, size = $$props.size);
+	};
+
+	return [classes, size];
+}
+
+class Mobile_icon extends SvelteComponent {
+	constructor(options) {
+		super();
+		init(this, options, instance$3, create_fragment$3, safe_not_equal, { classes: 0, size: 1 });
+	}
+}
+
+/* src/lib/journey/stages/qr-code.svelte generated by Svelte v3.59.2 */
+
+function get_if_ctx(ctx) {
+	const child_ctx = ctx.slice();
+
+	const constants_0 = {
+		callback: /*pollingWaitCb*/ child_ctx[10],
+		callbackMetadata: /*metadata*/ child_ctx[1]?.callbacks[/*pollingWaitIdx*/ child_ctx[15]],
+		options: { inline: true },
+		selfSubmitFunction: /*determineSubmission*/ child_ctx[16],
+		style: /*$style*/ child_ctx[14]
+	};
+
+	child_ctx[22] = constants_0;
+	return child_ctx;
+}
+
+function get_each_context(ctx, list, i) {
+	const child_ctx = ctx.slice();
+	child_ctx[23] = list[i];
+	child_ctx[25] = i;
+	return child_ctx;
+}
+
+// (114:2) {#if componentStyle !== 'inline'}
+function create_if_block_4(ctx) {
+	let t0;
+	let h1;
+	let t1;
+	let t2;
+	let p;
+	let t3;
+	let current;
+	let if_block = /*form*/ ctx[0]?.icon && create_if_block_5();
+
+	t1 = new Locale_strings({
+			props: { key: "twoFactorAuthentication" }
+		});
+
+	t3 = new Locale_strings({
+			props: { key: "scanQrCodeWithAuthenticator" }
+		});
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			t0 = space();
+			h1 = element("h1");
+			create_component(t1.$$.fragment);
+			t2 = space();
+			p = element("p");
+			create_component(t3.$$.fragment);
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p, "class", "tw_text-center tw_text-sm tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, t0, anchor);
+			insert(target, h1, anchor);
+			mount_component(t1, h1, null);
+			insert(target, t2, anchor);
+			insert(target, p, anchor);
+			mount_component(t3, p, null);
+			current = true;
+		},
+		p(ctx, dirty) {
+			if (/*form*/ ctx[0]?.icon) {
+				if (if_block) {
+					if (dirty & /*form*/ 1) {
+						transition_in(if_block, 1);
+					}
+				} else {
+					if_block = create_if_block_5();
+					if_block.c();
+					transition_in(if_block, 1);
+					if_block.m(t0.parentNode, t0);
+				}
+			} else if (if_block) {
+				group_outros();
+
+				transition_out(if_block, 1, 1, () => {
+					if_block = null;
+				});
+
+				check_outros();
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			transition_in(t1.$$.fragment, local);
+			transition_in(t3.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			transition_out(t1.$$.fragment, local);
+			transition_out(t3.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block) if_block.d(detaching);
+			if (detaching) detach(t0);
+			if (detaching) detach(h1);
+			destroy_component(t1);
+			if (detaching) detach(t2);
+			if (detaching) detach(p);
+			destroy_component(t3);
+		}
+	};
+}
+
+// (115:4) {#if form?.icon}
+function create_if_block_5(ctx) {
+	let div;
+	let mobileicon;
+	let current;
+
+	mobileicon = new Mobile_icon({
+			props: {
+				classes: "tw_text-gray-400 tw_fill-current",
+				size: "72px"
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(mobileicon.$$.fragment);
+			attr(div, "class", "tw_flex tw_justify-center tw_mb-6");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(mobileicon, div, null);
+			current = true;
+		},
+		i(local) {
+			if (current) return;
+			transition_in(mobileicon.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(mobileicon.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(mobileicon);
+		}
+	};
+}
+
+// (130:2) {#if form?.message}
+function create_if_block_3$1(ctx) {
+	let alert;
+	let current;
+
+	alert = new Alert({
+			props: {
+				id: "formFailureMessageAlert",
+				needsFocus: /*alertNeedsFocus*/ ctx[5],
+				type: "error",
+				$$slots: { default: [create_default_slot_4] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(alert.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(alert, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const alert_changes = {};
+			if (dirty & /*alertNeedsFocus*/ 32) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[5];
+
+			if (dirty & /*$$scope, formMessageKey, form*/ 67108993) {
+				alert_changes.$$scope = { dirty, ctx };
+			}
+
+			alert.$set(alert_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(alert.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(alert.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(alert, detaching);
+		}
+	};
+}
+
+// (131:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+function create_default_slot_4(ctx) {
+	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[0]?.message) + "";
+	let t;
+
+	return {
+		c() {
+			t = text(t_value);
+		},
+		m(target, anchor) {
+			insert(target, t, anchor);
+		},
+		p(ctx, dirty) {
+			if (dirty & /*formMessageKey, form*/ 129 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[0]?.message) + "")) set_data(t, t_value);
+		},
+		d(detaching) {
+			if (detaching) detach(t);
+		}
+	};
+}
+
+// (136:2) {#if !moduleLoaded}
+function create_if_block_2$1(ctx) {
+	let div;
+	let spinner;
+	let t0;
+	let p;
+	let t1;
+	let current;
+
+	spinner = new Spinner({
+			props: {
+				colorClass: "tw_text-primary-light",
+				layoutClasses: "tw_h-24 tw_my-6 tw_w-24"
+			}
+		});
+
+	t1 = new Locale_strings({ props: { key: "loading" } });
+
+	return {
+		c() {
+			div = element("div");
+			create_component(spinner.$$.fragment);
+			t0 = space();
+			p = element("p");
+			create_component(t1.$$.fragment);
+			attr(p, "class", "tw_text-secondary-dark dark:tw_text-secondary-light");
+			attr(div, "class", "tw_text-center");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(spinner, div, null);
+			append(div, t0);
+			append(div, p);
+			mount_component(t1, p, null);
+			current = true;
+		},
+		i(local) {
+			if (current) return;
+			transition_in(spinner.$$.fragment, local);
+			transition_in(t1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(spinner.$$.fragment, local);
+			transition_out(t1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(spinner);
+			destroy_component(t1);
+		}
+	};
+}
+
+// (144:2) {#each modifiedCallbacks as callback, idx}
+function create_each_block(ctx) {
+	let callbackmapper;
+	let current;
+
+	callbackmapper = new Callback_mapper({
+			props: {
+				props: {
+					callback: /*callback*/ ctx[23],
+					callbackMetadata: /*metadata*/ ctx[1]?.callbacks[/*idx*/ ctx[25]],
+					selfSubmitFunction: /*determineSubmission*/ ctx[16],
+					stepMetadata: /*metadata*/ ctx[1]?.step && { .../*metadata*/ ctx[1].step },
+					style: /*$style*/ ctx[14]
+				}
+			}
+		});
+
+	return {
+		c() {
+			create_component(callbackmapper.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(callbackmapper, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const callbackmapper_changes = {};
+
+			if (dirty & /*modifiedCallbacks, metadata, $style*/ 16642) callbackmapper_changes.props = {
+				callback: /*callback*/ ctx[23],
+				callbackMetadata: /*metadata*/ ctx[1]?.callbacks[/*idx*/ ctx[25]],
+				selfSubmitFunction: /*determineSubmission*/ ctx[16],
+				stepMetadata: /*metadata*/ ctx[1]?.step && { .../*metadata*/ ctx[1].step },
+				style: /*$style*/ ctx[14]
+			};
+
+			callbackmapper.$set(callbackmapper_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(callbackmapper.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(callbackmapper.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(callbackmapper, detaching);
+		}
+	};
+}
+
+// (156:2) {#if pollingWaitCb}
+function create_if_block_1$1(ctx) {
+	let pollingwait;
+	let current;
+	const pollingwait_spread_levels = [/*newProps*/ ctx[22]];
+	let pollingwait_props = {};
+
+	for (let i = 0; i < pollingwait_spread_levels.length; i += 1) {
+		pollingwait_props = assign(pollingwait_props, pollingwait_spread_levels[i]);
+	}
+
+	pollingwait = new Polling_wait({ props: pollingwait_props });
+
+	return {
+		c() {
+			create_component(pollingwait.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(pollingwait, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const pollingwait_changes = (dirty & /*pollingWaitCb, metadata, pollingWaitIdx, determineSubmission, $style*/ 115714)
+			? get_spread_update(pollingwait_spread_levels, [get_spread_object(/*newProps*/ ctx[22])])
+			: {};
+
+			pollingwait.$set(pollingwait_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(pollingwait.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(pollingwait.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(pollingwait, detaching);
+		}
+	};
+}
+
+// (170:6) <Link href={qrCodeUrl} classes="tw_block tw_my-6" target="_self">
+function create_default_slot_3(ctx) {
+	let t;
+	let current;
+
+	t = new Locale_strings({
+			props: { key: "onMobileOpenInAuthenticator" }
+		});
+
+	return {
+		c() {
+			create_component(t.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(t, target, anchor);
+			current = true;
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(t.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(t, detaching);
+		}
+	};
+}
+
+// (181:10) <ClipboardIcon classes="tw_fill-current tw_inline-block tw_align-top" size="16">
+function create_default_slot_2(ctx) {
+	let t;
+	let current;
+	t = new Locale_strings({ props: { key: "copyUrl" } });
+
+	return {
+		c() {
+			create_component(t.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(t, target, anchor);
+			current = true;
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(t.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(t, detaching);
+		}
+	};
+}
+
+// (195:2) {#if buttons?.length}
+function create_if_block$2(ctx) {
+	let button;
+	let current;
+
+	button = new Button({
+			props: {
+				busy: /*journey*/ ctx[4]?.loading,
+				style: "primary",
+				type: "submit",
+				width: "full",
+				$$slots: { default: [create_default_slot_1$1] },
+				$$scope: { ctx }
+			}
+		});
+
+	return {
+		c() {
+			create_component(button.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(button, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const button_changes = {};
+			if (dirty & /*journey*/ 16) button_changes.busy = /*journey*/ ctx[4]?.loading;
+
+			if (dirty & /*$$scope, buttons*/ 67108928) {
+				button_changes.$$scope = { dirty, ctx };
+			}
+
+			button.$set(button_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(button.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(button.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(button, detaching);
+		}
+	};
+}
+
+// (196:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+function create_default_slot_1$1(ctx) {
+	let t;
+	let current;
+
+	t = new Locale_strings({
+			props: { key: /*buttons*/ ctx[6][0].text }
+		});
+
+	return {
+		c() {
+			create_component(t.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(t, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const t_changes = {};
+			if (dirty & /*buttons*/ 64) t_changes.key = /*buttons*/ ctx[6][0].text;
+			t.$set(t_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(t.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(t, detaching);
+		}
+	};
+}
+
+// (113:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+function create_default_slot$2(ctx) {
+	let t0;
+	let t1;
+	let t2;
+	let canvas;
+	let t3;
+	let t4;
+	let t5;
+	let details;
+	let summary;
+	let t6;
+	let t7;
+	let div1;
+	let link;
+	let t8;
+	let p;
+	let t9;
+	let t10;
+	let div0;
+	let label;
+	let t11;
+	let t12;
+	let button;
+	let clipboardicon;
+	let t13;
+	let input;
+	let t14;
+	let if_block4_anchor;
+	let current;
+	let mounted;
+	let dispose;
+	let if_block0 = /*componentStyle*/ ctx[3] !== 'inline' && create_if_block_4(ctx);
+	let if_block1 = /*form*/ ctx[0]?.message && create_if_block_3$1(ctx);
+	let if_block2 = !/*moduleLoaded*/ ctx[9] && create_if_block_2$1();
+	let each_value = /*modifiedCallbacks*/ ctx[8];
+	let each_blocks = [];
+
+	for (let i = 0; i < each_value.length; i += 1) {
+		each_blocks[i] = create_each_block(get_each_context(ctx, each_value, i));
+	}
+
+	const out = i => transition_out(each_blocks[i], 1, 1, () => {
+		each_blocks[i] = null;
+	});
+
+	let if_block3 = /*pollingWaitCb*/ ctx[10] && create_if_block_1$1(get_if_ctx(ctx));
+	t6 = new Locale_strings({ props: { key: "qrCodeNotWorking" } });
+
+	link = new Link({
+			props: {
+				href: /*qrCodeUrl*/ ctx[12],
+				classes: "tw_block tw_my-6",
+				target: "_self",
+				$$slots: { default: [create_default_slot_3] },
+				$$scope: { ctx }
+			}
+		});
+
+	t9 = new Locale_strings({ props: { key: "copyAndPasteUrlBelow" } });
+	t11 = new Locale_strings({ props: { key: "url" } });
+
+	clipboardicon = new Clipboard_icon({
+			props: {
+				classes: "tw_fill-current tw_inline-block tw_align-top",
+				size: "16",
+				$$slots: { default: [create_default_slot_2] },
+				$$scope: { ctx }
+			}
+		});
+
+	let if_block4 = /*buttons*/ ctx[6]?.length && create_if_block$2(ctx);
+
+	return {
+		c() {
+			if (if_block0) if_block0.c();
+			t0 = space();
+			if (if_block1) if_block1.c();
+			t1 = space();
+			if (if_block2) if_block2.c();
+			t2 = space();
+			canvas = element("canvas");
+			t3 = space();
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				each_blocks[i].c();
+			}
+
+			t4 = space();
+			if (if_block3) if_block3.c();
+			t5 = space();
+			details = element("details");
+			summary = element("summary");
+			create_component(t6.$$.fragment);
+			t7 = space();
+			div1 = element("div");
+			create_component(link.$$.fragment);
+			t8 = space();
+			p = element("p");
+			create_component(t9.$$.fragment);
+			t10 = space();
+			div0 = element("div");
+			label = element("label");
+			create_component(t11.$$.fragment);
+			t12 = space();
+			button = element("button");
+			create_component(clipboardicon.$$.fragment);
+			t13 = space();
+			input = element("input");
+			t14 = space();
+			if (if_block4) if_block4.c();
+			if_block4_anchor = empty();
+			attr(canvas, "class", "tw_m-auto tw_mb-6");
+			attr(canvas, "data-testid", "qr-code-canvas");
+			attr(p, "class", "tw_text-base tw_my-6");
+			attr(label, "for", "mfa-registration-url");
+			attr(button, "class", "tw_absolute tw_h-4 tw_bg-background-dark tw_right-1 tw_top-1 tw_shadow-[0_0_1rem_2rem_black] tw_shadow-background-light dark:tw_shadow-background-dark tw_text-secondary-dark dark:tw_text-secondary-light");
+			attr(input, "class", "tw_bg-transparent tw_border-none focus-visible:tw_outline-none tw_font-mono tw_w-full");
+			attr(input, "id", "mfa-registration-url");
+			input.value = /*qrCodeUrl*/ ctx[12];
+			attr(div0, "class", "tw_relative tw_overflow-hidden");
+			attr(div1, "class", "tw_overflow-hidden");
+			attr(details, "class", "tw_my-6 tw_text-secondary-dark dark:tw_text-secondary-light");
+		},
+		m(target, anchor) {
+			if (if_block0) if_block0.m(target, anchor);
+			insert(target, t0, anchor);
+			if (if_block1) if_block1.m(target, anchor);
+			insert(target, t1, anchor);
+			if (if_block2) if_block2.m(target, anchor);
+			insert(target, t2, anchor);
+			insert(target, canvas, anchor);
+			/*canvas_binding*/ ctx[19](canvas);
+			insert(target, t3, anchor);
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				if (each_blocks[i]) {
+					each_blocks[i].m(target, anchor);
+				}
+			}
+
+			insert(target, t4, anchor);
+			if (if_block3) if_block3.m(target, anchor);
+			insert(target, t5, anchor);
+			insert(target, details, anchor);
+			append(details, summary);
+			mount_component(t6, summary, null);
+			append(details, t7);
+			append(details, div1);
+			mount_component(link, div1, null);
+			append(div1, t8);
+			append(div1, p);
+			mount_component(t9, p, null);
+			append(div1, t10);
+			append(div1, div0);
+			append(div0, label);
+			mount_component(t11, label, null);
+			append(div0, t12);
+			append(div0, button);
+			mount_component(clipboardicon, button, null);
+			append(div0, t13);
+			append(div0, input);
+			/*input_binding*/ ctx[20](input);
+			insert(target, t14, anchor);
+			if (if_block4) if_block4.m(target, anchor);
+			insert(target, if_block4_anchor, anchor);
+			current = true;
+
+			if (!mounted) {
+				dispose = listen(button, "click", /*copyUrl*/ ctx[17]);
+				mounted = true;
+			}
+		},
+		p(ctx, dirty) {
+			if (/*componentStyle*/ ctx[3] !== 'inline') {
+				if (if_block0) {
+					if_block0.p(ctx, dirty);
+
+					if (dirty & /*componentStyle*/ 8) {
+						transition_in(if_block0, 1);
+					}
+				} else {
+					if_block0 = create_if_block_4(ctx);
+					if_block0.c();
+					transition_in(if_block0, 1);
+					if_block0.m(t0.parentNode, t0);
+				}
+			} else if (if_block0) {
+				group_outros();
+
+				transition_out(if_block0, 1, 1, () => {
+					if_block0 = null;
+				});
+
+				check_outros();
+			}
+
+			if (/*form*/ ctx[0]?.message) {
+				if (if_block1) {
+					if_block1.p(ctx, dirty);
+
+					if (dirty & /*form*/ 1) {
+						transition_in(if_block1, 1);
+					}
+				} else {
+					if_block1 = create_if_block_3$1(ctx);
+					if_block1.c();
+					transition_in(if_block1, 1);
+					if_block1.m(t1.parentNode, t1);
+				}
+			} else if (if_block1) {
+				group_outros();
+
+				transition_out(if_block1, 1, 1, () => {
+					if_block1 = null;
+				});
+
+				check_outros();
+			}
+
+			if (!/*moduleLoaded*/ ctx[9]) {
+				if (if_block2) {
+					if (dirty & /*moduleLoaded*/ 512) {
+						transition_in(if_block2, 1);
+					}
+				} else {
+					if_block2 = create_if_block_2$1();
+					if_block2.c();
+					transition_in(if_block2, 1);
+					if_block2.m(t2.parentNode, t2);
+				}
+			} else if (if_block2) {
+				group_outros();
+
+				transition_out(if_block2, 1, 1, () => {
+					if_block2 = null;
+				});
+
+				check_outros();
+			}
+
+			if (dirty & /*modifiedCallbacks, metadata, determineSubmission, $style*/ 82178) {
+				each_value = /*modifiedCallbacks*/ ctx[8];
+				let i;
+
+				for (i = 0; i < each_value.length; i += 1) {
+					const child_ctx = get_each_context(ctx, each_value, i);
+
+					if (each_blocks[i]) {
+						each_blocks[i].p(child_ctx, dirty);
+						transition_in(each_blocks[i], 1);
+					} else {
+						each_blocks[i] = create_each_block(child_ctx);
+						each_blocks[i].c();
+						transition_in(each_blocks[i], 1);
+						each_blocks[i].m(t4.parentNode, t4);
+					}
+				}
+
+				group_outros();
+
+				for (i = each_value.length; i < each_blocks.length; i += 1) {
+					out(i);
+				}
+
+				check_outros();
+			}
+
+			if (/*pollingWaitCb*/ ctx[10]) {
+				if (if_block3) {
+					if_block3.p(get_if_ctx(ctx), dirty);
+
+					if (dirty & /*pollingWaitCb*/ 1024) {
+						transition_in(if_block3, 1);
+					}
+				} else {
+					if_block3 = create_if_block_1$1(get_if_ctx(ctx));
+					if_block3.c();
+					transition_in(if_block3, 1);
+					if_block3.m(t5.parentNode, t5);
+				}
+			} else if (if_block3) {
+				group_outros();
+
+				transition_out(if_block3, 1, 1, () => {
+					if_block3 = null;
+				});
+
+				check_outros();
+			}
+
+			const link_changes = {};
+			if (dirty & /*qrCodeUrl*/ 4096) link_changes.href = /*qrCodeUrl*/ ctx[12];
+
+			if (dirty & /*$$scope*/ 67108864) {
+				link_changes.$$scope = { dirty, ctx };
+			}
+
+			link.$set(link_changes);
+			const clipboardicon_changes = {};
+
+			if (dirty & /*$$scope*/ 67108864) {
+				clipboardicon_changes.$$scope = { dirty, ctx };
+			}
+
+			clipboardicon.$set(clipboardicon_changes);
+
+			if (!current || dirty & /*qrCodeUrl*/ 4096 && input.value !== /*qrCodeUrl*/ ctx[12]) {
+				input.value = /*qrCodeUrl*/ ctx[12];
+			}
+
+			if (/*buttons*/ ctx[6]?.length) {
+				if (if_block4) {
+					if_block4.p(ctx, dirty);
+
+					if (dirty & /*buttons*/ 64) {
+						transition_in(if_block4, 1);
+					}
+				} else {
+					if_block4 = create_if_block$2(ctx);
+					if_block4.c();
+					transition_in(if_block4, 1);
+					if_block4.m(if_block4_anchor.parentNode, if_block4_anchor);
+				}
+			} else if (if_block4) {
+				group_outros();
+
+				transition_out(if_block4, 1, 1, () => {
+					if_block4 = null;
+				});
+
+				check_outros();
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block0);
+			transition_in(if_block1);
+			transition_in(if_block2);
+
+			for (let i = 0; i < each_value.length; i += 1) {
+				transition_in(each_blocks[i]);
+			}
+
+			transition_in(if_block3);
+			transition_in(t6.$$.fragment, local);
+			transition_in(link.$$.fragment, local);
+			transition_in(t9.$$.fragment, local);
+			transition_in(t11.$$.fragment, local);
+			transition_in(clipboardicon.$$.fragment, local);
+			transition_in(if_block4);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block0);
+			transition_out(if_block1);
+			transition_out(if_block2);
+			each_blocks = each_blocks.filter(Boolean);
+
+			for (let i = 0; i < each_blocks.length; i += 1) {
+				transition_out(each_blocks[i]);
+			}
+
+			transition_out(if_block3);
+			transition_out(t6.$$.fragment, local);
+			transition_out(link.$$.fragment, local);
+			transition_out(t9.$$.fragment, local);
+			transition_out(t11.$$.fragment, local);
+			transition_out(clipboardicon.$$.fragment, local);
+			transition_out(if_block4);
+			current = false;
+		},
+		d(detaching) {
+			if (if_block0) if_block0.d(detaching);
+			if (detaching) detach(t0);
+			if (if_block1) if_block1.d(detaching);
+			if (detaching) detach(t1);
+			if (if_block2) if_block2.d(detaching);
+			if (detaching) detach(t2);
+			if (detaching) detach(canvas);
+			/*canvas_binding*/ ctx[19](null);
+			if (detaching) detach(t3);
+			destroy_each(each_blocks, detaching);
+			if (detaching) detach(t4);
+			if (if_block3) if_block3.d(detaching);
+			if (detaching) detach(t5);
+			if (detaching) detach(details);
+			destroy_component(t6);
+			destroy_component(link);
+			destroy_component(t9);
+			destroy_component(t11);
+			destroy_component(clipboardicon);
+			/*input_binding*/ ctx[20](null);
+			if (detaching) detach(t14);
+			if (if_block4) if_block4.d(detaching);
+			if (detaching) detach(if_block4_anchor);
+			mounted = false;
+			dispose();
+		}
+	};
+}
+
+function create_fragment$2(ctx) {
+	let form_1;
+	let updating_formEl;
+	let current;
+
+	function form_1_formEl_binding(value) {
+		/*form_1_formEl_binding*/ ctx[21](value);
+	}
+
+	let form_1_props = {
+		ariaDescribedBy: "formFailureMessageAlert",
+		onSubmitWhenValid: /*form*/ ctx[0]?.submit,
+		$$slots: { default: [create_default_slot$2] },
+		$$scope: { ctx }
+	};
+
+	if (/*formEl*/ ctx[2] !== void 0) {
+		form_1_props.formEl = /*formEl*/ ctx[2];
+	}
+
+	form_1 = new Form({ props: form_1_props });
+	binding_callbacks.push(() => bind(form_1, 'formEl', form_1_formEl_binding));
+
+	return {
+		c() {
+			create_component(form_1.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(form_1, target, anchor);
+			current = true;
+		},
+		p(ctx, [dirty]) {
+			const form_1_changes = {};
+			if (dirty & /*form*/ 1) form_1_changes.onSubmitWhenValid = /*form*/ ctx[0]?.submit;
+
+			if (dirty & /*$$scope, journey, buttons, qrCodeUrl, qrCodeEl, pollingWaitCb, metadata, $style, modifiedCallbacks, qrCodeCanvas, moduleLoaded, alertNeedsFocus, formMessageKey, form, componentStyle*/ 67141627) {
+				form_1_changes.$$scope = { dirty, ctx };
+			}
+
+			if (!updating_formEl && dirty & /*formEl*/ 4) {
+				updating_formEl = true;
+				form_1_changes.formEl = /*formEl*/ ctx[2];
+				add_flush_callback(() => updating_formEl = false);
+			}
+
+			form_1.$set(form_1_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(form_1.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(form_1.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			destroy_component(form_1, detaching);
+		}
+	};
+}
+
+function instance$2($$self, $$props, $$invalidate) {
+	let $style;
+	component_subscribe($$self, styleStore, $$value => $$invalidate(14, $style = $$value));
+	let { componentStyle } = $$props;
+	let { form } = $$props;
+	let { formEl = null } = $$props;
+	let { journey } = $$props;
+	let { metadata } = $$props;
+	let { step } = $$props;
+	let alertNeedsFocus = false;
+	let buttons;
+	let formMessageKey = '';
+	let modifiedCallbacks = [];
+	let moduleLoaded = false;
+	let pollingWaitCb;
+	let pollingWaitIdx;
+	let qrCodeCanvas;
+	let qrCodeUrl = '';
+	let qrCodeEl;
+
+	function determineSubmission() {
+		// TODO: the below is more strict; all self-submitting cbs have to complete before submitting
+		// if (stepMetadata.isStepSelfSubmittable && isStepReadyToSubmit(callbackMetadataArray)) {
+		// The below variation is more liberal first self-submittable cb to call this wins.
+		if (metadata?.step?.derived.isStepSelfSubmittable()) {
+			form?.submit();
+		}
+	}
+
+	async function copyUrl() {
+		qrCodeEl.select();
+		document.execCommand('copy');
+	}
+
+	afterUpdate(() => {
+		$$invalidate(5, alertNeedsFocus = !!form?.message);
+	});
+
+	onMount(() => {
+		async function renderQrCodeImage() {
+			try {
+				// Dynamically import QR Code module to reduce initial load when not needed
+				const qrCodeModule = await Promise.resolve().then(function () { return browser; });
+
+				$$invalidate(9, moduleLoaded = true);
+				$$invalidate(12, qrCodeUrl = FRQRCode.getQRCodeData(step).uri);
+
+				qrCodeModule.toCanvas(
+					qrCodeCanvas,
+					qrCodeUrl,
+					// Properties required for ForgeRock QR Codes
+					{
+						errorCorrectionLevel: 'L',
+						version: 20,
+						width: 400
+					},
+					function (error) {
+						if (error) {
+							$$invalidate(0, form.message = interpolate('qrCodeFailedToRender'), form);
+							console.error(error);
+						}
+					}
+				);
+			} catch(err) {
+				$$invalidate(0, form.message = interpolate('qrCodeImportFailure'), form);
+				console.error('Failed to import QR Code library');
+			}
+		}
+
+		renderQrCodeImage();
+	});
+
+	function canvas_binding($$value) {
+		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+			qrCodeCanvas = $$value;
+			$$invalidate(11, qrCodeCanvas);
+		});
+	}
+
+	function input_binding($$value) {
+		binding_callbacks[$$value ? 'unshift' : 'push'](() => {
+			qrCodeEl = $$value;
+			$$invalidate(13, qrCodeEl);
+		});
+	}
+
+	function form_1_formEl_binding(value) {
+		formEl = value;
+		$$invalidate(2, formEl);
+	}
+
+	$$self.$$set = $$props => {
+		if ('componentStyle' in $$props) $$invalidate(3, componentStyle = $$props.componentStyle);
+		if ('form' in $$props) $$invalidate(0, form = $$props.form);
+		if ('formEl' in $$props) $$invalidate(2, formEl = $$props.formEl);
+		if ('journey' in $$props) $$invalidate(4, journey = $$props.journey);
+		if ('metadata' in $$props) $$invalidate(1, metadata = $$props.metadata);
+		if ('step' in $$props) $$invalidate(18, step = $$props.step);
+	};
+
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*metadata, step, form*/ 262147) {
+			{
+				// Assign stage value to `QRCode`
+				if (metadata) {
+					$$invalidate(1, metadata.step.derived.stageName = 'QRCode', metadata);
+				}
+
+				const confirmationCallbacks = step.getCallbacksOfType(CallbackType.ConfirmationCallback);
+
+				if (confirmationCallbacks.length) {
+					const confirmationCb = confirmationCallbacks[0];
+					$$invalidate(6, buttons = confirmationCb.getOptions().map((option, index) => ({ value: `${index}`, text: option })));
+				}
+
+				step.callbacks.forEach((callback, idx) => {
+					if (callback.getType() === CallbackType.PollingWaitCallback) {
+						$$invalidate(10, pollingWaitCb = callback);
+					}
+				});
+
+				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
+
+				/**
+ * Filter out ConfirmationCallbacks; we'll use them seperately.
+ * Also, we'll filter out TextOutputCallbacks as we won't use the script
+ * text for rendering the QR Code, but our own QR Code module.
+ * Lastly, filter out PollingWaitCallback as we'll call that separately.
+ */
+				$$invalidate(8, modifiedCallbacks = step.callbacks.filter(callback => {
+					if (callback.getType() === CallbackType.TextOutputCallback) {
+						return false;
+					} else if (callback.getType() === CallbackType.ConfirmationCallback) {
+						return false;
+					} else if (callback.getType() === CallbackType.PollingWaitCallback) {
+						return false;
+					}
+
+					return true;
+				}));
+			}
+		}
+	};
+
+	return [
+		form,
+		metadata,
+		formEl,
+		componentStyle,
+		journey,
+		alertNeedsFocus,
+		buttons,
+		formMessageKey,
+		modifiedCallbacks,
+		moduleLoaded,
+		pollingWaitCb,
+		qrCodeCanvas,
+		qrCodeUrl,
+		qrCodeEl,
+		$style,
+		pollingWaitIdx,
+		determineSubmission,
+		copyUrl,
+		step,
+		canvas_binding,
+		input_binding,
+		form_1_formEl_binding
+	];
+}
+
+class Qr_code extends SvelteComponent {
+	constructor(options) {
+		super();
+
+		init(this, options, instance$2, create_fragment$2, safe_not_equal, {
+			componentStyle: 3,
+			form: 0,
+			formEl: 2,
+			journey: 4,
+			metadata: 1,
+			step: 18
 		});
 	}
 }
@@ -31769,6 +33546,9 @@ function mapStepToStage(currentStep) {
     }
     if (FRRecoveryCodes.isDisplayStep(currentStep)) {
         return Recovery_codes;
+    }
+    if (FRQRCode.isQRCodeStep(currentStep)) {
+        return Qr_code;
     }
     return Generic;
 }
@@ -32672,6 +34452,2936 @@ class Widget extends SvelteComponent {
 		init(this, options, instance, create_fragment, safe_not_equal, { type: 0 });
 	}
 }
+
+var browser$1 = {};
+
+// can-promise has a crash in some versions of react native that dont have
+// standard global objects
+// https://github.com/soldair/node-qrcode/issues/157
+
+var canPromise$1 = function () {
+  return typeof Promise === 'function' && Promise.prototype && Promise.prototype.then
+};
+
+var qrcode = {};
+
+var utils$1 = {};
+
+let toSJISFunction;
+const CODEWORDS_COUNT = [
+  0, // Not used
+  26, 44, 70, 100, 134, 172, 196, 242, 292, 346,
+  404, 466, 532, 581, 655, 733, 815, 901, 991, 1085,
+  1156, 1258, 1364, 1474, 1588, 1706, 1828, 1921, 2051, 2185,
+  2323, 2465, 2611, 2761, 2876, 3034, 3196, 3362, 3532, 3706
+];
+
+/**
+ * Returns the QR Code size for the specified version
+ *
+ * @param  {Number} version QR Code version
+ * @return {Number}         size of QR code
+ */
+utils$1.getSymbolSize = function getSymbolSize (version) {
+  if (!version) throw new Error('"version" cannot be null or undefined')
+  if (version < 1 || version > 40) throw new Error('"version" should be in range from 1 to 40')
+  return version * 4 + 17
+};
+
+/**
+ * Returns the total number of codewords used to store data and EC information.
+ *
+ * @param  {Number} version QR Code version
+ * @return {Number}         Data length in bits
+ */
+utils$1.getSymbolTotalCodewords = function getSymbolTotalCodewords (version) {
+  return CODEWORDS_COUNT[version]
+};
+
+/**
+ * Encode data with Bose-Chaudhuri-Hocquenghem
+ *
+ * @param  {Number} data Value to encode
+ * @return {Number}      Encoded value
+ */
+utils$1.getBCHDigit = function (data) {
+  let digit = 0;
+
+  while (data !== 0) {
+    digit++;
+    data >>>= 1;
+  }
+
+  return digit
+};
+
+utils$1.setToSJISFunction = function setToSJISFunction (f) {
+  if (typeof f !== 'function') {
+    throw new Error('"toSJISFunc" is not a valid function.')
+  }
+
+  toSJISFunction = f;
+};
+
+utils$1.isKanjiModeEnabled = function () {
+  return typeof toSJISFunction !== 'undefined'
+};
+
+utils$1.toSJIS = function toSJIS (kanji) {
+  return toSJISFunction(kanji)
+};
+
+var errorCorrectionLevel = {};
+
+(function (exports) {
+	exports.L = { bit: 1 };
+	exports.M = { bit: 0 };
+	exports.Q = { bit: 3 };
+	exports.H = { bit: 2 };
+
+	function fromString (string) {
+	  if (typeof string !== 'string') {
+	    throw new Error('Param is not a string')
+	  }
+
+	  const lcStr = string.toLowerCase();
+
+	  switch (lcStr) {
+	    case 'l':
+	    case 'low':
+	      return exports.L
+
+	    case 'm':
+	    case 'medium':
+	      return exports.M
+
+	    case 'q':
+	    case 'quartile':
+	      return exports.Q
+
+	    case 'h':
+	    case 'high':
+	      return exports.H
+
+	    default:
+	      throw new Error('Unknown EC Level: ' + string)
+	  }
+	}
+
+	exports.isValid = function isValid (level) {
+	  return level && typeof level.bit !== 'undefined' &&
+	    level.bit >= 0 && level.bit < 4
+	};
+
+	exports.from = function from (value, defaultValue) {
+	  if (exports.isValid(value)) {
+	    return value
+	  }
+
+	  try {
+	    return fromString(value)
+	  } catch (e) {
+	    return defaultValue
+	  }
+	}; 
+} (errorCorrectionLevel));
+
+function BitBuffer$1 () {
+  this.buffer = [];
+  this.length = 0;
+}
+
+BitBuffer$1.prototype = {
+
+  get: function (index) {
+    const bufIndex = Math.floor(index / 8);
+    return ((this.buffer[bufIndex] >>> (7 - index % 8)) & 1) === 1
+  },
+
+  put: function (num, length) {
+    for (let i = 0; i < length; i++) {
+      this.putBit(((num >>> (length - i - 1)) & 1) === 1);
+    }
+  },
+
+  getLengthInBits: function () {
+    return this.length
+  },
+
+  putBit: function (bit) {
+    const bufIndex = Math.floor(this.length / 8);
+    if (this.buffer.length <= bufIndex) {
+      this.buffer.push(0);
+    }
+
+    if (bit) {
+      this.buffer[bufIndex] |= (0x80 >>> (this.length % 8));
+    }
+
+    this.length++;
+  }
+};
+
+var bitBuffer = BitBuffer$1;
+
+/**
+ * Helper class to handle QR Code symbol modules
+ *
+ * @param {Number} size Symbol size
+ */
+
+function BitMatrix$1 (size) {
+  if (!size || size < 1) {
+    throw new Error('BitMatrix size must be defined and greater than 0')
+  }
+
+  this.size = size;
+  this.data = new Uint8Array(size * size);
+  this.reservedBit = new Uint8Array(size * size);
+}
+
+/**
+ * Set bit value at specified location
+ * If reserved flag is set, this bit will be ignored during masking process
+ *
+ * @param {Number}  row
+ * @param {Number}  col
+ * @param {Boolean} value
+ * @param {Boolean} reserved
+ */
+BitMatrix$1.prototype.set = function (row, col, value, reserved) {
+  const index = row * this.size + col;
+  this.data[index] = value;
+  if (reserved) this.reservedBit[index] = true;
+};
+
+/**
+ * Returns bit value at specified location
+ *
+ * @param  {Number}  row
+ * @param  {Number}  col
+ * @return {Boolean}
+ */
+BitMatrix$1.prototype.get = function (row, col) {
+  return this.data[row * this.size + col]
+};
+
+/**
+ * Applies xor operator at specified location
+ * (used during masking process)
+ *
+ * @param {Number}  row
+ * @param {Number}  col
+ * @param {Boolean} value
+ */
+BitMatrix$1.prototype.xor = function (row, col, value) {
+  this.data[row * this.size + col] ^= value;
+};
+
+/**
+ * Check if bit at specified location is reserved
+ *
+ * @param {Number}   row
+ * @param {Number}   col
+ * @return {Boolean}
+ */
+BitMatrix$1.prototype.isReserved = function (row, col) {
+  return this.reservedBit[row * this.size + col]
+};
+
+var bitMatrix = BitMatrix$1;
+
+var alignmentPattern = {};
+
+/**
+ * Alignment pattern are fixed reference pattern in defined positions
+ * in a matrix symbology, which enables the decode software to re-synchronise
+ * the coordinate mapping of the image modules in the event of moderate amounts
+ * of distortion of the image.
+ *
+ * Alignment patterns are present only in QR Code symbols of version 2 or larger
+ * and their number depends on the symbol version.
+ */
+
+(function (exports) {
+	const getSymbolSize = utils$1.getSymbolSize;
+
+	/**
+	 * Calculate the row/column coordinates of the center module of each alignment pattern
+	 * for the specified QR Code version.
+	 *
+	 * The alignment patterns are positioned symmetrically on either side of the diagonal
+	 * running from the top left corner of the symbol to the bottom right corner.
+	 *
+	 * Since positions are simmetrical only half of the coordinates are returned.
+	 * Each item of the array will represent in turn the x and y coordinate.
+	 * @see {@link getPositions}
+	 *
+	 * @param  {Number} version QR Code version
+	 * @return {Array}          Array of coordinate
+	 */
+	exports.getRowColCoords = function getRowColCoords (version) {
+	  if (version === 1) return []
+
+	  const posCount = Math.floor(version / 7) + 2;
+	  const size = getSymbolSize(version);
+	  const intervals = size === 145 ? 26 : Math.ceil((size - 13) / (2 * posCount - 2)) * 2;
+	  const positions = [size - 7]; // Last coord is always (size - 7)
+
+	  for (let i = 1; i < posCount - 1; i++) {
+	    positions[i] = positions[i - 1] - intervals;
+	  }
+
+	  positions.push(6); // First coord is always 6
+
+	  return positions.reverse()
+	};
+
+	/**
+	 * Returns an array containing the positions of each alignment pattern.
+	 * Each array's element represent the center point of the pattern as (x, y) coordinates
+	 *
+	 * Coordinates are calculated expanding the row/column coordinates returned by {@link getRowColCoords}
+	 * and filtering out the items that overlaps with finder pattern
+	 *
+	 * @example
+	 * For a Version 7 symbol {@link getRowColCoords} returns values 6, 22 and 38.
+	 * The alignment patterns, therefore, are to be centered on (row, column)
+	 * positions (6,22), (22,6), (22,22), (22,38), (38,22), (38,38).
+	 * Note that the coordinates (6,6), (6,38), (38,6) are occupied by finder patterns
+	 * and are not therefore used for alignment patterns.
+	 *
+	 * let pos = getPositions(7)
+	 * // [[6,22], [22,6], [22,22], [22,38], [38,22], [38,38]]
+	 *
+	 * @param  {Number} version QR Code version
+	 * @return {Array}          Array of coordinates
+	 */
+	exports.getPositions = function getPositions (version) {
+	  const coords = [];
+	  const pos = exports.getRowColCoords(version);
+	  const posLength = pos.length;
+
+	  for (let i = 0; i < posLength; i++) {
+	    for (let j = 0; j < posLength; j++) {
+	      // Skip if position is occupied by finder patterns
+	      if ((i === 0 && j === 0) || // top-left
+	          (i === 0 && j === posLength - 1) || // bottom-left
+	          (i === posLength - 1 && j === 0)) { // top-right
+	        continue
+	      }
+
+	      coords.push([pos[i], pos[j]]);
+	    }
+	  }
+
+	  return coords
+	}; 
+} (alignmentPattern));
+
+var finderPattern = {};
+
+const getSymbolSize = utils$1.getSymbolSize;
+const FINDER_PATTERN_SIZE = 7;
+
+/**
+ * Returns an array containing the positions of each finder pattern.
+ * Each array's element represent the top-left point of the pattern as (x, y) coordinates
+ *
+ * @param  {Number} version QR Code version
+ * @return {Array}          Array of coordinates
+ */
+finderPattern.getPositions = function getPositions (version) {
+  const size = getSymbolSize(version);
+
+  return [
+    // top-left
+    [0, 0],
+    // top-right
+    [size - FINDER_PATTERN_SIZE, 0],
+    // bottom-left
+    [0, size - FINDER_PATTERN_SIZE]
+  ]
+};
+
+var maskPattern = {};
+
+/**
+ * Data mask pattern reference
+ * @type {Object}
+ */
+
+(function (exports) {
+	exports.Patterns = {
+	  PATTERN000: 0,
+	  PATTERN001: 1,
+	  PATTERN010: 2,
+	  PATTERN011: 3,
+	  PATTERN100: 4,
+	  PATTERN101: 5,
+	  PATTERN110: 6,
+	  PATTERN111: 7
+	};
+
+	/**
+	 * Weighted penalty scores for the undesirable features
+	 * @type {Object}
+	 */
+	const PenaltyScores = {
+	  N1: 3,
+	  N2: 3,
+	  N3: 40,
+	  N4: 10
+	};
+
+	/**
+	 * Check if mask pattern value is valid
+	 *
+	 * @param  {Number}  mask    Mask pattern
+	 * @return {Boolean}         true if valid, false otherwise
+	 */
+	exports.isValid = function isValid (mask) {
+	  return mask != null && mask !== '' && !isNaN(mask) && mask >= 0 && mask <= 7
+	};
+
+	/**
+	 * Returns mask pattern from a value.
+	 * If value is not valid, returns undefined
+	 *
+	 * @param  {Number|String} value        Mask pattern value
+	 * @return {Number}                     Valid mask pattern or undefined
+	 */
+	exports.from = function from (value) {
+	  return exports.isValid(value) ? parseInt(value, 10) : undefined
+	};
+
+	/**
+	* Find adjacent modules in row/column with the same color
+	* and assign a penalty value.
+	*
+	* Points: N1 + i
+	* i is the amount by which the number of adjacent modules of the same color exceeds 5
+	*/
+	exports.getPenaltyN1 = function getPenaltyN1 (data) {
+	  const size = data.size;
+	  let points = 0;
+	  let sameCountCol = 0;
+	  let sameCountRow = 0;
+	  let lastCol = null;
+	  let lastRow = null;
+
+	  for (let row = 0; row < size; row++) {
+	    sameCountCol = sameCountRow = 0;
+	    lastCol = lastRow = null;
+
+	    for (let col = 0; col < size; col++) {
+	      let module = data.get(row, col);
+	      if (module === lastCol) {
+	        sameCountCol++;
+	      } else {
+	        if (sameCountCol >= 5) points += PenaltyScores.N1 + (sameCountCol - 5);
+	        lastCol = module;
+	        sameCountCol = 1;
+	      }
+
+	      module = data.get(col, row);
+	      if (module === lastRow) {
+	        sameCountRow++;
+	      } else {
+	        if (sameCountRow >= 5) points += PenaltyScores.N1 + (sameCountRow - 5);
+	        lastRow = module;
+	        sameCountRow = 1;
+	      }
+	    }
+
+	    if (sameCountCol >= 5) points += PenaltyScores.N1 + (sameCountCol - 5);
+	    if (sameCountRow >= 5) points += PenaltyScores.N1 + (sameCountRow - 5);
+	  }
+
+	  return points
+	};
+
+	/**
+	 * Find 2x2 blocks with the same color and assign a penalty value
+	 *
+	 * Points: N2 * (m - 1) * (n - 1)
+	 */
+	exports.getPenaltyN2 = function getPenaltyN2 (data) {
+	  const size = data.size;
+	  let points = 0;
+
+	  for (let row = 0; row < size - 1; row++) {
+	    for (let col = 0; col < size - 1; col++) {
+	      const last = data.get(row, col) +
+	        data.get(row, col + 1) +
+	        data.get(row + 1, col) +
+	        data.get(row + 1, col + 1);
+
+	      if (last === 4 || last === 0) points++;
+	    }
+	  }
+
+	  return points * PenaltyScores.N2
+	};
+
+	/**
+	 * Find 1:1:3:1:1 ratio (dark:light:dark:light:dark) pattern in row/column,
+	 * preceded or followed by light area 4 modules wide
+	 *
+	 * Points: N3 * number of pattern found
+	 */
+	exports.getPenaltyN3 = function getPenaltyN3 (data) {
+	  const size = data.size;
+	  let points = 0;
+	  let bitsCol = 0;
+	  let bitsRow = 0;
+
+	  for (let row = 0; row < size; row++) {
+	    bitsCol = bitsRow = 0;
+	    for (let col = 0; col < size; col++) {
+	      bitsCol = ((bitsCol << 1) & 0x7FF) | data.get(row, col);
+	      if (col >= 10 && (bitsCol === 0x5D0 || bitsCol === 0x05D)) points++;
+
+	      bitsRow = ((bitsRow << 1) & 0x7FF) | data.get(col, row);
+	      if (col >= 10 && (bitsRow === 0x5D0 || bitsRow === 0x05D)) points++;
+	    }
+	  }
+
+	  return points * PenaltyScores.N3
+	};
+
+	/**
+	 * Calculate proportion of dark modules in entire symbol
+	 *
+	 * Points: N4 * k
+	 *
+	 * k is the rating of the deviation of the proportion of dark modules
+	 * in the symbol from 50% in steps of 5%
+	 */
+	exports.getPenaltyN4 = function getPenaltyN4 (data) {
+	  let darkCount = 0;
+	  const modulesCount = data.data.length;
+
+	  for (let i = 0; i < modulesCount; i++) darkCount += data.data[i];
+
+	  const k = Math.abs(Math.ceil((darkCount * 100 / modulesCount) / 5) - 10);
+
+	  return k * PenaltyScores.N4
+	};
+
+	/**
+	 * Return mask value at given position
+	 *
+	 * @param  {Number} maskPattern Pattern reference value
+	 * @param  {Number} i           Row
+	 * @param  {Number} j           Column
+	 * @return {Boolean}            Mask value
+	 */
+	function getMaskAt (maskPattern, i, j) {
+	  switch (maskPattern) {
+	    case exports.Patterns.PATTERN000: return (i + j) % 2 === 0
+	    case exports.Patterns.PATTERN001: return i % 2 === 0
+	    case exports.Patterns.PATTERN010: return j % 3 === 0
+	    case exports.Patterns.PATTERN011: return (i + j) % 3 === 0
+	    case exports.Patterns.PATTERN100: return (Math.floor(i / 2) + Math.floor(j / 3)) % 2 === 0
+	    case exports.Patterns.PATTERN101: return (i * j) % 2 + (i * j) % 3 === 0
+	    case exports.Patterns.PATTERN110: return ((i * j) % 2 + (i * j) % 3) % 2 === 0
+	    case exports.Patterns.PATTERN111: return ((i * j) % 3 + (i + j) % 2) % 2 === 0
+
+	    default: throw new Error('bad maskPattern:' + maskPattern)
+	  }
+	}
+
+	/**
+	 * Apply a mask pattern to a BitMatrix
+	 *
+	 * @param  {Number}    pattern Pattern reference number
+	 * @param  {BitMatrix} data    BitMatrix data
+	 */
+	exports.applyMask = function applyMask (pattern, data) {
+	  const size = data.size;
+
+	  for (let col = 0; col < size; col++) {
+	    for (let row = 0; row < size; row++) {
+	      if (data.isReserved(row, col)) continue
+	      data.xor(row, col, getMaskAt(pattern, row, col));
+	    }
+	  }
+	};
+
+	/**
+	 * Returns the best mask pattern for data
+	 *
+	 * @param  {BitMatrix} data
+	 * @return {Number} Mask pattern reference number
+	 */
+	exports.getBestMask = function getBestMask (data, setupFormatFunc) {
+	  const numPatterns = Object.keys(exports.Patterns).length;
+	  let bestPattern = 0;
+	  let lowerPenalty = Infinity;
+
+	  for (let p = 0; p < numPatterns; p++) {
+	    setupFormatFunc(p);
+	    exports.applyMask(p, data);
+
+	    // Calculate penalty
+	    const penalty =
+	      exports.getPenaltyN1(data) +
+	      exports.getPenaltyN2(data) +
+	      exports.getPenaltyN3(data) +
+	      exports.getPenaltyN4(data);
+
+	    // Undo previously applied mask
+	    exports.applyMask(p, data);
+
+	    if (penalty < lowerPenalty) {
+	      lowerPenalty = penalty;
+	      bestPattern = p;
+	    }
+	  }
+
+	  return bestPattern
+	}; 
+} (maskPattern));
+
+var errorCorrectionCode = {};
+
+const ECLevel$1 = errorCorrectionLevel;
+
+const EC_BLOCKS_TABLE = [
+// L  M  Q  H
+  1, 1, 1, 1,
+  1, 1, 1, 1,
+  1, 1, 2, 2,
+  1, 2, 2, 4,
+  1, 2, 4, 4,
+  2, 4, 4, 4,
+  2, 4, 6, 5,
+  2, 4, 6, 6,
+  2, 5, 8, 8,
+  4, 5, 8, 8,
+  4, 5, 8, 11,
+  4, 8, 10, 11,
+  4, 9, 12, 16,
+  4, 9, 16, 16,
+  6, 10, 12, 18,
+  6, 10, 17, 16,
+  6, 11, 16, 19,
+  6, 13, 18, 21,
+  7, 14, 21, 25,
+  8, 16, 20, 25,
+  8, 17, 23, 25,
+  9, 17, 23, 34,
+  9, 18, 25, 30,
+  10, 20, 27, 32,
+  12, 21, 29, 35,
+  12, 23, 34, 37,
+  12, 25, 34, 40,
+  13, 26, 35, 42,
+  14, 28, 38, 45,
+  15, 29, 40, 48,
+  16, 31, 43, 51,
+  17, 33, 45, 54,
+  18, 35, 48, 57,
+  19, 37, 51, 60,
+  19, 38, 53, 63,
+  20, 40, 56, 66,
+  21, 43, 59, 70,
+  22, 45, 62, 74,
+  24, 47, 65, 77,
+  25, 49, 68, 81
+];
+
+const EC_CODEWORDS_TABLE = [
+// L  M  Q  H
+  7, 10, 13, 17,
+  10, 16, 22, 28,
+  15, 26, 36, 44,
+  20, 36, 52, 64,
+  26, 48, 72, 88,
+  36, 64, 96, 112,
+  40, 72, 108, 130,
+  48, 88, 132, 156,
+  60, 110, 160, 192,
+  72, 130, 192, 224,
+  80, 150, 224, 264,
+  96, 176, 260, 308,
+  104, 198, 288, 352,
+  120, 216, 320, 384,
+  132, 240, 360, 432,
+  144, 280, 408, 480,
+  168, 308, 448, 532,
+  180, 338, 504, 588,
+  196, 364, 546, 650,
+  224, 416, 600, 700,
+  224, 442, 644, 750,
+  252, 476, 690, 816,
+  270, 504, 750, 900,
+  300, 560, 810, 960,
+  312, 588, 870, 1050,
+  336, 644, 952, 1110,
+  360, 700, 1020, 1200,
+  390, 728, 1050, 1260,
+  420, 784, 1140, 1350,
+  450, 812, 1200, 1440,
+  480, 868, 1290, 1530,
+  510, 924, 1350, 1620,
+  540, 980, 1440, 1710,
+  570, 1036, 1530, 1800,
+  570, 1064, 1590, 1890,
+  600, 1120, 1680, 1980,
+  630, 1204, 1770, 2100,
+  660, 1260, 1860, 2220,
+  720, 1316, 1950, 2310,
+  750, 1372, 2040, 2430
+];
+
+/**
+ * Returns the number of error correction block that the QR Code should contain
+ * for the specified version and error correction level.
+ *
+ * @param  {Number} version              QR Code version
+ * @param  {Number} errorCorrectionLevel Error correction level
+ * @return {Number}                      Number of error correction blocks
+ */
+errorCorrectionCode.getBlocksCount = function getBlocksCount (version, errorCorrectionLevel) {
+  switch (errorCorrectionLevel) {
+    case ECLevel$1.L:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 0]
+    case ECLevel$1.M:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 1]
+    case ECLevel$1.Q:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 2]
+    case ECLevel$1.H:
+      return EC_BLOCKS_TABLE[(version - 1) * 4 + 3]
+    default:
+      return undefined
+  }
+};
+
+/**
+ * Returns the number of error correction codewords to use for the specified
+ * version and error correction level.
+ *
+ * @param  {Number} version              QR Code version
+ * @param  {Number} errorCorrectionLevel Error correction level
+ * @return {Number}                      Number of error correction codewords
+ */
+errorCorrectionCode.getTotalCodewordsCount = function getTotalCodewordsCount (version, errorCorrectionLevel) {
+  switch (errorCorrectionLevel) {
+    case ECLevel$1.L:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 0]
+    case ECLevel$1.M:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 1]
+    case ECLevel$1.Q:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 2]
+    case ECLevel$1.H:
+      return EC_CODEWORDS_TABLE[(version - 1) * 4 + 3]
+    default:
+      return undefined
+  }
+};
+
+var polynomial = {};
+
+var galoisField = {};
+
+const EXP_TABLE = new Uint8Array(512);
+const LOG_TABLE = new Uint8Array(256)
+/**
+ * Precompute the log and anti-log tables for faster computation later
+ *
+ * For each possible value in the galois field 2^8, we will pre-compute
+ * the logarithm and anti-logarithm (exponential) of this value
+ *
+ * ref {@link https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders#Introduction_to_mathematical_fields}
+ */
+;(function initTables () {
+  let x = 1;
+  for (let i = 0; i < 255; i++) {
+    EXP_TABLE[i] = x;
+    LOG_TABLE[x] = i;
+
+    x <<= 1; // multiply by 2
+
+    // The QR code specification says to use byte-wise modulo 100011101 arithmetic.
+    // This means that when a number is 256 or larger, it should be XORed with 0x11D.
+    if (x & 0x100) { // similar to x >= 256, but a lot faster (because 0x100 == 256)
+      x ^= 0x11D;
+    }
+  }
+
+  // Optimization: double the size of the anti-log table so that we don't need to mod 255 to
+  // stay inside the bounds (because we will mainly use this table for the multiplication of
+  // two GF numbers, no more).
+  // @see {@link mul}
+  for (let i = 255; i < 512; i++) {
+    EXP_TABLE[i] = EXP_TABLE[i - 255];
+  }
+}());
+
+/**
+ * Returns log value of n inside Galois Field
+ *
+ * @param  {Number} n
+ * @return {Number}
+ */
+galoisField.log = function log (n) {
+  if (n < 1) throw new Error('log(' + n + ')')
+  return LOG_TABLE[n]
+};
+
+/**
+ * Returns anti-log value of n inside Galois Field
+ *
+ * @param  {Number} n
+ * @return {Number}
+ */
+galoisField.exp = function exp (n) {
+  return EXP_TABLE[n]
+};
+
+/**
+ * Multiplies two number inside Galois Field
+ *
+ * @param  {Number} x
+ * @param  {Number} y
+ * @return {Number}
+ */
+galoisField.mul = function mul (x, y) {
+  if (x === 0 || y === 0) return 0
+
+  // should be EXP_TABLE[(LOG_TABLE[x] + LOG_TABLE[y]) % 255] if EXP_TABLE wasn't oversized
+  // @see {@link initTables}
+  return EXP_TABLE[LOG_TABLE[x] + LOG_TABLE[y]]
+};
+
+(function (exports) {
+	const GF = galoisField;
+
+	/**
+	 * Multiplies two polynomials inside Galois Field
+	 *
+	 * @param  {Uint8Array} p1 Polynomial
+	 * @param  {Uint8Array} p2 Polynomial
+	 * @return {Uint8Array}    Product of p1 and p2
+	 */
+	exports.mul = function mul (p1, p2) {
+	  const coeff = new Uint8Array(p1.length + p2.length - 1);
+
+	  for (let i = 0; i < p1.length; i++) {
+	    for (let j = 0; j < p2.length; j++) {
+	      coeff[i + j] ^= GF.mul(p1[i], p2[j]);
+	    }
+	  }
+
+	  return coeff
+	};
+
+	/**
+	 * Calculate the remainder of polynomials division
+	 *
+	 * @param  {Uint8Array} divident Polynomial
+	 * @param  {Uint8Array} divisor  Polynomial
+	 * @return {Uint8Array}          Remainder
+	 */
+	exports.mod = function mod (divident, divisor) {
+	  let result = new Uint8Array(divident);
+
+	  while ((result.length - divisor.length) >= 0) {
+	    const coeff = result[0];
+
+	    for (let i = 0; i < divisor.length; i++) {
+	      result[i] ^= GF.mul(divisor[i], coeff);
+	    }
+
+	    // remove all zeros from buffer head
+	    let offset = 0;
+	    while (offset < result.length && result[offset] === 0) offset++;
+	    result = result.slice(offset);
+	  }
+
+	  return result
+	};
+
+	/**
+	 * Generate an irreducible generator polynomial of specified degree
+	 * (used by Reed-Solomon encoder)
+	 *
+	 * @param  {Number} degree Degree of the generator polynomial
+	 * @return {Uint8Array}    Buffer containing polynomial coefficients
+	 */
+	exports.generateECPolynomial = function generateECPolynomial (degree) {
+	  let poly = new Uint8Array([1]);
+	  for (let i = 0; i < degree; i++) {
+	    poly = exports.mul(poly, new Uint8Array([1, GF.exp(i)]));
+	  }
+
+	  return poly
+	}; 
+} (polynomial));
+
+const Polynomial = polynomial;
+
+function ReedSolomonEncoder$1 (degree) {
+  this.genPoly = undefined;
+  this.degree = degree;
+
+  if (this.degree) this.initialize(this.degree);
+}
+
+/**
+ * Initialize the encoder.
+ * The input param should correspond to the number of error correction codewords.
+ *
+ * @param  {Number} degree
+ */
+ReedSolomonEncoder$1.prototype.initialize = function initialize (degree) {
+  // create an irreducible generator polynomial
+  this.degree = degree;
+  this.genPoly = Polynomial.generateECPolynomial(this.degree);
+};
+
+/**
+ * Encodes a chunk of data
+ *
+ * @param  {Uint8Array} data Buffer containing input data
+ * @return {Uint8Array}      Buffer containing encoded data
+ */
+ReedSolomonEncoder$1.prototype.encode = function encode (data) {
+  if (!this.genPoly) {
+    throw new Error('Encoder not initialized')
+  }
+
+  // Calculate EC for this data block
+  // extends data size to data+genPoly size
+  const paddedData = new Uint8Array(data.length + this.degree);
+  paddedData.set(data);
+
+  // The error correction codewords are the remainder after dividing the data codewords
+  // by a generator polynomial
+  const remainder = Polynomial.mod(paddedData, this.genPoly);
+
+  // return EC data blocks (last n byte, where n is the degree of genPoly)
+  // If coefficients number in remainder are less than genPoly degree,
+  // pad with 0s to the left to reach the needed number of coefficients
+  const start = this.degree - remainder.length;
+  if (start > 0) {
+    const buff = new Uint8Array(this.degree);
+    buff.set(remainder, start);
+
+    return buff
+  }
+
+  return remainder
+};
+
+var reedSolomonEncoder = ReedSolomonEncoder$1;
+
+var version = {};
+
+var mode = {};
+
+var versionCheck = {};
+
+/**
+ * Check if QR Code version is valid
+ *
+ * @param  {Number}  version QR Code version
+ * @return {Boolean}         true if valid version, false otherwise
+ */
+
+versionCheck.isValid = function isValid (version) {
+  return !isNaN(version) && version >= 1 && version <= 40
+};
+
+var regex = {};
+
+const numeric = '[0-9]+';
+const alphanumeric = '[A-Z $%*+\\-./:]+';
+let kanji = '(?:[u3000-u303F]|[u3040-u309F]|[u30A0-u30FF]|' +
+  '[uFF00-uFFEF]|[u4E00-u9FAF]|[u2605-u2606]|[u2190-u2195]|u203B|' +
+  '[u2010u2015u2018u2019u2025u2026u201Cu201Du2225u2260]|' +
+  '[u0391-u0451]|[u00A7u00A8u00B1u00B4u00D7u00F7])+';
+kanji = kanji.replace(/u/g, '\\u');
+
+const byte = '(?:(?![A-Z0-9 $%*+\\-./:]|' + kanji + ')(?:.|[\r\n]))+';
+
+regex.KANJI = new RegExp(kanji, 'g');
+regex.BYTE_KANJI = new RegExp('[^A-Z0-9 $%*+\\-./:]+', 'g');
+regex.BYTE = new RegExp(byte, 'g');
+regex.NUMERIC = new RegExp(numeric, 'g');
+regex.ALPHANUMERIC = new RegExp(alphanumeric, 'g');
+
+const TEST_KANJI = new RegExp('^' + kanji + '$');
+const TEST_NUMERIC = new RegExp('^' + numeric + '$');
+const TEST_ALPHANUMERIC = new RegExp('^[A-Z0-9 $%*+\\-./:]+$');
+
+regex.testKanji = function testKanji (str) {
+  return TEST_KANJI.test(str)
+};
+
+regex.testNumeric = function testNumeric (str) {
+  return TEST_NUMERIC.test(str)
+};
+
+regex.testAlphanumeric = function testAlphanumeric (str) {
+  return TEST_ALPHANUMERIC.test(str)
+};
+
+(function (exports) {
+	const VersionCheck = versionCheck;
+	const Regex = regex;
+
+	/**
+	 * Numeric mode encodes data from the decimal digit set (0 - 9)
+	 * (byte values 30HEX to 39HEX).
+	 * Normally, 3 data characters are represented by 10 bits.
+	 *
+	 * @type {Object}
+	 */
+	exports.NUMERIC = {
+	  id: 'Numeric',
+	  bit: 1 << 0,
+	  ccBits: [10, 12, 14]
+	};
+
+	/**
+	 * Alphanumeric mode encodes data from a set of 45 characters,
+	 * i.e. 10 numeric digits (0 - 9),
+	 *      26 alphabetic characters (A - Z),
+	 *   and 9 symbols (SP, $, %, *, +, -, ., /, :).
+	 * Normally, two input characters are represented by 11 bits.
+	 *
+	 * @type {Object}
+	 */
+	exports.ALPHANUMERIC = {
+	  id: 'Alphanumeric',
+	  bit: 1 << 1,
+	  ccBits: [9, 11, 13]
+	};
+
+	/**
+	 * In byte mode, data is encoded at 8 bits per character.
+	 *
+	 * @type {Object}
+	 */
+	exports.BYTE = {
+	  id: 'Byte',
+	  bit: 1 << 2,
+	  ccBits: [8, 16, 16]
+	};
+
+	/**
+	 * The Kanji mode efficiently encodes Kanji characters in accordance with
+	 * the Shift JIS system based on JIS X 0208.
+	 * The Shift JIS values are shifted from the JIS X 0208 values.
+	 * JIS X 0208 gives details of the shift coded representation.
+	 * Each two-byte character value is compacted to a 13-bit binary codeword.
+	 *
+	 * @type {Object}
+	 */
+	exports.KANJI = {
+	  id: 'Kanji',
+	  bit: 1 << 3,
+	  ccBits: [8, 10, 12]
+	};
+
+	/**
+	 * Mixed mode will contain a sequences of data in a combination of any of
+	 * the modes described above
+	 *
+	 * @type {Object}
+	 */
+	exports.MIXED = {
+	  bit: -1
+	};
+
+	/**
+	 * Returns the number of bits needed to store the data length
+	 * according to QR Code specifications.
+	 *
+	 * @param  {Mode}   mode    Data mode
+	 * @param  {Number} version QR Code version
+	 * @return {Number}         Number of bits
+	 */
+	exports.getCharCountIndicator = function getCharCountIndicator (mode, version) {
+	  if (!mode.ccBits) throw new Error('Invalid mode: ' + mode)
+
+	  if (!VersionCheck.isValid(version)) {
+	    throw new Error('Invalid version: ' + version)
+	  }
+
+	  if (version >= 1 && version < 10) return mode.ccBits[0]
+	  else if (version < 27) return mode.ccBits[1]
+	  return mode.ccBits[2]
+	};
+
+	/**
+	 * Returns the most efficient mode to store the specified data
+	 *
+	 * @param  {String} dataStr Input data string
+	 * @return {Mode}           Best mode
+	 */
+	exports.getBestModeForData = function getBestModeForData (dataStr) {
+	  if (Regex.testNumeric(dataStr)) return exports.NUMERIC
+	  else if (Regex.testAlphanumeric(dataStr)) return exports.ALPHANUMERIC
+	  else if (Regex.testKanji(dataStr)) return exports.KANJI
+	  else return exports.BYTE
+	};
+
+	/**
+	 * Return mode name as string
+	 *
+	 * @param {Mode} mode Mode object
+	 * @returns {String}  Mode name
+	 */
+	exports.toString = function toString (mode) {
+	  if (mode && mode.id) return mode.id
+	  throw new Error('Invalid mode')
+	};
+
+	/**
+	 * Check if input param is a valid mode object
+	 *
+	 * @param   {Mode}    mode Mode object
+	 * @returns {Boolean} True if valid mode, false otherwise
+	 */
+	exports.isValid = function isValid (mode) {
+	  return mode && mode.bit && mode.ccBits
+	};
+
+	/**
+	 * Get mode object from its name
+	 *
+	 * @param   {String} string Mode name
+	 * @returns {Mode}          Mode object
+	 */
+	function fromString (string) {
+	  if (typeof string !== 'string') {
+	    throw new Error('Param is not a string')
+	  }
+
+	  const lcStr = string.toLowerCase();
+
+	  switch (lcStr) {
+	    case 'numeric':
+	      return exports.NUMERIC
+	    case 'alphanumeric':
+	      return exports.ALPHANUMERIC
+	    case 'kanji':
+	      return exports.KANJI
+	    case 'byte':
+	      return exports.BYTE
+	    default:
+	      throw new Error('Unknown mode: ' + string)
+	  }
+	}
+
+	/**
+	 * Returns mode from a value.
+	 * If value is not a valid mode, returns defaultValue
+	 *
+	 * @param  {Mode|String} value        Encoding mode
+	 * @param  {Mode}        defaultValue Fallback value
+	 * @return {Mode}                     Encoding mode
+	 */
+	exports.from = function from (value, defaultValue) {
+	  if (exports.isValid(value)) {
+	    return value
+	  }
+
+	  try {
+	    return fromString(value)
+	  } catch (e) {
+	    return defaultValue
+	  }
+	}; 
+} (mode));
+
+(function (exports) {
+	const Utils = utils$1;
+	const ECCode = errorCorrectionCode;
+	const ECLevel = errorCorrectionLevel;
+	const Mode = mode;
+	const VersionCheck = versionCheck;
+
+	// Generator polynomial used to encode version information
+	const G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+	const G18_BCH = Utils.getBCHDigit(G18);
+
+	function getBestVersionForDataLength (mode, length, errorCorrectionLevel) {
+	  for (let currentVersion = 1; currentVersion <= 40; currentVersion++) {
+	    if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, mode)) {
+	      return currentVersion
+	    }
+	  }
+
+	  return undefined
+	}
+
+	function getReservedBitsCount (mode, version) {
+	  // Character count indicator + mode indicator bits
+	  return Mode.getCharCountIndicator(mode, version) + 4
+	}
+
+	function getTotalBitsFromDataArray (segments, version) {
+	  let totalBits = 0;
+
+	  segments.forEach(function (data) {
+	    const reservedBits = getReservedBitsCount(data.mode, version);
+	    totalBits += reservedBits + data.getBitsLength();
+	  });
+
+	  return totalBits
+	}
+
+	function getBestVersionForMixedData (segments, errorCorrectionLevel) {
+	  for (let currentVersion = 1; currentVersion <= 40; currentVersion++) {
+	    const length = getTotalBitsFromDataArray(segments, currentVersion);
+	    if (length <= exports.getCapacity(currentVersion, errorCorrectionLevel, Mode.MIXED)) {
+	      return currentVersion
+	    }
+	  }
+
+	  return undefined
+	}
+
+	/**
+	 * Returns version number from a value.
+	 * If value is not a valid version, returns defaultValue
+	 *
+	 * @param  {Number|String} value        QR Code version
+	 * @param  {Number}        defaultValue Fallback value
+	 * @return {Number}                     QR Code version number
+	 */
+	exports.from = function from (value, defaultValue) {
+	  if (VersionCheck.isValid(value)) {
+	    return parseInt(value, 10)
+	  }
+
+	  return defaultValue
+	};
+
+	/**
+	 * Returns how much data can be stored with the specified QR code version
+	 * and error correction level
+	 *
+	 * @param  {Number} version              QR Code version (1-40)
+	 * @param  {Number} errorCorrectionLevel Error correction level
+	 * @param  {Mode}   mode                 Data mode
+	 * @return {Number}                      Quantity of storable data
+	 */
+	exports.getCapacity = function getCapacity (version, errorCorrectionLevel, mode) {
+	  if (!VersionCheck.isValid(version)) {
+	    throw new Error('Invalid QR Code version')
+	  }
+
+	  // Use Byte mode as default
+	  if (typeof mode === 'undefined') mode = Mode.BYTE;
+
+	  // Total codewords for this QR code version (Data + Error correction)
+	  const totalCodewords = Utils.getSymbolTotalCodewords(version);
+
+	  // Total number of error correction codewords
+	  const ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
+
+	  // Total number of data codewords
+	  const dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
+
+	  if (mode === Mode.MIXED) return dataTotalCodewordsBits
+
+	  const usableBits = dataTotalCodewordsBits - getReservedBitsCount(mode, version);
+
+	  // Return max number of storable codewords
+	  switch (mode) {
+	    case Mode.NUMERIC:
+	      return Math.floor((usableBits / 10) * 3)
+
+	    case Mode.ALPHANUMERIC:
+	      return Math.floor((usableBits / 11) * 2)
+
+	    case Mode.KANJI:
+	      return Math.floor(usableBits / 13)
+
+	    case Mode.BYTE:
+	    default:
+	      return Math.floor(usableBits / 8)
+	  }
+	};
+
+	/**
+	 * Returns the minimum version needed to contain the amount of data
+	 *
+	 * @param  {Segment} data                    Segment of data
+	 * @param  {Number} [errorCorrectionLevel=H] Error correction level
+	 * @param  {Mode} mode                       Data mode
+	 * @return {Number}                          QR Code version
+	 */
+	exports.getBestVersionForData = function getBestVersionForData (data, errorCorrectionLevel) {
+	  let seg;
+
+	  const ecl = ECLevel.from(errorCorrectionLevel, ECLevel.M);
+
+	  if (Array.isArray(data)) {
+	    if (data.length > 1) {
+	      return getBestVersionForMixedData(data, ecl)
+	    }
+
+	    if (data.length === 0) {
+	      return 1
+	    }
+
+	    seg = data[0];
+	  } else {
+	    seg = data;
+	  }
+
+	  return getBestVersionForDataLength(seg.mode, seg.getLength(), ecl)
+	};
+
+	/**
+	 * Returns version information with relative error correction bits
+	 *
+	 * The version information is included in QR Code symbols of version 7 or larger.
+	 * It consists of an 18-bit sequence containing 6 data bits,
+	 * with 12 error correction bits calculated using the (18, 6) Golay code.
+	 *
+	 * @param  {Number} version QR Code version
+	 * @return {Number}         Encoded version info bits
+	 */
+	exports.getEncodedBits = function getEncodedBits (version) {
+	  if (!VersionCheck.isValid(version) || version < 7) {
+	    throw new Error('Invalid QR Code version')
+	  }
+
+	  let d = version << 12;
+
+	  while (Utils.getBCHDigit(d) - G18_BCH >= 0) {
+	    d ^= (G18 << (Utils.getBCHDigit(d) - G18_BCH));
+	  }
+
+	  return (version << 12) | d
+	}; 
+} (version));
+
+var formatInfo = {};
+
+const Utils$3 = utils$1;
+
+const G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+const G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+const G15_BCH = Utils$3.getBCHDigit(G15);
+
+/**
+ * Returns format information with relative error correction bits
+ *
+ * The format information is a 15-bit sequence containing 5 data bits,
+ * with 10 error correction bits calculated using the (15, 5) BCH code.
+ *
+ * @param  {Number} errorCorrectionLevel Error correction level
+ * @param  {Number} mask                 Mask pattern
+ * @return {Number}                      Encoded format information bits
+ */
+formatInfo.getEncodedBits = function getEncodedBits (errorCorrectionLevel, mask) {
+  const data = ((errorCorrectionLevel.bit << 3) | mask);
+  let d = data << 10;
+
+  while (Utils$3.getBCHDigit(d) - G15_BCH >= 0) {
+    d ^= (G15 << (Utils$3.getBCHDigit(d) - G15_BCH));
+  }
+
+  // xor final data with mask pattern in order to ensure that
+  // no combination of Error Correction Level and data mask pattern
+  // will result in an all-zero data string
+  return ((data << 10) | d) ^ G15_MASK
+};
+
+var segments = {};
+
+const Mode$4 = mode;
+
+function NumericData (data) {
+  this.mode = Mode$4.NUMERIC;
+  this.data = data.toString();
+}
+
+NumericData.getBitsLength = function getBitsLength (length) {
+  return 10 * Math.floor(length / 3) + ((length % 3) ? ((length % 3) * 3 + 1) : 0)
+};
+
+NumericData.prototype.getLength = function getLength () {
+  return this.data.length
+};
+
+NumericData.prototype.getBitsLength = function getBitsLength () {
+  return NumericData.getBitsLength(this.data.length)
+};
+
+NumericData.prototype.write = function write (bitBuffer) {
+  let i, group, value;
+
+  // The input data string is divided into groups of three digits,
+  // and each group is converted to its 10-bit binary equivalent.
+  for (i = 0; i + 3 <= this.data.length; i += 3) {
+    group = this.data.substr(i, 3);
+    value = parseInt(group, 10);
+
+    bitBuffer.put(value, 10);
+  }
+
+  // If the number of input digits is not an exact multiple of three,
+  // the final one or two digits are converted to 4 or 7 bits respectively.
+  const remainingNum = this.data.length - i;
+  if (remainingNum > 0) {
+    group = this.data.substr(i);
+    value = parseInt(group, 10);
+
+    bitBuffer.put(value, remainingNum * 3 + 1);
+  }
+};
+
+var numericData = NumericData;
+
+const Mode$3 = mode;
+
+/**
+ * Array of characters available in alphanumeric mode
+ *
+ * As per QR Code specification, to each character
+ * is assigned a value from 0 to 44 which in this case coincides
+ * with the array index
+ *
+ * @type {Array}
+ */
+const ALPHA_NUM_CHARS = [
+  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+  'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+  'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+  ' ', '$', '%', '*', '+', '-', '.', '/', ':'
+];
+
+function AlphanumericData (data) {
+  this.mode = Mode$3.ALPHANUMERIC;
+  this.data = data;
+}
+
+AlphanumericData.getBitsLength = function getBitsLength (length) {
+  return 11 * Math.floor(length / 2) + 6 * (length % 2)
+};
+
+AlphanumericData.prototype.getLength = function getLength () {
+  return this.data.length
+};
+
+AlphanumericData.prototype.getBitsLength = function getBitsLength () {
+  return AlphanumericData.getBitsLength(this.data.length)
+};
+
+AlphanumericData.prototype.write = function write (bitBuffer) {
+  let i;
+
+  // Input data characters are divided into groups of two characters
+  // and encoded as 11-bit binary codes.
+  for (i = 0; i + 2 <= this.data.length; i += 2) {
+    // The character value of the first character is multiplied by 45
+    let value = ALPHA_NUM_CHARS.indexOf(this.data[i]) * 45;
+
+    // The character value of the second digit is added to the product
+    value += ALPHA_NUM_CHARS.indexOf(this.data[i + 1]);
+
+    // The sum is then stored as 11-bit binary number
+    bitBuffer.put(value, 11);
+  }
+
+  // If the number of input data characters is not a multiple of two,
+  // the character value of the final character is encoded as a 6-bit binary number.
+  if (this.data.length % 2) {
+    bitBuffer.put(ALPHA_NUM_CHARS.indexOf(this.data[i]), 6);
+  }
+};
+
+var alphanumericData = AlphanumericData;
+
+var encodeUtf8$1 = function encodeUtf8 (input) {
+  var result = [];
+  var size = input.length;
+
+  for (var index = 0; index < size; index++) {
+    var point = input.charCodeAt(index);
+
+    if (point >= 0xD800 && point <= 0xDBFF && size > index + 1) {
+      var second = input.charCodeAt(index + 1);
+
+      if (second >= 0xDC00 && second <= 0xDFFF) {
+        // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+        point = (point - 0xD800) * 0x400 + second - 0xDC00 + 0x10000;
+        index += 1;
+      }
+    }
+
+    // US-ASCII
+    if (point < 0x80) {
+      result.push(point);
+      continue
+    }
+
+    // 2-byte UTF-8
+    if (point < 0x800) {
+      result.push((point >> 6) | 192);
+      result.push((point & 63) | 128);
+      continue
+    }
+
+    // 3-byte UTF-8
+    if (point < 0xD800 || (point >= 0xE000 && point < 0x10000)) {
+      result.push((point >> 12) | 224);
+      result.push(((point >> 6) & 63) | 128);
+      result.push((point & 63) | 128);
+      continue
+    }
+
+    // 4-byte UTF-8
+    if (point >= 0x10000 && point <= 0x10FFFF) {
+      result.push((point >> 18) | 240);
+      result.push(((point >> 12) & 63) | 128);
+      result.push(((point >> 6) & 63) | 128);
+      result.push((point & 63) | 128);
+      continue
+    }
+
+    // Invalid character
+    result.push(0xEF, 0xBF, 0xBD);
+  }
+
+  return new Uint8Array(result).buffer
+};
+
+const encodeUtf8 = encodeUtf8$1;
+const Mode$2 = mode;
+
+function ByteData (data) {
+  this.mode = Mode$2.BYTE;
+  if (typeof (data) === 'string') {
+    data = encodeUtf8(data);
+  }
+  this.data = new Uint8Array(data);
+}
+
+ByteData.getBitsLength = function getBitsLength (length) {
+  return length * 8
+};
+
+ByteData.prototype.getLength = function getLength () {
+  return this.data.length
+};
+
+ByteData.prototype.getBitsLength = function getBitsLength () {
+  return ByteData.getBitsLength(this.data.length)
+};
+
+ByteData.prototype.write = function (bitBuffer) {
+  for (let i = 0, l = this.data.length; i < l; i++) {
+    bitBuffer.put(this.data[i], 8);
+  }
+};
+
+var byteData = ByteData;
+
+const Mode$1 = mode;
+const Utils$2 = utils$1;
+
+function KanjiData (data) {
+  this.mode = Mode$1.KANJI;
+  this.data = data;
+}
+
+KanjiData.getBitsLength = function getBitsLength (length) {
+  return length * 13
+};
+
+KanjiData.prototype.getLength = function getLength () {
+  return this.data.length
+};
+
+KanjiData.prototype.getBitsLength = function getBitsLength () {
+  return KanjiData.getBitsLength(this.data.length)
+};
+
+KanjiData.prototype.write = function (bitBuffer) {
+  let i;
+
+  // In the Shift JIS system, Kanji characters are represented by a two byte combination.
+  // These byte values are shifted from the JIS X 0208 values.
+  // JIS X 0208 gives details of the shift coded representation.
+  for (i = 0; i < this.data.length; i++) {
+    let value = Utils$2.toSJIS(this.data[i]);
+
+    // For characters with Shift JIS values from 0x8140 to 0x9FFC:
+    if (value >= 0x8140 && value <= 0x9FFC) {
+      // Subtract 0x8140 from Shift JIS value
+      value -= 0x8140;
+
+    // For characters with Shift JIS values from 0xE040 to 0xEBBF
+    } else if (value >= 0xE040 && value <= 0xEBBF) {
+      // Subtract 0xC140 from Shift JIS value
+      value -= 0xC140;
+    } else {
+      throw new Error(
+        'Invalid SJIS character: ' + this.data[i] + '\n' +
+        'Make sure your charset is UTF-8')
+    }
+
+    // Multiply most significant byte of result by 0xC0
+    // and add least significant byte to product
+    value = (((value >>> 8) & 0xff) * 0xC0) + (value & 0xff);
+
+    // Convert result to a 13-bit binary string
+    bitBuffer.put(value, 13);
+  }
+};
+
+var kanjiData = KanjiData;
+
+var dijkstra = {exports: {}};
+
+(function (module) {
+
+	/******************************************************************************
+	 * Created 2008-08-19.
+	 *
+	 * Dijkstra path-finding functions. Adapted from the Dijkstar Python project.
+	 *
+	 * Copyright (C) 2008
+	 *   Wyatt Baldwin <self@wyattbaldwin.com>
+	 *   All rights reserved
+	 *
+	 * Licensed under the MIT license.
+	 *
+	 *   http://www.opensource.org/licenses/mit-license.php
+	 *
+	 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+	 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+	 * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	 * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+	 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+	 * THE SOFTWARE.
+	 *****************************************************************************/
+	var dijkstra = {
+	  single_source_shortest_paths: function(graph, s, d) {
+	    // Predecessor map for each node that has been encountered.
+	    // node ID => predecessor node ID
+	    var predecessors = {};
+
+	    // Costs of shortest paths from s to all nodes encountered.
+	    // node ID => cost
+	    var costs = {};
+	    costs[s] = 0;
+
+	    // Costs of shortest paths from s to all nodes encountered; differs from
+	    // `costs` in that it provides easy access to the node that currently has
+	    // the known shortest path from s.
+	    // XXX: Do we actually need both `costs` and `open`?
+	    var open = dijkstra.PriorityQueue.make();
+	    open.push(s, 0);
+
+	    var closest,
+	        u, v,
+	        cost_of_s_to_u,
+	        adjacent_nodes,
+	        cost_of_e,
+	        cost_of_s_to_u_plus_cost_of_e,
+	        cost_of_s_to_v,
+	        first_visit;
+	    while (!open.empty()) {
+	      // In the nodes remaining in graph that have a known cost from s,
+	      // find the node, u, that currently has the shortest path from s.
+	      closest = open.pop();
+	      u = closest.value;
+	      cost_of_s_to_u = closest.cost;
+
+	      // Get nodes adjacent to u...
+	      adjacent_nodes = graph[u] || {};
+
+	      // ...and explore the edges that connect u to those nodes, updating
+	      // the cost of the shortest paths to any or all of those nodes as
+	      // necessary. v is the node across the current edge from u.
+	      for (v in adjacent_nodes) {
+	        if (adjacent_nodes.hasOwnProperty(v)) {
+	          // Get the cost of the edge running from u to v.
+	          cost_of_e = adjacent_nodes[v];
+
+	          // Cost of s to u plus the cost of u to v across e--this is *a*
+	          // cost from s to v that may or may not be less than the current
+	          // known cost to v.
+	          cost_of_s_to_u_plus_cost_of_e = cost_of_s_to_u + cost_of_e;
+
+	          // If we haven't visited v yet OR if the current known cost from s to
+	          // v is greater than the new cost we just found (cost of s to u plus
+	          // cost of u to v across e), update v's cost in the cost list and
+	          // update v's predecessor in the predecessor list (it's now u).
+	          cost_of_s_to_v = costs[v];
+	          first_visit = (typeof costs[v] === 'undefined');
+	          if (first_visit || cost_of_s_to_v > cost_of_s_to_u_plus_cost_of_e) {
+	            costs[v] = cost_of_s_to_u_plus_cost_of_e;
+	            open.push(v, cost_of_s_to_u_plus_cost_of_e);
+	            predecessors[v] = u;
+	          }
+	        }
+	      }
+	    }
+
+	    if (typeof d !== 'undefined' && typeof costs[d] === 'undefined') {
+	      var msg = ['Could not find a path from ', s, ' to ', d, '.'].join('');
+	      throw new Error(msg);
+	    }
+
+	    return predecessors;
+	  },
+
+	  extract_shortest_path_from_predecessor_list: function(predecessors, d) {
+	    var nodes = [];
+	    var u = d;
+	    while (u) {
+	      nodes.push(u);
+	      predecessors[u];
+	      u = predecessors[u];
+	    }
+	    nodes.reverse();
+	    return nodes;
+	  },
+
+	  find_path: function(graph, s, d) {
+	    var predecessors = dijkstra.single_source_shortest_paths(graph, s, d);
+	    return dijkstra.extract_shortest_path_from_predecessor_list(
+	      predecessors, d);
+	  },
+
+	  /**
+	   * A very naive priority queue implementation.
+	   */
+	  PriorityQueue: {
+	    make: function (opts) {
+	      var T = dijkstra.PriorityQueue,
+	          t = {},
+	          key;
+	      opts = opts || {};
+	      for (key in T) {
+	        if (T.hasOwnProperty(key)) {
+	          t[key] = T[key];
+	        }
+	      }
+	      t.queue = [];
+	      t.sorter = opts.sorter || T.default_sorter;
+	      return t;
+	    },
+
+	    default_sorter: function (a, b) {
+	      return a.cost - b.cost;
+	    },
+
+	    /**
+	     * Add a new item to the queue and ensure the highest priority element
+	     * is at the front of the queue.
+	     */
+	    push: function (value, cost) {
+	      var item = {value: value, cost: cost};
+	      this.queue.push(item);
+	      this.queue.sort(this.sorter);
+	    },
+
+	    /**
+	     * Return the highest priority element in the queue.
+	     */
+	    pop: function () {
+	      return this.queue.shift();
+	    },
+
+	    empty: function () {
+	      return this.queue.length === 0;
+	    }
+	  }
+	};
+
+
+	// node.js module exports
+	{
+	  module.exports = dijkstra;
+	} 
+} (dijkstra));
+
+var dijkstraExports = dijkstra.exports;
+
+(function (exports) {
+	const Mode = mode;
+	const NumericData = numericData;
+	const AlphanumericData = alphanumericData;
+	const ByteData = byteData;
+	const KanjiData = kanjiData;
+	const Regex = regex;
+	const Utils = utils$1;
+	const dijkstra = dijkstraExports;
+
+	/**
+	 * Returns UTF8 byte length
+	 *
+	 * @param  {String} str Input string
+	 * @return {Number}     Number of byte
+	 */
+	function getStringByteLength (str) {
+	  return unescape(encodeURIComponent(str)).length
+	}
+
+	/**
+	 * Get a list of segments of the specified mode
+	 * from a string
+	 *
+	 * @param  {Mode}   mode Segment mode
+	 * @param  {String} str  String to process
+	 * @return {Array}       Array of object with segments data
+	 */
+	function getSegments (regex, mode, str) {
+	  const segments = [];
+	  let result;
+
+	  while ((result = regex.exec(str)) !== null) {
+	    segments.push({
+	      data: result[0],
+	      index: result.index,
+	      mode: mode,
+	      length: result[0].length
+	    });
+	  }
+
+	  return segments
+	}
+
+	/**
+	 * Extracts a series of segments with the appropriate
+	 * modes from a string
+	 *
+	 * @param  {String} dataStr Input string
+	 * @return {Array}          Array of object with segments data
+	 */
+	function getSegmentsFromString (dataStr) {
+	  const numSegs = getSegments(Regex.NUMERIC, Mode.NUMERIC, dataStr);
+	  const alphaNumSegs = getSegments(Regex.ALPHANUMERIC, Mode.ALPHANUMERIC, dataStr);
+	  let byteSegs;
+	  let kanjiSegs;
+
+	  if (Utils.isKanjiModeEnabled()) {
+	    byteSegs = getSegments(Regex.BYTE, Mode.BYTE, dataStr);
+	    kanjiSegs = getSegments(Regex.KANJI, Mode.KANJI, dataStr);
+	  } else {
+	    byteSegs = getSegments(Regex.BYTE_KANJI, Mode.BYTE, dataStr);
+	    kanjiSegs = [];
+	  }
+
+	  const segs = numSegs.concat(alphaNumSegs, byteSegs, kanjiSegs);
+
+	  return segs
+	    .sort(function (s1, s2) {
+	      return s1.index - s2.index
+	    })
+	    .map(function (obj) {
+	      return {
+	        data: obj.data,
+	        mode: obj.mode,
+	        length: obj.length
+	      }
+	    })
+	}
+
+	/**
+	 * Returns how many bits are needed to encode a string of
+	 * specified length with the specified mode
+	 *
+	 * @param  {Number} length String length
+	 * @param  {Mode} mode     Segment mode
+	 * @return {Number}        Bit length
+	 */
+	function getSegmentBitsLength (length, mode) {
+	  switch (mode) {
+	    case Mode.NUMERIC:
+	      return NumericData.getBitsLength(length)
+	    case Mode.ALPHANUMERIC:
+	      return AlphanumericData.getBitsLength(length)
+	    case Mode.KANJI:
+	      return KanjiData.getBitsLength(length)
+	    case Mode.BYTE:
+	      return ByteData.getBitsLength(length)
+	  }
+	}
+
+	/**
+	 * Merges adjacent segments which have the same mode
+	 *
+	 * @param  {Array} segs Array of object with segments data
+	 * @return {Array}      Array of object with segments data
+	 */
+	function mergeSegments (segs) {
+	  return segs.reduce(function (acc, curr) {
+	    const prevSeg = acc.length - 1 >= 0 ? acc[acc.length - 1] : null;
+	    if (prevSeg && prevSeg.mode === curr.mode) {
+	      acc[acc.length - 1].data += curr.data;
+	      return acc
+	    }
+
+	    acc.push(curr);
+	    return acc
+	  }, [])
+	}
+
+	/**
+	 * Generates a list of all possible nodes combination which
+	 * will be used to build a segments graph.
+	 *
+	 * Nodes are divided by groups. Each group will contain a list of all the modes
+	 * in which is possible to encode the given text.
+	 *
+	 * For example the text '12345' can be encoded as Numeric, Alphanumeric or Byte.
+	 * The group for '12345' will contain then 3 objects, one for each
+	 * possible encoding mode.
+	 *
+	 * Each node represents a possible segment.
+	 *
+	 * @param  {Array} segs Array of object with segments data
+	 * @return {Array}      Array of object with segments data
+	 */
+	function buildNodes (segs) {
+	  const nodes = [];
+	  for (let i = 0; i < segs.length; i++) {
+	    const seg = segs[i];
+
+	    switch (seg.mode) {
+	      case Mode.NUMERIC:
+	        nodes.push([seg,
+	          { data: seg.data, mode: Mode.ALPHANUMERIC, length: seg.length },
+	          { data: seg.data, mode: Mode.BYTE, length: seg.length }
+	        ]);
+	        break
+	      case Mode.ALPHANUMERIC:
+	        nodes.push([seg,
+	          { data: seg.data, mode: Mode.BYTE, length: seg.length }
+	        ]);
+	        break
+	      case Mode.KANJI:
+	        nodes.push([seg,
+	          { data: seg.data, mode: Mode.BYTE, length: getStringByteLength(seg.data) }
+	        ]);
+	        break
+	      case Mode.BYTE:
+	        nodes.push([
+	          { data: seg.data, mode: Mode.BYTE, length: getStringByteLength(seg.data) }
+	        ]);
+	    }
+	  }
+
+	  return nodes
+	}
+
+	/**
+	 * Builds a graph from a list of nodes.
+	 * All segments in each node group will be connected with all the segments of
+	 * the next group and so on.
+	 *
+	 * At each connection will be assigned a weight depending on the
+	 * segment's byte length.
+	 *
+	 * @param  {Array} nodes    Array of object with segments data
+	 * @param  {Number} version QR Code version
+	 * @return {Object}         Graph of all possible segments
+	 */
+	function buildGraph (nodes, version) {
+	  const table = {};
+	  const graph = { start: {} };
+	  let prevNodeIds = ['start'];
+
+	  for (let i = 0; i < nodes.length; i++) {
+	    const nodeGroup = nodes[i];
+	    const currentNodeIds = [];
+
+	    for (let j = 0; j < nodeGroup.length; j++) {
+	      const node = nodeGroup[j];
+	      const key = '' + i + j;
+
+	      currentNodeIds.push(key);
+	      table[key] = { node: node, lastCount: 0 };
+	      graph[key] = {};
+
+	      for (let n = 0; n < prevNodeIds.length; n++) {
+	        const prevNodeId = prevNodeIds[n];
+
+	        if (table[prevNodeId] && table[prevNodeId].node.mode === node.mode) {
+	          graph[prevNodeId][key] =
+	            getSegmentBitsLength(table[prevNodeId].lastCount + node.length, node.mode) -
+	            getSegmentBitsLength(table[prevNodeId].lastCount, node.mode);
+
+	          table[prevNodeId].lastCount += node.length;
+	        } else {
+	          if (table[prevNodeId]) table[prevNodeId].lastCount = node.length;
+
+	          graph[prevNodeId][key] = getSegmentBitsLength(node.length, node.mode) +
+	            4 + Mode.getCharCountIndicator(node.mode, version); // switch cost
+	        }
+	      }
+	    }
+
+	    prevNodeIds = currentNodeIds;
+	  }
+
+	  for (let n = 0; n < prevNodeIds.length; n++) {
+	    graph[prevNodeIds[n]].end = 0;
+	  }
+
+	  return { map: graph, table: table }
+	}
+
+	/**
+	 * Builds a segment from a specified data and mode.
+	 * If a mode is not specified, the more suitable will be used.
+	 *
+	 * @param  {String} data             Input data
+	 * @param  {Mode | String} modesHint Data mode
+	 * @return {Segment}                 Segment
+	 */
+	function buildSingleSegment (data, modesHint) {
+	  let mode;
+	  const bestMode = Mode.getBestModeForData(data);
+
+	  mode = Mode.from(modesHint, bestMode);
+
+	  // Make sure data can be encoded
+	  if (mode !== Mode.BYTE && mode.bit < bestMode.bit) {
+	    throw new Error('"' + data + '"' +
+	      ' cannot be encoded with mode ' + Mode.toString(mode) +
+	      '.\n Suggested mode is: ' + Mode.toString(bestMode))
+	  }
+
+	  // Use Mode.BYTE if Kanji support is disabled
+	  if (mode === Mode.KANJI && !Utils.isKanjiModeEnabled()) {
+	    mode = Mode.BYTE;
+	  }
+
+	  switch (mode) {
+	    case Mode.NUMERIC:
+	      return new NumericData(data)
+
+	    case Mode.ALPHANUMERIC:
+	      return new AlphanumericData(data)
+
+	    case Mode.KANJI:
+	      return new KanjiData(data)
+
+	    case Mode.BYTE:
+	      return new ByteData(data)
+	  }
+	}
+
+	/**
+	 * Builds a list of segments from an array.
+	 * Array can contain Strings or Objects with segment's info.
+	 *
+	 * For each item which is a string, will be generated a segment with the given
+	 * string and the more appropriate encoding mode.
+	 *
+	 * For each item which is an object, will be generated a segment with the given
+	 * data and mode.
+	 * Objects must contain at least the property "data".
+	 * If property "mode" is not present, the more suitable mode will be used.
+	 *
+	 * @param  {Array} array Array of objects with segments data
+	 * @return {Array}       Array of Segments
+	 */
+	exports.fromArray = function fromArray (array) {
+	  return array.reduce(function (acc, seg) {
+	    if (typeof seg === 'string') {
+	      acc.push(buildSingleSegment(seg, null));
+	    } else if (seg.data) {
+	      acc.push(buildSingleSegment(seg.data, seg.mode));
+	    }
+
+	    return acc
+	  }, [])
+	};
+
+	/**
+	 * Builds an optimized sequence of segments from a string,
+	 * which will produce the shortest possible bitstream.
+	 *
+	 * @param  {String} data    Input string
+	 * @param  {Number} version QR Code version
+	 * @return {Array}          Array of segments
+	 */
+	exports.fromString = function fromString (data, version) {
+	  const segs = getSegmentsFromString(data, Utils.isKanjiModeEnabled());
+
+	  const nodes = buildNodes(segs);
+	  const graph = buildGraph(nodes, version);
+	  const path = dijkstra.find_path(graph.map, 'start', 'end');
+
+	  const optimizedSegs = [];
+	  for (let i = 1; i < path.length - 1; i++) {
+	    optimizedSegs.push(graph.table[path[i]].node);
+	  }
+
+	  return exports.fromArray(mergeSegments(optimizedSegs))
+	};
+
+	/**
+	 * Splits a string in various segments with the modes which
+	 * best represent their content.
+	 * The produced segments are far from being optimized.
+	 * The output of this function is only used to estimate a QR Code version
+	 * which may contain the data.
+	 *
+	 * @param  {string} data Input string
+	 * @return {Array}       Array of segments
+	 */
+	exports.rawSplit = function rawSplit (data) {
+	  return exports.fromArray(
+	    getSegmentsFromString(data, Utils.isKanjiModeEnabled())
+	  )
+	}; 
+} (segments));
+
+const Utils$1 = utils$1;
+const ECLevel = errorCorrectionLevel;
+const BitBuffer = bitBuffer;
+const BitMatrix = bitMatrix;
+const AlignmentPattern = alignmentPattern;
+const FinderPattern = finderPattern;
+const MaskPattern = maskPattern;
+const ECCode = errorCorrectionCode;
+const ReedSolomonEncoder = reedSolomonEncoder;
+const Version = version;
+const FormatInfo = formatInfo;
+const Mode = mode;
+const Segments = segments;
+
+/**
+ * QRCode for JavaScript
+ *
+ * modified by Ryan Day for nodejs support
+ * Copyright (c) 2011 Ryan Day
+ *
+ * Licensed under the MIT license:
+ *   http://www.opensource.org/licenses/mit-license.php
+ *
+//---------------------------------------------------------------------
+// QRCode for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//   http://www.opensource.org/licenses/mit-license.php
+//
+// The word "QR Code" is registered trademark of
+// DENSO WAVE INCORPORATED
+//   http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+*/
+
+/**
+ * Add finder patterns bits to matrix
+ *
+ * @param  {BitMatrix} matrix  Modules matrix
+ * @param  {Number}    version QR Code version
+ */
+function setupFinderPattern (matrix, version) {
+  const size = matrix.size;
+  const pos = FinderPattern.getPositions(version);
+
+  for (let i = 0; i < pos.length; i++) {
+    const row = pos[i][0];
+    const col = pos[i][1];
+
+    for (let r = -1; r <= 7; r++) {
+      if (row + r <= -1 || size <= row + r) continue
+
+      for (let c = -1; c <= 7; c++) {
+        if (col + c <= -1 || size <= col + c) continue
+
+        if ((r >= 0 && r <= 6 && (c === 0 || c === 6)) ||
+          (c >= 0 && c <= 6 && (r === 0 || r === 6)) ||
+          (r >= 2 && r <= 4 && c >= 2 && c <= 4)) {
+          matrix.set(row + r, col + c, true, true);
+        } else {
+          matrix.set(row + r, col + c, false, true);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Add timing pattern bits to matrix
+ *
+ * Note: this function must be called before {@link setupAlignmentPattern}
+ *
+ * @param  {BitMatrix} matrix Modules matrix
+ */
+function setupTimingPattern (matrix) {
+  const size = matrix.size;
+
+  for (let r = 8; r < size - 8; r++) {
+    const value = r % 2 === 0;
+    matrix.set(r, 6, value, true);
+    matrix.set(6, r, value, true);
+  }
+}
+
+/**
+ * Add alignment patterns bits to matrix
+ *
+ * Note: this function must be called after {@link setupTimingPattern}
+ *
+ * @param  {BitMatrix} matrix  Modules matrix
+ * @param  {Number}    version QR Code version
+ */
+function setupAlignmentPattern (matrix, version) {
+  const pos = AlignmentPattern.getPositions(version);
+
+  for (let i = 0; i < pos.length; i++) {
+    const row = pos[i][0];
+    const col = pos[i][1];
+
+    for (let r = -2; r <= 2; r++) {
+      for (let c = -2; c <= 2; c++) {
+        if (r === -2 || r === 2 || c === -2 || c === 2 ||
+          (r === 0 && c === 0)) {
+          matrix.set(row + r, col + c, true, true);
+        } else {
+          matrix.set(row + r, col + c, false, true);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Add version info bits to matrix
+ *
+ * @param  {BitMatrix} matrix  Modules matrix
+ * @param  {Number}    version QR Code version
+ */
+function setupVersionInfo (matrix, version) {
+  const size = matrix.size;
+  const bits = Version.getEncodedBits(version);
+  let row, col, mod;
+
+  for (let i = 0; i < 18; i++) {
+    row = Math.floor(i / 3);
+    col = i % 3 + size - 8 - 3;
+    mod = ((bits >> i) & 1) === 1;
+
+    matrix.set(row, col, mod, true);
+    matrix.set(col, row, mod, true);
+  }
+}
+
+/**
+ * Add format info bits to matrix
+ *
+ * @param  {BitMatrix} matrix               Modules matrix
+ * @param  {ErrorCorrectionLevel}    errorCorrectionLevel Error correction level
+ * @param  {Number}    maskPattern          Mask pattern reference value
+ */
+function setupFormatInfo (matrix, errorCorrectionLevel, maskPattern) {
+  const size = matrix.size;
+  const bits = FormatInfo.getEncodedBits(errorCorrectionLevel, maskPattern);
+  let i, mod;
+
+  for (i = 0; i < 15; i++) {
+    mod = ((bits >> i) & 1) === 1;
+
+    // vertical
+    if (i < 6) {
+      matrix.set(i, 8, mod, true);
+    } else if (i < 8) {
+      matrix.set(i + 1, 8, mod, true);
+    } else {
+      matrix.set(size - 15 + i, 8, mod, true);
+    }
+
+    // horizontal
+    if (i < 8) {
+      matrix.set(8, size - i - 1, mod, true);
+    } else if (i < 9) {
+      matrix.set(8, 15 - i - 1 + 1, mod, true);
+    } else {
+      matrix.set(8, 15 - i - 1, mod, true);
+    }
+  }
+
+  // fixed module
+  matrix.set(size - 8, 8, 1, true);
+}
+
+/**
+ * Add encoded data bits to matrix
+ *
+ * @param  {BitMatrix}  matrix Modules matrix
+ * @param  {Uint8Array} data   Data codewords
+ */
+function setupData (matrix, data) {
+  const size = matrix.size;
+  let inc = -1;
+  let row = size - 1;
+  let bitIndex = 7;
+  let byteIndex = 0;
+
+  for (let col = size - 1; col > 0; col -= 2) {
+    if (col === 6) col--;
+
+    while (true) {
+      for (let c = 0; c < 2; c++) {
+        if (!matrix.isReserved(row, col - c)) {
+          let dark = false;
+
+          if (byteIndex < data.length) {
+            dark = (((data[byteIndex] >>> bitIndex) & 1) === 1);
+          }
+
+          matrix.set(row, col - c, dark);
+          bitIndex--;
+
+          if (bitIndex === -1) {
+            byteIndex++;
+            bitIndex = 7;
+          }
+        }
+      }
+
+      row += inc;
+
+      if (row < 0 || size <= row) {
+        row -= inc;
+        inc = -inc;
+        break
+      }
+    }
+  }
+}
+
+/**
+ * Create encoded codewords from data input
+ *
+ * @param  {Number}   version              QR Code version
+ * @param  {ErrorCorrectionLevel}   errorCorrectionLevel Error correction level
+ * @param  {ByteData} data                 Data input
+ * @return {Uint8Array}                    Buffer containing encoded codewords
+ */
+function createData (version, errorCorrectionLevel, segments) {
+  // Prepare data buffer
+  const buffer = new BitBuffer();
+
+  segments.forEach(function (data) {
+    // prefix data with mode indicator (4 bits)
+    buffer.put(data.mode.bit, 4);
+
+    // Prefix data with character count indicator.
+    // The character count indicator is a string of bits that represents the
+    // number of characters that are being encoded.
+    // The character count indicator must be placed after the mode indicator
+    // and must be a certain number of bits long, depending on the QR version
+    // and data mode
+    // @see {@link Mode.getCharCountIndicator}.
+    buffer.put(data.getLength(), Mode.getCharCountIndicator(data.mode, version));
+
+    // add binary data sequence to buffer
+    data.write(buffer);
+  });
+
+  // Calculate required number of bits
+  const totalCodewords = Utils$1.getSymbolTotalCodewords(version);
+  const ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
+  const dataTotalCodewordsBits = (totalCodewords - ecTotalCodewords) * 8;
+
+  // Add a terminator.
+  // If the bit string is shorter than the total number of required bits,
+  // a terminator of up to four 0s must be added to the right side of the string.
+  // If the bit string is more than four bits shorter than the required number of bits,
+  // add four 0s to the end.
+  if (buffer.getLengthInBits() + 4 <= dataTotalCodewordsBits) {
+    buffer.put(0, 4);
+  }
+
+  // If the bit string is fewer than four bits shorter, add only the number of 0s that
+  // are needed to reach the required number of bits.
+
+  // After adding the terminator, if the number of bits in the string is not a multiple of 8,
+  // pad the string on the right with 0s to make the string's length a multiple of 8.
+  while (buffer.getLengthInBits() % 8 !== 0) {
+    buffer.putBit(0);
+  }
+
+  // Add pad bytes if the string is still shorter than the total number of required bits.
+  // Extend the buffer to fill the data capacity of the symbol corresponding to
+  // the Version and Error Correction Level by adding the Pad Codewords 11101100 (0xEC)
+  // and 00010001 (0x11) alternately.
+  const remainingByte = (dataTotalCodewordsBits - buffer.getLengthInBits()) / 8;
+  for (let i = 0; i < remainingByte; i++) {
+    buffer.put(i % 2 ? 0x11 : 0xEC, 8);
+  }
+
+  return createCodewords(buffer, version, errorCorrectionLevel)
+}
+
+/**
+ * Encode input data with Reed-Solomon and return codewords with
+ * relative error correction bits
+ *
+ * @param  {BitBuffer} bitBuffer            Data to encode
+ * @param  {Number}    version              QR Code version
+ * @param  {ErrorCorrectionLevel} errorCorrectionLevel Error correction level
+ * @return {Uint8Array}                     Buffer containing encoded codewords
+ */
+function createCodewords (bitBuffer, version, errorCorrectionLevel) {
+  // Total codewords for this QR code version (Data + Error correction)
+  const totalCodewords = Utils$1.getSymbolTotalCodewords(version);
+
+  // Total number of error correction codewords
+  const ecTotalCodewords = ECCode.getTotalCodewordsCount(version, errorCorrectionLevel);
+
+  // Total number of data codewords
+  const dataTotalCodewords = totalCodewords - ecTotalCodewords;
+
+  // Total number of blocks
+  const ecTotalBlocks = ECCode.getBlocksCount(version, errorCorrectionLevel);
+
+  // Calculate how many blocks each group should contain
+  const blocksInGroup2 = totalCodewords % ecTotalBlocks;
+  const blocksInGroup1 = ecTotalBlocks - blocksInGroup2;
+
+  const totalCodewordsInGroup1 = Math.floor(totalCodewords / ecTotalBlocks);
+
+  const dataCodewordsInGroup1 = Math.floor(dataTotalCodewords / ecTotalBlocks);
+  const dataCodewordsInGroup2 = dataCodewordsInGroup1 + 1;
+
+  // Number of EC codewords is the same for both groups
+  const ecCount = totalCodewordsInGroup1 - dataCodewordsInGroup1;
+
+  // Initialize a Reed-Solomon encoder with a generator polynomial of degree ecCount
+  const rs = new ReedSolomonEncoder(ecCount);
+
+  let offset = 0;
+  const dcData = new Array(ecTotalBlocks);
+  const ecData = new Array(ecTotalBlocks);
+  let maxDataSize = 0;
+  const buffer = new Uint8Array(bitBuffer.buffer);
+
+  // Divide the buffer into the required number of blocks
+  for (let b = 0; b < ecTotalBlocks; b++) {
+    const dataSize = b < blocksInGroup1 ? dataCodewordsInGroup1 : dataCodewordsInGroup2;
+
+    // extract a block of data from buffer
+    dcData[b] = buffer.slice(offset, offset + dataSize);
+
+    // Calculate EC codewords for this data block
+    ecData[b] = rs.encode(dcData[b]);
+
+    offset += dataSize;
+    maxDataSize = Math.max(maxDataSize, dataSize);
+  }
+
+  // Create final data
+  // Interleave the data and error correction codewords from each block
+  const data = new Uint8Array(totalCodewords);
+  let index = 0;
+  let i, r;
+
+  // Add data codewords
+  for (i = 0; i < maxDataSize; i++) {
+    for (r = 0; r < ecTotalBlocks; r++) {
+      if (i < dcData[r].length) {
+        data[index++] = dcData[r][i];
+      }
+    }
+  }
+
+  // Apped EC codewords
+  for (i = 0; i < ecCount; i++) {
+    for (r = 0; r < ecTotalBlocks; r++) {
+      data[index++] = ecData[r][i];
+    }
+  }
+
+  return data
+}
+
+/**
+ * Build QR Code symbol
+ *
+ * @param  {String} data                 Input string
+ * @param  {Number} version              QR Code version
+ * @param  {ErrorCorretionLevel} errorCorrectionLevel Error level
+ * @param  {MaskPattern} maskPattern     Mask pattern
+ * @return {Object}                      Object containing symbol data
+ */
+function createSymbol (data, version, errorCorrectionLevel, maskPattern) {
+  let segments;
+
+  if (Array.isArray(data)) {
+    segments = Segments.fromArray(data);
+  } else if (typeof data === 'string') {
+    let estimatedVersion = version;
+
+    if (!estimatedVersion) {
+      const rawSegments = Segments.rawSplit(data);
+
+      // Estimate best version that can contain raw splitted segments
+      estimatedVersion = Version.getBestVersionForData(rawSegments, errorCorrectionLevel);
+    }
+
+    // Build optimized segments
+    // If estimated version is undefined, try with the highest version
+    segments = Segments.fromString(data, estimatedVersion || 40);
+  } else {
+    throw new Error('Invalid data')
+  }
+
+  // Get the min version that can contain data
+  const bestVersion = Version.getBestVersionForData(segments, errorCorrectionLevel);
+
+  // If no version is found, data cannot be stored
+  if (!bestVersion) {
+    throw new Error('The amount of data is too big to be stored in a QR Code')
+  }
+
+  // If not specified, use min version as default
+  if (!version) {
+    version = bestVersion;
+
+  // Check if the specified version can contain the data
+  } else if (version < bestVersion) {
+    throw new Error('\n' +
+      'The chosen QR Code version cannot contain this amount of data.\n' +
+      'Minimum version required to store current data is: ' + bestVersion + '.\n'
+    )
+  }
+
+  const dataBits = createData(version, errorCorrectionLevel, segments);
+
+  // Allocate matrix buffer
+  const moduleCount = Utils$1.getSymbolSize(version);
+  const modules = new BitMatrix(moduleCount);
+
+  // Add function modules
+  setupFinderPattern(modules, version);
+  setupTimingPattern(modules);
+  setupAlignmentPattern(modules, version);
+
+  // Add temporary dummy bits for format info just to set them as reserved.
+  // This is needed to prevent these bits from being masked by {@link MaskPattern.applyMask}
+  // since the masking operation must be performed only on the encoding region.
+  // These blocks will be replaced with correct values later in code.
+  setupFormatInfo(modules, errorCorrectionLevel, 0);
+
+  if (version >= 7) {
+    setupVersionInfo(modules, version);
+  }
+
+  // Add data codewords
+  setupData(modules, dataBits);
+
+  if (isNaN(maskPattern)) {
+    // Find best mask pattern
+    maskPattern = MaskPattern.getBestMask(modules,
+      setupFormatInfo.bind(null, modules, errorCorrectionLevel));
+  }
+
+  // Apply mask pattern
+  MaskPattern.applyMask(maskPattern, modules);
+
+  // Replace format info bits with correct values
+  setupFormatInfo(modules, errorCorrectionLevel, maskPattern);
+
+  return {
+    modules: modules,
+    version: version,
+    errorCorrectionLevel: errorCorrectionLevel,
+    maskPattern: maskPattern,
+    segments: segments
+  }
+}
+
+/**
+ * QR Code
+ *
+ * @param {String | Array} data                 Input data
+ * @param {Object} options                      Optional configurations
+ * @param {Number} options.version              QR Code version
+ * @param {String} options.errorCorrectionLevel Error correction level
+ * @param {Function} options.toSJISFunc         Helper func to convert utf8 to sjis
+ */
+qrcode.create = function create (data, options) {
+  if (typeof data === 'undefined' || data === '') {
+    throw new Error('No input text')
+  }
+
+  let errorCorrectionLevel = ECLevel.M;
+  let version;
+  let mask;
+
+  if (typeof options !== 'undefined') {
+    // Use higher error correction level as default
+    errorCorrectionLevel = ECLevel.from(options.errorCorrectionLevel, ECLevel.M);
+    version = Version.from(options.version);
+    mask = MaskPattern.from(options.maskPattern);
+
+    if (options.toSJISFunc) {
+      Utils$1.setToSJISFunction(options.toSJISFunc);
+    }
+  }
+
+  return createSymbol(data, version, errorCorrectionLevel, mask)
+};
+
+var canvas = {};
+
+var utils = {};
+
+(function (exports) {
+	function hex2rgba (hex) {
+	  if (typeof hex === 'number') {
+	    hex = hex.toString();
+	  }
+
+	  if (typeof hex !== 'string') {
+	    throw new Error('Color should be defined as hex string')
+	  }
+
+	  let hexCode = hex.slice().replace('#', '').split('');
+	  if (hexCode.length < 3 || hexCode.length === 5 || hexCode.length > 8) {
+	    throw new Error('Invalid hex color: ' + hex)
+	  }
+
+	  // Convert from short to long form (fff -> ffffff)
+	  if (hexCode.length === 3 || hexCode.length === 4) {
+	    hexCode = Array.prototype.concat.apply([], hexCode.map(function (c) {
+	      return [c, c]
+	    }));
+	  }
+
+	  // Add default alpha value
+	  if (hexCode.length === 6) hexCode.push('F', 'F');
+
+	  const hexValue = parseInt(hexCode.join(''), 16);
+
+	  return {
+	    r: (hexValue >> 24) & 255,
+	    g: (hexValue >> 16) & 255,
+	    b: (hexValue >> 8) & 255,
+	    a: hexValue & 255,
+	    hex: '#' + hexCode.slice(0, 6).join('')
+	  }
+	}
+
+	exports.getOptions = function getOptions (options) {
+	  if (!options) options = {};
+	  if (!options.color) options.color = {};
+
+	  const margin = typeof options.margin === 'undefined' ||
+	    options.margin === null ||
+	    options.margin < 0
+	    ? 4
+	    : options.margin;
+
+	  const width = options.width && options.width >= 21 ? options.width : undefined;
+	  const scale = options.scale || 4;
+
+	  return {
+	    width: width,
+	    scale: width ? 4 : scale,
+	    margin: margin,
+	    color: {
+	      dark: hex2rgba(options.color.dark || '#000000ff'),
+	      light: hex2rgba(options.color.light || '#ffffffff')
+	    },
+	    type: options.type,
+	    rendererOpts: options.rendererOpts || {}
+	  }
+	};
+
+	exports.getScale = function getScale (qrSize, opts) {
+	  return opts.width && opts.width >= qrSize + opts.margin * 2
+	    ? opts.width / (qrSize + opts.margin * 2)
+	    : opts.scale
+	};
+
+	exports.getImageWidth = function getImageWidth (qrSize, opts) {
+	  const scale = exports.getScale(qrSize, opts);
+	  return Math.floor((qrSize + opts.margin * 2) * scale)
+	};
+
+	exports.qrToImageData = function qrToImageData (imgData, qr, opts) {
+	  const size = qr.modules.size;
+	  const data = qr.modules.data;
+	  const scale = exports.getScale(size, opts);
+	  const symbolSize = Math.floor((size + opts.margin * 2) * scale);
+	  const scaledMargin = opts.margin * scale;
+	  const palette = [opts.color.light, opts.color.dark];
+
+	  for (let i = 0; i < symbolSize; i++) {
+	    for (let j = 0; j < symbolSize; j++) {
+	      let posDst = (i * symbolSize + j) * 4;
+	      let pxColor = opts.color.light;
+
+	      if (i >= scaledMargin && j >= scaledMargin &&
+	        i < symbolSize - scaledMargin && j < symbolSize - scaledMargin) {
+	        const iSrc = Math.floor((i - scaledMargin) / scale);
+	        const jSrc = Math.floor((j - scaledMargin) / scale);
+	        pxColor = palette[data[iSrc * size + jSrc] ? 1 : 0];
+	      }
+
+	      imgData[posDst++] = pxColor.r;
+	      imgData[posDst++] = pxColor.g;
+	      imgData[posDst++] = pxColor.b;
+	      imgData[posDst] = pxColor.a;
+	    }
+	  }
+	}; 
+} (utils));
+
+(function (exports) {
+	const Utils = utils;
+
+	function clearCanvas (ctx, canvas, size) {
+	  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+	  if (!canvas.style) canvas.style = {};
+	  canvas.height = size;
+	  canvas.width = size;
+	  canvas.style.height = size + 'px';
+	  canvas.style.width = size + 'px';
+	}
+
+	function getCanvasElement () {
+	  try {
+	    return document.createElement('canvas')
+	  } catch (e) {
+	    throw new Error('You need to specify a canvas element')
+	  }
+	}
+
+	exports.render = function render (qrData, canvas, options) {
+	  let opts = options;
+	  let canvasEl = canvas;
+
+	  if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
+	    opts = canvas;
+	    canvas = undefined;
+	  }
+
+	  if (!canvas) {
+	    canvasEl = getCanvasElement();
+	  }
+
+	  opts = Utils.getOptions(opts);
+	  const size = Utils.getImageWidth(qrData.modules.size, opts);
+
+	  const ctx = canvasEl.getContext('2d');
+	  const image = ctx.createImageData(size, size);
+	  Utils.qrToImageData(image.data, qrData, opts);
+
+	  clearCanvas(ctx, canvasEl, size);
+	  ctx.putImageData(image, 0, 0);
+
+	  return canvasEl
+	};
+
+	exports.renderToDataURL = function renderToDataURL (qrData, canvas, options) {
+	  let opts = options;
+
+	  if (typeof opts === 'undefined' && (!canvas || !canvas.getContext)) {
+	    opts = canvas;
+	    canvas = undefined;
+	  }
+
+	  if (!opts) opts = {};
+
+	  const canvasEl = exports.render(qrData, canvas, opts);
+
+	  const type = opts.type || 'image/png';
+	  const rendererOpts = opts.rendererOpts || {};
+
+	  return canvasEl.toDataURL(type, rendererOpts.quality)
+	}; 
+} (canvas));
+
+var svgTag = {};
+
+const Utils = utils;
+
+function getColorAttrib (color, attrib) {
+  const alpha = color.a / 255;
+  const str = attrib + '="' + color.hex + '"';
+
+  return alpha < 1
+    ? str + ' ' + attrib + '-opacity="' + alpha.toFixed(2).slice(1) + '"'
+    : str
+}
+
+function svgCmd (cmd, x, y) {
+  let str = cmd + x;
+  if (typeof y !== 'undefined') str += ' ' + y;
+
+  return str
+}
+
+function qrToPath (data, size, margin) {
+  let path = '';
+  let moveBy = 0;
+  let newRow = false;
+  let lineLength = 0;
+
+  for (let i = 0; i < data.length; i++) {
+    const col = Math.floor(i % size);
+    const row = Math.floor(i / size);
+
+    if (!col && !newRow) newRow = true;
+
+    if (data[i]) {
+      lineLength++;
+
+      if (!(i > 0 && col > 0 && data[i - 1])) {
+        path += newRow
+          ? svgCmd('M', col + margin, 0.5 + row + margin)
+          : svgCmd('m', moveBy, 0);
+
+        moveBy = 0;
+        newRow = false;
+      }
+
+      if (!(col + 1 < size && data[i + 1])) {
+        path += svgCmd('h', lineLength);
+        lineLength = 0;
+      }
+    } else {
+      moveBy++;
+    }
+  }
+
+  return path
+}
+
+svgTag.render = function render (qrData, options, cb) {
+  const opts = Utils.getOptions(options);
+  const size = qrData.modules.size;
+  const data = qrData.modules.data;
+  const qrcodesize = size + opts.margin * 2;
+
+  const bg = !opts.color.light.a
+    ? ''
+    : '<path ' + getColorAttrib(opts.color.light, 'fill') +
+      ' d="M0 0h' + qrcodesize + 'v' + qrcodesize + 'H0z"/>';
+
+  const path =
+    '<path ' + getColorAttrib(opts.color.dark, 'stroke') +
+    ' d="' + qrToPath(data, size, opts.margin) + '"/>';
+
+  const viewBox = 'viewBox="' + '0 0 ' + qrcodesize + ' ' + qrcodesize + '"';
+
+  const width = !opts.width ? '' : 'width="' + opts.width + '" height="' + opts.width + '" ';
+
+  const svgTag = '<svg xmlns="http://www.w3.org/2000/svg" ' + width + viewBox + ' shape-rendering="crispEdges">' + bg + path + '</svg>\n';
+
+  if (typeof cb === 'function') {
+    cb(null, svgTag);
+  }
+
+  return svgTag
+};
+
+const canPromise = canPromise$1;
+
+const QRCode = qrcode;
+const CanvasRenderer = canvas;
+const SvgRenderer = svgTag;
+
+function renderCanvas (renderFunc, canvas, text, opts, cb) {
+  const args = [].slice.call(arguments, 1);
+  const argsNum = args.length;
+  const isLastArgCb = typeof args[argsNum - 1] === 'function';
+
+  if (!isLastArgCb && !canPromise()) {
+    throw new Error('Callback required as last argument')
+  }
+
+  if (isLastArgCb) {
+    if (argsNum < 2) {
+      throw new Error('Too few arguments provided')
+    }
+
+    if (argsNum === 2) {
+      cb = text;
+      text = canvas;
+      canvas = opts = undefined;
+    } else if (argsNum === 3) {
+      if (canvas.getContext && typeof cb === 'undefined') {
+        cb = opts;
+        opts = undefined;
+      } else {
+        cb = opts;
+        opts = text;
+        text = canvas;
+        canvas = undefined;
+      }
+    }
+  } else {
+    if (argsNum < 1) {
+      throw new Error('Too few arguments provided')
+    }
+
+    if (argsNum === 1) {
+      text = canvas;
+      canvas = opts = undefined;
+    } else if (argsNum === 2 && !canvas.getContext) {
+      opts = text;
+      text = canvas;
+      canvas = undefined;
+    }
+
+    return new Promise(function (resolve, reject) {
+      try {
+        const data = QRCode.create(text, opts);
+        resolve(renderFunc(data, canvas, opts));
+      } catch (e) {
+        reject(e);
+      }
+    })
+  }
+
+  try {
+    const data = QRCode.create(text, opts);
+    cb(null, renderFunc(data, canvas, opts));
+  } catch (e) {
+    cb(e);
+  }
+}
+
+var create = browser$1.create = QRCode.create;
+var toCanvas = browser$1.toCanvas = renderCanvas.bind(null, CanvasRenderer.render);
+var toDataURL = browser$1.toDataURL = renderCanvas.bind(null, CanvasRenderer.renderToDataURL);
+
+// only svg for now.
+var toString = browser$1.toString = renderCanvas.bind(null, function (data, _, opts) {
+  return SvgRenderer.render(data, opts)
+});
+
+var browser = /*#__PURE__*/_mergeNamespaces({
+    __proto__: null,
+    create: create,
+    default: browser$1,
+    toCanvas: toCanvas,
+    toDataURL: toDataURL,
+    toString: toString
+}, [browser$1]);
 
 export { component, configuration, Widget as default, journey, request, user };
 //# sourceMappingURL=index.js.map
