@@ -43,7 +43,7 @@
     "@typescript-eslint/utils": "^5.57.1",
     "uuid": "9.0.0",
     "xss": "1.0.14",
-    "zod": "3.21.4"
+    "zod": "3.22.3"
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",
