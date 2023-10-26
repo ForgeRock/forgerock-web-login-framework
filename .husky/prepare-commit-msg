@@ -1,4 +1,6 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-exec < /dev/tty && npx cz --hook || true
+if [ "$2" == "template" ]; then	  # Only run commitizen if no commit message was already provided.
+  exec < /dev/tty && npm run commit || true
+fi
