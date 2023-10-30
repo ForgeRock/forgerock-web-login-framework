@@ -71,7 +71,7 @@
     "@storybook/addon-styling": "^1.3.7",
     "@storybook/jest": "^0.2.3",
     "@storybook/svelte": "^7.5.1",
-    "@storybook/sveltekit": "^7.5.1",
+    "@storybook/sveltekit": "^7.5.2",
     "@storybook/test-runner": "^0.13.0",
     "@storybook/testing-library": "^0.2.2",
     "@storybook/theming": "^7.5.1",
