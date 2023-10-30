@@ -43,7 +43,7 @@
     "@forgerock/javascript-sdk": "beta",
     "qrcode": "1.5.3",
     "xss": "1.0.14",
-    "zod": "3.22.3"
+    "zod": "3.22.4"
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",
