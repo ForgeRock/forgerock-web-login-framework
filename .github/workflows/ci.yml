@@ -32,7 +32,7 @@ jobs:
     needs: install
     strategy:
       matrix:
-        node: [16.x, 18.x]
+        node: [20.x, 18.x]
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     env:
@@ -58,7 +58,8 @@ jobs:
         run: npm run build:storybook --quiet
       - run: npx playwright install
       - name: Serve Storybook and run tests
-        if: ${{ runner.os == 'ubuntu-latest' }} # this one hangs on mac os for some reason
+        # this one hangs on mac os for some reason
+        if: ${{ runner.os == 'ubuntu-latest' }}
         run: |
           npx concurrently -k -s first -n "SB,TEST" -c "magenta,blue" \
             "npx http-server storybook-static --port 6006 --silent" \

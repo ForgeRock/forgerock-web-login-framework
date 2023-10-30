@@ -18,7 +18,7 @@ jobs:
         id: preview_urls
         run: |
           URLS=$(okteto preview endpoints pr-${{ github.event.number }}-ryanbas21 -o json | jq -c)
-          echo "::set-output name=preview_urls::$URLS"
+          echo "preview_urls=$URLS" >> "$GITHUB_OUTPUT"
       - uses: ryanbas21/update-cors-am-github-action@latest
         with:
           AM_URL: ${{ secrets.VITE_FR_AM_URL }}
