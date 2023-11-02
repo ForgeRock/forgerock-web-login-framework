@@ -1,14 +1,12 @@
 <script lang="ts">
-  import { FRAuth, FRStep } from '@forgerock/javascript-sdk';
+  import { CallbackType, FRAuth, FRStep } from '@forgerock/javascript-sdk';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
-  import T from '$components/_utilities/locale-strings.svelte';
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
-  import Button from '$components/primitives/button/button.svelte';
   import {
     convertStringToKey,
     shouldRedirectFromStep,
@@ -64,7 +62,6 @@
     formNeedsFocus = false;
     form?.submit();
   }
-
   afterUpdate(() => {
     if (form?.message) {
       formAriaDescriptor = formFailureMessageId;
@@ -125,12 +122,6 @@
       }}
     />
   {/each}
-
-  {#if !metadata?.step?.derived.numOfUserInputCbs || metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
-      <T key="nextButton" />
-    </Button>
-  {/if}
 
   <BackTo {journey} />
 </Form>
