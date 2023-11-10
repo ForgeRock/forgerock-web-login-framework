@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
-import { asyncEvents } from '../../utilities/async-events.js';
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
 /**
  * for now because FF is causing issues with the test
@@ -26,15 +26,15 @@ test('Registration accessibility ensuring password field focus when submitted tw
   await page.keyboard.press('Tab');
 
   const firstNameField = page.getByLabel('First name');
-  await firstNameField.fill('my-first-name');
+  await firstNameField.fill('Demo');
   await page.keyboard.press('Tab');
 
   const lastNameField = page.getByLabel('Last name');
-  await lastNameField.fill('my-last-name');
+  await lastNameField.fill('User');
   await page.keyboard.press('Tab');
 
   const emailField = page.getByLabel('Email address');
-  await emailField.fill('myemail@forgerock.com');
+  await emailField.fill('test@auto.com');
   await page.keyboard.press('Tab');
 
   // https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
@@ -106,8 +106,6 @@ test('Registration accessibility ensuring password field focus when submitted tw
 
   await expect(register).toBeFocused();
   await pressEnter('/authenticate');
-  const name = page.getByText('my-first-name my-last-name');
-  await name.waitFor();
-  expect(await name.textContent()).toBe('Full name: my-first-name my-last-name');
-  expect(await page.getByText('Email:').textContent()).toBe('Email: myemail@forgerock.com');
+
+  await verifyUserInfo(page, expect, 'register');
 });

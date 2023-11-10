@@ -12,6 +12,7 @@ import {
   oathRegistrationErrorStep,
   pushRegistrationStep,
   recoveryCodes,
+  emailSuspendStep,
   webAuthnAuthenticationStep,
   webAuthnRegistrationStep,
 } from './mfa-stages.mock.ts';
@@ -22,6 +23,7 @@ const frOathRegistration = new FRStep(oathRegistrationStep);
 const frOathRegistrationError = new FRStep(oathRegistrationErrorStep);
 const frPushRegistration = new FRStep(pushRegistrationStep);
 const frRecoveryCodes = new FRStep(recoveryCodes);
+const frSuspendEmail = new FRStep(emailSuspendStep);
 const frWebAuthnAuthenticationStep = new FRStep(webAuthnAuthenticationStep);
 const frWebAuthnRegistrationStep = new FRStep(webAuthnRegistrationStep);
 
@@ -153,6 +155,25 @@ export const RecoveryCodes = {
     },
     stage: 'RecoveryCodes',
     step: frRecoveryCodes,
+  },
+};
+
+export const SuspendEmail = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: 'EmailSuspend',
+    step: frSuspendEmail,
   },
 };
 

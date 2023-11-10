@@ -3,6 +3,7 @@
   import type { z } from 'zod';
 
   import Centered from '$components/primitives/box/centered.svelte';
+  import EmailSuspend from './email-suspend.svelte';
   import Generic from './generic.svelte';
   import { initialize as initializeLinks } from '$lib/links.store';
   import OneTimePassword from './one-time-password.svelte';
@@ -55,7 +56,9 @@
 </script>
 
 <Centered>
-  {#if stage === 'OneTimePassword'}
+  {#if stage === 'EmailSuspend'}
+    <EmailSuspend componentStyle="modal" {form} {journey} {metadata} {step} />
+  {:else if stage === 'OneTimePassword'}
     <OneTimePassword componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else if stage === 'DefaultLogin'}
     <Login componentStyle="modal" {form} {journey} {metadata} {step} />

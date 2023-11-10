@@ -5,8 +5,7 @@ import Login from '$journey/stages/login.svelte';
 import WebAuthn from '$journey/stages/webauthn.svelte';
 import RecoveryCodes from '$journey/stages/recovery-codes.svelte';
 import QrCode from '$journey/stages/qr-code.svelte';
-import SuspendedTextOutput from '$journey/stages/suspended-text-output.svelte';
-
+import EmailSuspend from '$journey/stages/email-suspend.svelte';
 import type { StepTypes } from '$journey/journey.interfaces';
 import {
   SuspendedTextOutputCallback,
@@ -16,21 +15,21 @@ import {
   CallbackType,
 } from '@forgerock/javascript-sdk';
 
-type ComponentTypes =
+type StageTypes =
   | typeof WebAuthn
   | typeof OneTimePassword
   | typeof Registration
   | typeof Login
   | typeof Generic
   | typeof QrCode
-  | typeof SuspendedTextOutput
+  | typeof EmailSuspend
   | typeof RecoveryCodes;
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
  * @returns {object} - The stage Svelte component
  */
-export function mapStepToStage(currentStep: StepTypes): ComponentTypes {
+export function mapStepToStage(currentStep: StepTypes): StageTypes {
   // Handle unlikely error state
   if (!currentStep || currentStep.type !== 'Step') {
     return Generic;
@@ -66,7 +65,7 @@ export function mapStepToStage(currentStep: StepTypes): ComponentTypes {
     CallbackType.SuspendedTextOutputCallback,
   );
   if (suspendedTextOutput.length > 0) {
-    return SuspendedTextOutput;
+    return EmailSuspend;
   }
 
   return Generic;

@@ -15,6 +15,7 @@ export const stringsSchema = z
     closeModal: z.string(),
     charactersCannotRepeatMoreThan: z.string(),
     charactersCannotRepeatMoreThanCaseInsensitive: z.string(),
+    checkYourEmail: z.string(),
     chooseDifferentUsername: z.string(),
     chooseYourDeviceForIdentityVerification: z.string(),
     confirmPassword: z.string(),

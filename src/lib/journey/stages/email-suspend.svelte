@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { CallbackType, FRAuth, FRStep } from '@forgerock/javascript-sdk';
+  import { FRAuth, FRStep } from '@forgerock/javascript-sdk';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
@@ -13,7 +13,7 @@
   } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
-  import ShieldIcon from '$components/icons/shield-icon.svelte';
+  import EmailIcon from '$components/icons/email-icon.svelte';
   import { styleStore } from '$lib/style.store';
 
   // Types
@@ -91,18 +91,14 @@
 >
   {#if form?.icon && componentStyle !== 'inline'}
     <div class="tw_flex tw_justify-center">
-      <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+      <EmailIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
   {/if}
+
   <header bind:this={linkWrapper} id={formHeaderId}>
     <h1 class="tw_primary-header dark:tw_primary-header_dark">
-      <Sanitize html={true} string={step?.getHeader() || ''} />
+      <Sanitize html={true} string={step?.getHeader() || interpolate('checkYourEmail')} />
     </h1>
-    <p
-      class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-    >
-      <Sanitize html={true} string={step?.getDescription() || ''} />
-    </p>
   </header>
 
   {#if form?.message}

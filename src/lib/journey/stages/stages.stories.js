@@ -10,6 +10,7 @@ import {
   loginStep,
   registrationStep,
   registrationStepWithTwoKBAs,
+  usernameDisplay,
   usernamePasswordStep,
   deviceProfileComposition,
   deviceProfileAloneData,
@@ -30,6 +31,7 @@ const frConfirmPassword = new FRStep(confirmPasswordStep);
 const frRegistrationStep = new FRStep(registrationStep);
 const frRegistrationStepWithTwoKBAs = new FRStep(registrationStepWithTwoKBAs);
 const frLoginStep = new FRStep(loginStep);
+const frUsernameDisplay = new FRStep(usernameDisplay);
 const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
 
 const frSocialMultipleProvidersLocalAuthFormStep = new FRStep(multipleProvidersLocalAuthFormStep);
@@ -96,7 +98,25 @@ export const Registration = {
     step: frRegistrationStep,
   },
 };
-
+export const UsernameDisplay = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([{ tree: 'Login' }]),
+    },
+    labelType: 'stacked',
+    stage: frUsernameDisplay.getStage(),
+    step: frUsernameDisplay,
+  },
+};
 export const UsernamePassword = {
   args: {
     form: {

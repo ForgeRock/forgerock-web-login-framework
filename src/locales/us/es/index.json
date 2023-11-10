@@ -5,6 +5,7 @@
   "closeModal": "Ventana Emergente",
   "charactersCannotRepeatMoreThan": "Character cannot repeat more than {max} times",
   "charactersCannotRepeatMoreThanCaseInsensitive": "Character cannot repeat more than {max} times (case insensitive)",
+  "checkYourEmail": "Check your email",
   "chooseDifferentUsername": "Please choose a different username.",
   "chooseYourDeviceForIdentityVerification": "Choose your device for identity verification.",
   "confirmPassword": "Confirm password",
