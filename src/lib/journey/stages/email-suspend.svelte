@@ -4,18 +4,16 @@
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
-  import T from '$components/_utilities/locale-strings.svelte';
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
-  import Button from '$components/primitives/button/button.svelte';
   import {
     convertStringToKey,
     shouldRedirectFromStep,
   } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
-  import ShieldIcon from '$components/icons/shield-icon.svelte';
+  import EmailIcon from '$components/icons/email-icon.svelte';
   import { styleStore } from '$lib/style.store';
 
   // Types
@@ -64,7 +62,6 @@
     formNeedsFocus = false;
     form?.submit();
   }
-
   afterUpdate(() => {
     if (form?.message) {
       formAriaDescriptor = formFailureMessageId;
@@ -94,18 +91,14 @@
 >
   {#if form?.icon && componentStyle !== 'inline'}
     <div class="tw_flex tw_justify-center">
-      <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
+      <EmailIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>
   {/if}
+
   <header bind:this={linkWrapper} id={formHeaderId}>
     <h1 class="tw_primary-header dark:tw_primary-header_dark">
-      <Sanitize html={true} string={step?.getHeader() || ''} />
+      <Sanitize html={true} string={step?.getHeader() || interpolate('checkYourEmail')} />
     </h1>
-    <p
-      class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-    >
-      <Sanitize html={true} string={step?.getDescription() || ''} />
-    </p>
   </header>
 
   {#if form?.message}
@@ -125,25 +118,6 @@
       }}
     />
   {/each}
-  <!--
-    The below condition follows this logic to render the submit button:
-    - If the step is NOT self-submittable, render button (needed for steps with device profile and other callbacks)
-    - If the user input calbacks are optional, render button (steps with self-submittable callbacks, but are optional)
-    - If no self-submittable callbacks, render button (most generic steps)
-  -->
-  {#if !metadata?.step?.derived.isStepSelfSubmittable()}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
-      <T key="nextButton" />
-    </Button>
-  {:else if metadata?.step?.derived.isUserInputOptional}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
-      <T key="nextButton" />
-    </Button>
-  {:else if !metadata?.step?.derived.numOfSelfSubmittableCbs}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
-      <T key="nextButton" />
-    </Button>
-  {/if}
 
   <BackTo {journey} />
 </Form>

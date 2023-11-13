@@ -5,16 +5,31 @@ import Login from '$journey/stages/login.svelte';
 import WebAuthn from '$journey/stages/webauthn.svelte';
 import RecoveryCodes from '$journey/stages/recovery-codes.svelte';
 import QrCode from '$journey/stages/qr-code.svelte';
-
+import EmailSuspend from '$journey/stages/email-suspend.svelte';
 import type { StepTypes } from '$journey/journey.interfaces';
-import { FRRecoveryCodes, FRWebAuthn, FRQRCode } from '@forgerock/javascript-sdk';
+import {
+  SuspendedTextOutputCallback,
+  FRRecoveryCodes,
+  FRWebAuthn,
+  FRQRCode,
+  CallbackType,
+} from '@forgerock/javascript-sdk';
 
+type StageTypes =
+  | typeof WebAuthn
+  | typeof OneTimePassword
+  | typeof Registration
+  | typeof Login
+  | typeof Generic
+  | typeof QrCode
+  | typeof EmailSuspend
+  | typeof RecoveryCodes;
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
  * @returns {object} - The stage Svelte component
  */
-export function mapStepToStage(currentStep: StepTypes) {
+export function mapStepToStage(currentStep: StepTypes): StageTypes {
   // Handle unlikely error state
   if (!currentStep || currentStep.type !== 'Step') {
     return Generic;
@@ -44,6 +59,13 @@ export function mapStepToStage(currentStep: StepTypes) {
 
   if (FRQRCode.isQRCodeStep(currentStep)) {
     return QrCode;
+  }
+
+  const suspendedTextOutput: Array<SuspendedTextOutputCallback> = currentStep.getCallbacksOfType(
+    CallbackType.SuspendedTextOutputCallback,
+  );
+  if (suspendedTextOutput.length > 0) {
+    return EmailSuspend;
   }
 
   return Generic;
