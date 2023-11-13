@@ -6022,7 +6022,7 @@ class ZodType {
 }
 const cuidRegex = /^c[^\s-]{8,}$/i;
 const cuid2Regex = /^[a-z][a-z0-9]*$/;
-const ulidRegex = /[0-9A-HJKMNP-TV-Z]{26}/;
+const ulidRegex = /^[0-9A-HJKMNP-TV-Z]{26}$/;
 // const uuidRegex =
 //   /^([a-f0-9]{8}-[a-f0-9]{4}-[1-5][a-f0-9]{3}-[a-f0-9]{4}-[a-f0-9]{12}|00000000-0000-0000-0000-000000000000)$/i;
 const uuidRegex = /^[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}$/i;
@@ -6042,7 +6042,8 @@ const emailRegex = /^(?!\.)(?!.*\.\.)([A-Z0-9_+-\.]*)[A-Z0-9_+-]@([A-Z0-9][A-Z0-
 // const emailRegex =
 //   /^[a-z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\.[a-z0-9\-]+)*$/i;
 // from https://thekevinscott.com/emojis-in-javascript/#writing-a-regular-expression
-const emojiRegex = /^(\p{Extended_Pictographic}|\p{Emoji_Component})+$/u;
+const _emojiRegex = `^(\\p{Extended_Pictographic}|\\p{Emoji_Component})+$`;
+let emojiRegex;
 const ipv4Regex = /^(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))$/;
 const ipv6Regex = /^(([a-f0-9]{1,4}:){7}|::([a-f0-9]{1,4}:){0,6}|([a-f0-9]{1,4}:){1}:([a-f0-9]{1,4}:){0,5}|([a-f0-9]{1,4}:){2}:([a-f0-9]{1,4}:){0,4}|([a-f0-9]{1,4}:){3}:([a-f0-9]{1,4}:){0,3}|([a-f0-9]{1,4}:){4}:([a-f0-9]{1,4}:){0,2}|([a-f0-9]{1,4}:){5}:([a-f0-9]{1,4}:){0,1})([a-f0-9]{1,4}|(((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2}))\.){3}((25[0-5])|(2[0-4][0-9])|(1[0-9]{2})|([0-9]{1,2})))$/;
 // Adapted from https://stackoverflow.com/a/3143231
@@ -6082,31 +6083,6 @@ function isValidIP(ip, version) {
     return false;
 }
 class ZodString extends ZodType {
-    constructor() {
-        super(...arguments);
-        this._regex = (regex, validation, message) => this.refinement((data) => regex.test(data), {
-            validation,
-            code: ZodIssueCode.invalid_string,
-            ...errorUtil.errToObj(message),
-        });
-        /**
-         * @deprecated Use z.string().min(1) instead.
-         * @see {@link ZodString.min}
-         */
-        this.nonempty = (message) => this.min(1, errorUtil.errToObj(message));
-        this.trim = () => new ZodString({
-            ...this._def,
-            checks: [...this._def.checks, { kind: "trim" }],
-        });
-        this.toLowerCase = () => new ZodString({
-            ...this._def,
-            checks: [...this._def.checks, { kind: "toLowerCase" }],
-        });
-        this.toUpperCase = () => new ZodString({
-            ...this._def,
-            checks: [...this._def.checks, { kind: "toUpperCase" }],
-        });
-    }
     _parse(input) {
         if (this._def.coerce) {
             input.data = String(input.data);
@@ -6194,6 +6170,9 @@ class ZodString extends ZodType {
                 }
             }
             else if (check.kind === "emoji") {
+                if (!emojiRegex) {
+                    emojiRegex = new RegExp(_emojiRegex, "u");
+                }
                 if (!emojiRegex.test(input.data)) {
                     ctx = this._getOrReturnCtx(input, ctx);
                     addIssueToContext(ctx, {
@@ -6346,6 +6325,13 @@ class ZodString extends ZodType {
         }
         return { status: status.value, value: input.data };
     }
+    _regex(regex, validation, message) {
+        return this.refinement((data) => regex.test(data), {
+            validation,
+            code: ZodIssueCode.invalid_string,
+            ...errorUtil.errToObj(message),
+        });
+    }
     _addCheck(check) {
         return new ZodString({
             ...this._def,
@@ -6441,6 +6427,31 @@ class ZodString extends ZodType {
             kind: "length",
             value: len,
             ...errorUtil.errToObj(message),
+        });
+    }
+    /**
+     * @deprecated Use z.string().min(1) instead.
+     * @see {@link ZodString.min}
+     */
+    nonempty(message) {
+        return this.min(1, errorUtil.errToObj(message));
+    }
+    trim() {
+        return new ZodString({
+            ...this._def,
+            checks: [...this._def.checks, { kind: "trim" }],
+        });
+    }
+    toLowerCase() {
+        return new ZodString({
+            ...this._def,
+            checks: [...this._def.checks, { kind: "toLowerCase" }],
+        });
+    }
+    toUpperCase() {
+        return new ZodString({
+            ...this._def,
+            checks: [...this._def.checks, { kind: "toUpperCase" }],
         });
     }
     get isDatetime() {
@@ -8976,7 +8987,7 @@ ZodReadonly.create = (type, params) => {
     });
 };
 const custom = (check, params = {}, 
-/*
+/**
  * @deprecated
  *
  * Pass `fatal` into the params object instead:
@@ -27883,7 +27894,7 @@ function get_each_context$6(ctx, list, i) {
 	return child_ctx;
 }
 
-// (71:2) {#if form?.icon && componentStyle !== 'inline'}
+// (70:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block_4$3(ctx) {
 	let div;
 	let shieldicon;
@@ -27923,7 +27934,7 @@ function create_if_block_4$3(ctx) {
 	};
 }
 
-// (87:2) {#if form?.message}
+// (86:2) {#if form?.message}
 function create_if_block_3$5(ctx) {
 	let alert;
 	let current;
@@ -27971,7 +27982,7 @@ function create_if_block_3$5(ctx) {
 	};
 }
 
-// (88:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_4$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -27992,7 +28003,7 @@ function create_default_slot_4$1(ctx) {
 	};
 }
 
-// (93:2) {#each step?.callbacks as callback, idx}
+// (92:2) {#each step?.callbacks as callback, idx}
 function create_each_block$6(ctx) {
 	let callbackmapper;
 	let current;
@@ -28045,7 +28056,7 @@ function create_each_block$6(ctx) {
 	};
 }
 
-// (118:61) 
+// (117:61) 
 function create_if_block_2$6(ctx) {
 	let button;
 	let current;
@@ -28094,7 +28105,7 @@ function create_if_block_2$6(ctx) {
 	};
 }
 
-// (114:56) 
+// (113:56) 
 function create_if_block_1$7(ctx) {
 	let button;
 	let current;
@@ -28143,7 +28154,7 @@ function create_if_block_1$7(ctx) {
 	};
 }
 
-// (110:2) {#if !metadata?.step?.derived.isStepSelfSubmittable()}
+// (109:2) {#if !metadata?.step?.derived.isStepSelfSubmittable()}
 function create_if_block$9(ctx) {
 	let button;
 	let current;
@@ -28192,7 +28203,7 @@ function create_if_block$9(ctx) {
 	};
 }
 
-// (119:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (118:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_3$2(ctx) {
 	let t;
 	let current;
@@ -28222,7 +28233,7 @@ function create_default_slot_3$2(ctx) {
 	};
 }
 
-// (115:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (114:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_2$4(ctx) {
 	let t;
 	let current;
@@ -28252,7 +28263,7 @@ function create_default_slot_2$4(ctx) {
 	};
 }
 
-// (111:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (110:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$8(ctx) {
 	let t;
 	let current;
@@ -28282,7 +28293,7 @@ function create_default_slot_1$8(ctx) {
 	};
 }
 
-// (64:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
+// (63:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
 function create_default_slot$9(ctx) {
 	let t0;
 	let header;
@@ -28708,11 +28719,10 @@ function instance$g($$self, $$props, $$invalidate) {
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*step, form, metadata*/ 52) {
+		if ($$self.$$.dirty & /*step, form*/ 36) {
 			{
 				shouldRedirectFromStep(step) && FRAuth.redirect(step);
 				$$invalidate(7, formMessageKey = convertStringToKey(form?.message));
-				console.log(metadata?.step.derived.isStepSelfSubmittable());
 			}
 		}
 	};
