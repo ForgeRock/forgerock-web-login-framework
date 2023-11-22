@@ -9,6 +9,7 @@
 
   import type { Maybe } from '$lib/interfaces';
   import type { styleSchema } from '$lib/style.store';
+  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
 
   export let forceValidityFailure = false;
   export let passwordsDoNotMatch = false;
@@ -17,8 +18,10 @@
   export let onChange: (val: Maybe<string>) => void;
   export let resetValue: boolean;
   export let style: z.infer<typeof styleSchema> = {};
+  export let isFirstInvalidInput: boolean;
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
+  const showCheckboxPassword = style.showPassword === 'checkbox' ? true : false;
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
@@ -59,7 +62,7 @@
 <Input
   {forceValidityFailure}
   isFirstInvalidInput={false}
-  hasRightIcon={true}
+  hasRightIcon={!showCheckboxPassword}
   key={`${key}-confirm`}
   label={interpolate('confirmPassword', null, 'Confirm Password')}
   {message}
@@ -69,16 +72,31 @@
   {showMessage}
   {type}
   value={typeof value === 'string' ? value : ''}
->
-  <button
-    class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
-    on:click={toggleVisibility}
-    slot="input-button"
-    type="button"
-  >
-    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-      <T key="showPassword" />
-    </EyeIcon>
-  </button>
-  <slot />
+><svelte:fragment slot="input-button">
+      {#if !showCheckboxPassword}
+        <button
+        class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
+        on:click={toggleVisibility}
+        type="button"
+        >
+          <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+            <T key="showPassword" />
+          </EyeIcon>
+        </button>
+      {/if}
+    </svelte:fragment>
+    <slot />
 </Input>
+{#if showCheckboxPassword}
+    <div class="tw_w-full tw_input-spacing" >
+      <Checkbox 
+        {isFirstInvalidInput}
+        isInvalid={false}
+        key = {key + style.showPassword}
+        onChange={toggleVisibility}
+        value={false}
+      >
+        Show Password
+      </Checkbox>
+    </div>
+  {/if}

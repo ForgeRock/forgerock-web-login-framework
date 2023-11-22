@@ -9,11 +9,12 @@ export const logoSchema = z
     width: z.number().optional(),
   })
   .strict();
-
+  
 export const styleSchema = z
   .object({
     checksAndRadios: z.union([z.literal('animated'), z.literal('standard')]).optional(),
     labels: z.union([z.literal('floating').optional(), z.literal('stacked')]).optional(),
+    showPassword: z.union([z.string(), z.null()]).optional(),
     logo: logoSchema.optional(),
     sections: z
       .object({
@@ -35,6 +36,7 @@ export const partialStyleSchema = styleSchema.partial();
 const fallbackStyles = {
   checksAndRadios: 'animated',
   labels: 'floating',
+  showPassword: 'button',
   logo: undefined,
   sections: undefined,
   stage: undefined,

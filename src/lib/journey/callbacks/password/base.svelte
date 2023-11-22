@@ -15,6 +15,7 @@
   import type { Maybe } from '$lib/interfaces';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
   import type { styleSchema } from '$lib/style.store';
+  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
@@ -24,6 +25,7 @@
   export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
+  const showCheckboxPassword = style.showPassword === 'checkbox' ? true : false;
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
@@ -94,7 +96,7 @@
 {#key callback}
   <Input
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    hasRightIcon={true}
+    hasRightIcon={!showCheckboxPassword}
     {key}
     label={interpolate(textToKey(callbackType), null, textInputLabel)}
     message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
@@ -104,19 +106,34 @@
     {showMessage}
     {type}
     value={typeof value === 'string' ? value : ''}
-  >
-    <button
-      class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
-      on:click={toggleVisibility}
-      slot="input-button"
-      type="button"
-    >
-      <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-        <T key="showPassword" />
-      </EyeIcon>
-    </button>
+  > 
+    <svelte:fragment slot="input-button">
+      {#if !showCheckboxPassword}
+        <button
+        class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
+        on:click={toggleVisibility}
+        type="button"
+        >
+          <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+            <T key="showPassword" />
+          </EyeIcon>
+        </button>
+      {/if}
+    </svelte:fragment>
     <slot />
   </Input>
+  {#if showCheckboxPassword}
+    <div class="tw_w-full tw_input-spacing" >
+      <Checkbox isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+        isInvalid={false}
+        key = {key + style.showPassword}
+        onChange={toggleVisibility}
+        value={false}
+      >
+        Show Password
+      </Checkbox>
+    </div>
+  {/if}
 
   {#if callbackMetadata?.platform?.confirmPassword}
     <ConfirmInput
@@ -128,6 +145,8 @@
       {resetValue}
       showMessage={doPasswordsMatch === false}
       {style}
+      isFirstInvalidInput = {callbackMetadata?.derived.isFirstInvalidInput || false}
     />
   {/if}
+  
 {/key}

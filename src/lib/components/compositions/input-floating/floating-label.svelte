@@ -21,6 +21,7 @@
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value = '';
 
+
   function onChangeWrapper(event: Event) {
     if (checkValidity) {
       isInvalid = !checkValidity(event);
@@ -51,6 +52,7 @@
     bind:value
   />
   <slot name="input-button" />
+  
   <div class="tw_w-full" id={`${key}-message`}>
     <Message dirtyMessage={message} {showMessage} type={isInvalid ? 'error' : 'info'} />
     <slot />

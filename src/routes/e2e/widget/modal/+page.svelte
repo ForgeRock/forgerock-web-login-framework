@@ -11,6 +11,7 @@
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
+  let showPasswordParam = $page.url.searchParams.get('showPassword');
 
   type UserResponseObj = {
     family_name: string;
@@ -111,6 +112,7 @@
       },
       style: {
         labels: 'floating',
+        showPassword: showPasswordParam,
         logo: {
           dark: '/img/fr-logomark-white.png',
           light: '/img/fr-logomark-black.png',
