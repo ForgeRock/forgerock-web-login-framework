@@ -26,9 +26,10 @@
     StepMetadata,
   } from '$journey/journey.interfaces';
   import BackTo from './_utilities/back-to.svelte';
-  import { captureLinks } from './_utilities/stage.utilities';
+  import { captureLinks, getCurrentJourney } from './_utilities/stage.utilities';
   import type { Maybe } from '$lib/interfaces';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
+  import type { StepOptions } from '@forgerock/javascript-sdk/src/auth/interfaces';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
@@ -49,6 +50,7 @@
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
   let linkWrapper: HTMLElement;
+  let currentJourney: Maybe<StepOptions> = null;
 
   function determineSubmission() {
     // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
@@ -79,6 +81,7 @@
 
   onMount(() => captureLinks(linkWrapper, journey));
 
+  $: getCurrentJourney(journey).then((currJourney) => (currentJourney = currJourney));
   $: {
     shouldRedirectFromStep(step) && FRAuth.redirect(step);
     formMessageKey = convertStringToKey(form?.message);
@@ -119,6 +122,7 @@
       props={{
         callback,
         callbackMetadata: metadata?.callbacks[idx],
+        journey: currentJourney,
         selfSubmitFunction: determineSubmission,
         stepMetadata: metadata?.step && { ...metadata.step },
         style: $styleStore,

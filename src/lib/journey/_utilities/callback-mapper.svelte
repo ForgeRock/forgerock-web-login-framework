@@ -60,6 +60,7 @@
   } from '$journey/journey.interfaces';
   import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
+  import type { StepOptions } from '@forgerock/javascript-sdk/src/auth/interfaces';
 
   type Props = {
     callback: FRCallback;
@@ -71,7 +72,11 @@
   export let props:
     | Props
     | (Props & { recoveryCodes: Array<string> })
-    | (Props & { webAuthnValue: WebAuthnStepType });
+    | (Props & { webAuthnValue: WebAuthnStepType })
+    | (Props & {
+        journey: Maybe<StepOptions>;
+        recaptchaAction: string;
+      });
 
   let cbType: string;
 
