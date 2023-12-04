@@ -87,7 +87,7 @@ jobs:
       - name: Install dependencies if cache invalid
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
-      - uses: chromaui/action@v1
+      - uses: chromaui/action@v10
         with:
           onlyChanged: true
           exitOnceUploaded: true
