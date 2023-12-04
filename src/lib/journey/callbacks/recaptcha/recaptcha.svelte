@@ -2,22 +2,30 @@
   import type { ReCaptchaCallback } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
   import { onMount } from 'svelte';
+  import { journeyStore } from '$journey/journey.store';
 
   import type { SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
   import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
-  import type { StepOptions } from '@forgerock/javascript-sdk/src/auth/interfaces';
+  import {
+    handleCaptchaError,
+    handleCaptchaToken,
+    renderCaptcha,
+  } from '$journey/stages/_utilities/recaptcha.utilities';
 
   export let callback: Maybe<ReCaptchaCallback>;
-  export let journey: Maybe<StepOptions> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
-  // This is the action that the user can pass into the component
-  // if it isn't passed we default to the journey.tree value
-  // journey.tree won't necessarily be set on mount, we have to wait for it
-  // to be passed down so defaulting to an empty string so its falsey
-  export let recaptchaAction = journey?.tree ?? '';
+  /**
+   * This is the action that the user can pass into the component.
+   * If it isn't passed in via journey.start, we
+   * default to the journey.tree value. However, journey.tree won't
+   * necessarily be set on mount. It is async, so we
+   * have to wait for it to resolve. Therefore, defaulting to
+   * an empty string so its falsey.
+   */
+  export let recaptchaAction = '';
 
   const siteKey = callback?.getSiteKey() ?? '';
   let isV3 = callback?.getOutputByName('reCaptchaV3', false);
@@ -30,67 +38,53 @@
     callback?.getOutputByName<string>('captchaDivClass', 'h-captcha') ?? 'h-captcha';
 
   onMount(() => {
-    if (!isV3) {
-      window.frHandleCaptchaError = function handleCaptchaError() {
-        callback?.setResult('');
-        if (recaptchaClass.startsWith('h')) {
-          window.hcaptcha.render(recaptchaClass, {
-            sitekey: siteKey,
-            callback: 'frHandleCaptcha',
-            'expired-callback': 'frHandleExpiredCallback',
-            'chalexpired-callback': 'frHandleExpiredCallback',
-            'error-callback': 'frHandleErrorCallback',
-          });
-        } else {
-          window.grecaptcha.render(recaptchaClass, {
-            sitekey: siteKey,
-            callback: window.frHandleCaptcha, // grecaptcha uses different types so passing real function here
-            'expired-callback': window.frHandleExpiredCallback,
-          });
-        }
-      };
-      window.frHandleCaptcha = function handleCaptchaToken(token: string) {
-        callback?.setResult(token);
-      };
+    if (isV3) {
+      // If ReCaptcha v3, do nothing and return early
+      return;
+    }
+    if (callback) {
+      window.frHandleCaptchaError = handleCaptchaError(callback);
+      window.frHandleCaptcha = handleCaptchaToken(callback);
       window.frHandleExpiredCallback = function handleExpiredCallback() {
         callback?.setResult('');
-        if (recaptchaClass.startsWith('h')) {
-          window.hcaptcha.render(recaptchaClass, {
-            sitekey: siteKey,
-            callback: 'frHandleCaptcha',
-            'expired-callback': 'frHandleExpiredCallback',
-            'chalexpired-callback': 'frHandleExpiredCallback',
-            'error-callback': 'frHandleErrorCallback',
-          });
-        } else {
-          window.grecaptcha.render(recaptchaClass, {
-            sitekey: siteKey,
-            callback: window.frHandleCaptcha, // grecaptcha uses different types so passing real function here
-            'expired-callback': window.frHandleExpiredCallback,
-          });
-        }
+        renderCaptcha({ nameOfCaptcha: 'hcaptcha', siteKey });
       };
+      renderCaptcha({
+        nameOfCaptcha: recaptchaClass === 'g-recaptcha' ? 'grecaptcha' : 'hcaptcha',
+        siteKey,
+      });
     }
   });
   // defining this outside of the reactive block and guarding it with a isV3 check so it only runs when v3
   // is defined as true and we have a recaptcha action to assign.
-  function executeCaptcha() {
+  function executeV3Captcha() {
     if (isV3 && recaptchaAction.length) {
-      window.grecaptcha.ready(async function () {
-        const value = await window.grecaptcha.execute(siteKey, {
-          action: recaptchaAction,
+      try {
+        window.grecaptcha.ready(async function () {
+          const value = await window.grecaptcha.execute(siteKey, {
+            action: recaptchaAction,
+          });
+          callback?.setResult(value);
         });
-        callback?.setResult(value);
-      });
+      } catch (err) {
+        throw new Error(
+          `Error executing recaptcha. Please make sure you have passed a siteKey and you have loaded the google recaptcha script in your app prior to this Error: ${err}`,
+        );
+      }
     }
   }
+  journeyStore.subscribe((value) => {
+    /*
+     * If the recaptcha action name is not passed in
+     * reassign it to the journey name when we have it.
+     */
+    if (!recaptchaAction.length) {
+      recaptchaAction = value?.recaptchaAction ?? '';
+    }
+  });
   $: {
-    // if recaptcha Action is 0 length, then it has not been passed in as a prop
-    // and we should use the journey tree value which we may have to wait for since
-    // it is not going to be available on mount immediatly due to be an async function
-    recaptchaAction = recaptchaAction.length === 0 ? journey?.tree ?? '' : recaptchaAction;
     if (recaptchaAction.length) {
-      executeCaptcha();
+      executeV3Captcha();
     }
   }
 </script>

@@ -59,7 +59,7 @@
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
         serverConfig: {
-          baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         },
         realmPath: 'alpha',
       },
@@ -68,9 +68,7 @@
         termsAndConditions: 'https://www.forgerock.com/terms',
       },
     });
-
     new Widget({ target: formEl, props: { type: 'inline' } });
-
     // Start the  journey after initialization or within the form.onMount event
     journeyEvents.start({
       journey: journeyParam || authIndexValueParam || undefined,

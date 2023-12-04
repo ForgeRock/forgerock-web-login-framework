@@ -89,6 +89,7 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
   step: null,
   successful: false,
   response: null,
+  recaptchaAction: null,
 });
 
 /**
@@ -126,7 +127,6 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     }
     const previousPayload = prevStep?.payload;
     let nextStep: StepTypes;
-
     journeyStore.set({
       completed: false,
       error: null,
@@ -135,6 +135,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       step: prevStep,
       successful: false,
       response: null,
+      recaptchaAction: nextOptions?.recaptchaAction || null,
     });
 
     try {
@@ -202,6 +203,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         step: nextStep,
         successful: false,
         response: null,
+        recaptchaAction: nextOptions?.recaptchaAction || null,
       });
     } else if (nextStep.type === StepType.LoginSuccess) {
       /**
@@ -218,6 +220,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         step: null,
         successful: true,
         response: nextStep.payload,
+        recaptchaAction: nextOptions?.recaptchaAction || null,
       });
     } else if (nextStep.type === StepType.LoginFailure) {
       /**
@@ -333,6 +336,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           step: restartedStep,
           successful: false,
           response: null,
+          recaptchaAction: null,
         });
       } else if (restartedStep.type === StepType.LoginSuccess) {
         journeyStore.set({
@@ -343,6 +347,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           step: null,
           successful: true,
           response: restartedStep.payload,
+          recaptchaAction: null,
         });
       } else {
         journeyStore.set({
@@ -358,6 +363,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           step: null,
           successful: false,
           response: restartedStep.payload,
+          recaptchaAction: null,
         });
       }
     }
@@ -392,6 +398,9 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         };
       }
     }
+    if (!startOptions?.recaptchaAction && startOptions?.tree) {
+      startOptions.recaptchaAction = startOptions.tree;
+    }
     await stack.push(startOptions);
     await next(undefined, startOptions);
   }
@@ -405,6 +414,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       step: null,
       successful: false,
       response: null,
+      recaptchaAction: null,
     });
   }
 

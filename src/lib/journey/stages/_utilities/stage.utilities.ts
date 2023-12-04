@@ -74,9 +74,3 @@ export function matchJourneyAndDecideAction(
     return { action: null };
   }
 }
-
-export async function getCurrentJourney({
-  stack: { latest },
-}: StageJourneyObject): Promise<StepOptions> {
-  return latest();
-}

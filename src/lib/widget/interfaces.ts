@@ -24,6 +24,7 @@ export interface JourneyOptionsStart {
   forgerock?: StepOptions;
   journey?: string;
   resumeUrl?: string; // current URL if resuming a journey/tree
+  recaptchaAction?: string;
 }
 export interface ModalApi {
   close(args?: { reason: 'auto' | 'external' | 'user' }): void;

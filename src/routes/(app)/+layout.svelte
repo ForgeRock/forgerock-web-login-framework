@@ -14,8 +14,6 @@
   <title>Login Application</title>
   <link rel="icon" href="/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <!--  this is only needed for recaptcha testing   -->
-  <!--  this is only needed for recaptcha testing   -->
   <script
     src="https://www.google.com/recaptcha/api.js?render=6LdIqXMoAAAAAP4APBlw7_5WDeMTlAAQJf42rPWz"
     async
