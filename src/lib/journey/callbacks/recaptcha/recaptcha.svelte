@@ -74,13 +74,7 @@
     }
   }
   journeyStore.subscribe((value) => {
-    /*
-     * If the recaptcha action name is not passed in
-     * reassign it to the journey name when we have it.
-     */
-    if (!recaptchaAction.length) {
-      recaptchaAction = value?.recaptchaAction ?? '';
-    }
+    recaptchaAction = value?.recaptchaAction ?? '';
   });
   $: {
     if (recaptchaAction.length) {

@@ -12087,7 +12087,7 @@ function initialize$4(initOptions) {
             step: prevStep,
             successful: false,
             response: null,
-            recaptchaAction: nextOptions?.recaptchaAction || null,
+            recaptchaAction: nextOptions?.recaptchaAction,
         });
         try {
             if (resumeUrl) {
@@ -12150,7 +12150,7 @@ function initialize$4(initOptions) {
                 step: nextStep,
                 successful: false,
                 response: null,
-                recaptchaAction: nextOptions?.recaptchaAction || null,
+                recaptchaAction: nextOptions?.recaptchaAction,
             });
         }
         else if (nextStep.type === StepType.LoginSuccess) {
@@ -12167,7 +12167,7 @@ function initialize$4(initOptions) {
                 step: null,
                 successful: true,
                 response: nextStep.payload,
-                recaptchaAction: nextOptions?.recaptchaAction || null,
+                recaptchaAction: nextOptions?.recaptchaAction,
             });
         }
         else if (nextStep.type === StepType.LoginFailure) {
@@ -12764,12 +12764,10 @@ function widgetApiFactory(componentApi) {
             }
             else {
                 journeyStore.start({
+                    recaptchaAction: startOptions?.recaptchaAction,
                     ...startOptions?.forgerock,
                     // Only include a `tree` property if the `journey` options prop is truthy
                     ...(startOptions?.journey && { tree: startOptions?.journey }),
-                    ...(!startOptions?.recaptchaAction
-                        ? { recaptchaAction: startOptions?.journey }
-                        : { recaptchaAction: startOptions.recaptchaAction }),
                 });
             }
             return new Promise((resolve, reject) => {
@@ -33657,7 +33655,7 @@ const { Error: Error_1 } = globals;
 
 const file$h = "src/lib/journey/callbacks/recaptcha/recaptcha.svelte";
 
-// (76:0) {#if isV3 === false}
+// (70:0) {#if isV3 === false}
 function create_if_block$b(ctx) {
 	let div;
 
@@ -33671,7 +33669,7 @@ function create_if_block$b(ctx) {
 			attr_dev(div, "data-chalexpired-callback", "frHandleExpiredCallback");
 			attr_dev(div, "data-error-callback", "frHandleErrorCallback");
 			attr_dev(div, "data-callback", "frHandleCaptcha");
-			add_location(div, file$h, 76, 2, 2821);
+			add_location(div, file$h, 70, 2, 2652);
 		},
 		m: function mount(target, anchor) {
 			insert_dev(target, div, anchor);
@@ -33686,7 +33684,7 @@ function create_if_block$b(ctx) {
 		block,
 		id: create_if_block$b.name,
 		type: "if",
-		source: "(76:0) {#if isV3 === false}",
+		source: "(70:0) {#if isV3 === false}",
 		ctx
 	});
 
@@ -33799,13 +33797,7 @@ function instance$j($$self, $$props, $$invalidate) {
 	}
 
 	journeyStore.subscribe(value => {
-		/*
- * If the recaptcha action name is not passed in
- * reassign it to the journey name when we have it.
- */
-		if (!recaptchaAction.length) {
-			$$invalidate(7, recaptchaAction = value?.recaptchaAction ?? '');
-		}
+		$$invalidate(7, recaptchaAction = value?.recaptchaAction ?? '');
 	});
 
 	$$self.$$.on_mount.push(function () {

@@ -50,7 +50,7 @@ export interface JourneyStoreValue {
   step: StepTypes;
   successful: boolean;
   response: Maybe<Step>;
-  recaptchaAction: Maybe<string>;
+  recaptchaAction?: Maybe<string>;
 }
 export interface StackStore extends Pick<Writable<StepOptions[]>, 'subscribe'> {
   latest: () => Promise<StepOptions>;

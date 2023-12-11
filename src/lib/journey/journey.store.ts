@@ -135,7 +135,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       step: prevStep,
       successful: false,
       response: null,
-      recaptchaAction: nextOptions?.recaptchaAction || null,
+      recaptchaAction: nextOptions?.recaptchaAction,
     });
 
     try {
@@ -203,7 +203,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         step: nextStep,
         successful: false,
         response: null,
-        recaptchaAction: nextOptions?.recaptchaAction || null,
+        recaptchaAction: nextOptions?.recaptchaAction,
       });
     } else if (nextStep.type === StepType.LoginSuccess) {
       /**
@@ -220,7 +220,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
         step: null,
         successful: true,
         response: nextStep.payload,
-        recaptchaAction: nextOptions?.recaptchaAction || null,
+        recaptchaAction: nextOptions?.recaptchaAction,
       });
     } else if (nextStep.type === StepType.LoginFailure) {
       /**

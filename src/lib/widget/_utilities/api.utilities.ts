@@ -202,12 +202,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         journeyStore.resume(startOptions.resumeUrl);
       } else {
         journeyStore.start({
+          recaptchaAction: startOptions?.recaptchaAction,
           ...startOptions?.forgerock,
           // Only include a `tree` property if the `journey` options prop is truthy
           ...(startOptions?.journey && { tree: startOptions?.journey }),
-          ...(!startOptions?.recaptchaAction
-            ? { recaptchaAction: startOptions?.journey }
-            : { recaptchaAction: startOptions.recaptchaAction }),
         });
       }
       return new Promise((resolve, reject) => {
