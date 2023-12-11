@@ -17,6 +17,7 @@
 
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
+  let recaptchaParam = $page.url.searchParams.get('recaptchaAction');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
   let formEl: HTMLDivElement;
   let userEvent: UserStoreValue | null;
@@ -73,6 +74,7 @@
     journeyEvents.start({
       journey: journeyParam || authIndexValueParam || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
+      recaptchaAction: recaptchaParam ?? undefined,
     });
   });
 </script>

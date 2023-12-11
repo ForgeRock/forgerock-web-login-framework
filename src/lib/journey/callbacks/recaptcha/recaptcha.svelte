@@ -18,14 +18,14 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
   /**
-   * This is the action that the user can pass into the component.
+   * This is a component level variable that is set from the journey store
    * If it isn't passed in via journey.start, we
    * default to the journey.tree value. However, journey.tree won't
    * necessarily be set on mount. It is async, so we
    * have to wait for it to resolve. Therefore, defaulting to
    * an empty string so its falsey.
    */
-  export let recaptchaAction = '';
+  let recaptchaAction = '';
 
   const siteKey = callback?.getSiteKey() ?? '';
   let isV3 = callback?.getOutputByName('reCaptchaV3', false);

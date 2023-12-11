@@ -205,7 +205,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
           ...startOptions?.forgerock,
           // Only include a `tree` property if the `journey` options prop is truthy
           ...(startOptions?.journey && { tree: startOptions?.journey }),
-          ...(!startOptions?.recaptchaAction ? { recaptchaAction: startOptions?.journey } : {}),
+          ...(!startOptions?.recaptchaAction
+            ? { recaptchaAction: startOptions?.journey }
+            : { recaptchaAction: startOptions.recaptchaAction }),
         });
       }
       return new Promise((resolve, reject) => {
