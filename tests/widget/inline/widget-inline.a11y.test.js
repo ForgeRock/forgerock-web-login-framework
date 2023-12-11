@@ -57,12 +57,23 @@ test('Registration accessibility ensuring password field focus when submitted tw
   await page.keyboard.press('Tab'); // tab again because of the eyeball
 
   // now on security questions
-  const securityQuestion1 = page.getByLabel('Select a security question');
+  const securityQuestion1 = page.getByLabel('Select a security question').first();
   await securityQuestion1.selectOption('0');
   await page.keyboard.press('Tab');
 
-  const securityAnswer1 = page.getByLabel('Security answer');
+  const securityAnswer1 = page.getByLabel('Security answer', {}).first();
   await securityAnswer1.fill('blue', { delay: 100 }); // type wasn't working idk why
+  await expect(securityAnswer1).toHaveValue('blue');
+
+  await page.keyboard.press('Tab');
+
+  const securityQuestion2 = page.getByLabel('Select a security question').last();
+  await securityQuestion2.selectOption('1');
+  await page.keyboard.press('Tab');
+
+  const securityAnswer2 = page.getByLabel('Security answer').last();
+
+  await securityAnswer2.fill('blue', { delay: 100 }); // type wasn't working idk why
   await expect(securityAnswer1).toHaveValue('blue');
 
   await page.keyboard.press('Tab');
@@ -86,6 +97,8 @@ test('Registration accessibility ensuring password field focus when submitted tw
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
 
   const register = page.getByRole('button', { name: 'Register' });
   await expect(register).toBeFocused();
@@ -97,6 +110,8 @@ test('Registration accessibility ensuring password field focus when submitted tw
   await page.keyboard.type('Password1!', { delay: 100 });
 
   // tab back through to the Register button!
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
