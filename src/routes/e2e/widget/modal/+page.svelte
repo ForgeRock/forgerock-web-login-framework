@@ -10,6 +10,7 @@
 
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
+  let recaptchaParam = $page.url.searchParams.get('recaptchaAction');
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
   type UserResponseObj = {
@@ -60,7 +61,7 @@
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
         serverConfig: {
-          baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
           timeout: 5000,
         },
         realmPath: 'alpha',
@@ -120,7 +121,6 @@
         },
       },
     });
-
     new Widget({ target: widgetEl });
   });
 </script>
@@ -140,6 +140,7 @@
         journeyEvents.start({
           journey: journeyParam || authIndexValueParam || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
+          recaptchaAction: recaptchaParam ?? undefined,
         });
         componentEvents.open();
       }}

@@ -17,9 +17,14 @@ test('Modal widget with user registration', async ({ page }) => {
   await page.getByLabel('Password').fill('j56eKtae*1');
   await page
     .getByLabel('Select a security question')
+    .first()
     .selectOption({ label: `What's your favorite color?` });
-  await page.getByLabel('Security Answer').fill('Red');
-
+  await page.getByLabel('Security Answer').first().fill('Red');
+  await page
+    .getByLabel('Select a security question')
+    .last()
+    .selectOption({ label: `Who was your first employer?` });
+  await page.getByLabel('Security Answer').last().fill('Not Red');
   const termsLink = page.getByRole('link', { name: 'View full Terms & Conditions' });
   const termsUrl = await termsLink.getAttribute('href');
   const termsTarget = await termsLink.getAttribute('target');

@@ -14,6 +14,10 @@
   <title>Login Application</title>
   <link rel="icon" href="/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script
+    src="https://www.google.com/recaptcha/api.js?render=6LdIqXMoAAAAAP4APBlw7_5WDeMTlAAQJf42rPWz"
+    async
+  ></script>
 
   <style>
     /**
@@ -26,7 +30,9 @@
       font-family: 'Open Sans';
       font-style: normal;
       font-weight: 300;
-      src: local(''), url('/open-sans/open-sans-v29-latin-300.woff2') format('woff2');
+      src:
+        local(''),
+        url('/open-sans/open-sans-v29-latin-300.woff2') format('woff2');
     }
     /* open-sans-regular - latin */
     @font-face {
@@ -34,7 +40,9 @@
       font-family: 'Open Sans';
       font-style: normal;
       font-weight: 400;
-      src: local(''), url('/open-sans/open-sans-v29-latin-regular.woff2') format('woff2');
+      src:
+        local(''),
+        url('/open-sans/open-sans-v29-latin-regular.woff2') format('woff2');
     }
     /* open-sans-700 - latin */
     @font-face {
@@ -42,7 +50,9 @@
       font-family: 'Open Sans';
       font-style: normal;
       font-weight: 700;
-      src: local(''), url('/open-sans/open-sans-v29-latin-700.woff2') format('woff2');
+      src:
+        local(''),
+        url('/open-sans/open-sans-v29-latin-700.woff2') format('woff2');
     }
 
     /**
@@ -55,9 +65,8 @@
       height: 100%;
       min-height: 100%;
       background-color: #f6f8fa;
-
     }
-    
+
     /**
      * This ensures those with dark theme on, they don't get a flash of a
      * bright white background before the remaining CSS loads and darkens it.
