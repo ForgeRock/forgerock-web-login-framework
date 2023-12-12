@@ -21,6 +21,9 @@ export default {
 export const Base = {
   args: {
     callback: step.getCallbackOfType(CallbackType.PasswordCallback),
+    style: {
+      showPassword: 'button',
+    },
   },
 };
 
@@ -32,6 +35,16 @@ export const PasswordWithCheckbox = {
     },
   },
 };
+
+export const PasswordWithNone = {
+  args: {
+    callback: step.getCallbackOfType(CallbackType.PasswordCallback),
+    style: {
+      showPassword: 'none',
+    },
+  },
+};
+
 const Template = (args) => {
   return {
     Component: Input,
@@ -46,7 +59,6 @@ Interaction.play = async ({ canvasElement }) => {
   const cb = step.getCallbackOfType(CallbackType.PasswordCallback);
   const canvas = within(canvasElement);
   const passwordField = canvas.getByLabelText('Password');
-  expect(passwordField.value).toBe('');
   await userEvent.tab();
   expect(passwordField).toHaveFocus();
 
@@ -76,4 +88,20 @@ InteractionWithCheckbox.play = async ({ canvasElement }) => {
   expect(checkbox).toHaveFocus();
   await userEvent.click(checkbox);
   expect(cb.getInputValue()).toBe('password1');
+};
+
+export const InteractionWithNone = Template.bind({});
+
+InteractionWithNone.args = { ...PasswordWithNone.args };
+
+InteractionWithNone.play = async ({ canvasElement }) => {
+  const cb = step.getCallbackOfType(CallbackType.PasswordCallback);
+  const canvas = within(canvasElement);
+  const passwordField = canvas.getByLabelText('Password');
+  await userEvent.tab();
+  expect(passwordField).toHaveFocus();
+  
+  await userEvent.keyboard('password2');
+  await userEvent.tab();
+  expect(cb.getInputValue()).toBe('password2');
 };

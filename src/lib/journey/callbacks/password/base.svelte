@@ -25,8 +25,7 @@
   export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
-  const showCheckboxPassword = style.showPassword === 'checkbox' ? true : false;
-
+  const showPassword = style.showPassword;
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
@@ -96,7 +95,7 @@
 {#key callback}
   <Input
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    hasRightIcon={!showCheckboxPassword}
+    hasRightIcon={style.showPassword === 'button' ? true : false}
     {key}
     label={interpolate(textToKey(callbackType), null, textInputLabel)}
     message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
@@ -108,7 +107,7 @@
     value={typeof value === 'string' ? value : ''}
   > 
     <svelte:fragment slot="input-button">
-      {#if !showCheckboxPassword}
+      {#if showPassword === "button"}
         <button
         class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
         on:click={toggleVisibility}
@@ -122,7 +121,8 @@
     </svelte:fragment>
     <slot />
   </Input>
-  {#if showCheckboxPassword}
+
+  {#if showPassword === "checkbox"}
     <div class="tw_w-full tw_input-spacing" >
       <Checkbox isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
         isInvalid={false}
@@ -134,7 +134,6 @@
       </Checkbox>
     </div>
   {/if}
-
   {#if callbackMetadata?.platform?.confirmPassword}
     <ConfirmInput
       forceValidityFailure={doPasswordsMatch === false}

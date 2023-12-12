@@ -18,7 +18,7 @@
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
         serverConfig: {
-          baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
           timeout: 5000,
         },
         realmPath: 'alpha',

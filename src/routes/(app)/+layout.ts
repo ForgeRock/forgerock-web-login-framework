@@ -10,11 +10,10 @@ configure({
   redirectUri: `${browser ? window.location.origin : 'https://placeholder.com'}/callback`,
   scope: 'openid profile me.read',
   serverConfig: {
-    baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
+    baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
   },
   realmPath: 'alpha',
 });
-
 initializeJourneys();
 
 initializeLinks({

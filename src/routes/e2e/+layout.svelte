@@ -33,7 +33,9 @@
       font-family: 'Open Sans';
       font-style: normal;
       font-weight: 300;
-      src: local(''), url('/open-sans/open-sans-v29-latin-300.woff2') format('woff2');
+      src:
+        local(''),
+        url('/open-sans/open-sans-v29-latin-300.woff2') format('woff2');
     }
     /* open-sans-regular - latin */
     @font-face {
@@ -41,7 +43,9 @@
       font-family: 'Open Sans';
       font-style: normal;
       font-weight: 400;
-      src: local(''), url('/open-sans/open-sans-v29-latin-regular.woff2') format('woff2');
+      src:
+        local(''),
+        url('/open-sans/open-sans-v29-latin-regular.woff2') format('woff2');
     }
     /* open-sans-700 - latin */
     @font-face {
@@ -49,7 +53,9 @@
       font-family: 'Open Sans';
       font-style: normal;
       font-weight: 700;
-      src: local(''), url('/open-sans/open-sans-v29-latin-700.woff2') format('woff2');
+      src:
+        local(''),
+        url('/open-sans/open-sans-v29-latin-700.woff2') format('woff2');
     }
     /**
       * This style block allows for the vertical expansion of the html
@@ -75,6 +81,10 @@
       }
     }
   </style>
+  <script
+    src="https://www.google.com/recaptcha/api.js?render=6LdIqXMoAAAAAP4APBlw7_5WDeMTlAAQJf42rPWz"
+    async
+  ></script>
 </svelte:head>
 
 <slot />

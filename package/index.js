@@ -65,14 +65,6 @@ function is_function(thing) {
 function safe_not_equal(a, b) {
     return a != a ? b == b : a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
-let src_url_equal_anchor;
-function src_url_equal(element_src, url) {
-    if (!src_url_equal_anchor) {
-        src_url_equal_anchor = document.createElement('a');
-    }
-    src_url_equal_anchor.href = url;
-    return element_src === src_url_equal_anchor.href;
-}
 function is_empty(obj) {
     return Object.keys(obj).length === 0;
 }
@@ -11940,6 +11932,7 @@ const journeyStore = writable({
     step: null,
     successful: false,
     response: null,
+    recaptchaAction: null,
 });
 /**
  * @function initialize - Initializes the journey store
@@ -11979,6 +11972,7 @@ function initialize$4(initOptions) {
             step: prevStep,
             successful: false,
             response: null,
+            recaptchaAction: nextOptions?.recaptchaAction,
         });
         try {
             if (resumeUrl) {
@@ -12041,6 +12035,7 @@ function initialize$4(initOptions) {
                 step: nextStep,
                 successful: false,
                 response: null,
+                recaptchaAction: nextOptions?.recaptchaAction,
             });
         }
         else if (nextStep.type === StepType.LoginSuccess) {
@@ -12057,6 +12052,7 @@ function initialize$4(initOptions) {
                 step: null,
                 successful: true,
                 response: nextStep.payload,
+                recaptchaAction: nextOptions?.recaptchaAction,
             });
         }
         else if (nextStep.type === StepType.LoginFailure) {
@@ -12159,6 +12155,7 @@ function initialize$4(initOptions) {
                     step: restartedStep,
                     successful: false,
                     response: null,
+                    recaptchaAction: null,
                 });
             }
             else if (restartedStep.type === StepType.LoginSuccess) {
@@ -12170,6 +12167,7 @@ function initialize$4(initOptions) {
                     step: null,
                     successful: true,
                     response: restartedStep.payload,
+                    recaptchaAction: null,
                 });
             }
             else {
@@ -12186,6 +12184,7 @@ function initialize$4(initOptions) {
                     step: null,
                     successful: false,
                     response: restartedStep.payload,
+                    recaptchaAction: null,
                 });
             }
         }
@@ -12217,6 +12216,9 @@ function initialize$4(initOptions) {
                 };
             }
         }
+        if (!startOptions?.recaptchaAction && startOptions?.tree) {
+            startOptions.recaptchaAction = startOptions.tree;
+        }
         await stack.push(startOptions);
         await next(undefined, startOptions);
     }
@@ -12229,6 +12231,7 @@ function initialize$4(initOptions) {
             step: null,
             successful: false,
             response: null,
+            recaptchaAction: null,
         });
     }
     return {
@@ -12646,6 +12649,7 @@ function widgetApiFactory(componentApi) {
             }
             else {
                 journeyStore.start({
+                    recaptchaAction: startOptions?.recaptchaAction,
                     ...startOptions?.forgerock,
                     // Only include a `tree` property if the `journey` options prop is truthy
                     ...(startOptions?.journey && { tree: startOptions?.journey }),
@@ -26314,38 +26318,56 @@ class Device_profile extends SvelteComponent {
 	}
 }
 
+/*
+ * Because hcaptch and grecaptcha would
+ * both be loaded on the page, we need to just leverage
+ * the classnames to determine which one is being rendered.
+ * This is retrieved from the step
+ */
+function checkForHCaptcha(captchaClassname) {
+    return captchaClassname.match('h-captcha');
+}
+function renderCaptcha({ nameOfCaptcha, siteKey, }) {
+    if (nameOfCaptcha === 'hcaptcha' && window.hcaptcha) {
+        return window.hcaptcha.render('fr-recaptcha', {
+            sitekey: siteKey,
+            callback: 'frHandleCaptcha',
+            'expired-callback': 'frHandleExpiredCallback',
+            'chalexpired-callback': 'frHandleExpiredCallback',
+            'error-callback': 'frHandleErrorCallback',
+        });
+    }
+    if (nameOfCaptcha === 'grecaptcha' && window.grecaptcha) {
+        return window.grecaptcha.render('fr-recaptcha', {
+            sitekey: siteKey,
+            callback: window.frHandleCaptcha,
+            'expired-callback': window.frHandleExpiredCallback,
+        });
+    }
+}
+function handleCaptchaError(callback) {
+    const siteKey = callback?.getSiteKey() ?? '';
+    const className = callback?.getOutputByName('captchaDivClass', 'h-captcha') ?? 'h-captcha';
+    if (checkForHCaptcha(className)) {
+        return () => renderCaptcha({ nameOfCaptcha: 'hcaptcha', siteKey });
+    }
+    else {
+        return () => renderCaptcha({ nameOfCaptcha: 'grecaptcha', siteKey });
+    }
+}
+function handleCaptchaToken(callback) {
+    return (token) => {
+        callback?.setResult(token);
+    };
+}
+
 /* src/lib/journey/callbacks/recaptcha/recaptcha.svelte generated by Svelte v3.59.2 */
 
 function create_if_block$b(ctx) {
-	let script;
-	let script_src_value;
-
-	return {
-		c() {
-			script = element("script");
-			if (!src_url_equal(script.src, script_src_value = /*recaptchaApi*/ ctx[1])) attr(script, "src", script_src_value);
-			script.async = true;
-			script.defer = true;
-		},
-		m(target, anchor) {
-			insert(target, script, anchor);
-		},
-		p: noop,
-		d(detaching) {
-			if (detaching) detach(script);
-		}
-	};
-}
-
-function create_fragment$i(ctx) {
-	let t;
 	let div;
-	let if_block = /*recaptchaApi*/ ctx[1].length && create_if_block$b(ctx);
 
 	return {
 		c() {
-			if (if_block) if_block.c();
-			t = space();
 			div = element("div");
 			attr(div, "id", "fr-recaptcha");
 			attr(div, "class", `${/*recaptchaClass*/ ctx[2]} tw_flex-1 tw_w-full tw_input-spacing`);
@@ -26356,19 +26378,36 @@ function create_fragment$i(ctx) {
 			attr(div, "data-callback", "frHandleCaptcha");
 		},
 		m(target, anchor) {
-			if (if_block) if_block.m(target, anchor);
-			insert(target, t, anchor);
 			insert(target, div, anchor);
 		},
+		p: noop,
+		d(detaching) {
+			if (detaching) detach(div);
+		}
+	};
+}
+
+function create_fragment$i(ctx) {
+	let if_block_anchor;
+	let if_block = /*isV3*/ ctx[1] === false && create_if_block$b(ctx);
+
+	return {
+		c() {
+			if (if_block) if_block.c();
+			if_block_anchor = empty();
+		},
+		m(target, anchor) {
+			if (if_block) if_block.m(target, anchor);
+			insert(target, if_block_anchor, anchor);
+		},
 		p(ctx, [dirty]) {
-			if (/*recaptchaApi*/ ctx[1].length) if_block.p(ctx, dirty);
+			if (/*isV3*/ ctx[1] === false) if_block.p(ctx, dirty);
 		},
 		i: noop,
 		o: noop,
 		d(detaching) {
 			if (if_block) if_block.d(detaching);
-			if (detaching) detach(t);
-			if (detaching) detach(div);
+			if (detaching) detach(if_block_anchor);
 		}
 	};
 }
@@ -26378,8 +26417,19 @@ function instance$j($$self, $$props, $$invalidate) {
 	const selfSubmitFunction = null;
 	const stepMetadata = null;
 	const style = {};
+
+	/**
+ * This is a component level variable that is set from the journey store
+ * If it isn't passed in via journey.start, we
+ * default to the journey.tree value. However, journey.tree won't
+ * necessarily be set on mount. It is async, so we
+ * have to wait for it to resolve. Therefore, defaulting to
+ * an empty string so its falsey.
+ */
+	let recaptchaAction = '';
+
 	const siteKey = callback?.getSiteKey() ?? '';
-	let recaptchaApi = `${callback?.getOutputByName('captchaApiUri', '') ?? ''}`;
+	let isV3 = callback?.getOutputByName('reCaptchaV3', false);
 
 	/**
  * AM defaults the class name to g-captcha which is wrong
@@ -26389,63 +26439,71 @@ function instance$j($$self, $$props, $$invalidate) {
 	const recaptchaClass = callback?.getOutputByName('captchaDivClass', 'h-captcha') ?? 'h-captcha';
 
 	onMount(() => {
-		window.frHandleCaptchaError = function handleCaptchaError() {
-			callback?.setResult('');
+		if (isV3) {
+			// If ReCaptcha v3, do nothing and return early
+			return;
+		}
 
-			if (recaptchaClass.startsWith('h')) {
-				window.hcaptcha.render(recaptchaClass, {
-					sitekey: siteKey,
-					callback: 'frHandleCaptcha',
-					'expired-callback': 'frHandleExpiredCallback',
-					'chalexpired-callback': 'frHandleExpiredCallback',
-					'error-callback': 'frHandleErrorCallback'
+		if (callback) {
+			window.frHandleCaptchaError = handleCaptchaError(callback);
+			window.frHandleCaptcha = handleCaptchaToken(callback);
+
+			window.frHandleExpiredCallback = function handleExpiredCallback() {
+				callback?.setResult('');
+				renderCaptcha({ nameOfCaptcha: 'hcaptcha', siteKey });
+			};
+
+			renderCaptcha({
+				nameOfCaptcha: recaptchaClass === 'g-recaptcha'
+				? 'grecaptcha'
+				: 'hcaptcha',
+				siteKey
+			});
+		}
+	});
+
+	// defining this outside of the reactive block and guarding it with a isV3 check so it only runs when v3
+	// is defined as true and we have a recaptcha action to assign.
+	function executeV3Captcha() {
+		if (isV3 && recaptchaAction.length) {
+			try {
+				window.grecaptcha.ready(async function () {
+					const value = await window.grecaptcha.execute(siteKey, { action: recaptchaAction });
+					callback?.setResult(value);
 				});
-			} else {
-				window.grecaptcha.render(recaptchaClass, {
-					sitekey: siteKey,
-					callback: window.frHandleCaptcha,
-					'expired-callback': window.frHandleExpiredCallback
-				});
+			} catch(err) {
+				throw new Error(`Error executing recaptcha. Please make sure you have passed a siteKey and you have loaded the google recaptcha script in your app prior to this Error: ${err}`);
 			}
-		};
+		}
+	}
 
-		window.frHandleCaptcha = function handleCaptchaToken(token) {
-			callback?.setResult(token);
-		};
-
-		window.frHandleExpiredCallback = function handleExpiredCallback() {
-			callback?.setResult('');
-
-			if (recaptchaClass.startsWith('h')) {
-				window.hcaptcha.render(recaptchaClass, {
-					sitekey: siteKey,
-					callback: 'frHandleCaptcha',
-					'expired-callback': 'frHandleExpiredCallback',
-					'chalexpired-callback': 'frHandleExpiredCallback',
-					'error-callback': 'frHandleErrorCallback'
-				});
-			} else {
-				window.grecaptcha.render(recaptchaClass, {
-					sitekey: siteKey,
-					callback: window.frHandleCaptcha,
-					'expired-callback': window.frHandleExpiredCallback
-				});
-			}
-		};
+	journeyStore.subscribe(value => {
+		$$invalidate(7, recaptchaAction = value?.recaptchaAction ?? '');
 	});
 
 	$$self.$$set = $$props => {
 		if ('callback' in $$props) $$invalidate(3, callback = $$props.callback);
 	};
 
+	$$self.$$.update = () => {
+		if ($$self.$$.dirty & /*recaptchaAction*/ 128) {
+			{
+				if (recaptchaAction.length) {
+					executeV3Captcha();
+				}
+			}
+		}
+	};
+
 	return [
 		siteKey,
-		recaptchaApi,
+		isV3,
 		recaptchaClass,
 		callback,
 		selfSubmitFunction,
 		stepMetadata,
-		style
+		style,
+		recaptchaAction
 	];
 }
 

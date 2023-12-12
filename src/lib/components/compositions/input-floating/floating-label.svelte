@@ -21,7 +21,6 @@
   export let type: 'date' | 'email' | 'number' | 'password' | 'phone' | 'text' = 'text';
   export let value = '';
 
-
   function onChangeWrapper(event: Event) {
     if (checkValidity) {
       isInvalid = !checkValidity(event);

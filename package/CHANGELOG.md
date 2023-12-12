@@ -1,3 +1,15 @@
+# [1.2.0-beta.10](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.9...v1.2.0-beta.10) (2023-12-12)
+
+
+### Bug Fixes
+
+* **e2e:** move-e2e-to-sdks-tenant ([7d151d4](https://github.com/forgerock/forgerock-web-login-framework/commit/7d151d479a5d028862281bb248bbe6032fd6e06b))
+
+
+### Features
+
+* **recaptchav3:** implement v3 for recaptcha in LAW ([7b83545](https://github.com/forgerock/forgerock-web-login-framework/commit/7b83545dc8c191e7c4a3caa0cc9eb3324b1c234c))
+
 # [1.2.0-beta.9](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.8...v1.2.0-beta.9) (2023-11-13)
 
 

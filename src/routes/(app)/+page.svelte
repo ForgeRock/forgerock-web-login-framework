@@ -47,13 +47,11 @@
     journeyStore.reset();
     oauthStore.reset();
     userStore.reset();
-
     // Fetch fresh journey step
     journeyStore.start({
       tree: journeyParam || authIndexValue || undefined,
     });
   }
-
   /**
    * Sets up locale store with appropriate content
    */
@@ -67,6 +65,7 @@
     } else {
       journeyStore.start({
         tree: journeyParam || authIndexValue || undefined,
+        // recaptchaAction: 'MyTestAction',
       });
     }
   });
