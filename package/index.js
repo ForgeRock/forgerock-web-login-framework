@@ -11942,7 +11942,7 @@ const journeyStore = writable({
 function initialize$4(initOptions) {
     const stack = initializeStack();
     let stepNumber = 0;
-    async function next(prevStep = null, nextOptions, resumeUrl) {
+    async function next(prevStep, nextOptions, resumeUrl) {
         if (!Config.get().serverConfig?.baseUrl) {
             logErrorAndThrow('missingBaseUrl');
         }

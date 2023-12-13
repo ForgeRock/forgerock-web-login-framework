@@ -14,13 +14,16 @@ export interface CallbackMetadata {
   idx: number;
   platform?: Record<string, unknown>;
 }
+export interface StartOptions extends StepOptions {
+  recaptchaAction?: string;
+}
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
   next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
   pop: () => void;
   push: (changeOptions: StepOptions) => void;
   reset: () => void;
   resume: (url: string, resumeOptions?: StepOptions) => void;
-  start: (startOptions?: StepOptions) => void;
+  start: (startOptions?: StartOptions) => void;
 }
 export interface StageFormObject {
   icon: boolean;
@@ -47,7 +50,7 @@ export interface JourneyStoreValue {
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   } | null;
-  step: StepTypes;
+  step?: StepTypes;
   successful: boolean;
   response: Maybe<Step>;
   recaptchaAction?: Maybe<string>;

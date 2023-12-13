@@ -11,7 +11,13 @@ import { get, writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
 import { logErrorAndThrow } from '$lib/_utilities/errors.utilities';
-import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
+import type {
+  JourneyStore,
+  JourneyStoreValue,
+  StackStore,
+  StartOptions,
+  StepTypes,
+} from './journey.interfaces';
 import { interpolate } from '$lib/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
@@ -102,7 +108,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
 
   let stepNumber = 0;
 
-  async function next(prevStep: StepTypes = null, nextOptions?: StepOptions, resumeUrl?: string) {
+  async function next(prevStep?: StepTypes, nextOptions?: StartOptions, resumeUrl?: string) {
     if (!Config.get().serverConfig?.baseUrl) {
       logErrorAndThrow('missingBaseUrl');
     }
@@ -386,7 +392,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     await next(undefined, resumeOptions, url);
   }
 
-  async function start(startOptions?: StepOptions) {
+  async function start(startOptions?: StartOptions) {
     const configTree = Config.get().tree;
     // If no tree is passed in, but there's a configured default tree, use that
     if (!startOptions?.tree && configTree) {
