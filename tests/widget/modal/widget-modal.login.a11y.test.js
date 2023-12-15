@@ -14,6 +14,8 @@ test('Modal widget with failed and successful login, keyboard only', async ({ pa
   const username1 = page.getByLabel('Username');
   const password1 = page.getByLabel('Password');
 
+  await expect(username1).toBeVisible();
+
   await page.keyboard.press('Tab');
   await expect(username1).toBeFocused();
   await username1.fill('username01');

@@ -1,3 +1,17 @@
+# [1.2.0-beta.12](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.11...v1.2.0-beta.12) (2023-12-15)
+
+
+### Bug Fixes
+
+* **tests:** repair tests from tenant migration ([13f41bb](https://github.com/forgerock/forgerock-web-login-framework/commit/13f41bb50fd3909721f9c9d20a0a44f043a1ed00))
+
+# [1.2.0-beta.11](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.10...v1.2.0-beta.11) (2023-12-13)
+
+
+### Bug Fixes
+
+* **fixing-types:** journey-type-updates ([899d0ba](https://github.com/forgerock/forgerock-web-login-framework/commit/899d0ba7705ac586c6734bf6c30543fbbe1964fd))
+
 # [1.2.0-beta.10](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.9...v1.2.0-beta.10) (2023-12-12)
 
 

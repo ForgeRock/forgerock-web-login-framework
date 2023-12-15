@@ -58,12 +58,6 @@
     }
   });
 
-  onMount(() => {
-    if (componentStyle === 'modal') {
-      captureLinks(linkWrapper, journey);
-    }
-  });
-
   $: {
     formMessageKey = convertStringToKey(form?.message);
   }

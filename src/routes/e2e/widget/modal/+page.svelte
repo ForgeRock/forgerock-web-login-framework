@@ -67,7 +67,10 @@
         },
         realmPath: 'alpha',
       },
-      content,
+      content: {
+        ...content,
+        alreadyHaveAnAccount: `Already have an account? <a href="?journey=TEST_Login">Sign in here!</a>`,
+      },
       journeys: {
         forgotPassword: {
           journey: 'TEST_ResetPasword',
