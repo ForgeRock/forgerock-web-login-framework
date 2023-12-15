@@ -1,3 +1,11 @@
+# [1.2.0-beta.13](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.12...v1.2.0-beta.13) (2023-12-15)
+
+
+### Features
+
+* **passwords-config:** add config for show password display UI ([bea26aa](https://github.com/forgerock/forgerock-web-login-framework/commit/bea26aa03aad70abf46281ab75ca8ec5396e8a4e))
+* **passwords-config:** add config for show password display UI ([0c8221a](https://github.com/forgerock/forgerock-web-login-framework/commit/0c8221a3076c6f297036241e5f69a2ed712e338c))
+
 # [1.2.0-beta.12](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.11...v1.2.0-beta.12) (2023-12-15)
 
 
