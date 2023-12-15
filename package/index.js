@@ -29845,7 +29845,7 @@ function get_each_context$4(ctx, list, i) {
 	return child_ctx;
 }
 
-// (50:2) {#if componentStyle !== 'inline'}
+// (45:2) {#if componentStyle !== 'inline'}
 function create_if_block_2$4(ctx) {
 	let t0;
 	let h1;
@@ -29932,7 +29932,7 @@ function create_if_block_2$4(ctx) {
 	};
 }
 
-// (51:4) {#if form?.icon}
+// (46:4) {#if form?.icon}
 function create_if_block_3$3(ctx) {
 	let div;
 	let newusericon;
@@ -29972,7 +29972,7 @@ function create_if_block_3$3(ctx) {
 	};
 }
 
-// (67:2) {#if form.message}
+// (62:2) {#if form.message}
 function create_if_block_1$5(ctx) {
 	let alert;
 	let current;
@@ -30020,7 +30020,7 @@ function create_if_block_1$5(ctx) {
 	};
 }
 
-// (68:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (63:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$2(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -30041,7 +30041,7 @@ function create_default_slot_2$2(ctx) {
 	};
 }
 
-// (73:2) {#each step?.callbacks as callback, idx}
+// (68:2) {#each step?.callbacks as callback, idx}
 function create_each_block$4(ctx) {
 	let callbackmapper;
 	let current;
@@ -30094,7 +30094,7 @@ function create_each_block$4(ctx) {
 	};
 }
 
-// (85:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+// (80:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
 function create_if_block$7(ctx) {
 	let button;
 	let current;
@@ -30143,7 +30143,7 @@ function create_if_block$7(ctx) {
 	};
 }
 
-// (86:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (81:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$6(ctx) {
 	let t;
 	let current;
@@ -30173,7 +30173,7 @@ function create_default_slot_1$6(ctx) {
 	};
 }
 
-// (49:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (44:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$7(ctx) {
 	let t0;
 	let t1;
@@ -30450,12 +30450,6 @@ function instance$c($$self, $$props, $$invalidate) {
 
 	afterUpdate(() => {
 		$$invalidate(6, alertNeedsFocus = !!form?.message);
-	});
-
-	onMount(() => {
-		if (componentStyle === 'modal') {
-			captureLinks(linkWrapper, journey);
-		}
 	});
 
 	onMount(() => {
