@@ -6,9 +6,12 @@
   import type { CallbackMetadata } from '$journey/journey.interfaces';
 
   import type { Maybe } from '$lib/interfaces';
+  import type { z } from 'zod';
+  import type { styleSchema } from '$lib/style.store';
 
   export let callback: ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata> = null;
+  export let style: z.infer<typeof styleSchema> ;
 
   let mergedCallbackMetadata = {
     derived: {
@@ -33,5 +36,5 @@
 </script>
 
 <Centered>
-  <Input {callback} callbackMetadata={mergedCallbackMetadata} {stepMetadata} />
+  <Input {callback} callbackMetadata={mergedCallbackMetadata} {stepMetadata} {style} />
 </Centered>
