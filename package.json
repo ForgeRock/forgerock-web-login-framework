@@ -139,7 +139,7 @@
     "uuid": "9.0.1",
     "vite": "^4.4.12",
     "vite-plugin-turbosnap": "^1.0.1",
-    "vitest": "^0.34.6"
+    "vitest": "^1.1.0"
   },
   "svelte": "../widget/modal.svelte",
   "type": "module",
