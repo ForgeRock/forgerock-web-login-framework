@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { configuration, user } from '$package/index';
+  import { configuration, user } from '@forgerock/login-widget';
 
   let loading: unknown;
   let userInfo: Record<string, unknown> | null;

@@ -1,13 +1,13 @@
 /**
  * @forgerock/login-widget
  *
- * Copyright (c) 2023 ForgeRock. All rights reserved.
+ * Copyright (c) 2024 ForgeRock. All rights reserved.
  * This software may be modified and distributed under the terms
  * of the MIT license.
  *
  * MIT License
  *
- * Copyright (c) 2023
+ * Copyright (c) 2024
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

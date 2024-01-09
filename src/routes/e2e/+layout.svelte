@@ -2,7 +2,7 @@
   /**
    * TODO: If there's a better way to do this, change to it
    */
-  import '$package/widget.css';
+  import '@forgerock/login-widget/widget.css';
 </script>
 
 <svelte:head>
