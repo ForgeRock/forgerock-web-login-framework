@@ -1,3 +1,29 @@
+# [1.2.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.1.0...v1.2.0) (2024-01-09)
+
+
+### Bug Fixes
+
+* accessible-fields-when-data-is-unchanged ([9f8c32e](https://github.com/forgerock/forgerock-web-login-framework/commit/9f8c32e8293035c659150e69c474b4d902703426))
+* **css:** fix base css with link specificity issue ([e7d69bf](https://github.com/forgerock/forgerock-web-login-framework/commit/e7d69bf3675d175628afe284bc3d94c07ff370ab))
+* **e2e-defaults:** improve e2e test usage convention and default redirect url ([e988eb1](https://github.com/forgerock/forgerock-web-login-framework/commit/e988eb14cd616d490ffca9e930f2b0df6f82685f))
+* **e2e:** move-e2e-to-sdks-tenant ([7d151d4](https://github.com/forgerock/forgerock-web-login-framework/commit/7d151d479a5d028862281bb248bbe6032fd6e06b))
+* **fixing-types:** journey-type-updates ([899d0ba](https://github.com/forgerock/forgerock-web-login-framework/commit/899d0ba7705ac586c6734bf6c30543fbbe1964fd))
+* **message-node:** render-next-msg-node ([c13bf93](https://github.com/forgerock/forgerock-web-login-framework/commit/c13bf934d338cbdcfa7c35ffddd63850e832000e))
+* **tests:** repair tests from tenant migration ([13f41bb](https://github.com/forgerock/forgerock-web-login-framework/commit/13f41bb50fd3909721f9c9d20a0a44f043a1ed00))
+* **widget-api:** fix oauth and user disablement in journey config ([c527d38](https://github.com/forgerock/forgerock-web-login-framework/commit/c527d3806258a18e9b4a6b387e74b6e4951948d9))
+* **zod:** improve the use of zod for configuration strictness ([25c330b](https://github.com/forgerock/forgerock-web-login-framework/commit/25c330b17a3289cccf8dd459f0ae71a05fd3f32a))
+
+
+### Features
+
+* **css-variables:** build initial "design tokens" for run-time customization ([d6107d8](https://github.com/forgerock/forgerock-web-login-framework/commit/d6107d8bf3a3fdfcb7151cabdeb8534557c30e57))
+* **LAW:** improve rendering of TextOutputCallback's types ([0d6af68](https://github.com/forgerock/forgerock-web-login-framework/commit/0d6af682b675777af3554fafed62710bc6611020))
+* **passwords-config:** add config for show password display UI ([bea26aa](https://github.com/forgerock/forgerock-web-login-framework/commit/bea26aa03aad70abf46281ab75ca8ec5396e8a4e))
+* **passwords-config:** add config for show password display UI ([0c8221a](https://github.com/forgerock/forgerock-web-login-framework/commit/0c8221a3076c6f297036241e5f69a2ed712e338c))
+* **recaptcha:** support-recaptcha-v2 ([3364d0f](https://github.com/forgerock/forgerock-web-login-framework/commit/3364d0f381e3cbeb07adad1ac89085cca4528fe7))
+* **recaptchav3:** implement v3 for recaptcha in LAW ([7b83545](https://github.com/forgerock/forgerock-web-login-framework/commit/7b83545dc8c191e7c4a3caa0cc9eb3324b1c234c))
+* **stage:** add new QR Code stage for MFA device registration ([b70bd31](https://github.com/forgerock/forgerock-web-login-framework/commit/b70bd3121474ee71ac37ebd385b17df5dc74fdab))
+
 # [1.2.0-beta.13](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.0-beta.12...v1.2.0-beta.13) (2023-12-15)
 
 
