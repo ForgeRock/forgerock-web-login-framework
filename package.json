@@ -48,6 +48,7 @@
   "devDependencies": {
     "@babel/core": "^7.21.3",
     "@hcaptcha/types": "^1.0.3",
+    "@forgerock/login-widget": "./package",
     "@playwright/test": "^1.39.0",
     "@rollup/plugin-alias": "^5.0.0",
     "@rollup/plugin-commonjs": "^24.0.1",

@@ -2,7 +2,7 @@
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
 
-  import Widget, { configuration, component, journey, user } from '$package/index';
+  import Widget, { configuration, component, journey, user } from '@forgerock/login-widget';
   import type { UserStoreValue } from '$lib/widget/types';
 
   type UserResponseObj = {
