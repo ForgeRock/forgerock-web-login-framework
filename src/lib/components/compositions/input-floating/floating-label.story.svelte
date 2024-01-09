@@ -17,7 +17,7 @@
   let el: SvelteComponent;
   let isInvalid: boolean;
 
-  function submitForm(event: SubmitEvent) {
+  function submitForm() {
     message = 'This field must have a value';
   }
 

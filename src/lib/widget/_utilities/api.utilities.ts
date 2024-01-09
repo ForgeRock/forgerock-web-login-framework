@@ -1,5 +1,10 @@
-import { Config, FRUser, SessionManager, type ConfigOptions } from '@forgerock/javascript-sdk';
-import HttpClient from '@forgerock/javascript-sdk/lib/http-client';
+import {
+  Config,
+  FRUser,
+  HttpClient,
+  SessionManager,
+  type ConfigOptions,
+} from '@forgerock/javascript-sdk';
 import { derived, get, type Readable } from 'svelte/store';
 
 import { logErrorAndThrow } from '$lib/_utilities/errors.utilities';
@@ -68,7 +73,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
           realmPath: 'alpha',
           // TODO: Once we move to SSR, this default should be more intelligent
           redirectUri:
-            typeof window === 'object' ? window.location.href : 'https://localhost:3000/callback',
+            typeof window === 'object'
+              ? // Construct URL with origin and path only, stripping off hash and query params
+                `${window.location.origin}${window.location.pathname}`
+              : 'https://localhost:3000/callback',
           scope: 'openid email',
         },
         // Let user provided config override defaults
@@ -139,8 +147,8 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       logErrorAndThrow('missingStores');
     }
 
-    const requestsOauth = options?.oauth || true;
-    const requestsUser = options?.user || true;
+    const requestsOauth = options?.oauth ?? true;
+    const requestsUser = options?.user ?? true;
     const {
       subscribe,
     }: Readable<{ journey: JourneyStoreValue; oauth: OAuthTokenStoreValue; user: UserStoreValue }> =
@@ -194,6 +202,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         journeyStore.resume(startOptions.resumeUrl);
       } else {
         journeyStore.start({
+          recaptchaAction: startOptions?.recaptchaAction,
           ...startOptions?.forgerock,
           // Only include a `tree` property if the `journey` options prop is truthy
           ...(startOptions?.journey && { tree: startOptions?.journey }),

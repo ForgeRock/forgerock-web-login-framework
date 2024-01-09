@@ -15,13 +15,7 @@
   // Types
   import type { FRStep } from '@forgerock/javascript-sdk';
 
-  import type {
-    CallbackMetadata,
-    StageFormObject,
-    StageJourneyObject,
-    StepMetadata,
-  } from '$journey/journey.interfaces';
-  import type { Maybe } from '$lib/interfaces';
+  import type { StageFormObject } from '$journey/journey.interfaces';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
@@ -29,11 +23,6 @@
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
-  export let journey: StageJourneyObject;
-  export let metadata: Maybe<{
-    callbacks: CallbackMetadata[];
-    step: StepMetadata;
-  }>;
   export let step: FRStep;
 
   const formFailureMessageId = 'genericStepFailureMessage';

@@ -1,6 +1,6 @@
 import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
 import { within, userEvent } from '@storybook/testing-library';
-import { expect, jest } from '@storybook/jest';
+import { expect } from '@storybook/jest';
 
 import response from './validated-create-username.mock';
 import Input from './validated-create-username.story.svelte';

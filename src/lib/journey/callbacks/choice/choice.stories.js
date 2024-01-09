@@ -55,11 +55,11 @@ Interaction.play = async ({ canvasElement }) => {
   expect(select).toHaveFocus();
   expect(select.value).toEqual('2');
 
-  userEvent.selectOptions(select, '1');
+  await userEvent.selectOptions(select, '1');
   expect(select.value).toEqual('1');
 
   await expect(cb.getInputValue()).toBe(1);
-  userEvent.selectOptions(select, '0');
+  await userEvent.selectOptions(select, '0');
 
   expect(select.value).toEqual('0');
   await new Promise((resolve) => setTimeout(resolve, 1000));

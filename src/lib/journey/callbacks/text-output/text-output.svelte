@@ -3,7 +3,6 @@
   import sanitize from 'xss';
   import type { z } from 'zod';
 
-
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
@@ -36,23 +35,22 @@
         return 'error';
       default:
         return 'info';
+    }
   }
-  }
-  
+
   $: {
     dirtyMessage = callback.getMessage();
     cleanMessage = sanitize(dirtyMessage);
-    callbackMessageType = getCallbackMessage(callback.getMessageType())
+    callbackMessageType = getCallbackMessage(callback.getMessageType());
   }
-
 </script>
 
 {#if callbackMessageType === 'info'}
-  <Text classes="tw_font-bold tw_mt-6">
+  <Text classes={cleanMessage.length < 100 ? 'tw_font-bold tw_mt-6' : 'tw_mt-6'}>
     {@html cleanMessage}
   </Text>
 {:else}
-  <Alert id="" needsFocus={false} type="{callbackMessageType}">
-        {cleanMessage}
+  <Alert id="" needsFocus={false} type={callbackMessageType}>
+    {cleanMessage}
   </Alert>
 {/if}

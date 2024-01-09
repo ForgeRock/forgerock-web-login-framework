@@ -8,15 +8,12 @@ import Step from './stages.story.svelte';
 import {
   confirmPasswordStep,
   loginStep,
-  oneTimePasswordStep,
   registrationStep,
   registrationStepWithTwoKBAs,
+  usernameDisplay,
   usernamePasswordStep,
   deviceProfileComposition,
   deviceProfileAloneData,
-  recoveryCodes,
-  webAuthnAuthenticationStep,
-  webAuthnRegistrationStep,
   successMessagesRenderingStep,
   failureMessagesRenderingStep,
 } from './step.mock';
@@ -31,11 +28,10 @@ import {
 const deviceProfileComposed = new FRStep(deviceProfileComposition);
 const deviceProfileAlone = new FRStep(deviceProfileAloneData);
 const frConfirmPassword = new FRStep(confirmPasswordStep);
-const frOneTimePassword = new FRStep(oneTimePasswordStep);
-const frRecoveryCodes = new FRStep(recoveryCodes);
 const frRegistrationStep = new FRStep(registrationStep);
 const frRegistrationStepWithTwoKBAs = new FRStep(registrationStepWithTwoKBAs);
 const frLoginStep = new FRStep(loginStep);
+const frUsernameDisplay = new FRStep(usernameDisplay);
 const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
 
 const frSocialMultipleProvidersLocalAuthFormStep = new FRStep(multipleProvidersLocalAuthFormStep);
@@ -45,8 +41,6 @@ const frSocialMultipleProvidersLocalAuthNoFormStep = new FRStep(
 const frSocialMultipleProvidersNoLocalAuthStep = new FRStep(multipleProvidersNoLocalAuthStep);
 const frSocialSingleProviderLocalAuthFormStep = new FRStep(singleProviderLocalAuthFormStep);
 const frSocialSingleProviderLocalAuthNoFormStep = new FRStep(singleProviderLocalAuthNoFormStep);
-const frWebAuthnAuthenticationStep = new FRStep(webAuthnAuthenticationStep);
-const frWebAuthnRegistrationStep = new FRStep(webAuthnRegistrationStep);
 const frSuccessMessagesRendering = new FRStep(successMessagesRenderingStep);
 const frFailureMessagesRendering = new FRStep(failureMessagesRenderingStep);
 
@@ -86,24 +80,6 @@ export const Generic = {
     step: frLoginStep,
   },
 };
-export const OneTimePassword = {
-  args: {
-    form: {
-      icon: true,
-      message: '',
-      status: '',
-      submit: jest.fn(),
-    },
-    journey: {
-      loading: false,
-      pop: jest.fn(),
-      push: jest.fn(),
-      stack: writable([]),
-    },
-    stage: frOneTimePassword.getStage(),
-    step: frOneTimePassword,
-  },
-};
 export const Registration = {
   args: {
     form: {
@@ -122,7 +98,25 @@ export const Registration = {
     step: frRegistrationStep,
   },
 };
-
+export const UsernameDisplay = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([{ tree: 'Login' }]),
+    },
+    labelType: 'stacked',
+    stage: frUsernameDisplay.getStage(),
+    step: frUsernameDisplay,
+  },
+};
 export const UsernamePassword = {
   args: {
     form: {
@@ -196,25 +190,6 @@ export const ConfirmPassword = {
     },
     stage: frConfirmPassword.getStage(),
     step: frConfirmPassword,
-  },
-};
-
-export const RecoveryCodes = {
-  args: {
-    form: {
-      icon: true,
-      message: '',
-      status: '',
-      submit: jest.fn(),
-    },
-    journey: {
-      loading: false,
-      pop: jest.fn(),
-      push: jest.fn(),
-      stack: writable([]),
-    },
-    stage: 'RecoveryCodes',
-    step: frRecoveryCodes,
   },
 };
 
@@ -329,44 +304,6 @@ export const TwoKBAQuestionSets = {
     },
     stage: frRegistrationStepWithTwoKBAs.getStage(),
     step: frRegistrationStepWithTwoKBAs,
-  },
-};
-
-export const WebAuthnAuthentication = {
-  args: {
-    form: {
-      icon: true,
-      message: '',
-      status: '',
-      submit: jest.fn(),
-    },
-    journey: {
-      loading: false,
-      pop: jest.fn(),
-      push: jest.fn(),
-      stack: writable([]),
-    },
-    stage: 'WebAuthn',
-    step: frWebAuthnAuthenticationStep,
-  },
-};
-
-export const WebAuthnRegistration = {
-  args: {
-    form: {
-      icon: true,
-      message: '',
-      status: '',
-      submit: jest.fn(),
-    },
-    journey: {
-      loading: false,
-      pop: jest.fn(),
-      push: jest.fn(),
-      stack: writable([]),
-    },
-    stage: 'WebAuthn',
-    step: frWebAuthnRegistrationStep,
   },
 };
 
@@ -504,18 +441,6 @@ LoginInteraction.play = async ({ canvasElement }) => {
   await expect(passwordCb.getInputValue()).toBe('Password123');
 };
 
-export const OneTimePasswordInteraction = Template.bind({});
-
-OneTimePasswordInteraction.args = {
-  ...OneTimePassword.argTypes,
-  ...OneTimePassword.args,
-};
-
-OneTimePasswordInteraction.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  expect(canvas.queryByRole('checkbox', 'Submit')).not.toBeInTheDocument();
-};
-
 export const RegistrationInteraction = Template.bind({});
 
 RegistrationInteraction.args = {
@@ -607,7 +532,6 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
   await userEvent.click(submit);
   await expect(Registration.args.form.submit).toHaveBeenCalled();
 
-  console.log(usernameCb);
   await expect(usernameCb.getInputValue()).toBe('user');
   await expect(passwordCb.getInputValue()).toBe('password');
   await expect(firstNameCb.getInputValue()).toBe('my-name');
@@ -617,45 +541,4 @@ RegistrationInteraction.play = async ({ canvasElement }) => {
   await expect(securityQuestions.payload.input[0].value).toBe('0');
   await expect(securityQuestions.payload.input[1].value).toBe('blue');
   await expect(tocCb.getInputValue()).toBe(true);
-  console.log(securityQuestions);
-};
-
-export const WebAuthnAuthenticationInteraction = Template.bind({});
-
-WebAuthnAuthenticationInteraction.args = {
-  ...WebAuthnAuthentication.argTypes,
-  ...WebAuthnAuthentication.args,
-};
-
-WebAuthnAuthenticationInteraction.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  expect(canvas.getByText('Verify your identity')).toBeTruthy();
-  expect(canvas.getByText('Use your device for identity verification.')).toBeTruthy();
-};
-
-export const WebAuthnRegistrationInteraction = Template.bind({});
-
-WebAuthnRegistrationInteraction.args = {
-  ...WebAuthnRegistration.argTypes,
-  ...WebAuthnRegistration.args,
-};
-
-WebAuthnRegistrationInteraction.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  expect(canvas.getByText('Register your device')).toBeTruthy();
-  expect(canvas.getByText('Choose your device for identity verification.')).toBeTruthy();
-};
-
-export const RecoveryCodesInteraction = Template.bind({});
-
-RecoveryCodesInteraction.args = {
-  ...RecoveryCodes.argTypes,
-  ...RecoveryCodes.args,
-};
-
-RecoveryCodesInteraction.play = async ({ canvasElement }) => {
-  const canvas = within(canvasElement);
-  expect(canvas.getByText('Your new device or MFA is enabled')).toBeTruthy();
-  expect(canvas.getByText(`Don't get locked out of your account!`)).toBeTruthy();
-  expect(canvas.getByText('CyFrHnLq2x')).toBeTruthy();
 };

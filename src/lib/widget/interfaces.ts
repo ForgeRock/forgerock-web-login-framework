@@ -1,4 +1,4 @@
-import type { StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import type { StepOptions } from '@forgerock/javascript-sdk/src/auth/interfaces';
 import type { z } from 'zod';
 
 // Import store types
@@ -24,6 +24,7 @@ export interface JourneyOptionsStart {
   forgerock?: StepOptions;
   journey?: string;
   resumeUrl?: string; // current URL if resuming a journey/tree
+  recaptchaAction?: string;
 }
 export interface ModalApi {
   close(args?: { reason: 'auto' | 'external' | 'user' }): void;

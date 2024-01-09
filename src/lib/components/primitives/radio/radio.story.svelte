@@ -3,7 +3,6 @@
 
   export let defaultOption: string;
   export let isRequired = false;
-  export let isInvalid = false;
   export let key: string;
   export let name: string;
   export let onChange: (event: Event) => void;
@@ -16,7 +15,6 @@
       <Radio
         checked={defaultOption === option.value}
         {isRequired}
-        {isInvalid}
         isFirstInvalidInput={false}
         key={`${key}-${option.value}`}
         {name}

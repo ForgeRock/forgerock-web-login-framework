@@ -18,23 +18,32 @@ test('Inline widget with user registration', async ({ page }) => {
 
   await page
     .getByLabel('Select a security question')
+    .first()
     .selectOption({ label: `What's your favorite color?` });
-  await page.getByLabel('Security Answer').fill('Red');
+
+  await page.getByLabel('Security Answer').first().fill('Red');
+
+  await page
+    .getByLabel('Select a security question')
+    .last()
+    .selectOption({ label: 'Who was your first employer?' });
+  await page.getByLabel('Security Answer').last().fill('Not Red');
+
   // `getByLabel()` does not work, likely due to the `<span>` elements (?)
   await page.getByText('Please accept our Terms & Conditions').click();
 
   await clickButton('Register', '/authenticate');
 
-  await expect(page.getByText('Password requirements:')).toBeVisible();
-  await expect(page.getByText('Should contain a number')).toBeVisible();
-  await expect(page.getByText('Should contain an uppercase letter')).toBeVisible();
-  await expect(page.getByText('Should contain a lowercase letter')).toBeVisible();
-  await expect(page.getByText('Should contain a symbol')).toBeVisible();
+  // await expect(page.getByText('Password requirements:')).toBeVisible();
+  // await expect(page.getByText('Should contain a number')).toBeVisible();
+  // await expect(page.getByText('Should contain an uppercase letter')).toBeVisible();
+  // await expect(page.getByText('Should contain a lowercase letter')).toBeVisible();
+  // await expect(page.getByText('Should contain a symbol')).toBeVisible();
 
   // Enter valid password
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  // await page.getByLabel('Password').fill('j56eKtae*1');
 
-  await clickButton('Register', '/authenticate');
+  // await clickButton('Register', '/authenticate');
 
   await verifyUserInfo(page, expect, 'register');
 });

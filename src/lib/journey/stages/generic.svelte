@@ -125,8 +125,21 @@
       }}
     />
   {/each}
-
-  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+  <!--
+    The below condition follows this logic to render the submit button:
+    - If the step is NOT self-submittable, render button (needed for steps with device profile and other callbacks)
+    - If the user input calbacks are optional, render button (steps with self-submittable callbacks, but are optional)
+    - If no self-submittable callbacks, render button (most generic steps)
+  -->
+  {#if !metadata?.step?.derived.isStepSelfSubmittable()}
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">
+      <T key="nextButton" />
+    </Button>
+  {:else if metadata?.step?.derived.isUserInputOptional}
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">
+      <T key="nextButton" />
+    </Button>
+  {:else if !metadata?.step?.derived.numOfSelfSubmittableCbs}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="nextButton" />
     </Button>

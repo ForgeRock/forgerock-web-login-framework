@@ -21,12 +21,18 @@ export default {
 export const Base = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0],
+    style: {
+      showPassword: 'button',
+    },
   },
 };
 
 export const ConfirmPassword = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0],
+    style: {
+      showPassword: 'button',
+    },
     callbackMetadata: {
       platform: { id: 'db09cd18-65a7-424a-9c9e-84c528c3e560', confirmPassword: true },
     },
@@ -36,18 +42,27 @@ export const ConfirmPassword = {
 export const Policies = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[1],
+    style: {
+      showPassword: 'button',
+    },
   },
 };
 
 export const PolicyErrors = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[2],
+    style: {
+      showPassword: 'button',
+    },
   },
 };
 
 export const PolicyErrorsAlt = {
   args: {
     callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[3],
+    style: {
+      showPassword: 'button',
+    },
   },
 };
 

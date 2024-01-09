@@ -2,6 +2,7 @@ const { resolve } = require('path');
 const preprocess = require('svelte-preprocess');
 const { mergeConfig } = require('vite'); // use `mergeConfig` to recursively merge Vite options
 const turbosnap = require('vite-plugin-turbosnap');
+
 module.exports = {
   stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
   staticDirs: ['../static'],
@@ -10,17 +11,13 @@ module.exports = {
     '@storybook/addon-links',
     '@storybook/addon-essentials',
     '@storybook/addon-interactions',
-    {
-      name: '@storybook/addon-postcss',
-      options: {
-        postcssLoaderOptions: {
-          implementation: require('postcss'),
-        },
-      },
-    },
-    'storybook-dark-mode',
     // https://storybook.js.org/addons/storybook-addon-code-editor
     // 'storybook-addon-code-editor',
+    'storybook-dark-mode',
+    {
+      name: '@storybook/addon-styling',
+      options: {},
+    },
   ],
 
   framework: {

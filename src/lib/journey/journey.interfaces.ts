@@ -1,5 +1,5 @@
 import type { FRStep, FRLoginFailure, FRLoginSuccess } from '@forgerock/javascript-sdk';
-import type { Step, StepOptions } from '@forgerock/javascript-sdk/lib/auth/interfaces';
+import type { Step, StepOptions } from '@forgerock/javascript-sdk/src/auth/interfaces';
 import type { Writable } from 'svelte/store';
 import type { Maybe } from '$lib/interfaces';
 
@@ -14,13 +14,16 @@ export interface CallbackMetadata {
   idx: number;
   platform?: Record<string, unknown>;
 }
+export interface StartOptions extends StepOptions {
+  recaptchaAction?: string;
+}
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
   next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
   pop: () => void;
   push: (changeOptions: StepOptions) => void;
   reset: () => void;
   resume: (url: string, resumeOptions?: StepOptions) => void;
-  start: (startOptions?: StepOptions) => void;
+  start: (startOptions?: StartOptions) => void;
 }
 export interface StageFormObject {
   icon: boolean;
@@ -47,9 +50,10 @@ export interface JourneyStoreValue {
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   } | null;
-  step: StepTypes;
+  step?: StepTypes;
   successful: boolean;
   response: Maybe<Step>;
+  recaptchaAction?: Maybe<string>;
 }
 export interface StackStore extends Pick<Writable<StepOptions[]>, 'subscribe'> {
   latest: () => Promise<StepOptions>;
@@ -64,6 +68,7 @@ export interface StepMetadata {
     numOfCallbacks: number;
     numOfSelfSubmittableCbs: number;
     numOfUserInputCbs: number;
+    stageName?: string;
   };
   platform?: Record<string, unknown>;
 }

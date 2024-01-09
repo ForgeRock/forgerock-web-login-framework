@@ -3,8 +3,14 @@
     "+([0-9])?(.{+([0-9]),x}).x",
     "main",
     "next",
-    { "name": "beta", "prerelease": true },
-    { "name": "alpha", "prerelease": true }
+    {
+      "name": "beta",
+      "prerelease": true
+    },
+    {
+      "name": "alpha",
+      "prerelease": true
+    }
   ],
   "ci": true,
   "repositoryUrl": "https://github.com/forgerock/forgerock-web-login-framework.git",
@@ -39,6 +45,8 @@
     [
       "@semantic-release/github",
       {
+        "successComment": false,
+        "failTitle": false,
         "assets": ["package/*.{js,css,.d.ts,.cjs,json,md}", "!package/node_modules/*"]
       }
     ],

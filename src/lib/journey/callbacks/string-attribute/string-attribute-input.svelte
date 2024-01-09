@@ -7,9 +7,7 @@
   import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
 
-  import {
-    getValidationFailures,
-  } from '$journey/callbacks/_utilities/callback.utilities';
+  import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
 
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
@@ -23,7 +21,7 @@
   } from '$journey/journey.interfaces';
   import type { styleSchema } from '$lib/style.store';
   import type { Maybe } from '$lib/interfaces';
-  import type { StringDict } from '@forgerock/javascript-sdk/lib/shared/interfaces';
+  import type { StringDict } from '@forgerock/javascript-sdk/src/shared/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
@@ -38,7 +36,7 @@
   let inputName: string;
   let isRequired: boolean;
   let outputName: string;
-  let policies: StringDict<any>;
+  let policies: StringDict<unknown>;
   let previousValue: string;
   let prompt: string;
   let type: 'email' | 'text';
@@ -70,17 +68,19 @@
   }
 </script>
 
-<Input
-  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-  key={inputName}
-  label={interpolate(outputName, null, prompt)}
-  message={isRequired ? interpolate('inputRequiredError') : undefined}
-  onChange={setValue}
-  {isRequired}
-  {isInvalid}
-  {type}
-  showMessage={!!isInvalid}
-  value={previousValue}
->
-  <Policies callback={callback} key={inputName} label={prompt} messageKey="valueRequirements" />
-</Input>
+{#key callback}
+  <Input
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    key={inputName}
+    label={interpolate(outputName, null, prompt)}
+    message={isRequired ? interpolate('inputRequiredError') : undefined}
+    onChange={setValue}
+    {isRequired}
+    {isInvalid}
+    {type}
+    showMessage={!!isInvalid}
+    value={previousValue}
+  >
+    <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />
+  </Input>
+{/key}

@@ -16,7 +16,7 @@
   let el: SvelteComponent;
   let isInvalid: boolean;
 
-  function submitForm(event: SubmitEvent, isFormValid: boolean) {
+  function submitForm() {
     console.log('Form submitted');
     message = 'Please accept this';
   }

@@ -1,6 +1,5 @@
 <script>
   import TopNav from './top-nav.svelte';
-  import SideNav from './side-nav.svelte';
 </script>
 
 <svelte:head>

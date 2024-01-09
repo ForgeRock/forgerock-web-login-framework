@@ -3,7 +3,8 @@
   export let formEl: HTMLFormElement | null = null;
   export let id = 'formId';
   export let needsFocus = false;
-  export let onSubmitWhenValid: ((event: SubmitEvent, isFormValid: boolean) => void) | undefined = undefined;
+  export let onSubmitWhenValid: ((event: SubmitEvent, isFormValid: boolean) => void) | undefined =
+    undefined;
 
   let isFormValid = false;
 
@@ -12,8 +13,7 @@
    * @param {Object} event - HTML form event
    * @return {undefined}
    */
-  // TODO: Using an `any` to give us time to figure out these weird event types that just changed
-  function formSubmit(event: any) {
+  function formSubmit(event: SubmitEvent) {
     /**
      * Reference for validation: https://www.aleksandrhovhannisyan.com/blog/html-input-validation-without-a-form/
      */

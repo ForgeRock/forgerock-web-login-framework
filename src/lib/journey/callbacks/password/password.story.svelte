@@ -3,8 +3,11 @@
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Password from './password.svelte';
+  import type { z } from 'zod';
+  import type { styleSchema } from '$lib/style.store';
 
   export let callback: PasswordCallback;
+  export let style: z.infer<typeof styleSchema> ;
 
   let callbackMetadata = {
     derived: {
@@ -28,5 +31,5 @@
 </script>
 
 <Centered>
-  <Password {callback} {callbackMetadata} {stepMetadata} />
+  <Password {callback} {callbackMetadata} {stepMetadata} {style} />
 </Centered>

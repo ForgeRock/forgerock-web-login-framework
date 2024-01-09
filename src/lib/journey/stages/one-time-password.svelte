@@ -1,5 +1,10 @@
 <script lang="ts">
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import {
+    CallbackType,
+    ConfirmationCallback,
+    type FRCallback,
+    type FRStep,
+  } from '@forgerock/javascript-sdk';
   import { afterUpdate } from 'svelte';
 
   // i18n
@@ -35,7 +40,9 @@
   export let step: FRStep;
 
   let alertNeedsFocus = false;
+  let buttons: { value: string; text: string }[];
   let formMessageKey = '';
+  let modifiedCallbacks: FRCallback[] = [];
 
   function determineSubmission() {
     // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
@@ -53,6 +60,24 @@
 
   $: {
     formMessageKey = convertStringToKey(form?.message);
+
+    const confirmationCallbacks = step.getCallbacksOfType(CallbackType.ConfirmationCallback);
+    if (confirmationCallbacks.length) {
+      const confirmationCb = confirmationCallbacks[0] as ConfirmationCallback;
+      buttons = confirmationCb
+        .getOptions()
+        .map((option, index) => ({ value: `${index}`, text: option }));
+    }
+
+    /**
+     * Filter out ConfirmationCallbacks; we'll use them seperately
+     */
+    modifiedCallbacks = step.callbacks.filter((callback) => {
+      if (callback.getType() === CallbackType.ConfirmationCallback) {
+        return false;
+      }
+      return true;
+    });
   }
 </script>
 
@@ -79,7 +104,7 @@
     </Alert>
   {/if}
 
-  {#each step?.callbacks as callback, idx}
+  {#each modifiedCallbacks as callback, idx}
     <CallbackMapper
       props={{
         callback,
@@ -91,7 +116,11 @@
     />
   {/each}
 
-  {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+  {#if buttons?.length}
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">
+      <T key={buttons[0].text} />
+    </Button>
+  {:else if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
     </Button>

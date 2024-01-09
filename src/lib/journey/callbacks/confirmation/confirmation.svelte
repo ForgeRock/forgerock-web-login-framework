@@ -97,43 +97,38 @@
   }
 </script>
 
-<!-- Only render confirmation if NOT currently on 'OneTimePassword' stage -->
-{#if stepMetadata?.platform?.stageName !== 'OneTimePassword'}
-  {#if !stepMetadata?.derived.isStepSelfSubmittable()}
-    {#if options.length > 1}
-      <Select
-        isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-        isRequired={false}
-        key={inputName}
-        {label}
-        onChange={setOptionValue}
-        {options}
-      />
-    {:else}
-      <Checkbox
-        isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-        isInvalid={false}
-        key={inputName}
-        onChange={setCheckboxValue}
-        value={false}
-      >
-        {options[0].text}
-      </Checkbox>
-    {/if}
+{#if !stepMetadata?.derived.isStepSelfSubmittable()}
+  {#if options.length > 1}
+    <Select
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      isRequired={false}
+      key={inputName}
+      {label}
+      onChange={setOptionValue}
+      {options}
+    />
   {:else}
-    <Grid num={options.length}>
-      {#each options as opt}
-        <Button
-          style={options.length > 1 && defaultChoice === Number(opt.value)
-            ? 'primary'
-            : buttonStyle}
-          type="button"
-          width="auto"
-          onClick={() => setBtnValue(Number(opt.value))}
-        >
-          {opt.text}
-        </Button>
-      {/each}
-    </Grid>
+    <Checkbox
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      isInvalid={false}
+      key={inputName}
+      onChange={setCheckboxValue}
+      value={false}
+    >
+      {options[0].text}
+    </Checkbox>
   {/if}
+{:else}
+  <Grid num={options.length >= 2 ? 2 : 1}>
+    {#each options as opt}
+      <Button
+        style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}
+        type="button"
+        width="auto"
+        onClick={() => setBtnValue(Number(opt.value))}
+      >
+        {opt.text}
+      </Button>
+    {/each}
+  </Grid>
 {/if}

@@ -7,17 +7,13 @@ import { browser } from '$app/environment';
 
 configure({
   clientId: 'WebOAuthClient',
-  // redirectUri: 'https://crbrl.ngrok.io/callback',
   redirectUri: `${browser ? window.location.origin : 'https://placeholder.com'}/callback`,
   scope: 'openid profile me.read',
   serverConfig: {
-    baseUrl: 'https://openam-crbrl-01.forgeblocks.com/am/',
-    // baseUrl: 'https://crbrl.ngrok.io/proxy/',
-    timeout: 5000,
+    baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
   },
   realmPath: 'alpha',
 });
-
 initializeJourneys();
 
 initializeLinks({

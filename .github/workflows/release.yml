@@ -1,8 +1,9 @@
 name: Release
 on:
+  workflow_dispatch:
   push:
     branches:
-      - main
+      # - main
       - next
       - beta
       - alpha
@@ -17,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node: ['18.x']
+        node: ['20.x']
         os: ['ubuntu-latest']
     steps:
       - name: Checkout
@@ -27,7 +28,7 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
       - name: Set git config username and email

@@ -15,6 +15,7 @@
   import type { Maybe } from '$lib/interfaces';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
   import type { styleSchema } from '$lib/style.store';
+  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
@@ -24,7 +25,7 @@
   export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
-
+  const showPassword = style.showPassword;
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
   export let validationFailure = '';
@@ -91,41 +92,60 @@
   }
 </script>
 
-<Input
-  isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-  hasRightIcon={true}
-  {key}
-  label={interpolate(textToKey(callbackType), null, textInputLabel)}
-  message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
-  onChange={setValue}
-  {isInvalid}
-  {isRequired}
-  {showMessage}
-  {type}
-  value={typeof value === 'string' ? value : ''}
->
-  <button
-    class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
-    on:click={toggleVisibility}
-    slot="input-button"
-    type="button"
-  >
-    <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-      <T key="showPassword" />
-    </EyeIcon>
-  </button>
-  <slot />
-</Input>
-
-{#if callbackMetadata?.platform?.confirmPassword}
-  <ConfirmInput
-    forceValidityFailure={doPasswordsMatch === false}
-    passwordsDoNotMatch={doPasswordsMatch === false}
+{#key callback}
+  <Input
+    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+    hasRightIcon={style.showPassword === 'button' ? true : false}
     {key}
-    isRequired={value.length > 0}
-    onChange={confirmInput}
-    {resetValue}
-    showMessage={doPasswordsMatch === false}
-    {style}
-  />
-{/if}
+    label={interpolate(textToKey(callbackType), null, textInputLabel)}
+    message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
+    onChange={setValue}
+    {isInvalid}
+    {isRequired}
+    {showMessage}
+    {type}
+    value={typeof value === 'string' ? value : ''}
+  > 
+    <svelte:fragment slot="input-button">
+      {#if showPassword === "button"}
+        <button
+        class={`tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark`}
+        on:click={toggleVisibility}
+        type="button"
+        >
+          <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+            <T key="showPassword" />
+          </EyeIcon>
+        </button>
+      {/if}
+    </svelte:fragment>
+    <slot />
+  </Input>
+
+  {#if showPassword === "checkbox"}
+    <div class="tw_w-full tw_input-spacing" >
+      <Checkbox isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+        isInvalid={false}
+        key = {key + style.showPassword}
+        onChange={toggleVisibility}
+        value={false}
+      >
+        Show Password
+      </Checkbox>
+    </div>
+  {/if}
+  {#if callbackMetadata?.platform?.confirmPassword}
+    <ConfirmInput
+      forceValidityFailure={doPasswordsMatch === false}
+      passwordsDoNotMatch={doPasswordsMatch === false}
+      {key}
+      isRequired={value.length > 0}
+      onChange={confirmInput}
+      {resetValue}
+      showMessage={doPasswordsMatch === false}
+      {style}
+      isFirstInvalidInput = {callbackMetadata?.derived.isFirstInvalidInput || false}
+    />
+  {/if}
+  
+{/key}

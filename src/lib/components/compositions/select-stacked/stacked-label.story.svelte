@@ -18,7 +18,7 @@
   let el: SvelteComponent;
   let isInvalid: boolean;
 
-  function submitForm(event: SubmitEvent) {
+  function submitForm() {
     errorMessage = 'Please select an option';
   }
 

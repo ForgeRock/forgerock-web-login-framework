@@ -41,6 +41,7 @@
   )} tw_alert dark:tw_alert_dark tw_input-spacing tw_outline-none`}
   {id}
   tabindex="-1"
+  role={type === 'error' ? 'alert' : ''}
 >
   <p class="tw_grid tw_grid-cols-[2em_1fr]">
     {#if type === 'error'}
