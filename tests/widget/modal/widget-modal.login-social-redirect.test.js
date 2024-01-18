@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
 test('Modal widget with social callback redirect', async ({ page }) => {

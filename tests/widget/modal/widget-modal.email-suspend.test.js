@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 import { asyncEvents } from '../../utilities/async-events.js';
 
 test('Modal widget with email suspend', async ({ page }) => {
