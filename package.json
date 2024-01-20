@@ -137,7 +137,7 @@
     "tslib": "^2.5.0",
     "typescript": "^5.2.2",
     "uuid": "9.0.1",
-    "vite": "^4.4.12",
+    "vite": "^4.5.2",
     "vite-plugin-turbosnap": "^1.0.1",
     "vitest": "^0.34.6"
   },
