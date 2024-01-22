@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
@@ -45,7 +45,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Restore npm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
@@ -76,7 +76,7 @@ jobs:
           node-version: 18.x
           cache: 'npm'
       - name: Restore npm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
