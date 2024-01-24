@@ -28,11 +28,40 @@ jobs:
       - name: Install dependencies if cache invalid
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
+  e2e:
+    needs: install
+    strategy:
+      matrix:
+        node: [20.x]
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+      VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+      VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
+      VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Restore npm dependencies
+        uses: actions/cache@v3
+        id: npm-cache
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm
+      - run: npm run build
+      - run: npx playwright install
+      - name: e2e
+        run: npm run ci:test:e2e
   pr:
     needs: install
     strategy:
       matrix:
-        node: [16.x, 18.x]
+        node: [20.x, 18.x]
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     env:

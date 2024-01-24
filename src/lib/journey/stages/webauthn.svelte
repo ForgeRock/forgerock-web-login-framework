@@ -1,6 +1,8 @@
 <script lang="ts">
   import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
   import { afterUpdate } from 'svelte';
+  import type { z } from 'zod';
+  import { styleStore } from '$lib/style.store';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -17,8 +19,12 @@
 
   import type { StageFormObject } from '$journey/journey.interfaces';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
+  import Button from '$components/primitives/button/button.svelte';
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import type { styleSchema } from '$lib/style.store';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
+  export let style: z.infer<typeof styleSchema> = {}
   export let allowWebAuthn = true;
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
@@ -29,11 +35,18 @@
   const formHeaderId = 'genericStepHeader';
   const formElementId = 'genericStepForm';
 
+  let deviceName = ''; 
+  let askForDeviceName = false;
   let alertNeedsFocus = false;
   let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
   let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
+
+  const updateDeviceName = (event: Event) => {
+    const target = event.target as unknown as { value: string } 
+    deviceName = target.value;
+  }
 
   afterUpdate(() => {
     if (form?.message) {
@@ -54,7 +67,7 @@
     try {
       switch (webAuthnType) {
         case WebAuthnStepType.Registration: {
-          await FRWebAuthn.register(step);
+          await FRWebAuthn.register<typeof deviceName>(step, deviceName);
           break;
         }
         case WebAuthnStepType.Authentication: {
@@ -92,10 +105,11 @@
     </div>
   {/if}
 
+  {#if askForDeviceName}
   <div class="tw_text-center tw_w-full tw_py-4">
     <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
   </div>
-
+  {/if}
   {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
       {interpolate(formMessageKey, null, form?.message)}
@@ -114,15 +128,26 @@
       </p>
     </header>
   {:else}
-    <header id={formHeaderId}>
+    <header class={`tw_input-spacing`} id={formHeaderId}>
+      {#if !askForDeviceName}
       <h1 class="tw_primary-header dark:tw_primary-header_dark">
-        <T key="registerYourDevice" />
+        <T key="nameYourDevice" />
       </h1>
-      <p
-        class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-      >
-        <T key="chooseYourDeviceForIdentityVerification" />
-      </p>
+
+        <Input type='text' isRequired={ false } isFirstInvalidInput={false} key="devicename" onChange={updateDeviceName} label={interpolate('optionallyNameDevice')} /> 
+          <Button style="primary" type="submit" width="full" onClick={() => askForDeviceName = true}>
+            <T key="nextButton" />
+          </Button>
+      {:else}
+        <h1 class="tw_primary-header dark:tw_primary-header_dark">
+          <T key="registerYourDevice" values={{name: deviceName.length > 0 ? deviceName : interpolate('yourDevice')}} />
+        </h1>
+        <p
+          class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+        >
+          <T key="chooseYourDeviceForIdentityVerification" />
+        </p>
+      {/if}
     </header>
   {/if}
 </Form>

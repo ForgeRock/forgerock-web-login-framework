@@ -14,6 +14,7 @@
   import type { FRStep } from '@forgerock/javascript-sdk';
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
+  import { interpolate } from '$lib/_utilities/i18n.utilities';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
@@ -21,7 +22,7 @@
   export let journey: StageJourneyObject;
   export let step: FRStep;
   let codes: Array<string> = [];
-
+  let name = 'New Security Key';
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
   const formElementId = 'genericStepForm';
@@ -41,6 +42,7 @@
 
   $: {
     codes = FRRecoveryCodes.getCodes(step);
+    name = FRRecoveryCodes.getDisplayName(step);
   }
 </script>
 
@@ -89,6 +91,9 @@
       </li>
     {/each}
   </ol>
+  <p class="tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6">
+    <T html={true} key="useOneOfTheseCodes" values={{ name }}/>
+  </p>
 
   <Button busy={journey?.loading} style="primary" type="submit" width="full">
     <T key="nextButton" />

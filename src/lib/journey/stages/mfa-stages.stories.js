@@ -12,10 +12,12 @@ import {
   oathRegistrationErrorStep,
   pushRegistrationStep,
   recoveryCodes,
+  recoveryCodesWithName,
   emailSuspendStep,
   webAuthnAuthenticationStep,
   webAuthnRegistrationStep,
 } from './mfa-stages.mock.ts';
+import userEvent from '@testing-library/user-event';
 
 const frOneTimePassword = new FRStep(oneTimePasswordStep);
 const frMfaRegistrationOptions = new FRStep(mfaRegistrationOptionsStep);
@@ -23,6 +25,7 @@ const frOathRegistration = new FRStep(oathRegistrationStep);
 const frOathRegistrationError = new FRStep(oathRegistrationErrorStep);
 const frPushRegistration = new FRStep(pushRegistrationStep);
 const frRecoveryCodes = new FRStep(recoveryCodes);
+const frRecoveryCodesWithName = new FRStep(recoveryCodesWithName);
 const frSuspendEmail = new FRStep(emailSuspendStep);
 const frWebAuthnAuthenticationStep = new FRStep(webAuthnAuthenticationStep);
 const frWebAuthnRegistrationStep = new FRStep(webAuthnRegistrationStep);
@@ -155,6 +158,25 @@ export const RecoveryCodes = {
     },
     stage: 'RecoveryCodes',
     step: frRecoveryCodes,
+  },
+};
+
+export const RecoveryCodesWithName = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: jest.fn(),
+    },
+    journey: {
+      loading: false,
+      pop: jest.fn(),
+      push: jest.fn(),
+      stack: writable([]),
+    },
+    stage: 'RecoveryCodes',
+    step: frRecoveryCodesWithName,
   },
 };
 
@@ -371,6 +393,26 @@ RecoveryCodesInteraction.play = async ({ canvasElement }) => {
   expect(canvas.getByText('CyFrHnLq2x')).toBeTruthy();
 };
 
+export const RecoveryCodesWithNameInteraction = Template.bind({});
+
+RecoveryCodesWithNameInteraction.args = {
+  ...RecoveryCodesWithName.argTypes,
+  ...RecoveryCodesWithName.args,
+};
+
+RecoveryCodesWithNameInteraction.play = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  console.log(canvasElement);
+  expect(canvas.getByText('Your new device or MFA is enabled')).toBeTruthy();
+  expect(canvas.getByText(`Don't get locked out of your account!`)).toBeTruthy();
+  expect(canvas.getByText('CyFrHnLq2x')).toBeTruthy();
+  expect(
+    canvas.getByText(
+      'Use one of these codes to authenticate if you lose your device, which has been named: My Device Name',
+    ),
+  ).toBeTruthy();
+};
+
 export const WebAuthnAuthenticationInteraction = Template.bind({});
 
 WebAuthnAuthenticationInteraction.args = {
@@ -393,6 +435,12 @@ WebAuthnRegistrationInteraction.args = {
 
 WebAuthnRegistrationInteraction.play = async ({ canvasElement }) => {
   const canvas = within(canvasElement);
-  expect(canvas.getByText('Register your device')).toBeTruthy();
+  expect(canvas.getByText('Name your device')).toBeTruthy();
+  const textbox = canvas.getByRole('textbox');
+  await userEvent.type(textbox, 'My Yubikey');
+  await expect(textbox).toHaveValue('My Yubikey');
+  await userEvent.click(canvas.getByRole('button', { name: 'Next' }));
+
+  expect(canvas.getByText('Register My Yubikey')).toBeTruthy();
   expect(canvas.getByText('Choose your device for identity verification.')).toBeTruthy();
 };
