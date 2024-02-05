@@ -41,11 +41,11 @@ jobs:
       VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
       VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Restore npm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
@@ -56,7 +56,8 @@ jobs:
       - run: npm run build
       - run: npx playwright install
       - name: e2e
-        run: npm run ci:test:e2e
+        run: npm run test:e2e
+
   pr:
     needs: install
     strategy:
@@ -92,12 +93,13 @@ jobs:
           npx concurrently -k -s first -n "SB,TEST" -c "magenta,blue" \
             "npx http-server storybook-static --port 6006 --silent" \
             "npx wait-on tcp:6006 && npm run test:storybook"
+
   chromatic:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     needs: install
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -105,7 +107,7 @@ jobs:
           node-version: 18.x
           cache: 'npm'
       - name: Restore npm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
@@ -116,7 +118,7 @@ jobs:
       - name: Install dependencies if cache invalid
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
-      - uses: chromaui/action@v1
+      - uses: chromaui/action@latest
         with:
           onlyChanged: true
           exitOnceUploaded: true

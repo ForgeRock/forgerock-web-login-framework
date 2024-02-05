@@ -14,21 +14,20 @@
   import type { FRStep } from '@forgerock/javascript-sdk';
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
-  import { interpolate } from '$lib/_utilities/i18n.utilities';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
   export let step: FRStep;
-  let codes: Array<string> = [];
-  let name = 'New Security Key';
+
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
   const formElementId = 'genericStepForm';
-
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
+  let codes: Array<string> = [];
+  let name = 'New Security Key';
 
   afterUpdate(() => {
     if (form?.message) {
@@ -42,7 +41,7 @@
 
   $: {
     codes = FRRecoveryCodes.getCodes(step);
-    name = FRRecoveryCodes.getDisplayName(step);
+    name = FRRecoveryCodes.getDeviceName(step);
   }
 </script>
 

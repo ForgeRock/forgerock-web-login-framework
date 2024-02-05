@@ -2,7 +2,6 @@
   import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
   import { afterUpdate } from 'svelte';
   import type { z } from 'zod';
-  import { styleStore } from '$lib/style.store';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -36,14 +35,14 @@
   const formElementId = 'genericStepForm';
 
   let deviceName = ''; 
-  let askForDeviceName = false;
+  let hasDeviceName = false;
   let alertNeedsFocus = false;
   let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
   let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
 
-  const updateDeviceName = (event: Event) => {
+  function updateDeviceName (event: Event) {
     const target = event.target as unknown as { value: string } 
     deviceName = target.value;
   }
@@ -83,13 +82,16 @@
     form.submit();
   }
 
-  // Call the WebAuthn API without await
-  if (allowWebAuthn) {
-    callWebAuthnApi();
-  }
-
+ 
   $: {
     formMessageKey = convertStringToKey(form?.message);
+    // Call the WebAuthn API without await
+    if (allowWebAuthn) {
+        if ((WebAuthnStepType.Registration === webAuthnType && hasDeviceName) || WebAuthnStepType.Authentication === webAuthnType) {
+          callWebAuthnApi();
+        }
+      }
+
   }
 </script>
 
@@ -105,7 +107,7 @@
     </div>
   {/if}
 
-  {#if askForDeviceName}
+  {#if hasDeviceName}
   <div class="tw_text-center tw_w-full tw_py-4">
     <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
   </div>
@@ -118,6 +120,9 @@
 
   {#if webAuthnType === WebAuthnStepType.Authentication}
     <header id={formHeaderId}>
+      <div class="tw_text-center tw_w-full tw_py-4">
+        <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+      </div>
       <h1 class="tw_primary-header dark:tw_primary-header_dark">
         <T key="verifyYourIdentity" />
       </h1>
@@ -129,13 +134,12 @@
     </header>
   {:else}
     <header class={`tw_input-spacing`} id={formHeaderId}>
-      {#if !askForDeviceName}
+      {#if !hasDeviceName}
       <h1 class="tw_primary-header dark:tw_primary-header_dark">
         <T key="nameYourDevice" />
       </h1>
-
         <Input type='text' isRequired={ false } isFirstInvalidInput={false} key="devicename" onChange={updateDeviceName} label={interpolate('optionallyNameDevice')} /> 
-          <Button style="primary" type="submit" width="full" onClick={() => askForDeviceName = true}>
+          <Button style="primary" type="submit" width="full" onClick={() => hasDeviceName = true}>
             <T key="nextButton" />
           </Button>
       {:else}

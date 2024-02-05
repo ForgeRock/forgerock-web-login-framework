@@ -3299,21 +3299,19 @@ function parseDisplayRecoveryCodesText(text) {
  * @param text
  * @returns string
  */
-function parseDisplayNameText(text) {
+function parseDeviceNameText(text) {
     /**
-     * We default the display name to 'New Security Key'
-     * If the user has a display name, it will be wrapped in <em> tags
+     * We default the device name to 'New Security Key'
+     * If the user has a device name, it will be wrapped in <em> tags
      * e.g. ` ... <em>My Security Key</em> ... `
-     * We want to remove the <em> tags and just return the display name
+     * We want to remove the <em> tags and just return the device name
      * e.g. ` ... My Security Key ... `
      */
-    debugger;
-    let displayArr = text
-        ?.match(/<em\s*.*>\s*.*<\/em>/g);
-    console.log(displayArr);
-    return displayArr?.replace('<em>', '')
+    const displayName = text
+        ?.match(/<em\s*.*>\s*.*<\/em>/g)?.[0]
+        ?.replace('<em>', '')
         ?.replace('</em>', '') ?? 'New Security Key';
-    // return displayName;
+    return displayName;
 }
 
 /*
@@ -3340,10 +3338,9 @@ function parseDisplayNameText(text) {
  * ```
  */
 class FRRecoveryCodes {
-    static getDisplayName(step) {
-        console.log('the step', step);
-        const text = this.getDisplayCallback(step)?.getOutputByName('message', '');
-        return parseDisplayNameText(text);
+    static getDeviceName(step) {
+        const text = this.getDisplayCallback(step)?.getOutputByName('message', '') ?? '';
+        return parseDeviceNameText(text);
     }
     /**
      * Retrieves the recovery codes by parsing the JavaScript message text in callback.
@@ -4756,7 +4753,6 @@ class FRWebAuthn {
             throw e;
         }
     }
-    static parseDeviceName() { }
     /**
      * Retrieves the credential from the browser Web Authentication API.
      *
@@ -31748,7 +31744,7 @@ function create_if_block_4$1(ctx) {
 	};
 }
 
-// (92:2) {#if askForDeviceName}
+// (93:2) {#if hasDeviceName}
 function create_if_block_3$2(ctx) {
 	let div;
 	let spinner;
@@ -31788,7 +31784,7 @@ function create_if_block_3$2(ctx) {
 	};
 }
 
-// (97:2) {#if form?.message}
+// (98:2) {#if form?.message}
 function create_if_block_2$2(ctx) {
 	let alert;
 	let current;
@@ -31836,7 +31832,7 @@ function create_if_block_2$2(ctx) {
 	};
 }
 
-// (98:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (99:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -31857,7 +31853,7 @@ function create_default_slot_2$1(ctx) {
 	};
 }
 
-// (114:2) {:else}
+// (118:2) {:else}
 function create_else_block$2(ctx) {
 	let header;
 	let current_block_type_index;
@@ -31867,7 +31863,7 @@ function create_else_block$2(ctx) {
 	const if_blocks = [];
 
 	function select_block_type_1(ctx, dirty) {
-		if (!/*askForDeviceName*/ ctx[4]) return 0;
+		if (!/*hasDeviceName*/ ctx[3]) return 0;
 		return 1;
 	}
 
@@ -31929,63 +31925,84 @@ function create_else_block$2(ctx) {
 	};
 }
 
-// (103:2) {#if webAuthnType === WebAuthnStepType.Authentication}
+// (104:2) {#if webAuthnType === WebAuthnStepType.Authentication}
 function create_if_block$5(ctx) {
 	let header;
-	let h1;
+	let div;
+	let spinner;
 	let t0;
+	let h1;
 	let t1;
-	let p;
 	let t2;
+	let p;
+	let t3;
 	let current;
-	t0 = new Locale_strings({ props: { key: "verifyYourIdentity" } });
 
-	t2 = new Locale_strings({
+	spinner = new Spinner({
+			props: {
+				colorClass: "tw_text-primary-light",
+				layoutClasses: "tw_h-28 tw_w-28"
+			}
+		});
+
+	t1 = new Locale_strings({ props: { key: "verifyYourIdentity" } });
+
+	t3 = new Locale_strings({
 			props: { key: "useDeviceForIdentityVerification" }
 		});
 
 	return {
 		c() {
 			header = element("header");
+			div = element("div");
+			create_component(spinner.$$.fragment);
+			t0 = space();
 			h1 = element("h1");
-			create_component(t0.$$.fragment);
-			t1 = space();
+			create_component(t1.$$.fragment);
+			t2 = space();
 			p = element("p");
-			create_component(t2.$$.fragment);
+			create_component(t3.$$.fragment);
+			attr(div, "class", "tw_text-center tw_w-full tw_py-4");
 			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
 			attr(p, "class", "tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
 			attr(header, "id", formHeaderId$2);
 		},
 		m(target, anchor) {
 			insert(target, header, anchor);
+			append(header, div);
+			mount_component(spinner, div, null);
+			append(header, t0);
 			append(header, h1);
-			mount_component(t0, h1, null);
-			append(header, t1);
+			mount_component(t1, h1, null);
+			append(header, t2);
 			append(header, p);
-			mount_component(t2, p, null);
+			mount_component(t3, p, null);
 			current = true;
 		},
 		p: noop,
 		i(local) {
 			if (current) return;
-			transition_in(t0.$$.fragment, local);
-			transition_in(t2.$$.fragment, local);
+			transition_in(spinner.$$.fragment, local);
+			transition_in(t1.$$.fragment, local);
+			transition_in(t3.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
-			transition_out(t0.$$.fragment, local);
-			transition_out(t2.$$.fragment, local);
+			transition_out(spinner.$$.fragment, local);
+			transition_out(t1.$$.fragment, local);
+			transition_out(t3.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
 			if (detaching) detach(header);
-			destroy_component(t0);
-			destroy_component(t2);
+			destroy_component(spinner);
+			destroy_component(t1);
+			destroy_component(t3);
 		}
 	};
 }
 
-// (125:6) {:else}
+// (128:6) {:else}
 function create_else_block_1(ctx) {
 	let h1;
 	let t0;
@@ -31998,8 +32015,8 @@ function create_else_block_1(ctx) {
 			props: {
 				key: "registerYourDevice",
 				values: {
-					name: /*deviceName*/ ctx[3].length > 0
-					? /*deviceName*/ ctx[3]
+					name: /*deviceName*/ ctx[4].length > 0
+					? /*deviceName*/ ctx[4]
 					: interpolate('yourDevice')
 				}
 			}
@@ -32032,9 +32049,9 @@ function create_else_block_1(ctx) {
 		p(ctx, dirty) {
 			const t0_changes = {};
 
-			if (dirty & /*deviceName*/ 8) t0_changes.values = {
-				name: /*deviceName*/ ctx[3].length > 0
-				? /*deviceName*/ ctx[3]
+			if (dirty & /*deviceName*/ 16) t0_changes.values = {
+				name: /*deviceName*/ ctx[4].length > 0
+				? /*deviceName*/ ctx[4]
 				: interpolate('yourDevice')
 			};
 
@@ -32061,7 +32078,7 @@ function create_else_block_1(ctx) {
 	};
 }
 
-// (116:6) {#if !askForDeviceName}
+// (120:6) {#if !hasDeviceName}
 function create_if_block_1$3(ctx) {
 	let h1;
 	let t0;
@@ -32078,7 +32095,7 @@ function create_if_block_1$3(ctx) {
 				isRequired: false,
 				isFirstInvalidInput: false,
 				key: "devicename",
-				onChange: /*updateDeviceName*/ ctx[9],
+				onChange: /*updateDeviceName*/ ctx[10],
 				label: interpolate('optionallyNameDevice')
 			}
 		});
@@ -32115,7 +32132,7 @@ function create_if_block_1$3(ctx) {
 		},
 		p(ctx, dirty) {
 			const button_changes = {};
-			if (dirty & /*askForDeviceName*/ 16) button_changes.onClick = /*func*/ ctx[14];
+			if (dirty & /*hasDeviceName*/ 8) button_changes.onClick = /*func*/ ctx[14];
 
 			if (dirty & /*$$scope*/ 131072) {
 				button_changes.$$scope = { dirty, ctx };
@@ -32147,7 +32164,7 @@ function create_if_block_1$3(ctx) {
 	};
 }
 
-// (122:10) <Button style="primary" type="submit" width="full" onClick={() => askForDeviceName = true}>
+// (125:10) <Button style="primary" type="submit" width="full" onClick={() => hasDeviceName = true}>
 function create_default_slot_1$4(ctx) {
 	let t;
 	let current;
@@ -32177,7 +32194,7 @@ function create_default_slot_1$4(ctx) {
 	};
 }
 
-// (80:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
+// (81:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
 function create_default_slot$5(ctx) {
 	let t0;
 	let t1;
@@ -32187,13 +32204,13 @@ function create_default_slot$5(ctx) {
 	let if_block3_anchor;
 	let current;
 	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_4$1();
-	let if_block1 = /*askForDeviceName*/ ctx[4] && create_if_block_3$2();
+	let if_block1 = /*hasDeviceName*/ ctx[3] && create_if_block_3$2();
 	let if_block2 = /*form*/ ctx[2]?.message && create_if_block_2$2(ctx);
 	const if_block_creators = [create_if_block$5, create_else_block$2];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (/*webAuthnType*/ ctx[10] === WebAuthnStepType.Authentication) return 0;
+		if (/*webAuthnType*/ ctx[9] === WebAuthnStepType.Authentication) return 0;
 		return 1;
 	}
 
@@ -32244,9 +32261,9 @@ function create_default_slot$5(ctx) {
 				check_outros();
 			}
 
-			if (/*askForDeviceName*/ ctx[4]) {
+			if (/*hasDeviceName*/ ctx[3]) {
 				if (if_block1) {
-					if (dirty & /*askForDeviceName*/ 16) {
+					if (dirty & /*hasDeviceName*/ 8) {
 						transition_in(if_block1, 1);
 					}
 				} else {
@@ -32355,7 +32372,7 @@ function create_fragment$9(ctx) {
 			if (dirty & /*formAriaDescriptor*/ 128) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[7];
 			if (dirty & /*formNeedsFocus*/ 256) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[8];
 
-			if (dirty & /*$$scope, askForDeviceName, deviceName, alertNeedsFocus, formMessageKey, form, componentStyle*/ 131198) {
+			if (dirty & /*$$scope, hasDeviceName, deviceName, alertNeedsFocus, formMessageKey, form, componentStyle*/ 131198) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32394,18 +32411,17 @@ function instance$9($$self, $$props, $$invalidate) {
 	let { formEl = null } = $$props;
 	let { step } = $$props;
 	let deviceName = '';
-
-	const updateDeviceName = event => {
-		const target = event.target;
-		$$invalidate(3, deviceName = target.value);
-	};
-
-	let askForDeviceName = false;
+	let hasDeviceName = false;
 	let alertNeedsFocus = false;
 	let formMessageKey = '';
 	let formAriaDescriptor = 'genericStepHeader';
 	let formNeedsFocus = false;
 	let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
+
+	function updateDeviceName(event) {
+		const target = event.target;
+		$$invalidate(4, deviceName = target.value);
+	}
 
 	afterUpdate(() => {
 		if (form?.message) {
@@ -32445,12 +32461,7 @@ function instance$9($$self, $$props, $$invalidate) {
 		form.submit();
 	}
 
-	// Call the WebAuthn API without await
-	if (allowWebAuthn) {
-		callWebAuthnApi();
-	}
-
-	const func = () => $$invalidate(4, askForDeviceName = true);
+	const func = () => $$invalidate(3, hasDeviceName = true);
 
 	function form_1_formEl_binding(value) {
 		formEl = value;
@@ -32467,9 +32478,16 @@ function instance$9($$self, $$props, $$invalidate) {
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*form*/ 4) {
+		if ($$self.$$.dirty & /*form, allowWebAuthn, hasDeviceName*/ 4108) {
 			{
 				$$invalidate(6, formMessageKey = convertStringToKey(form?.message));
+
+				// Call the WebAuthn API without await
+				if (allowWebAuthn) {
+					if (WebAuthnStepType.Registration === webAuthnType && hasDeviceName || WebAuthnStepType.Authentication === webAuthnType) {
+						callWebAuthnApi();
+					}
+				}
 			}
 		}
 	};
@@ -32478,14 +32496,14 @@ function instance$9($$self, $$props, $$invalidate) {
 		formEl,
 		componentStyle,
 		form,
+		hasDeviceName,
 		deviceName,
-		askForDeviceName,
 		alertNeedsFocus,
 		formMessageKey,
 		formAriaDescriptor,
 		formNeedsFocus,
-		updateDeviceName,
 		webAuthnType,
+		updateDeviceName,
 		style,
 		allowWebAuthn,
 		step,
@@ -32580,7 +32598,7 @@ function get_each_context$2(ctx, list, i) {
 	return child_ctx;
 }
 
-// (45:2) {#if form?.icon && componentStyle !== 'inline'}
+// (44:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block$4(ctx) {
 	let div;
 	let clipboardicon;
@@ -32620,7 +32638,7 @@ function create_if_block$4(ctx) {
 	};
 }
 
-// (75:4) {#each codes as code}
+// (74:4) {#each codes as code}
 function create_each_block$2(ctx) {
 	let li;
 	let span;
@@ -32644,7 +32662,7 @@ function create_each_block$2(ctx) {
 			append(li, t1);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*codes*/ 16 && t0_value !== (t0_value = /*code*/ ctx[11] + "")) set_data(t0, t0_value);
+			if (dirty & /*codes*/ 64 && t0_value !== (t0_value = /*code*/ ctx[11] + "")) set_data(t0, t0_value);
 		},
 		d(detaching) {
 			if (detaching) detach(li);
@@ -32652,7 +32670,7 @@ function create_each_block$2(ctx) {
 	};
 }
 
-// (87:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (86:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$3(ctx) {
 	let t;
 	let current;
@@ -32682,7 +32700,7 @@ function create_default_slot_1$3(ctx) {
 	};
 }
 
-// (38:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
+// (37:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
 function create_default_slot$4(ctx) {
 	let t0;
 	let header;
@@ -32728,7 +32746,7 @@ function create_default_slot$4(ctx) {
 			}
 		});
 
-	let each_value = /*codes*/ ctx[4];
+	let each_value = /*codes*/ ctx[6];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
@@ -32739,7 +32757,7 @@ function create_default_slot$4(ctx) {
 			props: {
 				html: true,
 				key: "useOneOfTheseCodes",
-				values: { name: /*name*/ ctx[5] }
+				values: { name: /*name*/ ctx[7] }
 			}
 		});
 
@@ -32848,8 +32866,8 @@ function create_default_slot$4(ctx) {
 				check_outros();
 			}
 
-			if (dirty & /*codes*/ 16) {
-				each_value = /*codes*/ ctx[4];
+			if (dirty & /*codes*/ 64) {
+				each_value = /*codes*/ ctx[6];
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -32872,7 +32890,7 @@ function create_default_slot$4(ctx) {
 			}
 
 			const t11_changes = {};
-			if (dirty & /*name*/ 32) t11_changes.values = { name: /*name*/ ctx[5] };
+			if (dirty & /*name*/ 128) t11_changes.values = { name: /*name*/ ctx[7] };
 			t11.$set(t11_changes);
 			const button_changes = {};
 			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
@@ -32940,9 +32958,9 @@ function create_fragment$7(ctx) {
 	}
 
 	let form_1_props = {
-		ariaDescribedBy: /*formAriaDescriptor*/ ctx[6],
+		ariaDescribedBy: /*formAriaDescriptor*/ ctx[4],
 		id: formElementId$1,
-		needsFocus: /*formNeedsFocus*/ ctx[7],
+		needsFocus: /*formNeedsFocus*/ ctx[5],
 		onSubmitWhenValid: /*func*/ ctx[9],
 		$$slots: { default: [create_default_slot$4] },
 		$$scope: { ctx }
@@ -32965,11 +32983,11 @@ function create_fragment$7(ctx) {
 		},
 		p(ctx, [dirty]) {
 			const form_1_changes = {};
-			if (dirty & /*formAriaDescriptor*/ 64) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[6];
-			if (dirty & /*formNeedsFocus*/ 128) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[7];
+			if (dirty & /*formAriaDescriptor*/ 16) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[4];
+			if (dirty & /*formNeedsFocus*/ 32) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[5];
 			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*func*/ ctx[9];
 
-			if (dirty & /*$$scope, journey, name, codes, form, componentStyle*/ 16446) {
+			if (dirty & /*$$scope, journey, name, codes, form, componentStyle*/ 16590) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -33006,18 +33024,18 @@ function instance$7($$self, $$props, $$invalidate) {
 	let { formEl = null } = $$props;
 	let { journey } = $$props;
 	let { step } = $$props;
-	let codes = [];
-	let name = 'New Security Key';
 	let formAriaDescriptor = 'genericStepHeader';
 	let formNeedsFocus = false;
+	let codes = [];
+	let name = 'New Security Key';
 
 	afterUpdate(() => {
 		if (form?.message) {
-			$$invalidate(6, formAriaDescriptor = formFailureMessageId$1);
-			$$invalidate(7, formNeedsFocus = false);
+			$$invalidate(4, formAriaDescriptor = formFailureMessageId$1);
+			$$invalidate(5, formNeedsFocus = false);
 		} else {
-			$$invalidate(6, formAriaDescriptor = formHeaderId$1);
-			$$invalidate(7, formNeedsFocus = true);
+			$$invalidate(4, formAriaDescriptor = formHeaderId$1);
+			$$invalidate(5, formNeedsFocus = true);
 		}
 	});
 
@@ -33039,8 +33057,8 @@ function instance$7($$self, $$props, $$invalidate) {
 	$$self.$$.update = () => {
 		if ($$self.$$.dirty & /*step*/ 256) {
 			{
-				$$invalidate(4, codes = FRRecoveryCodes.getCodes(step));
-				$$invalidate(5, name = FRRecoveryCodes.getDisplayName(step));
+				$$invalidate(6, codes = FRRecoveryCodes.getCodes(step));
+				$$invalidate(7, name = FRRecoveryCodes.getDeviceName(step));
 			}
 		}
 	};
@@ -33050,10 +33068,10 @@ function instance$7($$self, $$props, $$invalidate) {
 		componentStyle,
 		form,
 		journey,
-		codes,
-		name,
 		formAriaDescriptor,
 		formNeedsFocus,
+		codes,
+		name,
 		step,
 		func,
 		form_1_formEl_binding
