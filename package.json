@@ -87,7 +87,7 @@
     "@typescript-eslint/parser": "^6.9.0",
     "@vitejs/plugin-basic-ssl": "^0.1.2",
     "@vitest/ui": "^0.34.6",
-    "autoprefixer": "^10.4.16",
+    "autoprefixer": "^10.4.17",
     "axe-playwright": "^1.2.3",
     "babel-loader": "^9.1.2",
     "chromatic": "^7.2.0",
