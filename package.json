@@ -63,7 +63,7 @@
     "@semantic-release/npm": "^11.0.0",
     "@semantic-release/release-notes-generator": "^12.1.0",
     "@storybook/addon-a11y": "^7.5.1",
-    "@storybook/addon-actions": "^7.5.1",
+    "@storybook/addon-actions": "^7.6.12",
     "@storybook/addon-essentials": "^7.5.1",
     "@storybook/addon-interactions": "^7.5.3",
     "@storybook/addon-links": "^7.5.1",
