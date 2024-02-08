@@ -41,6 +41,9 @@
   },
   "dependencies": {
     "@forgerock/javascript-sdk": "beta",
+    "@rockcarver/frodo-lib": "^2.0.0-60",
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.1",
     "qrcode": "1.5.3",
     "xss": "1.0.14",
     "zod": "3.22.4"

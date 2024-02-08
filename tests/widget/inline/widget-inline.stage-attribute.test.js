@@ -1,5 +1,4 @@
 import { expect, test } from '@playwright/test';
-
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
 test('Inline widget with additional stage attribute testing', async ({ page }) => {

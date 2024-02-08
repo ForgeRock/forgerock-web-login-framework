@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
-
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
+//Use create and delete users and use the data in replace of 'demouser'
 test('Modal widget with login', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 

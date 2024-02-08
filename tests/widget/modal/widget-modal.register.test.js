@@ -1,7 +1,15 @@
 import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
-
+import { getDemoUserId, deleteDemoUser } from '../../utilities/manage-demo-users.js';
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+
+const userName = uuid();
+
+test.afterAll('End of tests', async () => {
+  console.log('Done with tests');
+  const userId = await getDemoUserId(userName);
+  await deleteDemoUser(userId);
+});
 
 test('Modal widget with user registration', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
@@ -10,7 +18,7 @@ test('Modal widget with user registration', async ({ page }) => {
 
   await clickButton('Open Login Modal', '/authenticate');
 
-  await page.getByLabel('Username').fill(uuid());
+  await page.getByLabel('Username').fill(userName);
   await page.getByLabel('First Name').fill('Demo');
   await page.getByLabel('Last Name').fill('User');
   await page.getByLabel('Email Address').fill('test@auto.com');
