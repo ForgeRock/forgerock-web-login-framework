@@ -111,6 +111,6 @@ test('Modal widget with none show password config', async ({ page }) => {
 
   await expect(page.getByRole('dialog')).toBeVisible();
 
-  await expect(page.getByRole('button', { name: 'Show password' })).not.toBeVisible();
-  await expect(page.getByRole('checkbox')).not.toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show password' })).toBeHidden();
+  await expect(page.getByRole('checkbox')).toBeHidden();
 });

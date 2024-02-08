@@ -3,7 +3,8 @@ const colorLib = require('color');
 module.exports = function (theme) {
   return {
     '.button-apple': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       backgroundColor: theme('colors.black'),
       color: theme('colors.white'),
@@ -12,7 +13,8 @@ module.exports = function (theme) {
       },
     },
     '.button-apple_dark': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       backgroundColor: theme('colors.white'),
       color: theme('colors.black'),
@@ -21,7 +23,8 @@ module.exports = function (theme) {
       },
     },
     '.button-facebook': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       backgroundColor: '#1877F2',
       color: theme('colors.white'),
@@ -30,7 +33,8 @@ module.exports = function (theme) {
       },
     },
     '.button-facebook_dark': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       backgroundColor: theme('colors.white'),
       color: '#1877F2',
@@ -39,7 +43,8 @@ module.exports = function (theme) {
       },
     },
     '.button-google': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       backgroundColor: theme('colors.white'),
       color: theme('colors.black'),
@@ -48,7 +53,8 @@ module.exports = function (theme) {
       },
     },
     '.button-google_dark': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       backgroundColor: theme('colors.white'),
       color: theme('colors.black'),
@@ -69,7 +75,8 @@ module.exports = function (theme) {
       },
     },
     '.kba-fieldset': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.DEFAULT')})`,
       position: 'relative',
       borderBottomWidth: '0',
@@ -88,7 +95,8 @@ module.exports = function (theme) {
         display: 'block',
       },
       '&:first-of-type:after': {
-        '--border-color': 'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
+        '--border-color':
+          'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
         borderColor: `var(--border-color, ${theme('colors.secondary.DEFAULT')})`,
         borderTopWidth: '1px',
         content: '""',
@@ -99,7 +107,8 @@ module.exports = function (theme) {
         width: '45%',
       },
       '&:first-of-type:before': {
-        '--border-color': 'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
+        '--border-color':
+          'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
         borderColor: `var(--border-color, ${theme('colors.secondary.DEFAULT')})`,
         borderTopWidth: '1px',
         content: '""',
@@ -118,17 +127,26 @@ module.exports = function (theme) {
       },
     },
     '.kba-fieldset_dark': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-default-hs), calc(var(--tw-colors-secondary-default-l) - 25%))',
-      borderColor: `var(--border-color, ${colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString()})`,
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-default-hs), calc(var(--tw-colors-secondary-default-l) - 25%))',
+      borderColor: `var(--border-color, ${colorLib(theme('colors.secondary.DEFAULT'))
+        .darken(0.25)
+        .toString()})`,
 
       '&:after': {
-        '--border-color': 'hsl(var(--tw-colors-secondary-default-hs), calc(var(--tw-colors-secondary-default-l) - 25%))',
-        borderColor: `var(--border-color, ${colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString()})`,
+        '--border-color':
+          'hsl(var(--tw-colors-secondary-default-hs), calc(var(--tw-colors-secondary-default-l) - 25%))',
+        borderColor: `var(--border-color, ${colorLib(theme('colors.secondary.DEFAULT'))
+          .darken(0.25)
+          .toString()})`,
       },
       '&:before': {
-        '--border-color': 'hsl(var(--tw-colors-secondary-default-hs), calc(var(--tw-colors-secondary-default-l) - 25%))',
+        '--border-color':
+          'hsl(var(--tw-colors-secondary-default-hs), calc(var(--tw-colors-secondary-default-l) - 25%))',
 
-        borderColor: `var(--border-color, ${colorLib(theme('colors.secondary.DEFAULT')).darken(0.25).toString()})`,
+        borderColor: `var(--border-color, ${colorLib(theme('colors.secondary.DEFAULT'))
+          .darken(0.25)
+          .toString()})`,
       },
     },
     '.kba-lock-icon': {
@@ -139,7 +157,8 @@ module.exports = function (theme) {
       width: '100%',
 
       '& > svg': {
-        '--color': 'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
+        '--color':
+          'hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))',
         color: `var(--color, ${theme('colors.secondary.DEFAULT')})`,
         fill: 'currentcolor',
         top: `-${theme('spacing.3')}`,
@@ -154,8 +173,11 @@ module.exports = function (theme) {
       },
     },
     '.password-button': {
-      '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
+      '--bg-color':
+        'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+        .darken(0.02)
+        .toString()})`,
       borderLeft: '0 !important',
       borderTopLeftRadius: '0px !important',
       borderBottomLeftRadius: '0px !important',
@@ -168,7 +190,9 @@ module.exports = function (theme) {
     },
     '.password-button_dark': {
       '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.5)',
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+        .fade(0.5)
+        .toString()})`,
     },
     '.password-icon': {
       '--color': 'hsl(var(--tw-colors-secondary-dark-hs), var(--tw-colors-secondary-dark-l))',

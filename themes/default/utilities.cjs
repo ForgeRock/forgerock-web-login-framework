@@ -5,18 +5,24 @@ module.exports = (theme) => ({
    * https://www.sarasoueidan.com/blog/focus-indicators/
    */
   '.focusable-element': {
-    '--outline-color': 'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.7)',
-    outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).fade(0.7).toString()})`,
+    '--outline-color':
+      'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.7)',
+    outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
+      .fade(0.7)
+      .toString()})`,
     outlineOffset: '0',
     outlineStyle: 'solid',
     outlineWidth: '0',
     transition:
       'background-color ease-in-out 0.15s, outline-color ease-in-out 0.2s, outline-offset ease-in-out 0.1s',
     '&:focus': {
-      '--outline-color': 'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1)',  
+      '--outline-color':
+        'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1)',
       outlineOffset: '0',
       outlineWidth: '3px',
-      outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString()})`,
+      outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
+        .fade(0.1)
+        .toString()})`,
     },
     '&:active': {
       outlineOffset: '2px',
@@ -24,12 +30,20 @@ module.exports = (theme) => ({
     },
   },
   '.focusable-element_dark': {
-    '--outline-color': 'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.7)',
-    outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.7).toString()})`,
+    '--outline-color':
+      'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.7)',
+    outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
+      .lighten(0.2)
+      .fade(0.7)
+      .toString()})`,
     '&:focus': {
-      '--outline-color': 'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1)',
-      outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.1).toString()})`,
-    }
+      '--outline-color':
+        'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1)',
+      outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
+        .lighten(0.2)
+        .fade(0.1)
+        .toString()})`,
+    },
   },
   '.input-spacing': {
     marginBottom: theme('spacing.4'),

@@ -6,10 +6,13 @@ module.exports = function (theme) {
      */
     '.alert': {
       '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
-      '--border-color':'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 10%))',
+      '--border-color':
+        'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 10%))',
       '--font-size': 'var(--tw-font-size-base-type)',
       backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
-      borderColor: `var(--border-color, ${colorLib(theme('colors.background.light')).darken(0.1).toString()})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.background.light'))
+        .darken(0.1)
+        .toString()})`,
       borderRadius: theme('borderRadius.DEFAULT'),
       borderWidth: '1px',
       color: theme('colors.black'),
@@ -18,23 +21,30 @@ module.exports = function (theme) {
       padding: theme('spacing.4'),
 
       '&:focus': {
-        '--outline-color': 'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1)',
+        '--outline-color':
+          'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1)',
         borderRadius: theme('borderRadius.DEFAULT'),
-        outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).fade(0.1).toString()})`,
+        outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
+          .fade(0.1)
+          .toString()})`,
         outlineOffset: '2px',
         outlineStyle: 'solid',
         outlineWidth: '3px',
       },
     },
     '.alert_dark': {
-      '--bg-color':'hsl(var(--tw-colors-background-dark-hs),var(--tw-colors-background-dark-l))',
+      '--bg-color': 'hsl(var(--tw-colors-background-dark-hs),var(--tw-colors-background-dark-l))',
       backgroundColor: `var(--bg-color, ${theme('colors.background.dark')})`,
       borderColor: theme('colors.black'),
       color: theme('colors.white'),
 
       '&:focus': {
-        '--outline-color': 'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1)',
-        outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT')).lighten(0.2).fade(0.1).toString()})`,
+        '--outline-color':
+          'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
+          .lighten(0.2)
+          .fade(0.1)
+          .toString()})`,
       },
       '& svg': {
         color: theme('colors.white'),
@@ -55,9 +65,12 @@ module.exports = function (theme) {
     },
     '.alert-error_dark': {
       '--bg-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
-      '--border-color': 'hsl(var(--tw-colors-error-dark-hs), calc(var(--tw-colors-error-dark-l) - 20%))',
+      '--border-color':
+        'hsl(var(--tw-colors-error-dark-hs), calc(var(--tw-colors-error-dark-l) - 20%))',
       backgroundColor: `var(--bg-color, ${theme('colors.error.dark')})`,
-      borderColor: `var(--border-color, ${colorLib(theme('colors.error.dark')).darken(0.2).toString()})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.error.dark'))
+        .darken(0.2)
+        .toString()})`,
 
       '& svg': {
         '--color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
@@ -66,9 +79,12 @@ module.exports = function (theme) {
       },
     },
     '.alert-info': {
-      '--bg-color': 'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
+      '--bg-color':
+        'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
       '--border-color': 'hsl(var(--tw-colors-primary-light-hs),var(--tw-colors-primary-light-l))',
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light')).lighten(0.9).toString()})`,
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light'))
+        .lighten(0.9)
+        .toString()})`,
       borderColor: `var(--border-color, ${theme('colors.primary.light')})`,
 
       '& svg': {
@@ -78,13 +94,20 @@ module.exports = function (theme) {
       },
     },
     '.alert-info_dark': {
-      '--bg-color': 'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) - 40%))',
-      '--border-color': 'hsl(var(--tw-colors-primary-dark-hs), calc(var(--tw-colors-primary-dark-l) - 20%))',
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light')).darken(0.4).toString()})`,
-      borderColor: `var(--border-color, ${colorLib(theme('colors.primary.dark')).darken(0.2).toString()})`,
+      '--bg-color':
+        'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) - 40%))',
+      '--border-color':
+        'hsl(var(--tw-colors-primary-dark-hs), calc(var(--tw-colors-primary-dark-l) - 20%))',
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light'))
+        .darken(0.4)
+        .toString()})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.primary.dark'))
+        .darken(0.2)
+        .toString()})`,
 
       '& svg': {
-        '--color': 'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
+        '--color':
+          'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
         color: `var(--color, ${colorLib(theme('colors.primary.light')).lighten(0.9).toString()})`,
         fill: 'currentColor',
       },
@@ -103,9 +126,12 @@ module.exports = function (theme) {
     },
     '.alert-success_dark': {
       '--bg-color': 'hsl(var(--tw-colors-success-dark-hs),var(--tw-colors-success-dark-l))',
-      '--border-color': 'hsl(var(--tw-colors-success-dark-hs), calc(var(--tw-colors-success-dark-l) - 20%))',
+      '--border-color':
+        'hsl(var(--tw-colors-success-dark-hs), calc(var(--tw-colors-success-dark-l) - 20%))',
       backgroundColor: `var(--bg-color, ${theme('colors.success.dark')})`,
-      borderColor: `var(--border-color, ${colorLib(theme('colors.success.dark')).darken(0.2).toString()})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.success.dark'))
+        .darken(0.2)
+        .toString()})`,
 
       '& svg': {
         '--color': 'hsl(var(--tw-colors-success-light-hs),var(--tw-colors-success-light-l))',
@@ -127,9 +153,12 @@ module.exports = function (theme) {
     },
     '.alert-warning_dark': {
       '--bg-color': 'hsl(var(--tw-colors-warning-dark-hs),var(--tw-colors-warning-dark-l))',
-      '--border-color': 'hsl(var(--tw-colors-warning-dark-hs), calc(var(--tw-colors-warning-dark-l) - 20%))',
+      '--border-color':
+        'hsl(var(--tw-colors-warning-dark-hs), calc(var(--tw-colors-warning-dark-l) - 20%))',
       backgroundColor: `var(--bg-color, ${theme('colors.warning.dark')})`,
-      borderColor: `var(--border-color, ${colorLib(theme('colors.warning.dark')).darken(0.2).toString()})`,
+      borderColor: `var(--border-color, ${colorLib(theme('colors.warning.dark'))
+        .darken(0.2)
+        .toString()})`,
 
       '& svg': {
         '--color': 'hsl(var(--tw-colors-warning-light-hs),var(--tw-colors-warning-light-l))',
@@ -200,7 +229,8 @@ module.exports = function (theme) {
       borderColor: `var(--border-color, ${theme('colors.secondary.dark')})`,
     },
     '.button-outline_dark': {
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       color: theme('colors.white'),
       '&:hover::before, &:focus::before': {
@@ -209,7 +239,8 @@ module.exports = function (theme) {
     },
     '.button-secondary': {
       '--bg-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
-      '--border-color': 'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
       backgroundColor: `var(--bg-color, ${theme('colors.secondary.light')})`,
       borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
       color: theme('colors.black'),
@@ -253,12 +284,15 @@ module.exports = function (theme) {
         display: 'none',
       },
       '&[aria-invalid="true"]': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) + 1%))',
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) + 1%))',
 
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).lighten(0.01).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+          .lighten(0.01)
+          .toString()})`,
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
@@ -271,17 +305,26 @@ module.exports = function (theme) {
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]': {
-        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.8)',
-        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.8).toString()})`,
+        '--outline-color':
+          'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.8)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light'))
+          .fade(0.8)
+          .toString()})`,
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
-        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.5)',
-        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.5).toString()})`,
+        '--outline-color':
+          'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.5)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light'))
+          .fade(0.5)
+          .toString()})`,
       },
       '&[aria-invalid="true"]:focus': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) + 5%))',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).lighten(0.05).toString()})`,
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) + 5%))',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+          .lighten(0.05)
+          .toString()})`,
       },
     },
     '.checkbox-input_dark': {
@@ -296,13 +339,20 @@ module.exports = function (theme) {
      * String input and select primitive theme settings
      */
     '.input-base': {
-      '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
-      '--border': `${theme('borderWidth.DEFAULT')} solid hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))`,
+      '--bg-color':
+        'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      '--border': `${theme(
+        'borderWidth.DEFAULT',
+      )} solid hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))`,
       '--font-size': 'var(--tw-font-size-base-type)',
-      
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
 
-      border: `var(--border, ${theme('borderWidth.DEFAULT')} solid ${theme('colors.secondary.DEFAULT')})`,
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+        .darken(0.02)
+        .toString()})`,
+
+      border: `var(--border, ${theme('borderWidth.DEFAULT')} solid ${theme(
+        'colors.secondary.DEFAULT',
+      )})`,
       border: `${theme('borderWidth.DEFAULT')} solid ${theme('colors.secondary.DEFAULT')}`,
       borderRadius: theme('borderRadius.DEFAULT'),
       color: theme('colors.black'),
@@ -311,21 +361,26 @@ module.exports = function (theme) {
       padding: theme('spacing.3'),
 
       '&:hover': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&:focus': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&[aria-invalid="true"]': {
         '--border-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
         borderColor: `var(--border-color, ${theme('colors.error.dark')})`,
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+          .darken(0.02)
+          .toString()})`,
         backgroundPosition: `right ${theme('spacing.3')} center`,
         backgroundSize: `${theme('spacing.4')} ${theme('spacing.4')}`,
       },
@@ -335,18 +390,25 @@ module.exports = function (theme) {
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]': {
-        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.8)',
-        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.8).toString()})`,
+        '--outline-color':
+          'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.8)',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light'))
+          .fade(0.8)
+          .toString()})`,
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
         '--outline-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l), 0.3)',
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
-        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.dark')).fade(0.3).toString()})`,
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.dark'))
+          .fade(0.3)
+          .toString()})`,
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&[aria-invalid="true"]:hover': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       // TODO: is this needed? I don't think so.
@@ -357,17 +419,23 @@ module.exports = function (theme) {
     '.input-base_dark': {
       '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.5)',
       '--border-color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+        .fade(0.5)
+        .toString()})`,
       borderColor: `var(--border-color, ${theme('colors.secondary.dark')})`,
       color: theme('colors.white'),
 
       '&:focus': {
         '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.25)
+          .toString()})`,
       },
       '&:hover': {
         '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.25)
+          .toString()})`,
       },
       '&[aria-invalid="true"]': {
         '--border-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
@@ -376,17 +444,26 @@ module.exports = function (theme) {
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.light'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.5)
+          .toString()})`,
       },
       '&[aria-invalid="true"]:focus': {
-        '--outline-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.3) !important',
+        '--outline-color':
+          'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.3) !important',
         '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
-        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light')).fade(0.3).toString()}) !important`,
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
+        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light'))
+          .fade(0.3)
+          .toString()}) !important`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.25)
+          .toString()})`,
       },
       '&[aria-invalid="true"]:hover': {
         '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.25)
+          .toString()})`,
       },
       '&[aria-invalid="true"] ~ button': {
         '--border-color': 'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l))',
@@ -401,9 +478,8 @@ module.exports = function (theme) {
     '.input-label': {
       '--font-size': 'var(--tw-font-size-base-type)',
       '--color': 'hsl(var(--tw-colors-label-dark-hs), var(--tw-colors-label-dark-l))',
-      fontSize: `var(--font-size, ${theme('fontSize.base')})`, 
+      fontSize: `var(--font-size, ${theme('fontSize.base')})`,
       color: `var(--color, ${theme('colors.label.dark')})`,
-
     },
 
     '.input-label_dark': {
@@ -475,39 +551,54 @@ module.exports = function (theme) {
       color: `var(--color, ${theme('colors.link.light')})`,
     },
     '.select-base': {
-      '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      '--bg-color':
+        'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
       '--color': 'hsl(var(--tw-colors-label-dark-hs), var(--tw-colors-label-dark-l))',
-      
+
       appearance: 'none',
       /**
        * The below background property prevents Storybook a11y from determining contrast.
        * This is likely due to the presence of the image.
        */
-      background: `no-repeat right ${theme('spacing.3',)} center url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
-      theme('colors.secondary.dark'),).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
+      background: `no-repeat right ${theme(
+        'spacing.3',
+      )} center url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
+        theme('colors.secondary.dark'),
+      ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+        .darken(0.02)
+        .toString()})`,
       backgroundSize: '16px 12px',
       color: `var(--color, ${theme('colors.label.dark')})`,
       // TODO: Use design tokens, not absolute values
       height: 'calc(3rem + 2px)',
 
       '&:hover': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.05).toString()})`,
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+          .darken(0.05)
+          .toString()})`,
       },
       '&:focus': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.05).toString()})`,
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+          .darken(0.05)
+          .toString()})`,
       },
       '&[aria-invalid="true"]': {
-        '--bg-color': 'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+        '--bg-color':
+          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
 
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.dark'),
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light')).darken(0.02).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
+          .darken(0.02)
+          .toString()})`,
         backgroundPosition: 'right 0.75rem center, center right 2.25rem',
         backgroundSize: `16px 12px, ${theme('spacing.4')} ${theme('spacing.4')}`,
       },
@@ -520,17 +611,23 @@ module.exports = function (theme) {
       )} center / 16px 12px url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
         theme('colors.secondary.light'),
       ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e")`,
-      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
-      color: `var(--color, ${ theme('colors.label.light')})`,
+      backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+        .fade(0.5)
+        .toString()})`,
+      color: `var(--color, ${theme('colors.label.light')})`,
 
       '&:hover,': {
         '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25)',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.25)
+          .toString()})`,
       },
 
       '&:focus': {
         '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25)',
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.25).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.25)
+          .toString()})`,
       },
 
       '&[aria-invalid="true"]': {
@@ -540,7 +637,9 @@ module.exports = function (theme) {
         ).rgb()}' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M2 5l6 6 6-6'/%3e%3c/svg%3e"), url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.light'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
-        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark')).fade(0.5).toString()})`,
+        backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
+          .fade(0.5)
+          .toString()})`,
         backgroundPosition: 'right 0.75rem center, center right 2.25rem',
         backgroundSize: `16px 12px, ${theme('spacing.4')} ${theme('spacing.4')}`,
       },

@@ -37,7 +37,7 @@ const plugins = [
     preprocess: sveltePreprocess({
       typescript: {
         tsconfigFile: './tsconfig.json',
-        exclude: ["**/*.test.ts", "**/*.test.js", "tests/**"]
+        exclude: ['**/*.test.ts', '**/*.test.js', 'tests/**'],
       },
     }),
   }),

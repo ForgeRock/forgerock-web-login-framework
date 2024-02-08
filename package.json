@@ -37,7 +37,8 @@
     "test": "vitest",
     "test:e2e": "npm run build && playwright test",
     "test:e2e:ui": "npm run build && playwright test --ui",
-    "test:storybook": "test-storybook"
+    "test:storybook": "test-storybook",
+    "playwright": "playwright test --ui"
   },
   "overrides": {
     "vite": {
@@ -108,6 +109,7 @@
     "dotenv": "^16.4.1",
     "eslint": "^8.53.0",
     "eslint-config-prettier": "^9.0.0",
+    "eslint-plugin-playwright": "^0.22.2",
     "eslint-plugin-storybook": "^0.6.15",
     "eslint-plugin-svelte3": "^4.0.0",
     "husky": "8.0.3",
@@ -123,6 +125,8 @@
     "postcss-cli": "^10.1.0",
     "postcss-import": "^15.0.0",
     "prettier": "3.0.3",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "remark-autolink-headings": "^7.0.1",
     "remark-slug": "^7.0.1",
     "rimraf": "3.0.2",

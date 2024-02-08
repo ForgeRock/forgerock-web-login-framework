@@ -17,7 +17,7 @@ export function asyncEvents(page) {
       ]);
     },
     async navigate(route) {
-      await page.goto(route, { waitUntil: 'networkidle' });
+      await page.goto(route, { waitFor: 'load' });
     },
     async pressEnter(endpoint) {
       if (!endpoint)
@@ -48,6 +48,6 @@ export async function verifyUserInfo(page, expect, type) {
   // Just wait for one of them to be visible
   await name.waitFor();
 
-  expect(await name.textContent()).toBe(nameString);
-  expect(await email.textContent()).toBe(emailString);
+  await expect(name).toHaveText(nameString);
+  await expect(email).toHaveText(emailString);
 }

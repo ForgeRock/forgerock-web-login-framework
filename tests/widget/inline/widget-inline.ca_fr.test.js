@@ -11,6 +11,7 @@ test('Inline widget with login in Canadian French', async ({ page }) => {
   await page.getByLabel('utilisateur').fill('demouser');
   await page.getByLabel('Mot de passe').fill('j56eKtae*1');
 
+  await expect(page.getByText('Se connecter')).toBeVisible();
   await clickButton('Se connecter', '/authenticate');
 
   await verifyUserInfo(page, expect);

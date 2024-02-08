@@ -26,7 +26,7 @@
   const formElementId = 'genericStepForm';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
-  let codes: Array<string> = [];
+  let codes: string[] = [];
   let name = 'New Security Key';
 
   afterUpdate(() => {

@@ -14,7 +14,7 @@ const config: PlaywrightTestConfig = {
     headless: true,
     baseURL: `${url}/e2e/`,
     ignoreHTTPSErrors: true,
-    trace: 'on',
+    trace: 'retain-on-failure',
   },
   retries: process.env.CI ? 2 : 0,
   forbidOnly: !!process.env.CI,

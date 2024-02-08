@@ -1,7 +1,6 @@
 <script lang="ts">
   import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
   import { afterUpdate } from 'svelte';
-  import type { z } from 'zod';
 
   // i18n
   import { interpolate } from '$lib/_utilities/i18n.utilities';
@@ -17,13 +16,13 @@
   import type { FRStep } from '@forgerock/javascript-sdk';
 
   import type { StageFormObject } from '$journey/journey.interfaces';
-  import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import Button from '$components/primitives/button/button.svelte';
+
   import Input from '$components/compositions/input-floating/floating-label.svelte';
-  import type { styleSchema } from '$lib/style.store';
+
+  import Button from '$components/primitives/button/button.svelte';
+  import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
-  export let style: z.infer<typeof styleSchema> = {}
   export let allowWebAuthn = true;
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
@@ -34,12 +33,14 @@
   const formHeaderId = 'genericStepHeader';
   const formElementId = 'genericStepForm';
 
-  let deviceName = ''; 
-  let hasDeviceName = false;
   let alertNeedsFocus = false;
+  let deviceName = ''; 
+  let noDeviceRegistered = false;
   let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
+  let requestsDeviceName = true;
+  let waitingForWebAuthnAPI = false;
   let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
 
   function updateDeviceName (event: Event) {
@@ -66,7 +67,12 @@
     try {
       switch (webAuthnType) {
         case WebAuthnStepType.Registration: {
-          await FRWebAuthn.register<typeof deviceName>(step, deviceName);
+          try {
+            await FRWebAuthn.register<typeof deviceName>(step, deviceName);
+            noDeviceRegistered = true;
+          } catch (err) {
+            // TODO: handle error
+          } 
           break;
         }
         case WebAuthnStepType.Authentication: {
@@ -85,9 +91,11 @@
  
   $: {
     formMessageKey = convertStringToKey(form?.message);
+    console.log(noDeviceRegistered, allowWebAuthn)
     // Call the WebAuthn API without await
-    if (allowWebAuthn) {
-        if ((WebAuthnStepType.Registration === webAuthnType && hasDeviceName) || WebAuthnStepType.Authentication === webAuthnType) {
+    if (allowWebAuthn && !noDeviceRegistered) {
+      console.log(requestsDeviceName)
+        if ((WebAuthnStepType.Registration === webAuthnType && !requestsDeviceName) || WebAuthnStepType.Authentication === webAuthnType) {
           callWebAuthnApi();
         }
       }
@@ -107,7 +115,7 @@
     </div>
   {/if}
 
-  {#if hasDeviceName}
+  {#if waitingForWebAuthnAPI}
   <div class="tw_text-center tw_w-full tw_py-4">
     <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
   </div>
@@ -134,12 +142,15 @@
     </header>
   {:else}
     <header class={`tw_input-spacing`} id={formHeaderId}>
-      {#if !hasDeviceName}
+      {#if requestsDeviceName}
       <h1 class="tw_primary-header dark:tw_primary-header_dark">
         <T key="nameYourDevice" />
       </h1>
         <Input type='text' isRequired={ false } isFirstInvalidInput={false} key="devicename" onChange={updateDeviceName} label={interpolate('optionallyNameDevice')} /> 
-          <Button style="primary" type="submit" width="full" onClick={() => hasDeviceName = true}>
+          <Button style="primary" type="submit" width="full" onClick={() => {
+            requestsDeviceName = false; 
+            waitingForWebAuthnAPI = true }
+            }>
             <T key="nextButton" />
           </Button>
       {:else}
