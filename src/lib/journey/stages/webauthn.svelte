@@ -16,6 +16,10 @@
   import type { FRStep } from '@forgerock/javascript-sdk';
 
   import type { StageFormObject } from '$journey/journey.interfaces';
+
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
+
+  import Button from '$components/primitives/button/button.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
@@ -30,10 +34,19 @@
   const formElementId = 'genericStepForm';
 
   let alertNeedsFocus = false;
+  let deviceName = ''; 
+  let noDeviceRegistered = false;
   let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
+  let requestsDeviceName = true;
+  let waitingForWebAuthnAPI = false;
   let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
+
+  function updateDeviceName (event: Event) {
+    const target = event.target as unknown as { value: string } 
+    deviceName = target.value;
+  }
 
   afterUpdate(() => {
     if (form?.message) {
@@ -54,7 +67,12 @@
     try {
       switch (webAuthnType) {
         case WebAuthnStepType.Registration: {
-          await FRWebAuthn.register(step);
+          try {
+            await FRWebAuthn.register<typeof deviceName>(step, deviceName);
+            noDeviceRegistered = true;
+          } catch (err) {
+            // TODO: handle error
+          } 
           break;
         }
         case WebAuthnStepType.Authentication: {
@@ -70,13 +88,18 @@
     form.submit();
   }
 
-  // Call the WebAuthn API without await
-  if (allowWebAuthn) {
-    callWebAuthnApi();
-  }
-
+ 
   $: {
     formMessageKey = convertStringToKey(form?.message);
+    console.log(noDeviceRegistered, allowWebAuthn)
+    // Call the WebAuthn API without await
+    if (allowWebAuthn && !noDeviceRegistered) {
+      console.log(requestsDeviceName)
+        if ((WebAuthnStepType.Registration === webAuthnType && !requestsDeviceName) || WebAuthnStepType.Authentication === webAuthnType) {
+          callWebAuthnApi();
+        }
+      }
+
   }
 </script>
 
@@ -92,10 +115,11 @@
     </div>
   {/if}
 
+  {#if waitingForWebAuthnAPI}
   <div class="tw_text-center tw_w-full tw_py-4">
     <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
   </div>
-
+  {/if}
   {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
       {interpolate(formMessageKey, null, form?.message)}
@@ -104,6 +128,9 @@
 
   {#if webAuthnType === WebAuthnStepType.Authentication}
     <header id={formHeaderId}>
+      <div class="tw_text-center tw_w-full tw_py-4">
+        <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
+      </div>
       <h1 class="tw_primary-header dark:tw_primary-header_dark">
         <T key="verifyYourIdentity" />
       </h1>
@@ -114,15 +141,28 @@
       </p>
     </header>
   {:else}
-    <header id={formHeaderId}>
+    <header class={`tw_input-spacing`} id={formHeaderId}>
+      {#if requestsDeviceName}
       <h1 class="tw_primary-header dark:tw_primary-header_dark">
-        <T key="registerYourDevice" />
+        <T key="nameYourDevice" />
       </h1>
-      <p
-        class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-      >
-        <T key="chooseYourDeviceForIdentityVerification" />
-      </p>
+        <Input type='text' isRequired={ false } isFirstInvalidInput={false} key="devicename" onChange={updateDeviceName} label={interpolate('optionallyNameDevice')} /> 
+          <Button style="primary" type="submit" width="full" onClick={() => {
+            requestsDeviceName = false; 
+            waitingForWebAuthnAPI = true }
+            }>
+            <T key="nextButton" />
+          </Button>
+      {:else}
+        <h1 class="tw_primary-header dark:tw_primary-header_dark">
+          <T key="registerYourDevice" values={{name: deviceName.length > 0 ? deviceName : interpolate('yourDevice')}} />
+        </h1>
+        <p
+          class="tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+        >
+          <T key="chooseYourDeviceForIdentityVerification" />
+        </p>
+      {/if}
     </header>
   {/if}
 </Form>

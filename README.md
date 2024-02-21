@@ -246,7 +246,7 @@ For most single page applications (SPA) this is your `index.html` file.
 This new element should be a direct child element of <body> and not within the element where you mount your SPA.
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!-- ... -->

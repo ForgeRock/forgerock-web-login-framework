@@ -25,7 +25,7 @@ test('Modal widget with testing journey changes', async ({ page }) => {
   // Get all buttons
   const buttons = page.getByRole('button');
   // Is last button the "Back to" button?
-  expect(await buttons.last().innerText()).toBe('Back to Sign In');
+  await expect(buttons.last()).toHaveText('Back to Sign In');
 
   // It's important that this email is UNIQUE in the system or this test will fail
   await page.getByLabel('Email address').fill('forget-password@keepunique.com');

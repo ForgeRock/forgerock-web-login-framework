@@ -23,6 +23,10 @@ module.exports = {
       files: ['*.svelte'],
       processor: 'svelte3/svelte3',
     },
+    {
+      files: ['test/**'],
+      plugins: ['plugin:playwright/recommended'],
+    },
   ],
   settings: {
     'svelte3/typescript': () => require('typescript'),

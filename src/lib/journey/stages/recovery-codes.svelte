@@ -20,14 +20,14 @@
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
   export let step: FRStep;
-  let codes: Array<string> = [];
 
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
   const formElementId = 'genericStepForm';
-
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
+  let codes: string[] = [];
+  let name = 'New Security Key';
 
   afterUpdate(() => {
     if (form?.message) {
@@ -41,6 +41,7 @@
 
   $: {
     codes = FRRecoveryCodes.getCodes(step);
+    name = FRRecoveryCodes.getDeviceName(step);
   }
 </script>
 
@@ -89,6 +90,9 @@
       </li>
     {/each}
   </ol>
+  <p class="tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6">
+    <T html={true} key="useOneOfTheseCodes" values={{ name }}/>
+  </p>
 
   <Button busy={journey?.loading} style="primary" type="submit" width="full">
     <T key="nextButton" />

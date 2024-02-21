@@ -100,7 +100,7 @@ InteractionWithNone.play = async ({ canvasElement }) => {
   const passwordField = canvas.getByLabelText('Password');
   await userEvent.tab();
   expect(passwordField).toHaveFocus();
-  
+
   await userEvent.keyboard('password2');
   await userEvent.tab();
   expect(cb.getInputValue()).toBe('password2');

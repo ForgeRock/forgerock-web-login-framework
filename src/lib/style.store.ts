@@ -9,12 +9,14 @@ export const logoSchema = z
     width: z.number().optional(),
   })
   .strict();
-  
+
 export const styleSchema = z
   .object({
     checksAndRadios: z.union([z.literal('animated'), z.literal('standard')]).optional(),
     labels: z.union([z.literal('floating').optional(), z.literal('stacked')]).optional(),
-    showPassword: z.union([z.literal('none'), z.literal('button'), z.literal('checkbox')]).optional(),
+    showPassword: z
+      .union([z.literal('none'), z.literal('button'), z.literal('checkbox')])
+      .optional(),
     logo: logoSchema.optional(),
     sections: z
       .object({
@@ -59,12 +61,15 @@ export function initialize(customStyle?: z.infer<typeof partialStyleSchema>) {
       return customStyle[str];
     };
     const newStyleConfig = Object.keys(customStyle).reduce((acc, key) => {
-      if (accessStrictType(key as keyof typeof customStyle) === undefined || accessStrictType(key as keyof typeof customStyle) === null) {
+      if (
+        accessStrictType(key as keyof typeof customStyle) === undefined ||
+        accessStrictType(key as keyof typeof customStyle) === null
+      ) {
         return acc;
       }
-      return {...acc, [key]:accessStrictType(key as keyof typeof customStyle)};
-      },fallbackStyles);
-      styleStore.set(newStyleConfig);
+      return { ...acc, [key]: accessStrictType(key as keyof typeof customStyle) };
+    }, fallbackStyles);
+    styleStore.set(newStyleConfig);
   } else {
     styleStore.set(fallbackStyles);
   }

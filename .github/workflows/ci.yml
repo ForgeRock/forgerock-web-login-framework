@@ -9,7 +9,7 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Node ${{ matrix.node }} Run
@@ -17,7 +17,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
           cache: 'npm'
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
@@ -28,11 +28,11 @@ jobs:
       - name: Install dependencies if cache invalid
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
-  pr:
+  e2e:
     needs: install
     strategy:
       matrix:
-        node: [16.x, 18.x]
+        node: [20.x]
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     env:
@@ -41,11 +41,47 @@ jobs:
       VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
       VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - name: Restore npm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            node_modules
+          key: ${{ runner.os }}-npm-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm
+      - run: npm run build
+      - run: npx playwright install
+      - name: e2e
+        run: npm run ci:e2e
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
+
+  pr:
+    needs: install
+    strategy:
+      matrix:
+        node: [20.x, 18.x]
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+      VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+      VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
+      VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Restore npm dependencies
+        uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
@@ -63,12 +99,13 @@ jobs:
           npx concurrently -k -s first -n "SB,TEST" -c "magenta,blue" \
             "npx http-server storybook-static --port 6006 --silent" \
             "npx wait-on tcp:6006 && npm run test:storybook"
+
   chromatic:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     needs: install
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -76,7 +113,7 @@ jobs:
           node-version: 18.x
           cache: 'npm'
       - name: Restore npm dependencies
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         id: npm-cache
         with:
           path: |
@@ -87,7 +124,7 @@ jobs:
       - name: Install dependencies if cache invalid
         if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
-      - uses: chromaui/action@v1
+      - uses: chromaui/action@latest
         with:
           onlyChanged: true
           exitOnceUploaded: true

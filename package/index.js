@@ -845,6 +845,7 @@ function setDefaults(options) {
         ...options,
         oauthThreshold: options.oauthThreshold || DEFAULT_OAUTH_THRESHOLD,
         logLevel: options.logLevel || 'none',
+        prefix: options.prefix || PREFIX,
     };
 }
 /**
@@ -877,9 +878,7 @@ class Config {
         if (options.serverConfig) {
             this.validateServerConfig(options.serverConfig);
         }
-        this.options = {
-            ...setDefaults(options),
-        };
+        this.options = { ...setDefaults(options) };
     }
     /**
      * Merges the provided options with the default options.  Ensures a server configuration exists.
@@ -2650,6 +2649,9 @@ class FRStep {
  * Provides access to the OpenAM authentication tree API.
  */
 class FRAuth {
+    static get previousStepKey() {
+        return `${Config.get().prefix}-PreviousStep`;
+    }
     /**
      * Requests the next step in the authentication tree.
      *
@@ -2796,7 +2798,6 @@ class FRAuth {
         return await FRAuth.next(undefined, options);
     }
 }
-FRAuth.previousStepKey = `${PREFIX}-PreviousStep`;
 
 /*
  * @forgerock/javascript-sdk
@@ -3093,7 +3094,7 @@ class FRDevice extends Collector {
         return this.reduceToObject(this.config.hardwareProps, navigator);
     }
     getIdentifier() {
-        const storageKey = `${PREFIX}-DeviceID`;
+        const storageKey = `${Config.get().prefix}-DeviceID`;
         if (!(typeof globalThis.crypto !== 'undefined' && globalThis.crypto.getRandomValues)) {
             FRLogger.warn('Cannot generate profile ID. Crypto and/or getRandomValues is not supported.');
             return '';
@@ -3293,6 +3294,25 @@ function parseDisplayRecoveryCodesText(text) {
         });
     return recoveryCodes || [];
 }
+/**
+ *
+ * @param text
+ * @returns string
+ */
+function parseDeviceNameText(text) {
+    /**
+     * We default the device name to 'New Security Key'
+     * If the user has a device name, it will be wrapped in <em> tags
+     * e.g. ` ... <em>My Security Key</em> ... `
+     * We want to remove the <em> tags and just return the device name
+     * e.g. ` ... My Security Key ... `
+     */
+    const displayName = text
+        ?.match(/<em\s*.*>\s*.*<\/em>/g)?.[0]
+        ?.replace('<em>', '')
+        ?.replace('</em>', '') ?? 'New Security Key';
+    return displayName;
+}
 
 /*
  * @forgerock/javascript-sdk
@@ -3318,6 +3338,10 @@ function parseDisplayRecoveryCodesText(text) {
  * ```
  */
 class FRRecoveryCodes {
+    static getDeviceName(step) {
+        const text = this.getDisplayCallback(step)?.getOutputByName('message', '') ?? '';
+        return parseDeviceNameText(text);
+    }
     /**
      * Retrieves the recovery codes by parsing the JavaScript message text in callback.
      *
@@ -3370,7 +3394,7 @@ class LocalStorageWrapper {
      * Retrieve tokens.
      */
     static async get(clientId) {
-        const tokenString = localStorage.getItem(`${PREFIX}-${clientId}`);
+        const tokenString = localStorage.getItem(`${Config.get().prefix}-${clientId}`);
         // If there is no stored token, or the token is not an object, return null
         if (!tokenString) {
             // This is a normal state, so resolve with undefined
@@ -3389,13 +3413,13 @@ class LocalStorageWrapper {
      */
     static async set(clientId, tokens) {
         const tokenString = JSON.stringify(tokens);
-        localStorage.setItem(`${PREFIX}-${clientId}`, tokenString);
+        localStorage.setItem(`${Config.get().prefix}-${clientId}`, tokenString);
     }
     /**
      * Removes stored tokens.
      */
     static async remove(clientId) {
-        localStorage.removeItem(`${PREFIX}-${clientId}`);
+        localStorage.removeItem(`${Config.get().prefix}-${clientId}`);
     }
 }
 
@@ -3416,7 +3440,7 @@ class SessionStorageWrapper {
      * Retrieve tokens.
      */
     static async get(clientId) {
-        const tokenString = sessionStorage.getItem(`${PREFIX}-${clientId}`);
+        const tokenString = sessionStorage.getItem(`${Config.get().prefix}-${clientId}`);
         // If there is no stored token, or the token is not an object, return null
         if (!tokenString) {
             // This is a normal state, so resolve with undefined
@@ -3435,13 +3459,13 @@ class SessionStorageWrapper {
      */
     static async set(clientId, tokens) {
         const tokenString = JSON.stringify(tokens);
-        sessionStorage.setItem(`${PREFIX}-${clientId}`, tokenString);
+        sessionStorage.setItem(`${Config.get().prefix}-${clientId}`, tokenString);
     }
     /**
      * Removes stored tokens.
      */
     static async remove(clientId) {
-        sessionStorage.removeItem(`${PREFIX}-${clientId}`);
+        sessionStorage.removeItem(`${Config.get().prefix}-${clientId}`);
     }
 }
 
@@ -4011,7 +4035,7 @@ class TokenManager {
      */
     static async getTokens(options) {
         const { clientId, oauthThreshold } = Config.get(options);
-        const storageKey = `${PREFIX}-${clientId}`;
+        const storageKey = `${Config.get().prefix}-${clientId}`;
         /**
          * First, let's see if tokens exist locally
          */
@@ -11123,6 +11147,7 @@ var continueWith = "Continue with ";
 var copyAndPasteUrlBelow = "Or, copy and paste the URL below into your authentictor app.";
 var copyUrl = "Copy URL";
 var customSecurityQuestion = "Custom security question";
+var deviceName = "Device name";
 var doesNotMeetMinimumCharacterLength = "At least {min} character(s)";
 var dontGetLockedOut = "Don't get locked out of your account!";
 var dontHaveAnAccount = "No account? <a href='?journey=Registration'>Register here!</a>";
@@ -11147,11 +11172,13 @@ var minimumNumberOfLowercase = "At least {num} lowercase letter(s)";
 var minimumNumberOfUppercase = "At least {num} uppercase letter(s)";
 var minimumNumberOfSymbols = "At least {num} symbol(s)";
 var nameCallback = "Username";
+var nameYourDevice = "Name your device";
 var next = "Next";
 var nextButton = "Next";
 var notToExceedMaximumCharacterLength = "No more than {max} characters";
 var noLessThanMinimumCharacterLength = "At least {min} character(s)";
 var onMobileOpenInAuthenticator = "On mobile? Open link in Authenticator.";
+var optionallyNameDevice = "Optionally name your device";
 var passwordCallback = "Password";
 var passwordCannotContainCommonPasswords = "Password cannot contain common passwords";
 var passwordCannotContainCommonPasswordsOrBeReversible = "Password cannot contain common passwords or reversible text";
@@ -11170,7 +11197,7 @@ var registerButton = "Register";
 var registerHeader = "Register";
 var registerSuccess = "Registration successful!";
 var requiredField = "Value is required";
-var registerYourDevice = "Register your device";
+var registerYourDevice = "Register {name}";
 var scanQrCodeWithAuthenticator = "Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login.";
 var securityAnswer = "Security answer";
 var securityQuestions = "Security question(s)";
@@ -11180,6 +11207,7 @@ var shouldContainAnUppercase = "Should contain an uppercase letter";
 var shouldContainALowercase = "Should contain a lowercase letter";
 var shouldContainASymbol = "Should contain a symbol";
 var showPassword = "Show password";
+var skipButton = "Skip";
 var sn = "Last name";
 var submit = "Submit";
 var submitButton = "Submit";
@@ -11195,6 +11223,7 @@ var unknownLoginError = "Unknown login failure has occurred.";
 var unknownNetworkError = "Unknown network request failure has occurred.";
 var url = "URL:";
 var useDeviceForIdentityVerification = "Use your device for identity verification.";
+var useOneOfTheseCodes = "Use one of these codes to authenticate if you lose your device, which has been named: <em>{name}</em>";
 var userName = "Username";
 var usernameRequirements = "Username requirements:";
 var useTheAuthenticatorAppOnYourPhone = "Find the verification code using the authenticator app on your phone.";
@@ -11202,6 +11231,7 @@ var validatedCreatePasswordCallback = "Password";
 var validatedCreateUsernameCallback = "Username";
 var valueRequirements = "Value requirements:";
 var verifyYourIdentity = "Verify your identity";
+var yourDevice = "Your device";
 var yourMultiFactorAuthIsEnabled = "Your new device or MFA is enabled";
 var yourRecoveryCodesToAccessAccountForLostDevice = "If you lose your device, or don’t have it with you, a recovery code is the only way to sign in to your account with 2-step verification enabled. It’s strongly recommended that you print and store these codes in a safe place. <b>Each code can only be used once</b>.";
 var fallback = {
@@ -11221,6 +11251,7 @@ var fallback = {
 	copyAndPasteUrlBelow: copyAndPasteUrlBelow,
 	copyUrl: copyUrl,
 	customSecurityQuestion: customSecurityQuestion,
+	deviceName: deviceName,
 	doesNotMeetMinimumCharacterLength: doesNotMeetMinimumCharacterLength,
 	dontGetLockedOut: dontGetLockedOut,
 	dontHaveAnAccount: dontHaveAnAccount,
@@ -11245,11 +11276,13 @@ var fallback = {
 	minimumNumberOfUppercase: minimumNumberOfUppercase,
 	minimumNumberOfSymbols: minimumNumberOfSymbols,
 	nameCallback: nameCallback,
+	nameYourDevice: nameYourDevice,
 	next: next,
 	nextButton: nextButton,
 	notToExceedMaximumCharacterLength: notToExceedMaximumCharacterLength,
 	noLessThanMinimumCharacterLength: noLessThanMinimumCharacterLength,
 	onMobileOpenInAuthenticator: onMobileOpenInAuthenticator,
+	optionallyNameDevice: optionallyNameDevice,
 	passwordCallback: passwordCallback,
 	passwordCannotContainCommonPasswords: passwordCannotContainCommonPasswords,
 	passwordCannotContainCommonPasswordsOrBeReversible: passwordCannotContainCommonPasswordsOrBeReversible,
@@ -11278,6 +11311,7 @@ var fallback = {
 	shouldContainALowercase: shouldContainALowercase,
 	shouldContainASymbol: shouldContainASymbol,
 	showPassword: showPassword,
+	skipButton: skipButton,
 	sn: sn,
 	submit: submit,
 	submitButton: submitButton,
@@ -11293,6 +11327,7 @@ var fallback = {
 	unknownNetworkError: unknownNetworkError,
 	url: url,
 	useDeviceForIdentityVerification: useDeviceForIdentityVerification,
+	useOneOfTheseCodes: useOneOfTheseCodes,
 	userName: userName,
 	usernameRequirements: usernameRequirements,
 	useTheAuthenticatorAppOnYourPhone: useTheAuthenticatorAppOnYourPhone,
@@ -11300,6 +11335,7 @@ var fallback = {
 	validatedCreateUsernameCallback: validatedCreateUsernameCallback,
 	valueRequirements: valueRequirements,
 	verifyYourIdentity: verifyYourIdentity,
+	yourDevice: yourDevice,
 	yourMultiFactorAuthIsEnabled: yourMultiFactorAuthIsEnabled,
 	yourRecoveryCodesToAccessAccountForLostDevice: yourRecoveryCodesToAccessAccountForLostDevice
 };
@@ -11325,6 +11361,7 @@ const stringsSchema = z
     customSecurityQuestion: z.string(),
     dontGetLockedOut: z.string(),
     doesNotMeetMinimumCharacterLength: z.string(),
+    deviceName: z.string(),
     ensurePasswordIsMoreThan: z.string(),
     ensurePasswordHasOne: z.string(),
     enterVerificationCode: z.string(),
@@ -11346,11 +11383,14 @@ const stringsSchema = z
     minimumNumberOfUppercase: z.string(),
     minimumNumberOfSymbols: z.string(),
     nameCallback: z.string(),
+    nameYourDevice: z.string(),
     next: z.string(),
     nextButton: z.string(),
     notToExceedMaximumCharacterLength: z.string(),
     noLessThanMinimumCharacterLength: z.string(),
+    useOneOfTheseCodes: z.string(),
     onMobileOpenInAuthenticator: z.string(),
+    optionallyNameDevice: z.string(),
     passwordCallback: z.string(),
     passwordCannotContainCommonPasswords: z.string(),
     passwordCannotContainCommonPasswordsOrBeReversible: z.string(),
@@ -11379,6 +11419,7 @@ const stringsSchema = z
     shouldContainALowercase: z.string(),
     shouldContainASymbol: z.string(),
     showPassword: z.string(),
+    skipButton: z.string(),
     sn: z.string(),
     submit: z.string(),
     submitButton: z.string(),
@@ -11401,6 +11442,7 @@ const stringsSchema = z
     validatedCreateUsernameCallback: z.string(),
     valueRequirements: z.string(),
     verifyYourIdentity: z.string(),
+    yourDevice: z.string(),
     yourMultiFactorAuthIsEnabled: z.string(),
     yourRecoveryCodesToAccessAccountForLostDevice: z.string(),
 })
@@ -12454,7 +12496,9 @@ const styleSchema = z
     .object({
     checksAndRadios: z.union([z.literal('animated'), z.literal('standard')]).optional(),
     labels: z.union([z.literal('floating').optional(), z.literal('stacked')]).optional(),
-    showPassword: z.union([z.literal('none'), z.literal('button'), z.literal('checkbox')]).optional(),
+    showPassword: z
+        .union([z.literal('none'), z.literal('button'), z.literal('checkbox')])
+        .optional(),
     logo: logoSchema.optional(),
     sections: z
         .object({
@@ -12495,7 +12539,8 @@ function initialize(customStyle) {
             return customStyle[str];
         };
         const newStyleConfig = Object.keys(customStyle).reduce((acc, key) => {
-            if (accessStrictType(key) === undefined || accessStrictType(key) === null) {
+            if (accessStrictType(key) === undefined ||
+                accessStrictType(key) === null) {
                 return acc;
             }
             return { ...acc, [key]: accessStrictType(key) };
@@ -18761,7 +18806,7 @@ function get_each_context$9(ctx, list, i) {
 }
 
 // (101:0) {:else}
-function create_else_block_1(ctx) {
+function create_else_block_1$1(ctx) {
 	let grid;
 	let current;
 
@@ -18877,7 +18922,7 @@ function create_if_block$n(ctx) {
 }
 
 // (104:6) <Button         style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}         type="button"         width="auto"         onClick={() => setBtnValue(Number(opt.value))}       >
-function create_default_slot_2$8(ctx) {
+function create_default_slot_2$9(ctx) {
 	let t0_value = /*opt*/ ctx[15].text + "";
 	let t0;
 	let t1;
@@ -18918,7 +18963,7 @@ function create_each_block$9(ctx) {
 				type: "button",
 				width: "auto",
 				onClick: func,
-				$$slots: { default: [create_default_slot_2$8] },
+				$$slots: { default: [create_default_slot_2$9] },
 				$$scope: { ctx }
 			}
 		});
@@ -19173,7 +19218,7 @@ function create_fragment$J(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block$n, create_else_block_1];
+	const if_block_creators = [create_if_block$n, create_else_block_1$1];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -19647,7 +19692,7 @@ function create_if_block_5$2(ctx) {
 }
 
 // (65:0) {#if type === 'number'}
-function create_if_block_4$5(ctx) {
+function create_if_block_4$6(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -19727,7 +19772,7 @@ function create_if_block_4$5(ctx) {
 }
 
 // (81:0) {#if type === 'password'}
-function create_if_block_3$8(ctx) {
+function create_if_block_3$9(ctx) {
 	let input;
 	let input_aria_describedby_value;
 	let input_class_value;
@@ -20047,8 +20092,8 @@ function create_fragment$I(ctx) {
 	let if_block0 = /*labelOrder*/ ctx[6] === 'first' && create_if_block_7$1(ctx);
 	let if_block1 = /*type*/ ctx[11] === 'date' && create_if_block_6$1(ctx);
 	let if_block2 = /*type*/ ctx[11] === 'email' && create_if_block_5$2(ctx);
-	let if_block3 = /*type*/ ctx[11] === 'number' && create_if_block_4$5(ctx);
-	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$8(ctx);
+	let if_block3 = /*type*/ ctx[11] === 'number' && create_if_block_4$6(ctx);
+	let if_block4 = /*type*/ ctx[11] === 'password' && create_if_block_3$9(ctx);
 	let if_block5 = /*type*/ ctx[11] === 'phone' && create_if_block_2$a(ctx);
 	let if_block6 = /*type*/ ctx[11] === 'text' && create_if_block_1$d(ctx);
 	let if_block7 = /*labelOrder*/ ctx[6] === 'last' && create_if_block$m(ctx);
@@ -20145,7 +20190,7 @@ function create_fragment$I(ctx) {
 				if (if_block3) {
 					if_block3.p(ctx, dirty);
 				} else {
-					if_block3 = create_if_block_4$5(ctx);
+					if_block3 = create_if_block_4$6(ctx);
 					if_block3.c();
 					if_block3.m(t3.parentNode, t3);
 				}
@@ -20158,7 +20203,7 @@ function create_fragment$I(ctx) {
 				if (if_block4) {
 					if_block4.p(ctx, dirty);
 				} else {
-					if_block4 = create_if_block_3$8(ctx);
+					if_block4 = create_if_block_3$9(ctx);
 					if_block4.c();
 					if_block4.m(t4.parentNode, t4);
 				}
@@ -21881,7 +21926,7 @@ class Eye_icon extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/confirm-input.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot_2$7(ctx) {
+function create_default_slot_2$8(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[17].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[18], null);
@@ -22154,7 +22199,7 @@ function create_fragment$B(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot$1],
-					default: [create_default_slot_2$7]
+					default: [create_default_slot_2$8]
 				},
 				$$scope: { ctx }
 			}
@@ -22330,7 +22375,7 @@ class Confirm_input extends SvelteComponent {
 
 /* src/lib/journey/callbacks/password/base.svelte generated by Svelte v3.59.2 */
 
-function create_default_slot_2$6(ctx) {
+function create_default_slot_2$7(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[22].default;
 	const default_slot = create_slot(default_slot_template, ctx, /*$$scope*/ ctx[23], null);
@@ -22660,7 +22705,7 @@ function create_key_block$3(ctx) {
 				: '',
 				$$slots: {
 					"input-button": [create_input_button_slot],
-					default: [create_default_slot_2$6]
+					default: [create_default_slot_2$7]
 				},
 				$$scope: { ctx }
 			}
@@ -23806,7 +23851,7 @@ function get_each_context$8(ctx, list, i) {
 }
 
 // (66:56) 
-function create_if_block_3$7(ctx) {
+function create_if_block_3$8(ctx) {
 	let button;
 	let current;
 
@@ -23928,7 +23973,7 @@ function create_if_block_1$a(ctx) {
 				type: "button",
 				width: "auto",
 				onClick: func,
-				$$slots: { default: [create_default_slot_2$5] },
+				$$slots: { default: [create_default_slot_2$6] },
 				$$scope: { ctx }
 			}
 		});
@@ -24084,7 +24129,7 @@ function create_default_slot_3$3(ctx) {
 }
 
 // (45:6) <Button         classes="tw_button-apple dark:tw_button-apple_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
-function create_default_slot_2$5(ctx) {
+function create_default_slot_2$6(ctx) {
 	let appleicon;
 	let t0;
 	let t1;
@@ -24150,7 +24195,7 @@ function create_default_slot_1$b(ctx) {
 	let if_block;
 	let if_block_anchor;
 	let current;
-	const if_block_creators = [create_if_block_1$a, create_if_block_2$8, create_if_block_3$7];
+	const if_block_creators = [create_if_block_1$a, create_if_block_2$8, create_if_block_3$8];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
@@ -27743,7 +27788,7 @@ function create_if_block_5$1(ctx) {
 }
 
 // (141:52) 
-function create_if_block_4$4(ctx) {
+function create_if_block_4$5(ctx) {
 	let kbacreate;
 	let current;
 	const kbacreate_spread_levels = [/*newProps*/ ctx[22]];
@@ -27786,7 +27831,7 @@ function create_if_block_4$4(ctx) {
 }
 
 // (135:54) 
-function create_if_block_3$6(ctx) {
+function create_if_block_3$7(ctx) {
 	let hiddenvalue;
 	let current;
 	const hiddenvalue_spread_levels = [/*newProps*/ ctx[22]];
@@ -27967,8 +28012,8 @@ function create_fragment$h(ctx) {
 		create_if_block$a,
 		create_if_block_1$8,
 		create_if_block_2$7,
-		create_if_block_3$6,
-		create_if_block_4$4,
+		create_if_block_3$7,
+		create_if_block_4$5,
 		create_if_block_5$1,
 		create_if_block_6,
 		create_if_block_7,
@@ -28231,7 +28276,7 @@ function get_each_context$6(ctx, list, i) {
 }
 
 // (70:2) {#if form?.icon && componentStyle !== 'inline'}
-function create_if_block_4$3(ctx) {
+function create_if_block_4$4(ctx) {
 	let div;
 	let shieldicon;
 	let current;
@@ -28271,7 +28316,7 @@ function create_if_block_4$3(ctx) {
 }
 
 // (86:2) {#if form?.message}
-function create_if_block_3$5(ctx) {
+function create_if_block_3$6(ctx) {
 	let alert;
 	let current;
 
@@ -28452,7 +28497,7 @@ function create_if_block_1$7(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_2$4] },
+				$$slots: { default: [create_default_slot_2$5] },
 				$$scope: { ctx }
 			}
 		});
@@ -28570,7 +28615,7 @@ function create_default_slot_3$2(ctx) {
 }
 
 // (114:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_2$4(ctx) {
+function create_default_slot_2$5(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "nextButton" } });
@@ -28647,7 +28692,7 @@ function create_default_slot$9(ctx) {
 	let t5;
 	let backto;
 	let current;
-	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_4$3();
+	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_4$4();
 
 	sanitize0 = new Server_strings({
 			props: {
@@ -28663,7 +28708,7 @@ function create_default_slot$9(ctx) {
 			}
 		});
 
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_3$5(ctx);
+	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_3$6(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
 
@@ -28756,7 +28801,7 @@ function create_default_slot$9(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_4$3();
+					if_block0 = create_if_block_4$4();
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -28786,7 +28831,7 @@ function create_default_slot$9(ctx) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_3$5(ctx);
+					if_block1 = create_if_block_3$6(ctx);
 					if_block1.c();
 					transition_in(if_block1, 1);
 					if_block1.m(t3.parentNode, t3);
@@ -29212,7 +29257,7 @@ function get_each_context$5(ctx, list, i) {
 }
 
 // (57:2) {#if componentStyle !== 'inline'}
-function create_if_block_3$4(ctx) {
+function create_if_block_3$5(ctx) {
 	let t0;
 	let h1;
 	let t1;
@@ -29220,7 +29265,7 @@ function create_if_block_3$4(ctx) {
 	let p;
 	let t3;
 	let current;
-	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4$2();
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4$3();
 
 	t1 = new Locale_strings({
 			props: { key: "twoFactorAuthentication" }
@@ -29259,7 +29304,7 @@ function create_if_block_3$4(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block_4$2();
+					if_block = create_if_block_4$3();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(t0.parentNode, t0);
@@ -29300,7 +29345,7 @@ function create_if_block_3$4(ctx) {
 }
 
 // (58:4) {#if form?.icon}
-function create_if_block_4$2(ctx) {
+function create_if_block_4$3(ctx) {
 	let div;
 	let keyicon;
 	let current;
@@ -29472,7 +29517,7 @@ function create_if_block_1$6(ctx) {
 				style: "primary",
 				type: "submit",
 				width: "full",
-				$$slots: { default: [create_default_slot_2$3] },
+				$$slots: { default: [create_default_slot_2$4] },
 				$$scope: { ctx }
 			}
 		});
@@ -29560,7 +29605,7 @@ function create_if_block$8(ctx) {
 }
 
 // (96:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
-function create_default_slot_2$3(ctx) {
+function create_default_slot_2$4(ctx) {
 	let t;
 	let current;
 	t = new Locale_strings({ props: { key: "loginButton" } });
@@ -29636,7 +29681,7 @@ function create_default_slot$8(ctx) {
 	let if_block2;
 	let if_block2_anchor;
 	let current;
-	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$4(ctx);
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$5(ctx);
 	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$5(ctx);
 	let each_value = /*modifiedCallbacks*/ ctx[8];
 	let each_blocks = [];
@@ -29709,7 +29754,7 @@ function create_default_slot$8(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_3$4(ctx);
+					if_block0 = create_if_block_3$5(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -30132,7 +30177,7 @@ function create_if_block_2$4(ctx) {
 	let p;
 	let t3;
 	let current;
-	let if_block = /*form*/ ctx[2]?.icon && create_if_block_3$3();
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_3$4();
 	t1 = new Locale_strings({ props: { key: "registerHeader" } });
 
 	t3 = new Locale_strings({
@@ -30169,7 +30214,7 @@ function create_if_block_2$4(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block_3$3();
+					if_block = create_if_block_3$4();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(t0.parentNode, t0);
@@ -30211,7 +30256,7 @@ function create_if_block_2$4(ctx) {
 }
 
 // (46:4) {#if form?.icon}
-function create_if_block_3$3(ctx) {
+function create_if_block_3$4(ctx) {
 	let div;
 	let newusericon;
 	let current;
@@ -30260,7 +30305,7 @@ function create_if_block_1$5(ctx) {
 				id: "formFailureMessageAlert",
 				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
-				$$slots: { default: [create_default_slot_2$2] },
+				$$slots: { default: [create_default_slot_2$3] },
 				$$scope: { ctx }
 			}
 		});
@@ -30299,7 +30344,7 @@ function create_if_block_1$5(ctx) {
 }
 
 // (63:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
-function create_default_slot_2$2(ctx) {
+function create_default_slot_2$3(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
@@ -30807,12 +30852,12 @@ function get_each_context$3(ctx, list, i) {
 }
 
 // (45:2) {#if componentStyle !== 'inline'}
-function create_if_block_3$2(ctx) {
+function create_if_block_3$3(ctx) {
 	let t0;
 	let h1;
 	let t1;
 	let current;
-	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4$1();
+	let if_block = /*form*/ ctx[2]?.icon && create_if_block_4$2();
 	t1 = new Locale_strings({ props: { key: "loginHeader" } });
 
 	return {
@@ -30837,7 +30882,7 @@ function create_if_block_3$2(ctx) {
 						transition_in(if_block, 1);
 					}
 				} else {
-					if_block = create_if_block_4$1();
+					if_block = create_if_block_4$2();
 					if_block.c();
 					transition_in(if_block, 1);
 					if_block.m(t0.parentNode, t0);
@@ -30873,7 +30918,7 @@ function create_if_block_3$2(ctx) {
 }
 
 // (46:4) {#if form?.icon}
-function create_if_block_4$1(ctx) {
+function create_if_block_4$2(ctx) {
 	let div;
 	let keyicon;
 	let current;
@@ -30922,7 +30967,7 @@ function create_if_block_2$3(ctx) {
 				id: "formFailureMessageAlert",
 				needsFocus: /*alertNeedsFocus*/ ctx[6],
 				type: "error",
-				$$slots: { default: [create_default_slot_2$1] },
+				$$slots: { default: [create_default_slot_2$2] },
 				$$scope: { ctx }
 			}
 		});
@@ -30961,7 +31006,7 @@ function create_if_block_2$3(ctx) {
 }
 
 // (57:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
-function create_default_slot_2$1(ctx) {
+function create_default_slot_2$2(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
@@ -31204,7 +31249,7 @@ function create_default_slot$6(ctx) {
 	let t3;
 	let if_block3_anchor;
 	let current;
-	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$2(ctx);
+	let if_block0 = /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_3$3(ctx);
 	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_2$3(ctx);
 	let each_value = /*step*/ ctx[5]?.callbacks;
 	let each_blocks = [];
@@ -31265,7 +31310,7 @@ function create_default_slot$6(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_3$2(ctx);
+					if_block0 = create_if_block_3$3(ctx);
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -31663,7 +31708,7 @@ class Fingerprint_icon extends SvelteComponent {
 
 /* src/lib/journey/stages/webauthn.svelte generated by Svelte v3.59.2 */
 
-function create_if_block_2$2(ctx) {
+function create_if_block_4$1(ctx) {
 	let div;
 	let fingerprinticon;
 	let current;
@@ -31702,17 +31747,57 @@ function create_if_block_2$2(ctx) {
 	};
 }
 
-// (86:2) {#if form?.message}
-function create_if_block_1$3(ctx) {
+// (98:2) {#if waitingForWebAuthnAPI}
+function create_if_block_3$2(ctx) {
+	let div;
+	let spinner;
+	let current;
+
+	spinner = new Spinner({
+			props: {
+				colorClass: "tw_text-primary-light",
+				layoutClasses: "tw_h-28 tw_w-28"
+			}
+		});
+
+	return {
+		c() {
+			div = element("div");
+			create_component(spinner.$$.fragment);
+			attr(div, "class", "tw_text-center tw_w-full tw_py-4");
+		},
+		m(target, anchor) {
+			insert(target, div, anchor);
+			mount_component(spinner, div, null);
+			current = true;
+		},
+		i(local) {
+			if (current) return;
+			transition_in(spinner.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(spinner.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(div);
+			destroy_component(spinner);
+		}
+	};
+}
+
+// (103:2) {#if form?.message}
+function create_if_block_2$2(ctx) {
 	let alert;
 	let current;
 
 	alert = new Alert({
 			props: {
 				id: formFailureMessageId$2,
-				needsFocus: /*alertNeedsFocus*/ ctx[3],
+				needsFocus: /*alertNeedsFocus*/ ctx[4],
 				type: "error",
-				$$slots: { default: [create_default_slot_1$4] },
+				$$slots: { default: [create_default_slot_2$1] },
 				$$scope: { ctx }
 			}
 		});
@@ -31727,9 +31812,9 @@ function create_if_block_1$3(ctx) {
 		},
 		p(ctx, dirty) {
 			const alert_changes = {};
-			if (dirty & /*alertNeedsFocus*/ 8) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[3];
+			if (dirty & /*alertNeedsFocus*/ 16) alert_changes.needsFocus = /*alertNeedsFocus*/ ctx[4];
 
-			if (dirty & /*$$scope, formMessageKey, form*/ 4116) {
+			if (dirty & /*$$scope, formMessageKey, form*/ 262212) {
 				alert_changes.$$scope = { dirty, ctx };
 			}
 
@@ -31750,9 +31835,9 @@ function create_if_block_1$3(ctx) {
 	};
 }
 
-// (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
-function create_default_slot_1$4(ctx) {
-	let t_value = interpolate(/*formMessageKey*/ ctx[4], null, /*form*/ ctx[2]?.message) + "";
+// (104:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+function create_default_slot_2$1(ctx) {
+	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[2]?.message) + "";
 	let t;
 
 	return {
@@ -31763,7 +31848,7 @@ function create_default_slot_1$4(ctx) {
 			insert(target, t, anchor);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*formMessageKey, form*/ 20 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[4], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
+			if (dirty & /*formMessageKey, form*/ 68 && t_value !== (t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[2]?.message) + "")) set_data(t, t_value);
 		},
 		d(detaching) {
 			if (detaching) detach(t);
@@ -31771,16 +31856,174 @@ function create_default_slot_1$4(ctx) {
 	};
 }
 
-// (103:2) {:else}
+// (123:2) {:else}
 function create_else_block$2(ctx) {
 	let header;
+	let current_block_type_index;
+	let if_block;
+	let current;
+	const if_block_creators = [create_if_block_1$3, create_else_block_1];
+	const if_blocks = [];
+
+	function select_block_type_1(ctx, dirty) {
+		if (/*requestsDeviceName*/ ctx[3]) return 0;
+		return 1;
+	}
+
+	current_block_type_index = select_block_type_1(ctx);
+	if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+
+	return {
+		c() {
+			header = element("header");
+			if_block.c();
+			attr(header, "class", `tw_input-spacing`);
+			attr(header, "id", formHeaderId$2);
+		},
+		m(target, anchor) {
+			insert(target, header, anchor);
+			if_blocks[current_block_type_index].m(header, null);
+			current = true;
+		},
+		p(ctx, dirty) {
+			let previous_block_index = current_block_type_index;
+			current_block_type_index = select_block_type_1(ctx);
+
+			if (current_block_type_index === previous_block_index) {
+				if_blocks[current_block_type_index].p(ctx, dirty);
+			} else {
+				group_outros();
+
+				transition_out(if_blocks[previous_block_index], 1, 1, () => {
+					if_blocks[previous_block_index] = null;
+				});
+
+				check_outros();
+				if_block = if_blocks[current_block_type_index];
+
+				if (!if_block) {
+					if_block = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+					if_block.c();
+				} else {
+					if_block.p(ctx, dirty);
+				}
+
+				transition_in(if_block, 1);
+				if_block.m(header, null);
+			}
+		},
+		i(local) {
+			if (current) return;
+			transition_in(if_block);
+			current = true;
+		},
+		o(local) {
+			transition_out(if_block);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(header);
+			if_blocks[current_block_type_index].d();
+		}
+	};
+}
+
+// (109:2) {#if webAuthnType === WebAuthnStepType.Authentication}
+function create_if_block$5(ctx) {
+	let header;
+	let div;
+	let spinner;
+	let t0;
+	let h1;
+	let t1;
+	let t2;
+	let p;
+	let t3;
+	let current;
+
+	spinner = new Spinner({
+			props: {
+				colorClass: "tw_text-primary-light",
+				layoutClasses: "tw_h-28 tw_w-28"
+			}
+		});
+
+	t1 = new Locale_strings({ props: { key: "verifyYourIdentity" } });
+
+	t3 = new Locale_strings({
+			props: { key: "useDeviceForIdentityVerification" }
+		});
+
+	return {
+		c() {
+			header = element("header");
+			div = element("div");
+			create_component(spinner.$$.fragment);
+			t0 = space();
+			h1 = element("h1");
+			create_component(t1.$$.fragment);
+			t2 = space();
+			p = element("p");
+			create_component(t3.$$.fragment);
+			attr(div, "class", "tw_text-center tw_w-full tw_py-4");
+			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
+			attr(p, "class", "tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
+			attr(header, "id", formHeaderId$2);
+		},
+		m(target, anchor) {
+			insert(target, header, anchor);
+			append(header, div);
+			mount_component(spinner, div, null);
+			append(header, t0);
+			append(header, h1);
+			mount_component(t1, h1, null);
+			append(header, t2);
+			append(header, p);
+			mount_component(t3, p, null);
+			current = true;
+		},
+		p: noop,
+		i(local) {
+			if (current) return;
+			transition_in(spinner.$$.fragment, local);
+			transition_in(t1.$$.fragment, local);
+			transition_in(t3.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(spinner.$$.fragment, local);
+			transition_out(t1.$$.fragment, local);
+			transition_out(t3.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(header);
+			destroy_component(spinner);
+			destroy_component(t1);
+			destroy_component(t3);
+		}
+	};
+}
+
+// (136:6) {:else}
+function create_else_block_1(ctx) {
 	let h1;
 	let t0;
 	let t1;
 	let p;
 	let t2;
 	let current;
-	t0 = new Locale_strings({ props: { key: "registerYourDevice" } });
+
+	t0 = new Locale_strings({
+			props: {
+				key: "registerYourDevice",
+				values: {
+					name: /*deviceName*/ ctx[5].length > 0
+					? /*deviceName*/ ctx[5]
+					: interpolate('yourDevice')
+				}
+			}
+		});
 
 	t2 = new Locale_strings({
 			props: {
@@ -31790,7 +32033,6 @@ function create_else_block$2(ctx) {
 
 	return {
 		c() {
-			header = element("header");
 			h1 = element("h1");
 			create_component(t0.$$.fragment);
 			t1 = space();
@@ -31798,18 +32040,26 @@ function create_else_block$2(ctx) {
 			create_component(t2.$$.fragment);
 			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
 			attr(p, "class", "tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
-			attr(header, "id", formHeaderId$2);
 		},
 		m(target, anchor) {
-			insert(target, header, anchor);
-			append(header, h1);
+			insert(target, h1, anchor);
 			mount_component(t0, h1, null);
-			append(header, t1);
-			append(header, p);
+			insert(target, t1, anchor);
+			insert(target, p, anchor);
 			mount_component(t2, p, null);
 			current = true;
 		},
-		p: noop,
+		p(ctx, dirty) {
+			const t0_changes = {};
+
+			if (dirty & /*deviceName*/ 32) t0_changes.values = {
+				name: /*deviceName*/ ctx[5].length > 0
+				? /*deviceName*/ ctx[5]
+				: interpolate('yourDevice')
+			};
+
+			t0.$set(t0_changes);
+		},
 		i(local) {
 			if (current) return;
 			transition_in(t0.$$.fragment, local);
@@ -31822,124 +32072,174 @@ function create_else_block$2(ctx) {
 			current = false;
 		},
 		d(detaching) {
-			if (detaching) detach(header);
+			if (detaching) detach(h1);
 			destroy_component(t0);
+			if (detaching) detach(t1);
+			if (detaching) detach(p);
 			destroy_component(t2);
 		}
 	};
 }
 
-// (92:2) {#if webAuthnType === WebAuthnStepType.Authentication}
-function create_if_block$5(ctx) {
-	let header;
+// (125:6) {#if requestsDeviceName}
+function create_if_block_1$3(ctx) {
 	let h1;
 	let t0;
 	let t1;
-	let p;
+	let input;
 	let t2;
+	let button;
 	let current;
-	t0 = new Locale_strings({ props: { key: "verifyYourIdentity" } });
+	t0 = new Locale_strings({ props: { key: "nameYourDevice" } });
 
-	t2 = new Locale_strings({
-			props: { key: "useDeviceForIdentityVerification" }
+	input = new Floating_label({
+			props: {
+				type: "text",
+				isRequired: false,
+				isFirstInvalidInput: false,
+				key: "devicename",
+				onChange: /*updateDeviceName*/ ctx[11],
+				label: interpolate('optionallyNameDevice')
+			}
+		});
+
+	button = new Button({
+			props: {
+				style: "primary",
+				type: "submit",
+				width: "full",
+				onClick: /*func*/ ctx[15],
+				$$slots: { default: [create_default_slot_1$4] },
+				$$scope: { ctx }
+			}
 		});
 
 	return {
 		c() {
-			header = element("header");
 			h1 = element("h1");
 			create_component(t0.$$.fragment);
 			t1 = space();
-			p = element("p");
-			create_component(t2.$$.fragment);
+			create_component(input.$$.fragment);
+			t2 = space();
+			create_component(button.$$.fragment);
 			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
-			attr(p, "class", "tw_text-center tw_-mt-5 tw_mb-2 tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light");
-			attr(header, "id", formHeaderId$2);
 		},
 		m(target, anchor) {
-			insert(target, header, anchor);
-			append(header, h1);
+			insert(target, h1, anchor);
 			mount_component(t0, h1, null);
-			append(header, t1);
-			append(header, p);
-			mount_component(t2, p, null);
+			insert(target, t1, anchor);
+			mount_component(input, target, anchor);
+			insert(target, t2, anchor);
+			mount_component(button, target, anchor);
+			current = true;
+		},
+		p(ctx, dirty) {
+			const button_changes = {};
+			if (dirty & /*requestsDeviceName, waitingForWebAuthnAPI*/ 520) button_changes.onClick = /*func*/ ctx[15];
+
+			if (dirty & /*$$scope*/ 262144) {
+				button_changes.$$scope = { dirty, ctx };
+			}
+
+			button.$set(button_changes);
+		},
+		i(local) {
+			if (current) return;
+			transition_in(t0.$$.fragment, local);
+			transition_in(input.$$.fragment, local);
+			transition_in(button.$$.fragment, local);
+			current = true;
+		},
+		o(local) {
+			transition_out(t0.$$.fragment, local);
+			transition_out(input.$$.fragment, local);
+			transition_out(button.$$.fragment, local);
+			current = false;
+		},
+		d(detaching) {
+			if (detaching) detach(h1);
+			destroy_component(t0);
+			if (detaching) detach(t1);
+			destroy_component(input, detaching);
+			if (detaching) detach(t2);
+			destroy_component(button, detaching);
+		}
+	};
+}
+
+// (130:10) <Button style="primary" type="submit" width="full" onClick={() => {             requestsDeviceName = false;              waitingForWebAuthnAPI = true }             }>
+function create_default_slot_1$4(ctx) {
+	let t;
+	let current;
+	t = new Locale_strings({ props: { key: "nextButton" } });
+
+	return {
+		c() {
+			create_component(t.$$.fragment);
+		},
+		m(target, anchor) {
+			mount_component(t, target, anchor);
 			current = true;
 		},
 		p: noop,
 		i(local) {
 			if (current) return;
-			transition_in(t0.$$.fragment, local);
-			transition_in(t2.$$.fragment, local);
+			transition_in(t.$$.fragment, local);
 			current = true;
 		},
 		o(local) {
-			transition_out(t0.$$.fragment, local);
-			transition_out(t2.$$.fragment, local);
+			transition_out(t.$$.fragment, local);
 			current = false;
 		},
 		d(detaching) {
-			if (detaching) detach(header);
-			destroy_component(t0);
-			destroy_component(t2);
+			destroy_component(t, detaching);
 		}
 	};
 }
 
-// (70:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
+// (86:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
 function create_default_slot$5(ctx) {
 	let t0;
-	let div;
-	let spinner;
 	let t1;
 	let t2;
 	let current_block_type_index;
-	let if_block2;
-	let if_block2_anchor;
+	let if_block3;
+	let if_block3_anchor;
 	let current;
-	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_2$2();
-
-	spinner = new Spinner({
-			props: {
-				colorClass: "tw_text-primary-light",
-				layoutClasses: "tw_h-28 tw_w-28"
-			}
-		});
-
-	let if_block1 = /*form*/ ctx[2]?.message && create_if_block_1$3(ctx);
+	let if_block0 = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block_4$1();
+	let if_block1 = /*waitingForWebAuthnAPI*/ ctx[9] && create_if_block_3$2();
+	let if_block2 = /*form*/ ctx[2]?.message && create_if_block_2$2(ctx);
 	const if_block_creators = [create_if_block$5, create_else_block$2];
 	const if_blocks = [];
 
 	function select_block_type(ctx, dirty) {
-		if (/*webAuthnType*/ ctx[7] === WebAuthnStepType.Authentication) return 0;
+		if (/*webAuthnType*/ ctx[10] === WebAuthnStepType.Authentication) return 0;
 		return 1;
 	}
 
 	current_block_type_index = select_block_type(ctx);
-	if_block2 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
+	if_block3 = if_blocks[current_block_type_index] = if_block_creators[current_block_type_index](ctx);
 
 	return {
 		c() {
 			if (if_block0) if_block0.c();
 			t0 = space();
-			div = element("div");
-			create_component(spinner.$$.fragment);
-			t1 = space();
 			if (if_block1) if_block1.c();
+			t1 = space();
+			if (if_block2) if_block2.c();
 			t2 = space();
-			if_block2.c();
-			if_block2_anchor = empty();
-			attr(div, "class", "tw_text-center tw_w-full tw_py-4");
+			if_block3.c();
+			if_block3_anchor = empty();
 		},
 		m(target, anchor) {
 			if (if_block0) if_block0.m(target, anchor);
 			insert(target, t0, anchor);
-			insert(target, div, anchor);
-			mount_component(spinner, div, null);
-			insert(target, t1, anchor);
 			if (if_block1) if_block1.m(target, anchor);
+			insert(target, t1, anchor);
+			if (if_block2) if_block2.m(target, anchor);
 			insert(target, t2, anchor);
 			if_blocks[current_block_type_index].m(target, anchor);
-			insert(target, if_block2_anchor, anchor);
+			insert(target, if_block3_anchor, anchor);
 			current = true;
 		},
 		p(ctx, dirty) {
@@ -31949,7 +32249,7 @@ function create_default_slot$5(ctx) {
 						transition_in(if_block0, 1);
 					}
 				} else {
-					if_block0 = create_if_block_2$2();
+					if_block0 = create_if_block_4$1();
 					if_block0.c();
 					transition_in(if_block0, 1);
 					if_block0.m(t0.parentNode, t0);
@@ -31964,18 +32264,16 @@ function create_default_slot$5(ctx) {
 				check_outros();
 			}
 
-			if (/*form*/ ctx[2]?.message) {
+			if (/*waitingForWebAuthnAPI*/ ctx[9]) {
 				if (if_block1) {
-					if_block1.p(ctx, dirty);
-
-					if (dirty & /*form*/ 4) {
+					if (dirty & /*waitingForWebAuthnAPI*/ 512) {
 						transition_in(if_block1, 1);
 					}
 				} else {
-					if_block1 = create_if_block_1$3(ctx);
+					if_block1 = create_if_block_3$2();
 					if_block1.c();
 					transition_in(if_block1, 1);
-					if_block1.m(t2.parentNode, t2);
+					if_block1.m(t1.parentNode, t1);
 				}
 			} else if (if_block1) {
 				group_outros();
@@ -31987,33 +32285,55 @@ function create_default_slot$5(ctx) {
 				check_outros();
 			}
 
-			if_block2.p(ctx, dirty);
+			if (/*form*/ ctx[2]?.message) {
+				if (if_block2) {
+					if_block2.p(ctx, dirty);
+
+					if (dirty & /*form*/ 4) {
+						transition_in(if_block2, 1);
+					}
+				} else {
+					if_block2 = create_if_block_2$2(ctx);
+					if_block2.c();
+					transition_in(if_block2, 1);
+					if_block2.m(t2.parentNode, t2);
+				}
+			} else if (if_block2) {
+				group_outros();
+
+				transition_out(if_block2, 1, 1, () => {
+					if_block2 = null;
+				});
+
+				check_outros();
+			}
+
+			if_block3.p(ctx, dirty);
 		},
 		i(local) {
 			if (current) return;
 			transition_in(if_block0);
-			transition_in(spinner.$$.fragment, local);
 			transition_in(if_block1);
 			transition_in(if_block2);
+			transition_in(if_block3);
 			current = true;
 		},
 		o(local) {
 			transition_out(if_block0);
-			transition_out(spinner.$$.fragment, local);
 			transition_out(if_block1);
 			transition_out(if_block2);
+			transition_out(if_block3);
 			current = false;
 		},
 		d(detaching) {
 			if (if_block0) if_block0.d(detaching);
 			if (detaching) detach(t0);
-			if (detaching) detach(div);
-			destroy_component(spinner);
-			if (detaching) detach(t1);
 			if (if_block1) if_block1.d(detaching);
+			if (detaching) detach(t1);
+			if (if_block2) if_block2.d(detaching);
 			if (detaching) detach(t2);
 			if_blocks[current_block_type_index].d(detaching);
-			if (detaching) detach(if_block2_anchor);
+			if (detaching) detach(if_block3_anchor);
 		}
 	};
 }
@@ -32024,13 +32344,13 @@ function create_fragment$9(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[10](value);
+		/*form_1_formEl_binding*/ ctx[16](value);
 	}
 
 	let form_1_props = {
-		ariaDescribedBy: /*formAriaDescriptor*/ ctx[5],
+		ariaDescribedBy: /*formAriaDescriptor*/ ctx[7],
 		id: formElementId$2,
-		needsFocus: /*formNeedsFocus*/ ctx[6],
+		needsFocus: /*formNeedsFocus*/ ctx[8],
 		$$slots: { default: [create_default_slot$5] },
 		$$scope: { ctx }
 	};
@@ -32052,10 +32372,10 @@ function create_fragment$9(ctx) {
 		},
 		p(ctx, [dirty]) {
 			const form_1_changes = {};
-			if (dirty & /*formAriaDescriptor*/ 32) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[5];
-			if (dirty & /*formNeedsFocus*/ 64) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[6];
+			if (dirty & /*formAriaDescriptor*/ 128) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[7];
+			if (dirty & /*formNeedsFocus*/ 256) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[8];
 
-			if (dirty & /*$$scope, alertNeedsFocus, formMessageKey, form, componentStyle*/ 4126) {
+			if (dirty & /*$$scope, requestsDeviceName, waitingForWebAuthnAPI, deviceName, alertNeedsFocus, formMessageKey, form, componentStyle*/ 262782) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32093,20 +32413,29 @@ function instance$9($$self, $$props, $$invalidate) {
 	let { formEl = null } = $$props;
 	let { step } = $$props;
 	let alertNeedsFocus = false;
+	let deviceName = '';
+	let deviceRegistered = false;
 	let formMessageKey = '';
 	let formAriaDescriptor = 'genericStepHeader';
 	let formNeedsFocus = false;
+	let requestsDeviceName = true;
+	let waitingForWebAuthnAPI = false;
 	let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
+
+	function updateDeviceName(event) {
+		const target = event.target;
+		$$invalidate(5, deviceName = target.value);
+	}
 
 	afterUpdate(() => {
 		if (form?.message) {
-			$$invalidate(5, formAriaDescriptor = formFailureMessageId$2);
-			$$invalidate(3, alertNeedsFocus = true);
-			$$invalidate(6, formNeedsFocus = false);
+			$$invalidate(7, formAriaDescriptor = formFailureMessageId$2);
+			$$invalidate(4, alertNeedsFocus = true);
+			$$invalidate(8, formNeedsFocus = false);
 		} else {
-			$$invalidate(5, formAriaDescriptor = formHeaderId$2);
-			$$invalidate(3, alertNeedsFocus = false);
-			$$invalidate(6, formNeedsFocus = true);
+			$$invalidate(7, formAriaDescriptor = formHeaderId$2);
+			$$invalidate(4, alertNeedsFocus = false);
+			$$invalidate(8, formNeedsFocus = true);
 		}
 	});
 
@@ -32118,7 +32447,13 @@ function instance$9($$self, $$props, $$invalidate) {
 			switch (webAuthnType) {
 				case WebAuthnStepType.Registration:
 					{
-						await FRWebAuthn.register(step);
+						try {
+							await FRWebAuthn.register(step, deviceName);
+							$$invalidate(14, deviceRegistered = true);
+						} catch(err) {
+							
+						}
+
 						break;
 					}
 				case WebAuthnStepType.Authentication:
@@ -32136,10 +32471,10 @@ function instance$9($$self, $$props, $$invalidate) {
 		form.submit();
 	}
 
-	// Call the WebAuthn API without await
-	if (allowWebAuthn) {
-		callWebAuthnApi();
-	}
+	const func = () => {
+		$$invalidate(3, requestsDeviceName = false);
+		$$invalidate(9, waitingForWebAuthnAPI = true);
+	};
 
 	function form_1_formEl_binding(value) {
 		formEl = value;
@@ -32147,17 +32482,24 @@ function instance$9($$self, $$props, $$invalidate) {
 	}
 
 	$$self.$$set = $$props => {
-		if ('allowWebAuthn' in $$props) $$invalidate(8, allowWebAuthn = $$props.allowWebAuthn);
+		if ('allowWebAuthn' in $$props) $$invalidate(12, allowWebAuthn = $$props.allowWebAuthn);
 		if ('componentStyle' in $$props) $$invalidate(1, componentStyle = $$props.componentStyle);
 		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
-		if ('step' in $$props) $$invalidate(9, step = $$props.step);
+		if ('step' in $$props) $$invalidate(13, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*form*/ 4) {
+		if ($$self.$$.dirty & /*form, allowWebAuthn, deviceRegistered, requestsDeviceName*/ 20492) {
 			{
-				$$invalidate(4, formMessageKey = convertStringToKey(form?.message));
+				$$invalidate(6, formMessageKey = convertStringToKey(form?.message));
+
+				// Call the WebAuthn API without await
+				if (allowWebAuthn && !deviceRegistered) {
+					if (WebAuthnStepType.Registration === webAuthnType && requestsDeviceName || WebAuthnStepType.Authentication === webAuthnType) {
+						callWebAuthnApi();
+					}
+				}
 			}
 		}
 	};
@@ -32166,13 +32508,19 @@ function instance$9($$self, $$props, $$invalidate) {
 		formEl,
 		componentStyle,
 		form,
+		requestsDeviceName,
 		alertNeedsFocus,
+		deviceName,
 		formMessageKey,
 		formAriaDescriptor,
 		formNeedsFocus,
+		waitingForWebAuthnAPI,
 		webAuthnType,
+		updateDeviceName,
 		allowWebAuthn,
 		step,
+		deviceRegistered,
+		func,
 		form_1_formEl_binding
 	];
 }
@@ -32182,11 +32530,11 @@ class Webauthn extends SvelteComponent {
 		super();
 
 		init(this, options, instance$9, create_fragment$9, safe_not_equal, {
-			allowWebAuthn: 8,
+			allowWebAuthn: 12,
 			componentStyle: 1,
 			form: 2,
 			formEl: 0,
-			step: 9
+			step: 13
 		});
 	}
 }
@@ -32258,11 +32606,11 @@ class Shield_check_icon extends SvelteComponent {
 
 function get_each_context$2(ctx, list, i) {
 	const child_ctx = ctx.slice();
-	child_ctx[10] = list[i];
+	child_ctx[11] = list[i];
 	return child_ctx;
 }
 
-// (42:2) {#if form?.icon && componentStyle !== 'inline'}
+// (44:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block$4(ctx) {
 	let div;
 	let clipboardicon;
@@ -32302,11 +32650,11 @@ function create_if_block$4(ctx) {
 	};
 }
 
-// (72:4) {#each codes as code}
+// (74:4) {#each codes as code}
 function create_each_block$2(ctx) {
 	let li;
 	let span;
-	let t0_value = /*code*/ ctx[10] + "";
+	let t0_value = /*code*/ ctx[11] + "";
 	let t0;
 	let t1;
 
@@ -32326,7 +32674,7 @@ function create_each_block$2(ctx) {
 			append(li, t1);
 		},
 		p(ctx, dirty) {
-			if (dirty & /*codes*/ 16 && t0_value !== (t0_value = /*code*/ ctx[10] + "")) set_data(t0, t0_value);
+			if (dirty & /*codes*/ 64 && t0_value !== (t0_value = /*code*/ ctx[11] + "")) set_data(t0, t0_value);
 		},
 		d(detaching) {
 			if (detaching) detach(li);
@@ -32334,7 +32682,7 @@ function create_each_block$2(ctx) {
 	};
 }
 
-// (81:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (86:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$3(ctx) {
 	let t;
 	let current;
@@ -32364,7 +32712,7 @@ function create_default_slot_1$3(ctx) {
 	};
 }
 
-// (35:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
+// (37:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
 function create_default_slot$4(ctx) {
 	let t0;
 	let header;
@@ -32384,6 +32732,9 @@ function create_default_slot$4(ctx) {
 	let t9;
 	let ol;
 	let t10;
+	let p2;
+	let t11;
+	let t12;
 	let button;
 	let current;
 	let if_block = /*form*/ ctx[2]?.icon && /*componentStyle*/ ctx[1] !== 'inline' && create_if_block$4();
@@ -32407,12 +32758,20 @@ function create_default_slot$4(ctx) {
 			}
 		});
 
-	let each_value = /*codes*/ ctx[4];
+	let each_value = /*codes*/ ctx[6];
 	let each_blocks = [];
 
 	for (let i = 0; i < each_value.length; i += 1) {
 		each_blocks[i] = create_each_block$2(get_each_context$2(ctx, each_value, i));
 	}
+
+	t11 = new Locale_strings({
+			props: {
+				html: true,
+				key: "useOneOfTheseCodes",
+				values: { name: /*name*/ ctx[7] }
+			}
+		});
 
 	button = new Button({
 			props: {
@@ -32451,6 +32810,9 @@ function create_default_slot$4(ctx) {
 			}
 
 			t10 = space();
+			p2 = element("p");
+			create_component(t11.$$.fragment);
+			t12 = space();
 			create_component(button.$$.fragment);
 			attr(h1, "class", "tw_primary-header dark:tw_primary-header_dark");
 			attr(p0, "class", "tw_-mt-5 tw_mb-2 tw_py-4 tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light");
@@ -32459,6 +32821,7 @@ function create_default_slot$4(ctx) {
 			attr(h2, "class", "tw_secondary-header dark:tw_secondary-header_dark tw_text-lg");
 			attr(p1, "class", "tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6");
 			attr(ol, "class", "tw_font-mono tw_border tw_border-secondary-light dark:tw_border-secondary-dark tw_bg-white dark:tw_bg-body-dark tw_list-decimal tw_text-secondary-light dark:tw_text-secondary-light tw_py-4 tw_list-inside tw_rounded-md tw_mb-4 tw_columns-2");
+			attr(p2, "class", "tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6");
 		},
 		m(target, anchor) {
 			if (if_block) if_block.m(target, anchor);
@@ -32487,6 +32850,9 @@ function create_default_slot$4(ctx) {
 			}
 
 			insert(target, t10, anchor);
+			insert(target, p2, anchor);
+			mount_component(t11, p2, null);
+			insert(target, t12, anchor);
 			mount_component(button, target, anchor);
 			current = true;
 		},
@@ -32512,8 +32878,8 @@ function create_default_slot$4(ctx) {
 				check_outros();
 			}
 
-			if (dirty & /*codes*/ 16) {
-				each_value = /*codes*/ ctx[4];
+			if (dirty & /*codes*/ 64) {
+				each_value = /*codes*/ ctx[6];
 				let i;
 
 				for (i = 0; i < each_value.length; i += 1) {
@@ -32535,10 +32901,13 @@ function create_default_slot$4(ctx) {
 				each_blocks.length = each_value.length;
 			}
 
+			const t11_changes = {};
+			if (dirty & /*name*/ 128) t11_changes.values = { name: /*name*/ ctx[7] };
+			t11.$set(t11_changes);
 			const button_changes = {};
 			if (dirty & /*journey*/ 8) button_changes.busy = /*journey*/ ctx[3]?.loading;
 
-			if (dirty & /*$$scope*/ 8192) {
+			if (dirty & /*$$scope*/ 16384) {
 				button_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32551,6 +32920,7 @@ function create_default_slot$4(ctx) {
 			transition_in(t3.$$.fragment, local);
 			transition_in(t6.$$.fragment, local);
 			transition_in(t8.$$.fragment, local);
+			transition_in(t11.$$.fragment, local);
 			transition_in(button.$$.fragment, local);
 			current = true;
 		},
@@ -32560,6 +32930,7 @@ function create_default_slot$4(ctx) {
 			transition_out(t3.$$.fragment, local);
 			transition_out(t6.$$.fragment, local);
 			transition_out(t8.$$.fragment, local);
+			transition_out(t11.$$.fragment, local);
 			transition_out(button.$$.fragment, local);
 			current = false;
 		},
@@ -32581,6 +32952,9 @@ function create_default_slot$4(ctx) {
 			if (detaching) detach(ol);
 			destroy_each(each_blocks, detaching);
 			if (detaching) detach(t10);
+			if (detaching) detach(p2);
+			destroy_component(t11);
+			if (detaching) detach(t12);
 			destroy_component(button, detaching);
 		}
 	};
@@ -32592,14 +32966,14 @@ function create_fragment$7(ctx) {
 	let current;
 
 	function form_1_formEl_binding(value) {
-		/*form_1_formEl_binding*/ ctx[9](value);
+		/*form_1_formEl_binding*/ ctx[10](value);
 	}
 
 	let form_1_props = {
-		ariaDescribedBy: /*formAriaDescriptor*/ ctx[5],
+		ariaDescribedBy: /*formAriaDescriptor*/ ctx[4],
 		id: formElementId$1,
-		needsFocus: /*formNeedsFocus*/ ctx[6],
-		onSubmitWhenValid: /*func*/ ctx[8],
+		needsFocus: /*formNeedsFocus*/ ctx[5],
+		onSubmitWhenValid: /*func*/ ctx[9],
 		$$slots: { default: [create_default_slot$4] },
 		$$scope: { ctx }
 	};
@@ -32621,11 +32995,11 @@ function create_fragment$7(ctx) {
 		},
 		p(ctx, [dirty]) {
 			const form_1_changes = {};
-			if (dirty & /*formAriaDescriptor*/ 32) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[5];
-			if (dirty & /*formNeedsFocus*/ 64) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[6];
-			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*func*/ ctx[8];
+			if (dirty & /*formAriaDescriptor*/ 16) form_1_changes.ariaDescribedBy = /*formAriaDescriptor*/ ctx[4];
+			if (dirty & /*formNeedsFocus*/ 32) form_1_changes.needsFocus = /*formNeedsFocus*/ ctx[5];
+			if (dirty & /*form*/ 4) form_1_changes.onSubmitWhenValid = /*func*/ ctx[9];
 
-			if (dirty & /*$$scope, journey, codes, form, componentStyle*/ 8222) {
+			if (dirty & /*$$scope, journey, name, codes, form, componentStyle*/ 16590) {
 				form_1_changes.$$scope = { dirty, ctx };
 			}
 
@@ -32662,17 +33036,18 @@ function instance$7($$self, $$props, $$invalidate) {
 	let { formEl = null } = $$props;
 	let { journey } = $$props;
 	let { step } = $$props;
-	let codes = [];
 	let formAriaDescriptor = 'genericStepHeader';
 	let formNeedsFocus = false;
+	let codes = [];
+	let name = 'New Security Key';
 
 	afterUpdate(() => {
 		if (form?.message) {
-			$$invalidate(5, formAriaDescriptor = formFailureMessageId$1);
-			$$invalidate(6, formNeedsFocus = false);
+			$$invalidate(4, formAriaDescriptor = formFailureMessageId$1);
+			$$invalidate(5, formNeedsFocus = false);
 		} else {
-			$$invalidate(5, formAriaDescriptor = formHeaderId$1);
-			$$invalidate(6, formNeedsFocus = true);
+			$$invalidate(4, formAriaDescriptor = formHeaderId$1);
+			$$invalidate(5, formNeedsFocus = true);
 		}
 	});
 
@@ -32688,13 +33063,14 @@ function instance$7($$self, $$props, $$invalidate) {
 		if ('form' in $$props) $$invalidate(2, form = $$props.form);
 		if ('formEl' in $$props) $$invalidate(0, formEl = $$props.formEl);
 		if ('journey' in $$props) $$invalidate(3, journey = $$props.journey);
-		if ('step' in $$props) $$invalidate(7, step = $$props.step);
+		if ('step' in $$props) $$invalidate(8, step = $$props.step);
 	};
 
 	$$self.$$.update = () => {
-		if ($$self.$$.dirty & /*step*/ 128) {
+		if ($$self.$$.dirty & /*step*/ 256) {
 			{
-				$$invalidate(4, codes = FRRecoveryCodes.getCodes(step));
+				$$invalidate(6, codes = FRRecoveryCodes.getCodes(step));
+				$$invalidate(7, name = FRRecoveryCodes.getDeviceName(step));
 			}
 		}
 	};
@@ -32704,9 +33080,10 @@ function instance$7($$self, $$props, $$invalidate) {
 		componentStyle,
 		form,
 		journey,
-		codes,
 		formAriaDescriptor,
 		formNeedsFocus,
+		codes,
+		name,
 		step,
 		func,
 		form_1_formEl_binding
@@ -32722,7 +33099,7 @@ class Recovery_codes extends SvelteComponent {
 			form: 2,
 			formEl: 0,
 			journey: 3,
-			step: 7
+			step: 8
 		});
 	}
 }

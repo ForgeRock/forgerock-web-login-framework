@@ -1,291 +1,296 @@
 import { type Step, CallbackType } from '@forgerock/javascript-sdk';
 
 export const mfaRegistrationOptionsStep: Step = {
-  "authId": "eyJ0eXAiOiJKV1QiLCciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlBV0aG4iLCJvdGsiOiI0N2xtdWUxbzJlYXI4dTg0anJzdG1vbXUyNSIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaW9uSWQiOiIqQUFKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTV1VjBNeU9XTTRZMFJzWlhsUFowNDVTRGhtWjNOUkxsWkJOVko0UjJaSFpFUjBVRFZWZDBFeGJVdDNiRWR0UjJSTlltbzRWbE5aUkdabU9IQnBSV1ZCVjI4NUxVbDBkRFpJVlRGME4xaERSR3BhVDAxSGExSlJNa0ZCU25sSVZsVkJaRnBEUzFaUU9Xc3RTV2RNVHpabVRHdGxiVTVoWnpkRVF6QmpkRTlWYUV4WFJHcHRNMFpKT0ZGbVFrOHdiakZFTkcxT1FqTktRMUZHZURWVVVETTJaMGQwWkMwMFVVaDJaWHBHVVhGemNYQnVVVzVNUzI1d1prY3lPRzFFWTFKdFRXTnBiakZ4WmxCT1ZHaFBWR2hyV0RoWFdHaDRNR1F6ZVZwRWVGOXNVRXRHU2tKWFpXNWlYM0ZtYkU0M1ozTkdNalptVlRBdFJuTjNjMDlvYWxJNFVFMXFRVE5vV0VoV1pHUmxjRXhaUlROR1pFMUNiakZpYTBobWFXOXVSRVp2VGs4emQzcHdiV1J5VVRKdVdIWTFMVmc0UkVaUGJtOXBSMGc0VFZOcU0xVllZa1pNUkV0V1pWQnJiVEJFVW10ME4zTTNiVXBTYUdoblVrSkNVekkwU0ZGcGVGZDRjRUpoVDBJM1lVOUROMjlETVVGRVdVRllTR1V0VFZRMGJubEVOV1pzV21STk56VnRhRVV0TlVneVl6SklTMXBKYURaZllUVTFWMlYyWmprd04zZGxiRmRRVXpsNGFtcEVjVzloTFVkamMyRnJZMVV5YjJSZlMwMXdMVnBzTkhSalJuWmZhR2wyU0hrelNsVkROMTgzTlRsd1UwUkVNMkYwUzFodlgyUmpWeTFETmpGSmVrRmplSFF3T1cxbllYcDNXR1JxV2xoRVlXVkhkbVJJU1hobmVtRlJRbTEwYzJSb1dFZ3hOalYxTkRrMk1URXdka0ZIV2tKNGJYYzNaRE5wUVRCclEzSkZTbVZHV0hGM2Vtd3RWVTVVZVdsWk1HWjZaMHBVV25kWFRERk5kVXBQVTNWVlZHRlFPWFIyUjNaQ2NEWkhiM1pzVDNNMU9UTlVaV2hVUm10aFIyMUZjMkY1ZEdWa2NFSmpOa3hQZFVocVoycFFUSGRXUTFKSk0yZFpaWGM1TTJaU2N6Rm9kV1JVVGxOUFQxSTNRMUpPTmtoTlNrSlJRV2haWDBJelNGcHVka0pDZW5WaWVrVkRUMk56VlhaSmFGODNZbGhVZEV4eE5HRjVTM05QV2tWSGJtVTRZVk14WkZWWlV6Y3hWM0V3YURCNVJWbzFVa3d3VjJoNFVUSXhSSFZtYkZoelYzQkhhRlp5U1ZsQ016SlBSbVowY1RadFkzZzJkbTUyVW1aR1VIUk9hbU53ZEU1dE56bFdkek5FTUV0eldEZDVVRUpWWWpaMFkyOVNORkpqZWtKRFptSlBjV3hFU205blpYWlZOMHhhYUZndFYwVjVWR280UTFCaWRsTlpSUzFOV1VSdVZEbFdlRTFyUjJGYWJuWlFVV2RsYnpSaE16RkxTbXRNZG1sbWRHOW1WbTl3UTA5M1NqQnVlVTUwVURKVVgzQlpMa3RLWVZsbFVrRlpSMVJUWW1sSGIzbFpMVzltVTJjLnh0U3hoMVh1blFaUEI1WUZIdVlEbHpHRUJvZFNCNEtaT2RfcG1NWlFlVFEiLCJleHAiOjE2OTgxMDODEwNTE0Nn0.QdH6gR4bCTLStkZ08BjADk3zv4kX32I",
-  "callbacks": [
+  authId:
+    'eyJ0eXAiOiJKV1QiLCciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlBV0aG4iLCJvdGsiOiI0N2xtdWUxbzJlYXI4dTg0anJzdG1vbXUyNSIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaW9uSWQiOiIqQUFKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTV1VjBNeU9XTTRZMFJzWlhsUFowNDVTRGhtWjNOUkxsWkJOVko0UjJaSFpFUjBVRFZWZDBFeGJVdDNiRWR0UjJSTlltbzRWbE5aUkdabU9IQnBSV1ZCVjI4NUxVbDBkRFpJVlRGME4xaERSR3BhVDAxSGExSlJNa0ZCU25sSVZsVkJaRnBEUzFaUU9Xc3RTV2RNVHpabVRHdGxiVTVoWnpkRVF6QmpkRTlWYUV4WFJHcHRNMFpKT0ZGbVFrOHdiakZFTkcxT1FqTktRMUZHZURWVVVETTJaMGQwWkMwMFVVaDJaWHBHVVhGemNYQnVVVzVNUzI1d1prY3lPRzFFWTFKdFRXTnBiakZ4WmxCT1ZHaFBWR2hyV0RoWFdHaDRNR1F6ZVZwRWVGOXNVRXRHU2tKWFpXNWlYM0ZtYkU0M1ozTkdNalptVlRBdFJuTjNjMDlvYWxJNFVFMXFRVE5vV0VoV1pHUmxjRXhaUlROR1pFMUNiakZpYTBobWFXOXVSRVp2VGs4emQzcHdiV1J5VVRKdVdIWTFMVmc0UkVaUGJtOXBSMGc0VFZOcU0xVllZa1pNUkV0V1pWQnJiVEJFVW10ME4zTTNiVXBTYUdoblVrSkNVekkwU0ZGcGVGZDRjRUpoVDBJM1lVOUROMjlETVVGRVdVRllTR1V0VFZRMGJubEVOV1pzV21STk56VnRhRVV0TlVneVl6SklTMXBKYURaZllUVTFWMlYyWmprd04zZGxiRmRRVXpsNGFtcEVjVzloTFVkamMyRnJZMVV5YjJSZlMwMXdMVnBzTkhSalJuWmZhR2wyU0hrelNsVkROMTgzTlRsd1UwUkVNMkYwUzFodlgyUmpWeTFETmpGSmVrRmplSFF3T1cxbllYcDNXR1JxV2xoRVlXVkhkbVJJU1hobmVtRlJRbTEwYzJSb1dFZ3hOalYxTkRrMk1URXdka0ZIV2tKNGJYYzNaRE5wUVRCclEzSkZTbVZHV0hGM2Vtd3RWVTVVZVdsWk1HWjZaMHBVV25kWFRERk5kVXBQVTNWVlZHRlFPWFIyUjNaQ2NEWkhiM1pzVDNNMU9UTlVaV2hVUm10aFIyMUZjMkY1ZEdWa2NFSmpOa3hQZFVocVoycFFUSGRXUTFKSk0yZFpaWGM1TTJaU2N6Rm9kV1JVVGxOUFQxSTNRMUpPTmtoTlNrSlJRV2haWDBJelNGcHVka0pDZW5WaWVrVkRUMk56VlhaSmFGODNZbGhVZEV4eE5HRjVTM05QV2tWSGJtVTRZVk14WkZWWlV6Y3hWM0V3YURCNVJWbzFVa3d3VjJoNFVUSXhSSFZtYkZoelYzQkhhRlp5U1ZsQ016SlBSbVowY1RadFkzZzJkbTUyVW1aR1VIUk9hbU53ZEU1dE56bFdkek5FTUV0eldEZDVVRUpWWWpaMFkyOVNORkpqZWtKRFptSlBjV3hFU205blpYWlZOMHhhYUZndFYwVjVWR280UTFCaWRsTlpSUzFOV1VSdVZEbFdlRTFyUjJGYWJuWlFVV2RsYnpSaE16RkxTbXRNZG1sbWRHOW1WbTl3UTA5M1NqQnVlVTUwVURKVVgzQlpMa3RLWVZsbFVrRlpSMVJUWW1sSGIzbFpMVzltVTJjLnh0U3hoMVh1blFaUEI1WUZIdVlEbHpHRUJvZFNCNEtaT2RfcG1NWlFlVFEiLCJleHAiOjE2OTgxMDODEwNTE0Nn0.QdH6gR4bCTLStkZ08BjADk3zv4kX32I',
+  callbacks: [
     {
-      "type": CallbackType.TextOutputCallback,
-      "output": [
+      type: CallbackType.TextOutputCallback,
+      output: [
         {
-          "name": "message",
-          "value": "On this page you can choose to register, skip or opt-out the second factor authentication method selected to protect your account. If you \"Skip\", an MFA method will not be registered now, but you will be prompted again on your next login. Otherwise, if you \"Opt out\", an MFA method will not be registered now and you will not be asked again. This choice is not recommended."
+          name: 'message',
+          value:
+            'On this page you can choose to register, skip or opt-out the second factor authentication method selected to protect your account. If you "Skip", an MFA method will not be registered now, but you will be prompted again on your next login. Otherwise, if you "Opt out", an MFA method will not be registered now and you will not be asked again. This choice is not recommended.',
         },
         {
-          "name": "messageType",
-          "value": "0"
-        }
-      ]
+          name: 'messageType',
+          value: '0',
+        },
+      ],
     },
     {
-      "type": CallbackType.ConfirmationCallback,
-      "output": [
+      type: CallbackType.ConfirmationCallback,
+      output: [
         {
-          "name": "prompt",
-          "value": ""
+          name: 'prompt',
+          value: '',
         },
         {
-          "name": "messageType",
-          "value": 0
+          name: 'messageType',
+          value: 0,
         },
         {
-          "name": "options",
-          "value": [
-            "Register Device",
-            "Get the App",
-            "Skip this step",
-            "Opt-out"
-          ]
+          name: 'options',
+          value: ['Register Device', 'Get the App', 'Skip this step', 'Opt-out'],
         },
         {
-          "name": "optionType",
-          "value": -1
+          name: 'optionType',
+          value: -1,
         },
         {
-          "name": "defaultOption",
-          "value": 0
-        }
+          name: 'defaultOption',
+          value: 0,
+        },
       ],
-      "input": [
+      input: [
         {
-          "name": "IDToken2",
-          "value": 0
-        }
-      ]
-    }
-  ]
+          name: 'IDToken2',
+          value: 0,
+        },
+      ],
+    },
+  ],
 };
 
 export const oathRegistrationStep: Step = {
-  "authId": "eyJ0eXAiOiJKciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6ImRlbaEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNXNSMWxPYzA5ek9GSnpUbmgwVG0xcGIwTTRjbkozTGpkclV6QjFjRXh6TFZadExVRmhTSGhLYURocmRVWTJXVFJwYVU0eGIzaExZalZ4Y1VsWGQzb3lTWGhGZERSdk0yMTZVR3BITTBseFZXZ3lUVmRLWTJsQlRXaDBlbWR2UW5CYWIxOUJUMEozWWtoQmFXRkhSRTR4TnpSTFR6bHhUMDlLVVdGT2JXYzNSMEZvVjNOUGVVYzVVbXBzT1UxTVNGTlBhV1JuZEZOdE1rUlVNR1l6Um0xTFkxWXplWHBQUlhabFUyMXNhR1ZtUldwdlVFZG1jV3RQUTNsSU1uTmtURTFIUzJacVMwbEhaV1kxZFVoZlNXUjNUak5tY2kxVGIyUkRjVlpRU2twdU5GWTNiMUp0VTFGRldXWmlWME5MTVdGSVRGQlhRemhWUkU1TWVUTjNkMFZNTkRSTVMzUmFMWGgwVjJGQ04yNUtXbFZ4UTBwMFRXdHRZV0pIYnpKNGJHdzNOWFZuWVhsbk1IVk1NVE42V2tkTVgweEdObmxETTA1UWFWbFRSbnBHZUZka1dsWk9kSFJDWW5aMWMxZHRVakpGY2kweExXdzJZbEp0UmpSc1kyOHdWWEF4T0ZGWFpXWmpPRTlMWW05aFNqQkxkMVp4TmxrMFZqUmtNa3RIVHpZdFlsOXJMV1JqZFRCSGJsOHRiMHBCTjNSaWNrNXlXbVZCTUhSNmVtTkVaR052VFZaTGNuUnhiV1JYYWt0dVUwdHpVbkF3Vm1RdFRHMUlTa1pXVkd4Q1RFZHlPSHBIZERGaWNGTkRUbXBNY0VZNWRESnFaR3hPTkVZNFZsaEVMV3QzYzJGTU1WUkNZalpGUVdZMVYxWnhTVVZJTWt4c2RsaFRWVVp3TVc5dk0zSTRjamRWVTFoTlJsb3llRVprYkdoc1VqUk5UVVE1VjBOTGQwMWxVbFJWT0hWS2VGaDNaMk40VkVGWlZFSkJUVmROUzFSRWFqUmpTWGMxV1V0S2R6ZDJhWEJyYnpGVWVtOUVTamhCVkc5UmQwMDBZV1p1WnpGMWMzQmpORmw1VTBNemJFcEdSME0zVFRCR05tOVNNbVl6ZEVNeU1scHBRamhUYlZCVExWVTVSRU5oTUZOeWRWUjZZa1JrZWpNMlEwSm5iM2RzWlUxU00yeHVObkJQY1UwMldXMW5OV2RDY25BM1VrVklXamxHWTJobVdGRklPVUp1UVRoWlZXUXdVVFo1U1VGak1FWTVTekp1Y0hReVFrOVdVMXBUWDIxUU1rUmlXakZVU1MxelUzSnBNMjl1WVRaa1ZrUlhTSFJZTVMxak9XZFZVRUpRY1d4MFVGOXBSMUJtYVRSTWIwbDNWMWRGU1ZCcE9HNUxYekZXV0RsZmJ6QjBVbVJFZEc5UlRtTndWMFpKUkRKNFZrWXdSSEpKWVVsNE0zZEJNbTQzVjJsR1RFbFlORjh0VEROMmJrSnJkMDEwZUZkcFYydElMV3BDY25wcVdXWkVWMGxVWVVwbFlqSjJkVXROVjFKWVNIWklOWEIzWkVkd1prOU1NMkpXWm1wMVZsRjBWVzA0WlU1WWNHRTNNV3B1YTBoaU5sSm5PRXQwUzNWMVpIUnVjMmhGZEU0eVdXMVRNbVEwUjJwcVRrOVZUMUZFU0RaZk5URnRiVEpRZVVoMVMzTklXSEJ3VGxaM01VWllTVXd0VmpWMmRsbHdkbmd3T1RkNFJsbDFkVzFXZDFvNFJWWnRSM2htTXpOSFowZHJkVlkyWlZaRlkxRnNaVkF3V0dKbU5EVjRUVmQxYkRrMlVWTk5TR2RYY0hvNVJVUkhVbUZ4WmpobGEyUkxkbWR1V1haMGVVOVJNMHcxYjNCelRXaDFjRkZRUmtscVRFRklha1U1T1Zac1RHRjRURjlPYVd4bVdrVmhhR2MxZW5obFRXSm1UMVJpZEZCRmVrVlhRWGc1TmtOcmIzVkVNVVptTVY5d2JVMW1WM0pXWlRaeU5VRTFaRlpFYjFReVlWTkJWRjl4YkdWSlgyUTBaMjVpVVhwclVIRlFNelZ6WjFadlFYa3lWVTF6Y1daVGQxYzFkazVWZERjM1JUbHFUSFZSZW1OTWNUTTNNVmhKVmpCc2VWZzNhMlpTWWxGelVGUndUV0Z1ZHpGelVXUnVWVWd6WDJ0dGRYcFJURGhqV0hwNVMxQnVPV1JHVkZCdE5XVm5ZblJXVVZoR01VVTJYMGR2TjFkWVIxaFNOMlJ2UjJkRk1uSmxjVGxpYm5GNFdsaDZTbWRpZFZORWRqSnJjVTg1Tmt0UlNsa3hlamQ0TmtkaVNYRXRNRVF4Vm14MFNrWllaeTVOVjBOelRVeDVNamQ0TmpKdFZqQjZZbTlRWXkxUi5wYWtKbExQN01UMmJyZkVKV2ZHNmdETWg5YmVhSzhiUV9IcDFWTVJpcGJNIiwiZXhwIjoxNjkzOTI2MjE2LCJpYXQiOjE2OTM5MjU5MTZ9.4z1ZGuxP8jJZ7WgNbIJq4zpEZrFYMXG6o_7upHJGoes",
-  "callbacks": [
+  authId:
+    'eyJ0eXAiOiJKciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6ImRlbaEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNXNSMWxPYzA5ek9GSnpUbmgwVG0xcGIwTTRjbkozTGpkclV6QjFjRXh6TFZadExVRmhTSGhLYURocmRVWTJXVFJwYVU0eGIzaExZalZ4Y1VsWGQzb3lTWGhGZERSdk0yMTZVR3BITTBseFZXZ3lUVmRLWTJsQlRXaDBlbWR2UW5CYWIxOUJUMEozWWtoQmFXRkhSRTR4TnpSTFR6bHhUMDlLVVdGT2JXYzNSMEZvVjNOUGVVYzVVbXBzT1UxTVNGTlBhV1JuZEZOdE1rUlVNR1l6Um0xTFkxWXplWHBQUlhabFUyMXNhR1ZtUldwdlVFZG1jV3RQUTNsSU1uTmtURTFIUzJacVMwbEhaV1kxZFVoZlNXUjNUak5tY2kxVGIyUkRjVlpRU2twdU5GWTNiMUp0VTFGRldXWmlWME5MTVdGSVRGQlhRemhWUkU1TWVUTjNkMFZNTkRSTVMzUmFMWGgwVjJGQ04yNUtXbFZ4UTBwMFRXdHRZV0pIYnpKNGJHdzNOWFZuWVhsbk1IVk1NVE42V2tkTVgweEdObmxETTA1UWFWbFRSbnBHZUZka1dsWk9kSFJDWW5aMWMxZHRVakpGY2kweExXdzJZbEp0UmpSc1kyOHdWWEF4T0ZGWFpXWmpPRTlMWW05aFNqQkxkMVp4TmxrMFZqUmtNa3RIVHpZdFlsOXJMV1JqZFRCSGJsOHRiMHBCTjNSaWNrNXlXbVZCTUhSNmVtTkVaR052VFZaTGNuUnhiV1JYYWt0dVUwdHpVbkF3Vm1RdFRHMUlTa1pXVkd4Q1RFZHlPSHBIZERGaWNGTkRUbXBNY0VZNWRESnFaR3hPTkVZNFZsaEVMV3QzYzJGTU1WUkNZalpGUVdZMVYxWnhTVVZJTWt4c2RsaFRWVVp3TVc5dk0zSTRjamRWVTFoTlJsb3llRVprYkdoc1VqUk5UVVE1VjBOTGQwMWxVbFJWT0hWS2VGaDNaMk40VkVGWlZFSkJUVmROUzFSRWFqUmpTWGMxV1V0S2R6ZDJhWEJyYnpGVWVtOUVTamhCVkc5UmQwMDBZV1p1WnpGMWMzQmpORmw1VTBNemJFcEdSME0zVFRCR05tOVNNbVl6ZEVNeU1scHBRamhUYlZCVExWVTVSRU5oTUZOeWRWUjZZa1JrZWpNMlEwSm5iM2RzWlUxU00yeHVObkJQY1UwMldXMW5OV2RDY25BM1VrVklXamxHWTJobVdGRklPVUp1UVRoWlZXUXdVVFo1U1VGak1FWTVTekp1Y0hReVFrOVdVMXBUWDIxUU1rUmlXakZVU1MxelUzSnBNMjl1WVRaa1ZrUlhTSFJZTVMxak9XZFZVRUpRY1d4MFVGOXBSMUJtYVRSTWIwbDNWMWRGU1ZCcE9HNUxYekZXV0RsZmJ6QjBVbVJFZEc5UlRtTndWMFpKUkRKNFZrWXdSSEpKWVVsNE0zZEJNbTQzVjJsR1RFbFlORjh0VEROMmJrSnJkMDEwZUZkcFYydElMV3BDY25wcVdXWkVWMGxVWVVwbFlqSjJkVXROVjFKWVNIWklOWEIzWkVkd1prOU1NMkpXWm1wMVZsRjBWVzA0WlU1WWNHRTNNV3B1YTBoaU5sSm5PRXQwUzNWMVpIUnVjMmhGZEU0eVdXMVRNbVEwUjJwcVRrOVZUMUZFU0RaZk5URnRiVEpRZVVoMVMzTklXSEJ3VGxaM01VWllTVXd0VmpWMmRsbHdkbmd3T1RkNFJsbDFkVzFXZDFvNFJWWnRSM2htTXpOSFowZHJkVlkyWlZaRlkxRnNaVkF3V0dKbU5EVjRUVmQxYkRrMlVWTk5TR2RYY0hvNVJVUkhVbUZ4WmpobGEyUkxkbWR1V1haMGVVOVJNMHcxYjNCelRXaDFjRkZRUmtscVRFRklha1U1T1Zac1RHRjRURjlPYVd4bVdrVmhhR2MxZW5obFRXSm1UMVJpZEZCRmVrVlhRWGc1TmtOcmIzVkVNVVptTVY5d2JVMW1WM0pXWlRaeU5VRTFaRlpFYjFReVlWTkJWRjl4YkdWSlgyUTBaMjVpVVhwclVIRlFNelZ6WjFadlFYa3lWVTF6Y1daVGQxYzFkazVWZERjM1JUbHFUSFZSZW1OTWNUTTNNVmhKVmpCc2VWZzNhMlpTWWxGelVGUndUV0Z1ZHpGelVXUnVWVWd6WDJ0dGRYcFJURGhqV0hwNVMxQnVPV1JHVkZCdE5XVm5ZblJXVVZoR01VVTJYMGR2TjFkWVIxaFNOMlJ2UjJkRk1uSmxjVGxpYm5GNFdsaDZTbWRpZFZORWRqSnJjVTg1Tmt0UlNsa3hlamQ0TmtkaVNYRXRNRVF4Vm14MFNrWllaeTVOVjBOelRVeDVNamQ0TmpKdFZqQjZZbTlRWXkxUi5wYWtKbExQN01UMmJyZkVKV2ZHNmdETWg5YmVhSzhiUV9IcDFWTVJpcGJNIiwiZXhwIjoxNjkzOTI2MjE2LCJpYXQiOjE2OTM5MjU5MTZ9.4z1ZGuxP8jJZ7WgNbIJq4zpEZrFYMXG6o_7upHJGoes',
+  callbacks: [
     {
-      "type": CallbackType.TextOutputCallback,
-      "output": [
+      type: CallbackType.TextOutputCallback,
+      output: [
         {
-          "name": "message",
-          "value": "Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login."
+          name: 'message',
+          value:
+            'Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login.',
         },
         {
-          "name": "messageType",
-          "value": "0"
-        }
-      ]
-    },
-    {
-      "type": CallbackType.TextOutputCallback,
-      "output": [
-        {
-          "name": "message",
-          "value": "window.QRCodeReader.createCode({\n  id: 'callback_0',\n  text: 'otpauth\\x3A\\x2F\\x2Ftotp\\x2FForgeRock\\x3Ajlowery\\x3Fperiod\\x3D30\\x26b\\x3D032b75\\x26digits\\x3D6\\x26secret\\QITSTC234FRIU8DD987DW3VPICFY\\x3D\\x3D\\x3D\\x3D\\x3D\\x3D\\x26issuer\\x3DForgeRock',\n  version: '20',\n  code: 'L'\n});"
+          name: 'messageType',
+          value: '0',
         },
-        {
-          "name": "messageType",
-          "value": "4"
-        }
-      ]
-    },
-    {
-      "type": CallbackType.HiddenValueCallback,
-      "output": [
-        {
-          "name": "value",
-          "value": "otpauth://totp/ForgeRock:jlowery?secret=QITSTC234FRIU8DD987DW3VPICFY======&issuer=ForgeRock&period=30&digits=6&b=032b75"
-        },
-        {
-          "name": "id",
-          "value": "mfaDeviceRegistration"
-        }
       ],
-      "input": [
-        {
-          "name": "IDToken3",
-          "value": "mfaDeviceRegistration"
-        }
-      ]
     },
     {
-      "type": CallbackType.ConfirmationCallback,
-      "output": [
+      type: CallbackType.TextOutputCallback,
+      output: [
         {
-          "name": "prompt",
-          "value": ""
+          name: 'message',
+          value:
+            "window.QRCodeReader.createCode({\n  id: 'callback_0',\n  text: 'otpauth\\x3A\\x2F\\x2Ftotp\\x2FForgeRock\\x3Ajlowery\\x3Fperiod\\x3D30\\x26b\\x3D032b75\\x26digits\\x3D6\\x26secret\\QITSTC234FRIU8DD987DW3VPICFY\\x3D\\x3D\\x3D\\x3D\\x3D\\x3D\\x26issuer\\x3DForgeRock',\n  version: '20',\n  code: 'L'\n});",
         },
         {
-          "name": "messageType",
-          "value": 0
+          name: 'messageType',
+          value: '4',
         },
-        {
-          "name": "options",
-          "value": [
-            "Next"
-          ]
-        },
-        {
-          "name": "optionType",
-          "value": -1
-        },
-        {
-          "name": "defaultOption",
-          "value": 0
-        }
       ],
-      "input": [
+    },
+    {
+      type: CallbackType.HiddenValueCallback,
+      output: [
         {
-          "name": "IDToken4",
-          "value": 0
-        }
-      ]
-    }
+          name: 'value',
+          value:
+            'otpauth://totp/ForgeRock:jlowery?secret=QITSTC234FRIU8DD987DW3VPICFY======&issuer=ForgeRock&period=30&digits=6&b=032b75',
+        },
+        {
+          name: 'id',
+          value: 'mfaDeviceRegistration',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken3',
+          value: 'mfaDeviceRegistration',
+        },
+      ],
+    },
+    {
+      type: CallbackType.ConfirmationCallback,
+      output: [
+        {
+          name: 'prompt',
+          value: '',
+        },
+        {
+          name: 'messageType',
+          value: 0,
+        },
+        {
+          name: 'options',
+          value: ['Next'],
+        },
+        {
+          name: 'optionType',
+          value: -1,
+        },
+        {
+          name: 'defaultOption',
+          value: 0,
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken4',
+          value: 0,
+        },
+      ],
+    },
   ],
   stage: 'QRCode',
 };
 
 export const oathRegistrationErrorStep: Step = {
-  "authId": "eyJ0eXAiOiJKciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6ImRlbaEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNXNSMWxPYzA5ek9GSnpUbmgwVG0xcGIwTTRjbkozTGpkclV6QjFjRXh6TFZadExVRmhTSGhLYURocmRVWTJXVFJwYVU0eGIzaExZalZ4Y1VsWGQzb3lTWGhGZERSdk0yMTZVR3BITTBseFZXZ3lUVmRLWTJsQlRXaDBlbWR2UW5CYWIxOUJUMEozWWtoQmFXRkhSRTR4TnpSTFR6bHhUMDlLVVdGT2JXYzNSMEZvVjNOUGVVYzVVbXBzT1UxTVNGTlBhV1JuZEZOdE1rUlVNR1l6Um0xTFkxWXplWHBQUlhabFUyMXNhR1ZtUldwdlVFZG1jV3RQUTNsSU1uTmtURTFIUzJacVMwbEhaV1kxZFVoZlNXUjNUak5tY2kxVGIyUkRjVlpRU2twdU5GWTNiMUp0VTFGRldXWmlWME5MTVdGSVRGQlhRemhWUkU1TWVUTjNkMFZNTkRSTVMzUmFMWGgwVjJGQ04yNUtXbFZ4UTBwMFRXdHRZV0pIYnpKNGJHdzNOWFZuWVhsbk1IVk1NVE42V2tkTVgweEdObmxETTA1UWFWbFRSbnBHZUZka1dsWk9kSFJDWW5aMWMxZHRVakpGY2kweExXdzJZbEp0UmpSc1kyOHdWWEF4T0ZGWFpXWmpPRTlMWW05aFNqQkxkMVp4TmxrMFZqUmtNa3RIVHpZdFlsOXJMV1JqZFRCSGJsOHRiMHBCTjNSaWNrNXlXbVZCTUhSNmVtTkVaR052VFZaTGNuUnhiV1JYYWt0dVUwdHpVbkF3Vm1RdFRHMUlTa1pXVkd4Q1RFZHlPSHBIZERGaWNGTkRUbXBNY0VZNWRESnFaR3hPTkVZNFZsaEVMV3QzYzJGTU1WUkNZalpGUVdZMVYxWnhTVVZJTWt4c2RsaFRWVVp3TVc5dk0zSTRjamRWVTFoTlJsb3llRVprYkdoc1VqUk5UVVE1VjBOTGQwMWxVbFJWT0hWS2VGaDNaMk40VkVGWlZFSkJUVmROUzFSRWFqUmpTWGMxV1V0S2R6ZDJhWEJyYnpGVWVtOUVTamhCVkc5UmQwMDBZV1p1WnpGMWMzQmpORmw1VTBNemJFcEdSME0zVFRCR05tOVNNbVl6ZEVNeU1scHBRamhUYlZCVExWVTVSRU5oTUZOeWRWUjZZa1JrZWpNMlEwSm5iM2RzWlUxU00yeHVObkJQY1UwMldXMW5OV2RDY25BM1VrVklXamxHWTJobVdGRklPVUp1UVRoWlZXUXdVVFo1U1VGak1FWTVTekp1Y0hReVFrOVdVMXBUWDIxUU1rUmlXakZVU1MxelUzSnBNMjl1WVRaa1ZrUlhTSFJZTVMxak9XZFZVRUpRY1d4MFVGOXBSMUJtYVRSTWIwbDNWMWRGU1ZCcE9HNUxYekZXV0RsZmJ6QjBVbVJFZEc5UlRtTndWMFpKUkRKNFZrWXdSSEpKWVVsNE0zZEJNbTQzVjJsR1RFbFlORjh0VEROMmJrSnJkMDEwZUZkcFYydElMV3BDY25wcVdXWkVWMGxVWVVwbFlqSjJkVXROVjFKWVNIWklOWEIzWkVkd1prOU1NMkpXWm1wMVZsRjBWVzA0WlU1WWNHRTNNV3B1YTBoaU5sSm5PRXQwUzNWMVpIUnVjMmhGZEU0eVdXMVRNbVEwUjJwcVRrOVZUMUZFU0RaZk5URnRiVEpRZVVoMVMzTklXSEJ3VGxaM01VWllTVXd0VmpWMmRsbHdkbmd3T1RkNFJsbDFkVzFXZDFvNFJWWnRSM2htTXpOSFowZHJkVlkyWlZaRlkxRnNaVkF3V0dKbU5EVjRUVmQxYkRrMlVWTk5TR2RYY0hvNVJVUkhVbUZ4WmpobGEyUkxkbWR1V1haMGVVOVJNMHcxYjNCelRXaDFjRkZRUmtscVRFRklha1U1T1Zac1RHRjRURjlPYVd4bVdrVmhhR2MxZW5obFRXSm1UMVJpZEZCRmVrVlhRWGc1TmtOcmIzVkVNVVptTVY5d2JVMW1WM0pXWlRaeU5VRTFaRlpFYjFReVlWTkJWRjl4YkdWSlgyUTBaMjVpVVhwclVIRlFNelZ6WjFadlFYa3lWVTF6Y1daVGQxYzFkazVWZERjM1JUbHFUSFZSZW1OTWNUTTNNVmhKVmpCc2VWZzNhMlpTWWxGelVGUndUV0Z1ZHpGelVXUnVWVWd6WDJ0dGRYcFJURGhqV0hwNVMxQnVPV1JHVkZCdE5XVm5ZblJXVVZoR01VVTJYMGR2TjFkWVIxaFNOMlJ2UjJkRk1uSmxjVGxpYm5GNFdsaDZTbWRpZFZORWRqSnJjVTg1Tmt0UlNsa3hlamQ0TmtkaVNYRXRNRVF4Vm14MFNrWllaeTVOVjBOelRVeDVNamQ0TmpKdFZqQjZZbTlRWXkxUi5wYWtKbExQN01UMmJyZkVKV2ZHNmdETWg5YmVhSzhiUV9IcDFWTVJpcGJNIiwiZXhwIjoxNjkzOTI2MjE2LCJpYXQiOjE2OTM5MjU5MTZ9.4z1ZGuxP8jJZ7WgNbIJq4zpEZrFYMXG6o_7upHJGoes",
-    "callbacks": [
-      {
-        "type": CallbackType.TextOutputCallback,
-        "output": [
-          {
-            "name": "message",
-            "value": "Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login."
-          },
-          {
-            "name": "messageType",
-            "value": "0"
-          }
-        ]
-      },
-      {
-        "type": CallbackType.TextOutputCallback,
-        "output": [
-          {
-            "name": "message",
-            "value": "window.QRCodeReader.createCode({\n  id: 'callback_0',\n  text: 'otpauth\\x3A\\x2F\\x2Ftotp\\x2FForgeRock\\x3Ajlowery\\x3Fperiod\\x3D30\\x26b\\x3D032b75\\x26digits\\x3D6\\x26secret\\QITSTC234FRIU8DD987DW3VPICFY\\x3D\\x3D\\x3D\\x3D\\x3D\\x3D\\x26issuer\\x3DForgeRock',\n  version: '20',\n  code: 'L'\n});"
-          },
-          {
-            "name": "messageType",
-            "value": "4"
-          }
-        ]
-      },
-      {
-        "type": CallbackType.HiddenValueCallback,
-        "output": [
-          {
-            "name": "value",
-            "value": "pushauth://push/forgerock:Justin%20Lowery?l=YW1sYmNvb2wMQ&issuer=Rm9yZ2VSb2Nr&m=REGISTER:53b85112-8ba9-4b7e-9107-ecbca2d65f7b1695151603616&s=FoxEr5uAzrys1yBmuygPbxrVjysElmzsmqifi6eO_AI&c=XXD-MxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw&rD-MxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw&r=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIaHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIaHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIaHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIZXI&a=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW019hY3Rpb249YXV0aGVudGljYXRl&b=032b75"
-          },
-          {
-            "name": "id",
-            "value": "mfaDeviceRegistration"
-          }
-        ],
-        "input": [
-          {
-            "name": "IDToken3",
-            "value": "mfaDeviceRegistration"
-          }
-        ]
-      },
-      {
-        "type": CallbackType.ConfirmationCallback,
-        "output": [
-          {
-            "name": "prompt",
-            "value": ""
-          },
-          {
-            "name": "messageType",
-            "value": 0
-          },
-          {
-            "name": "options",
-            "value": [
-              "Next"
-            ]
-          },
-          {
-            "name": "optionType",
-            "value": -1
-          },
-          {
-            "name": "defaultOption",
-            "value": 0
-          }
-        ],
-        "input": [
-          {
-            "name": "IDToken4",
-            "value": 0
-          }
-        ]
-      }
+  authId:
+    'eyJ0eXAiOiJKciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6ImRlbaEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNXNSMWxPYzA5ek9GSnpUbmgwVG0xcGIwTTRjbkozTGpkclV6QjFjRXh6TFZadExVRmhTSGhLYURocmRVWTJXVFJwYVU0eGIzaExZalZ4Y1VsWGQzb3lTWGhGZERSdk0yMTZVR3BITTBseFZXZ3lUVmRLWTJsQlRXaDBlbWR2UW5CYWIxOUJUMEozWWtoQmFXRkhSRTR4TnpSTFR6bHhUMDlLVVdGT2JXYzNSMEZvVjNOUGVVYzVVbXBzT1UxTVNGTlBhV1JuZEZOdE1rUlVNR1l6Um0xTFkxWXplWHBQUlhabFUyMXNhR1ZtUldwdlVFZG1jV3RQUTNsSU1uTmtURTFIUzJacVMwbEhaV1kxZFVoZlNXUjNUak5tY2kxVGIyUkRjVlpRU2twdU5GWTNiMUp0VTFGRldXWmlWME5MTVdGSVRGQlhRemhWUkU1TWVUTjNkMFZNTkRSTVMzUmFMWGgwVjJGQ04yNUtXbFZ4UTBwMFRXdHRZV0pIYnpKNGJHdzNOWFZuWVhsbk1IVk1NVE42V2tkTVgweEdObmxETTA1UWFWbFRSbnBHZUZka1dsWk9kSFJDWW5aMWMxZHRVakpGY2kweExXdzJZbEp0UmpSc1kyOHdWWEF4T0ZGWFpXWmpPRTlMWW05aFNqQkxkMVp4TmxrMFZqUmtNa3RIVHpZdFlsOXJMV1JqZFRCSGJsOHRiMHBCTjNSaWNrNXlXbVZCTUhSNmVtTkVaR052VFZaTGNuUnhiV1JYYWt0dVUwdHpVbkF3Vm1RdFRHMUlTa1pXVkd4Q1RFZHlPSHBIZERGaWNGTkRUbXBNY0VZNWRESnFaR3hPTkVZNFZsaEVMV3QzYzJGTU1WUkNZalpGUVdZMVYxWnhTVVZJTWt4c2RsaFRWVVp3TVc5dk0zSTRjamRWVTFoTlJsb3llRVprYkdoc1VqUk5UVVE1VjBOTGQwMWxVbFJWT0hWS2VGaDNaMk40VkVGWlZFSkJUVmROUzFSRWFqUmpTWGMxV1V0S2R6ZDJhWEJyYnpGVWVtOUVTamhCVkc5UmQwMDBZV1p1WnpGMWMzQmpORmw1VTBNemJFcEdSME0zVFRCR05tOVNNbVl6ZEVNeU1scHBRamhUYlZCVExWVTVSRU5oTUZOeWRWUjZZa1JrZWpNMlEwSm5iM2RzWlUxU00yeHVObkJQY1UwMldXMW5OV2RDY25BM1VrVklXamxHWTJobVdGRklPVUp1UVRoWlZXUXdVVFo1U1VGak1FWTVTekp1Y0hReVFrOVdVMXBUWDIxUU1rUmlXakZVU1MxelUzSnBNMjl1WVRaa1ZrUlhTSFJZTVMxak9XZFZVRUpRY1d4MFVGOXBSMUJtYVRSTWIwbDNWMWRGU1ZCcE9HNUxYekZXV0RsZmJ6QjBVbVJFZEc5UlRtTndWMFpKUkRKNFZrWXdSSEpKWVVsNE0zZEJNbTQzVjJsR1RFbFlORjh0VEROMmJrSnJkMDEwZUZkcFYydElMV3BDY25wcVdXWkVWMGxVWVVwbFlqSjJkVXROVjFKWVNIWklOWEIzWkVkd1prOU1NMkpXWm1wMVZsRjBWVzA0WlU1WWNHRTNNV3B1YTBoaU5sSm5PRXQwUzNWMVpIUnVjMmhGZEU0eVdXMVRNbVEwUjJwcVRrOVZUMUZFU0RaZk5URnRiVEpRZVVoMVMzTklXSEJ3VGxaM01VWllTVXd0VmpWMmRsbHdkbmd3T1RkNFJsbDFkVzFXZDFvNFJWWnRSM2htTXpOSFowZHJkVlkyWlZaRlkxRnNaVkF3V0dKbU5EVjRUVmQxYkRrMlVWTk5TR2RYY0hvNVJVUkhVbUZ4WmpobGEyUkxkbWR1V1haMGVVOVJNMHcxYjNCelRXaDFjRkZRUmtscVRFRklha1U1T1Zac1RHRjRURjlPYVd4bVdrVmhhR2MxZW5obFRXSm1UMVJpZEZCRmVrVlhRWGc1TmtOcmIzVkVNVVptTVY5d2JVMW1WM0pXWlRaeU5VRTFaRlpFYjFReVlWTkJWRjl4YkdWSlgyUTBaMjVpVVhwclVIRlFNelZ6WjFadlFYa3lWVTF6Y1daVGQxYzFkazVWZERjM1JUbHFUSFZSZW1OTWNUTTNNVmhKVmpCc2VWZzNhMlpTWWxGelVGUndUV0Z1ZHpGelVXUnVWVWd6WDJ0dGRYcFJURGhqV0hwNVMxQnVPV1JHVkZCdE5XVm5ZblJXVVZoR01VVTJYMGR2TjFkWVIxaFNOMlJ2UjJkRk1uSmxjVGxpYm5GNFdsaDZTbWRpZFZORWRqSnJjVTg1Tmt0UlNsa3hlamQ0TmtkaVNYRXRNRVF4Vm14MFNrWllaeTVOVjBOelRVeDVNamQ0TmpKdFZqQjZZbTlRWXkxUi5wYWtKbExQN01UMmJyZkVKV2ZHNmdETWg5YmVhSzhiUV9IcDFWTVJpcGJNIiwiZXhwIjoxNjkzOTI2MjE2LCJpYXQiOjE2OTM5MjU5MTZ9.4z1ZGuxP8jJZ7WgNbIJq4zpEZrFYMXG6o_7upHJGoes',
+  callbacks: [
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            'Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login.',
+        },
+        {
+          name: 'messageType',
+          value: '0',
+        },
       ],
+    },
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            "window.QRCodeReader.createCode({\n  id: 'callback_0',\n  text: 'otpauth\\x3A\\x2F\\x2Ftotp\\x2FForgeRock\\x3Ajlowery\\x3Fperiod\\x3D30\\x26b\\x3D032b75\\x26digits\\x3D6\\x26secret\\QITSTC234FRIU8DD987DW3VPICFY\\x3D\\x3D\\x3D\\x3D\\x3D\\x3D\\x26issuer\\x3DForgeRock',\n  version: '20',\n  code: 'L'\n});",
+        },
+        {
+          name: 'messageType',
+          value: '4',
+        },
+      ],
+    },
+    {
+      type: CallbackType.HiddenValueCallback,
+      output: [
+        {
+          name: 'value',
+          value:
+            'pushauth://push/forgerock:Justin%20Lowery?l=YW1sYmNvb2wMQ&issuer=Rm9yZ2VSb2Nr&m=REGISTER:53b85112-8ba9-4b7e-9107-ecbca2d65f7b1695151603616&s=FoxEr5uAzrys1yBmuygPbxrVjysElmzsmqifi6eO_AI&c=XXD-MxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw&rD-MxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw&r=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIaHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIaHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIaHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmwVnaXN0ZXIZXI&a=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW019hY3Rpb249YXV0aGVudGljYXRl&b=032b75',
+        },
+        {
+          name: 'id',
+          value: 'mfaDeviceRegistration',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken3',
+          value: 'mfaDeviceRegistration',
+        },
+      ],
+    },
+    {
+      type: CallbackType.ConfirmationCallback,
+      output: [
+        {
+          name: 'prompt',
+          value: '',
+        },
+        {
+          name: 'messageType',
+          value: 0,
+        },
+        {
+          name: 'options',
+          value: ['Next'],
+        },
+        {
+          name: 'optionType',
+          value: -1,
+        },
+        {
+          name: 'defaultOption',
+          value: 0,
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken4',
+          value: 0,
+        },
+      ],
+    },
+  ],
   stage: 'QRCode',
 };
 export const pushRegistrationStep: Step = {
-  "authId": "eyJ0eXAiOiJKV1JIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlB1c2giLF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaWKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTV1TXpWSU5ISndaMFpFWldKdlpuWjNNSFpsV0RSbkxuUkpVMFkxTVZFM1ZVdHNTRXN6WmxjelpuaExaSE01TUZOdmVUYzRNMHhhY0U1eWNIcEhVRmhrYXpGRWJuVnlNa3B2V0ZReGJucFdhblZLVm5NNFdsUlZkMlJPWlRGUWVsTXpUWEJHWDFsSU9WbDVZWGhGVjFCc01VaE1Oa0pXTmtoU1dVaEJVRUpoYTBVNWJuRmhORFIwWjBWalRubE1YM0IxVm1WaFIyaENjMmhvUlZkd2RVVlFNbEV0WW1Gb1RYWndZVTFhV2xJMmJHcEVkMHBVTWkxMFVGUk5aM0pZVTJ0MVluTkJNVUYyZEc1SlZUQTJjbTloTjNWNFZqRmpNVlpqVDNkd1IyOXpOMlJNYmxwbGFpMWxTR3BzV0hWR2QybG1XV0pLWlVacFZHeFZWbGN6ZDBreGNHdDNXRUZCUkVKS2FITnpVbVo2WmtaSFEzVkNTVnB6VkdOYWNsaHFXRmszTkdaaVpEWldSVGRoUzFaaWNtWndTMUZPU3psRFlXYzJTa1pPUzFjME9XVmpTbU5ZYTB4SFFrczFOMWRLYzFsWGJWZzRUbE5PUWxOcFIxcDJZMnhUV25wZk9GSjVSMFV3YWs5WmIzVnRRMWxSV1hWQ2NGRk1WbVkyTlVWMlNFZzFZMlZQVkdkTVJGQjBkMGhSY1U1VGFrZFhhV1ZIT1ZSdE1FTjJkbEJYU1ZGMlNubG1RMW94UjBKQ1IyNW9hbTgzUlVsNlh6aHRNakpNYW01SGVFNTZiRFpaV1V3eFZYRndibEZZWmtoT1ZFcHBaemQ2YVVWYWEzVnJkbWRoY1ZrNFZUWlNiamwwTW1SNmNreHlVSGx2UlVoM2RsUlJWVFZmWjBKNlYyMUxaVTR4Y0dwSmRtaE9NRlZMUW5Sc1oyOURabnByUmt4TFVsbDNhMUl0YjFrMlVqWTNXREJ6YzBGamNGbFpPRkJDVXpGSE5VVldSMDQ0ZW5SeFlWZEhkekpMWlhoMU1tMHRjemh1T0ZKMGRITlJkVEZvWDFobVptaFJZblZTWTJRMmVXZFpObkJHYzBSSWJtTlFZMWd4Y21saVlYQkNlazlrY1hsWFEzcGxWMHhFV1Y5c2IyNU1VamxrTkdKNWRtNDBVRUl0TjNKSVJXVlVaMkp0V1VKS04zUmlhMHBFUm00NWVIRnJlRnBOVjJ4cFNVMWhObXRaVTFoSmNVcGtaRmMxYzNKWGFqSkVVV1JHYjNwa2VFMVVjWGx0UVhOdmNrSmhNM2R6T1VWcVUybFBSSEYwZUMxdE0wRkVNMlZRU2psbU9YSkRhMjExUTJ4UFZUbDNTV0YzTUZSM00wMTNXVGRxVFRsMFoydHVRa3N0ZFc1amVXUnhNR1JJWnpoaGVuUTRNemhsWjNRM2NIcHRSRGxhWDBNNVlsbFVTbkpWWW5KeVRVRjNlWFJDTm5oQlNUSmhWblpQVGpaSVVrcE9PRzVLVWxJNVYyWjFTRVJJZWtaWk5GaDJWMEozYlVwbVUwRjRNVmswTW10cVdFNVVTakprVG5KS1owbHJZazQ1WlUwMlVYSlliblZpWW5CRlpXWkRRVjlqWDBSdlVYbHZNVmh1YmxJNExWTjNZWHBKZVRSUWFYVkpOMHg2TTNJM1ozWnVNMFUzZHpSamVsQTRVbDk0WTJkaFYzWXRjM2h1Ym5oeU1WOVRaVkV4V25RNVJXUjFaMmgyUzNOS1p5MXdWak0zYTNaWmMzWXhTMWMzTm1NemRGQTBVRzgwTUhkQ1drOXJhMlJET0d4dVFXRk5iRFYwYmxkMlRGWjJZbFpPVW5sc1JXczJja2Q1Y2xSb2VrRnhTa3hPU1RReVgwUnBXblkzVnpCWWNscHlTVkY0TTJKNU1VeFFNUzB0Y3pSZldqTXRUSE5vVEVweVRGUldZMnRIZHpCNE1GazFXR1p3UkVSemRsSklORWxuVGpWQ2EzbDBSa3ROV1VWdk9XSnNVbmRNY25RNGRFUm1ZMnM1YlROS2FuSkVjMHhNVjBoaVFqY3pRM0l5ZWtVMWJFTlRZV1YwVXpFMllUSkVkR0owU21oTFNsVklkbWR4Vm5adFJVeFlWRkZCTkhOYU1XZ3hjbWx5WXpscGNFVjNNbHByYkdzMGVFZEhXRXhyYUdGUmFDMXhWSFI1TjI5S2Iyb3lOMVZ1VUdka1NqZHBaWEV4T0VGalVGaDRUMEpRT0hvNVRHWXhjVmRuT1MxV1RVSk5ValpYYldFM1IxZHJhMDgzY1RkbE1tNTJlSE5wWkdaWllVbzNURjl5WW5kdVRVSmFVVTVQYmtsMlNWWmtMVjl5UVc4d1VHOTNaR2hMYm10Sk5FRkdNRTB3VEVsTk1rWlZRVGh0Tm5jM2RFNDJWMHRLTm05WFNtY3RXVkJuYkY5R1dqbFFTVmQ2Y0dWblNqWlFhMHBwTm1nelVIaHhkVWhRUzAxMVdrSmxSVkpUTWxJMVdYTnVjbWxUZG5SdWVqSmFja05DUmxWbmFGaDZUbDl4UkhBNGRYRmFZbEUyU1ZKZlNIUkhYMlZIZURKMU1EZGFhMDluTFRsb1R6SlZhSEZ0UWkxSmJ6WjRVSFpwTUdKWk56TmhMVEJ5WXpZM1lVOWxjRkJLTTFFeFdYSmtibmw2ZWtGVWMwWTVkRkJNTjBoNlRUZzNaM2hVU25ORVREVkhSRUpuYzJweVgxTkZjV0p6TjBNelRtNUVXVWhCVEc5UlNqWk9WVWhXVGxjNGExVnhPV1UzYkdnNWVqUXdjRW95TWxOVFdrdGZZVk56TWpoWVJFODFla1ZGZUhsNk1VUmFVbFUzVEZaVlNtOXNkVE5mZWxOSVpGOWZMVWd5YzNKMGEwWjJTMlJUTkRaTGNIbGFlazlYVjA1RVVuRkVWMDFQZFVseVIwb3RTbmhNUzFSYVkyazJTRVpFZUd0MlVISjJiazB6TW1SaWVrSjNPWFJaWW10cFl6Rmpja3B5YW5kaWNsTldjbkZJU0VWU2RrOVNZelpHTmpKS1NEZEZPWGR6WVRka2R6RmpZWE5XTTJwMlRFOU9RVGRqTW5Oa1lsSkRYemxXTUhKTGRYZHRiM1JLTjNOcFJuQlJiVXg0YWxONmFUZ3paa3R0UVhSb1RuY3piRXRsZWxadVpsTkVOREV4V0d0NWNuVm9TMHd3YTI1c1lXeEtOMVZSWWs1MGF6VXVUVVIxWDFkTVoxRk5PRlF5UjNsNlluSjFZalJKVVEua2tNemRNczdKLU5vOTg5QmFTVUxfb1N3TmxsOElaYmprdTZXWVFtQm80QSIsImV4cCI6MTY5NTE1MTg4NiwiaWF0IjoxNjk1MTUxNTg2fQ.kxHz4cYFMfoSmZVL1KtrmVG-_oU4E8bEjNbdSZe_Niw",
-    "callbacks": [
-      {
-        "type": CallbackType.TextOutputCallback,
-        "output": [
-          {
-            "name": "message",
-            "value": "Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login."
-          },
-          {
-            "name": "messageType",
-            "value": "0"
-          }
-        ]
-      },
-      {
-        "type": CallbackType.TextOutputCallback,
-        "output": [
-          {
-            "name": "message",
-            "value": "window.QRCodeReader.createCode({\n  id: 'callback_0',\n  text: 'pushauth\\x3A\\x2F\\x2Fpush\\x2Fforgerock\\x3AJustin\\x2520Lowery\\x3Fa\\x3DaHR0cHM6Ly9v9807987ddzLmZvcmdlYmxzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249YXV0aGVudGljYXRl\\x26r\\x3DaHR0cHM6Ly9vcGVuYW0tZm9yZ2VLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmVnaXN0ZXI\\x26b\\x3D032b75\\x26s\\x3DFoxEr5uAzrys1yBmuygPbxrVjysElmzsmqifi6eO_AI\\x26c\\x3DXD\\x2DMxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw\\x26l\\x3DYW1sYmNvb2tpZT0wMQ\\x26m\\x3DREGISTER\\x3A53b85112\\x2D8ba9\\x2D4b7e\\x2D9107\\x2Decbca2d65f7b1695151603616\\x26issuer\\x3DRm9yZ2VSb2Nr',\n  version: '20',\n  code: 'L'\n});"
-          },
-          {
-            "name": "messageType",
-            "value": "4"
-          }
-        ]
-      },
-      {
-        "type": CallbackType.HiddenValueCallback,
-        "output": [
-          {
-            "name": "value",
-            "value": "pushauth://push/forgerock:Justin%20Lowery?l=YW1sYmNvb2wMQ&issuer=Rm9yZ2VSb2Nr&m=REGISTER:53b85112-8ba9-4b7e-9107-ecbca2d65f7b1695151603616&s=FoxEr5uAzrys1yBmuygPbxrVjysElmzsmqifi6eO_AI&c=XD-MxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw&r=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmVnaXN0ZXI&a=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW019hY3Rpb249YXV0aGVudGljYXRl&b=032b75"
-          },
-          {
-            "name": "id",
-            "value": "mfaDeviceRegistration"
-          }
-        ],
-        "input": [
-          {
-            "name": "IDToken3",
-            "value": "mfaDeviceRegistration"
-          }
-        ]
-      },
-      {
-        "type": CallbackType.PollingWaitCallback,
-        "output": [
-          {
-            "name": "waitTime",
-            "value": "5000"
-          },
-          {
-            "name": "message",
-            "value": "Waiting for response..."
-          }
-        ]
-      }
-    ],
+  authId:
+    'eyJ0eXAiOiJKV1JIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlB1c2giLF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaWKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTV1TXpWSU5ISndaMFpFWldKdlpuWjNNSFpsV0RSbkxuUkpVMFkxTVZFM1ZVdHNTRXN6WmxjelpuaExaSE01TUZOdmVUYzRNMHhhY0U1eWNIcEhVRmhrYXpGRWJuVnlNa3B2V0ZReGJucFdhblZLVm5NNFdsUlZkMlJPWlRGUWVsTXpUWEJHWDFsSU9WbDVZWGhGVjFCc01VaE1Oa0pXTmtoU1dVaEJVRUpoYTBVNWJuRmhORFIwWjBWalRubE1YM0IxVm1WaFIyaENjMmhvUlZkd2RVVlFNbEV0WW1Gb1RYWndZVTFhV2xJMmJHcEVkMHBVTWkxMFVGUk5aM0pZVTJ0MVluTkJNVUYyZEc1SlZUQTJjbTloTjNWNFZqRmpNVlpqVDNkd1IyOXpOMlJNYmxwbGFpMWxTR3BzV0hWR2QybG1XV0pLWlVacFZHeFZWbGN6ZDBreGNHdDNXRUZCUkVKS2FITnpVbVo2WmtaSFEzVkNTVnB6VkdOYWNsaHFXRmszTkdaaVpEWldSVGRoUzFaaWNtWndTMUZPU3psRFlXYzJTa1pPUzFjME9XVmpTbU5ZYTB4SFFrczFOMWRLYzFsWGJWZzRUbE5PUWxOcFIxcDJZMnhUV25wZk9GSjVSMFV3YWs5WmIzVnRRMWxSV1hWQ2NGRk1WbVkyTlVWMlNFZzFZMlZQVkdkTVJGQjBkMGhSY1U1VGFrZFhhV1ZIT1ZSdE1FTjJkbEJYU1ZGMlNubG1RMW94UjBKQ1IyNW9hbTgzUlVsNlh6aHRNakpNYW01SGVFNTZiRFpaV1V3eFZYRndibEZZWmtoT1ZFcHBaemQ2YVVWYWEzVnJkbWRoY1ZrNFZUWlNiamwwTW1SNmNreHlVSGx2UlVoM2RsUlJWVFZmWjBKNlYyMUxaVTR4Y0dwSmRtaE9NRlZMUW5Sc1oyOURabnByUmt4TFVsbDNhMUl0YjFrMlVqWTNXREJ6YzBGamNGbFpPRkJDVXpGSE5VVldSMDQ0ZW5SeFlWZEhkekpMWlhoMU1tMHRjemh1T0ZKMGRITlJkVEZvWDFobVptaFJZblZTWTJRMmVXZFpObkJHYzBSSWJtTlFZMWd4Y21saVlYQkNlazlrY1hsWFEzcGxWMHhFV1Y5c2IyNU1VamxrTkdKNWRtNDBVRUl0TjNKSVJXVlVaMkp0V1VKS04zUmlhMHBFUm00NWVIRnJlRnBOVjJ4cFNVMWhObXRaVTFoSmNVcGtaRmMxYzNKWGFqSkVVV1JHYjNwa2VFMVVjWGx0UVhOdmNrSmhNM2R6T1VWcVUybFBSSEYwZUMxdE0wRkVNMlZRU2psbU9YSkRhMjExUTJ4UFZUbDNTV0YzTUZSM00wMTNXVGRxVFRsMFoydHVRa3N0ZFc1amVXUnhNR1JJWnpoaGVuUTRNemhsWjNRM2NIcHRSRGxhWDBNNVlsbFVTbkpWWW5KeVRVRjNlWFJDTm5oQlNUSmhWblpQVGpaSVVrcE9PRzVLVWxJNVYyWjFTRVJJZWtaWk5GaDJWMEozYlVwbVUwRjRNVmswTW10cVdFNVVTakprVG5KS1owbHJZazQ1WlUwMlVYSlliblZpWW5CRlpXWkRRVjlqWDBSdlVYbHZNVmh1YmxJNExWTjNZWHBKZVRSUWFYVkpOMHg2TTNJM1ozWnVNMFUzZHpSamVsQTRVbDk0WTJkaFYzWXRjM2h1Ym5oeU1WOVRaVkV4V25RNVJXUjFaMmgyUzNOS1p5MXdWak0zYTNaWmMzWXhTMWMzTm1NemRGQTBVRzgwTUhkQ1drOXJhMlJET0d4dVFXRk5iRFYwYmxkMlRGWjJZbFpPVW5sc1JXczJja2Q1Y2xSb2VrRnhTa3hPU1RReVgwUnBXblkzVnpCWWNscHlTVkY0TTJKNU1VeFFNUzB0Y3pSZldqTXRUSE5vVEVweVRGUldZMnRIZHpCNE1GazFXR1p3UkVSemRsSklORWxuVGpWQ2EzbDBSa3ROV1VWdk9XSnNVbmRNY25RNGRFUm1ZMnM1YlROS2FuSkVjMHhNVjBoaVFqY3pRM0l5ZWtVMWJFTlRZV1YwVXpFMllUSkVkR0owU21oTFNsVklkbWR4Vm5adFJVeFlWRkZCTkhOYU1XZ3hjbWx5WXpscGNFVjNNbHByYkdzMGVFZEhXRXhyYUdGUmFDMXhWSFI1TjI5S2Iyb3lOMVZ1VUdka1NqZHBaWEV4T0VGalVGaDRUMEpRT0hvNVRHWXhjVmRuT1MxV1RVSk5ValpYYldFM1IxZHJhMDgzY1RkbE1tNTJlSE5wWkdaWllVbzNURjl5WW5kdVRVSmFVVTVQYmtsMlNWWmtMVjl5UVc4d1VHOTNaR2hMYm10Sk5FRkdNRTB3VEVsTk1rWlZRVGh0Tm5jM2RFNDJWMHRLTm05WFNtY3RXVkJuYkY5R1dqbFFTVmQ2Y0dWblNqWlFhMHBwTm1nelVIaHhkVWhRUzAxMVdrSmxSVkpUTWxJMVdYTnVjbWxUZG5SdWVqSmFja05DUmxWbmFGaDZUbDl4UkhBNGRYRmFZbEUyU1ZKZlNIUkhYMlZIZURKMU1EZGFhMDluTFRsb1R6SlZhSEZ0UWkxSmJ6WjRVSFpwTUdKWk56TmhMVEJ5WXpZM1lVOWxjRkJLTTFFeFdYSmtibmw2ZWtGVWMwWTVkRkJNTjBoNlRUZzNaM2hVU25ORVREVkhSRUpuYzJweVgxTkZjV0p6TjBNelRtNUVXVWhCVEc5UlNqWk9WVWhXVGxjNGExVnhPV1UzYkdnNWVqUXdjRW95TWxOVFdrdGZZVk56TWpoWVJFODFla1ZGZUhsNk1VUmFVbFUzVEZaVlNtOXNkVE5mZWxOSVpGOWZMVWd5YzNKMGEwWjJTMlJUTkRaTGNIbGFlazlYVjA1RVVuRkVWMDFQZFVseVIwb3RTbmhNUzFSYVkyazJTRVpFZUd0MlVISjJiazB6TW1SaWVrSjNPWFJaWW10cFl6Rmpja3B5YW5kaWNsTldjbkZJU0VWU2RrOVNZelpHTmpKS1NEZEZPWGR6WVRka2R6RmpZWE5XTTJwMlRFOU9RVGRqTW5Oa1lsSkRYemxXTUhKTGRYZHRiM1JLTjNOcFJuQlJiVXg0YWxONmFUZ3paa3R0UVhSb1RuY3piRXRsZWxadVpsTkVOREV4V0d0NWNuVm9TMHd3YTI1c1lXeEtOMVZSWWs1MGF6VXVUVVIxWDFkTVoxRk5PRlF5UjNsNlluSjFZalJKVVEua2tNemRNczdKLU5vOTg5QmFTVUxfb1N3TmxsOElaYmprdTZXWVFtQm80QSIsImV4cCI6MTY5NTE1MTg4NiwiaWF0IjoxNjk1MTUxNTg2fQ.kxHz4cYFMfoSmZVL1KtrmVG-_oU4E8bEjNbdSZe_Niw',
+  callbacks: [
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            'Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login.',
+        },
+        {
+          name: 'messageType',
+          value: '0',
+        },
+      ],
+    },
+    {
+      type: CallbackType.TextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            "window.QRCodeReader.createCode({\n  id: 'callback_0',\n  text: 'pushauth\\x3A\\x2F\\x2Fpush\\x2Fforgerock\\x3AJustin\\x2520Lowery\\x3Fa\\x3DaHR0cHM6Ly9v9807987ddzLmZvcmdlYmxzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249YXV0aGVudGljYXRl\\x26r\\x3DaHR0cHM6Ly9vcGVuYW0tZm9yZ2VLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmVnaXN0ZXI\\x26b\\x3D032b75\\x26s\\x3DFoxEr5uAzrys1yBmuygPbxrVjysElmzsmqifi6eO_AI\\x26c\\x3DXD\\x2DMxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw\\x26l\\x3DYW1sYmNvb2tpZT0wMQ\\x26m\\x3DREGISTER\\x3A53b85112\\x2D8ba9\\x2D4b7e\\x2D9107\\x2Decbca2d65f7b1695151603616\\x26issuer\\x3DRm9yZ2VSb2Nr',\n  version: '20',\n  code: 'L'\n});",
+        },
+        {
+          name: 'messageType',
+          value: '4',
+        },
+      ],
+    },
+    {
+      type: CallbackType.HiddenValueCallback,
+      output: [
+        {
+          name: 'value',
+          value:
+            'pushauth://push/forgerock:Justin%20Lowery?l=YW1sYmNvb2wMQ&issuer=Rm9yZ2VSb2Nr&m=REGISTER:53b85112-8ba9-4b7e-9107-ecbca2d65f7b1695151603616&s=FoxEr5uAzrys1yBmuygPbxrVjysElmzsmqifi6eO_AI&c=XD-MxsK2sRGa7sUw7kinSKoUDf_eNYMZUV2f0z5kjgw&r=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW0vanNvbi9hbHBoYS9wdXNoL3Nucy9tZXNzYWdlP19hY3Rpb249cmVnaXN0ZXI&a=aHR0cHM6Ly9vcGVuYW0tZm9yZ2Vycm9jay1zZGtzLmZvcmdlYmxvY2tzLmNvbTo0NDMvYW019hY3Rpb249YXV0aGVudGljYXRl&b=032b75',
+        },
+        {
+          name: 'id',
+          value: 'mfaDeviceRegistration',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken3',
+          value: 'mfaDeviceRegistration',
+        },
+      ],
+    },
+    {
+      type: CallbackType.PollingWaitCallback,
+      output: [
+        {
+          name: 'waitTime',
+          value: '5000',
+        },
+        {
+          name: 'message',
+          value: 'Waiting for response...',
+        },
+      ],
+    },
+  ],
   stage: 'QRCode',
 };
 
@@ -333,22 +338,40 @@ export const recoveryCodes: Step = {
   ],
 };
 
-export const emailSuspendStep: Step = {
-  "authId": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlRFU1RfTG9naW5TdXNwZW5kRW1haWwiLCJvdGsiOiI0Ym8yNzlkMDBkNnJtcjRuYzkycXNmaWtqdCIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaW9uSWQiOiIqQUFKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTVQVjB0b2RVOHdNVTAzWkhod1VWcDRiVkpKYlZobkxtRXhVVTl4TkhGVk1TMVlWRmRpUVdaSVYwaFJUMjl1VWpWWVQyOUhXVVJ1ZW1oaVlXZHJTM1pvTUdWcFFYUjVVbmRWUzBSaVYwSmlNVmR1WWs5MGJFVkRXbkV6VW5aU1JrVnlhazV2WmpCQmFtMDVjRWRRYlVneE1YQjZaR3BJY2xWRmMxaGpiMGsyVTFKbVJtOTBabEJ0VFV0cU9XSlpaWGRQU3pKaFpGRkZVbUpJV0RoRk5XWnBXRVpLVGtSalpHUkRWVVJOT0hsS2RYUlRlbU54ZWpRNGJtZHhTRWN3U0U1UVl6QnliMVV6WlU4M2IweFpaa2sxV1dKQ1V6SnpRbVJpTWtWaldGWjVXRWgzUzJKclJrdDVOSEpaVW1kcU1ISTNNVEZDYlRnMlZsaHZNR3hTTlhVd1ZVVkZSM00yUW1GSFVHdGxVbmt4VTNZellYbzNWVEkzZW14aE9HVlBSWGMyWVZSeVEwZzNVWFJEUVhBeVdscEtlbmhpUWtWMVJUVktObFJxTW1SamFsTnFVM2RGUzJWT1JrZGZZbk5VWkZaT04xQTFYMng0WlRKMWRsTnVOVVZpWjNKcmMwMHlWRGQzVEdaQmQweHhUMVEzUjIxNFFrZFFOMlZqZVUxZlExTTBjMmhDV0VvMU1GODBTMEZsV0VwT01XVkZWekJ3YjBWTlZIcFZVemswZGxodWRUVnNjbU4yTTBsWlVsVlBiWFJRY1RoMFkxbE9lVUZzVmxacFozQlRMWFZVYTFWVFVETk9SWE41U1RSSFEzUTNVV3BaVW0xRlVrd3RPWEppV2pSVVpUbHpXakZsVXpKWGVWQmpTRTFpU2podVJUTjNlV2xzUW01d1VsUXlZbUoxYVdWU04zSlNiMlpsTVdadVNWRXphMWhpUWs1ZmNFeGFhWGRCWVhoalMxSXRSVGxqTldORWJIQlNYMlpuVlcxQ2VFZzRTSGRoWkZSMmVFTklVVk53ZERVMVUzcHBOUzF0ZUdveWJYTmxVekZHWXpjNVdGUTVTWFZ2Y21KemQzQk5lRWRmTlUxaGRtRllXazV0Um1Kd2QxRTNMV3RITkVWd1dGSlZiRXhGTVhWVmJWRkRPVkJDVXpWdmVrUnlNME5WWVVkd09FOU1hRFo1WlRaU1RWUTNXbWxaU0RkWlpqbHNVM05zVUhGSGMzZENXVGhmUVZaTVpWVkdNa2MzYlRod1VXeDZlSFV3TW0xU1dpMHplbEZVZDBkM1gzUXhVazgxWDFWaGQwNXdRM2xRVFRCQlEzWndUM2t4YTJ0cVpqWTFTM0ZLYzNCeFlsTnNWMWxNTkVkWE4ycDJOVVJaYWxsMWJVWm5SRUp5TUdWd01qQkZOSE50T0VRNWFFSjNTVkZXZDB0V2RFNXVUaTFRTkU5WFduRTNXVGcwYzFreVRpMXpRbk5CU25BdGREVmtWemhGUTBNNVlXSlFSSGxCWW05WlJERTFOVEZrYjFvMmNHRXlOR1UwWVRsSmQwMHRRa2xuTjI5UkxtaEdhVTFhTjJRMGIxbEJiVzlPVlRoWFNFNDJSMEUuNnpYWWxaX29NTmhzXzJjWFBhd0FfSUZiaTFYSjN0MmJrZG1SeFIyZmZDbyIsImV4cCI6MTY5OTU0NzgyNCwiaWF0IjoxNjk5NTQ3NTI0fQ.H45_nxKB1KConWvZcN6_ngmxpjknBv3U6H-TnoOKdnI",
-  "callbacks": [
+export const recoveryCodesWithName: Step = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlBhc3N3b3JkbGVzc1dlYkF1dGhuIiwib3RrIjoidXVnOHNxNjNwNGs2YnRzN2NoOHZzYnVjbDQiLCJhdXRoSW5kZXhUeXBlIjoic2VydmljZSIsInJlYWxtIjoiL2FscGhhIiwic2Vzc2lvbklkIjoiKkFBSlRTUUFDTURJQUJIUjVjR1VBQ0VwWFZGOUJWVlJJQUFKVE1RQUNNREUuKmV5SjBlWEFpT2lKS1YxUWlMQ0pqZEhraU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkuWlhsS01HVllRV2xQYVVwTFZqRlJhVXhEU214aWJVMXBUMmxLUWsxVVNUUlJNRXBFVEZWb1ZFMXFWVEpKYVhkcFdWZDRia2xxYjJsYVIyeDVTVzR3TGk1SVdHRXhaek5EZUU1MldGZFhVblpzV0ZOdVNtVm5MamRuWkZkUmFWRlZPRmhQUWsxcFpuZEZjMWx5T1U0MFlWaHdjbkJ4V0ZGT01IQlZaa3BTUjB4WFVUUnBkR3BNTFRKblVGUkJlbEpPVW0weFJTMVlXRTlzVGxoRlluZEVSVmxvUWtSTlozbFlZVWxaVmpZdGRGSmFOVmMxU2twbU56RTVTSFZGVFV4T2VHeHlWSFpHVkVJd1UweHBTVWxQWWkxMFExY3RaVFZ2ZWpWM2NDMDVUM0ZKZW1KUVUwazRNRk40Ukc5bU9FRllNbWhoVVhCeFVrVnFSMU5oWlVsaVEzTjZNWE53WWpOVGExUXRZVFpVTTFWUk0wTkZjRnBPWDJGWmRHOUVaekJRVW1ad1FVOW9aV2c0WmxGVGNWRTNiVWxmYzJOSGVURnJZVTVUWWxjMkxVRlhZVll6YVdoUVNDMTZjbHA1VDJaU1EyUlBTVVpPVnpoMVdXeERUWG8zVFRaemFWODJZVlpSTVZRelltbzFiV3BDTFZrMlIwbDNSR1kxU2pSeVh6SlpZMWxsYzBsWVpVcGhhSFJHWlRSUmVUVjBlbVp5YkRWd1Z6WTNUa3AxVEZCMVYzSlVObkI2WDFBMGRGbG1UM0l5WjNkRE1UbG5Wa1ZxYW1KNlZVUkRkM0l3VERsWFNtbE9NM3BIZUZoeUxWTk9WMkp1YTBscFVtNVBPRWRoVEZSaWVFSk1iWFl0VEc1dk5IQjJRbGxIVWprNE5rNVdjMFJqWmpKVWFrZDBWVE5mZERSbVptRjNaMnRyWWtOclJtdDZXRFV5Wm5RME0ySlFabGRMWmtaRE1Fc3piRlpoT1ZGalozbGtVR3c1UW5WeU56bDBTbmR5TWtwSGIxZEpTRXB2VDJWbWIwOXZkekJTUkRkWWFFbDBTMVZoTVMxdFZuTlpaRnBDVG1oWVpuQnNlVW96TTFGRE5IZzRiSEV3VG00NVNWOW5TV3hRVEhJMmNHRTJaM0JRYUc1aVNXVkpkVGhRTUZac2FtSjRjbk00Y1MxRlEycG5VRU40ZFRWSVdHZEVOVVZxTVRKelozVjVWV0Y2WDAxbmVVNWhaV3Q1Wm14b1MydG1RbkpsYWxOamJuWmtSRFphWjJoTlowaFpjVE5EWm5oUE9XZ3dkbXMxVWpSME0wRktTbTl4UVU4MlgzVkVTRlpTVWpWNVdWZHNaVEZNUWpadVpFVnhOVTQzWW1WMlRGbFRZbTUzYW5sTU9HVmxaMDlmYnpJMWMxcG9iRTl1TVRaamRrTTNlRmh6T0ZOSmNFcDFVM1paVjJaVWJqazBWR3hHYmtOVWNFMXdhMWcxUVdOSVFWSnZWa3hNV2xSdk5YRXlNbEJpZG5oRGIyaG9hRkJKYTJGcVIwMTZlRmh1Y1ZCSU1VNHRVVGRRT1VSRk1WYzRXRzV1UjE5RmFrbHhORmRtVjFOeFluRmpjMngyT1haWU1XZGxSR1ZXUlZGNVEwdE9jRWRJUzNWaFZXb3dWbDk1WDNaemVWUldiRFJUVW5CUFpUWkRla3hqYzBsM0xXYzFVMk5STkRscGNERmxiVmxGTjI4MVJGVldZazlNUTBKNVdVUTFiamhEUWpOVE4xaHBkSFV3YUVORVMxOWtVM1ZUWmpSQlJreFVhalZ2VjNFMlpETnFlRFIzWkVwRlozbEVYM2R1TlVoSk1FZGxlbmg2Wldsb2RHOVdjVXh1WTNKS2JHUTVZVkZ6TFVKSFlrbHRXRk16UXpkM01rTkNjemMxUjBoT1l6UXdVa1JFUVZneFN6UnVObTVwZDAxTFpXRnRVbkJZTVZOR1dtMDVRVFJTUW1Rd2QyNUVYMHR6VDFsVUxUUjFTMGQwWkhGNGIwNXZUR2hUUkd0TlVrNXRNMEUwTFRoSVFreHhhMEpHYWkxcVMwRnpkRWxPZDFoV2IyaDJNR3gzYXpGSVNFOW1ZMXAyVDNKMmRUQXlXamMwUlZJMk9GODBlV3BNTWtwUFowdzNSVzVHZUVwdVYzaDRUR2RrVlZwM00xSm5hbTg1Y0ZkV2VXVXhRazlvV0hCdlREZzFRM0E0TW1nd1drSm5XRkZMV1RSTU0xOWFiREp1YTFBMmNYbFpNbHBFYkhCSWRHaFlhRFJ6Y1hBMGFYTkZkVGhSTnpjMlNYY3diVTQxZURGS2RrRnRlWHBZVlhCTGRVbzNTVTQxZWtWSmJGSnNWRWx0VlZNdFFrdHNTSGxvVTJKR1RtSlhkMEZvZDBaSk5uQjJlSEZZYTBKVWEyWkxjVlppYlZvelNIQlhWRzlYTURWeWFHWjZTVGsxTjBnMlpqSmxZVmxaWVdGb05sUnpibWxKVlU4NVNsSTJSV2xIZG5scmQzRkZWbkoxWVV4b1VsRnFRMUptUldSbVRGRlJRVkV5WW5oTlJFcG9kMlV5WW5wMlVsbHFNV2hmVWw5elVEaGZVWEYwYVhnMlNHOWhiRlpVT1ZKdVJXeGpSMlZFYm5seVVrTTJRa2hHZVdJeE1XcGhSbXBuTTBKS2JHUlpXak5NYWxaT01VUlFTekpoYWpCcU16VnRWeTEzYTNGVVQwRnJUV1I1ZDE5WFZFSXRWekJ0WVV0TmJFUm9VM1J5T1ZKcVZETlhVek5EVmtWRFRFdzBiMUpPTW1SMk1UUnlWRk41UkRscVNrUnhPSFJyTm1kb1gwUjJTV1ZKWm5Kd1NHdzFlRWs0UzJ4dWEyeEVjMnd0Y1VORWJEY3hVbEJCT0VoaE1pNWljbEk1YlROWk5WY3hRa0paU0ZOVlJrMW9ObmRSLmtCNjlONWZuMXdBQm9WU1JQMDcxTXdyeHJrSFpjSjViXzBCdzQxMHRYb0UiLCJleHAiOjE2ODczNTc3MzksImlhdCI6MTY4NzM1NzQzOX0.8QcUHytp7PWmxLWVVg6F3vxbnCGv_99m15LDXpsXjDE',
+  callbacks: [
     {
-      "type": CallbackType.SuspendedTextOutputCallback,
-      "output": [
+      type: CallbackType.TextOutputCallback,
+      output: [
         {
-          "name": "message",
-          "value": "An email has been sent to the address you entered. Click the link in that email to proceed."
+          name: 'message',
+          value: `/*\n * Copyright 2018 ForgeRock AS. All Rights Reserved\n *\n * Use of this code requires a commercial software license with ForgeRock AS.\n * or with one of its affiliates. All use shall be exclusively subject\n * to such license between the licensee and ForgeRock AS.\n */\n\nvar newLocation = document.getElementById("wrapper");\nvar oldHtml = newLocation.getElementsByTagName("fieldset")[0].innerHTML;\nnewLocation.getElementsByTagName("fieldset")[0].innerHTML = "<div class=\\"panel panel-default\\">\\n" +\n    "    <div class=\\"panel-body text-center\\">\\n" +\n    "        <h3>Your Recovery Codes</h3>\\n" +\n    "        <h4>You must make a copy of these recovery codes. They cannot be displayed again.</h4>\\n" +\n    "    </div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "CyFrHnLq2x\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "x95uukzd3C\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "FHmdsD8khD\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "s77okhRxLX\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "XuTOVS00K6\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "CWmtqmR34b\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "N9v9L1ultI\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "ciA0MUvRRn\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "iVowPQpu7V\\n" +\n    "</div>\\n" +\n    "<div class=\\"text-center\\">\\n" +\n    "RsRY6CkwF3\\n" +\n    "</div>\\n" +\n    "<div class=\\"panel-body text-center\\">\\n" +\n    "        <p>Use one of these codes to authenticate if you lose your device, which has been named: <em>My Device Name</em></p>\\n" +\n    "</div>\\n" +\n    "</div>" + oldHtml;\ndocument.body.appendChild(newLocation);\n\n\n`,
+        },
+        { name: 'messageType', value: '4' },
+      ],
+    },
+  ],
+};
+export const emailSuspendStep: Step = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlRFU1RfTG9naW5TdXNwZW5kRW1haWwiLCJvdGsiOiI0Ym8yNzlkMDBkNnJtcjRuYzkycXNmaWtqdCIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEiLCJzZXNzaW9uSWQiOiIqQUFKVFNRQUNNRElBQkhSNWNHVUFDRXBYVkY5QlZWUklBQUpUTVFBQ01ERS4qZXlKMGVYQWlPaUpLVjFRaUxDSmpkSGtpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOS5aWGxLTUdWWVFXbFBhVXBMVmpGUmFVeERTbXhpYlUxcFQybEtRazFVU1RSUk1FcEVURlZvVkUxcVZUSkphWGRwV1ZkNGJrbHFiMmxhUjJ4NVNXNHdMaTVQVjB0b2RVOHdNVTAzWkhod1VWcDRiVkpKYlZobkxtRXhVVTl4TkhGVk1TMVlWRmRpUVdaSVYwaFJUMjl1VWpWWVQyOUhXVVJ1ZW1oaVlXZHJTM1pvTUdWcFFYUjVVbmRWUzBSaVYwSmlNVmR1WWs5MGJFVkRXbkV6VW5aU1JrVnlhazV2WmpCQmFtMDVjRWRRYlVneE1YQjZaR3BJY2xWRmMxaGpiMGsyVTFKbVJtOTBabEJ0VFV0cU9XSlpaWGRQU3pKaFpGRkZVbUpJV0RoRk5XWnBXRVpLVGtSalpHUkRWVVJOT0hsS2RYUlRlbU54ZWpRNGJtZHhTRWN3U0U1UVl6QnliMVV6WlU4M2IweFpaa2sxV1dKQ1V6SnpRbVJpTWtWaldGWjVXRWgzUzJKclJrdDVOSEpaVW1kcU1ISTNNVEZDYlRnMlZsaHZNR3hTTlhVd1ZVVkZSM00yUW1GSFVHdGxVbmt4VTNZellYbzNWVEkzZW14aE9HVlBSWGMyWVZSeVEwZzNVWFJEUVhBeVdscEtlbmhpUWtWMVJUVktObFJxTW1SamFsTnFVM2RGUzJWT1JrZGZZbk5VWkZaT04xQTFYMng0WlRKMWRsTnVOVVZpWjNKcmMwMHlWRGQzVEdaQmQweHhUMVEzUjIxNFFrZFFOMlZqZVUxZlExTTBjMmhDV0VvMU1GODBTMEZsV0VwT01XVkZWekJ3YjBWTlZIcFZVemswZGxodWRUVnNjbU4yTTBsWlVsVlBiWFJRY1RoMFkxbE9lVUZzVmxacFozQlRMWFZVYTFWVFVETk9SWE41U1RSSFEzUTNVV3BaVW0xRlVrd3RPWEppV2pSVVpUbHpXakZsVXpKWGVWQmpTRTFpU2podVJUTjNlV2xzUW01d1VsUXlZbUoxYVdWU04zSlNiMlpsTVdadVNWRXphMWhpUWs1ZmNFeGFhWGRCWVhoalMxSXRSVGxqTldORWJIQlNYMlpuVlcxQ2VFZzRTSGRoWkZSMmVFTklVVk53ZERVMVUzcHBOUzF0ZUdveWJYTmxVekZHWXpjNVdGUTVTWFZ2Y21KemQzQk5lRWRmTlUxaGRtRllXazV0Um1Kd2QxRTNMV3RITkVWd1dGSlZiRXhGTVhWVmJWRkRPVkJDVXpWdmVrUnlNME5WWVVkd09FOU1hRFo1WlRaU1RWUTNXbWxaU0RkWlpqbHNVM05zVUhGSGMzZENXVGhmUVZaTVpWVkdNa2MzYlRod1VXeDZlSFV3TW0xU1dpMHplbEZVZDBkM1gzUXhVazgxWDFWaGQwNXdRM2xRVFRCQlEzWndUM2t4YTJ0cVpqWTFTM0ZLYzNCeFlsTnNWMWxNTkVkWE4ycDJOVVJaYWxsMWJVWm5SRUp5TUdWd01qQkZOSE50T0VRNWFFSjNTVkZXZDB0V2RFNXVUaTFRTkU5WFduRTNXVGcwYzFreVRpMXpRbk5CU25BdGREVmtWemhGUTBNNVlXSlFSSGxCWW05WlJERTFOVEZrYjFvMmNHRXlOR1UwWVRsSmQwMHRRa2xuTjI5UkxtaEdhVTFhTjJRMGIxbEJiVzlPVlRoWFNFNDJSMEUuNnpYWWxaX29NTmhzXzJjWFBhd0FfSUZiaTFYSjN0MmJrZG1SeFIyZmZDbyIsImV4cCI6MTY5OTU0NzgyNCwiaWF0IjoxNjk5NTQ3NTI0fQ.H45_nxKB1KConWvZcN6_ngmxpjknBv3U6H-TnoOKdnI',
+  callbacks: [
+    {
+      type: CallbackType.SuspendedTextOutputCallback,
+      output: [
+        {
+          name: 'message',
+          value:
+            'An email has been sent to the address you entered. Click the link in that email to proceed.',
         },
         {
-          "name": "messageType",
-          "value": "0"
-        }
-      ]
-    }
+          name: 'messageType',
+          value: '0',
+        },
+      ],
+    },
   ],
   stage: 'EmailSuspend',
 };
@@ -434,4 +457,3 @@ export const webAuthnRegistrationStep = {
     },
   ],
 };
-

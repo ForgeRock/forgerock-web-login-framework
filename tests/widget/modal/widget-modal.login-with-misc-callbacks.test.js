@@ -32,14 +32,7 @@ test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   // TODO: Figure out why regular clicks don't work: https://github.com/microsoft/playwright/issues/13576
   await page.getByLabel('Yes').dispatchEvent('click');
   await clickButton('Next', '/authenticate');
-  ``;
 
-  await Promise.all([
-    // NOTE: Make sure timer is same or more than set in Polling Wait node
-    page.waitForTimeout(2000),
-    // Spinner
-    expect(page.getByRole('status')).toBeVisible(),
-  ]);
-
+  await expect(page.getByRole('status')).toBeVisible();
   await verifyUserInfo(page, expect);
 });

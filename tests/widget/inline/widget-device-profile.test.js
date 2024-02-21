@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { asyncEvents } from '../../utilities/async-events.js';
 
-test('collect a device profile after login', async ({ page, context }) => {
+test('Modal widget with collecting a device profile after login', async ({ page, context }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
   await context.grantPermissions(['geolocation']);
@@ -11,6 +11,8 @@ test('collect a device profile after login', async ({ page, context }) => {
   await page.getByRole('textbox', { name: 'Password' }).type('j56eKtae*1');
 
   await clickButton('Next', '/authenticate');
+  await page.getByText('Collecting Profile').isVisible();
+
   const returnedPage = page.on('request', (request) => {
     const data = request.postData();
     const parsed = JSON.parse(data);
@@ -22,7 +24,7 @@ test('collect a device profile after login', async ({ page, context }) => {
     expect(input.metadata.browser.userAgent).toBeTruthy();
   });
 
-  context.clearPermissions();
+  await context.clearPermissions();
 
   returnedPage.removeListener('request', () => {
     console.log('removed');

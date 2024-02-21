@@ -93,7 +93,7 @@ Linking CSS in HTML example (you may have to copy the CSS file out of the npm mo
 
 ```html
 <!-- index.html -->
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!-- ... -->
@@ -145,7 +145,7 @@ We recommend you add a new element on which you will mount the Widget to your st
 Example:
 
 ```html
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <!-- ... -->

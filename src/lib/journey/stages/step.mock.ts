@@ -224,15 +224,15 @@ export const usernameDisplay: Step = {
       type: CallbackType.TextOutputCallback,
       output: [
         {
-          "name": "message",
-          "value": "jane.doe"
+          name: 'message',
+          value: 'jane.doe',
         },
         {
-          "name": "messageType",
-          "value": "0"
-        }
+          name: 'messageType',
+          value: '0',
+        },
       ],
-      _id: 4
+      _id: 4,
     },
   ],
 };
@@ -837,122 +837,122 @@ export const registrationStepWithTwoKBAs: Step = {
   stage: 'DefaultRegistration',
 };
 
-
 export const successMessagesRenderingStep = {
-
-  authId: "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlRleHRPdXRwdXRDYWxsYmFja19MVyIsIm90ayI6ImRsdGJnMGZrZGZpY2RucXUwZzgzaDh0MHRrIiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNVVTMUV3WDBzd1MxbEVWVTR0VldwYWFqSTBiSEZCTGtSTE1VRlNWakJyY0ZOdU5rSldablp1YVhaSGNtbEpia3M1V0RCS1dWaERNRWxFZVVGeU5VOXdVWGg2T0VkNFExaEViV0UyVnpCNU5qaGxOMmgyV0RGTVpHUXdaRjkwYUd0dWVYcFFhRk0yUmw5WlFXdzBVR2h1TjFkZlEybGthRVpGUmxkdlZXbzNNbVE0VW1nNE4wOU9ZMDlITjFaUFVHdDJhbmxQVkRKR2VrODViWFIyTlZFMVdVbGxaMGhpWTBKdlVVZFdlR3RpV0ZSekxYa3hTVEJrVmpsMWExZGhVVzFJT0VaU2RYZFlXR0pwVUU4dE5FNDFObUp6ZFhCV05uVndOWEZtVWt0WVQycGtSakJuYzBSSExUQk9iMk5XVHpNd1FXdE1abUY1YmtWVWRYZFJjbXcxVG1rMWRrWmpObE5JWmtwdlIybERWMlJoVFcxeFMySmtZak52YTI1U09VcDNkblZmTWxsWVlsSnVTWGhqZGtSdWIySlVNMWRUVkZsdlpuUnpUMWxxUWkxVWNuWmlURk5GVUhGSE1EVkRPRlZyVWxSclZ6bFJka1U0UlY5MmJsSnRjVFZZVEZWWWVFZFllbEpuV1dabWEzTTJaWHBSU1dSUVMxaFNNRlU0WjFaalJVdEdlbkZOVWtaalYyMVBOelF6YldGUlZHRnpZV3RuZDBSQlVEYzVia0pJUzNKcFNUbHFielZPYjFVeUxWZDJNMDVXY2xKeU1VOTFPWFF0U0hSa1UybGFRV3N6WWw5amRDMHRSSFl6YTNFMmRVRm1NMmhpVVZBeE4yTnhOVTV2TmtobVJUWlhOMTlMZWtodVdFMXVZVTVTUm5OMlMyTjVOSGRXT0VKMFZXUktNM281UldGSlRWWnFSemR5VkdSS1JIWm1USFJYVDBsblVscENVR3hqTldscVdVWkpORGh2WlVWbVJHUTRNMGRwYjBGbWVGcFRTbUZZV1hkV1ZWVTViWE5ZTTJSSFlWUnZZbGhLUVhWdlptZFhUVVJ4Ym5KTFkzZGZjRmRSUVVadVlYaDJUa1ZYZG1wSVlYQkdPSFowUlRoMFpXeGhNWEk0WjJWRE5qbHJTRzFGY0dFeWNXTkZOWEUxVm5Cc2EyVnRNVWhRVTA1T1JWRjVPVFZqYWtWSVdFbHhXRTVQTmtsVlZFRk5SV05ZVlRBNVoyVnNWelpxWjFwTFZUSm5NbTlYWmxGR2VERnRURWRRTFcxcFVYTk9RalJTVGxsd05XNW9iV1Z0YlZwb1ZrdGplR1Z0UzJONGRrZzFSbXBGYTBKNVZWZDBVRlJWYVc4NFFVMXVTalUxWkVkRGFEaGtUbXhCYUdaaGRXZFhTV3AwTFVOdGJDMW9RVkZ4VlVkR01XcDFUalZyWDFSbVNIVTJaRFJDTVRsbVpGVXpTMFZ6V1ZGVldUVndiVVpmTkc5WllYRnJOeTExYjNwSWRHNXpaalZDZWxGYVNFTlVkM3BpT0c5b01DMTNWMVpZZUVWM1VVbEdUSE15VmpCQ05rSlJNMTlHVHpaamJXUm5aa1puWldGV01GOVhRMlp2YTBoRmFuVm1MWFJtZDNsWk9HVnlVRFZMWkZZMWFHWk5NblpMYkVSWmNrbHVaVTk1UTJFMVNIbENSMTlrT0hsS2FXMUZTMmxOU25CRFl6RmxjMFpwZWxwVVZuTk1NMmRaUmpCNlRXYzRla1F6UjFkeVZFcDJkMlUzWkROWVRqYzNVWFJyVWt0dGRHMU1hM0pwUm1WNWNEVkVieTFaVjNSbVVHNXBORE5GY2tKTVRUSjVTVWx2Y3kwdFJWOU1RM1JMVm5SSmMxOXBWbTloV1U1d2RtMXJiV2RVWlRoUVpUZEZRVXhOY0VWUFVXNDFSVkJuUmpjd1JVeHdValU0UmtOak5qaGlVRFJVVURVNWF6UnRWamxpYmtjM2JqYzVOV1JSV1dwUFZHWlVWRVJCUkZSYVVYVkROV05OTjFSemNUZDNURGczVTBGTWRFOTJYMUJETkdRNVkyOXNUbnBWWmpSMFdIcEdhRTFoUTNBMVZITnVXazlQYjJ4U1gzZzVja1JxZEcxeFZFMVpiMUExTWpoeFdYVnhSVkpWYlVOb2REWlFkV3N1VWpsWFowNVNSRWxZVW05UmVFWnBiV1ZsVDFaQ1VRLlpuV2xST01kVEhveFFuYTBWOERkdTFRZVRockhOM0hrOENSaDhtMnN5T3ciLCJleHAiOjE2OTQwMzAzODAsImlhdCI6MTY5NDAzMDA4MH0.cyApCtDHSS0DTUCqqs958ckBJ23DCf7DvsRUgQr0gEM",
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlRleHRPdXRwdXRDYWxsYmFja19MVyIsIm90ayI6ImRsdGJnMGZrZGZpY2RucXUwZzgzaDh0MHRrIiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNVVTMUV3WDBzd1MxbEVWVTR0VldwYWFqSTBiSEZCTGtSTE1VRlNWakJyY0ZOdU5rSldablp1YVhaSGNtbEpia3M1V0RCS1dWaERNRWxFZVVGeU5VOXdVWGg2T0VkNFExaEViV0UyVnpCNU5qaGxOMmgyV0RGTVpHUXdaRjkwYUd0dWVYcFFhRk0yUmw5WlFXdzBVR2h1TjFkZlEybGthRVpGUmxkdlZXbzNNbVE0VW1nNE4wOU9ZMDlITjFaUFVHdDJhbmxQVkRKR2VrODViWFIyTlZFMVdVbGxaMGhpWTBKdlVVZFdlR3RpV0ZSekxYa3hTVEJrVmpsMWExZGhVVzFJT0VaU2RYZFlXR0pwVUU4dE5FNDFObUp6ZFhCV05uVndOWEZtVWt0WVQycGtSakJuYzBSSExUQk9iMk5XVHpNd1FXdE1abUY1YmtWVWRYZFJjbXcxVG1rMWRrWmpObE5JWmtwdlIybERWMlJoVFcxeFMySmtZak52YTI1U09VcDNkblZmTWxsWVlsSnVTWGhqZGtSdWIySlVNMWRUVkZsdlpuUnpUMWxxUWkxVWNuWmlURk5GVUhGSE1EVkRPRlZyVWxSclZ6bFJka1U0UlY5MmJsSnRjVFZZVEZWWWVFZFllbEpuV1dabWEzTTJaWHBSU1dSUVMxaFNNRlU0WjFaalJVdEdlbkZOVWtaalYyMVBOelF6YldGUlZHRnpZV3RuZDBSQlVEYzVia0pJUzNKcFNUbHFielZPYjFVeUxWZDJNMDVXY2xKeU1VOTFPWFF0U0hSa1UybGFRV3N6WWw5amRDMHRSSFl6YTNFMmRVRm1NMmhpVVZBeE4yTnhOVTV2TmtobVJUWlhOMTlMZWtodVdFMXVZVTVTUm5OMlMyTjVOSGRXT0VKMFZXUktNM281UldGSlRWWnFSemR5VkdSS1JIWm1USFJYVDBsblVscENVR3hqTldscVdVWkpORGh2WlVWbVJHUTRNMGRwYjBGbWVGcFRTbUZZV1hkV1ZWVTViWE5ZTTJSSFlWUnZZbGhLUVhWdlptZFhUVVJ4Ym5KTFkzZGZjRmRSUVVadVlYaDJUa1ZYZG1wSVlYQkdPSFowUlRoMFpXeGhNWEk0WjJWRE5qbHJTRzFGY0dFeWNXTkZOWEUxVm5Cc2EyVnRNVWhRVTA1T1JWRjVPVFZqYWtWSVdFbHhXRTVQTmtsVlZFRk5SV05ZVlRBNVoyVnNWelpxWjFwTFZUSm5NbTlYWmxGR2VERnRURWRRTFcxcFVYTk9RalJTVGxsd05XNW9iV1Z0YlZwb1ZrdGplR1Z0UzJONGRrZzFSbXBGYTBKNVZWZDBVRlJWYVc4NFFVMXVTalUxWkVkRGFEaGtUbXhCYUdaaGRXZFhTV3AwTFVOdGJDMW9RVkZ4VlVkR01XcDFUalZyWDFSbVNIVTJaRFJDTVRsbVpGVXpTMFZ6V1ZGVldUVndiVVpmTkc5WllYRnJOeTExYjNwSWRHNXpaalZDZWxGYVNFTlVkM3BpT0c5b01DMTNWMVpZZUVWM1VVbEdUSE15VmpCQ05rSlJNMTlHVHpaamJXUm5aa1puWldGV01GOVhRMlp2YTBoRmFuVm1MWFJtZDNsWk9HVnlVRFZMWkZZMWFHWk5NblpMYkVSWmNrbHVaVTk1UTJFMVNIbENSMTlrT0hsS2FXMUZTMmxOU25CRFl6RmxjMFpwZWxwVVZuTk1NMmRaUmpCNlRXYzRla1F6UjFkeVZFcDJkMlUzWkROWVRqYzNVWFJyVWt0dGRHMU1hM0pwUm1WNWNEVkVieTFaVjNSbVVHNXBORE5GY2tKTVRUSjVTVWx2Y3kwdFJWOU1RM1JMVm5SSmMxOXBWbTloV1U1d2RtMXJiV2RVWlRoUVpUZEZRVXhOY0VWUFVXNDFSVkJuUmpjd1JVeHdValU0UmtOak5qaGlVRFJVVURVNWF6UnRWamxpYmtjM2JqYzVOV1JSV1dwUFZHWlVWRVJCUkZSYVVYVkROV05OTjFSemNUZDNURGczVTBGTWRFOTJYMUJETkdRNVkyOXNUbnBWWmpSMFdIcEdhRTFoUTNBMVZITnVXazlQYjJ4U1gzZzVja1JxZEcxeFZFMVpiMUExTWpoeFdYVnhSVkpWYlVOb2REWlFkV3N1VWpsWFowNVNSRWxZVW05UmVFWnBiV1ZsVDFaQ1VRLlpuV2xST01kVEhveFFuYTBWOERkdTFRZVRockhOM0hrOENSaDhtMnN5T3ciLCJleHAiOjE2OTQwMzAzODAsImlhdCI6MTY5NDAzMDA4MH0.cyApCtDHSS0DTUCqqs958ckBJ23DCf7DvsRUgQr0gEM',
   callbacks: [
-      {
-          type: "NameCallback",
-          output: [
-              {
-                  "name": "prompt",
-                  "value": "User Name"
-              }
-          ],
-          input: [
-              {
-                  "name": "IDToken1",
-                  "value": ""
-              }
-          ],
-          _id: 2
-      },
-      {
-          type: "PasswordCallback",
-          output: [
-              {
-                  "name": "prompt",
-                  "value": "Password"
-              }
-          ],
-          input: [
-              {
-                  "name": "IDToken2",
-                  "value": ""
-              }
-          ],
-          _id: 3
-      },
-      {
-          type: "TextOutputCallback",
-          output: [
-              {
-                  "name": "message",
-                  "value": "Hey, you made it..."
-              },
-              {
-                  "name": "messageType",
-                  "value": "0"
-              }
-          ],
-          _id: 4
-      },
-      {
-          type: "TextOutputCallback",
-          output: [
-              {
-                  "name": "message",
-                  "value": "Hey, you made it..."
-              },
-              {
-                  "name": "messageType",
-                  "value": "1"
-              }
-          ],
-          _id: 5
-      }
-  ]
-}
+    {
+      type: 'NameCallback',
+      output: [
+        {
+          name: 'prompt',
+          value: 'User Name',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken1',
+          value: '',
+        },
+      ],
+      _id: 2,
+    },
+    {
+      type: 'PasswordCallback',
+      output: [
+        {
+          name: 'prompt',
+          value: 'Password',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken2',
+          value: '',
+        },
+      ],
+      _id: 3,
+    },
+    {
+      type: 'TextOutputCallback',
+      output: [
+        {
+          name: 'message',
+          value: 'Hey, you made it...',
+        },
+        {
+          name: 'messageType',
+          value: '0',
+        },
+      ],
+      _id: 4,
+    },
+    {
+      type: 'TextOutputCallback',
+      output: [
+        {
+          name: 'message',
+          value: 'Hey, you made it...',
+        },
+        {
+          name: 'messageType',
+          value: '1',
+        },
+      ],
+      _id: 5,
+    },
+  ],
+};
 
 export const failureMessagesRenderingStep = {
-  "authId": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlRleHRPdXRwdXRDYWxsYmFja19MVyIsIm90ayI6InU1NDV0dThjMzh2dWNqcWYxM3BrYWtsdmt0IiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNURXRzF3V0V0eVJFd3pOblY0WkcwMk5YWlpVblZSTGtKS1ZWRTRZMmxKTkZwaE5VaG5SSFpEVkhadU5GY3dkR0p6V1dGSk9VMVRaRVEyZG1vd2MzbFlkVEJZTkVsTVozYzRkVFo2U1RaM1VubFZhVEEzUTFwUmIxVkNWRk0wUjI1SVpTMUZWMFk0Vm5OMFJFNXhjSFYwVDFWUlQxaE9NRVJ6VnpOWmVFOTBaa1p3Vld4T1RrcERjbTVNZWtvdFpFUlhPRGc1UVVSTWVuUnFUblZ0TVRKVU5VaDBSRmRJZFRkS01UQlliblJuYWtKek5uUlBRVjgxU0RCcVYwUm1iM3B5TVVOYWNuTjBlVWRQVm1SNmRVZHdiakl0TlZad1ZtdFBNRVp1UTNsRFJFOUtNM1J5VUdKYVprVlJiVU10WXpCQmRYUTFiek55Y3pCalFVNURaV1pTUVY4ME5FSnpaV2xUZUd3NU1FbGljM2RhTm1oak9YZzRVbXR6ZHpOYWFHdEpORXg2UzJkMmNHaFZRbFJJVWtWUVZrWnJabXd6WVhSS1dFZDJOVXN4TVhrNVRYUk1VR1ZVVnpGcmJIcFJOUzFVTUZsVlVsUkxNRWx5WDFGTmFWTlpWRlZuUlRoWlZWQTBNM3AxVDBONldIVTBWa1JRT1c0NFZrNW5OV2hpVVhONE5IWlNZMUEyUW05NFZWVmpaa3RaYmpsc1kxbFVVV1Z1UlhsYWNFRmFWVjlaY3kxclJUWmtTakZJY0ZGQ01VTnZPR0pMTnpOd1dtNWxZMU5IVVVwb2VITm5abGszUWxoQlMwUmFja0Z6VFhJME9FdHBUMkZUZVhJd1ZqQkRZbE5mYkRaNGNuUXdSMGxaVlhsRllYRndlWEJCWTBSdVFUbHpORGxNU25WQlExaGFkSE5qYVVwNE5sSkdOeTFCWDBOcFZrSldZMkl0Ymw5bVVVcFhObXRFYVdGNVUwVndVVWt3VW1SVmVrRXdXRkJCT1c1RE5XOTBRV3RqTUU5NVdrMXdOVEJCY1V0dmIyOXJOMlo2TlUxa05TMU1NbXhqVlZaQ1VEVmFZM0ZOV0VGWlltcEtNVkpQTXpSNmJXdGhWa1pJYUZOb1NqUnlUalF0WkdWalJuZHdTRXhMTVZGcWJFOWlibDlRYzJOU09UaEtNMHB3ZUhOT1EwMDBZbkJMZVdoclVpMVJTelpTWmw5NlJWbGplakZpYWpoQ2NqZFliMU0xVFUxSVFraHNTVkpOTFc1SlFVcE9XbkUwUjFwUk5FSlZjbUpFZEhoSFYxVlFTbEpJWmxCMlpWUnlTMjF3Tkd0QlN6UmxTRFZOWlc0MGJVdEZUSGgzTjBGRFRGbzBMVVU0UXpZd1dERjRNbE52UzJsTVUzbzJaVmxIYVZGd2RpMXpiRFI2WTBsNlVWZFJSelo1VG1GSFNXUkhiSE5DWjJGYUxXczNaM1Y1TnpaUVZtMWFNRmN0YUhFeVJHbEJRalEyZDIxYWFrWmZSekk0ZEZOU09FeFhjRkExYTBkeU5VNTRSVjlVWkVaZmNHaEtNWFY0WmtoVmNrdEZPVTlxVkUxQ01IWk9hSFJRVkZJM2JGWlBTSFIxU2tWMVpsb3RSMjUwVFd0Wk9XMUdVMHd3VWpSd2RGWnpSVFowYTBjemQwMUNlVFo0VTNCVFdFRmZPSEZVTFhaVllWVmhRbGN3ZURCeWFXazBkSEI0VlZoWmVuWXhORTAzWnpWdU9YUlBZM2xVUWsxWlZEVnZRbWhhZDBobmRuVkxSMnhsYkVveVVXSnJNVkZZVFhkWFFrVlBkSG8zVERWS2NXWk9hMGRFWDFKSFdsSXRlRmgwY1d0NFltWlpOR2hhTm1OS2NGRlJXRGxFWTBaUk16RldXVTV2YWpjemFuQXhSWGhUV0ZwNldYWnRWMUJoYTNoWmNVMDBPSHBDYjJJemRIVTRhVTgxU0dKUk9VMDBZamQyT0RCVlkyRTFkRXB6VFRGWWNtdDJTVE53Ym1wNVUyaERTV1p1Wm5aQ04zRnVla05CTmtoNloxSmtVblUwTldGVFltRmlhVFZEUlY5c09HZEJTVlY2YjFkalVucG1OekJpUjAxTlJtNXBZVlJWTlRGaGVVVk1NR0pZTFZoSWEwbGFUVkpyVUhVNU9URm1PRFpQYmxwZllXRkNhMXB1Y0RNMFdVSldWVmRTVjNselRFdFhka0pXUVhsR1RIWjFjSHBCWmtaSFNIaFJMalF6VGxSNGMxRmlXSGszZFZRMmFGOU1kbmx0VjJjLnN4MlFyNjV5VWVqdEo0cGc3S0t6NEptV29CTUdmQ0VxeTlEOWVFVnZnbmMiLCJleHAiOjE2OTQwMzE4NzAsImlhdCI6MTY5NDAzMTU3MH0.PicOMBEd5Q48a1E_-UrCUXuGYd70OomOy_xbwIz3oug",
-  "callbacks": [
-      {
-          "type": "NameCallback",
-          "output": [
-              {
-                  "name": "prompt",
-                  "value": "User Name"
-              }
-          ],
-          "input": [
-              {
-                  "name": "IDToken1",
-                  "value": ""
-              }
-          ],
-          "_id": 2
-      },
-      {
-          "type": "PasswordCallback",
-          "output": [
-              {
-                  "name": "prompt",
-                  "value": "Password"
-              }
-          ],
-          "input": [
-              {
-                  "name": "IDToken2",
-                  "value": ""
-              }
-          ],
-          "_id": 3
-      },
-      {
-          "type": "TextOutputCallback",
-          "output": [
-              {
-                  "name": "message",
-                  "value": "You have exceeded login attempts. Please contact support."
-              },
-              {
-                  "name": "messageType",
-                  "value": "2"
-              }
-          ],
-          "_id": 4
-      }
-  ]
-}
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlRleHRPdXRwdXRDYWxsYmFja19MVyIsIm90ayI6InU1NDV0dThjMzh2dWNqcWYxM3BrYWtsdmt0IiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNURXRzF3V0V0eVJFd3pOblY0WkcwMk5YWlpVblZSTGtKS1ZWRTRZMmxKTkZwaE5VaG5SSFpEVkhadU5GY3dkR0p6V1dGSk9VMVRaRVEyZG1vd2MzbFlkVEJZTkVsTVozYzRkVFo2U1RaM1VubFZhVEEzUTFwUmIxVkNWRk0wUjI1SVpTMUZWMFk0Vm5OMFJFNXhjSFYwVDFWUlQxaE9NRVJ6VnpOWmVFOTBaa1p3Vld4T1RrcERjbTVNZWtvdFpFUlhPRGc1UVVSTWVuUnFUblZ0TVRKVU5VaDBSRmRJZFRkS01UQlliblJuYWtKek5uUlBRVjgxU0RCcVYwUm1iM3B5TVVOYWNuTjBlVWRQVm1SNmRVZHdiakl0TlZad1ZtdFBNRVp1UTNsRFJFOUtNM1J5VUdKYVprVlJiVU10WXpCQmRYUTFiek55Y3pCalFVNURaV1pTUVY4ME5FSnpaV2xUZUd3NU1FbGljM2RhTm1oak9YZzRVbXR6ZHpOYWFHdEpORXg2UzJkMmNHaFZRbFJJVWtWUVZrWnJabXd6WVhSS1dFZDJOVXN4TVhrNVRYUk1VR1ZVVnpGcmJIcFJOUzFVTUZsVlVsUkxNRWx5WDFGTmFWTlpWRlZuUlRoWlZWQTBNM3AxVDBONldIVTBWa1JRT1c0NFZrNW5OV2hpVVhONE5IWlNZMUEyUW05NFZWVmpaa3RaYmpsc1kxbFVVV1Z1UlhsYWNFRmFWVjlaY3kxclJUWmtTakZJY0ZGQ01VTnZPR0pMTnpOd1dtNWxZMU5IVVVwb2VITm5abGszUWxoQlMwUmFja0Z6VFhJME9FdHBUMkZUZVhJd1ZqQkRZbE5mYkRaNGNuUXdSMGxaVlhsRllYRndlWEJCWTBSdVFUbHpORGxNU25WQlExaGFkSE5qYVVwNE5sSkdOeTFCWDBOcFZrSldZMkl0Ymw5bVVVcFhObXRFYVdGNVUwVndVVWt3VW1SVmVrRXdXRkJCT1c1RE5XOTBRV3RqTUU5NVdrMXdOVEJCY1V0dmIyOXJOMlo2TlUxa05TMU1NbXhqVlZaQ1VEVmFZM0ZOV0VGWlltcEtNVkpQTXpSNmJXdGhWa1pJYUZOb1NqUnlUalF0WkdWalJuZHdTRXhMTVZGcWJFOWlibDlRYzJOU09UaEtNMHB3ZUhOT1EwMDBZbkJMZVdoclVpMVJTelpTWmw5NlJWbGplakZpYWpoQ2NqZFliMU0xVFUxSVFraHNTVkpOTFc1SlFVcE9XbkUwUjFwUk5FSlZjbUpFZEhoSFYxVlFTbEpJWmxCMlpWUnlTMjF3Tkd0QlN6UmxTRFZOWlc0MGJVdEZUSGgzTjBGRFRGbzBMVVU0UXpZd1dERjRNbE52UzJsTVUzbzJaVmxIYVZGd2RpMXpiRFI2WTBsNlVWZFJSelo1VG1GSFNXUkhiSE5DWjJGYUxXczNaM1Y1TnpaUVZtMWFNRmN0YUhFeVJHbEJRalEyZDIxYWFrWmZSekk0ZEZOU09FeFhjRkExYTBkeU5VNTRSVjlVWkVaZmNHaEtNWFY0WmtoVmNrdEZPVTlxVkUxQ01IWk9hSFJRVkZJM2JGWlBTSFIxU2tWMVpsb3RSMjUwVFd0Wk9XMUdVMHd3VWpSd2RGWnpSVFowYTBjemQwMUNlVFo0VTNCVFdFRmZPSEZVTFhaVllWVmhRbGN3ZURCeWFXazBkSEI0VlZoWmVuWXhORTAzWnpWdU9YUlBZM2xVUWsxWlZEVnZRbWhhZDBobmRuVkxSMnhsYkVveVVXSnJNVkZZVFhkWFFrVlBkSG8zVERWS2NXWk9hMGRFWDFKSFdsSXRlRmgwY1d0NFltWlpOR2hhTm1OS2NGRlJXRGxFWTBaUk16RldXVTV2YWpjemFuQXhSWGhUV0ZwNldYWnRWMUJoYTNoWmNVMDBPSHBDYjJJemRIVTRhVTgxU0dKUk9VMDBZamQyT0RCVlkyRTFkRXB6VFRGWWNtdDJTVE53Ym1wNVUyaERTV1p1Wm5aQ04zRnVla05CTmtoNloxSmtVblUwTldGVFltRmlhVFZEUlY5c09HZEJTVlY2YjFkalVucG1OekJpUjAxTlJtNXBZVlJWTlRGaGVVVk1NR0pZTFZoSWEwbGFUVkpyVUhVNU9URm1PRFpQYmxwZllXRkNhMXB1Y0RNMFdVSldWVmRTVjNselRFdFhka0pXUVhsR1RIWjFjSHBCWmtaSFNIaFJMalF6VGxSNGMxRmlXSGszZFZRMmFGOU1kbmx0VjJjLnN4MlFyNjV5VWVqdEo0cGc3S0t6NEptV29CTUdmQ0VxeTlEOWVFVnZnbmMiLCJleHAiOjE2OTQwMzE4NzAsImlhdCI6MTY5NDAzMTU3MH0.PicOMBEd5Q48a1E_-UrCUXuGYd70OomOy_xbwIz3oug',
+  callbacks: [
+    {
+      type: 'NameCallback',
+      output: [
+        {
+          name: 'prompt',
+          value: 'User Name',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken1',
+          value: '',
+        },
+      ],
+      _id: 2,
+    },
+    {
+      type: 'PasswordCallback',
+      output: [
+        {
+          name: 'prompt',
+          value: 'Password',
+        },
+      ],
+      input: [
+        {
+          name: 'IDToken2',
+          value: '',
+        },
+      ],
+      _id: 3,
+    },
+    {
+      type: 'TextOutputCallback',
+      output: [
+        {
+          name: 'message',
+          value: 'You have exceeded login attempts. Please contact support.',
+        },
+        {
+          name: 'messageType',
+          value: '2',
+        },
+      ],
+      _id: 4,
+    },
+  ],
+};
