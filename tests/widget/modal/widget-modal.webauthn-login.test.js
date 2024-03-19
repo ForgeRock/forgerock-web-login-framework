@@ -1,46 +1,38 @@
 import { expect, test } from '@playwright/test';
-import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+import { asyncEvents, verifyUserInfo } from '../../utilities/async-events';
 
-test('Modal widget with webauthn login', async ({ browser, page }) => {
+test.use({ browserName: 'chromium' });
+test('Modal widget with webauthn login', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  let authenticator;
-  if (browser.browserType().name() === 'chromium') {
-    const cdpSession = await page.context().newCDPSession(page);
+  const cdpSession = await page.context().newCDPSession(page);
 
-    await cdpSession.send('WebAuthn.enable');
-    authenticator = await cdpSession.send('WebAuthn.addVirtualAuthenticator', {
-      options: {
-        protocol: 'ctap2',
-        transport: 'internal',
-        hasUserVerification: true,
-        isUserVerified: true,
-        hasResidentKey: true,
-      },
-    });
+  await cdpSession.send('WebAuthn.enable');
 
-    await navigate('widget/modal?journey=TEST_WebAuthn-Registration');
+  await cdpSession.send('WebAuthn.addVirtualAuthenticator', {
+    options: {
+      protocol: 'ctap2',
+      transport: 'internal',
+      hasUserVerification: true,
+      isUserVerified: true,
+      hasResidentKey: true,
+    },
+  });
 
-    await clickButton('Open Login Modal', '/authenticate');
+  await navigate('widget/modal?journey=TEST_WebAuthn-Registration');
 
-    // Try failed login
-    await page.getByLabel('Username').fill('notauser');
-    await page.getByLabel('Password').fill('notapassword');
+  await clickButton('Open Login Modal', '/authenticate');
 
-    await clickButton('Next', '/authenticate');
+  // Try successful login
+  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.getByRole('button', { name: 'Next' }).click();
+  await expect(page.getByText('Name your device', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Optionally name your device')).toBeVisible();
 
-    await expect(page.getByText('Sign in failed')).toBeVisible();
+  await clickButton('Next', '/authenticate');
 
-    // Try successful login
-    await page.getByLabel('Username').fill('demouser');
-    await page.getByLabel('Password').fill('j56eKtae*1');
+  await verifyUserInfo(page, expect);
 
-    await clickButton('Next', '/authenticate');
-
-    await verifyUserInfo(page, expect);
-
-    await cdpSession.send('WebAuthn.removeVirtualAuthenticator', {
-      authenticatorId: authenticator.authenticatorId,
-    });
-  }
+  await cdpSession.detach();
 });

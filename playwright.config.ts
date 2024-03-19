@@ -21,9 +21,19 @@ const config: PlaywrightTestConfig = {
   workers: process.env.CI ? 1 : undefined,
   testDir: 'tests',
   timeout: 120 * 1000,
+  reporter: process.env.CI ? 'blob' : 'dot',
   projects: [
     {
       name: 'chromium',
+      grep: /webauth/,
+      use: {
+        ...devices['Desktop Chrome'],
+        ...devices['Desktop Edge'],
+      },
+    },
+    {
+      name: 'chromium',
+      grepInvert: /webauthn/,
       use: {
         ...devices['Desktop Chrome'],
         ...devices['Desktop Edge'],
@@ -31,6 +41,7 @@ const config: PlaywrightTestConfig = {
     },
     {
       name: 'firefox',
+      grepInvert: /webauthn/,
       use: { ...devices['Desktop Firefox'] },
     },
     // {
