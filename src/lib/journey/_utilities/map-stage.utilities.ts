@@ -1,3 +1,12 @@
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+
 import Generic from '$journey/stages/generic.svelte';
 import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import Registration from '$journey/stages/registration.svelte';

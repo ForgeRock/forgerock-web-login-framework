@@ -1,13 +1,13 @@
 /**
  * @forgerock/login-widget
  *
- * Copyright (c) 2024 ForgeRock. All rights reserved.
+ * Copyright (c) 2025 Ping Identity Corporation. All rights reserved.
  * This software may be modified and distributed under the terms
  * of the MIT license.
  *
  * MIT License
  *
- * Copyright (c) 2024
+ * Copyright (c) 2025
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -681,6 +681,14 @@ function derived(stores, fn, initial_value) {
     });
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const componentStore = writable({
     lastAction: null,
     error: null,
@@ -3630,6 +3638,14 @@ class e {
   }
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 /**
  * @function logErrorAndThrow - Logs an error message and throws an error.
  * @param {string} type - The type of error. This will be used to determine what error message to log.
@@ -7667,6 +7683,14 @@ var z = /*#__PURE__*/Object.freeze({
 });
 
 /**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+/**
  * Configure underlying SDK
  */
 const configSchema = z
@@ -7770,6 +7794,14 @@ function configure (config) {
     c$3.set(config);
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const journeyConfigItemSchema = z
     .object({
     journey: z.string().optional(),
@@ -7839,15 +7871,14 @@ function initialize$6(customJourneys) {
     return configuredJourneysStore;
 }
 
-/*
- * forgerock-sample-web-react
+/**
  *
- * decode.js
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
  *
- * Copyright (c) 2021 ForgeRock. All rights reserved.
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
- */
+ *
+ **/
 /**
  * @function htmlDecode - Decodes HTML encoded strings
  * @param {string} input - string that needs to be HTML decoded
@@ -9781,6 +9812,14 @@ var fallback = {
 	yourRecoveryCodesToAccessAccountForLostDevice: yourRecoveryCodesToAccessAccountForLostDevice
 };
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const stringsSchema = z
     .object({
     alreadyHaveAnAccount: z.string(),
@@ -9912,6 +9951,14 @@ function initialize$5(userLocale) {
     return stringsSchema;
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 /**
  * Do not allow strings with angle brackets, just to be extra safe
  *
@@ -10062,6 +10109,14 @@ function textToKey(text) {
     return transformedString.charAt(0).toLowerCase() + transformedString.slice(1);
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const authIdTimeoutErrorCode = '110';
 const constrainedViolationMessage = 'constraint violation';
 /**
@@ -10142,6 +10197,14 @@ function shouldPopulateWithPreviousCallbacks(nextStep, previousCallbacks, restar
     return false;
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const selfSubmittingCallbacks = [
     l.ConfirmationCallback,
     l.DeviceProfileCallback,
@@ -10270,6 +10333,14 @@ function isUserInputOptional(callbackMetadataArray, numOfUserInputCbs, fn) {
 }
 
 /**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+/**
  * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
  * @param {object} step - The modified Widget step object
  * @param {function} checkValidation - function that checks if current callback is the first invalid callback
@@ -10351,6 +10422,14 @@ function buildStepMetadata(callbackMetadataArray, stageJson, stageName) {
     };
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 /**
  * @function initializeJourney - Initializes the journey stack for tracking journey switches
  * @param {object} initOptions - The initial options to set
@@ -10732,6 +10811,14 @@ function initialize$4(initOptions) {
 }
 let stack;
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const linksSchema = z
     .object({
     termsAndConditions: z.string(),
@@ -10758,6 +10845,14 @@ function initialize$3(customLinks) {
     return linksStore;
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const authorizationTimedOut = 'Authorization timed out';
 const interactionNeeded = 'The request requires some interaction that is not allowed.';
 const timeoutErrorMessage = 'Timeouts are likely an issue with OAuth client misconfiguration. If you are getting a 4xx error in the network tab, copy the full `/authorize` URL and paste it directly into your browsers URL field to directly visit the page. The error should be displayed on the page.';
@@ -10852,6 +10947,14 @@ function initialize$2(initOptions) {
     };
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const userStore = writable({
     completed: false,
     error: null,
@@ -10928,6 +11031,14 @@ function initialize$1(initOptions) {
     };
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 const logoSchema = z
     .object({
     dark: z.string().optional(),
@@ -10997,6 +11108,14 @@ function initialize(customStyle) {
     return styleStore;
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 /**
  * @function widgetApiFactory - Creates the widget API
  * @param {object} componentApi - The component API
@@ -11344,7 +11463,7 @@ function create_else_block$d(ctx) {
 	};
 }
 
-// (11:0) {#if html}
+// (20:0) {#if html}
 function create_if_block$x(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[5].default;
@@ -11397,7 +11516,7 @@ function create_if_block$x(ctx) {
 	};
 }
 
-// (14:8) {message}
+// (23:8) {message}
 function fallback_block_1$1(ctx) {
 	let t;
 
@@ -11417,7 +11536,7 @@ function fallback_block_1$1(ctx) {
 	};
 }
 
-// (12:8) {@html message}
+// (21:8) {@html message}
 function fallback_block$2(ctx) {
 	let html_tag;
 	let html_anchor;
@@ -11742,7 +11861,7 @@ function create_else_block$c(ctx) {
 	};
 }
 
-// (39:2) {#if withHeader}
+// (48:2) {#if withHeader}
 function create_if_block$w(ctx) {
 	let div1;
 	let div0;
@@ -11834,7 +11953,7 @@ function create_if_block$w(ctx) {
 	};
 }
 
-// (72:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (81:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot_1$i(ctx) {
 	let t;
 	let current;
@@ -11864,7 +11983,7 @@ function create_default_slot_1$i(ctx) {
 	};
 }
 
-// (77:6) {#if $styleStore?.logo}
+// (86:6) {#if $styleStore?.logo}
 function create_if_block_1$h(ctx) {
 	let div;
 	let div_style_value;
@@ -11889,7 +12008,7 @@ function create_if_block_1$h(ctx) {
 	};
 }
 
-// (55:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
+// (64:8) <XIcon           classes="tw_inline-block tw_fill-current tw_text-secondary-dark dark:tw_text-secondary-light"           >
 function create_default_slot$w(ctx) {
 	let t;
 	let current;
@@ -12454,7 +12573,7 @@ function create_else_block$b(ctx) {
 	};
 }
 
-// (44:33) 
+// (53:33) 
 function create_if_block_1$g(ctx) {
 	let warningicon;
 	let current;
@@ -12483,7 +12602,7 @@ function create_if_block_1$g(ctx) {
 	};
 }
 
-// (42:4) {#if type === 'error'}
+// (51:4) {#if type === 'error'}
 function create_if_block$v(ctx) {
 	let alerticon;
 	let current;
@@ -12828,7 +12947,7 @@ function create_if_block$u(ctx) {
 	};
 }
 
-// (44:8) Submit
+// (53:8) Submit
 function fallback_block$1(ctx) {
 	let t;
 
@@ -13296,7 +13415,7 @@ function create_else_block$a(ctx) {
 	};
 }
 
-// (10:0) {#if html}
+// (19:0) {#if html}
 function create_if_block$t(ctx) {
 	let current;
 	const default_slot_template = /*#slots*/ ctx[4].default;
@@ -13349,7 +13468,7 @@ function create_if_block$t(ctx) {
 	};
 }
 
-// (13:8) {message}
+// (22:8) {message}
 function fallback_block_1(ctx) {
 	let t;
 
@@ -13369,7 +13488,7 @@ function fallback_block_1(ctx) {
 	};
 }
 
-// (11:8) {@html message}
+// (20:8) {@html message}
 function fallback_block(ctx) {
 	let html_tag;
 	let html_anchor;
@@ -13712,6 +13831,14 @@ class Back_to extends SvelteComponent {
 }
 
 /**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+/**
  * @function captureLinks - This is a callback for onMount that internally handled links and prevents navigation
  * @param {object} linkWrapper - The object return from `bind:this` attribute on an native element
  * @param {object} currentJourney - The current stage's journey object
@@ -13773,6 +13900,14 @@ function matchJourneyAndDecideAction(href, journeys, stack) {
     }
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 /** *********************************************
  * NEW "NORMALIZED" METHODS
  */
@@ -15078,7 +15213,7 @@ function create_default_slot$s(ctx) {
 	};
 }
 
-// (32:0) {#key callback}
+// (41:0) {#key callback}
 function create_key_block$5(ctx) {
 	let checkbox;
 	let current;
@@ -15271,7 +15406,7 @@ function get_each_context$c(ctx, list, i) {
 	return child_ctx;
 }
 
-// (40:8) <Label           key={`${key}-${option.value}`}           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"         >
+// (49:8) <Label           key={`${key}-${option.value}`}           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"         >
 function create_default_slot$r(ctx) {
 	let span;
 	let t0;
@@ -15301,7 +15436,7 @@ function create_default_slot$r(ctx) {
 	};
 }
 
-// (27:4) {#each options as option}
+// (36:4) {#each options as option}
 function create_each_block$c(ctx) {
 	let div;
 	let input;
@@ -15840,7 +15975,7 @@ function get_each_context$b(ctx, list, i) {
 	return child_ctx;
 }
 
-// (21:6) <Radio         checked={defaultOption === option.value}         {isFirstInvalidInput}         {isRequired}         key={`${key}-${option.value}`}         {name}         {onChange}         value={option.value}       >
+// (30:6) <Radio         checked={defaultOption === option.value}         {isFirstInvalidInput}         {isRequired}         key={`${key}-${option.value}`}         {name}         {onChange}         value={option.value}       >
 function create_default_slot$p(ctx) {
 	let t_value = /*option*/ ctx[11].text + "";
 	let t;
@@ -15861,7 +15996,7 @@ function create_default_slot$p(ctx) {
 	};
 }
 
-// (19:2) {#each options as option}
+// (28:2) {#each options as option}
 function create_each_block$b(ctx) {
 	let div;
 	let radio;
@@ -16123,7 +16258,7 @@ function get_each_context$a(ctx, list, i) {
 	return child_ctx;
 }
 
-// (39:0) {#if labelOrder === 'first'}
+// (48:0) {#if labelOrder === 'first'}
 function create_if_block_1$f(ctx) {
 	let label_1;
 	let current;
@@ -16171,7 +16306,7 @@ function create_if_block_1$f(ctx) {
 	};
 }
 
-// (40:2) <Label {key} classes={`${labelClasses}`}>
+// (49:2) <Label {key} classes={`${labelClasses}`}>
 function create_default_slot_1$h(ctx) {
 	let t;
 
@@ -16191,7 +16326,7 @@ function create_default_slot_1$h(ctx) {
 	};
 }
 
-// (54:2) {#each options as option}
+// (63:2) {#each options as option}
 function create_each_block$a(ctx) {
 	let option;
 	let t0_value = /*option*/ ctx[15].text + "";
@@ -16232,7 +16367,7 @@ function create_each_block$a(ctx) {
 	};
 }
 
-// (61:0) {#if labelOrder === 'last'}
+// (70:0) {#if labelOrder === 'last'}
 function create_if_block$q(ctx) {
 	let label_1;
 	let current;
@@ -16285,7 +16420,7 @@ function create_if_block$q(ctx) {
 	};
 }
 
-// (62:2) <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>
+// (71:2) <Label {key} classes={`${shouldDisplayOption ? labelClasses : 'tw_sr-only'}`}>
 function create_default_slot$o(ctx) {
 	let t;
 
@@ -16950,7 +17085,7 @@ function create_else_block$9(ctx) {
 	};
 }
 
-// (52:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
+// (61:0) {#if callbackMetadata?.platform?.displayType === 'radio'}
 function create_if_block$p(ctx) {
 	let radio;
 	let current;
@@ -17281,7 +17416,7 @@ function get_each_context$9(ctx, list, i) {
 	return child_ctx;
 }
 
-// (101:0) {:else}
+// (110:0) {:else}
 function create_else_block_1$1(ctx) {
 	let grid;
 	let current;
@@ -17327,7 +17462,7 @@ function create_else_block_1$1(ctx) {
 	};
 }
 
-// (80:0) {#if !stepMetadata?.derived.isStepSelfSubmittable()}
+// (89:0) {#if !stepMetadata?.derived.isStepSelfSubmittable()}
 function create_if_block$o(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -17397,7 +17532,7 @@ function create_if_block$o(ctx) {
 	};
 }
 
-// (104:6) <Button         style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}         type="button"         width="auto"         onClick={() => setBtnValue(Number(opt.value))}       >
+// (113:6) <Button         style={options.length > 1 && defaultChoice === Number(opt.value) ? 'primary' : buttonStyle}         type="button"         width="auto"         onClick={() => setBtnValue(Number(opt.value))}       >
 function create_default_slot_2$9(ctx) {
 	let t0_value = /*opt*/ ctx[15].text + "";
 	let t0;
@@ -17422,7 +17557,7 @@ function create_default_slot_2$9(ctx) {
 	};
 }
 
-// (103:4) {#each options as opt}
+// (112:4) {#each options as opt}
 function create_each_block$9(ctx) {
 	let button;
 	let current;
@@ -17483,7 +17618,7 @@ function create_each_block$9(ctx) {
 	};
 }
 
-// (102:2) <Grid num={options.length >= 2 ? 2 : 1}>
+// (111:2) <Grid num={options.length >= 2 ? 2 : 1}>
 function create_default_slot_1$g(ctx) {
 	let each_1_anchor;
 	let current;
@@ -17567,7 +17702,7 @@ function create_default_slot_1$g(ctx) {
 	};
 }
 
-// (90:2) {:else}
+// (99:2) {:else}
 function create_else_block$8(ctx) {
 	let checkbox;
 	let current;
@@ -17618,7 +17753,7 @@ function create_else_block$8(ctx) {
 	};
 }
 
-// (81:2) {#if options.length > 1}
+// (90:2) {#if options.length > 1}
 function create_if_block_1$e(ctx) {
 	let select;
 	let current;
@@ -17665,7 +17800,7 @@ function create_if_block_1$e(ctx) {
 	};
 }
 
-// (91:4) <Checkbox       isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}       isInvalid={false}       key={inputName}       onChange={setCheckboxValue}       value={false}     >
+// (100:4) <Checkbox       isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}       isInvalid={false}       key={inputName}       onChange={setCheckboxValue}       value={false}     >
 function create_default_slot$n(ctx) {
 	let t_value = /*options*/ ctx[3][0].text + "";
 	let t;
@@ -17985,7 +18120,7 @@ function create_if_block_7$1(ctx) {
 	};
 }
 
-// (25:2) <Label {key} classes={`${labelClasses} tw_w-full tw_ml-1`}>
+// (34:2) <Label {key} classes={`${labelClasses} tw_w-full tw_ml-1`}>
 function create_default_slot_1$f(ctx) {
 	let t;
 
@@ -18005,7 +18140,7 @@ function create_default_slot_1$f(ctx) {
 	};
 }
 
-// (33:0) {#if type === 'date'}
+// (42:0) {#if type === 'date'}
 function create_if_block_6$1(ctx) {
 	let input;
 	let input_aria_describedby_value;
@@ -18085,7 +18220,7 @@ function create_if_block_6$1(ctx) {
 	};
 }
 
-// (49:0) {#if type === 'email'}
+// (58:0) {#if type === 'email'}
 function create_if_block_5$2(ctx) {
 	let input;
 	let input_aria_describedby_value;
@@ -18165,7 +18300,7 @@ function create_if_block_5$2(ctx) {
 	};
 }
 
-// (65:0) {#if type === 'number'}
+// (74:0) {#if type === 'number'}
 function create_if_block_4$6(ctx) {
 	let input;
 	let input_aria_describedby_value;
@@ -18245,7 +18380,7 @@ function create_if_block_4$6(ctx) {
 	};
 }
 
-// (81:0) {#if type === 'password'}
+// (90:0) {#if type === 'password'}
 function create_if_block_3$9(ctx) {
 	let input;
 	let input_aria_describedby_value;
@@ -18325,7 +18460,7 @@ function create_if_block_3$9(ctx) {
 	};
 }
 
-// (97:0) {#if type === 'phone'}
+// (106:0) {#if type === 'phone'}
 function create_if_block_2$a(ctx) {
 	let input;
 	let input_aria_describedby_value;
@@ -18405,7 +18540,7 @@ function create_if_block_2$a(ctx) {
 	};
 }
 
-// (113:0) {#if type === 'text'}
+// (122:0) {#if type === 'text'}
 function create_if_block_1$d(ctx) {
 	let input;
 	let input_aria_describedby_value;
@@ -18485,7 +18620,7 @@ function create_if_block_1$d(ctx) {
 	};
 }
 
-// (129:0) {#if labelOrder === 'last'}
+// (138:0) {#if labelOrder === 'last'}
 function create_if_block$n(ctx) {
 	let label_1;
 	let current;
@@ -18533,7 +18668,7 @@ function create_if_block$n(ctx) {
 	};
 }
 
-// (130:2) <Label {key} classes={`${labelClasses}`}>
+// (139:2) <Label {key} classes={`${labelClasses}`}>
 function create_default_slot$m(ctx) {
 	let t;
 
@@ -20224,7 +20359,7 @@ function create_else_block$7(ctx) {
 	};
 }
 
-// (6:0) {#if !visible}
+// (15:0) {#if !visible}
 function create_if_block$l(ctx) {
 	let svg;
 	let path0;
@@ -20447,7 +20582,7 @@ function create_default_slot_2$8(ctx) {
 	};
 }
 
-// (66:6) {#if showPassword === "button"}
+// (75:6) {#if showPassword === "button"}
 function create_if_block_1$c(ctx) {
 	let button;
 	let eyeicon;
@@ -20509,7 +20644,7 @@ function create_if_block_1$c(ctx) {
 	};
 }
 
-// (72:10) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+// (81:10) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
 function create_default_slot_1$e(ctx) {
 	let t;
 	let current;
@@ -20539,7 +20674,7 @@ function create_default_slot_1$e(ctx) {
 	};
 }
 
-// (65:1) <svelte:fragment slot="input-button">
+// (74:1) <svelte:fragment slot="input-button">
 function create_input_button_slot$1(ctx) {
 	let if_block_anchor;
 	let current;
@@ -20574,7 +20709,7 @@ function create_input_button_slot$1(ctx) {
 	};
 }
 
-// (80:0) {#if showPassword === "checkbox"}
+// (89:0) {#if showPassword === "checkbox"}
 function create_if_block$k(ctx) {
 	let div;
 	let checkbox;
@@ -20630,7 +20765,7 @@ function create_if_block$k(ctx) {
 	};
 }
 
-// (82:6) <Checkbox          {isFirstInvalidInput}         isInvalid={false}         key = {key + style.showPassword}         onChange={toggleVisibility}         value={false}       >
+// (91:6) <Checkbox          {isFirstInvalidInput}         isInvalid={false}         key = {key + style.showPassword}         onChange={toggleVisibility}         value={false}       >
 function create_default_slot$l(ctx) {
 	let t;
 
@@ -20896,7 +21031,7 @@ function create_default_slot_2$7(ctx) {
 	};
 }
 
-// (92:6) {#if showPassword === 'button'}
+// (101:6) {#if showPassword === 'button'}
 function create_if_block_2$9(ctx) {
 	let button;
 	let eyeicon;
@@ -20958,7 +21093,7 @@ function create_if_block_2$9(ctx) {
 	};
 }
 
-// (98:10) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+// (107:10) <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
 function create_default_slot_1$d(ctx) {
 	let t;
 	let current;
@@ -20988,7 +21123,7 @@ function create_default_slot_1$d(ctx) {
 	};
 }
 
-// (91:4) <svelte:fragment slot="input-button">
+// (100:4) <svelte:fragment slot="input-button">
 function create_input_button_slot(ctx) {
 	let if_block_anchor;
 	let current;
@@ -21023,7 +21158,7 @@ function create_input_button_slot(ctx) {
 	};
 }
 
-// (107:2) {#if showPassword === 'checkbox'}
+// (116:2) {#if showPassword === 'checkbox'}
 function create_if_block_1$b(ctx) {
 	let div;
 	let checkbox;
@@ -21079,7 +21214,7 @@ function create_if_block_1$b(ctx) {
 	};
 }
 
-// (109:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={key + style.showPassword}         onChange={toggleVisibility}         value={false}       >
+// (118:6) <Checkbox         isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}         isInvalid={false}         key={key + style.showPassword}         onChange={toggleVisibility}         value={false}       >
 function create_default_slot$k(ctx) {
 	let t;
 
@@ -21096,7 +21231,7 @@ function create_default_slot$k(ctx) {
 	};
 }
 
-// (120:2) {#if callbackMetadata?.platform?.confirmPassword}
+// (129:2) {#if callbackMetadata?.platform?.confirmPassword}
 function create_if_block$j(ctx) {
 	let confirminput;
 	let current;
@@ -21150,7 +21285,7 @@ function create_if_block$j(ctx) {
 	};
 }
 
-// (77:0) {#key callback}
+// (86:0) {#key callback}
 function create_key_block$3(ctx) {
 	let input;
 	let t0;
@@ -21704,7 +21839,7 @@ function create_else_block$6(ctx) {
 	};
 }
 
-// (28:2) {#if options?.inline}
+// (37:2) {#if options?.inline}
 function create_if_block$i(ctx) {
 	let text_1;
 	let current;
@@ -21748,7 +21883,7 @@ function create_if_block$i(ctx) {
 	};
 }
 
-// (35:4) <Text>
+// (44:4) <Text>
 function create_default_slot_1$c(ctx) {
 	let t;
 
@@ -21768,7 +21903,7 @@ function create_default_slot_1$c(ctx) {
 	};
 }
 
-// (29:4) <Text>
+// (38:4) <Text>
 function create_default_slot$j(ctx) {
 	let spinner;
 	let t0;
@@ -22324,7 +22459,7 @@ function get_each_context$8(ctx, list, i) {
 	return child_ctx;
 }
 
-// (66:56) 
+// (75:56) 
 function create_if_block_3$8(ctx) {
 	let button;
 	let current;
@@ -22378,7 +22513,7 @@ function create_if_block_3$8(ctx) {
 	};
 }
 
-// (55:58) 
+// (64:58) 
 function create_if_block_2$8(ctx) {
 	let button;
 	let current;
@@ -22432,7 +22567,7 @@ function create_if_block_2$8(ctx) {
 	};
 }
 
-// (44:4) {#if idp.text.toUpperCase().includes('APPLE')}
+// (53:4) {#if idp.text.toUpperCase().includes('APPLE')}
 function create_if_block_1$a(ctx) {
 	let button;
 	let current;
@@ -22486,7 +22621,7 @@ function create_if_block_1$a(ctx) {
 	};
 }
 
-// (67:6) <Button         classes="tw_button-google dark:tw_button-google_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
+// (76:6) <Button         classes="tw_button-google dark:tw_button-google_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
 function create_default_slot_4$2(ctx) {
 	let googleicon;
 	let t0;
@@ -22544,7 +22679,7 @@ function create_default_slot_4$2(ctx) {
 	};
 }
 
-// (56:6) <Button         classes="tw_button-facebook dark:tw_button-facebook_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
+// (65:6) <Button         classes="tw_button-facebook dark:tw_button-facebook_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
 function create_default_slot_3$3(ctx) {
 	let facebookicon;
 	let t0;
@@ -22602,7 +22737,7 @@ function create_default_slot_3$3(ctx) {
 	};
 }
 
-// (45:6) <Button         classes="tw_button-apple dark:tw_button-apple_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
+// (54:6) <Button         classes="tw_button-apple dark:tw_button-apple_dark"         type="button"         width="auto"         onClick={() => setBtnValue(idp.value)}       >
 function create_default_slot_2$6(ctx) {
 	let appleicon;
 	let t0;
@@ -22660,7 +22795,7 @@ function create_default_slot_2$6(ctx) {
 	};
 }
 
-// (43:2) <Grid num={1}>
+// (52:2) <Grid num={1}>
 function create_default_slot_1$b(ctx) {
 	let show_if;
 	let show_if_1;
@@ -22757,7 +22892,7 @@ function create_default_slot_1$b(ctx) {
 	};
 }
 
-// (42:0) {#each idps as idp}
+// (51:0) {#each idps as idp}
 function create_each_block$8(ctx) {
 	let grid;
 	let current;
@@ -22802,7 +22937,7 @@ function create_each_block$8(ctx) {
 	};
 }
 
-// (81:0) {#if stepMetadata && stepMetadata.derived.numOfCallbacks > 1}
+// (90:0) {#if stepMetadata && stepMetadata.derived.numOfCallbacks > 1}
 function create_if_block$h(ctx) {
 	let grid;
 	let current;
@@ -22838,7 +22973,7 @@ function create_if_block$h(ctx) {
 	};
 }
 
-// (82:2) <Grid num={1}>
+// (91:2) <Grid num={1}>
 function create_default_slot$h(ctx) {
 	let hr;
 
@@ -23070,7 +23205,7 @@ function get_each_context$7(ctx, list, i) {
 	return child_ctx;
 }
 
-// (35:51) 
+// (44:51) 
 function create_if_block_1$9(ctx) {
 	let div;
 	let p;
@@ -23166,7 +23301,7 @@ function create_if_block_1$9(ctx) {
 	};
 }
 
-// (24:0) {#if simplifiedFailures.length}
+// (33:0) {#if simplifiedFailures.length}
 function create_if_block$g(ctx) {
 	let div;
 	let p;
@@ -23262,7 +23397,7 @@ function create_if_block$g(ctx) {
 	};
 }
 
-// (41:6) {#each validationRules as rule}
+// (50:6) {#each validationRules as rule}
 function create_each_block_1(ctx) {
 	let li;
 	let t_value = /*rule*/ ctx[11].message + "";
@@ -23287,7 +23422,7 @@ function create_each_block_1(ctx) {
 	};
 }
 
-// (30:6) {#each simplifiedFailures as failure}
+// (39:6) {#each simplifiedFailures as failure}
 function create_each_block$7(ctx) {
 	let li;
 	let t_value = /*failure*/ ctx[8].message + "";
@@ -23511,7 +23646,7 @@ function create_default_slot$g(ctx) {
 	};
 }
 
-// (47:0) {#key callback}
+// (56:0) {#key callback}
 function create_key_block$2(ctx) {
 	let input;
 	let current;
@@ -23835,7 +23970,7 @@ function create_else_block$5(ctx) {
 	};
 }
 
-// (27:0) {#if $linksStore?.termsAndConditions}
+// (36:0) {#if $linksStore?.termsAndConditions}
 function create_if_block$f(ctx) {
 	let link;
 	let t;
@@ -23913,7 +24048,7 @@ function create_if_block$f(ctx) {
 	};
 }
 
-// (28:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
+// (37:2) <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
 function create_default_slot_1$a(ctx) {
 	let t_value = interpolate('termsAndConditionsLinkText') + "";
 	let t;
@@ -23932,7 +24067,7 @@ function create_default_slot_1$a(ctx) {
 	};
 }
 
-// (31:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
+// (40:2) <Checkbox     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}     key={inputName}     onChange={setValue}     value={false}   >
 function create_default_slot$f(ctx) {
 	let t;
 	let current;
@@ -24152,7 +24287,7 @@ function create_else_block$4(ctx) {
 	};
 }
 
-// (32:0) {#if callbackMessageType === 'info'}
+// (41:0) {#if callbackMessageType === 'info'}
 function create_if_block$e(ctx) {
 	let text_1;
 	let current;
@@ -24203,7 +24338,7 @@ function create_if_block$e(ctx) {
 	};
 }
 
-// (37:2) <Alert id="" needsFocus={false} type={callbackMessageType}>
+// (46:2) <Alert id="" needsFocus={false} type={callbackMessageType}>
 function create_default_slot_1$9(ctx) {
 	let t;
 
@@ -24223,7 +24358,7 @@ function create_default_slot_1$9(ctx) {
 	};
 }
 
-// (33:2) <Text classes={cleanMessage.length < 100 ? 'tw_font-bold tw_mt-6' : 'tw_mt-6'}>
+// (42:2) <Text classes={cleanMessage.length < 100 ? 'tw_font-bold tw_mt-6' : 'tw_mt-6'}>
 function create_default_slot$e(ctx) {
 	let html_tag;
 	let html_anchor;
@@ -24508,7 +24643,7 @@ function create_default_slot$d(ctx) {
 	};
 }
 
-// (28:0) {#key callback}
+// (37:0) {#key callback}
 function create_key_block$1(ctx) {
 	let base;
 	let current;
@@ -24725,7 +24860,7 @@ function create_default_slot$c(ctx) {
 	};
 }
 
-// (38:0) {#key callback}
+// (47:0) {#key callback}
 function create_key_block(ctx) {
 	let input;
 	let current;
@@ -24990,7 +25125,7 @@ function create_if_block$d(ctx) {
 	};
 }
 
-// (26:4) <Text>
+// (35:4) <Text>
 function create_default_slot$b(ctx) {
 	let t;
 
@@ -25109,6 +25244,14 @@ class Device_profile extends SvelteComponent {
 	}
 }
 
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
 /*
  * Because hcaptch and grecaptcha would
  * both be loaded on the page, we need to just leverage
@@ -25926,7 +26069,7 @@ function get_if_ctx$1(ctx) {
 	return child_ctx;
 }
 
-// (253:0) {:else}
+// (262:0) {:else}
 function create_else_block$3(ctx) {
 	let unknown;
 	let current;
@@ -25969,7 +26112,7 @@ function create_else_block$3(ctx) {
 	};
 }
 
-// (247:67) 
+// (256:67) 
 function create_if_block_20(ctx) {
 	let pingprotectinitialize;
 	let current;
@@ -26012,7 +26155,7 @@ function create_if_block_20(ctx) {
 	};
 }
 
-// (241:67) 
+// (250:67) 
 function create_if_block_19(ctx) {
 	let pingprotectevaluation;
 	let current;
@@ -26055,7 +26198,7 @@ function create_if_block_19(ctx) {
 	};
 }
 
-// (235:52) 
+// (244:52) 
 function create_if_block_18(ctx) {
 	let recaptcha;
 	let current;
@@ -26098,7 +26241,7 @@ function create_if_block_18(ctx) {
 	};
 }
 
-// (229:51) 
+// (238:51) 
 function create_if_block_17(ctx) {
 	let metadata;
 	let current;
@@ -26141,7 +26284,7 @@ function create_if_block_17(ctx) {
 	};
 }
 
-// (223:56) 
+// (232:56) 
 function create_if_block_16(ctx) {
 	let deviceprofile;
 	let current;
@@ -26184,7 +26327,7 @@ function create_if_block_16(ctx) {
 	};
 }
 
-// (217:62) 
+// (226:62) 
 function create_if_block_15(ctx) {
 	let textoutput;
 	let current;
@@ -26227,7 +26370,7 @@ function create_if_block_15(ctx) {
 	};
 }
 
-// (211:53) 
+// (220:53) 
 function create_if_block_14(ctx) {
 	let textoutput;
 	let current;
@@ -26270,7 +26413,7 @@ function create_if_block_14(ctx) {
 	};
 }
 
-// (205:61) 
+// (214:61) 
 function create_if_block_13(ctx) {
 	let termsconditions;
 	let current;
@@ -26313,7 +26456,7 @@ function create_if_block_13(ctx) {
 	};
 }
 
-// (199:66) 
+// (208:66) 
 function create_if_block_12(ctx) {
 	let validatedcreateusername;
 	let current;
@@ -26356,7 +26499,7 @@ function create_if_block_12(ctx) {
 	};
 }
 
-// (193:66) 
+// (202:66) 
 function create_if_block_11(ctx) {
 	let validatedcreatepassword;
 	let current;
@@ -26399,7 +26542,7 @@ function create_if_block_11(ctx) {
 	};
 }
 
-// (187:63) 
+// (196:63) 
 function create_if_block_10(ctx) {
 	let stringattributeinput;
 	let current;
@@ -26442,7 +26585,7 @@ function create_if_block_10(ctx) {
 	};
 }
 
-// (181:52) 
+// (190:52) 
 function create_if_block_9(ctx) {
 	let selectidp;
 	let current;
@@ -26485,7 +26628,7 @@ function create_if_block_9(ctx) {
 	};
 }
 
-// (175:51) 
+// (184:51) 
 function create_if_block_8(ctx) {
 	let redirect;
 	let current;
@@ -26528,7 +26671,7 @@ function create_if_block_8(ctx) {
 	};
 }
 
-// (169:54) 
+// (178:54) 
 function create_if_block_7(ctx) {
 	let pollingwait;
 	let current;
@@ -26571,7 +26714,7 @@ function create_if_block_7(ctx) {
 	};
 }
 
-// (163:51) 
+// (172:51) 
 function create_if_block_6(ctx) {
 	let password;
 	let current;
@@ -26614,7 +26757,7 @@ function create_if_block_6(ctx) {
 	};
 }
 
-// (157:47) 
+// (166:47) 
 function create_if_block_5$1(ctx) {
 	let name;
 	let current;
@@ -26657,7 +26800,7 @@ function create_if_block_5$1(ctx) {
 	};
 }
 
-// (151:52) 
+// (160:52) 
 function create_if_block_4$5(ctx) {
 	let kbacreate;
 	let current;
@@ -26700,7 +26843,7 @@ function create_if_block_4$5(ctx) {
 	};
 }
 
-// (145:54) 
+// (154:54) 
 function create_if_block_3$7(ctx) {
 	let hiddenvalue;
 	let current;
@@ -26743,7 +26886,7 @@ function create_if_block_3$7(ctx) {
 	};
 }
 
-// (139:55) 
+// (148:55) 
 function create_if_block_2$7(ctx) {
 	let confirmation;
 	let current;
@@ -26786,7 +26929,7 @@ function create_if_block_2$7(ctx) {
 	};
 }
 
-// (133:49) 
+// (142:49) 
 function create_if_block_1$8(ctx) {
 	let choice;
 	let current;
@@ -26829,7 +26972,7 @@ function create_if_block_1$8(ctx) {
 	};
 }
 
-// (127:0) {#if cbType === CallbackType.BooleanAttributeInputCallback}
+// (136:0) {#if cbType === CallbackType.BooleanAttributeInputCallback}
 function create_if_block$a(ctx) {
 	let boolean;
 	let current;
@@ -27161,7 +27304,7 @@ function get_each_context$6(ctx, list, i) {
 	return child_ctx;
 }
 
-// (70:2) {#if form?.icon && componentStyle !== 'inline'}
+// (79:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block_4$4(ctx) {
 	let div;
 	let shieldicon;
@@ -27201,7 +27344,7 @@ function create_if_block_4$4(ctx) {
 	};
 }
 
-// (86:2) {#if form?.message}
+// (95:2) {#if form?.message}
 function create_if_block_3$6(ctx) {
 	let alert;
 	let current;
@@ -27249,7 +27392,7 @@ function create_if_block_3$6(ctx) {
 	};
 }
 
-// (87:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (96:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_4$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -27270,7 +27413,7 @@ function create_default_slot_4$1(ctx) {
 	};
 }
 
-// (92:2) {#each step?.callbacks as callback, idx}
+// (101:2) {#each step?.callbacks as callback, idx}
 function create_each_block$6(ctx) {
 	let callbackmapper;
 	let current;
@@ -27323,7 +27466,7 @@ function create_each_block$6(ctx) {
 	};
 }
 
-// (117:61) 
+// (126:61) 
 function create_if_block_2$6(ctx) {
 	let button;
 	let current;
@@ -27372,7 +27515,7 @@ function create_if_block_2$6(ctx) {
 	};
 }
 
-// (113:56) 
+// (122:56) 
 function create_if_block_1$7(ctx) {
 	let button;
 	let current;
@@ -27421,7 +27564,7 @@ function create_if_block_1$7(ctx) {
 	};
 }
 
-// (109:2) {#if !metadata?.step?.derived.isStepSelfSubmittable()}
+// (118:2) {#if !metadata?.step?.derived.isStepSelfSubmittable()}
 function create_if_block$9(ctx) {
 	let button;
 	let current;
@@ -27470,7 +27613,7 @@ function create_if_block$9(ctx) {
 	};
 }
 
-// (118:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (127:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_3$2(ctx) {
 	let t;
 	let current;
@@ -27500,7 +27643,7 @@ function create_default_slot_3$2(ctx) {
 	};
 }
 
-// (114:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (123:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_2$5(ctx) {
 	let t;
 	let current;
@@ -27530,7 +27673,7 @@ function create_default_slot_2$5(ctx) {
 	};
 }
 
-// (110:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (119:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$8(ctx) {
 	let t;
 	let current;
@@ -27560,7 +27703,7 @@ function create_default_slot_1$8(ctx) {
 	};
 }
 
-// (63:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
+// (72:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
 function create_default_slot$9(ctx) {
 	let t0;
 	let header;
@@ -28140,7 +28283,7 @@ function get_each_context$5(ctx, list, i) {
 	return child_ctx;
 }
 
-// (57:2) {#if componentStyle !== 'inline'}
+// (66:2) {#if componentStyle !== 'inline'}
 function create_if_block_3$5(ctx) {
 	let t0;
 	let h1;
@@ -28228,7 +28371,7 @@ function create_if_block_3$5(ctx) {
 	};
 }
 
-// (58:4) {#if form?.icon}
+// (67:4) {#if form?.icon}
 function create_if_block_4$3(ctx) {
 	let div;
 	let keyicon;
@@ -28268,7 +28411,7 @@ function create_if_block_4$3(ctx) {
 	};
 }
 
-// (73:2) {#if form?.message}
+// (82:2) {#if form?.message}
 function create_if_block_2$5(ctx) {
 	let alert;
 	let current;
@@ -28316,7 +28459,7 @@ function create_if_block_2$5(ctx) {
 	};
 }
 
-// (74:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (83:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_3$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -28337,7 +28480,7 @@ function create_default_slot_3$1(ctx) {
 	};
 }
 
-// (79:2) {#each modifiedCallbacks as callback, idx}
+// (88:2) {#each modifiedCallbacks as callback, idx}
 function create_each_block$5(ctx) {
 	let callbackmapper;
 	let current;
@@ -28390,7 +28533,7 @@ function create_each_block$5(ctx) {
 	};
 }
 
-// (95:108) 
+// (104:108) 
 function create_if_block_1$6(ctx) {
 	let button;
 	let current;
@@ -28439,7 +28582,7 @@ function create_if_block_1$6(ctx) {
 	};
 }
 
-// (91:2) {#if buttons?.length}
+// (100:2) {#if buttons?.length}
 function create_if_block$8(ctx) {
 	let button;
 	let current;
@@ -28488,7 +28631,7 @@ function create_if_block$8(ctx) {
 	};
 }
 
-// (96:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (105:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_2$4(ctx) {
 	let t;
 	let current;
@@ -28518,7 +28661,7 @@ function create_default_slot_2$4(ctx) {
 	};
 }
 
-// (92:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (101:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$7(ctx) {
 	let t;
 	let current;
@@ -28555,7 +28698,7 @@ function create_default_slot_1$7(ctx) {
 	};
 }
 
-// (56:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (65:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$8(ctx) {
 	let t0;
 	let t1;
@@ -29050,7 +29193,7 @@ function get_each_context$4(ctx, list, i) {
 	return child_ctx;
 }
 
-// (45:2) {#if componentStyle !== 'inline'}
+// (54:2) {#if componentStyle !== 'inline'}
 function create_if_block_2$4(ctx) {
 	let t0;
 	let h1;
@@ -29137,7 +29280,7 @@ function create_if_block_2$4(ctx) {
 	};
 }
 
-// (46:4) {#if form?.icon}
+// (55:4) {#if form?.icon}
 function create_if_block_3$4(ctx) {
 	let div;
 	let newusericon;
@@ -29177,7 +29320,7 @@ function create_if_block_3$4(ctx) {
 	};
 }
 
-// (62:2) {#if form.message}
+// (71:2) {#if form.message}
 function create_if_block_1$5(ctx) {
 	let alert;
 	let current;
@@ -29225,7 +29368,7 @@ function create_if_block_1$5(ctx) {
 	};
 }
 
-// (63:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (72:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$3(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -29246,7 +29389,7 @@ function create_default_slot_2$3(ctx) {
 	};
 }
 
-// (68:2) {#each step?.callbacks as callback, idx}
+// (77:2) {#each step?.callbacks as callback, idx}
 function create_each_block$4(ctx) {
 	let callbackmapper;
 	let current;
@@ -29299,7 +29442,7 @@ function create_each_block$4(ctx) {
 	};
 }
 
-// (80:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+// (89:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
 function create_if_block$7(ctx) {
 	let button;
 	let current;
@@ -29348,7 +29491,7 @@ function create_if_block$7(ctx) {
 	};
 }
 
-// (81:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (90:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$6(ctx) {
 	let t;
 	let current;
@@ -29378,7 +29521,7 @@ function create_default_slot_1$6(ctx) {
 	};
 }
 
-// (44:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (53:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$7(ctx) {
 	let t0;
 	let t1;
@@ -29731,7 +29874,7 @@ function get_each_context$3(ctx, list, i) {
 	return child_ctx;
 }
 
-// (45:2) {#if componentStyle !== 'inline'}
+// (54:2) {#if componentStyle !== 'inline'}
 function create_if_block_3$3(ctx) {
 	let t0;
 	let h1;
@@ -29797,7 +29940,7 @@ function create_if_block_3$3(ctx) {
 	};
 }
 
-// (46:4) {#if form?.icon}
+// (55:4) {#if form?.icon}
 function create_if_block_4$2(ctx) {
 	let div;
 	let keyicon;
@@ -29837,7 +29980,7 @@ function create_if_block_4$2(ctx) {
 	};
 }
 
-// (56:2) {#if form?.message}
+// (65:2) {#if form?.message}
 function create_if_block_2$3(ctx) {
 	let alert;
 	let current;
@@ -29885,7 +30028,7 @@ function create_if_block_2$3(ctx) {
 	};
 }
 
-// (57:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (66:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$2(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -29906,7 +30049,7 @@ function create_default_slot_2$2(ctx) {
 	};
 }
 
-// (62:2) {#each step?.callbacks as callback, idx}
+// (71:2) {#each step?.callbacks as callback, idx}
 function create_each_block$3(ctx) {
 	let callbackmapper;
 	let current;
@@ -29959,7 +30102,7 @@ function create_each_block$3(ctx) {
 	};
 }
 
-// (74:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
+// (83:2) {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
 function create_if_block_1$4(ctx) {
 	let button;
 	let current;
@@ -30008,7 +30151,7 @@ function create_if_block_1$4(ctx) {
 	};
 }
 
-// (75:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (84:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$5(ctx) {
 	let t;
 	let current;
@@ -30038,7 +30181,7 @@ function create_default_slot_1$5(ctx) {
 	};
 }
 
-// (80:2) {#if componentStyle !== 'inline'}
+// (89:2) {#if componentStyle !== 'inline'}
 function create_if_block$6(ctx) {
 	let p0;
 	let button0;
@@ -30120,7 +30263,7 @@ function create_if_block$6(ctx) {
 	};
 }
 
-// (44:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (53:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$6(ctx) {
 	let t0;
 	let t1;
@@ -30625,7 +30768,7 @@ function create_if_block_4$1(ctx) {
 	};
 }
 
-// (101:2) {#if waitingForWebAuthnAPI}
+// (110:2) {#if waitingForWebAuthnAPI}
 function create_if_block_3$2(ctx) {
 	let div;
 	let spinner;
@@ -30665,7 +30808,7 @@ function create_if_block_3$2(ctx) {
 	};
 }
 
-// (106:2) {#if form?.message}
+// (115:2) {#if form?.message}
 function create_if_block_2$2(ctx) {
 	let alert;
 	let current;
@@ -30713,7 +30856,7 @@ function create_if_block_2$2(ctx) {
 	};
 }
 
-// (107:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (116:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_2$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[6], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -30734,7 +30877,7 @@ function create_default_slot_2$1(ctx) {
 	};
 }
 
-// (126:2) {:else}
+// (135:2) {:else}
 function create_else_block$2(ctx) {
 	let header;
 	let current_block_type_index;
@@ -30806,7 +30949,7 @@ function create_else_block$2(ctx) {
 	};
 }
 
-// (112:2) {#if webAuthnType === WebAuthnStepType.Authentication}
+// (121:2) {#if webAuthnType === WebAuthnStepType.Authentication}
 function create_if_block$5(ctx) {
 	let header;
 	let div;
@@ -30883,7 +31026,7 @@ function create_if_block$5(ctx) {
 	};
 }
 
-// (151:6) {:else}
+// (160:6) {:else}
 function create_else_block_1(ctx) {
 	let h1;
 	let t0;
@@ -30959,7 +31102,7 @@ function create_else_block_1(ctx) {
 	};
 }
 
-// (128:6) {#if requestsDeviceName}
+// (137:6) {#if requestsDeviceName}
 function create_if_block_1$3(ctx) {
 	let h1;
 	let t0;
@@ -31045,7 +31188,7 @@ function create_if_block_1$3(ctx) {
 	};
 }
 
-// (140:8) <Button           style="primary"           type="submit"           width="full"           onClick={() => {             requestsDeviceName = false;             waitingForWebAuthnAPI = true;           }}         >
+// (149:8) <Button           style="primary"           type="submit"           width="full"           onClick={() => {             requestsDeviceName = false;             waitingForWebAuthnAPI = true;           }}         >
 function create_default_slot_1$4(ctx) {
 	let t;
 	let current;
@@ -31075,7 +31218,7 @@ function create_default_slot_1$4(ctx) {
 	};
 }
 
-// (89:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
+// (98:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus} >
 function create_default_slot$5(ctx) {
 	let t0;
 	let t1;
@@ -31488,7 +31631,7 @@ function get_each_context$2(ctx, list, i) {
 	return child_ctx;
 }
 
-// (44:2) {#if form?.icon && componentStyle !== 'inline'}
+// (53:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block$4(ctx) {
 	let div;
 	let clipboardicon;
@@ -31528,7 +31671,7 @@ function create_if_block$4(ctx) {
 	};
 }
 
-// (74:4) {#each codes as code}
+// (83:4) {#each codes as code}
 function create_each_block$2(ctx) {
 	let li;
 	let span;
@@ -31560,7 +31703,7 @@ function create_each_block$2(ctx) {
 	};
 }
 
-// (86:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (95:2) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$3(ctx) {
 	let t;
 	let current;
@@ -31590,7 +31733,7 @@ function create_default_slot_1$3(ctx) {
 	};
 }
 
-// (37:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
+// (46:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={() => form.submit()} >
 function create_default_slot$4(ctx) {
 	let t0;
 	let header;
@@ -32165,7 +32308,7 @@ function get_each_context$1(ctx, list, i) {
 	return child_ctx;
 }
 
-// (114:2) {#if componentStyle !== 'inline'}
+// (123:2) {#if componentStyle !== 'inline'}
 function create_if_block_4(ctx) {
 	let t0;
 	let h1;
@@ -32253,7 +32396,7 @@ function create_if_block_4(ctx) {
 	};
 }
 
-// (115:4) {#if form?.icon}
+// (124:4) {#if form?.icon}
 function create_if_block_5(ctx) {
 	let div;
 	let mobileicon;
@@ -32293,7 +32436,7 @@ function create_if_block_5(ctx) {
 	};
 }
 
-// (130:2) {#if form?.message}
+// (139:2) {#if form?.message}
 function create_if_block_3$1(ctx) {
 	let alert;
 	let current;
@@ -32341,7 +32484,7 @@ function create_if_block_3$1(ctx) {
 	};
 }
 
-// (131:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+// (140:4) <Alert id="formFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_4(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[0]?.message) + "";
 	let t;
@@ -32362,7 +32505,7 @@ function create_default_slot_4(ctx) {
 	};
 }
 
-// (136:2) {#if !moduleLoaded}
+// (145:2) {#if !moduleLoaded}
 function create_if_block_2$1(ctx) {
 	let div;
 	let spinner;
@@ -32417,7 +32560,7 @@ function create_if_block_2$1(ctx) {
 	};
 }
 
-// (144:2) {#each modifiedCallbacks as callback, idx}
+// (153:2) {#each modifiedCallbacks as callback, idx}
 function create_each_block$1(ctx) {
 	let callbackmapper;
 	let current;
@@ -32470,7 +32613,7 @@ function create_each_block$1(ctx) {
 	};
 }
 
-// (156:2) {#if pollingWaitCb}
+// (165:2) {#if pollingWaitCb}
 function create_if_block_1$2(ctx) {
 	let pollingwait;
 	let current;
@@ -32513,7 +32656,7 @@ function create_if_block_1$2(ctx) {
 	};
 }
 
-// (170:6) <Link href={qrCodeUrl} classes="tw_block tw_my-6" target="_self">
+// (179:6) <Link href={qrCodeUrl} classes="tw_block tw_my-6" target="_self">
 function create_default_slot_3(ctx) {
 	let t;
 	let current;
@@ -32546,7 +32689,7 @@ function create_default_slot_3(ctx) {
 	};
 }
 
-// (181:10) <ClipboardIcon classes="tw_fill-current tw_inline-block tw_align-top" size="16">
+// (190:10) <ClipboardIcon classes="tw_fill-current tw_inline-block tw_align-top" size="16">
 function create_default_slot_2(ctx) {
 	let t;
 	let current;
@@ -32576,7 +32719,7 @@ function create_default_slot_2(ctx) {
 	};
 }
 
-// (195:2) {#if buttons?.length}
+// (204:2) {#if buttons?.length}
 function create_if_block$3(ctx) {
 	let button;
 	let current;
@@ -32625,7 +32768,7 @@ function create_if_block$3(ctx) {
 	};
 }
 
-// (196:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
+// (205:4) <Button busy={journey?.loading} style="primary" type="submit" width="full">
 function create_default_slot_1$2(ctx) {
 	let t;
 	let current;
@@ -32662,7 +32805,7 @@ function create_default_slot_1$2(ctx) {
 	};
 }
 
-// (113:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+// (122:0) <Form bind:formEl ariaDescribedBy="formFailureMessageAlert" onSubmitWhenValid={form?.submit}>
 function create_default_slot$3(ctx) {
 	let t0;
 	let t1;
@@ -33379,7 +33522,7 @@ function get_each_context(ctx, list, i) {
 	return child_ctx;
 }
 
-// (68:2) {#if form?.icon && componentStyle !== 'inline'}
+// (77:2) {#if form?.icon && componentStyle !== 'inline'}
 function create_if_block_1$1(ctx) {
 	let div;
 	let emailicon;
@@ -33419,7 +33562,7 @@ function create_if_block_1$1(ctx) {
 	};
 }
 
-// (80:2) {#if form?.message}
+// (89:2) {#if form?.message}
 function create_if_block$2(ctx) {
 	let alert;
 	let current;
@@ -33467,7 +33610,7 @@ function create_if_block$2(ctx) {
 	};
 }
 
-// (81:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
+// (90:4) <Alert id={formFailureMessageId} needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_1$1(ctx) {
 	let t_value = interpolate(/*formMessageKey*/ ctx[7], null, /*form*/ ctx[2]?.message) + "";
 	let t;
@@ -33488,7 +33631,7 @@ function create_default_slot_1$1(ctx) {
 	};
 }
 
-// (86:2) {#each step?.callbacks as callback, idx}
+// (95:2) {#each step?.callbacks as callback, idx}
 function create_each_block(ctx) {
 	let callbackmapper;
 	let current;
@@ -33541,7 +33684,7 @@ function create_each_block(ctx) {
 	};
 }
 
-// (61:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
+// (70:0) <Form   bind:formEl   ariaDescribedBy={formAriaDescriptor}   id={formElementId}   needsFocus={formNeedsFocus}   onSubmitWhenValid={submitFormWrapper} >
 function create_default_slot$2(ctx) {
 	let t0;
 	let header;
@@ -33915,6 +34058,14 @@ class Email_suspend extends SvelteComponent {
 }
 
 /**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+/**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
  * @returns {object} - The stage Svelte component
@@ -34025,7 +34176,7 @@ function create_else_block$1(ctx) {
 	};
 }
 
-// (56:52) 
+// (65:52) 
 function create_if_block_3(ctx) {
 	let div;
 	let spinner;
@@ -34066,7 +34217,7 @@ function create_if_block_3(ctx) {
 	};
 }
 
-// (30:0) {#if $journeyStore && !$journeyStore.completed}
+// (39:0) {#if $journeyStore && !$journeyStore.completed}
 function create_if_block$1(ctx) {
 	let current_block_type_index;
 	let if_block;
@@ -34153,7 +34304,7 @@ function create_if_block$1(ctx) {
 	};
 }
 
-// (61:2) <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
+// (70:2) <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
 function create_default_slot_1(ctx) {
 	let t;
 	let current;
@@ -34186,7 +34337,7 @@ function create_default_slot_1(ctx) {
 	};
 }
 
-// (64:2) <Button style="secondary" onClick={tryAgain}>
+// (73:2) <Button style="secondary" onClick={tryAgain}>
 function create_default_slot$1(ctx) {
 	let t;
 	let current;
@@ -34216,7 +34367,7 @@ function create_default_slot$1(ctx) {
 	};
 }
 
-// (35:55) 
+// (44:55) 
 function create_if_block_2(ctx) {
 	let switch_instance;
 	let updating_formEl;
@@ -34338,7 +34489,7 @@ function create_if_block_2(ctx) {
 	};
 }
 
-// (31:2) {#if $journeyStore && !$journeyStore.step}
+// (40:2) {#if $journeyStore && !$journeyStore.step}
 function create_if_block_1(ctx) {
 	let div;
 	let spinner;
@@ -34583,7 +34734,7 @@ function create_else_block(ctx) {
 	};
 }
 
-// (29:0) {#if type === 'modal'}
+// (38:0) {#if type === 'modal'}
 function create_if_block(ctx) {
 	let div;
 	let dialog;
@@ -34653,7 +34804,7 @@ function create_if_block(ctx) {
 	};
 }
 
-// (31:4) <Dialog       bind:dialogEl       bind:this={dialogComp}       dialogId="sampleDialog"       withHeader={$styleStore?.sections?.header}     >
+// (40:4) <Dialog       bind:dialogEl       bind:this={dialogComp}       dialogId="sampleDialog"       withHeader={$styleStore?.sections?.header}     >
 function create_default_slot(ctx) {
 	let journey_1;
 	let updating_formEl;

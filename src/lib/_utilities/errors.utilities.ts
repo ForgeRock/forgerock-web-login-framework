@@ -1,4 +1,13 @@
 /**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+
+/**
  * @function logErrorAndThrow - Logs an error message and throws an error.
  * @param {string} type - The type of error. This will be used to determine what error message to log.
  * @throws {Error} - An error with a message that depends on the value of `type`.
