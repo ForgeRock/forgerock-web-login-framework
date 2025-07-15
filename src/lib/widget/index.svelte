@@ -1,3 +1,12 @@
+<!--
+ 
+ Copyright © 2025 Ping Identity Corporation. All right reserved.
+ 
+ This software may be modified and distributed under the terms
+ of the MIT license. See the LICENSE file for details.
+ 
+ -->
+
 <script context="module" lang="ts">
   import { widgetApiFactory } from './_utilities/api.utilities';
   import { componentApi } from './_utilities/component.utilities';
