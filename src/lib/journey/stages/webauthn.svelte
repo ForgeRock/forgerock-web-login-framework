@@ -50,6 +50,7 @@
   let formNeedsFocus = false;
   let requestsDeviceName = true;
   let waitingForWebAuthnAPI = false;
+  let webAuthnApiCalled = false;
   let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
 
   function updateDeviceName(event: Event) {
@@ -97,14 +98,16 @@
     form.submit();
   }
 
+  $: formMessageKey = convertStringToKey(form?.message);
+
   $: {
-    formMessageKey = convertStringToKey(form?.message);
-    // Call the WebAuthn API without await
-    if (allowWebAuthn && !noDeviceRegistered) {
+    // Call the WebAuthn API without await, but only once per component lifecycle
+    if (allowWebAuthn && !noDeviceRegistered && !webAuthnApiCalled) {
       if (
         (WebAuthnStepType.Registration === webAuthnType && !requestsDeviceName) ||
         WebAuthnStepType.Authentication === webAuthnType
       ) {
+        webAuthnApiCalled = true;
         callWebAuthnApi();
       }
     }
