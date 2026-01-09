@@ -3,69 +3,25 @@ on:
   push:
 jobs:
   build:
-    needs: [install]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: [20.10.0, 18.x]
-        os: [macos-latest]
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm'
-      - name: Restore npm dependencies
-        uses: actions/cache/restore@v4
-        id: npm-cache
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-npm-${{matrix.node}}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-${{matrix.node}}
-      - run: npm run build:release
+          node-version: 22.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run build:release
       - uses: actions/upload-artifact@v4
         with:
-          name: package-${{ matrix.node }}
-          path: package/*
+          name: widget-dist
+          path: packages/login-widget/dist/*
 
-  install:
-    strategy:
-      matrix:
-        node: [20.10.0, 18.x]
-        os: [macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Node ${{ matrix.node }} Run
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm'
-      - uses: actions/cache/restore@v4
-        id: npm-cache
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-npm-${{matrix.node}}-${{ hashFiles('**/package-lock.json') }}
-      - name: Install dependencies if cache invalid
-        if: steps.npm-cache.outputs.cache-hit != 'true'
-        run: npm ci
-      - uses: actions/cache/save@v4
-        with:
-          key: ${{ runner.os }}-npm-${{matrix.node}}-${{ hashFiles('**/package-lock.json') }}
-          path: |
-            node_modules
   e2e:
     needs: [build]
     strategy:
       matrix:
-        node: [20.10.0]
         os: [macos-latest, ubuntu-latest]
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
@@ -77,84 +33,86 @@ jobs:
       VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm'
-      - name: Restore npm dependencies
-        uses: actions/cache/restore@v4
+          node-version: 22.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+
+      # Cache Playwright browser binaries between runs (~200MB for Chromium)
+      # playwright is a devDependency of the e2e workspace, so commands must be scoped
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm --filter @forgerock/login-widget-e2e exec playwright --version)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: playwright-cache
         with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-npm-${{matrix.node}}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-${{matrix.node}}
-            ${{ runner.os }}-npm
-      - run: npx playwright install
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright-version.outputs.version }}
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @forgerock/login-widget-e2e exec playwright install chromium
+      - name: Install Playwright system dependencies
+        if: runner.os == 'Linux'
+        run: pnpm --filter @forgerock/login-widget-e2e exec playwright install-deps chromium
+
       - uses: actions/download-artifact@v4
         with:
-          name: package-${{ matrix.node }}
-          path: package
-      - run: npm run build
+          name: widget-dist
+          path: packages/login-widget/dist
+      - run: pnpm --filter @forgerock/login-app run build
       - name: e2e
-        run: npm run ci:e2e -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+        run: pnpm --filter @forgerock/login-widget-e2e exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       - name: Upload blob report to GitHub Actions Artifacts
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: blob-report-${{runner.os}}-${{matrix.node}}-${{ matrix.shardIndex }}
-          path: blob-report
+          name: blob-report-${{ runner.os }}-${{ matrix.shardIndex }}
+          path: e2e/blob-report
+          if-no-files-found: ignore
           retention-days: 1
+
   merge-e2e-report:
     strategy:
       matrix:
-        node: [20.10.0]
         os: [macos-latest, ubuntu-latest]
-    # Merge reports after playwright-tests, even if some shards have failed
     if: always()
     needs: [e2e]
-    runs-on: ${{matrix.os}}
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
-      - uses: actions/cache/restore@v4
-        id: npm-cache
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-npm-${{matrix.node}}-${{ hashFiles('**/package-lock.json') }}
-
-      - name: Install dependencies
-        if: steps.npm-cache.outputs.cache-hit != 'true'
-        run: npm ci
+          node-version: 22.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
 
       - name: Download blob reports from GitHub Actions Artifacts
         uses: actions/download-artifact@v4
         with:
           path: all-blob-reports
-          pattern: blob-report-*
+          pattern: blob-report-${{ runner.os }}-*
           merge-multiple: true
 
       - name: Merge into HTML Report
-        run: npx playwright merge-reports --config=merge.config.ts ./all-blob-reports
+        run: |
+          if [ -d all-blob-reports ] && [ "$(ls -A all-blob-reports 2>/dev/null)" ]; then
+            pnpm --filter @forgerock/login-widget-e2e exec playwright merge-reports --config=merge.config.ts ../all-blob-reports
+          else
+            echo "No blob reports found — skipping merge"
+          fi
 
       - name: Upload HTML report
         uses: actions/upload-artifact@v4
         with:
-          name: html-report--attempt--${{runner.os}}-${{matrix.node}}-${{ github.run_attempt }}
-          path: playwright-report
+          name: html-report--attempt--${{ runner.os }}-${{ github.run_attempt }}
+          path: e2e/playwright-report
           retention-days: 14
+
   test-lint-storybook-build:
-    needs: install
-    strategy:
-      matrix:
-        node: [18.x]
-        os: [macos-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     env:
       VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
       VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
@@ -162,65 +120,42 @@ jobs:
       VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node }}
-          cache: 'npm'
-      - name: Restore npm dependencies
-        uses: actions/cache/restore@v4
-        id: npm-cache
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-npm-${{matrix.node}}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-${{matrix.node}}
-      - run: npm run check:lint
-      - run: npm run test
+          node-version: 22.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check:lint
+      - run: pnpm run test
+      - name: Install Playwright for Storybook tests
+        run: pnpm --filter @forgerock/login-widget exec playwright install --with-deps chromium
       - name: Build Storybook
-        run: npm run build:storybook --quiet
+        run: pnpm run build:storybook --quiet
       - name: Serve Storybook and run tests
-        if: ${{ runner.os == 'ubuntu-latest' }} # this one hangs on mac os for some reason
         run: |
-          npx concurrently -k -s first -n "SB,TEST" -c "magenta,blue" \
-            "npx http-server storybook-static --port 6006 --silent" \
-            "npx wait-on tcp:6006 && npm run test:storybook"
+          pnpm exec concurrently -k -s first -n "SB,TEST" -c "magenta,blue" \
+            "pnpm exec http-server packages/login-widget/storybook-static --port 6006 --silent" \
+            "pnpm exec wait-on tcp:6006 && pnpm run test:storybook"
 
   chromatic:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request'
-    needs: install
-    strategy:
-      matrix:
-        node: [18.x]
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0 # Chromatic needs full git history for onlyChanged
+      - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18.x
-          cache: 'npm'
-      - name: Restore npm dependencies
-        uses: actions/cache@v4
-        id: npm-cache
-        with:
-          path: |
-            node_modules
-          key: ${{ runner.os }}-npm-${{matrix.node}}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-npm-${{matrix.node}}
-      - name: Install dependencies if cache invalid
-        if: steps.npm-cache.outputs.cache-hit != 'true'
-        run: npm ci
+          node-version: 22.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
       - uses: chromaui/action@latest
         with:
           onlyChanged: true
           exitOnceUploaded: true
           traceChanged: true
-          diagnostics: true
+          diagnosticsFile: chromatic-diagnostics.json
           buildScriptName: 'build:storybook'
           exitZeroOnChanges: true
         env:

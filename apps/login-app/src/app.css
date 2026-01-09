@@ -1,0 +1,2 @@
+/* Import the widget's Tailwind entry point */
+@import '../../../packages/login-widget/src/app.css';

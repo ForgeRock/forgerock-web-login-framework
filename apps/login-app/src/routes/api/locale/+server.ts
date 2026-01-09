@@ -1,0 +1,37 @@
+/**
+ *
+ * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+
+import type { RequestEvent } from '@sveltejs/kit';
+import type { RequestHandler } from './$types';
+import type { z } from 'zod';
+
+import { getLocale } from '$core/_utilities/i18n.utilities';
+
+import type { stringsSchema } from '$core/locale.store';
+
+export const GET: RequestHandler = async (event: RequestEvent) => {
+  const userLocale = event.request.headers.get('accept-language') || 'en-US';
+  const locale = getLocale(userLocale, '/');
+  const [country, lang] = locale.split('/');
+
+  let localeContent: { default: z.infer<typeof stringsSchema> };
+
+  try {
+    localeContent = await import(`$app-locales/${country}/${lang}/index.json`);
+  } catch (err) {
+    console.error(`User locale content for ${userLocale} was not found.`);
+
+    // Fallback to default US English locale from core
+    // eslint-disable-next-line
+    // @ts-ignore
+    localeContent = await import(`$locales/us/en/index.json`);
+  }
+
+  return new Response(JSON.stringify(localeContent.default));
+};

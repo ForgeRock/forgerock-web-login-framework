@@ -1,40 +1,101 @@
-# Instructions for Beta Testing
+# Testing
 
-## Step 1. Read the README thoroughly
+This document covers how to run the various test suites in the ForgeRock Web Login Framework.
 
-Please read the README and answer the following questions:
+## Table of Contents
 
-1. Does the README address your most important questions quickly?
-2. Do you understand the difference between the two form-factors: modal and inline?
-3. Take note of what's currently NOT supported
-4. What do you feel is missing from the README?
+- [Unit Tests](#unit-tests)
+- [Storybook Tests](#storybook-tests)
+- [E2E Tests](#e2e-tests)
+- [Linting](#linting)
+- [CI Pipeline](#ci-pipeline)
 
-## Step 2. Use the Modal component
+## Unit Tests
 
-[Available video introduction to the Widget](https://drive.google.com/file/d/1rnBYPNY2aUUslGOd3pZMu7mMnZBx6QYK/view?usp=sharing).
+Unit tests use [Vitest](https://vitest.dev/) and live alongside the source code in `packages/login-widget`.
 
-1. Install the Widget into an existing or new app (preferably an existing app that already uses the ForgeRock JavaScript SDK)
-2. Use the Modal component in your app to login a user with ID Cloud's default Login journey
-3. Did the Modal work and look the way you envisioned it?
-4. After authenticating a user, inspect the response in the `journey.onSuccess` callback. Does this response object contain what you would like to know?
-5. Does the Widget provide what you'd need to build a fully functional protected app? Is the `journey`, `modal`, `request` and `user` objects enough?
-6. Was there anything missing from the Widget that you expected? Missing APIs, behavior, style?
+```shell
+# Run tests in watch mode
+pnpm test
 
-## Step 3. Use the Inline component
+# Run tests once (CI mode)
+pnpm test -- --run
+```
 
-1. Install the Widget into an existing or new app
-2. Setup the Inline component in your app to login a user with ID Cloud's default Registration journey
-3. Did the widget work the way you envisioned it?
-4. Was this implementation more difficult than the Modal component? What made it more difficult and how could the Widget make it easier?
-5. Was there anything missing from the Inline component that you expected? Missing APIs, behavior, style?
+## Storybook Tests
 
-## Step 4. Reflect on the overall effort
+[Storybook](https://storybook.js.org/) interaction tests verify component behavior in an isolated environment.
 
-1. Did the Quickstart actually get you started quickly?
-2. Did you like the look and feel of the Widgets (UX)?
-3. How was the developer experience? Was it "intuitive"?
-4. How much customization to the UX do you believe is critical for an MVP?
+```shell
+# Build Storybook
+pnpm build:storybook
 
-## Stretch Goal
+# Run Storybook interaction tests (requires Storybook to be running)
+pnpm storybook         # Start Storybook on port 6006
+pnpm test:storybook    # Run interaction tests against running Storybook
+```
 
-For existing apps that already use the SDK, can you strip out the SDK completely from your app and see if the Widget can replace everything the SDK currently does (with the understanding that the Widget doesn't support all callbacks, yet).
+## E2E Tests
+
+End-to-end tests use [Playwright](https://playwright.dev/) and live in the `e2e/` workspace. See [e2e/README.md](e2e/README.md) for detailed documentation.
+
+### Prerequisites
+
+Before running E2E tests, you must:
+
+1. Build the widget: `pnpm build:widget`
+2. Build the login-app: `pnpm build:app`
+3. Install Playwright browsers: `pnpm exec playwright install chromium`
+
+### Running E2E Tests
+
+```shell
+# Run all E2E tests
+pnpm ci:e2e
+
+# Run with debug mode (opens browser inspector)
+pnpm --filter @forgerock/login-widget-e2e run ci:e2e:debug
+
+# Run a specific test file
+pnpm ci:e2e -- tests/widget/modal/widget-modal.login.test.js
+
+# Run with visible browser
+pnpm ci:e2e -- --headed
+```
+
+### Environment Variables
+
+E2E tests require ForgeRock AM connection details. Set these in your environment or a `.env` file:
+
+| Variable                      | Description            |
+| ----------------------------- | ---------------------- |
+| `VITE_FR_AM_URL`              | ForgeRock AM base URL  |
+| `VITE_FR_AM_COOKIE_NAME`      | AM session cookie name |
+| `VITE_FR_OAUTH_PUBLIC_CLIENT` | OAuth 2.0 client ID    |
+| `VITE_FR_REALM_PATH`          | AM realm path          |
+
+## Linting
+
+```shell
+# Run Prettier + ESLint with auto-fix
+pnpm check:lint
+
+# Run Svelte type checking
+pnpm check:svelte
+```
+
+## CI Pipeline
+
+The CI pipeline (`.github/workflows/ci.yml`) runs the following jobs on every push:
+
+| Job                           | Description                                                                |
+| ----------------------------- | -------------------------------------------------------------------------- |
+| **build**                     | Builds the widget release artifacts                                        |
+| **test-lint-storybook-build** | Runs linting, unit tests, Storybook build, and Storybook interaction tests |
+| **e2e**                       | Runs Playwright tests across macOS + Ubuntu with 4-shard parallelism       |
+| **merge-e2e-report**          | Merges sharded E2E reports into a single HTML report                       |
+| **chromatic**                 | Runs Chromatic visual regression tests                                     |
+
+---
+
+&copy; Copyright 2022-2025 Ping Identity Corporation. All Rights Reserved.

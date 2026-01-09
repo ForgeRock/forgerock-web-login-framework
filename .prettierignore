@@ -1,8 +1,9 @@
 .hars
 .vscode
 .svelte-kit/
-.svelte-kit/tsconfig.json
-package
-.scripts
-svelte-package
+e2e/test-app/.svelte-kit/
+packages/login-widget/dist
+packages/login-widget/svelte-package
 package-lock.json
+pnpm-lock.yaml
+core/**/*.d.ts

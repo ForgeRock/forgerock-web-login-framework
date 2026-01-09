@@ -1,79 +1,147 @@
 name: Release
 on:
-  workflow_dispatch:
-    inputs:
-      releaseToNpm:
-        description: 'Release to npm'
-        required: true
-        type: boolean
-        default: false
   push:
     branches:
-      # - main
-      - next
-      - beta
-      - alpha
-      - '*.x'
+      - main
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch/ref to publish from'
+        required: false
+        default: 'main'
+        type: string
+      dist_tag:
+        description: 'npm dist-tag (e.g. beta, canary, next)'
+        required: false
+        default: 'beta'
+        type: string
+      prerelease:
+        description: 'Changesets prerelease tag (beta/canary)'
+        required: false
+        default: 'beta'
+        type: string
+      access:
+        description: 'npm access level'
+        required: false
+        default: 'public'
+        type: string
+
 permissions:
-  id-token: write # Enable OIDC
   contents: write
-  issues: write
   pull-requests: write
+  id-token: write # Required for npm OIDC trusted publishing & provenance attestation
+
 jobs:
+  # ─── Stable / Beta (automatic on push to main) ─────────────────────────
   release:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node: ['20.x']
-        os: ['ubuntu-latest']
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
-          persist-credentials: false
           fetch-depth: 0
-          token: ${{ secrets.GH_TOKEN }}
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-      - name: Set git config username and email
-        run: git config user.email "ryan.basmajian@forgerock.com" && git config user.name "ryanbas21"
-      - name: Import bot's GPG key for signing commits
-        id: import-gpg
-        uses: crazy-max/ghaction-import-gpg@v5.2.0
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          git_config_global: true
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-      - name: Install dependencies
-        run: npm ci
-      - name: Build
-        run: npm run build:release
-        env:
-          NODE_ENV: production
-          VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
-          VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
-          VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
-          VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
 
-      - name: Login to npm if beta
-        if: ${{ github.ref == 'refs/heads/beta' }}
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+          # No registry-url — OIDC trusted publishing handles auth without NODE_AUTH_TOKEN.
+          # Setting registry-url creates an .npmrc with _authToken=${NODE_AUTH_TOKEN},
+          # which prevents OIDC fallback even when the env var is unset.
+
+      # Node 22.x ships with npm 10.x; OIDC trusted publishing requires npm >= 11.5.1
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@^11.6.0
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build release artifacts
+        run: pnpm run build:release
+
+      # When pending changesets exist: creates/updates a "Version Packages" PR.
+      # When no changesets remain (Version Packages PR was merged): publishes stable to @latest.
+      # Auth is handled by npm OIDC — no NODE_AUTH_TOKEN needed.
+      # Provenance attestation is automatic via publishConfig.provenance in package.json.
+      - name: Create Release PR or Publish Stable
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: pnpm changeset version
+          publish: pnpm changeset publish
+          commit: 'chore(release): version packages'
+          title: 'chore(release): version packages'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # When stable was NOT just published and there are pending changesets,
+      # publish a snapshot beta so every merge to main is immediately available
+      # on npm via `npm install @forgerock/login-widget@beta`.
+      - name: Publish Beta Snapshot
+        if: steps.changesets.outputs.published != 'true' && steps.changesets.outputs.hasChangesets == 'true'
         run: |
-          npx npm-cli-login -u ${{ secrets.VERDACCIO_USERNAME }} -p ${{ secrets.VERDACCIO_PASSWORD }} -e test@domain.test -r https://npm.petrov.ca
+          pnpm changeset version --snapshot beta
+          pnpm changeset publish --tag beta
         env:
-          NODE_AUTH_TOKEN: ${{ secrets.VERDACCIO_NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Release
-        run: npx semantic-release
+      - name: Notify Slack (stable)
+        if: steps.changesets.outputs.published == 'true'
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Published @forgerock/login-widget (stable) — <https://github.com/${{ github.repository }}/releases|View Release>"
+            }
+
+      - name: Notify Slack (beta)
+        if: steps.changesets.outputs.published != 'true' && steps.changesets.outputs.hasChangesets == 'true'
+        uses: slackapi/slack-github-action@v2
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "text": "Published @forgerock/login-widget (beta snapshot) — <https://www.npmjs.com/package/@forgerock/login-widget?activeTab=versions|View on npm>"
+            }
+
+  # ─── Snapshot (manual via workflow_dispatch) ────────────────────────────
+  snapshot:
+    if: github.event_name == 'workflow_dispatch'
+    name: Publish Snapshot
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.branch }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@^11.6.0
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build release artifacts
+        run: pnpm run build:release
+
+      - name: Version packages as prerelease
+        run: pnpm changeset version --snapshot ${{ inputs.prerelease }}
         env:
-          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          HUSKY: 0
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          NPM_TOKEN: ${{ inputs.releaseToNpm && secrets.NPM_TOKEN || secrets.VERDACCIO_NPM_TOKEN }}
-          NPM_CONFIG_REGISTRY: ${{ inputs.releaseToNpm == true && 'https://registry.npmjs.org/' || 'https://npm.petrov.ca/' }}
-          VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
-          VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
-          VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
-          VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Publish must happen in this file — npm OIDC trusted publishing is
+      # bound to the workflow filename configured on npmjs.com.
+      - name: Publish snapshot
+        run: pnpm publish -r --tag ${{ inputs.dist_tag }} --no-git-checks --access ${{ inputs.access }}

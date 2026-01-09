@@ -1,21 +1,19 @@
 {
-  "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
-    "paths": {
-      "$components": ["./src/lib/components"],
-      "$components/*": ["./src/lib/components/*"],
-      "$journey": ["./src/lib/journey"],
-      "$journey/*": ["./src/lib/journey/*"],
-      "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"],
-      "$locales": ["./src/locales"],
-      "$locales/*": ["./src/locales/*"],
-      "$package": ["./package"],
-      "$package/*": ["./package/*"],
-      "$widget": ["./src/widget"],
-      "$widget/*": ["./src/widget/*"]
-    },
-    "strict": true
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"]
   },
-  "exclude": ["./src/locales/**"]
+  "references": [
+    { "path": "core" },
+    { "path": "packages/login-widget" },
+    { "path": "apps/login-app" }
+  ],
+  "exclude": ["node_modules", "packages", "apps", "e2e", "core"]
 }

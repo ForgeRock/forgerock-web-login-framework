@@ -1,0 +1,23 @@
+{
+  "extends": "./.svelte-kit/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "$core": ["../../core"],
+      "$core/*": ["../../core/*"],
+      "$components": ["../../core/components"],
+      "$components/*": ["../../core/components/*"],
+      "$journey": ["../../core/journey"],
+      "$journey/*": ["../../core/journey/*"],
+      "$app-locales": ["./src/locales"],
+      "$app-locales/*": ["./src/locales/*"],
+      "$locales": ["../../core/locales"],
+      "$locales/*": ["../../core/locales/*"],
+      "$package": ["../../packages/login-widget/dist"],
+      "$package/*": ["../../packages/login-widget/dist/*"],
+      "$server": ["./src/lib/server"],
+      "$server/*": ["./src/lib/server/*"]
+    },
+    "strict": true
+  },
+  "exclude": ["../../core/locales/**"]
+}
