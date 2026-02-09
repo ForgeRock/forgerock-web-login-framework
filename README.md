@@ -210,7 +210,7 @@ myConfig.set({
   forgerock: {
     // Minimum required configuration:
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional configuration:
@@ -283,7 +283,7 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional but recommended configuration:
@@ -318,7 +318,7 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional but recommended configuration:
@@ -379,7 +379,7 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional but recommended configuration:
