@@ -74,7 +74,7 @@ This directory stores the locale JSON files for translations. These files are fl
 This directory contains all the routes of this project. This is the standard SvelteKit routes directory. SvelteKit is leveraged in many ways within this project, so here's a breakdown of their usage:
 
 1. `(app)`: contains the routes of the deployable, stand-alone Login Application
-2. `api`: contains the routes of the deployable back-end/procy for the login application
+2. `api`: contains the routes of the deployable back-end/proxy for the login application
 3. `docs`: contains this project's documentation
 4. `e2e`: contains this project's end-to-end test targets
 

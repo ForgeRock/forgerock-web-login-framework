@@ -60,7 +60,7 @@ You can use the ForgeRock Login Widget within React, Vue, Angular, and a number 
 
 It does not currently support server-side rendering (SSR), including Node.js.
 
-The ForgeRock Login Widget uses the [ForgeRock SDK for JavaScript](https://backstage.forgerock.com/docs/sdks/latest/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html) internally, and adds a user interface and state management. This rendering layer helps eliminate the need to develop and maintain the UI components for providing complex authentication flows.
+The ForgeRock Login Widget uses the [ForgeRock SDK for JavaScript](https://docs.pingidentity.com/sdks/latest/sdks/tutorials/javascript/index.html) internally, and adds a user interface and state management. This rendering layer helps eliminate the need to develop and maintain the UI components for providing complex authentication flows.
 
 ForgeRock develops this rendering layer using [Svelte](https://svelte.dev/) and [Tailwind](https://tailwindcss.com/), but these are "compiled away" resulting in no runtime dependencies.
 
@@ -144,7 +144,7 @@ Add the ForgeRock Login Widget to your project using npm as follows:
 npm install @forgerock/login-widget
 ```
 
-If you want to customize the themes included in the Login Widget, you need to download the ForgeRock Web Login Framework source, make your modifications, and build a customized package. Refer to [Build a customized ForgeRock Login Widget](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/01-install.html#build).
+If you want to customize the themes included in the Login Widget, you need to download the ForgeRock Web Login Framework source, make your modifications, and build a customized package. Refer to [Build a customized ForgeRock Login Widget](https://docs.pingidentity.com/sdks/latest/login-widget/tutorial/01-install.html#build).
 
 ### Import the CSS
 
@@ -177,7 +177,7 @@ Importing into your CSS:
 
 The exact syntax for importing the CSS depends on the module system you are using.
 
-For information on using the CSS `layer` feature with the Login Widget, refer to [Controlling the CSS cascade](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/02-configure-css.html#controlling_the_css_cascade).
+For information on using the CSS `layer` feature with the Login Widget, refer to [Controlling the CSS cascade](https://docs.pingidentity.com/sdks/latest/login-widget/tutorial/02-configure-css.html#controlling_the_css_cascade).
 
 ### Import the widget
 
@@ -196,7 +196,7 @@ The ForgeRock Login Widget requires information about the server instance it con
 
 To provide these settings import and use the configuration module and its `set()` method.
 
-The ForgeRock Login Widget uses the same underlying [configuration properties](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/04-configure-sdk.html#config-props) as the SDK for JavaScript. Add your configuration under the `forgerock` property:
+The ForgeRock Login Widget uses the same underlying [configuration properties](https://docs.pingidentity.com/sdks/latest/login-widget/tutorial/04-configure-sdk.html#sdk_configuration_properties) as the SDK for JavaScript. Add your configuration under the `forgerock` property:
 
 ```js
 // Import the modules
@@ -210,7 +210,7 @@ myConfig.set({
   forgerock: {
     // Minimum required configuration:
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional configuration:
@@ -231,7 +231,7 @@ myConfig.set({
 >
 > For example, you must set the configuration before starting a journey with `journeyEvents.start()` or calling either `userEvents.get()` or `tokenEvents.get()`.
 
-For more information on the available properties, refer to [SDK configuration properties](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/04-configure-sdk.html#sdk_configuration_properties).
+For more information on the available properties, refer to [SDK configuration properties](https://docs.pingidentity.com/sdks/latest/login-widget/tutorial/04-configure-sdk.html#sdk_configuration_properties).
 
 ### Instantiate the widget
 
@@ -283,7 +283,7 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional but recommended configuration:
@@ -318,7 +318,7 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional but recommended configuration:
@@ -357,7 +357,7 @@ The modal form factor opens and displays a spinner graphic until you start a jou
 >
 > You can also close it by calling `componentEvents.close()`;
 
-For information on using the widget's inline form factor, refer to [Instantiate the inline form factor](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/05-instantiate.html#inline).
+For information on using the widget's inline form factor, refer to [Instantiate the inline form factor](https://docs.pingidentity.com/sdks/latest/login-widget/tutorial/05-instantiate.html#inline).
 
 ### Start a journey
 
@@ -379,7 +379,7 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+        baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
         timeout: 3000,
     },
     // Optional but recommended configuration:
@@ -408,7 +408,7 @@ journeyEvents.start();
 
 This starts the journey configured as the default in your ForgeRock server and renders the initial callback.
 
-For information about how to specify which journey to use and other parameters, refer to [Configure start() parameters](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/06-journey.html#journey-params).
+For information about how to specify which journey to use and other parameters, refer to [Configure start() parameters](https://docs.pingidentity.com/sdks/latest/login-widget/tutorial/06-journey.html#journey-params).
 
 ### Subscribe to events
 
@@ -452,7 +452,7 @@ userInfoEvents.subscribe((event) => {
 });
 ```
 
-For information on the events each observable returns, refer to the [API Reference](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/widget-api-reference.html).
+For information on the events each observable returns, refer to the [API Reference](https://docs.pingidentity.com/sdks/latest/login-widget/widget-api-reference.html).
 
 #### Unsubscribe from an observable
 
@@ -505,14 +505,14 @@ The `subscribe` can exist before or after this `get` call and still capture the 
 
 All of the Login Widget APIs that involve network calls have an alternative promise implementation that you can use.
 
-For more information, refer to [Use promises rather than observables](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/07-subscribe.html#use_promises_rather_than_observables).
+For more information, refer to [Use promises rather than observables](https://docs.pingidentity.com/sdks/latest/login-widget/tutorial/07-subscribe.html#use_promises_rather_than_observables).
 
 <!--------------------------------------------------------------------------------------------------------------->
 <!-- DOCS -->
 
 ## Documentation
 
-Documentation for the Login Widget is provided at [ForgeRock Backstage](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework.html), and includes topics such as:
+Documentation for the Login Widget is provided at [ForgeRock Backstage](https://docs.pingidentity.com/sdks/latest/login-widget/index.html), and includes topics such as:
 
 - Instantiate the inline form factor
 - Theme the widget
@@ -526,12 +526,12 @@ Documentation for the Login Widget is provided at [ForgeRock Backstage](https://
 
 ## Support
 
-If you encounter any issues, be sure to check our **[Troubleshooting](https://backstage.forgerock.com/knowledge/kb/article/a68547609)** pages.
+If you encounter any issues, be sure to check our **[Troubleshooting](https://support.pingidentity.com/s/article/How-do-I-troubleshoot-the-ForgeRock-SDK-for-JavaScript)** pages.
 
 Support tickets can be raised whenever you need our assistance; here are some examples of when it is appropriate to open a ticket (but not limited to):
 
 - Suspected bugs or problems with ForgeRock software.
-- Requests for assistance - please look at the **[Documentation](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework.html)** and **[Knowledge Base](https://backstage.forgerock.com/knowledge/kb/home/g32324668)** first.
+- Requests for assistance - please look at the **[Documentation](https://docs.pingidentity.com/sdks/latest/login-widget/index.html)** and **[Knowledge Base](https://support.pingidentity.com/s/knowledge-base?category=Forgerock_SDK)** first.
 
 You can raise a ticket using **[BackStage](https://backstage.forgerock.com/support/tickets)**, our customer support portal that provides one-stop access to ForgeRock services.
 
