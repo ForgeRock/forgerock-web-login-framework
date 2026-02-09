@@ -22,7 +22,7 @@
 - [Overview](#overview)
 - [Functionality](#functionality)
   - [Supported](#supported)
-  - [Net yet supported](#net-yet-supported)
+  - [Not yet supported](#not-yet-supported)
 - [Requirements](#requirements)
   - [Tested](#tested)
   - [Unsupported](#unsupported)
@@ -86,7 +86,7 @@ The ForgeRock Login Widget supports the following ForgeRock functionality:
     - Google
 - Email suspend, or "magic links"
 
-### Net yet supported
+### Not yet supported
 
 - WebAuthn
 - Centralized login
@@ -210,15 +210,14 @@ myConfig.set({
   forgerock: {
     // Minimum required configuration:
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
-        timeout: 3000,
+      baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+      timeout: 3000,
     },
     // Optional configuration:
     clientId: 'ForgeRockSDKClient', // The default is `WebLoginWidgetClient`
-    realmPath: 'alpha',  // This is the default if not specified
-    redirectUri: window.location.href,  // This is the default if not specified
+    realmPath: 'alpha', // This is the default if not specified
+    redirectUri: window.location.href, // This is the default if not specified
     scope: 'openid profile', // This is the default if not specified
-    },
   },
 });
 ```
@@ -283,15 +282,14 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
-        timeout: 3000,
+      baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+      timeout: 3000,
     },
     // Optional but recommended configuration:
     realmPath: 'alpha',
     clientId: 'ForgeRockSDKClient',
     redirectUri: window.location.href,
-    scope: 'openid email'
-    },
+    scope: 'openid email',
   },
 });
 
@@ -318,15 +316,14 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
-        timeout: 3000,
+      baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+      timeout: 3000,
     },
     // Optional but recommended configuration:
     realmPath: 'alpha',
     clientId: 'ForgeRockSDKClient',
     redirectUri: window.location.href,
-    scope: 'openid email'
-    },
+    scope: 'openid email',
   },
 });
 
@@ -379,15 +376,14 @@ const myConfig = configuration();
 myConfig.set({
   forgerock: {
     serverConfig: {
-        baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
-        timeout: 3000,
+      baseUrl: 'https://openam-forgerock-sdks.forgeblocks.com/am/',
+      timeout: 3000,
     },
     // Optional but recommended configuration:
     realmPath: 'alpha',
     clientId: 'ForgeRockSDKClient',
     redirectUri: window.location.href,
-    scope: 'openid email'
-    },
+    scope: 'openid email',
   },
 });
 
@@ -486,7 +482,7 @@ You can get the current values stored within the ForgeRock Login Widget without 
 let userInfo;
 
 // Call subscribe, get the current local value, and then immediately call the returned function
-userInfoEvents.subscribe((event) => (userinfo = event.response))(); // <-- notice the second pair of parentheses
+userInfoEvents.subscribe((event) => (userInfo = event.response))(); // <-- notice the second pair of parentheses
 ```
 
 #### Get updated values from ForgeRock
@@ -512,7 +508,7 @@ For more information, refer to [Use promises rather than observables](https://ba
 
 ## Documentation
 
-Documentation for the Login Widget is provided at [ForgeRock Backstage](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework.html), and includes topics such as:
+Documentation for the Login Widget is provided at [ForgeRock BackStage](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework.html), and includes topics such as:
 
 - Instantiate the inline form factor
 - Theme the widget
