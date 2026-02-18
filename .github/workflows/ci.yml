@@ -93,7 +93,7 @@ jobs:
             ${{ runner.os }}-npm-${{matrix.node}}
             ${{ runner.os }}-npm
       - run: npx playwright install
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           name: package-${{ matrix.node }}
           path: package
@@ -133,7 +133,7 @@ jobs:
         run: npm ci
 
       - name: Download blob reports from GitHub Actions Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: all-blob-reports
           pattern: blob-report-*
