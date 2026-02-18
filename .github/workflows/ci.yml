@@ -10,7 +10,7 @@ jobs:
         node: [20.10.0, 18.x]
         os: [macos-latest]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -39,7 +39,7 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Node ${{ matrix.node }} Run
@@ -76,7 +76,7 @@ jobs:
       VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
       VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -117,7 +117,7 @@ jobs:
     needs: [e2e]
     runs-on: ${{matrix.os}}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -161,7 +161,7 @@ jobs:
       VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
       VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
@@ -196,7 +196,7 @@ jobs:
       matrix:
         node: [18.x]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - uses: actions/setup-node@v4
