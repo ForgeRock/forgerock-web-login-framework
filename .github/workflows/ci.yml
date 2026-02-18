@@ -27,7 +27,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-npm-${{matrix.node}}
       - run: npm run build:release
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: package-${{ matrix.node }}
           path: package/*
@@ -102,7 +102,7 @@ jobs:
         run: npm run ci:e2e -- --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       - name: Upload blob report to GitHub Actions Artifacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: blob-report-${{runner.os}}-${{matrix.node}}-${{ matrix.shardIndex }}
           path: blob-report
@@ -143,7 +143,7 @@ jobs:
         run: npx playwright merge-reports --config=merge.config.ts ./all-blob-reports
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: html-report--attempt--${{runner.os}}-${{matrix.node}}-${{ github.run_attempt }}
           path: playwright-report
@@ -225,7 +225,7 @@ jobs:
           exitZeroOnChanges: true
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         if: always()
         with:
           name: chromatic-build-artifacts-${{ github.run_id }}
