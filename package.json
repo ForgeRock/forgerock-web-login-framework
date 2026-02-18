@@ -46,7 +46,7 @@
     }
   },
   "optionalDependencies": {
-    "@rollup/rollup-linux-x64-gnu": "4.9.5"
+    "@rollup/rollup-linux-x64-gnu": "4.57.1"
   },
   "dependencies": {
     "@forgerock/javascript-sdk": "^4.4.2",
