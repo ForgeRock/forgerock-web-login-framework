@@ -105,7 +105,7 @@
     "chromatic": "^10.9.1",
     "color": "4.2.3",
     "commitizen": "^4.3.0",
-    "concurrently": "^8.2.2",
+    "concurrently": "^9.2.1",
     "cz-conventional-changelog": "^3.3.0",
     "dotenv": "^16.4.1",
     "eslint": "^8.53.0",
