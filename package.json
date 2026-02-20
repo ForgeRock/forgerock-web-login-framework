@@ -49,7 +49,7 @@
     "@rollup/rollup-linux-x64-gnu": "4.9.5"
   },
   "dependencies": {
-    "@forgerock/javascript-sdk": "^4.4.2",
+    "@forgerock/javascript-sdk": "^4.8.3",
     "@forgerock/ping-protect": "^4.4.2",
     "@rockcarver/frodo-lib": "^2.0.0-60",
     "axios": "^1.6.7",
