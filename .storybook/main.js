@@ -1,7 +1,10 @@
-const { resolve } = require('path');
-const { mergeConfig } = require('vite');
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { mergeConfig } from 'vite';
 
-module.exports = {
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+export default {
   stories: ['../core/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
   staticDirs: ['../apps/login-app/static'],
 

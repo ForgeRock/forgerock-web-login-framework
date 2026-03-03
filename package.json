@@ -30,6 +30,7 @@
     "@eslint/js": "^9.39.2",
     "@forgerock/javascript-sdk": "^4.4.2",
     "@forgerock/ping-protect": "^4.4.2",
+    "axe-playwright": "^1.2.3",
     "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-links": "^10.1.11",
@@ -60,6 +61,7 @@
     "svelte-eslint-parser": "^1.5.1",
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.52.0",
+    "vite": "^5.4.21",
     "wait-on": "^7.2.0",
     "xss": "1.0.14",
     "zod": "3.22.4"
