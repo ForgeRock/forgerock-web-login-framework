@@ -14,14 +14,14 @@
     "dev": "pnpm run build:widget && pnpm --filter @forgerock/login-app run dev",
     "test": "pnpm --filter @forgerock/login-widget run test",
     "test:storybook": "test-storybook",
-    "check:lint": "prettier --ignore-path .gitignore --check . && eslint .",
+    "check:lint": "prettier --ignore-path .gitignore --ignore-path .prettierignore --check . && eslint .",
     "check:svelte": "pnpm --filter @forgerock/login-app run check:svelte",
     "ci:e2e": "pnpm --filter @forgerock/login-widget-e2e run ci:e2e",
     "chromatic": "chromatic",
     "storybook": "storybook dev --no-open -p 6006",
     "clean": "git clean -fdX -e \"!.env\"",
     "commit": "cz",
-    "format": "prettier --ignore-path .gitignore --write .",
+    "format": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write .",
     "prepare": "is-ci || husky install"
   },
   "devDependencies": {
