@@ -1,7 +1,7 @@
 /* Write your global styles here, in PostCSS syntax */
 @tailwind base;
-@tailwind utilities;
 @tailwind components;
+@tailwind utilities;
 @tailwind variants;
 
 /* Including this here to ensure the animation and keyframes get included from config */
