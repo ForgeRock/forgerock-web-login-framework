@@ -6,6 +6,7 @@ import { resolve } from 'path';
 
 export default defineConfig(
   ({ mode }): UserConfig => ({
+    envDir: resolve('../..'),
     plugins: [
       // Only use SSL plugin in development mode, not production/preview
       ...(mode === 'development' ? [basicSsl()] : []),
