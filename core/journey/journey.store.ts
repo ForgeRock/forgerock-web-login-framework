@@ -340,6 +340,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             message: failureMessageStr,
             stage: prevStep?.payload?.stage,
             troubleshoot: null,
+            detail: nextStep.payload?.detail,
           },
           loading: false,
           metadata: {
@@ -370,6 +371,7 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
             message: failureMessageStr,
             stage: prevStep?.payload?.stage,
             troubleshoot: null,
+            detail: nextStep.payload?.detail,
           },
           loading: false,
           metadata: null,
