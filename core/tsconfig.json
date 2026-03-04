@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "verbatimModuleSyntax": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "declaration": false,
+    "sourceMap": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "paths": {
+      "$core": ["."],
+      "$core/*": ["./*"],
+      "$components": ["./components"],
+      "$components/*": ["./components/*"],
+      "$journey": ["./journey"],
+      "$journey/*": ["./journey/*"],
+      "$locales": ["./locales"],
+      "$locales/*": ["./locales/*"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.svelte"],
+  "exclude": ["node_modules", "**/*.test.ts", "**/*.stories.ts", "**/*.stories.js"]
+}

@@ -1,0 +1,7 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'e2e'
+
+overrides:
+  vite>rollup: 'npm:@rollup/wasm-node'

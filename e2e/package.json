@@ -1,0 +1,15 @@
+{
+  "name": "@forgerock/login-widget-e2e",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ci:e2e": "playwright test",
+    "ci:e2e:debug": "PWDEBUG=1 playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.1",
+    "axe-playwright": "^1.2.3",
+    "playwright": "^1.44.0",
+    "uuid": "9.0.1"
+  }
+}

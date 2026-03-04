@@ -1,10 +1,8 @@
-import { themes } from '@storybook/theming';
+import { themes } from 'storybook/theming';
 
-import { initialize } from '../src/lib/locale.store';
+import { initialize } from '../core/locale.store';
 
-import '../src/app.css';
-
-import { withThemeByClassName } from '@storybook/addon-styling';
+import '../packages/login-widget/src/app.css';
 
 // Initializes localized content globally for all stories
 initialize();
@@ -26,7 +24,6 @@ const bg = prefersDarkTheme ? themes.dark.appBg : themes.light.appBg;
 document.body.style = `background-color: ${bg};`;
 
 export const parameters = {
-  actions: { argTypesRegex: '^on[A-Z].*' },
   // backgrounds: {
   //   default: 'dark',
   //   values: [
@@ -54,13 +51,4 @@ export const parameters = {
   },
 };
 
-export const decorators = [
-  // Adds theme switching support.
-  withThemeByClassName({
-    themes: {
-      light: 'light',
-      dark: 'dark',
-    },
-    defaultTheme: 'light',
-  }),
-];
+export const tags = ['autodocs'];

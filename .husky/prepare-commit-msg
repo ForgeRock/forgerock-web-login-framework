@@ -2,5 +2,5 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 if [ "$2" == "template" ]; then	  # Only run commitizen if no commit message was already provided.
-  exec < /dev/tty && npm run commit || true
+  exec < /dev/tty && pnpm run commit || true
 fi

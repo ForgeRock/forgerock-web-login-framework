@@ -1,0 +1,47 @@
+<!--
+ 
+ Copyright © 2025 Ping Identity Corporation. All right reserved.
+ 
+ This software may be modified and distributed under the terms
+ of the MIT license. See the LICENSE file for details.
+ 
+ -->
+
+<script lang="ts">
+  import { interpolate } from '$core/_utilities/i18n.utilities';
+
+  import type { StageJourneyObject } from '$journey/journey.interfaces';
+  import { configuredJourneysStore } from '$journey/config.store';
+
+  export let journey: StageJourneyObject;
+
+  let stack = journey.stack;
+  let string = '';
+
+  function constructString() {
+    const currentJourney = $configuredJourneysStore.find((journey) => {
+      return journey.journey === $stack[$stack.length - 2]?.tree;
+    });
+
+    const key = currentJourney?.key;
+    const capitalizedKey =
+      typeof key === 'string' ? key.replace(/([a-z])/, (_, char) => `${char.toUpperCase()}`) : key;
+    return `backTo${capitalizedKey || 'Default'}`;
+  }
+
+  $: {
+    string = constructString();
+  }
+</script>
+
+{#if $stack.length > 1}
+  <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
+    <button
+      on:click|preventDefault={() => {
+        journey?.pop();
+      }}
+    >
+      {interpolate(string)}
+    </button>
+  </p>
+{/if}

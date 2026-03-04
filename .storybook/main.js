@@ -1,59 +1,49 @@
-const { resolve } = require('path');
-const preprocess = require('svelte-preprocess');
-const { mergeConfig } = require('vite'); // use `mergeConfig` to recursively merge Vite options
-const turbosnap = require('vite-plugin-turbosnap');
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { mergeConfig } from 'vite';
 
-module.exports = {
-  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
-  staticDirs: ['../static'],
+const __dirname = dirname(fileURLToPath(import.meta.url));
+
+export default {
+  stories: ['../core/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
+  staticDirs: ['../apps/login-app/static'],
+
   addons: [
     '@storybook/addon-a11y',
     '@storybook/addon-links',
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    // https://storybook.js.org/addons/storybook-addon-code-editor
-    // 'storybook-addon-code-editor',
-    'storybook-dark-mode',
-    {
-      name: '@storybook/addon-styling',
-      options: {},
-    },
+    '@vueless/storybook-dark-mode',
+    '@storybook/addon-docs',
   ],
 
   framework: {
     name: '@storybook/sveltekit',
     options: {},
   },
-  // For tighter Vite integration
-  async viteFinal(config, { configType }) {
-    // return the customized config
+
+  async viteFinal(config) {
+    // Check if the Svelte Vite plugin is already registered by the framework.
+    // When Storybook runs from the monorepo root (outside SvelteKit), the
+    // framework preset may not add it automatically.
+    const hasSveltePlugin = (config.plugins || [])
+      .flat()
+      .some((p) => p && p.name && p.name.startsWith('vite-plugin-svelte'));
+
+    const extraPlugins = [];
+    if (!hasSveltePlugin) {
+      const { svelte } = await import('@sveltejs/vite-plugin-svelte');
+      extraPlugins.push(svelte());
+    }
+
     return mergeConfig(config, {
-      plugins:
-        configType === 'PRODUCTION'
-          ? [
-              turbosnap({
-                rootDir: config.root ?? process.cwd(),
-              }),
-            ]
-          : [],
-      // customize the Vite config here
+      plugins: extraPlugins,
       resolve: {
         alias: {
-          /**
-           * Reminder to ensure aliases are also added here:
-           * 1. /config.alias.js
-           * 2. /tsconfig.json
-           */
-          $components: resolve('./src/lib/components'),
-          $journey: resolve('./src/lib/journey'),
-          $lib: resolve('./src/lib'),
-          $locales: resolve('./src/locales'),
-          $widget: resolve('./src/widget'),
+          $core: resolve(__dirname, '../core'),
+          $components: resolve(__dirname, '../core/components'),
+          $journey: resolve(__dirname, '../core/journey'),
+          $locales: resolve(__dirname, '../core/locales'),
         },
       },
     });
-  },
-  docs: {
-    autodocs: true,
   },
 };
