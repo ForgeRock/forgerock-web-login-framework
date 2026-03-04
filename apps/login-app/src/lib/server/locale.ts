@@ -44,7 +44,7 @@ export const loadLocaleContent = (acceptLanguage: string): Effect.Effect<LocaleS
   // so Vite can statically analyze the glob pattern and bundle all locale files.
   return pipe(
     Effect.tryPromise({
-      try: () => import(`$locales/${country}/${lang}/index.json`),
+      try: () => import(`$app-locales/${country}/${lang}/index.json`),
       catch: identity,
     }),
     Effect.map((mod: LocaleModule) => mod.default),
