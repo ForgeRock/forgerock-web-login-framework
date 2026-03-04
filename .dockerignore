@@ -1,5 +1,49 @@
-node_modules
+# =============================================================================
+# .dockerignore — keep Docker build context minimal
+# =============================================================================
+
+# --- VCS & CI ----------------------------------------------------------------
 .git
+.github
+.husky
+.changeset
+
+# --- IDE & tooling -----------------------------------------------------------
+.vscode
+.claude
+.playwright-mcp
+
+# --- Docker (prevent recursive copy) ----------------------------------------
 *Dockerfile*
 *docker-compose*
+
+# --- Node / build artifacts --------------------------------------------------
+node_modules
+.svelte-kit
+storybook-static
+dist
+
+# --- Test files --------------------------------------------------------------
+**/*.test.ts
+**/*.spec.ts
+**/*.bench.ts
+**/*.stories.js
+**/*.story.svelte
+**/integration/
+e2e/tests/
+e2e/playwright.config.ts
+e2e/playwright-report/
+
+# --- Documentation -----------------------------------------------------------
+*.md
+LICENSE
+
+# --- Dev-only root files -----------------------------------------------------
+bashrc
+.env
+.env.*
+.eslintrc.*
+.prettierrc
+.prettierignore
+.editorconfig
 npm-debug.log

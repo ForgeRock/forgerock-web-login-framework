@@ -1,3 +1,4 @@
+.claude
 .DS_Store
 storybook-static
 node_modules
@@ -36,3 +37,7 @@ core/**/*.d.ts
 # Misc
 .syncthing*
 .eslintcache
+
+# Playwright test generator scaffolding
+seed.spec.ts
+specs/

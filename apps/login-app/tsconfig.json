@@ -15,7 +15,9 @@
       "$package": ["../../packages/login-widget/dist"],
       "$package/*": ["../../packages/login-widget/dist/*"],
       "$server": ["./src/lib/server"],
-      "$server/*": ["./src/lib/server/*"]
+      "$server/*": ["./src/lib/server/*"],
+      "$routes": ["./src/routes"],
+      "$routes/*": ["./src/routes/*"]
     },
     "strict": true
   },

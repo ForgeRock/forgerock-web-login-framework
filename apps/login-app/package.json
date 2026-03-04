@@ -6,22 +6,33 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning"
+    "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.ts",
+    "test:e2e:bff": "playwright test --config playwright.bff.config.ts",
+    "test:e2e:bff:browserstack": "playwright test --config playwright.bff.browserstack.config.ts"
   },
   "dependencies": {
-    "@forgerock/login-widget": "workspace:*"
+    "@effect/opentelemetry": "^0.61.0",
+    "@effect/platform": "^0.94.2",
+    "@forgerock/login-widget": "workspace:*",
+    "effect": "^3.19.15"
   },
   "devDependencies": {
+    "@effect/vitest": "^0.27.0",
+    "@playwright/test": "^1.44.1",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-node": "^5.4.0",
-    "@sveltejs/kit": "^2.53.3",
+    "@sveltejs/kit": "^2.49.4",
     "@sveltejs/vite-plugin-svelte": "^4.0.4",
     "@types/grecaptcha": "^3.0.9",
-    "@types/uuid": "^9.0.8",
     "@vitejs/plugin-basic-ssl": "^2.1.3",
     "autoprefixer": "^10.4.17",
+    "browserstack-local": "^1.5.11",
     "dotenv": "^16.4.1",
     "mdsvex": "0.12.6",
+    "msw": "^2.12.10",
     "postcss": "^8.4.38",
     "remark-autolink-headings": "^7.0.1",
     "remark-slug": "^7.0.1",
@@ -29,7 +40,7 @@
     "svelte-check": "^4.3.5",
     "svelte-preprocess": "^6.0.3",
     "tailwindcss": "^3.3.3",
-    "uuid": "9.0.1",
-    "vite": "^5.4.21"
+    "vite": "^5.4.21",
+    "vitest": "^3.1.1"
   }
 }

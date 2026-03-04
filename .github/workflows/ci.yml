@@ -1,6 +1,8 @@
 name: 'CI Pipeline'
 on:
   push:
+    branches: [main, beta]
+  pull_request:
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -17,6 +19,42 @@ jobs:
         with:
           name: widget-dist
           path: packages/login-widget/dist/*
+
+  bff-e2e:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+
+      - name: Get Playwright version
+        id: playwright-version
+        run: echo "version=$(pnpm --filter @forgerock/login-app exec playwright --version)" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-bff-${{ steps.playwright-version.outputs.version }}
+      - name: Install Playwright Chromium
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: pnpm --filter @forgerock/login-app exec playwright install chromium
+      - name: Install Playwright system dependencies
+        run: pnpm --filter @forgerock/login-app exec playwright install-deps chromium
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: widget-dist
+          path: packages/login-widget/dist
+      - name: Build login-app (adapter-node)
+        run: PREVIEW=true pnpm --filter @forgerock/login-app run build
+
+      - name: BFF E2E tests
+        run: pnpm --filter @forgerock/login-app exec playwright test --config playwright.bff.config.ts --project chromium-js --project chromium-nojs
 
   e2e:
     needs: [build]
@@ -128,6 +166,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check:lint
       - run: pnpm run test
+      - name: Server unit tests
+        run: pnpm --filter login-app exec svelte-kit sync && pnpm --filter login-app run test:run
       - name: Install Playwright for Storybook tests
         run: pnpm --filter @forgerock/login-widget exec playwright install --with-deps chromium
       - name: Build Storybook
@@ -167,3 +207,46 @@ jobs:
           path: |
             chromatic-diagnostics.json
             **/build-storybook.log
+
+  bff-e2e-browserstack:
+    name: 'BFF E2E (BrowserStack)'
+    needs: [build]
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    env:
+      BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
+      BROWSERSTACK_ACCESS_KEY: ${{ secrets.BROWSERSTACK_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'pnpm'
+      - run: pnpm install --frozen-lockfile
+
+      - name: Start BrowserStack Local Tunnel
+        uses: browserstack/github-actions/setup-local@master
+        with:
+          local-testing: start
+          local-logging-level: 1
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: widget-dist
+          path: packages/login-widget/dist
+
+      - name: Build login-app
+        run: PREVIEW=true pnpm --filter @forgerock/login-app run build
+
+      - name: Run BFF E2E on BrowserStack
+        run: pnpm --filter @forgerock/login-app run test:e2e:bff:browserstack
+        env:
+          BROWSERSTACK_BUILD_NAME: bff-e2e-${{ github.run_id }}
+
+      - name: Stop BrowserStack Local Tunnel
+        if: always()
+        uses: browserstack/github-actions/setup-local@master
+        with:
+          local-testing: stop

@@ -1,36 +1,40 @@
-/**
- *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
- *
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- *
- **/
-
-import type { RequestEvent } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
-import { get as getCookie, remove as removeCookie } from '$server/sessions';
+import { Effect, pipe } from 'effect';
 
-export const POST: RequestHandler = async (event: RequestEvent) => {
-  const cookie = event.request.headers.get('cookie');
-  const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
-  const reqCookie = Array.isArray(reqCookieUuid) && getCookie(reqCookieUuid[1]);
-  Array.isArray(reqCookieUuid) && removeCookie(reqCookieUuid[1]);
+import { deleteAllCookies, readCookiesAsMap, unsealSession } from '$server/cookie-crypto';
+import { amResponseToHttp } from '$server/error-response';
+import { checkRateLimit } from '$server/request';
+import { handleRoute, run } from '$server/run';
+import { AmProxyService } from '$server/services/am-proxy';
+import { AppConfigService } from '$server/services/app-config';
 
-  const response = await fetch(`${AM_DOMAIN_PATH}${JSON_REALM_PATH}/sessions/${event.url.search}`, {
-    method: 'POST',
-    headers: {
-      cookie: reqCookie ? reqCookie : '',
-    },
-  });
-
-  const resBody = await response.text();
-  // console.log(response);
-
-  const headers = new Headers();
-  headers.append('set-cookie', '');
-
-  return new Response(resBody, { headers });
-};
+/**
+ * POST /api/sessions — AM session logout.
+ * Reads the AM cookie from `__session`, calls AM's session logout endpoint,
+ * and clears all BFF cookies.
+ */
+export const POST: RequestHandler = (event) =>
+  pipe(
+    checkRateLimit(event.getClientAddress(), '/api/sessions'),
+    Effect.andThen(
+      Effect.all({
+        config: AppConfigService,
+        amProxy: AmProxyService,
+        session: unsealSession(readCookiesAsMap(event.cookies)),
+      }),
+    ),
+    Effect.flatMap(({ config, amProxy, session }) =>
+      amProxy
+        .logout({
+          cookie: session.amCookie,
+          queryString: event.url.search.slice(1),
+        })
+        .pipe(
+          Effect.tap(() => Effect.sync(() => deleteAllCookies(event.cookies, config))),
+          Effect.map(amResponseToHttp),
+        ),
+    ),
+    handleRoute({ method: event.request.method, pathname: event.url.pathname }),
+    run,
+  );

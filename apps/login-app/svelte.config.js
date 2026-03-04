@@ -17,6 +17,27 @@ const config = {
   },
   kit: {
     adapter: process.env.PREVIEW ? node() : auto(),
+    /**
+     * CSP via SvelteKit's built-in support — automatically generates nonces
+     * for inline scripts (Svelte hydration) so they aren't blocked by
+     * `script-src 'self'`. Per-route overrides happen in hooks.server.ts:
+     * - /e2e routes: CSP header removed (widget makes direct cross-origin AM requests)
+     * - /callback: frame-ancestors relaxed to 'self' (SDK uses hidden iframe for OAuth)
+     */
+    csp: {
+      mode: 'auto',
+      directives: {
+        'default-src': ['self'],
+        'script-src': ['self'],
+        'style-src': ['self', 'unsafe-inline'],
+        'img-src': ['self', 'data:'],
+        'font-src': ['self'],
+        'connect-src': ['self'],
+        'frame-ancestors': ['none'],
+        'base-uri': ['self'],
+        'form-action': ['self'],
+      },
+    },
     // $lib now defaults to SvelteKit's standard src/lib/ — the app's own code
     alias: {
       $core: path.resolve('../../core'),

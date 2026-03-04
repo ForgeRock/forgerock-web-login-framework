@@ -13,6 +13,10 @@ export default defineConfig({
       VITE_FR_AM_URL: 'https://openam-sdks.forgeblocks.com/am',
       VITE_FR_AM_COOKIE_NAME: '5421aeddf91aa20',
       VITE_FR_AM_JOURNEY_NAME: 'Login',
+      VITE_FR_REALM_PATH: 'alpha',
+      VITE_FR_OAUTH_PUBLIC_CLIENT: 'WebOAuthClient',
+      COOKIE_SECRET: 'e2e-test-placeholder-key-that-is-at-least-32-chars',
+      ORIGIN: 'http://localhost:3000',
     },
   },
   use: {
@@ -25,7 +29,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   workers: process.env.CI ? 1 : undefined,
   testDir: 'tests',
-  timeout: 120 * 1000,
+  timeout: 30_000,
   reporter: process.env.CI ? 'blob' : 'dot',
   projects: [
     {

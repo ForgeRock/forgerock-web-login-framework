@@ -28,7 +28,7 @@
     async function loadingPingProtect() {
       const config = callback.getConfig();
       try {
-        await PIProtect.start(config);
+        await PIProtect.start(config as Parameters<typeof PIProtect.start>[0]);
         loaded = true;
       } catch (error) {
         if (error instanceof Error) {
