@@ -1,31 +1,29 @@
-/**
- *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
- *
- * This software may be modified and distributed under the terms
- * of the MIT license. See the LICENSE file for details.
- *
- **/
-
-import type { RequestEvent } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 
-import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$core/constants';
+import { Effect, pipe } from 'effect';
 
-export const POST: RequestHandler = async (event: RequestEvent) => {
-  const bodyStream = event?.request?.body;
-  const body = bodyStream?.getReader().read();
+import { checkRateLimit, readRequestBody } from '$server/request';
+import { amResponseToHttp } from '$server/error-response';
+import { handleRoute, run } from '$server/run';
+import { AmProxyService } from '$server/services/am-proxy';
 
-  const response = await fetch(`${AM_DOMAIN_PATH}${OAUTH_REALM_PATH}/access_token`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/x-www-form-urlencoded',
-    },
-    body: body?.toString(),
-  });
-
-  const resBody = await response.text();
-  // console.log(resBody);
-
-  return new Response(resBody);
-};
+/**
+ * POST /api/tokens
+ *
+ * Proxy for AM's /access_token endpoint.
+ * The customer's server calls this with the authorization_code + code_verifier
+ * to exchange for tokens. The BFF passes through — no session state needed.
+ *
+ * Note: The code_verifier was generated server-side during authentication and
+ * included in the authorize redirect. The customer's server extracts it from
+ * the redirect URL and sends it here for the token exchange.
+ */
+export const POST: RequestHandler = (event) =>
+  pipe(
+    checkRateLimit(event.getClientAddress(), '/api/tokens'),
+    Effect.andThen(Effect.all({ amProxy: AmProxyService, body: readRequestBody(event.request) })),
+    Effect.flatMap(({ amProxy, body }) => amProxy.getTokens({ body })),
+    Effect.map(amResponseToHttp),
+    handleRoute({ method: event.request.method, pathname: event.url.pathname }),
+    run,
+  );

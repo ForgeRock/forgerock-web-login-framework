@@ -76,6 +76,16 @@ export default tseslint.config(
     },
   },
 
+  // BFF server code: strict type safety + structured logging
+  {
+    files: ['apps/login-app/src/lib/server/**/*.ts', 'apps/login-app/src/hooks.server.ts'],
+    rules: {
+      '@typescript-eslint/consistent-type-assertions': ['error', { assertionStyle: 'never' }],
+      'no-console': ['error', { allow: ['warn'] }],
+      '@typescript-eslint/no-explicit-any': 'error',
+    },
+  },
+
   // Ignore patterns
   {
     ignores: [
@@ -92,6 +102,8 @@ export default tseslint.config(
       '**/build/**',
       'core/**/*.d.ts',
       'packages/login-widget/dist/**/*.d.ts',
+      'seed.spec.ts',
+      'specs/**',
     ],
   },
 );

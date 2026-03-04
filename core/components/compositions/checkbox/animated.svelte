@@ -45,11 +45,11 @@
     TODO: Currently NOT using the primitive checkbox component, but re-evaluate later
    -->
   <input
-    aria-describedby={`${key}-message`}
     aria-invalid={isInvalid}
     bind:this={inputEl}
     class="tw_checkbox-input_animated dark:tw_checkbox-input_animated_dark tw_sr-only"
     checked={value}
+    data-message={`${key}-message`}
     id={key}
     on:change={onChangeWrapper}
     required={isRequired}
@@ -63,7 +63,7 @@
     NOTE: The below places the error message on the second row and in second
     column to match the label's layout.
    -->
-  <div class="tw_ml-10" id={`${key}-message`}>
-    <Message dirtyMessage={message} {showMessage} type={isInvalid ? 'error' : 'info'} />
+  <div class="tw_ml-10">
+    <Message {key} dirtyMessage={message} {showMessage} type={isInvalid ? 'error' : 'info'} />
   </div>
 </div>

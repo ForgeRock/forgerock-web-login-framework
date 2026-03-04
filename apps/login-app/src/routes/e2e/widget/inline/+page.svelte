@@ -38,20 +38,22 @@
     userResponse = null;
   }
 
-  componentEvents.subscribe((event) => {
+  componentEvents.subscribe((event: { lastAction: string }) => {
     if (event.lastAction === 'mount') {
       console.log('Form mounted');
     }
   });
-  journeyEvents.subscribe((event) => {
-    if (event?.user?.successful) {
-      userEvent = event.user;
-      userResponse = event.user.response as UserResponseObj;
-    }
-    if (event.journey.error || event.oauth.error || event.user.error) {
-      console.log('Login failure event fired');
-    }
-  });
+  journeyEvents.subscribe(
+    (event: { user: UserStoreValue; journey: { error?: unknown }; oauth: { error?: unknown } }) => {
+      if (event?.user?.successful) {
+        userEvent = event.user;
+        userResponse = event.user.response as UserResponseObj;
+      }
+      if (event.journey.error || event.oauth.error || event.user.error) {
+        console.log('Login failure event fired');
+      }
+    },
+  );
 
   onMount(async () => {
     let content;

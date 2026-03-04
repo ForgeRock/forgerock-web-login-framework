@@ -3,13 +3,32 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: deploy
       args:
-        VITE_FR_AM_URL: ${VITE_FR_AM_URL}
-        VITE_FR_AM_COOKIE_NAME: ${VITE_FR_AM_COOKIE_NAME}
-        VITE_FR_OAUTH_PUBLIC_CLIENT: ${VITE_FR_OAUTH_PUBLIC_CLIENT}
-        VITE_FR_REALM_PATH: ${VITE_FR_REALM_PATH}
-    env_file:
-      - .env
+        VITE_FR_AM_URL: $VITE_FR_AM_URL
+        VITE_FR_AM_COOKIE_NAME: $VITE_FR_AM_COOKIE_NAME
+        VITE_FR_OAUTH_PUBLIC_CLIENT: $VITE_FR_OAUTH_PUBLIC_CLIENT
+        VITE_FR_REALM_PATH: $VITE_FR_REALM_PATH
+    environment:
+      # --- BFF runtime (required) ---
+      COOKIE_SECRET: ${COOKIE_SECRET}
+      ORIGIN: http://localhost:3000
+      # --- AM connection (runtime access for AppConfigService) ---
+      VITE_FR_AM_URL: $VITE_FR_AM_URL
+      VITE_FR_AM_COOKIE_NAME: $VITE_FR_AM_COOKIE_NAME
+      VITE_FR_OAUTH_PUBLIC_CLIENT: $VITE_FR_OAUTH_PUBLIC_CLIENT
+      VITE_FR_REALM_PATH: $VITE_FR_REALM_PATH
+      # --- Observability ---
+      LOG_FORMAT: json
+      LOG_LEVEL: Info
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://jaeger:4318
+      OTEL_SERVICE_NAME: login-bff
     ports:
       - 3000:3000
+    depends_on:
+      - jaeger
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    ports:
+      - '16686:16686' # Jaeger UI
+      - '4318:4318' # OTLP HTTP receiver
