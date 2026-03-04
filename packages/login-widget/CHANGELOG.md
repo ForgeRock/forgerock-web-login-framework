@@ -1,5 +1,18 @@
 # [1.3.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.1...v1.3.0) (2024-06-05)
 
+## 1.3.0
+
+### Minor Changes
+
+- [#400](https://github.com/ForgeRock/forgerock-web-login-framework/pull/400) [`5f8b168`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/5f8b16811d3a4fd79f7b7f11501a8c6b34f0c119) Thanks [@ryanbas21](https://github.com/ryanbas21)! - Migrate to Svelte 5, pnpm monorepo architecture, and fix published type declarations
+
+  - Upgrade Svelte from v3/v4 to v5 with backward-compatible legacy mode
+  - Restructure project into pnpm workspaces: `packages/login-widget`, `apps/login-app`, `e2e/`, `core/`
+  - Fix published type declarations by namespacing core types under `dist/core/` with correct relative paths
+  - Upgrade Storybook from v7 to v10
+  - Replace Rollup with Vite for all builds
+  - Overhaul CI pipeline for pnpm strict dependency isolation
+
 ### Bug Fixes
 
 - **add loglevel to widget config:** widget config to support loglevel option ([db864e9](https://github.com/forgerock/forgerock-web-login-framework/commit/db864e9964018f0aa3e51cea90c126f2e8800d86))
