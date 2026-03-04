@@ -11,5 +11,26 @@ services:
         VITE_FR_REALM_PATH: ${VITE_FR_REALM_PATH}
     env_file:
       - .env
+    environment:
+      - ORIGIN=http://localhost:3000
     ports:
       - 3000:3000
+
+  e2e:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: e2e
+    depends_on:
+      preview:
+        condition: service_healthy
+    # Use host networking so the browser's origin is http://localhost:3000,
+    # matching the AM server's CORS allowlist.
+    network_mode: host
+    env_file:
+      - .env
+    environment:
+      - PLAYWRIGHT_TEST_BASE_URL=http://localhost:3000
+    tty: false
+    profiles:
+      - test
