@@ -13,6 +13,7 @@ import type {
   FRLoginSuccess,
   Step,
   StepOptions,
+  StepDetail,
 } from '@forgerock/javascript-sdk';
 import type { Writable } from 'svelte/store';
 import type { Maybe } from '$core/interfaces';
@@ -58,6 +59,7 @@ export interface JourneyStoreValue {
     message: Maybe<string>;
     stage: Maybe<string>;
     troubleshoot: Maybe<string>;
+    detail: Maybe<StepDetail>;
   }>;
   loading: boolean;
   metadata: {
