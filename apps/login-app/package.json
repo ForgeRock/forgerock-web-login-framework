@@ -22,7 +22,7 @@
     "autoprefixer": "^10.4.17",
     "dotenv": "^16.4.1",
     "mdsvex": "0.12.6",
-    "postcss": "^8.4.38",
+    "postcss": "^8.5.8",
     "remark-autolink-headings": "^7.0.1",
     "remark-slug": "^7.0.1",
     "svelte": "^5.46.1",
