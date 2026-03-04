@@ -1,5 +1,22 @@
 node_modules
 .git
+.env
+.env.*
+!.env.example
+!.env.docker.example
 *Dockerfile*
 *docker-compose*
 npm-debug.log
+
+# Build artifacts (rebuilt inside container)
+dist
+.svelte-kit
+
+# e2e test files included for the e2e Docker stage
+# (deploy stage is unaffected — same builder layer)
+.github
+.storybook
+.changeset
+.husky
+.vscode
+*.md
