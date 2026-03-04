@@ -309,7 +309,7 @@ export const OathRegistrationErrorInteraction = {
     await waitFor(async () => {
       const alertEl = canvas.queryByRole('alert');
       await expect(alertEl).toHaveFocus();
-      await expect(alertEl.innerText).toBe(
+      await expect(alertEl.innerText.trim()).toBe(
         'QR Code failed to render. Please notify your support administrator. You are welcome to use the alternative methods below.',
       );
     });

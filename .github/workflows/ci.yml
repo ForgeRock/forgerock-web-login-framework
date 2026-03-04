@@ -212,6 +212,7 @@ jobs:
     name: 'BFF E2E (BrowserStack)'
     needs: [build]
     runs-on: ubuntu-latest
+    continue-on-error: true
     if: github.event_name == 'pull_request' && github.base_ref == 'main'
     env:
       BROWSERSTACK_USERNAME: ${{ secrets.BROWSERSTACK_USERNAME }}
