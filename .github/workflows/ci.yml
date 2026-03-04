@@ -13,7 +13,7 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build:release
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: widget-dist
           path: packages/login-widget/dist/*
@@ -66,7 +66,7 @@ jobs:
         run: pnpm --filter @forgerock/login-widget-e2e exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       - name: Upload blob report to GitHub Actions Artifacts
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blob-report-${{ runner.os }}-${{ matrix.shardIndex }}
           path: e2e/blob-report
@@ -105,7 +105,7 @@ jobs:
           fi
 
       - name: Upload HTML report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: html-report--attempt--${{ runner.os }}-${{ github.run_attempt }}
           path: e2e/playwright-report
@@ -160,7 +160,7 @@ jobs:
           exitZeroOnChanges: true
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: chromatic-build-artifacts-${{ github.run_id }}
