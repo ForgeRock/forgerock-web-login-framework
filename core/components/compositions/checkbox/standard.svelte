@@ -42,7 +42,7 @@
     NOTE: The below places the error message on the second row and in second
     column to match the label's layout.
    -->
-  <span class="tw_col-start-2 tw_row-start-2">
-    <Message dirtyMessage={message} {key} {showMessage} type={isInvalid ? 'error' : 'info'} />
+  <span class="tw_col-start-2 tw_row-start-2" id={`${key}-message`}>
+    <Message dirtyMessage={message} {showMessage} type={isInvalid ? 'error' : 'info'} />
   </span>
 </div>

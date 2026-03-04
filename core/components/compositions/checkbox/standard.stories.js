@@ -105,6 +105,6 @@ export const Interaction = {
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    await expect(canvas.queryByText('Please accept this')).not.toBeInTheDocument();
+    await expect(canvas.queryByText('Please accept this')).not.toBeVisible();
   },
 };
