@@ -51,8 +51,8 @@ importers:
         specifier: ^10.0.4
         version: 10.0.7(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       axe-playwright:
-        specifier: ^1.2.3
-        version: 1.2.3(playwright@1.58.2)
+        specifier: ^2.2.2
+        version: 2.2.2(playwright@1.58.2)
       chromatic:
         specifier: ^10.9.1
         version: 10.9.6
@@ -202,8 +202,8 @@ importers:
         specifier: ^1.44.1
         version: 1.58.2
       axe-playwright:
-        specifier: ^1.2.3
-        version: 1.2.3(playwright@1.58.2)
+        specifier: ^2.2.2
+        version: 2.2.2(playwright@1.58.2)
       playwright:
         specifier: ^1.44.0
         version: 1.58.2
@@ -272,8 +272,8 @@ importers:
         specifier: ^10.4.17
         version: 10.4.24(postcss@8.5.8)
       axe-playwright:
-        specifier: ^1.2.3
-        version: 1.2.3(playwright@1.58.2)
+        specifier: ^2.2.2
+        version: 2.2.2(playwright@1.58.2)
       babel-loader:
         specifier: ^9.1.2
         version: 9.2.1(@babel/core@7.29.0)(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3))
@@ -1588,6 +1588,9 @@ packages:
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
+  '@types/junit-report-builder@3.0.2':
+    resolution: {integrity: sha512-R5M+SYhMbwBeQcNXYWNCZkl09vkVfAtcPIaCGdzIkkbeaTrVbGQ7HVgi4s+EmM/M1K4ZuWQH0jGcvMvNePfxYA==}
+
   '@types/mdast@3.0.15':
     resolution: {integrity: sha512-LnwD+mUEfxWMa1QpDraczIn6k0Ee3SMicuYSSzS6ZYl2gKS09EClnJYGd8Du6rfc5r/GZEk5o1mRb8TaTj03sQ==}
 
@@ -2032,14 +2035,14 @@ packages:
     resolution: {integrity: sha512-BASOg+YwO2C+346x3LZOeoovTIoTrRqEsqMa6fmfAV0P+U9mFr9NsyOEpiYvFjbc64NMrSswhV50WdXzdb/Z5A==}
     engines: {node: '>=4'}
 
-  axe-html-reporter@2.2.3:
-    resolution: {integrity: sha512-io8aCEt4fJvv43W+33n3zEa8rdplH5Ti2v5fOnth3GBKLhLHarNs7jj46xGfpnGnpaNrz23/tXPHC3HbwTzwwA==}
+  axe-html-reporter@2.2.11:
+    resolution: {integrity: sha512-WlF+xlNVgNVWiM6IdVrsh+N0Cw7qupe5HT9N6Uyi+aN7f6SSi92RDomiP1noW8OWIV85V6x404m5oKMeqRV3tQ==}
     engines: {node: '>=8.9.0'}
     peerDependencies:
       axe-core: '>=3'
 
-  axe-playwright@1.2.3:
-    resolution: {integrity: sha512-bTxCTNp3kx6sQRMjmuLv8pG3+v+kOCvFXATim1+XUXzW6ykulbbuJdQfgB+vQPNAF9uvYbW2qrv9pg81ZSFV/A==}
+  axe-playwright@2.2.2:
+    resolution: {integrity: sha512-h350/grzDCPgpuWV7eEOqr/f61Xn07Gi9f9B3Ew4rW6/nFtpdEJYW6jgRATorgAGXjEAYFTnaY3sEys39wDw4A==}
     peerDependencies:
       playwright: '>1.0.0'
 
@@ -3604,6 +3607,10 @@ packages:
 
   jsonfile@6.2.0:
     resolution: {integrity: sha512-FGuPw30AdOIUTRMC2OMRtQV+jkVj2cfPqSeWXv1NEAJ1qZ5zb1X6z1mFhbfOB/iy3ssJCD+3KuZ8r8C3uVFlAg==}
+
+  junit-report-builder@5.1.1:
+    resolution: {integrity: sha512-ZNOIIGMzqCGcHQEA2Q4rIQQ3Df6gSIfne+X9Rly9Bc2y55KxAZu8iGv+n2pP0bLf0XAOctJZgeloC54hWzCahQ==}
+    engines: {node: '>=16'}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -5171,6 +5178,10 @@ packages:
 
   xml@1.0.1:
     resolution: {integrity: sha512-huCv9IH9Tcf95zuYCsQraZtWnJvBtLVE0QHMOs8bWyZAFZNDcYjsPq1nEx8jKA9y+Beo9v+7OBPRisQTjinQMw==}
+
+  xmlbuilder@15.1.1:
+    resolution: {integrity: sha512-yMqGBqtXyeN1e3TGYvgNgDVZ3j84W4cwkOXQswghol6APgZWaff9lnbvN7MHYJOiXsvGPXtjTYJEiC9J2wv9Eg==}
+    engines: {node: '>=8.0'}
 
   xss@1.0.14:
     resolution: {integrity: sha512-og7TEJhXvn1a7kzZGQ7ETjdQVS2UfZyTlsEdDOqvQF7GoxNfY+0YLCzBy1kPdsDDx4QuNAonQPddpsn6Xl/7sw==}
@@ -6759,6 +6770,8 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/junit-report-builder@3.0.2': {}
+
   '@types/mdast@3.0.15':
     dependencies:
       '@types/unist': 2.0.11
@@ -7220,16 +7233,17 @@ snapshots:
 
   axe-core@4.11.1: {}
 
-  axe-html-reporter@2.2.3(axe-core@4.11.1):
+  axe-html-reporter@2.2.11(axe-core@4.11.1):
     dependencies:
       axe-core: 4.11.1
       mustache: 4.2.0
-      rimraf: 3.0.2
 
-  axe-playwright@1.2.3(playwright@1.58.2):
+  axe-playwright@2.2.2(playwright@1.58.2):
     dependencies:
+      '@types/junit-report-builder': 3.0.2
       axe-core: 4.11.1
-      axe-html-reporter: 2.2.3(axe-core@4.11.1)
+      axe-html-reporter: 2.2.11(axe-core@4.11.1)
+      junit-report-builder: 5.1.1
       picocolors: 1.1.1
       playwright: 1.58.2
 
@@ -9135,6 +9149,12 @@ snapshots:
     optionalDependencies:
       graceful-fs: 4.2.11
 
+  junit-report-builder@5.1.1:
+    dependencies:
+      lodash: 4.17.23
+      make-dir: 3.1.0
+      xmlbuilder: 15.1.1
+
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
@@ -10801,6 +10821,8 @@ snapshots:
       is-wsl: 3.1.1
 
   xml@1.0.1: {}
+
+  xmlbuilder@15.1.1: {}
 
   xss@1.0.14:
     dependencies:
