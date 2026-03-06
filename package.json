@@ -30,7 +30,7 @@
     "@eslint/js": "^9.39.2",
     "@forgerock/javascript-sdk": "^4.4.2",
     "@forgerock/ping-protect": "^4.4.2",
-    "axe-playwright": "^1.2.3",
+    "axe-playwright": "^2.2.2",
     "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-links": "^10.1.11",
