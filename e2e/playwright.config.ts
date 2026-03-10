@@ -2,19 +2,24 @@ import { defineConfig, devices } from '@playwright/test';
 
 const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 
+// When PLAYWRIGHT_TEST_BASE_URL is set, the server is managed externally (e.g. Docker)
+const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
+  ? undefined
+  : {
+      command: 'pnpm --filter @forgerock/login-app run preview -- --host=localhost',
+      cwd: '..',
+      url,
+      ignoreHTTPSErrors: true,
+      reuseExistingServer: true,
+      env: {
+        VITE_FR_AM_URL: 'https://openam-sdks.forgeblocks.com/am',
+        VITE_FR_AM_COOKIE_NAME: '5421aeddf91aa20',
+        VITE_FR_AM_JOURNEY_NAME: 'Login',
+      },
+    };
+
 export default defineConfig({
-  webServer: {
-    command: 'pnpm --filter @forgerock/login-app run preview -- --host=localhost',
-    cwd: '..',
-    url,
-    ignoreHTTPSErrors: true,
-    reuseExistingServer: true,
-    env: {
-      VITE_FR_AM_URL: 'https://openam-sdks.forgeblocks.com/am',
-      VITE_FR_AM_COOKIE_NAME: '5421aeddf91aa20',
-      VITE_FR_AM_JOURNEY_NAME: 'Login',
-    },
-  },
+  webServer,
   use: {
     headless: true,
     baseURL: `${url}/e2e/`,
@@ -26,7 +31,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   testDir: 'tests',
   timeout: 120 * 1000,
-  reporter: process.env.CI ? 'blob' : 'dot',
+  reporter: process.env.GITHUB_ACTIONS ? 'blob' : 'dot',
   projects: [
     {
       name: 'chromium',
