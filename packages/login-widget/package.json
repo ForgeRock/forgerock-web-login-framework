@@ -55,7 +55,7 @@
     "@vueless/storybook-dark-mode": "^10.0.4",
     "axe-playwright": "^1.2.3",
     "autoprefixer": "^10.4.17",
-    "babel-loader": "^9.1.2",
+    "babel-loader": "^10.1.1",
     "chromatic": "^10.9.1",
     "playwright": "^1.44.0",
     "postcss": "^8.5.8",
