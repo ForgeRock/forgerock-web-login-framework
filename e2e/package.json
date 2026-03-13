@@ -8,7 +8,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.44.1",
-    "axe-playwright": "^1.2.3",
+    "axe-playwright": "^2.2.2",
     "playwright": "^1.44.0",
     "uuid": "9.0.1"
   }
