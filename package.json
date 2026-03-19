@@ -62,7 +62,7 @@
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.52.0",
     "vite": "^5.4.21",
-    "wait-on": "^7.2.0",
+    "wait-on": "^9.0.4",
     "xss": "1.0.14",
     "zod": "3.22.4"
   },
