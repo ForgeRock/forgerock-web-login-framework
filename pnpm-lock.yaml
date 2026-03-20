@@ -54,8 +54,8 @@ importers:
         specifier: ^1.2.3
         version: 1.2.3(playwright@1.58.2)
       chromatic:
-        specifier: ^10.9.1
-        version: 10.9.6
+        specifier: ^15.3.0
+        version: 15.3.0
       color:
         specifier: 4.2.3
         version: 4.2.3
@@ -278,8 +278,8 @@ importers:
         specifier: ^9.1.2
         version: 9.2.1(@babel/core@7.29.0)(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3))
       chromatic:
-        specifier: ^10.9.1
-        version: 10.9.6
+        specifier: ^15.3.0
+        version: 15.3.0
       playwright:
         specifier: ^1.44.0
         version: 1.58.2
@@ -2232,12 +2232,12 @@ packages:
     resolution: {integrity: sha512-TQMmc3w+5AxjpL8iIiwebF73dRDF4fBIieAqGn9RGCWaEVwQ6Fb2cGe31Yns0RRIzii5goJ1Y7xbMwo1TxMplw==}
     engines: {node: '>= 20.19.0'}
 
-  chromatic@10.9.6:
-    resolution: {integrity: sha512-1MoT+/U+vQwEiq2GuehPyStbqhxqHmM1B9pdpVU1dKh26userQg1FyOFYifkTgy+9reo2w2p7sAbc0JRd2kzlA==}
+  chromatic@15.3.0:
+    resolution: {integrity: sha512-ficw/Pz9OpBnPoWDRmuwFDwzLPSN0o90x6X+0+rbnMFYtDTPWXddW6R14jQ56SgYSByJ67OyHZg2gW6U6HF2Qw==}
     hasBin: true
     peerDependencies:
-      '@chromatic-com/cypress': ^0.5.2 || ^1.0.0
-      '@chromatic-com/playwright': ^0.5.2 || ^1.0.0
+      '@chromatic-com/cypress': ^0.*.* || ^1.0.0
+      '@chromatic-com/playwright': ^0.*.* || ^1.0.0
     peerDependenciesMeta:
       '@chromatic-com/cypress':
         optional: true
@@ -7452,7 +7452,7 @@ snapshots:
     dependencies:
       readdirp: 5.0.0
 
-  chromatic@10.9.6: {}
+  chromatic@15.3.0: {}
 
   chrome-trace-event@1.0.4: {}
 
