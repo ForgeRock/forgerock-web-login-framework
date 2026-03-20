@@ -1,5 +1,28 @@
 # [1.3.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.1...v1.3.0) (2024-06-05)
 
+## 1.4.0
+
+### Minor Changes
+
+- [#450](https://github.com/ForgeRock/forgerock-web-login-framework/pull/450) [`2265fd7`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/2265fd7f77cea57cb0b77f701a4c16e80a9d44f1) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add `TextInputCallback` support in the login widget callback renderer.
+
+  - Map and render `TextInputCallback` using existing text input composition patterns.
+  - Include callback metadata handling so steps treat `TextInputCallback` as required user input.
+  - Add Storybook coverage and Playwright E2E coverage for submit flow and TextInput edge cases.
+
+- [#400](https://github.com/ForgeRock/forgerock-web-login-framework/pull/400) [`5f8b168`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/5f8b16811d3a4fd79f7b7f11501a8c6b34f0c119) Thanks [@ryanbas21](https://github.com/ryanbas21)! - Migrate to Svelte 5, pnpm monorepo architecture, and fix published type declarations
+
+  - Upgrade Svelte from v3/v4 to v5 with backward-compatible legacy mode
+  - Restructure project into pnpm workspaces: `packages/login-widget`, `apps/login-app`, `e2e/`, `core/`
+  - Fix published type declarations by namespacing core types under `dist/core/` with correct relative paths
+  - Upgrade Storybook from v7 to v10
+  - Replace Rollup with Vite for all builds
+  - Overhaul CI pipeline for pnpm strict dependency isolation
+
+### Patch Changes
+
+- [#446](https://github.com/ForgeRock/forgerock-web-login-framework/pull/446) [`16d48f3`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/16d48f3a93dc34733e9b6fc410ff50630890ed11) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Fix English locale copy: authenticator typo and grammar wording updates.
+
 ### Bug Fixes
 
 - **add loglevel to widget config:** widget config to support loglevel option ([db864e9](https://github.com/forgerock/forgerock-web-login-framework/commit/db864e9964018f0aa3e51cea90c126f2e8800d86))
