@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -32,6 +32,7 @@
   import SelectIdp from '$journey/callbacks/select-idp/select-idp.svelte';
   import StringAttributeInput from '$journey/callbacks/string-attribute/string-attribute-input.svelte';
   import TermsConditions from '$journey/callbacks/terms-and-conditions/terms-conditions.svelte';
+  import TextInput from '$journey/callbacks/text-input/text-input.svelte';
   import TextOutput from '$journey/callbacks/text-output/text-output.svelte';
   import Unknown from '$journey/callbacks/unknown/unknown.svelte';
   import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
@@ -55,6 +56,7 @@
     SelectIdPCallback,
     SuspendedTextOutputCallback,
     TermsAndConditionsCallback,
+    TextInputCallback,
     TextOutputCallback,
     ValidatedCreatePasswordCallback,
     ValidatedCreateUsernameCallback,
@@ -102,6 +104,7 @@
   let _ValidatedCreatePasswordCallback: ValidatedCreatePasswordCallback;
   let _ValidatedCreateUsernameCallback: ValidatedCreateUsernameCallback;
   let _TermsAndConditionsCallback: TermsAndConditionsCallback;
+  let _TextInputCallback: TextInputCallback;
   let _TextOutputCallback: TextOutputCallback;
   let _SuspendedTextOutputCallback: SuspendedTextOutputCallback;
   let _MetadataCallback: MetadataCallback;
@@ -159,6 +162,9 @@
         break;
       case CallbackType.TermsAndConditionsCallback:
         _TermsAndConditionsCallback = props.callback as TermsAndConditionsCallback;
+        break;
+      case CallbackType.TextInputCallback:
+        _TextInputCallback = props.callback as TextInputCallback;
         break;
       case CallbackType.TextOutputCallback:
         _TextOutputCallback = props.callback as TextOutputCallback;
@@ -268,6 +274,12 @@
     callback: _TermsAndConditionsCallback,
   }}
   <TermsConditions {...newProps} />
+{:else if cbType === CallbackType.TextInputCallback}
+  {@const newProps = {
+    ...props,
+    callback: _TextInputCallback,
+  }}
+  <TextInput {...newProps} />
 {:else if cbType === CallbackType.TextOutputCallback}
   {@const newProps = {
     ...props,
