@@ -5,7 +5,10 @@ import { mergeConfig } from 'vite';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default {
-  stories: ['../core/**/*.stories.@(js|jsx|ts|tsx|svelte)'],
+  stories: [
+    '../core/**/*.stories.@(js|jsx|ts|tsx|svelte)',
+    '../experimental/custom/**/*.stories.@(js|jsx|ts|tsx|svelte)',
+  ],
   staticDirs: ['../apps/login-app/static'],
 
   addons: [
@@ -42,6 +45,7 @@ export default {
           $components: resolve(__dirname, '../core/components'),
           $journey: resolve(__dirname, '../core/journey'),
           $locales: resolve(__dirname, '../core/locales'),
+          '$login-framework': resolve(__dirname, '../experimental/custom/login-framework.ts'),
         },
       },
     });

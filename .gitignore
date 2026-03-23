@@ -29,6 +29,14 @@ yarn.lock
 # Generated type declarations (core/ has no compiled JS — TS reads .ts source directly)
 core/**/*.d.ts
 
+# Auto-generated custom component registry (produced by generateCustomRegistry.mjs pre-build)
+core/journey/_utilities/custom-registry.ts
+
+# Custom component implementations (developer-authored; gitignored so customer forks don't conflict)
+# The stage/ and callback/ folders themselves (with .gitkeep) remain tracked as scaffolding references.
+experimental/custom/stages/*/
+experimental/custom/callbacks/*/
+
 # Claude Code
 .claude/
 .mcp.json

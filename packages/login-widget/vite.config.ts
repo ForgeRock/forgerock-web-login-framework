@@ -47,6 +47,7 @@ export default defineConfig({
       $components: resolve('../../core/components'),
       $journey: resolve('../../core/journey'),
       $locales: resolve('../../core/locales'),
+      '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
     },
   },
   css: {
