@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -21,6 +21,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -31,6 +32,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -54,6 +56,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -64,6 +67,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -93,6 +97,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -103,6 +108,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -117,6 +123,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -138,6 +145,7 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -148,6 +156,7 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -162,6 +171,7 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
+          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,

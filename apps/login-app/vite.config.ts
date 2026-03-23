@@ -1,5 +1,4 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import basicSsl from '@vitejs/plugin-basic-ssl';
 import type { UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
@@ -9,7 +8,7 @@ export default defineConfig(
     envDir: resolve('../..'),
     plugins: [
       // Only use SSL plugin in development mode, not production/preview
-      ...(mode === 'development' ? [basicSsl()] : []),
+      ...(mode === 'development' ? [] : []),
       sveltekit(),
     ],
     resolve: {

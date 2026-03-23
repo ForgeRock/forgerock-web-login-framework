@@ -31,6 +31,7 @@ export interface CallbackMetadata {
     isReadyForSubmission: boolean;
     isSelfSubmitting: boolean;
     isUserInputRequired: boolean;
+    isPasskeyAutofillEligible: boolean;
   };
   idx: number;
   platform?: Record<string, unknown>;
