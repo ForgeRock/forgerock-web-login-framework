@@ -9,13 +9,16 @@ export default defineConfig({
       $components: resolve('../../core/components'),
       $journey: resolve('../../core/journey'),
       $locales: resolve('../../core/locales'),
+      '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
     },
   },
   plugins: [svelte({ hot: !process.env.VITEST })],
   test: {
-    include: ['**/*.test.ts'],
+    include: [
+      resolve('../../core/**/*.test.ts'),
+      resolve('../../experimental/custom/**/*.test.ts'),
+    ],
     exclude: ['node_modules', 'dist'],
-    dir: '../../core',
     typecheck: {
       tsconfig: './tsconfig.json',
     },

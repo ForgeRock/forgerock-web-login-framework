@@ -26,6 +26,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "prebuild": "node ../../scripts/generateCustomRegistry.mjs",
     "build": "vite build",
     "build:types": "svelte-package -o svelte-package",
     "build:iife": "vite build --config vite.config.iife.ts",
