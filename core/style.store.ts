@@ -44,6 +44,9 @@ export const styleSchema = z
 
 export const partialStyleSchema = styleSchema.partial();
 
+/** Convenience type alias for the resolved widget style object. */
+export type StyleObject = z.infer<typeof partialStyleSchema>;
+
 const fallbackStyles = {
   checksAndRadios: 'animated',
   labels: 'floating',
