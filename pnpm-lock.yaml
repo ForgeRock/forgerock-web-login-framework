@@ -24,8 +24,8 @@ importers:
         specifier: ^9.39.2
         version: 9.39.3
       '@forgerock/javascript-sdk':
-        specifier: ^4.4.2
-        version: 4.8.3(react@19.2.4)
+        specifier: ^4.9.0
+        version: 4.9.0(react@19.2.4)
       '@forgerock/journey-client':
         specifier: ^2.0.0
         version: 2.0.0(react@19.2.4)
@@ -1053,6 +1053,9 @@ packages:
 
   '@forgerock/javascript-sdk@4.8.3':
     resolution: {integrity: sha512-6yOEsw1aZC8H/vTvdTgnta0eccEMTtcm6kh0L4aVkTOOa+pLTLq0ezq6hTcEL3Bn7nsGvgdlhhAoBPrvqbRp3w==}
+
+  '@forgerock/javascript-sdk@4.9.0':
+    resolution: {integrity: sha512-xNE4LMIFYvvPpsq04RqSGnZ+zT+LjOdHePPj6K4uukqewBaZMDmynozkOTtCFmWui7gqANuhf2arbdo3J5uTVQ==}
 
   '@forgerock/journey-client@2.0.0':
     resolution: {integrity: sha512-nwVs+/ybJP/TPkUkaPXM4ThkZMmfae+RiE0dso0g6sW1ST366AVxQqEIxI7C4UJvKDsC+wfjprX5sjVdhlILdw==}
@@ -6408,6 +6411,14 @@ snapshots:
   '@eslint/js@9.39.3': {}
 
   '@forgerock/javascript-sdk@4.8.3(react@19.2.4)':
+    dependencies:
+      '@reduxjs/toolkit': 2.11.2(react@19.2.4)
+      immer: 10.2.0
+    transitivePeerDependencies:
+      - react
+      - react-redux
+
+  '@forgerock/javascript-sdk@4.9.0(react@19.2.4)':
     dependencies:
       '@reduxjs/toolkit': 2.11.2(react@19.2.4)
       immer: 10.2.0

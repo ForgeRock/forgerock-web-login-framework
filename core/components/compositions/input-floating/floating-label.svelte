@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -12,6 +12,7 @@
   import Message from '$components/primitives/message/input-message.svelte';
   import type { Maybe } from '$core/interfaces';
 
+  export let autocomplete: 'username webauthn' | undefined = undefined;
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let forceValidityFailure = false;
   export let message = '';
@@ -44,6 +45,7 @@
     NOTE: `placeholder` for the input is required for Twitter Bootstrap's floating label
   -->
   <Input
+    {autocomplete}
     {forceValidityFailure}
     {isFirstInvalidInput}
     inputClasses={`tw_input-floating dark:tw_input-floating_dark ${

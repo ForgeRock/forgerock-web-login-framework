@@ -9,7 +9,7 @@
 
 <script lang="ts">
   import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
-  import { afterUpdate } from 'svelte';
+  import { afterUpdate, onDestroy } from 'svelte';
 
   // i18n
   import { interpolate } from '$core/_utilities/i18n.utilities';
@@ -30,6 +30,10 @@
 
   import Button from '$components/primitives/button/button.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
+  import {
+    abortWebAuthnOperation,
+    authenticateWebAuthnStep,
+  } from '$core/journey/stages/_effects/webauthn.effects';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
   export let allowWebAuthn = true;
@@ -95,17 +99,23 @@
           break;
         }
         case WebAuthnStepType.Authentication: {
-          await WebAuthn.authenticate(step);
+          await authenticateWebAuthnStep(step);
           break;
         }
         default:
           break;
       }
     } catch (err) {
-      // TODO: handle error
+      console.debug('Passkey autofill attempt did not complete', err);
     }
     form.submit();
   }
+
+  onDestroy(() => {
+    if (waitingForWebAuthnAPI || webAuthnApiCalled) {
+      abortWebAuthnOperation();
+    }
+  });
 
   $: formMessageKey = convertStringToKey(form?.message);
 

@@ -22,6 +22,7 @@
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: true,
+      isPasskeyAutofillEligible: true,
     },
     idx: 0,
   };

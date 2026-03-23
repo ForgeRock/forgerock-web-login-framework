@@ -31,6 +31,18 @@ export const Base = {
   },
 };
 
+export const PasskeyAutofill = {
+  args: {
+    ...Base.args,
+    isPasskeyAutofillEligible: true,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const element = canvas.getByRole('textbox');
+    await expect(element).toHaveAttribute('autocomplete', 'username webauthn');
+  },
+};
+
 export const Interaction = {
   args: { ...Base.args },
   play: async ({ canvasElement }) => {
