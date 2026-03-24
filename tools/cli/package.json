@@ -1,0 +1,27 @@
+{
+  "name": "@forgerock/login-widget-generator",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "ping-law": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc && ([ -d templates ] && cp -r templates dist/templates || true)",
+    "dev": "tsc --watch",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "effect": "^3.21.0",
+    "@effect/cli": "^0.75.0",
+    "@effect/platform": "^0.96.0",
+    "@effect/platform-node": "^0.106.0",
+    "@effect/printer": "^0.49.0",
+    "@effect/printer-ansi": "^0.49.0",
+    "@effect/typeclass": "^0.40.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.2.2",
+    "vitest": "^3.0.0"
+  }
+}

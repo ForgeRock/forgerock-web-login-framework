@@ -22,7 +22,8 @@
     "clean": "git clean -fdX -e \"!.env\"",
     "commit": "cz",
     "format": "prettier --ignore-path .gitignore --ignore-path .prettierignore --write .",
-    "prepare": "is-ci || husky install"
+    "prepare": "is-ci || husky install",
+    "ping-law": "pnpm --filter @forgerock/login-widget-generator build && node tools/cli/dist/main.js"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
