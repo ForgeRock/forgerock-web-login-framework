@@ -20,9 +20,7 @@ interface DiscoveredComponent extends ComponentMetadata {
 }
 
 function parseComponentMetadata(source: string): ComponentMetadata | null {
-  const match = source.match(
-    /<!--\s*@component\s+Type:\s*(callback|stage)\s+Name:\s*(\w+)\s*-->/s,
-  );
+  const match = source.match(/<!--\s*@component\s+Type:\s*(callback|stage)\s+Name:\s*(\w+)\s*-->/s);
   if (!match) return null;
   return { type: match[1] as 'callback' | 'stage', name: match[2] };
 }

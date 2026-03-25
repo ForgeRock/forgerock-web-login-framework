@@ -1,10 +1,10 @@
-import { Effect } from "effect";
-import { FileSystem } from "@effect/platform";
-import { isExcluded } from "../config/exclusions.js";
-import { FileSystemError } from "../errors.js";
-import path from "node:path";
+import { Effect } from 'effect';
+import { FileSystem } from '@effect/platform';
+import { isExcluded } from '../config/exclusions.js';
+import { FileSystemError } from '../errors.js';
+import path from 'node:path';
 
-const PROTECTED_DIRS = ["user/"] as const;
+const PROTECTED_DIRS = ['user/'] as const;
 
 function isProtected(relativePath: string): boolean {
   return PROTECTED_DIRS.some((dir) => relativePath.startsWith(dir));
@@ -20,7 +20,7 @@ export const copyWithExclusions = (sourceDir: string, targetDir: string) =>
           Effect.mapError(
             (cause) =>
               new FileSystemError({
-                operation: "readDirectory",
+                operation: 'readDirectory',
                 path: dir,
                 cause,
               }),
@@ -39,7 +39,7 @@ export const copyWithExclusions = (sourceDir: string, targetDir: string) =>
             Effect.mapError(
               (cause) =>
                 new FileSystemError({
-                  operation: "stat",
+                  operation: 'stat',
                   path: fullPath,
                   cause,
                 }),
@@ -48,12 +48,12 @@ export const copyWithExclusions = (sourceDir: string, targetDir: string) =>
 
           const targetPath = path.join(targetDir, relativePath);
 
-          if (stat.type === "Directory") {
+          if (stat.type === 'Directory') {
             yield* fs.makeDirectory(targetPath, { recursive: true }).pipe(
               Effect.mapError(
                 (cause) =>
                   new FileSystemError({
-                    operation: "makeDirectory",
+                    operation: 'makeDirectory',
                     path: targetPath,
                     cause,
                   }),
@@ -61,23 +61,25 @@ export const copyWithExclusions = (sourceDir: string, targetDir: string) =>
             );
             yield* walk(fullPath);
           } else {
-            yield* fs.makeDirectory(path.dirname(targetPath), {
-              recursive: true,
-            }).pipe(
-              Effect.mapError(
-                (cause) =>
-                  new FileSystemError({
-                    operation: "makeDirectory",
-                    path: path.dirname(targetPath),
-                    cause,
-                  }),
-              ),
-            );
+            yield* fs
+              .makeDirectory(path.dirname(targetPath), {
+                recursive: true,
+              })
+              .pipe(
+                Effect.mapError(
+                  (cause) =>
+                    new FileSystemError({
+                      operation: 'makeDirectory',
+                      path: path.dirname(targetPath),
+                      cause,
+                    }),
+                ),
+              );
             yield* fs.copyFile(fullPath, targetPath).pipe(
               Effect.mapError(
                 (cause) =>
                   new FileSystemError({
-                    operation: "copyFile",
+                    operation: 'copyFile',
                     path: fullPath,
                     cause,
                   }),

@@ -1,5 +1,5 @@
-import { FileSystem, Path } from "@effect/platform";
-import { Effect } from "effect";
+import { FileSystem, Path } from '@effect/platform';
+import { Effect } from 'effect';
 
 /**
  * Patches a Vite config file to inject the customRegistryPlugin.
@@ -15,17 +15,14 @@ export const injectRegistryPlugin = (configPath: string) =>
     let content = yield* efs.readFileString(configPath);
 
     // Skip if already injected
-    if (content.includes("customRegistryPlugin")) return;
+    if (content.includes('customRegistryPlugin')) return;
 
     // Add import after the last existing import
     const importLine = `import { customRegistryPlugin } from '../../core/_utilities/vite-plugin-custom-registry';\n`;
-    const lastImportIdx = content.lastIndexOf("\nimport ");
+    const lastImportIdx = content.lastIndexOf('\nimport ');
     if (lastImportIdx !== -1) {
-      const endOfLine = content.indexOf("\n", lastImportIdx + 1);
-      content =
-        content.slice(0, endOfLine + 1) +
-        importLine +
-        content.slice(endOfLine + 1);
+      const endOfLine = content.indexOf('\n', lastImportIdx + 1);
+      content = content.slice(0, endOfLine + 1) + importLine + content.slice(endOfLine + 1);
     }
 
     // Insert plugin at the start of the plugins array
@@ -44,13 +41,7 @@ export const injectRegistryPlugin = (configPath: string) =>
 export const injectRegistryPluginAll = (resolvedDir: string) =>
   Effect.gen(function* () {
     const p = yield* Path.Path;
-    yield* injectRegistryPlugin(
-      p.join(resolvedDir, "packages/login-widget/vite.config.ts"),
-    );
-    yield* injectRegistryPlugin(
-      p.join(resolvedDir, "packages/login-widget/vite.config.iife.ts"),
-    );
-    yield* injectRegistryPlugin(
-      p.join(resolvedDir, "apps/login-app/vite.config.ts"),
-    );
+    yield* injectRegistryPlugin(p.join(resolvedDir, 'packages/login-widget/vite.config.ts'));
+    yield* injectRegistryPlugin(p.join(resolvedDir, 'packages/login-widget/vite.config.iife.ts'));
+    yield* injectRegistryPlugin(p.join(resolvedDir, 'apps/login-app/vite.config.ts'));
   });

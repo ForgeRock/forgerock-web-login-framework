@@ -1,6 +1,6 @@
-import { Effect } from "effect";
-import { FileSystem } from "@effect/platform";
-import { GeneratorVersionError } from "../errors.js";
+import { Effect } from 'effect';
+import { FileSystem } from '@effect/platform';
+import { GeneratorVersionError } from '../errors.js';
 
 export interface GeneratorVersion {
   readonly version: string;
@@ -8,7 +8,7 @@ export interface GeneratorVersion {
   readonly generatedAt: string;
 }
 
-const VERSION_FILE = ".generator-version";
+const VERSION_FILE = '.generator-version';
 
 export const readVersion = (directory: string) =>
   Effect.gen(function* () {
@@ -18,7 +18,7 @@ export const readVersion = (directory: string) =>
 
     if (!exists) {
       return yield* new GeneratorVersionError({
-        message: "No .generator-version file found. Is this a generated project?",
+        message: 'No .generator-version file found. Is this a generated project?',
         path: filePath,
       });
     }
@@ -28,7 +28,7 @@ export const readVersion = (directory: string) =>
       try: () => JSON.parse(content) as GeneratorVersion,
       catch: () =>
         new GeneratorVersionError({
-          message: "Malformed .generator-version file",
+          message: 'Malformed .generator-version file',
           path: filePath,
         }),
     });
@@ -38,5 +38,5 @@ export const writeVersion = (directory: string, version: GeneratorVersion) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const filePath = `${directory}/${VERSION_FILE}`;
-    yield* fs.writeFileString(filePath, JSON.stringify(version, null, 2) + "\n");
+    yield* fs.writeFileString(filePath, JSON.stringify(version, null, 2) + '\n');
   });

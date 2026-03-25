@@ -1,22 +1,22 @@
-import { Data } from "effect";
+import { Data } from 'effect';
 
-export class ReleaseNotFoundError extends Data.TaggedError("ReleaseNotFoundError")<{
+export class ReleaseNotFoundError extends Data.TaggedError('ReleaseNotFoundError')<{
   readonly version: string;
   readonly cause?: unknown;
 }> {}
 
-export class FileSystemError extends Data.TaggedError("FileSystemError")<{
+export class FileSystemError extends Data.TaggedError('FileSystemError')<{
   readonly operation: string;
   readonly path: string;
   readonly cause?: unknown;
 }> {}
 
-export class GeneratorVersionError extends Data.TaggedError("GeneratorVersionError")<{
+export class GeneratorVersionError extends Data.TaggedError('GeneratorVersionError')<{
   readonly message: string;
   readonly path?: string;
 }> {}
 
-export class RegistryScanError extends Data.TaggedError("RegistryScanError")<{
+export class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
   readonly directory: string;
   readonly cause?: unknown;
 }> {}
