@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";

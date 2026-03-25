@@ -1,15 +1,32 @@
 {
   "name": "@forgerock/login-widget-generator",
   "version": "0.1.0",
-  "private": true,
+  "description": "CLI generator for ForgeRock Login Widget custom component projects",
   "type": "module",
   "bin": {
     "ping-law": "./dist/main.js"
   },
+  "files": ["dist"],
   "scripts": {
-    "build": "tsc && ([ -d templates ] && cp -r templates dist/templates || true)",
+    "build": "rm -rf dist && tsc && ([ -d templates ] && cp -r templates/ dist/templates/ || true)",
     "dev": "tsc --watch",
-    "test": "vitest"
+    "test": "vitest",
+    "prepublishOnly": "pnpm build"
+  },
+  "keywords": ["forgerock", "ping-identity", "login", "widget", "generator", "svelte"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ForgeRock/forgerock-web-login-framework.git",
+    "directory": "tools/cli"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true,
+    "registry": "https://registry.npmjs.org"
   },
   "dependencies": {
     "effect": "^3.21.0",
