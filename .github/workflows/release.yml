@@ -30,12 +30,16 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write # Required for npm OIDC trusted publishing & provenance attestation
+  packages: write # Required for pushing Docker images to GHCR
 
 jobs:
   # ─── Stable / Beta (automatic on push to main) ─────────────────────────
   release:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -145,3 +149,68 @@ jobs:
       # bound to the workflow filename configured on npmjs.com.
       - name: Publish snapshot
         run: pnpm publish -r --tag ${{ inputs.dist_tag }} --no-git-checks --access ${{ inputs.access }}
+
+  # ─── Docker (publish to GHCR after npm release) ──────────────────────
+  # Tags the image as "latest" when changesets publishes a stable npm release,
+  # or "beta" when a beta snapshot is published (pending changesets exist).
+  # Skips entirely when there's nothing to publish (no changesets, no release).
+  docker:
+    needs: release
+    if: >-
+      github.event_name == 'push' &&
+      (needs.release.outputs.published == 'true' || needs.release.outputs.hasChangesets == 'true')
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ghcr.io/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Determine Docker tag
+        id: docker-tag
+        run: |
+          if [ "$PUBLISHED" = "true" ]; then
+            echo "tag=latest" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=beta" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          PUBLISHED: ${{ needs.release.outputs.published }}
+
+      - name: Read widget version
+        id: version
+        run: |
+          VERSION=$(node -p "require('./packages/login-widget/package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=${{ steps.docker-tag.outputs.tag }}
+            type=raw,value=${{ steps.version.outputs.version }}
+            type=sha,prefix=
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: deploy
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            NODE_ENV=production
