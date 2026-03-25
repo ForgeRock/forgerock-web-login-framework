@@ -1,6 +1,6 @@
 import { Command, Args, Options } from "@effect/cli";
 import { FileSystem } from "@effect/platform";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import path from "node:path";
 import fs from "node:fs";
 import { Release } from "../services/Release.js";
@@ -182,15 +182,26 @@ const directory = Args.directory({ name: "directory" }).pipe(
   Args.withDefault("."),
 );
 
-const version = Options.text("version").pipe(Options.withAlias("v"));
+const version = Options.text("version").pipe(
+  Options.withAlias("v"),
+  Options.withDescription("Framework version (e.g. v1.0.0). Defaults to latest release."),
+  Options.optional,
+);
 
 export const generateCommand = Command.make(
   "generate",
   { directory, version },
-  ({ directory: targetDir, version: ver }) =>
+  ({ directory: targetDir, version: verOption }) =>
     Effect.gen(function* () {
       const release = yield* Release;
       const resolvedDir = path.resolve(targetDir);
+
+      const ver = Option.isSome(verOption)
+        ? verOption.value
+        : yield* Effect.tap(
+            release.resolveLatest(),
+            (v) => Effect.log(`No --version specified, resolved latest: ${v}`),
+          );
 
       yield* Effect.log(`Generating project at ${resolvedDir} from ${ver}`);
 

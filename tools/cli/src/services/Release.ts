@@ -23,6 +23,11 @@ export class Release extends Context.Tag("Release")<
   Release,
   {
     readonly archiveUrl: (version: string) => string;
+    readonly resolveLatest: () => Effect.Effect<
+      string,
+      ReleaseNotFoundError,
+      CommandExecutor.CommandExecutor
+    >;
     readonly fetch: (
       version: string,
       targetDir: string,
@@ -37,6 +42,36 @@ export class Release extends Context.Tag("Release")<
 export const ReleaseLive = Layer.succeed(Release, {
   archiveUrl: (version: string) =>
     `https://github.com/${REPO}/archive/refs/tags/${version}.tar.gz`,
+
+  resolveLatest: () =>
+    Effect.gen(function* () {
+      // GitHub API redirects /releases/latest to the latest release.
+      // curl -sI follows redirects and we extract the tag from the Location header.
+      const result = yield* Command.make(
+        "curl",
+        "-sI",
+        `https://github.com/${REPO}/releases/latest`,
+      ).pipe(
+        Command.string,
+        Effect.mapError(
+          (cause) =>
+            new ReleaseNotFoundError({ version: "latest", cause }),
+        ),
+      );
+
+      // Location header contains: .../releases/tag/v1.3.0
+      const match = result.match(/location:.*\/tag\/([^\s\r\n]+)/i);
+      if (!match) {
+        return yield* Effect.fail(
+          new ReleaseNotFoundError({
+            version: "latest",
+            cause: "Could not resolve latest release tag from GitHub",
+          }),
+        );
+      }
+
+      return match[1];
+    }),
 
   fetch: (version, targetDir) =>
     Effect.gen(function* () {

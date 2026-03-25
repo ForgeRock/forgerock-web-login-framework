@@ -1,6 +1,6 @@
 import { Command, Options } from "@effect/cli";
 import { FileSystem } from "@effect/platform";
-import { Effect } from "effect";
+import { Effect, Option } from "effect";
 import path from "node:path";
 import { Release } from "../services/Release.js";
 import { copyWithExclusions } from "../services/FileSystem.js";
@@ -10,12 +10,16 @@ import {
 } from "../services/Registry.js";
 import { readVersion, writeVersion } from "../config/version.js";
 
-const version = Options.text("version").pipe(Options.withAlias("v"));
+const version = Options.text("version").pipe(
+  Options.withAlias("v"),
+  Options.withDescription("Framework version to update to (e.g. v1.1.0). Defaults to latest release."),
+  Options.optional,
+);
 
 export const updateCommand = Command.make(
   "update",
   { version },
-  ({ version: ver }) =>
+  ({ version: verOption }) =>
     Effect.gen(function* () {
       const release = yield* Release;
       const resolvedDir = path.resolve(".");
@@ -24,7 +28,15 @@ export const updateCommand = Command.make(
       const current = yield* readVersion(resolvedDir);
       yield* Effect.log(`Current version: ${current.version}`);
 
-      // 2. Check if already up to date
+      // 2. Resolve target version
+      const ver = Option.isSome(verOption)
+        ? verOption.value
+        : yield* Effect.tap(
+            release.resolveLatest(),
+            (v) => Effect.log(`No --version specified, resolved latest: ${v}`),
+          );
+
+      // 3. Check if already up to date
       if (current.version === ver) {
         yield* Effect.log(`Already at version ${ver}. Nothing to update.`);
         return;
