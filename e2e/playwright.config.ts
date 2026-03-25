@@ -12,9 +12,10 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
       ignoreHTTPSErrors: true,
       reuseExistingServer: true,
       env: {
-        VITE_FR_AM_URL: 'https://openam-sdks.forgeblocks.com/am',
-        VITE_FR_AM_COOKIE_NAME: '5421aeddf91aa20',
-        VITE_FR_AM_JOURNEY_NAME: 'Login',
+        FR_AM_URL: 'https://openam-sdks.forgeblocks.com/am',
+        FR_AM_COOKIE_NAME: '5421aeddf91aa20',
+        FR_OAUTH_PUBLIC_CLIENT: 'WebOAuthClient',
+        FR_REALM_PATH: 'alpha',
       },
     };
 
