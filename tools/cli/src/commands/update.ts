@@ -8,6 +8,7 @@ import {
   generateRegistrySource,
 } from "../services/Registry.js";
 import { readVersion, writeVersion } from "../config/version.js";
+import { injectRegistryPluginAll } from "../services/ViteConfig.js";
 
 const version = Options.text("version").pipe(
   Options.withAlias("v"),
@@ -50,7 +51,10 @@ export const updateCommand = Command.make(
       // 4. Overwrite framework files (preserves /user)
       yield* copyWithExclusions(tempDir, resolvedDir);
 
-      // 5. Re-scan /user and regenerate registry
+      // 5. Re-inject Vite plugin (configs were overwritten by copyWithExclusions)
+      yield* injectRegistryPluginAll(resolvedDir);
+
+      // 6. Re-scan /user and regenerate registry
       const userDir = p.join(resolvedDir, "user");
       const components = scanUserDirectory(userDir);
       const registrySource = generateRegistrySource(components);

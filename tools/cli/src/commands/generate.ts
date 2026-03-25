@@ -11,6 +11,7 @@ import { writeVersion } from "../config/version.js";
 import { generateCiWorkflow } from "../templates/ci-workflow.js";
 import { generateEnvExample } from "../templates/env-example.js";
 import { FileSystemError } from "../errors.js";
+import { injectRegistryPluginAll } from "../services/ViteConfig.js";
 
 const resolveTemplateDir = Effect.gen(function* () {
   const p = yield* Path.Path;
@@ -234,38 +235,6 @@ const local = Options.directory("local").pipe(
   Options.optional,
 );
 
-/**
- * Patches a Vite config file to inject the customRegistryPlugin.
- * Adds the import and inserts the plugin call before the first existing plugin.
- */
-const injectRegistryPlugin = (configPath: string) =>
-  Effect.gen(function* () {
-    const efs = yield* FileSystem.FileSystem;
-    const exists = yield* efs.exists(configPath);
-    if (!exists) return;
-
-    let content = yield* efs.readFileString(configPath);
-
-    // Skip if already injected
-    if (content.includes("customRegistryPlugin")) return;
-
-    // Add import after the last existing import
-    const importLine = `import { customRegistryPlugin } from '../../core/_utilities/vite-plugin-custom-registry';\n`;
-    const lastImportIdx = content.lastIndexOf("\nimport ");
-    if (lastImportIdx !== -1) {
-      const endOfLine = content.indexOf("\n", lastImportIdx + 1);
-      content = content.slice(0, endOfLine + 1) + importLine + content.slice(endOfLine + 1);
-    }
-
-    // Insert plugin at the start of the plugins array
-    content = content.replace(
-      /plugins:\s*\[/,
-      `plugins: [\n    customRegistryPlugin({ root: resolve('../..') }),`,
-    );
-
-    yield* efs.writeFileString(configPath, content);
-  });
-
 export const generateCommand = Command.make(
   "generate",
   { directory, version, local },
@@ -351,9 +320,7 @@ export const generateCommand = Command.make(
 
       // 6. Inject custom registry Vite plugin into configs
       yield* Effect.log("Injecting custom registry Vite plugin...");
-      yield* injectRegistryPlugin(p.join(resolvedDir, "packages/login-widget/vite.config.ts"));
-      yield* injectRegistryPlugin(p.join(resolvedDir, "packages/login-widget/vite.config.iife.ts"));
-      yield* injectRegistryPlugin(p.join(resolvedDir, "apps/login-app/vite.config.ts"));
+      yield* injectRegistryPluginAll(resolvedDir);
 
       // 7. Scan user directory and generate initial registry
       const userDir = p.join(resolvedDir, "user");
