@@ -92,6 +92,7 @@ export default tseslint.config(
       '**/build/**',
       'core/**/*.d.ts',
       'packages/login-widget/dist/**/*.d.ts',
+      'tools/cli/dist/**',
     ],
   },
 );
