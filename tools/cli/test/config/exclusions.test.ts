@@ -17,10 +17,11 @@ describe("isExcluded", () => {
     expect(isExcluded(".mcp.json")).toBe(true);
   });
 
-  it("excludes git, lock, and workspace files", () => {
+  it("excludes git, lock, workspace, and root config files", () => {
     expect(isExcluded(".git/HEAD")).toBe(true);
     expect(isExcluded("pnpm-lock.yaml")).toBe(true);
     expect(isExcluded("pnpm-workspace.yaml")).toBe(true);
+    expect(isExcluded("tsconfig.json")).toBe(true);
     expect(isExcluded(".env")).toBe(true);
   });
 
@@ -42,10 +43,14 @@ describe("isExcluded", () => {
   });
 
   it("preserves config files needed by customers", () => {
-    expect(isExcluded("tsconfig.json")).toBe(false);
     expect(isExcluded(".npmrc")).toBe(false);
     expect(isExcluded("eslint.config.js")).toBe(false);
     expect(isExcluded(".prettierrc")).toBe(false);
     expect(isExcluded("postcss.config.cjs")).toBe(false);
+  });
+
+  it("preserves nested tsconfigs (only root excluded)", () => {
+    expect(isExcluded("core/tsconfig.json")).toBe(false);
+    expect(isExcluded("packages/login-widget/tsconfig.json")).toBe(false);
   });
 });

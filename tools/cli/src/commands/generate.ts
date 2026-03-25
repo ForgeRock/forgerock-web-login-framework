@@ -314,6 +314,32 @@ export const generateCommand = Command.make(
         ].join("\n"),
       );
 
+      // 2b. Write root tsconfig.json without apps/login-app reference
+      // (apps/login-app/tsconfig.json extends .svelte-kit/tsconfig.json
+      //  which only exists after svelte-kit sync runs via pnpm install)
+      yield* efs.writeFileString(
+        p.join(resolvedDir, "tsconfig.json"),
+        JSON.stringify(
+          {
+            compilerOptions: {
+              target: "ESNext",
+              module: "ESNext",
+              moduleResolution: "bundler",
+              strict: true,
+              esModuleInterop: true,
+              skipLibCheck: true,
+              forceConsistentCasingInFileNames: true,
+              resolveJsonModule: true,
+              lib: ["ESNext", "DOM", "DOM.Iterable"],
+            },
+            references: [{ path: "core" }, { path: "packages/login-widget" }],
+            exclude: ["node_modules", "packages", "apps", "e2e", "core"],
+          },
+          null,
+          2,
+        ) + "\n",
+      );
+
       // 3. Scaffold user directory with demo components
       yield* scaffoldUserDirectory(resolvedDir);
 
@@ -355,5 +381,10 @@ export const generateCommand = Command.make(
       }
 
       yield* Effect.log(`Project generated successfully at ${resolvedDir}`);
+      yield* Effect.log("Next steps:");
+      yield* Effect.log(`  cd ${resolvedDir}`);
+      yield* Effect.log("  pnpm install");
+      yield* Effect.log("  cp .env.example .env  # fill in your AM details");
+      yield* Effect.log("  pnpm dev");
     }),
 );

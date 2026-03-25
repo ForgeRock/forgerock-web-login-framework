@@ -33,7 +33,7 @@ describe("copyWithExclusions", () => {
       "{}",
     );
     fs.writeFileSync(path.join(sourceDir, "package.json"), "{}");
-    fs.writeFileSync(path.join(sourceDir, "tsconfig.json"), "{}");
+    fs.writeFileSync(path.join(sourceDir, ".npmrc"), "auto-install-peers=true");
   });
 
   afterEach(() => {
@@ -48,9 +48,7 @@ describe("copyWithExclusions", () => {
           fs.existsSync(path.join(targetDir, "core/journey/journey.svelte")),
         ).toBe(true);
         expect(fs.existsSync(path.join(targetDir, "package.json"))).toBe(true);
-        expect(fs.existsSync(path.join(targetDir, "tsconfig.json"))).toBe(
-          true,
-        );
+        expect(fs.existsSync(path.join(targetDir, ".npmrc"))).toBe(true);
       }),
       Effect.provide(NodeContext.layer),
       Effect.runPromise,

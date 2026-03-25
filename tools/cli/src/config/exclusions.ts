@@ -29,6 +29,7 @@ const EXCLUDED_FILES = [
   "CLAUDE.md",
   ".generator-version",
   "pnpm-workspace.yaml",
+  "tsconfig.json",
 ] as const;
 
 const EXCLUDED_PATTERNS = [
