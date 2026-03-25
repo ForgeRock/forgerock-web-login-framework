@@ -29,6 +29,11 @@ describe("isExcluded", () => {
     expect(isExcluded("storybook-static/index.html")).toBe(true);
   });
 
+  it("excludes CLI tooling", () => {
+    expect(isExcluded("tools/cli/package.json")).toBe(true);
+    expect(isExcluded("tools/cli/src/main.ts")).toBe(true);
+  });
+
   it("preserves framework source code", () => {
     expect(isExcluded("core/journey/journey.svelte")).toBe(false);
     expect(isExcluded("packages/login-widget/package.json")).toBe(false);

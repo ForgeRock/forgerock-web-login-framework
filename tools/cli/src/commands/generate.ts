@@ -190,6 +190,12 @@ const version = Options.text("version").pipe(
   Options.optional,
 );
 
+const local = Options.directory("local").pipe(
+  Options.withAlias("l"),
+  Options.withDescription("Path to local framework source (skips GitHub fetch)."),
+  Options.optional,
+);
+
 /**
  * Patches a Vite config file to inject the customRegistryPlugin.
  * Adds the import and inserts the plugin call before the first existing plugin.
@@ -224,27 +230,35 @@ const injectRegistryPlugin = (configPath: string) =>
 
 export const generateCommand = Command.make(
   "generate",
-  { directory, version },
-  ({ directory: targetDir, version: verOption }) =>
+  { directory, version, local },
+  ({ directory: targetDir, version: verOption, local: localOption }) =>
     Effect.gen(function* () {
       const p = yield* Path.Path;
       const release = yield* Release;
       const resolvedDir = p.resolve(targetDir);
+      const isLocal = Option.isSome(localOption);
 
-      const ver = Option.isSome(verOption)
-        ? verOption.value
-        : yield* Effect.tap(
-            release.resolveLatest(),
-            (v) => Effect.log(`No --version specified, resolved latest: ${v}`),
-          );
+      // Determine source: local path or fetched release
+      let sourceDir: string;
+      let ver: string;
 
-      yield* Effect.log(`Generating project at ${resolvedDir} from ${ver}`);
+      if (isLocal) {
+        sourceDir = p.resolve(localOption.value);
+        ver = Option.isSome(verOption) ? verOption.value : "local";
+        yield* Effect.log(`Generating project at ${resolvedDir} from local source: ${sourceDir}`);
+      } else {
+        ver = Option.isSome(verOption)
+          ? verOption.value
+          : yield* Effect.tap(
+              release.resolveLatest(),
+              (v) => Effect.log(`No --version specified, resolved latest: ${v}`),
+            );
+        yield* Effect.log(`Generating project at ${resolvedDir} from ${ver}`);
+        sourceDir = yield* release.fetch(ver, resolvedDir);
+      }
 
-      // 1. Fetch release archive
-      const tempDir = yield* release.fetch(ver, resolvedDir);
-
-      // 2. Copy framework files (excludes user/, .github/, etc.)
-      yield* copyWithExclusions(tempDir, resolvedDir);
+      // 1. Copy framework files (excludes user/, .github/, tools/, etc.)
+      yield* copyWithExclusions(sourceDir, resolvedDir);
 
       // 3. Scaffold user directory with demo components
       yield* scaffoldUserDirectory(resolvedDir);
@@ -280,10 +294,12 @@ export const generateCommand = Command.make(
         generatedAt: new Date().toISOString(),
       });
 
-      // 9. Cleanup temp directory
-      yield* efs
-        .remove(tempDir, { recursive: true })
-        .pipe(Effect.catchAll(() => Effect.void));
+      // 9. Cleanup temp directory (only when fetched from remote)
+      if (!isLocal) {
+        yield* efs
+          .remove(sourceDir, { recursive: true })
+          .pipe(Effect.catchAll(() => Effect.void));
+      }
 
       yield* Effect.log(`Project generated successfully at ${resolvedDir}`);
     }),
