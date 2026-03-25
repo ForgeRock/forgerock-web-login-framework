@@ -1,17 +1,13 @@
 import { Command } from "@effect/cli";
 import { Effect } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
-
-const generate = Command.make("generate", {}, () =>
-  Effect.log("generate: not yet implemented")
-);
-
-const update = Command.make("update", {}, () =>
-  Effect.log("update: not yet implemented")
-);
+import { generateCommand } from "./commands/generate.js";
+import { updateCommand } from "./commands/update.js";
+import { scanCommand } from "./commands/scan.js";
+import { ReleaseLive } from "./services/Release.js";
 
 const command = Command.make("ping-law").pipe(
-  Command.withSubcommands([generate, update])
+  Command.withSubcommands([generateCommand, updateCommand, scanCommand]),
 );
 
 const cli = Command.run(command, {
@@ -19,4 +15,8 @@ const cli = Command.run(command, {
   version: "0.1.0",
 });
 
-cli(process.argv).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain);
+cli(process.argv).pipe(
+  Effect.provide(ReleaseLive),
+  Effect.provide(NodeContext.layer),
+  NodeRuntime.runMain,
+);

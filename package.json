@@ -7,8 +7,8 @@
   "scripts": {
     "changeset": "changeset",
     "build:release": "pnpm --filter @forgerock/login-widget run build:release",
-    "build:widget": "pnpm --filter @forgerock/login-widget run build",
-    "build:app": "pnpm --filter @forgerock/login-widget run build && pnpm --filter @forgerock/login-app run build",
+    "build:widget": "pnpm ping-law -- scan && pnpm --filter @forgerock/login-widget run build",
+    "build:app": "pnpm ping-law -- scan && pnpm --filter @forgerock/login-widget run build && pnpm --filter @forgerock/login-app run build",
     "build:storybook": "storybook build --webpack-stats-json",
     "build": "pnpm run build:widget && pnpm --filter @forgerock/login-app run build",
     "dev": "pnpm run build:widget && pnpm --filter @forgerock/login-app run dev",
