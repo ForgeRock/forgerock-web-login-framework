@@ -16,6 +16,7 @@
    * returned a union of the possible types, rather than just a generic `string` type.
    */
 
+  import { customCallbacks } from './custom-registry';
   import { CallbackType, WebAuthnStepType } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
 
@@ -87,6 +88,7 @@
     | (Props & { webAuthnValue: WebAuthnStepType });
 
   let cbType: string;
+  let CustomComponent: unknown = null;
 
   let _BooleanAttributeInputCallback: AttributeInputCallback<boolean>;
   let _ChoiceCallback: ChoiceCallback;
@@ -113,6 +115,7 @@
 
   $: {
     cbType = props.callback.getType();
+    CustomComponent = cbType in customCallbacks ? customCallbacks[cbType] : null;
 
     switch (cbType) {
       case CallbackType.BooleanAttributeInputCallback:
@@ -184,7 +187,9 @@
   }
 </script>
 
-{#if cbType === CallbackType.BooleanAttributeInputCallback}
+{#if CustomComponent}
+  <svelte:component this={CustomComponent} {...props} />
+{:else if cbType === CallbackType.BooleanAttributeInputCallback}
   {@const newProps = {
     ...props,
     callback: _BooleanAttributeInputCallback,

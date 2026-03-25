@@ -21,7 +21,9 @@
       "$journey": ["./journey"],
       "$journey/*": ["./journey/*"],
       "$locales": ["./locales"],
-      "$locales/*": ["./locales/*"]
+      "$locales/*": ["./locales/*"],
+      "$user": ["../user"],
+      "$user/*": ["../user/*"]
     }
   },
   "include": ["**/*.ts", "**/*.svelte"],

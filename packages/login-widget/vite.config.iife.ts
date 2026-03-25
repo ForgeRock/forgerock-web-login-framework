@@ -55,6 +55,7 @@ export default defineConfig({
       $components: resolve('../../core/components'),
       $journey: resolve('../../core/journey'),
       $locales: resolve('../../core/locales'),
+      $user: resolve('../../user'),
     },
   },
   css: {

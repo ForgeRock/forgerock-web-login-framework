@@ -17,6 +17,7 @@ export default defineConfig(
         '$app-locales': resolve('./src/locales'),
         $locales: resolve('../../core/locales'),
         $package: resolve('../../packages/login-widget/dist'),
+        $user: resolve('../../user'),
       },
     },
     server: {

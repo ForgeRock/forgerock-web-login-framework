@@ -7,6 +7,7 @@
  *
  **/
 
+import { customStages } from './custom-registry';
 import Generic from '$journey/stages/generic.svelte';
 import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import Registration from '$journey/stages/registration.svelte';
@@ -42,6 +43,12 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes {
   // Handle unlikely error state
   if (!currentStep || currentStep.type !== 'Step') {
     return Generic;
+  }
+
+  // Check custom stage registry first (customer overrides take priority)
+  const stageName = currentStep?.getStage?.() || '';
+  if (stageName && stageName in customStages) {
+    return customStages[stageName] as StageTypes;
   }
 
   // Prioritize stage value if present
