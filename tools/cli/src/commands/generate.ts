@@ -190,6 +190,38 @@ const version = Options.text("version").pipe(
   Options.optional,
 );
 
+/**
+ * Patches a Vite config file to inject the customRegistryPlugin.
+ * Adds the import and inserts the plugin call before the first existing plugin.
+ */
+const injectRegistryPlugin = (configPath: string) =>
+  Effect.gen(function* () {
+    const efs = yield* FileSystem.FileSystem;
+    const exists = yield* efs.exists(configPath);
+    if (!exists) return;
+
+    let content = yield* efs.readFileString(configPath);
+
+    // Skip if already injected
+    if (content.includes("customRegistryPlugin")) return;
+
+    // Add import after the last existing import
+    const importLine = `import { customRegistryPlugin } from '../../core/_utilities/vite-plugin-custom-registry';\n`;
+    const lastImportIdx = content.lastIndexOf("\nimport ");
+    if (lastImportIdx !== -1) {
+      const endOfLine = content.indexOf("\n", lastImportIdx + 1);
+      content = content.slice(0, endOfLine + 1) + importLine + content.slice(endOfLine + 1);
+    }
+
+    // Insert plugin at the start of the plugins array
+    content = content.replace(
+      /plugins:\s*\[/,
+      `plugins: [\n    customRegistryPlugin({ root: resolve('../..') }),`,
+    );
+
+    yield* efs.writeFileString(configPath, content);
+  });
+
 export const generateCommand = Command.make(
   "generate",
   { directory, version },
@@ -223,23 +255,32 @@ export const generateCommand = Command.make(
       // 5. Scaffold .env.example
       yield* scaffoldEnvExample(resolvedDir);
 
-      // 6. Scan user directory and generate registry
+      // 6. Inject custom registry Vite plugin into configs
+      yield* Effect.log("Injecting custom registry Vite plugin...");
+      yield* injectRegistryPlugin(p.join(resolvedDir, "packages/login-widget/vite.config.ts"));
+      yield* injectRegistryPlugin(p.join(resolvedDir, "packages/login-widget/vite.config.iife.ts"));
+      yield* injectRegistryPlugin(p.join(resolvedDir, "apps/login-app/vite.config.ts"));
+
+      // 7. Scan user directory and generate initial registry
       const userDir = p.join(resolvedDir, "user");
       const components = scanUserDirectory(userDir);
       const registrySource = generateRegistrySource(components);
 
       const efs = yield* FileSystem.FileSystem;
-      const registryPath = p.join(userDir, "registry.ts");
+      const registryPath = p.join(resolvedDir, "core/journey/_utilities/custom-registry.ts");
+      yield* efs.makeDirectory(p.dirname(registryPath), { recursive: true }).pipe(
+        Effect.catchAll(() => Effect.void),
+      );
       yield* efs.writeFileString(registryPath, registrySource);
 
-      // 7. Write version file
+      // 8. Write version file
       yield* writeVersion(resolvedDir, {
         version: ver,
         commitHash: "generated",
         generatedAt: new Date().toISOString(),
       });
 
-      // 8. Cleanup temp directory
+      // 9. Cleanup temp directory
       yield* efs
         .remove(tempDir, { recursive: true })
         .pipe(Effect.catchAll(() => Effect.void));

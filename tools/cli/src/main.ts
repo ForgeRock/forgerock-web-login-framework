@@ -3,11 +3,10 @@ import { Effect } from "effect";
 import { NodeContext, NodeRuntime } from "@effect/platform-node";
 import { generateCommand } from "./commands/generate.js";
 import { updateCommand } from "./commands/update.js";
-import { scanCommand } from "./commands/scan.js";
 import { ReleaseLive } from "./services/Release.js";
 
 const command = Command.make("ping-law").pipe(
-  Command.withSubcommands([generateCommand, updateCommand, scanCommand]),
+  Command.withSubcommands([generateCommand, updateCommand]),
 );
 
 const cli = Command.run(command, {

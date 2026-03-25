@@ -3,7 +3,6 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 import type { UserConfig } from 'vite';
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-
 export default defineConfig(
   ({ mode }): UserConfig => ({
     envDir: resolve('../..'),

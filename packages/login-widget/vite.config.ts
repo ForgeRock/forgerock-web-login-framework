@@ -5,7 +5,6 @@ import { resolve } from 'path';
 import postcssImport from 'postcss-import';
 import tailwindcss from 'tailwindcss';
 import autoprefixer from 'autoprefixer';
-
 export default defineConfig({
   // Use isolated tsconfig for esbuild (avoids dependency on .svelte-kit/tsconfig.json)
   esbuild: {
