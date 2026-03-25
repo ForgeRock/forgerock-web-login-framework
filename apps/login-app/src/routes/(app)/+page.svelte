@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,10 +8,12 @@
  -->
 
 <script lang="ts">
-  import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
   import { goto } from '$app/navigation';
+  import { browser } from '$app/environment';
   import { page } from '$app/stores';
   import { onMount } from 'svelte';
+
+  import { REDIRECT_FALLBACK } from '$lib/redirect.constants';
 
   import Box from '$components/primitives/box/centered.svelte';
   import Journey from '$journey/journey.svelte';
@@ -38,29 +40,39 @@
 
   let name = '';
 
-  async function logout() {
-    const { clientId } = Config.get();
+  // Ensures we only trigger the post-login redirect once
+  // to avoid re-running multiple times as journey/oauth/user stores update.
+  let hasRedirected = false;
 
-    /**
-     * If configuration has a clientId, then use FRUser to logout to ensure
-     * token revoking and removal; else, just end the session.
-     */
-    if (clientId) {
-      // Call SDK logout
-      await FRUser.logout();
-    } else {
-      await SessionManager.logout();
+  async function redirectAfterLogin() {
+    const accessToken = $oauthStore.response?.accessToken;
+
+    if (!accessToken) {
+      window.location.assign(REDIRECT_FALLBACK);
+      return;
     }
 
-    // Reset stores
-    journeyStore.reset();
-    oauthStore.reset();
-    userStore.reset();
-    // Fetch fresh journey step
-    journeyStore.start({
-      tree: journeyParam || authIndexValue || undefined,
-    });
+    try {
+      const response = await fetch('/api/redirect', {
+        method: 'GET',
+        headers: {
+          accept: 'application/json',
+          authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        window.location.assign(REDIRECT_FALLBACK);
+        return;
+      }
+
+      const body = (await response.json()) as { redirectUri?: string };
+      window.location.assign(body.redirectUri || REDIRECT_FALLBACK);
+    } catch {
+      window.location.assign(REDIRECT_FALLBACK);
+    }
   }
+
   /**
    * Sets up locale store with appropriate content
    */
@@ -87,6 +99,11 @@
       userStore.get();
     }
     name = ($userStore.response as { name: string })?.name;
+
+    if (browser && $userStore?.successful && !hasRedirected) {
+      hasRedirected = true;
+      redirectAfterLogin();
+    }
   }
 </script>
 
@@ -94,12 +111,6 @@
   {#if !$userStore.successful}
     <Journey componentStyle="app" displayIcon={true} {journeyStore} />
   {:else}
-    <p class="tw_mb-6">User: {name}</p>
-    <button
-      class="tw_button-base tw_focusable-element dark:tw_focusable-element_dark tw_button-secondary dark:tw_button-secondary_dark"
-      on:click={logout}
-    >
-      Logout
-    </button>
+      <p class="tw_mb-6">{name}, you are being redirected...</p>
   {/if}
 </Box>

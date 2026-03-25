@@ -1,37 +1,56 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import type { RequestEvent } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import type { z } from 'zod';
+import { loadLocaleContent } from '$server/locale';
 
-import { getLocale } from '$core/_utilities/i18n.utilities';
+import { REDIRECT_QUERY_PARAMS } from '$lib/redirect.constants';
 
-import type { stringsSchema } from '$core/locale.store';
+export const load: PageServerLoad = async ({ request, url, cookies }) => {
+  // https://docs.pingidentity.com/pingam/8/am-oauth2/oauth2-parameters.html#redirect-uri
+  const redirectUri = url.searchParams.get('goto');
 
-export const load: PageServerLoad = async (event: RequestEvent) => {
-  const userLocale = event.request.headers.get('accept-language') || 'en-US';
-  const locale = getLocale(userLocale, '/');
-  const [country, lang] = locale.split('/');
+  const userLocale = request.headers.get('accept-language') || 'en-US';
+  const content = await loadLocaleContent(userLocale);
 
-  let localeContent: { default: z.infer<typeof stringsSchema> };
+  if (redirectUri) {
+    try {
+      // Normalize common inputs into something URL parsing + AM validateGoto can consistently handle.
+      // Examples:
+      // - '/path' stays relative (will be resolved against this app's origin below)
+      // - 'example.com/path' becomes 'https://example.com/path'
+      // - 'https://…' stays as-is
+      const normalizedRedirectUri =
+        redirectUri.startsWith('http://') ||
+        redirectUri.startsWith('https://') ||
+        redirectUri.startsWith('/')
+          ? redirectUri
+          : `https://${redirectUri}`;
 
-  try {
-    localeContent = await import(`$locales/${country}/${lang}/index.json`);
-  } catch (err) {
-    console.error(`User locale content for ${userLocale} was not found.`);
+      // Parse into a real URL object. If the input is relative (e.g. '/path'), use this app's origin
+      // as the base so we end up with a full absolute URL in `parsed.href`.
+      const parsed = new URL(normalizedRedirectUri, url.origin);
 
-    // TODO: Reevaluate use of JS versus JSON without breaking type generation for lib
-    // eslint-disable-next-line
-    // @ts-ignore
-    localeContent = await import(`$locales/us/en/index.json`);
+      // Only persist http(s) redirects. Other schemes like 'javascript:' are ignored.
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+        cookies.set(REDIRECT_QUERY_PARAMS, parsed.href, {
+          httpOnly: true,
+          sameSite: 'lax',
+          secure: url.protocol === 'https:',
+          maxAge: 300,
+          path: '/',
+        });
+      }
+    } catch {
+      // Ignore invalid redirectUri values
+    }
   }
 
-  return { content: localeContent.default };
+  return { content };
 };
