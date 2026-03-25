@@ -79,6 +79,44 @@ export const scaffoldUserDirectory = (targetDir: string) =>
         demoStageDir,
       );
     }
+
+    // Write a tsconfig for the user directory so esbuild resolves types
+    // locally instead of crawling up to the root project references
+    const tsconfigPath = p.join(userDir, "tsconfig.json");
+    const tsconfigExists = yield* efs.exists(tsconfigPath);
+    if (!tsconfigExists) {
+      yield* efs.writeFileString(
+        tsconfigPath,
+        JSON.stringify(
+          {
+            compilerOptions: {
+              target: "ESNext",
+              module: "ESNext",
+              moduleResolution: "bundler",
+              strict: true,
+              verbatimModuleSyntax: true,
+              isolatedModules: true,
+              esModuleInterop: true,
+              skipLibCheck: true,
+              lib: ["ESNext", "DOM", "DOM.Iterable"],
+              paths: {
+                $core: ["../core"],
+                "$core/*": ["../core/*"],
+                $components: ["../core/components"],
+                "$components/*": ["../core/components/*"],
+                $journey: ["../core/journey"],
+                "$journey/*": ["../core/journey/*"],
+                $locales: ["../core/locales"],
+                "$locales/*": ["../core/locales/*"],
+              },
+            },
+            include: ["**/*.ts", "**/*.svelte"],
+          },
+          null,
+          2,
+        ) + "\n",
+      );
+    }
   });
 
 const copyTemplateDir = (sourceDir: string, targetDir: string) =>
@@ -257,8 +295,24 @@ export const generateCommand = Command.make(
         sourceDir = yield* release.fetch(ver, resolvedDir);
       }
 
-      // 1. Copy framework files (excludes user/, .github/, tools/, etc.)
+      // 1. Copy framework files (excludes user/, .github/, tools/, pnpm-workspace.yaml, etc.)
       yield* copyWithExclusions(sourceDir, resolvedDir);
+
+      // 2. Write a clean pnpm-workspace.yaml (without tools/*)
+      const efs = yield* FileSystem.FileSystem;
+      yield* efs.writeFileString(
+        p.join(resolvedDir, "pnpm-workspace.yaml"),
+        [
+          "packages:",
+          "  - 'packages/*'",
+          "  - 'apps/*'",
+          "  - 'e2e'",
+          "",
+          "overrides:",
+          "  vite>rollup: 'npm:@rollup/wasm-node'",
+          "",
+        ].join("\n"),
+      );
 
       // 3. Scaffold user directory with demo components
       yield* scaffoldUserDirectory(resolvedDir);
@@ -280,7 +334,6 @@ export const generateCommand = Command.make(
       const components = scanUserDirectory(userDir);
       const registrySource = generateRegistrySource(components);
 
-      const efs = yield* FileSystem.FileSystem;
       const registryPath = p.join(resolvedDir, "core/journey/_utilities/custom-registry.ts");
       yield* efs.makeDirectory(p.dirname(registryPath), { recursive: true }).pipe(
         Effect.catchAll(() => Effect.void),

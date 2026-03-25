@@ -17,9 +17,10 @@ describe("isExcluded", () => {
     expect(isExcluded(".mcp.json")).toBe(true);
   });
 
-  it("excludes git and lock files", () => {
+  it("excludes git, lock, and workspace files", () => {
     expect(isExcluded(".git/HEAD")).toBe(true);
     expect(isExcluded("pnpm-lock.yaml")).toBe(true);
+    expect(isExcluded("pnpm-workspace.yaml")).toBe(true);
     expect(isExcluded(".env")).toBe(true);
   });
 

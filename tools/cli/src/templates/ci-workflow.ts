@@ -20,7 +20,7 @@ jobs:
           node-version: 22
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - run: pnpm install
 
       - run: pnpm check:lint
         name: Lint

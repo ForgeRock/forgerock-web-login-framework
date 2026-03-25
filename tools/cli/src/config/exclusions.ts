@@ -28,6 +28,7 @@ const EXCLUDED_FILES = [
   "yarn.lock",
   "CLAUDE.md",
   ".generator-version",
+  "pnpm-workspace.yaml",
 ] as const;
 
 const EXCLUDED_PATTERNS = [
