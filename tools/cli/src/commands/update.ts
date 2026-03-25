@@ -1,7 +1,6 @@
 import { Command, Options } from "@effect/cli";
-import { FileSystem } from "@effect/platform";
+import { FileSystem, Path } from "@effect/platform";
 import { Effect, Option } from "effect";
-import path from "node:path";
 import { Release } from "../services/Release.js";
 import { copyWithExclusions } from "../services/FileSystem.js";
 import {
@@ -21,8 +20,9 @@ export const updateCommand = Command.make(
   { version },
   ({ version: verOption }) =>
     Effect.gen(function* () {
+      const p = yield* Path.Path;
       const release = yield* Release;
-      const resolvedDir = path.resolve(".");
+      const resolvedDir = p.resolve(".");
 
       // 1. Read current version
       const current = yield* readVersion(resolvedDir);
@@ -51,12 +51,12 @@ export const updateCommand = Command.make(
       yield* copyWithExclusions(tempDir, resolvedDir);
 
       // 5. Re-scan /user and regenerate registry
-      const userDir = path.join(resolvedDir, "user");
+      const userDir = p.join(resolvedDir, "user");
       const components = scanUserDirectory(userDir);
       const registrySource = generateRegistrySource(components);
 
       const efs = yield* FileSystem.FileSystem;
-      const registryPath = path.join(userDir, "registry.ts");
+      const registryPath = p.join(userDir, "registry.ts");
       yield* efs.writeFileString(registryPath, registrySource);
 
       // 6. Update .generator-version
