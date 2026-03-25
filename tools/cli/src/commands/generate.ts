@@ -322,7 +322,35 @@ export const generateCommand = Command.make(
       yield* Effect.log("Injecting custom registry Vite plugin...");
       yield* injectRegistryPluginAll(resolvedDir);
 
-      // 7. Scan user directory and generate initial registry
+      // 7. Strip ping-law script from root package.json (CLI isn't in generated output)
+      const pkgJsonPath = p.join(resolvedDir, "package.json");
+      const pkgJsonExists = yield* efs.exists(pkgJsonPath);
+      if (pkgJsonExists) {
+        const pkgJson = JSON.parse(yield* efs.readFileString(pkgJsonPath));
+        if (pkgJson.scripts?.["ping-law"]) {
+          delete pkgJson.scripts["ping-law"];
+          yield* efs.writeFileString(
+            pkgJsonPath,
+            JSON.stringify(pkgJson, null, 2) + "\n",
+          );
+        }
+      }
+
+      // 8. Uncomment custom-registry.ts in .gitignore
+      const gitignorePath = p.join(resolvedDir, ".gitignore");
+      const gitignoreExists = yield* efs.exists(gitignorePath);
+      if (gitignoreExists) {
+        const gitignore = yield* efs.readFileString(gitignorePath);
+        yield* efs.writeFileString(
+          gitignorePath,
+          gitignore.replace(
+            "# core/journey/_utilities/custom-registry.ts",
+            "core/journey/_utilities/custom-registry.ts",
+          ),
+        );
+      }
+
+      // 9. Scan user directory and generate initial registry
       const userDir = p.join(resolvedDir, "user");
       const components = scanUserDirectory(userDir);
       const registrySource = generateRegistrySource(components);
