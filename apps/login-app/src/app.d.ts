@@ -18,12 +18,3 @@ declare namespace App {
   // interface Session {}
   // interface Stuff {}
 }
-
-// Extend Vite's ImportMetaEnv with custom env variables
-declare module 'vite/client' {
-  interface ImportMetaEnv {
-    readonly VITE_FR_AM_URL: string;
-    readonly VITE_FR_AM_COOKIE_NAME: string;
-    readonly APP_DOMAIN: string;
-  }
-}

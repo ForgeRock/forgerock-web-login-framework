@@ -26,11 +26,12 @@ jobs:
         shardIndex: [1, 2, 3, 4]
         shardTotal: [4]
     runs-on: ${{ matrix.os }}
+    # GitHub secrets still use legacy VITE_FR_* names — remap to FR_* for runtime
     env:
-      VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
-      VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
-      VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
-      VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+      FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+      FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+      FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
+      FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -113,11 +114,12 @@ jobs:
 
   test-lint-storybook-build:
     runs-on: ubuntu-latest
+    # GitHub secrets still use legacy VITE_FR_* names — remap to FR_* for runtime
     env:
-      VITE_FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
-      VITE_FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
-      VITE_FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
-      VITE_FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
+      FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
+      FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
+      FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
+      FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

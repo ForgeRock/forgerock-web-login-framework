@@ -14,8 +14,7 @@ import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants
 import { get, set } from '$server/sessions';
 
 export const POST: RequestHandler = async (event: RequestEvent) => {
-  const bodyStream = event?.request?.body;
-  const body = bodyStream?.getReader().read();
+  const body = await event.request.text();
   let cookieUuid = '';
 
   // console.log(body.toString());
@@ -39,7 +38,7 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
         'content-type': 'application/json',
         cookie: reqCookie ? reqCookie : '',
       },
-      body: body?.toString(),
+      body,
     },
   );
 

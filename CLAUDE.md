@@ -108,10 +108,10 @@ Singleton Svelte stores in `core/` manage all widget state. The public API is co
 
 The login-app and E2E tests require ForgeRock AM connection details via `.env` or shell:
 
-- `VITE_FR_AM_URL` — ForgeRock AM base URL
-- `VITE_FR_AM_COOKIE_NAME` — AM session cookie name
-- `VITE_FR_OAUTH_PUBLIC_CLIENT` — OAuth 2.0 client ID
-- `VITE_FR_REALM_PATH` — AM realm path
+- `FR_AM_URL` — ForgeRock AM base URL
+- `FR_AM_COOKIE_NAME` — AM session cookie name
+- `FR_OAUTH_PUBLIC_CLIENT` — OAuth 2.0 client ID
+- `FR_REALM_PATH` — AM realm path
 
 ## Conventions
 

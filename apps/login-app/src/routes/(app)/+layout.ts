@@ -13,18 +13,23 @@ import { initialize as initializeLinks } from '$core/links.store';
 
 import '../../app.css';
 import { browser } from '$app/environment';
+import type { LayoutLoad } from './$types';
 
-configure({
-  clientId: 'WebOAuthClient',
-  redirectUri: `${browser ? window.location.origin : 'https://placeholder.com'}/callback`,
-  scope: 'openid profile me.read',
-  serverConfig: {
-    baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
-  },
-  realmPath: 'alpha',
-});
-initializeJourneys();
+export const load: LayoutLoad = ({ data }) => {
+  configure({
+    clientId: data.clientId,
+    redirectUri: `${browser ? window.location.origin : 'https://placeholder.com'}/callback`,
+    ...(data.scope && { scope: data.scope }),
+    serverConfig: {
+      baseUrl: data.amUrl,
+    },
+    realmPath: data.realmPath,
+  });
+  initializeJourneys();
 
-initializeLinks({
-  termsAndConditions: 'https://www.forgerock.com/terms',
-});
+  initializeLinks({
+    termsAndConditions: 'https://www.forgerock.com/terms',
+  });
+
+  return data;
+};
