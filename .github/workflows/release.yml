@@ -95,6 +95,14 @@ jobs:
         run: |
           git checkout "$ORIGINAL_SHA"
           pnpm changeset version --snapshot beta
+
+          VERSION=$(node -p "require('./packages/login-widget/package.json').version")
+          if [[ "$VERSION" != *"-beta-"* ]]; then
+            echo "::error::Expected a snapshot version containing '-beta-' but got '$VERSION'. Aborting publish to prevent releasing a stable version under the beta tag."
+            exit 1
+          fi
+          echo "Publishing snapshot version: $VERSION"
+
           pnpm changeset publish --tag beta
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
