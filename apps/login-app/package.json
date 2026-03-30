@@ -9,7 +9,8 @@
     "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning"
   },
   "dependencies": {
-    "@forgerock/login-widget": "workspace:*"
+    "@forgerock/login-widget": "workspace:*",
+    "jose": "^6.2.2"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^7.0.0",

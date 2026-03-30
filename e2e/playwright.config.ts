@@ -15,6 +15,8 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
         FR_AM_URL: 'https://openam-sdks.forgeblocks.com/am',
         FR_AM_COOKIE_NAME: '5421aeddf91aa20',
         FR_OAUTH_PUBLIC_CLIENT: 'WebOAuthClient',
+        // Required: AM returns `invalid_scope` when no scope is requested and no default is configured.
+        FR_OAUTH_SCOPE: 'openid profile email',
         FR_REALM_PATH: 'alpha',
       },
     };
