@@ -10,46 +10,39 @@
 import type { PageServerLoad } from './$types';
 import { loadLocaleContent } from '$server/locale';
 
-import { REDIRECT_QUERY_PARAMS } from '$lib/redirect.constants';
+import { normalizeRedirectParam, REDIRECT_QUERY_PARAMS } from '$lib/redirect.utilities';
+
+type RedirectQueryParamsCookie = {
+  goto?: string | null;
+  gotoOnFail?: string | null;
+};
 
 export const load: PageServerLoad = async ({ request, url, cookies }) => {
-  // https://docs.pingidentity.com/pingam/8/am-oauth2/oauth2-parameters.html#redirect-uri
-  const redirectUri = url.searchParams.get('goto');
-
   const userLocale = request.headers.get('accept-language') || 'en-US';
   const content = await loadLocaleContent(userLocale);
 
-  if (redirectUri) {
-    try {
-      // Normalize common inputs into something URL parsing + AM validateGoto can consistently handle.
-      // Examples:
-      // - '/path' stays relative (will be resolved against this app's origin below)
-      // - 'example.com/path' becomes 'https://example.com/path'
-      // - 'https://…' stays as-is
-      const normalizedRedirectUri =
-        redirectUri.startsWith('http://') ||
-        redirectUri.startsWith('https://') ||
-        redirectUri.startsWith('/')
-          ? redirectUri
-          : `https://${redirectUri}`;
+  const redirectUrl = url.searchParams.get('goto');
+  const redirectOnFailUrl = url.searchParams.get('gotoOnFail');
+  const cookieValue: RedirectQueryParamsCookie = {};
 
-      // Parse into a real URL object. If the input is relative (e.g. '/path'), use this app's origin
-      // as the base so we end up with a full absolute URL in `parsed.href`.
-      const parsed = new URL(normalizedRedirectUri, url.origin);
+  if (redirectUrl) {
+    const normalizedUrl = normalizeRedirectParam(redirectUrl, url.origin);
+    if (normalizedUrl) cookieValue.goto = normalizedUrl;
+  }
 
-      // Only persist http(s) redirects. Other schemes like 'javascript:' are ignored.
-      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
-        cookies.set(REDIRECT_QUERY_PARAMS, parsed.href, {
-          httpOnly: true,
-          sameSite: 'lax',
-          secure: url.protocol === 'https:',
-          maxAge: 300,
-          path: '/',
-        });
-      }
-    } catch {
-      // Ignore invalid redirectUri values
-    }
+  if (redirectOnFailUrl) {
+    const normalizedUrl = normalizeRedirectParam(redirectOnFailUrl, url.origin);
+    if (normalizedUrl) cookieValue.gotoOnFail = normalizedUrl;
+  }
+
+  if (cookieValue.goto || cookieValue.gotoOnFail) {
+    cookies.set(REDIRECT_QUERY_PARAMS, JSON.stringify(cookieValue), {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: url.protocol === 'https:',
+      maxAge: 300,
+      path: '/',
+    });
   }
 
   return { content };
