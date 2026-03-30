@@ -17,7 +17,7 @@
   "jsdelivr": "./dist/widget.iife.js",
   "files": ["dist"],
   "repository": {
-    "url": "https://github.com/forgerock/forgerock-web-login-framework.git"
+    "url": "https://github.com/ForgeRock/forgerock-web-login-framework.git"
   },
   "publishConfig": {
     "access": "public",

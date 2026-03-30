@@ -79,7 +79,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/forgerock/forgerock-web-login-framework.git"
+    "url": "git+https://github.com/ForgeRock/forgerock-web-login-framework.git"
   },
   "config": {
     "commitizen": {
