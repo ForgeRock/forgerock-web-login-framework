@@ -7,7 +7,7 @@
  *
  **/
 
-import type { FRCallback, FRStep } from '@forgerock/javascript-sdk';
+import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
 
 import type { CallbackMetadata } from '$journey/journey.interfaces';
 import {
@@ -26,8 +26,8 @@ import {
  * @returns {array}
  */
 export function buildCallbackMetadata(
-  step: FRStep,
-  checkValidation: (callback: FRCallback) => boolean,
+  step: JourneyStep,
+  checkValidation: (callback: BaseCallback) => boolean,
   stageJson?: Record<string, unknown> | null,
 ) {
   const callbackCount: Record<string, number> = {};

@@ -15,4 +15,5 @@ export const load: LayoutServerLoad = () => ({
   clientId: env.FR_OAUTH_PUBLIC_CLIENT ?? '',
   realmPath: env.FR_REALM_PATH ?? '',
   scope: env.FR_OAUTH_SCOPE,
+  wellknown: env.FR_AM_WELLKNOWN_URL ?? '',
 });
