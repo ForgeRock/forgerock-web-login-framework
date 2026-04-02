@@ -7,41 +7,41 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
 import {
-  CallbackType,
   ConfirmationCallback,
   SelectIdPCallback,
-  type FRCallback,
-} from '@forgerock/javascript-sdk';
+  type BaseCallback,
+} from '@forgerock/journey-client/types';
 
 import type { CallbackMetadata } from '$journey/journey.interfaces';
 
 const selfSubmittingCallbacks = [
-  CallbackType.ConfirmationCallback,
-  CallbackType.DeviceProfileCallback,
-  CallbackType.PollingWaitCallback,
-  CallbackType.SelectIdPCallback,
-  CallbackType.PingOneProtectInitializeCallback,
-  CallbackType.PingOneProtectEvaluationCallback,
+  callbackType.ConfirmationCallback,
+  callbackType.DeviceProfileCallback,
+  callbackType.PollingWaitCallback,
+  callbackType.SelectIdPCallback,
+  callbackType.PingOneProtectInitializeCallback,
+  callbackType.PingOneProtectEvaluationCallback,
 ] as const;
 
 export type SelfSubmittingCallbacks = (typeof selfSubmittingCallbacks)[number];
 
 const userInputCallbacks = [
-  CallbackType.BooleanAttributeInputCallback,
-  CallbackType.ChoiceCallback,
-  CallbackType.ConfirmationCallback,
-  CallbackType.KbaCreateCallback,
-  CallbackType.NameCallback,
-  CallbackType.NumberAttributeInputCallback,
-  CallbackType.PasswordCallback,
-  CallbackType.ReCaptchaCallback,
-  CallbackType.SelectIdPCallback,
-  CallbackType.StringAttributeInputCallback,
-  CallbackType.TermsAndConditionsCallback,
-  CallbackType.TextInputCallback,
-  CallbackType.ValidatedCreatePasswordCallback,
-  CallbackType.ValidatedCreateUsernameCallback,
+  callbackType.BooleanAttributeInputCallback,
+  callbackType.ChoiceCallback,
+  callbackType.ConfirmationCallback,
+  callbackType.KbaCreateCallback,
+  callbackType.NameCallback,
+  callbackType.NumberAttributeInputCallback,
+  callbackType.PasswordCallback,
+  callbackType.ReCaptchaCallback,
+  callbackType.SelectIdPCallback,
+  callbackType.StringAttributeInputCallback,
+  callbackType.TermsAndConditionsCallback,
+  callbackType.TextInputCallback,
+  callbackType.ValidatedCreatePasswordCallback,
+  callbackType.ValidatedCreateUsernameCallback,
 ] as const;
 
 export type UserInputCallbacks = (typeof userInputCallbacks)[number];
@@ -50,7 +50,7 @@ export type UserInputCallbacks = (typeof userInputCallbacks)[number];
  * @function forceUserInputOptionalityCallbacks - Determines if a callback should be forced to be optional
  */
 const forceUserInputOptionalityCallbacks = {
-  SelectIdPCallback: (callback: FRCallback) => {
+  SelectIdPCallback: (callback: BaseCallback) => {
     const selectIdpCb = callback as SelectIdPCallback;
     return !!selectIdpCb
       .getProviders()
@@ -63,8 +63,8 @@ const forceUserInputOptionalityCallbacks = {
  * @param {object} callback - Generic FRCallback from JavaScript SDK
  * @returns {boolean}
  */
-export function isCbReadyByDefault(callback: FRCallback) {
-  if (callback.getType() === CallbackType.ConfirmationCallback) {
+export function isCbReadyByDefault(callback: BaseCallback) {
+  if (callback.getType() === callbackType.ConfirmationCallback) {
     const cb = callback as ConfirmationCallback;
     if (cb.getOptions().length === 1) {
       return true;
@@ -78,7 +78,7 @@ export function isCbReadyByDefault(callback: FRCallback) {
  * @param {object} callback - generic FRCallback from JavaScript SDK
  * @returns
  */
-export function canForceUserInputOptionality(callback: FRCallback) {
+export function canForceUserInputOptionality(callback: BaseCallback) {
   // See if a callback function exists within this collection
   const fn =
     forceUserInputOptionalityCallbacks[
@@ -94,7 +94,7 @@ export function canForceUserInputOptionality(callback: FRCallback) {
  * @param {object} callback - generic FRCallback from JavaScript SDK
  * @returns
  */
-export function isSelfSubmitting(callback: FRCallback) {
+export function isSelfSubmitting(callback: BaseCallback) {
   return selfSubmittingCallbacks.includes(callback.getType() as SelfSubmittingCallbacks);
 }
 
@@ -133,12 +133,12 @@ export function isStepReadyToSubmit(callbacks: CallbackMetadata[]) {
  * @param  {object} callback - Generic callback provided by JavaScript SDK
  * @returns {boolean}
  */
-export function requiresUserInput(callback: FRCallback) {
-  if (callback.getType() === CallbackType.SelectIdPCallback) {
+export function requiresUserInput(callback: BaseCallback) {
+  if (callback.getType() === callbackType.SelectIdPCallback) {
     return false;
   }
 
-  if (callback.getType() === CallbackType.ConfirmationCallback) {
+  if (callback.getType() === callbackType.ConfirmationCallback) {
     const cb = callback as ConfirmationCallback;
     if (cb.getOptions().length === 1) {
       return false;
