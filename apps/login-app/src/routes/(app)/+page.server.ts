@@ -7,43 +7,43 @@
  *
  **/
 
+import type { RequestEvent } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
-import { loadLocaleContent } from '$server/locale';
+import { z } from 'zod';
 
-import { normalizeRedirectParam, REDIRECT_QUERY_PARAMS } from '$lib/redirect.utilities';
+import { getLocale } from '$core/_utilities/i18n.utilities';
+import { storeRedirectParams, handleRedirectAction } from '$server/redirect/redirect';
 
-type RedirectQueryParamsCookie = {
-  goto?: string | null;
-  gotoOnFail?: string | null;
+import type { stringsSchema } from '$core/locale.store';
+
+export const load: PageServerLoad = async (event: RequestEvent) => {
+  const userLocale = event.request.headers.get('accept-language') || 'en-US';
+  const locale = getLocale(userLocale, '/');
+  const [country, lang] = locale.split('/');
+
+  let localeContent: { default: z.infer<typeof stringsSchema> };
+
+  try {
+    localeContent = await import(`$locales/${country}/${lang}/index.json`);
+  } catch (err) {
+    console.error(`User locale content for ${userLocale} was not found.`);
+
+    // TODO: Reevaluate use of JS versus JSON without breaking type generation for lib
+    // eslint-disable-next-line
+    // @ts-ignore
+    localeContent = await import(`$locales/us/en/index.json`);
+  }
+
+  const redirectParams = storeRedirectParams(event);
+
+  return {
+    content: localeContent.default,
+    redirectParams,
+  };
 };
 
-export const load: PageServerLoad = async ({ request, url, cookies }) => {
-  const userLocale = request.headers.get('accept-language') || 'en-US';
-  const content = await loadLocaleContent(userLocale);
-
-  const redirectUrl = url.searchParams.get('goto');
-  const redirectOnFailUrl = url.searchParams.get('gotoOnFail');
-  const cookieValue: RedirectQueryParamsCookie = {};
-
-  if (redirectUrl) {
-    const normalizedUrl = normalizeRedirectParam(redirectUrl, url.origin);
-    if (normalizedUrl) cookieValue.goto = normalizedUrl;
-  }
-
-  if (redirectOnFailUrl) {
-    const normalizedUrl = normalizeRedirectParam(redirectOnFailUrl, url.origin);
-    if (normalizedUrl) cookieValue.gotoOnFail = normalizedUrl;
-  }
-
-  if (cookieValue.goto || cookieValue.gotoOnFail) {
-    cookies.set(REDIRECT_QUERY_PARAMS, JSON.stringify(cookieValue), {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: url.protocol === 'https:',
-      maxAge: 300,
-      path: '/',
-    });
-  }
-
-  return { content };
+export const actions = {
+  default: async (event: RequestEvent) => {
+    return handleRedirectAction(event);
+  },
 };

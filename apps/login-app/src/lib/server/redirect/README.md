@@ -1,6 +1,6 @@
 # Redirects in Login App
 
-This document explains how post-authentication redirect is determined on **success** and **failure**, and explains various redirect flows
+This document explains how post-authentication redirect is determined on success and failure, and explains various redirect flows
 
 ## Reference:
 
@@ -12,15 +12,15 @@ This document explains how post-authentication redirect is determined on **succe
 
 - Redirect users to the correct target after login success or failure
 - Prevent open-redirect issues by validating URL against `validateGoto` endpoint
-- Handle common edge cases: default console paths, SAML endpoints, admin vs end user defaults, and `gotoOnFail`
+- Handle common edge cases: default console paths, SAML endpoints, admin vs end user redirects
 
 ## Redirect inputs
 
 Redirect URLs can come from multiple places:
 
 - Query parameters:
-  - `goto` (success redirect hint)
-  - `gotoOnFail` (failure redirect hint)
+  - `goto` (success)
+  - `gotoOnFail` (failure)
 - Journey outcome:
   - Success URL from the journey step (for example `step.getSuccessUrl()`)
   - Failure URL from the journey payload (for example `step.payload.detail.failureUrl`)
@@ -30,47 +30,37 @@ Redirect URLs can come from multiple places:
 
 ## Success and Failure redirection flow (`goto` and `gotoOnFail`)
 
-### 1) Initial request (server)
+### 1) Initial request (client)
 
-- Read `goto` / `gotoOnFail` from the incoming URL.
-- Normalize into a format AM can consistently validate
-- Store the normalized values in a short-lived **HTTP-only** cookie.
-  This cookie is cleared after it’s read to avoid stale redirects.
+- When the authentication journey completes on the client, a hidden form is submitted to the server to initiate the redirect flow. This form contains the necessary redirect information (such as success/failure state and URLs).
 
-### 2) Authentication completes (client)
+### 2) Storing redirect params (server)
 
-The client triggers redirect exactly once
+- Read `goto` / `gotoOnFail` from the incoming URL or from the submitted form.
+- Store values in a short-lived **HTTP-only** cookie.
 
-- On success: the client calls the redirect function with:
-  - the access token (for authorization)
-  - the journey success URL (if present)
-  - `isGotoOnFail=false`
-- On failure: the client calls the redirect function with:
-  - the access token (if available)
-  - the `gotoOnFail` query value (if present)
-  - `isGotoOnFail=true`
-  - the journey-provided `failureUrl` (as a fallback)
+### 3) Redirect function performs the final redirect (server)
 
-The client then navigates via `window.location.assign(...)` using the server’s response, or a safe fallback URL.
-
-### 3) Redirect function picks the final URL (server)
-
-1. Reads and parses the HTTP-only cookie (`goto` / `gotoOnFail`), then deletes it.
-2. Selects a possible `gotoUrl`:
+1. Read and parse the HTTP-only cookie (`goto` / `gotoOnFail`). This cookie is cleared after it’s read to avoid stale redirects.
+2. Select a possible `gotoUrl`:
    - If `isGotoOnFail=true`: prefer cookie `gotoOnFail`.
    - If `isGotoOnFail=false`: prefer cookie `goto`, otherwise use the client-provided URL (typically from the journey success step).
-3. Calls `validateGoto(authorization, gotoUrl)` in AM.
+3. Call `validateGoto(authorization, gotoUrl)` in AM. AM may return a `successURL` even when the input is invalid. It will fall back to the default success URL.
 4. If there is no usable `gotoUrl`, compute a default redirect, which redirects to either admin or end user.
+5. Final fallback:
 
-AM may return a `successURL` even when the input is invalid. It will fall back to the default success URL.
+- If all redirect logic fails (no valid URL can be determined), the server will redirect to static fallback files:
+  - `/success-redirect` for success cases
+  - `/failure-redirect` for failure cases
+- These files provide a guaranteed fallback destination for both success and failure scenarios.
 
 ## Other flows
 
 ### Default path
 
-- detects destinations whose last path segment is `console` (for example `/am/console` or `/auth/console`).
-- If `validateGoto` returns a non-console URL, use it.
-- If `validateGoto` returns a console URL:
+- detect destinations whose last path segment is `console` (for example `/am/console` or `/auth/console`).
+- If `validateGoto` return a non-console URL, use it.
+- If `validateGoto` return a console URL:
   - Failure flow: return an empty redirect so the client can redirect to the journey `failureUrl` or the global fallback.
   - Success flow: if the client provided a non-console URL from the journey, prefer that.
 
@@ -83,7 +73,6 @@ For example, when `validateGoto` endpoint returns '/am/console' as successURL an
 
 When there is no usable `goto` (or redirect selection must fall back), the server computes a default destination:
 
-- Verify the access token (`jwtVerify`) and read the subject (`sub`).
 - Fetch the user record and determine whether the user is an admin (based on roles/groups).
 - Admin users go to an admin landing page; non-admin users go to an end user landing page.
 

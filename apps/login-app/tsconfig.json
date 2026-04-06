@@ -2,8 +2,6 @@
   "extends": "./.svelte-kit/tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "$lib": ["./src/lib"],
-      "$lib/*": ["./src/lib/*"],
       "$core": ["../../core"],
       "$core/*": ["../../core/*"],
       "$components": ["../../core/components"],
