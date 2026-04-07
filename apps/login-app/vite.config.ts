@@ -17,6 +17,7 @@ export default defineConfig(
         '$app-locales': resolve('./src/locales'),
         $locales: resolve('../../core/locales'),
         $package: resolve('../../packages/login-widget/dist'),
+        '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
       },
     },
     server: {
@@ -27,8 +28,8 @@ export default defineConfig(
         // credentials: true
       },
       fs: {
-        // Allow serving files from the core directory and widget package
-        allow: ['../../core', '../../packages/login-widget'],
+        // Allow serving files from the core, widget, and experimental custom-component directories.
+        allow: ['../../core', '../../packages/login-widget', '../../experimental'],
       },
       hmr: {
         // Use if tunneling through Ngrok

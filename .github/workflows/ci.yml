@@ -40,6 +40,8 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/generateCustomRegistry.mjs
+        shell: bash
 
       # Cache Playwright browser binaries between runs (~200MB for Chromium)
       # playwright is a devDependency of the e2e workspace, so commands must be scoped
@@ -128,6 +130,8 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/generateCustomRegistry.mjs
+        shell: bash
       - run: pnpm run check:lint
       - run: pnpm run test
       - name: Install Playwright for Storybook tests
@@ -152,6 +156,8 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
+      - run: node scripts/generateCustomRegistry.mjs
+        shell: bash
       - uses: chromaui/action@latest
         with:
           onlyChanged: true

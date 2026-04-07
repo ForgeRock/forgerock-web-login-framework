@@ -18,6 +18,8 @@
 
   import { CallbackType, WebAuthnStepType } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
+  import type { CustomRegistryEntry } from './custom-registry';
+  import { customCallbackRegistry } from './custom-registry';
 
   // Callback handler components
   import Boolean from '$journey/callbacks/boolean/boolean.svelte';
@@ -190,7 +192,13 @@
   }
 </script>
 
-{#if cbType === CallbackType.BooleanAttributeInputCallback}
+{#if customCallbackRegistry[cbType]}
+  {@const _entry = customCallbackRegistry[cbType] as CustomRegistryEntry}
+  {@const _filteredProps = Object.fromEntries(
+    Object.entries(props).filter(([k]) => _entry.acceptedProps.includes(k)),
+  )}
+  <svelte:component this={_entry.component} {..._filteredProps} />
+{:else if cbType === CallbackType.BooleanAttributeInputCallback}
   {@const newProps = {
     ...props,
     callback: _BooleanAttributeInputCallback,
