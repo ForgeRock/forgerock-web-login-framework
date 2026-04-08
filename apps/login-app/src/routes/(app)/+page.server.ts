@@ -7,14 +7,19 @@
  *
  **/
 
-import type { RequestEvent } from '@sveltejs/kit';
+import { redirect, type RequestEvent } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types';
 import { z } from 'zod';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
-import { storeRedirectParams, handleRedirectAction } from '$server/redirect/redirect';
+import { resolveRedirect } from '$server/redirect/redirect.utilities';
 
 import type { stringsSchema } from '$core/locale.store';
+import {
+  storeRedirectParams,
+  createRedirectContext,
+  readAndClearRedirectCookie,
+} from '$server/redirect/redirect.effects';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
   const userLocale = event.request.headers.get('accept-language') || 'en-US';
@@ -44,6 +49,10 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
 
 export const actions = {
   default: async (event: RequestEvent) => {
-    return handleRedirectAction(event);
+    const formData = await event.request.formData();
+    const cookie = readAndClearRedirectCookie(event);
+    const redirectContext = await createRedirectContext(formData, cookie);
+    const url = resolveRedirect(redirectContext);
+    redirect(303, url);
   },
 };

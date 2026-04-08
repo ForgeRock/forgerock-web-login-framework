@@ -45,7 +45,7 @@ Redirect URLs can come from multiple places:
 2. Select a possible `gotoUrl`:
    - If `isGotoOnFail=true`: prefer cookie `gotoOnFail`.
    - If `isGotoOnFail=false`: prefer cookie `goto`, otherwise use the client-provided URL (typically from the journey success step).
-3. Call `validateGoto(authorization, gotoUrl)` in AM. AM may return a `successURL` even when the input is invalid. It will fall back to the default success URL.
+3. Call `validateGoto(authorization, gotoUrl)` in AM. AM may return a `successUrl` even when the input is invalid. It will fall back to the default success URL.
 4. If there is no usable `gotoUrl`, compute a default redirect, which redirects to either admin or end user.
 5. Final fallback:
 
@@ -67,7 +67,7 @@ Redirect URLs can come from multiple places:
 ### SAML URLs
 
 If `validateGoto` falls back to a console URL but the original `goto` looks like SAML, return the original `goto`.
-For example, when `validateGoto` endpoint returns '/am/console' as successURL and the corresponding `goto` query param is 'https://default.iam.example.com/am/Consumer/metaAlias/avsp', SAML condition becomes true and the `goto` URL is returned
+For example, when `validateGoto` endpoint returns '/am/console' as successUrl and the corresponding `goto` query param is 'https://default.iam.example.com/am/Consumer/metaAlias/avsp', SAML condition becomes true and the `goto` URL is returned
 
 ### Admin vs end user default
 
@@ -86,4 +86,4 @@ In these flows:
 2. Customer is redirected to authorization server and then to the Login App for authentication.
 3. Login app passes the `goto` and `gotoOnFail` params to AM and AM links this parameter with the active auth session in memory. This happens through the SDK options (`StepOptions.query.goto` and `StepOptions.query.gotoOnFail`).
 4. AM stores all of these relevant state params in the `suspendedId`, so the magic link sent to the user contains the `goto` param within this `suspendedId` in the URL.
-5. AM then restores the goto URL, and AM is able to send the user to this URL upon completion of the journey (turned into the successURL).
+5. AM then restores the goto URL, and AM is able to send the user to this URL upon completion of the journey (turned into the successUrl).

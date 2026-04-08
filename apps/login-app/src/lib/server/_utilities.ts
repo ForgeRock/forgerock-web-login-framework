@@ -7,19 +7,11 @@
  *
  **/
 
-import { z } from 'zod';
-
 interface RewriteCookieParams {
   cookie: string;
   amDomain: string;
   appDomain: string;
 }
-
-type RedirectFormValue = {
-  loginResult: 'success' | 'failure';
-  tokenId: string;
-  journeyStepUrl: string;
-};
 
 /**
  * @function extractDomainFromUrl - extracts the domain from a given URL string
@@ -67,80 +59,4 @@ export function rewriteCookieForClient({ cookie, amDomain, appDomain }: RewriteC
  */
 export function rewriteCookieForServer({ cookie, amDomain, appDomain }: RewriteCookieParams) {
   return cookie.replace(appDomain, amDomain);
-}
-
-/**
- * @function parseRedirectForm - parses the redirect form data into a structured object
- * @param {FormData} formData - The form data from the request
- * @returns {RedirectFormValue} The parsed form values
- */
-export function parseRedirectForm(formData: FormData): RedirectFormValue {
-  const str = z.preprocess((v) => (typeof v === 'string' ? v : ''), z.string());
-  const formSchema = z.object({
-    loginResult: str.pipe(z.enum(['success', 'failure']).catch('failure')),
-    tokenId: str,
-    journeyStepUrl: str,
-  });
-
-  return formSchema.parse({
-    loginResult: formData.get('loginResult'),
-    tokenId: formData.get('tokenId'),
-    journeyStepUrl: formData.get('journeyStepUrl'),
-  });
-}
-
-/**
- * @function isDefaultPath - Checks if the given URL or path ends with 'console'.
- * @param {string | null | undefined} urlOrPath - The URL or path to check.
- * @returns {boolean} True if the last segment is 'console', false otherwise.
- */
-export function isDefaultPath(urlOrPath: string | null | undefined): boolean {
-  if (!urlOrPath) {
-    return false;
-  }
-  const pathname = urlOrPath.split('?')[0].split('#')[0];
-  const lastSegment = pathname.split('/').filter(Boolean).at(-1);
-  return lastSegment === 'console';
-}
-
-/**
- * @function isSamlURL - Determines if the given URL or path is related to SAML endpoints.
- * @param {string} urlOrPath - The URL or path to check.
- * @returns {boolean} True if the path contains SAML indicators, false otherwise.
- */
-export function isSamlURL(urlOrPath: string): boolean {
-  return urlOrPath.includes('/Consumer/metaAlias') || urlOrPath.includes('/saml2');
-}
-
-/**
- * @function getRedirectUrlBasedOnRole - Returns a redirect URL based on the user's roles and realm.
- * @param {string} amOrigin - The AM server origin.
- * @param {string[]} roles - The user's roles.
- * @param {string} realm - The realm name.
- * @returns {string} The constructed redirect URL for admin or end user.
- */
-export function getRedirectUrlBasedOnRole(
-  amOrigin: string,
-  roles: string[],
-  realm: string,
-): string {
-  const isAdmin = roles.includes('ui-global-admin') || roles.includes('ui-realm-admin');
-  const realmPath = realm && realm !== 'root' ? `/${realm}` : '/';
-  return isAdmin
-    ? `${amOrigin}/platform/?realm=${realmPath}`
-    : `${amOrigin}/enduser/?realm=${realmPath}#/`;
-}
-
-/**
- * @function resolveAgainstOrigin - Resolves a relative URL or path against a given origin, returning an absolute URL.
- * @param {string} urlOrPath - The URL or path to resolve.
- * @param {string} origin - The base origin to resolve against.
- * @returns {string} The resolved absolute URL, or the original input if invalid.
- */
-export function resolveAgainstOrigin(urlOrPath: string, origin: string): string {
-  try {
-    return new URL(urlOrPath, origin).href;
-  } catch {
-    return urlOrPath;
-  }
 }

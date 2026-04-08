@@ -6,7 +6,8 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning"
+    "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning",
+    "test": "vitest run"
   },
   "dependencies": {
     "@forgerock/login-widget": "workspace:*"
@@ -30,6 +31,7 @@
     "svelte-preprocess": "^6.0.3",
     "tailwindcss": "^3.3.3",
     "uuid": "9.0.1",
-    "vite": "^5.4.21"
+    "vite": "^5.4.21",
+    "vitest": "^3.2.4"
   }
 }

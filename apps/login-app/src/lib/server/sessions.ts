@@ -9,8 +9,10 @@
 
 import { v4 as uuid } from 'uuid';
 import { z } from 'zod';
-import type { RequestEvent } from '@sveltejs/kit';
+import type { Cookies } from '@sveltejs/kit';
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
+
+import type { TokenId } from '$server/schemas';
 
 const amSessions: Map<string, string> = new Map();
 
@@ -45,14 +47,14 @@ export function remove(uuid: string): void {
 }
 
 /**
- * @function setHttpCookie - stores an http cookie on the provided SvelteKit RequestEvent.
- * @param {RequestEvent} event - SvelteKit request event which exposes the `cookies` API.
+ * @function setHttpCookie - stores an HTTP cookie using the provided SvelteKit Cookies API.
+ * @param {Cookies} cookies - SvelteKit cookies API instance.
  * @param {string} name - The name of the cookie to set.
  * @param {string} value - The value to store in the cookie.
  * @returns {void}
  */
-export function setHttpCookie(event: RequestEvent, name: string, value: string): void {
-  event.cookies.set(name, value, {
+export function setHttpCookie(cookies: Cookies, name: string, value: string): void {
+  cookies.set(name, value, {
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
@@ -62,23 +64,23 @@ export function setHttpCookie(event: RequestEvent, name: string, value: string):
 }
 
 /**
- * @function getHttpCookie - retrieves an http cookie value from the provided SvelteKit RequestEvent.
- * @param {RequestEvent} event - SvelteKit request event which exposes the `cookies` API.
+ * @function getHttpCookie - retrieves an HTTP cookie value using the provided SvelteKit Cookies API.
+ * @param {Cookies} cookies - SvelteKit cookies API instance.
  * @param {string} name - The name of the cookie to read.
  * @returns {string | undefined} The cookie value if present, otherwise `undefined`.
  */
-export function getHttpCookie(event: RequestEvent, name: string): string | undefined {
-  return event.cookies.get(name);
+export function getHttpCookie(cookies: Cookies, name: string): string | undefined {
+  return cookies.get(name);
 }
 
 /**
- * @function removeHttpCookie - deletes an http cookie via the provided SvelteKit RequestEvent.
- * @param {RequestEvent} event - SvelteKit request event which exposes the `cookies` API.
+ * @function removeHttpCookie - deletes an HTTP cookie using the provided SvelteKit Cookies API.
+ * @param {Cookies} cookies - SvelteKit cookies API instance.
  * @param {string} name - The name of the cookie to delete.
  * @returns {void}
  */
-export function removeHttpCookie(event: RequestEvent, name: string): void {
-  event.cookies.delete(name, {
+export function removeHttpCookie(cookies: Cookies, name: string): void {
+  cookies.delete(name, {
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
@@ -92,7 +94,7 @@ export function removeHttpCookie(event: RequestEvent, name: string): void {
  * @param {string} tokenId - The session token ID
  * @returns {Promise<string[]>} An array of user roles or an empty roles array
  */
-export async function getUserRolesFromSession(tokenId: string): Promise<string[]> {
+export async function getUserRolesFromSession(tokenId: TokenId): Promise<string[]> {
   const userId = await getUserIdFromSession(tokenId);
   if (!userId) {
     return [];
@@ -107,7 +109,7 @@ export async function getUserRolesFromSession(tokenId: string): Promise<string[]
  * @param {string} tokenId - The session token ID
  * @returns {Promise<string|null>} The user ID or null if not found
  */
-export async function getUserIdFromSession(tokenId: string): Promise<string | null> {
+export async function getUserIdFromSession(tokenId: TokenId): Promise<string | null> {
   const response = await amFetchRequest(tokenId, '/users?_action=idFromSession', 'POST', {});
   const parsed = z.object({ id: z.string() }).safeParse(response);
   return parsed.success ? parsed.data.id : null;
@@ -122,7 +124,7 @@ export async function getUserIdFromSession(tokenId: string): Promise<string | nu
  * @returns {Promise<unknown|null>} Parsed JSON response on success, otherwise `null`.
  */
 export async function amFetchRequest(
-  tokenId: string,
+  tokenId: TokenId,
   endpoint: string,
   method: string,
   body?: object,
