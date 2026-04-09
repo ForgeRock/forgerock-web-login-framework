@@ -88,6 +88,10 @@
     }
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@swc/core", "esbuild", "svelte-preprocess", "unrs-resolver"]
+    "onlyBuiltDependencies": ["@swc/core", "esbuild", "svelte-preprocess", "unrs-resolver"],
+    "overrides": {
+      "picomatch@2": "2.3.2",
+      "picomatch@4": "4.0.4"
+    }
   }
 }

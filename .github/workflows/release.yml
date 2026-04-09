@@ -56,9 +56,14 @@ jobs:
           # Setting registry-url creates an .npmrc with _authToken=${NODE_AUTH_TOKEN},
           # which prevents OIDC fallback even when the env var is unset.
 
-      # Node 22.x ships with npm 10.x; OIDC trusted publishing requires npm >= 11.5.1
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npm install -g npm@^11.6.0
+      # Node 22.x ships npm 10.x; OIDC trusted publishing requires npm >= 11.6.
+      # Use corepack to install the required npm version instead of self-upgrading
+      # npm, which can fail on runners with corrupted pre-installed npm.
+      - name: Install npm for OIDC trusted publishing
+        run: |
+          corepack enable npm
+          corepack install -g npm@latest
+          npm --version
 
       - run: pnpm install --frozen-lockfile
 
@@ -159,8 +164,11 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
 
-      - name: Upgrade npm for OIDC trusted publishing
-        run: npm install -g npm@^11.6.0
+      - name: Install npm for OIDC trusted publishing
+        run: |
+          corepack enable npm
+          corepack install -g npm@latest
+          npm --version
 
       - run: pnpm install --frozen-lockfile
 
