@@ -7,12 +7,24 @@
  *
  **/
 
+import type { RequestEvent } from '@sveltejs/kit';
 import { env } from '$env/dynamic/private';
-import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = () => ({
-  amUrl: env.FR_AM_URL ?? '',
-  clientId: env.FR_OAUTH_PUBLIC_CLIENT ?? '',
-  realmPath: env.FR_REALM_PATH ?? '',
-  scope: env.FR_OAUTH_SCOPE,
-});
+export const load = ({ url }: RequestEvent) => {
+  // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → "root" (admin default)
+  const realmParam = url.searchParams.get('realm');
+  let realmPath: string;
+  if (realmParam != null) {
+    const stripped = realmParam.replace(/^\/+/, '');
+    realmPath = stripped || 'root';
+  } else {
+    realmPath = 'root';
+  }
+
+  return {
+    amUrl: env.FR_AM_URL ?? '',
+    clientId: env.FR_OAUTH_PUBLIC_CLIENT ?? '',
+    realmPath,
+    scope: env.FR_OAUTH_SCOPE,
+  };
+};

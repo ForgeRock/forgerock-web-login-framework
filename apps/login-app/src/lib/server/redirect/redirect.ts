@@ -31,9 +31,55 @@ import {
 
 const REDIRECT_QUERY_PARAMS = 'redirect_query_params';
 
+/**
+ * Returns true if the URL is an AM OAuth2 authorize endpoint.
+ * These URLs must never be used as a top-level redirect destination:
+ * appAuthHelperRedirect.html (the OAuth redirect_uri) is designed to run
+ * inside a hidden iframe and post tokens back to the parent SPA. If the
+ * browser navigates there as the main frame, it gets stuck.
+ */
+function isOAuthAuthorizePath(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    return parsed.pathname.includes('/oauth2/') && parsed.pathname.endsWith('/authorize');
+  } catch {
+    const pathname = url.split('?')[0].split('#')[0];
+    return pathname.includes('/oauth2/') && pathname.endsWith('/authorize');
+  }
+}
+
+/**
+ * In this deployment /enduser/ and /login/ on the login-app host are routed
+ * back to this login app by HAProxy (USE_NEW_LOGIN_APP=true). Redirecting there
+ * would loop. Check both path AND host to avoid falsely flagging platform-ui URLs.
+ */
+function isLoginAppPath(url: string, loginAppOrigin: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const appHost = new URL(loginAppOrigin).host;
+    if (parsed.host !== appHost) return false;
+    return (
+      parsed.pathname === '/enduser' ||
+      parsed.pathname.startsWith('/enduser/') ||
+      parsed.pathname === '/login' ||
+      parsed.pathname.startsWith('/login/')
+    );
+  } catch {
+    // Relative URL — check pathname only (relative URLs are always on the login-app host)
+    const pathname = url.split('?')[0].split('#')[0];
+    return (
+      pathname === '/enduser' ||
+      pathname.startsWith('/enduser/') ||
+      pathname === '/login' ||
+      pathname.startsWith('/login/')
+    );
+  }
+}
+
 type RedirectParams = {
   goto?: string;
   gotoOnFail?: string;
+  realm?: string;
 };
 
 /**
@@ -44,19 +90,20 @@ type RedirectParams = {
 export function storeRedirectParams(event: RequestEvent): RedirectParams {
   const goto = event.url.searchParams.get('goto') || undefined;
   const gotoOnFail = event.url.searchParams.get('gotoOnFail') || undefined;
+  const realmParam = event.url.searchParams.get('realm');
+  const realm = realmParam != null ? realmParam.replace(/^\/+/, '') || 'root' : 'root';
 
-  if (goto || gotoOnFail) {
-    setHttpCookie(
-      event,
-      REDIRECT_QUERY_PARAMS,
-      JSON.stringify({
-        ...(goto ? { goto } : {}),
-        ...(gotoOnFail ? { gotoOnFail } : {}),
-      }),
-    );
-  }
+  setHttpCookie(
+    event,
+    REDIRECT_QUERY_PARAMS,
+    JSON.stringify({
+      ...(goto ? { goto } : {}),
+      ...(gotoOnFail ? { gotoOnFail } : {}),
+      realm,
+    }),
+  );
 
-  return { goto, gotoOnFail };
+  return { goto, gotoOnFail, realm };
 }
 
 /**
@@ -80,6 +127,20 @@ export async function handleRedirectAction(event: RequestEvent): Promise<never> 
     successUrl = await validateUrl(tokenId, gotoUrl, amOrigin);
   }
 
+  // AM returns login-app paths (e.g. /enduser/?realm=/alpha) as the default
+  // successURL — redirecting there would loop back into this app.
+  if (successUrl && isLoginAppPath(successUrl, amOrigin)) {
+    successUrl = null;
+  }
+
+  // OAuth authorize URLs (e.g. /am/oauth2/alpha/authorize?...) must not be used
+  // as a top-level redirect. appAuthHelperRedirect.html only works inside a
+  // hidden iframe. Redirect to the SPA instead and let it handle OAuth via its
+  // own iframe mechanism.
+  if (successUrl && isOAuthAuthorizePath(successUrl)) {
+    successUrl = null;
+  }
+
   if (successUrl && !isDefaultPath(successUrl)) {
     throw redirect(303, successUrl);
   }
@@ -87,29 +148,48 @@ export async function handleRedirectAction(event: RequestEvent): Promise<never> 
   if (successUrl && isDefaultPath(successUrl)) {
     if (isGotoOnFail) {
       successUrl = null; // treat as unusable
-    } else if (journeyStepUrl && !isDefaultPath(journeyStepUrl)) {
+    } else if (
+      journeyStepUrl &&
+      !isDefaultPath(journeyStepUrl) &&
+      !isLoginAppPath(resolveAgainstOrigin(journeyStepUrl, amOrigin), amOrigin) &&
+      !isOAuthAuthorizePath(journeyStepUrl)
+    ) {
       throw redirect(303, resolveAgainstOrigin(journeyStepUrl, amOrigin));
     } else if (isSamlURL(gotoUrl)) {
       throw redirect(303, resolveAgainstOrigin(gotoUrl, amOrigin));
     }
   }
 
-  // If validateGoto was not usable, fall back to journeyStepUrl (if present).
-  if (journeyStepUrl) {
+  // If validateGoto was not usable, fall back to journeyStepUrl (if present and not a login-app loop or OAuth flow).
+  if (
+    journeyStepUrl &&
+    !isLoginAppPath(resolveAgainstOrigin(journeyStepUrl, amOrigin), amOrigin) &&
+    !isOAuthAuthorizePath(journeyStepUrl)
+  ) {
     throw redirect(303, resolveAgainstOrigin(journeyStepUrl, amOrigin));
   }
 
   // Success flow: compute role-based default using the session token.
   if (!isGotoOnFail && tokenId) {
     const roles = await getUserRolesFromSession(tokenId);
-    throw redirect(303, getRedirectUrlBasedOnRole(amOrigin, roles, env.FR_REALM_PATH));
+    const platformOrigin = env.FR_PLATFORM_ORIGIN || undefined;
+    const destination = getRedirectUrlBasedOnRole(
+      amOrigin,
+      roles,
+      cookie.realm ?? 'root',
+      platformOrigin,
+    );
+    throw redirect(303, destination);
   }
 
   // Final fallbacks.
   if (isGotoOnFail) {
     throw redirect(303, '/failure-redirect');
   }
-  throw redirect(303, '/success-redirect');
+  throw redirect(
+    303,
+    `${new URL(AM_DOMAIN_PATH).origin}/enduser/?realm=/${cookie.realm && cookie.realm !== 'root' ? cookie.realm : ''}#/`,
+  );
 }
 
 /**
@@ -124,6 +204,7 @@ function readAndClearRedirectCookie(event: RequestEvent): RedirectParams {
   const cookieSchema = z.object({
     goto: z.string().optional(),
     gotoOnFail: z.string().optional(),
+    realm: z.string().optional(),
   });
 
   if (!cookieValue) {

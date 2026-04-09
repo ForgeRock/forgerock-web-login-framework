@@ -114,21 +114,24 @@ export function isSamlURL(urlOrPath: string): boolean {
 
 /**
  * @function getRedirectUrlBasedOnRole - Returns a redirect URL based on the user's roles and realm.
- * @param {string} amOrigin - The AM server origin.
+ * @param {string} amOrigin - The AM server origin (used for admin /platform/ redirect).
  * @param {string[]} roles - The user's roles.
  * @param {string} realm - The realm name.
+ * @param {string} [platformOrigin] - Optional separate origin for platform-ui (enduser/admin). Defaults to amOrigin.
  * @returns {string} The constructed redirect URL for admin or end user.
  */
 export function getRedirectUrlBasedOnRole(
   amOrigin: string,
   roles: string[],
   realm: string,
+  platformOrigin?: string,
 ): string {
+  const origin = platformOrigin || amOrigin;
   const isAdmin = roles.includes('ui-global-admin') || roles.includes('ui-realm-admin');
   const realmPath = realm && realm !== 'root' ? `/${realm}` : '/';
   return isAdmin
-    ? `${amOrigin}/platform/?realm=${realmPath}`
-    : `${amOrigin}/enduser/?realm=${realmPath}#/`;
+    ? `${origin}/platform/?realm=${realmPath}`
+    : `${origin}/enduser/?realm=${realmPath}#/`;
 }
 
 /**
