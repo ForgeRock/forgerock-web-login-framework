@@ -34,7 +34,7 @@ The ForgeRock Login Widget is an all-inclusive UI component for adding authentic
 
 It works with React, Vue, Angular, Svelte, and vanilla JavaScript — any modern client-side JavaScript framework. It does not currently support server-side rendering (SSR) or Node.js.
 
-The widget uses the [ForgeRock SDK for JavaScript](https://backstage.forgerock.com/docs/sdks/latest/javascript/configuring/configuring-forgerock-sdk-settings-for-your-javascript-app.html) internally and adds a UI rendering layer with state management. This rendering layer is built with [Svelte](https://svelte.dev/) and [Tailwind](https://tailwindcss.com/), but both are compiled away — the resulting widget is framework-agnostic with no runtime dependencies.
+The widget uses the [ForgeRock SDK for JavaScript](https://docs.pingidentity.com/sdks/latest/sdks/tutorials/javascript/index.html) internally and adds a UI rendering layer with state management. This rendering layer is built with [Svelte](https://svelte.dev/) and [Tailwind](https://tailwindcss.com/), but both are compiled away — the resulting widget is framework-agnostic with no runtime dependencies.
 
 ## Quick Start
 
@@ -114,7 +114,7 @@ For test documentation, see **[TESTING.md](TESTING.md)**.
 
 ## Documentation
 
-Documentation for the Login Widget is provided at [ForgeRock Backstage](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework.html), and includes topics such as:
+Documentation for the Login Widget is provided at [ForgeRock Login Widget](https://docs.pingidentity.com/sdks/latest/login-widget/index.html), and includes topics such as:
 
 - Instantiate the inline form factor
 - Theme the widget
@@ -125,14 +125,14 @@ Documentation for the Login Widget is provided at [ForgeRock Backstage](https://
 
 ## Support
 
-If you encounter any issues, be sure to check our **[Troubleshooting](https://backstage.forgerock.com/knowledge/kb/article/a68547609)** pages.
+If you encounter any issues, be sure to check our **[Troubleshooting](https://support.pingidentity.com/s/article/How-do-I-troubleshoot-the-ForgeRock-SDK-for-JavaScript)** pages.
 
 Support tickets can be raised whenever you need our assistance; here are some examples of when it is appropriate to open a ticket (but not limited to):
 
 - Suspected bugs or problems with ForgeRock software.
-- Requests for assistance — please look at the **[Documentation](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework.html)** and **[Knowledge Base](https://backstage.forgerock.com/knowledge/kb/home/g32324668)** first.
+- Requests for assistance — please look at the **[Documentation](https://docs.pingidentity.com/sdks/latest/login-widget/index.html)** and **[Knowledge Base](https://support.pingidentity.com/s/knowledge-base?category=Forgerock_SDK)** first.
 
-You can raise a ticket using **[BackStage](https://backstage.forgerock.com/support/tickets)**, our customer support portal that provides one-stop access to ForgeRock services.
+You can raise a ticket using **[Ping Identity Support](https://support.pingidentity.com/s/)**, our customer support portal that provides one-stop access to ForgeRock services.
 
 ## Contributing
 
