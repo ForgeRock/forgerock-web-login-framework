@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { SuspendedTextOutputCallback, TextOutputCallback } from '@forgerock/javascript-sdk';
+  import type { SuspendedTextOutputCallback, TextOutputCallback } from '@forgerock/journey-client/types';
   import sanitize from 'xss';
   import type { z } from 'zod';
 

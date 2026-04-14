@@ -11,7 +11,7 @@
   import type {
     PasswordCallback,
     ValidatedCreatePasswordCallback,
-  } from '@forgerock/javascript-sdk';
+  } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import ConfirmInput from './confirm-input.svelte';

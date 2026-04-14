@@ -10,7 +10,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import T from '$components/_utilities/locale-strings.svelte';
-  import type { PingOneProtectEvaluationCallback } from '@forgerock/javascript-sdk';
+  import type { PingOneProtectEvaluationCallback } from '@forgerock/journey-client/types';
   import { PIProtect, type InitParams } from '@forgerock/ping-protect';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import type { SelfSubmitFunction } from '$journey/journey.interfaces';

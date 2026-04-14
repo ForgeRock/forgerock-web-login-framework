@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { FRAuth, FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
@@ -18,10 +18,7 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import {
-    convertStringToKey,
-    shouldRedirectFromStep,
-  } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
   import ShieldIcon from '$components/icons/shield-icon.svelte';
@@ -47,7 +44,7 @@
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   }>;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
@@ -89,7 +86,6 @@
   onMount(() => captureLinks(linkWrapper, journey));
 
   $: {
-    shouldRedirectFromStep(step) && FRAuth.redirect(step);
     formMessageKey = convertStringToKey(form?.message);
   }
 </script>

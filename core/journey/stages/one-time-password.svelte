@@ -8,12 +8,8 @@
  -->
 
 <script lang="ts">
-  import {
-    CallbackType,
-    ConfirmationCallback,
-    type FRCallback,
-    type FRStep,
-  } from '@forgerock/javascript-sdk';
+  import { callbackType } from '@forgerock/journey-client';
+  import type { BaseCallback, ConfirmationCallback, JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate } from 'svelte';
 
   // i18n
@@ -46,12 +42,12 @@
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   }>;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   let alertNeedsFocus = false;
   let buttons: { value: string; text: string }[];
   let formMessageKey = '';
-  let modifiedCallbacks: FRCallback[] = [];
+  let modifiedCallbacks: BaseCallback[] = [];
 
   function determineSubmission() {
     // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
@@ -70,19 +66,19 @@
   $: {
     formMessageKey = convertStringToKey(form?.message);
 
-    const confirmationCallbacks = step.getCallbacksOfType(CallbackType.ConfirmationCallback);
+    const confirmationCallbacks = step.getCallbacksOfType(callbackType.ConfirmationCallback);
     if (confirmationCallbacks.length) {
       const confirmationCb = confirmationCallbacks[0] as ConfirmationCallback;
       buttons = confirmationCb
         .getOptions()
-        .map((option, index) => ({ value: `${index}`, text: option }));
+        .map((option: string, index: number) => ({ value: `${index}`, text: option }));
     }
 
     /**
      * Filter out ConfirmationCallbacks; we'll use them seperately
      */
-    modifiedCallbacks = step.callbacks.filter((callback) => {
-      if (callback.getType() === CallbackType.ConfirmationCallback) {
+    modifiedCallbacks = step.callbacks.filter((callback: BaseCallback) => {
+      if (callback.getType() === callbackType.ConfirmationCallback) {
         return false;
       }
       return true;

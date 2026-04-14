@@ -9,7 +9,7 @@
 
 <script lang="ts">
   import { getAttributeValidationFailureText } from '$journey/callbacks/_utilities/callback.utilities';
-  import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
+  import type { AttributeInputCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';

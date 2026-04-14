@@ -12,7 +12,7 @@ import type {
   PolicyRequirement,
   ValidatedCreateUsernameCallback,
   ValidatedCreatePasswordCallback,
-} from '@forgerock/javascript-sdk';
+} from '@forgerock/journey-client/types';
 
 import { interpolate } from '$core/_utilities/i18n.utilities';
 import type { PolicyParams } from '@forgerock/javascript-sdk/src/auth/interfaces';

@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ReCaptchaCallback } from '@forgerock/javascript-sdk';
+  import type { ReCaptchaCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
   import { onMount } from 'svelte';
   import { journeyStore } from '$journey/journey.store';
@@ -101,5 +101,5 @@
     data-chalexpired-callback="frHandleExpiredCallback"
     data-error-callback="frHandleErrorCallback"
     data-callback="frHandleCaptcha"
-  />
+  ></div>
 {/if}

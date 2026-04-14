@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { FRRecoveryCodes } from '@forgerock/javascript-sdk';
+  import { RecoveryCodes } from '@forgerock/journey-client/recovery-codes';
   import { afterUpdate } from 'svelte';
 
   // i18n
@@ -20,7 +20,7 @@
   import ClipboardIcon from '$components/icons/shield-check-icon.svelte';
 
   // Types
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
@@ -28,7 +28,7 @@
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
@@ -49,8 +49,8 @@
   });
 
   $: {
-    codes = FRRecoveryCodes.getCodes(step);
-    name = FRRecoveryCodes.getDeviceName(step);
+    codes = RecoveryCodes.getCodes(step);
+    name = RecoveryCodes.getDeviceName(step);
   }
 </script>
 

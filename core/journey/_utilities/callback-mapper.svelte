@@ -16,7 +16,8 @@
    * returned a union of the possible types, rather than just a generic `string` type.
    */
 
-  import { CallbackType, WebAuthnStepType } from '@forgerock/javascript-sdk';
+  import { callbackType } from '@forgerock/journey-client';
+  import type { WebAuthnStepType } from '@forgerock/journey-client/webauthn';
   import type { z } from 'zod';
   import type { CustomRegistryEntry } from './custom-registry';
   import { customCallbackRegistry } from './custom-registry';
@@ -47,6 +48,7 @@
 
   import type {
     AttributeInputCallback,
+    BaseCallback,
     ChoiceCallback,
     ConfirmationCallback,
     HiddenValueCallback,
@@ -62,13 +64,12 @@
     TextOutputCallback,
     ValidatedCreatePasswordCallback,
     ValidatedCreateUsernameCallback,
-    FRCallback,
     DeviceProfileCallback,
     MetadataCallback,
     ReCaptchaCallback,
     PingOneProtectEvaluationCallback,
     PingOneProtectInitializeCallback,
-  } from '@forgerock/javascript-sdk';
+  } from '@forgerock/journey-client/types';
 
   import type {
     CallbackMetadata,
@@ -79,7 +80,7 @@
   import type { Maybe } from '$core/interfaces';
 
   type Props = {
-    callback: FRCallback;
+    callback: BaseCallback;
     callbackMetadata: Maybe<CallbackMetadata>;
     selfSubmitFunction: SelfSubmitFunction;
     stepMetadata: Maybe<StepMetadata>;
@@ -114,80 +115,80 @@
   let _RecaptchaCallback: ReCaptchaCallback;
   let _PingProtectEvaluation: PingOneProtectEvaluationCallback;
   let _PingProtectInitialize: PingOneProtectInitializeCallback;
-  let _FRCallback: FRCallback;
+  let _BaseCallback: BaseCallback;
 
   $: {
     cbType = props.callback.getType();
 
     switch (cbType) {
-      case CallbackType.BooleanAttributeInputCallback:
+      case callbackType.BooleanAttributeInputCallback:
         _BooleanAttributeInputCallback = props.callback as AttributeInputCallback<boolean>;
         break;
-      case CallbackType.ChoiceCallback:
+      case callbackType.ChoiceCallback:
         _ChoiceCallback = props.callback as ChoiceCallback;
         break;
-      case CallbackType.ConfirmationCallback:
+      case callbackType.ConfirmationCallback:
         _ConfirmationCallback = props.callback as ConfirmationCallback;
         break;
-      case CallbackType.HiddenValueCallback:
+      case callbackType.HiddenValueCallback:
         _HiddenValueCallback = props.callback as HiddenValueCallback;
         break;
-      case CallbackType.KbaCreateCallback:
+      case callbackType.KbaCreateCallback:
         _KbaCreateCallback = props.callback as KbaCreateCallback;
         break;
-      case CallbackType.NameCallback:
+      case callbackType.NameCallback:
         _NameCallback = props.callback as NameCallback;
         break;
-      case CallbackType.ReCaptchaCallback:
+      case callbackType.ReCaptchaCallback:
         _RecaptchaCallback = props.callback as ReCaptchaCallback;
         break;
-      case CallbackType.PasswordCallback:
+      case callbackType.PasswordCallback:
         _PasswordCallback = props.callback as PasswordCallback;
         break;
-      case CallbackType.PollingWaitCallback:
+      case callbackType.PollingWaitCallback:
         _PollingWaitCallback = props.callback as PollingWaitCallback;
         break;
-      case CallbackType.RedirectCallback:
+      case callbackType.RedirectCallback:
         _RedirectCallback = props.callback as RedirectCallback;
         break;
-      case CallbackType.SelectIdPCallback:
+      case callbackType.SelectIdPCallback:
         _SelectIdPCallback = props.callback as SelectIdPCallback;
         break;
-      case CallbackType.StringAttributeInputCallback:
+      case callbackType.StringAttributeInputCallback:
         _StringAttributeInputCallback = props.callback as AttributeInputCallback<string>;
         break;
-      case CallbackType.ValidatedCreatePasswordCallback:
+      case callbackType.ValidatedCreatePasswordCallback:
         _ValidatedCreatePasswordCallback = props.callback as ValidatedCreatePasswordCallback;
         break;
-      case CallbackType.ValidatedCreateUsernameCallback:
+      case callbackType.ValidatedCreateUsernameCallback:
         _ValidatedCreateUsernameCallback = props.callback as ValidatedCreateUsernameCallback;
         break;
-      case CallbackType.TermsAndConditionsCallback:
+      case callbackType.TermsAndConditionsCallback:
         _TermsAndConditionsCallback = props.callback as TermsAndConditionsCallback;
         break;
-      case CallbackType.TextInputCallback:
+      case callbackType.TextInputCallback:
         _TextInputCallback = props.callback as TextInputCallback;
         break;
-      case CallbackType.TextOutputCallback:
+      case callbackType.TextOutputCallback:
         _TextOutputCallback = props.callback as TextOutputCallback;
         break;
-      case CallbackType.SuspendedTextOutputCallback:
+      case callbackType.SuspendedTextOutputCallback:
         _SuspendedTextOutputCallback = props.callback as SuspendedTextOutputCallback;
         break;
-      case CallbackType.DeviceProfileCallback:
+      case callbackType.DeviceProfileCallback:
         _DeviceProfileCallback = props.callback as DeviceProfileCallback;
         break;
-      case CallbackType.MetadataCallback:
+      case callbackType.MetadataCallback:
         _MetadataCallback = props.callback as MetadataCallback;
         break;
-      case CallbackType.PingOneProtectEvaluationCallback:
+      case callbackType.PingOneProtectEvaluationCallback:
         _PingProtectEvaluation = props.callback as PingOneProtectEvaluationCallback;
         break;
-      case CallbackType.PingOneProtectInitializeCallback:
+      case callbackType.PingOneProtectInitializeCallback:
         _PingProtectInitialize = props.callback as PingOneProtectInitializeCallback;
         break;
       default:
-        _FRCallback = props.callback as FRCallback;
+        _BaseCallback = props.callback as BaseCallback;
     }
   }
 </script>
@@ -198,133 +199,133 @@
     Object.entries(props).filter(([k]) => _entry.acceptedProps.includes(k)),
   )}
   <svelte:component this={_entry.component} {..._filteredProps} />
-{:else if cbType === CallbackType.BooleanAttributeInputCallback}
+{:else if cbType === callbackType.BooleanAttributeInputCallback}
   {@const newProps = {
     ...props,
     callback: _BooleanAttributeInputCallback,
   }}
   <Boolean {...newProps} />
-{:else if cbType === CallbackType.ChoiceCallback}
+{:else if cbType === callbackType.ChoiceCallback}
   {@const newProps = {
     ...props,
     callback: _ChoiceCallback,
   }}
   <Choice {...newProps} />
-{:else if cbType === CallbackType.ConfirmationCallback}
+{:else if cbType === callbackType.ConfirmationCallback}
   {@const newProps = {
     ...props,
     callback: _ConfirmationCallback,
   }}
   <Confirmation {...newProps} />
-{:else if cbType === CallbackType.HiddenValueCallback}
+{:else if cbType === callbackType.HiddenValueCallback}
   {@const newProps = {
     ...props,
     callback: _HiddenValueCallback,
   }}
   <HiddenValue {...newProps} />
-{:else if cbType === CallbackType.KbaCreateCallback}
+{:else if cbType === callbackType.KbaCreateCallback}
   {@const newProps = {
     ...props,
     callback: _KbaCreateCallback,
   }}
   <KbaCreate {...newProps} />
-{:else if cbType === CallbackType.NameCallback}
+{:else if cbType === callbackType.NameCallback}
   {@const newProps = {
     ...props,
     callback: _NameCallback,
   }}
   <Name {...newProps} />
-{:else if cbType === CallbackType.PasswordCallback}
+{:else if cbType === callbackType.PasswordCallback}
   {@const newProps = {
     ...props,
     callback: _PasswordCallback,
   }}
   <Password {...newProps} />
-{:else if cbType === CallbackType.PollingWaitCallback}
+{:else if cbType === callbackType.PollingWaitCallback}
   {@const newProps = {
     ...props,
     callback: _PollingWaitCallback,
   }}
   <PollingWait {...newProps} />
-{:else if cbType === CallbackType.RedirectCallback}
+{:else if cbType === callbackType.RedirectCallback}
   {@const newProps = {
     ...props,
     callback: _RedirectCallback,
   }}
   <Redirect {...newProps} />
-{:else if cbType === CallbackType.SelectIdPCallback}
+{:else if cbType === callbackType.SelectIdPCallback}
   {@const newProps = {
     ...props,
     callback: _SelectIdPCallback,
   }}
   <SelectIdp {...newProps} />
-{:else if cbType === CallbackType.StringAttributeInputCallback}
+{:else if cbType === callbackType.StringAttributeInputCallback}
   {@const newProps = {
     ...props,
     callback: _StringAttributeInputCallback,
   }}
   <StringAttributeInput {...newProps} />
-{:else if cbType === CallbackType.ValidatedCreatePasswordCallback}
+{:else if cbType === callbackType.ValidatedCreatePasswordCallback}
   {@const newProps = {
     ...props,
     callback: _ValidatedCreatePasswordCallback,
   }}
   <ValidatedCreatePassword {...newProps} />
-{:else if cbType === CallbackType.ValidatedCreateUsernameCallback}
+{:else if cbType === callbackType.ValidatedCreateUsernameCallback}
   {@const newProps = {
     ...props,
     callback: _ValidatedCreateUsernameCallback,
   }}
   <ValidatedCreateUsername {...newProps} />
-{:else if cbType === CallbackType.TermsAndConditionsCallback}
+{:else if cbType === callbackType.TermsAndConditionsCallback}
   {@const newProps = {
     ...props,
     callback: _TermsAndConditionsCallback,
   }}
   <TermsConditions {...newProps} />
-{:else if cbType === CallbackType.TextInputCallback}
+{:else if cbType === callbackType.TextInputCallback}
   {@const newProps = {
     ...props,
     callback: _TextInputCallback,
   }}
   <TextInput {...newProps} />
-{:else if cbType === CallbackType.TextOutputCallback}
+{:else if cbType === callbackType.TextOutputCallback}
   {@const newProps = {
     ...props,
     callback: _TextOutputCallback,
   }}
   <TextOutput {...newProps} />
-{:else if cbType === CallbackType.SuspendedTextOutputCallback}
+{:else if cbType === callbackType.SuspendedTextOutputCallback}
   {@const newProps = {
     ...props,
     callback: _SuspendedTextOutputCallback,
   }}
   <TextOutput {...newProps} />
-{:else if cbType === CallbackType.DeviceProfileCallback}
+{:else if cbType === callbackType.DeviceProfileCallback}
   {@const newProps = {
     ...props,
     callback: _DeviceProfileCallback,
   }}
   <DeviceProfile {...newProps} />
-{:else if cbType === CallbackType.MetadataCallback}
+{:else if cbType === callbackType.MetadataCallback}
   {@const newProps = {
     ...props,
     callback: _MetadataCallback,
   }}
   <Metadata {...newProps} />
-{:else if cbType === CallbackType.ReCaptchaCallback}
+{:else if cbType === callbackType.ReCaptchaCallback}
   {@const newProps = {
     ...props,
     callback: _RecaptchaCallback,
   }}
   <Recaptcha {...newProps} />
-{:else if cbType === CallbackType.PingOneProtectEvaluationCallback}
+{:else if cbType === callbackType.PingOneProtectEvaluationCallback}
   {@const newProps = {
     ...props,
     callback: _PingProtectEvaluation,
   }}
   <PingProtectEvaluation {...newProps} />
-{:else if cbType === CallbackType.PingOneProtectInitializeCallback}
+{:else if cbType === callbackType.PingOneProtectInitializeCallback}
   {@const newProps = {
     ...props,
     callback: _PingProtectInitialize,
@@ -333,7 +334,7 @@
 {:else}
   {@const newProps = {
     ...props,
-    callback: _FRCallback,
+    callback: _BaseCallback,
   }}
   <Unknown {...newProps} />
 {/if}

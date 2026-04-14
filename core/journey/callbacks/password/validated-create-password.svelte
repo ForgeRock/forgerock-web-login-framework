@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
+  import type { ValidatedCreatePasswordCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';

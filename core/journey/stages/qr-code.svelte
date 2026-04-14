@@ -8,15 +8,16 @@
  -->
 
 <script lang="ts">
-  import { CallbackType, FRQRCode } from '@forgerock/javascript-sdk';
+  import { callbackType } from '@forgerock/journey-client';
+  import { QRCode } from '@forgerock/journey-client/qr-code';
   import { afterUpdate, onMount } from 'svelte';
 
   import type {
+    BaseCallback,
     ConfirmationCallback,
-    FRCallback,
-    FRStep,
+    JourneyStep,
     PollingWaitCallback,
-  } from '@forgerock/javascript-sdk';
+  } from '@forgerock/journey-client/types';
 
   // i18n
   import { interpolate } from '$core/_utilities/i18n.utilities';
@@ -54,12 +55,12 @@
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   }>;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   let alertNeedsFocus = false;
   let buttons: { value: string; text: string }[];
   let formMessageKey = '';
-  let modifiedCallbacks: FRCallback[] = [];
+  let modifiedCallbacks: BaseCallback[] = [];
   let moduleLoaded = false;
   let pollingWaitCb: PollingWaitCallback;
   let pollingWaitIdx: number;
@@ -94,14 +95,14 @@
 
         moduleLoaded = true;
 
-        qrCodeUrl = FRQRCode.getQRCodeData(step).uri;
+        qrCodeUrl = QRCode.getQRCodeData(step).uri;
 
         qrCodeModule.toCanvas(
           qrCodeCanvas,
           qrCodeUrl,
           // Properties required for ForgeRock QR Codes
           { errorCorrectionLevel: 'L', version: 20, width: 400 },
-          function (error) {
+          function (error: unknown) {
             if (error) {
               form.message = interpolate('qrCodeFailedToRender');
               console.error(error);
@@ -123,16 +124,16 @@
       metadata.step.derived.stageName = 'QRCode';
     }
 
-    const confirmationCallbacks = step.getCallbacksOfType(CallbackType.ConfirmationCallback);
+    const confirmationCallbacks = step.getCallbacksOfType(callbackType.ConfirmationCallback);
     if (confirmationCallbacks.length) {
       const confirmationCb = confirmationCallbacks[0] as ConfirmationCallback;
       buttons = confirmationCb
         .getOptions()
-        .map((option, index) => ({ value: `${index}`, text: option }));
+        .map((option: string, index: number) => ({ value: `${index}`, text: option }));
     }
 
-    step.callbacks.forEach((callback, idx) => {
-      if (callback.getType() === CallbackType.PollingWaitCallback) {
+    step.callbacks.forEach((callback: BaseCallback, idx: number) => {
+      if (callback.getType() === callbackType.PollingWaitCallback) {
         pollingWaitCb = callback as PollingWaitCallback;
         pollingWaitIdx = idx;
       }
@@ -146,12 +147,12 @@
      * text for rendering the QR Code, but our own QR Code module.
      * Lastly, filter out PollingWaitCallback as we'll call that separately.
      */
-    modifiedCallbacks = step.callbacks.filter((callback) => {
-      if (callback.getType() === CallbackType.TextOutputCallback) {
+    modifiedCallbacks = step.callbacks.filter((callback: BaseCallback) => {
+      if (callback.getType() === callbackType.TextOutputCallback) {
         return false;
-      } else if (callback.getType() === CallbackType.ConfirmationCallback) {
+      } else if (callback.getType() === callbackType.ConfirmationCallback) {
         return false;
-      } else if (callback.getType() === CallbackType.PollingWaitCallback) {
+      } else if (callback.getType() === callbackType.PollingWaitCallback) {
         return false;
       }
       return true;
@@ -188,7 +189,7 @@
       <p class="tw_text-secondary-dark dark:tw_text-secondary-light"><T key="loading" /></p>
     </div>
   {/if}
-  <canvas bind:this={qrCodeCanvas} class="tw_m-auto tw_mb-6" data-testid="qr-code-canvas" />
+  <canvas bind:this={qrCodeCanvas} class="tw_m-auto tw_mb-6" data-testid="qr-code-canvas"></canvas>
 
   {#each modifiedCallbacks as callback, idx}
     <CallbackMapper

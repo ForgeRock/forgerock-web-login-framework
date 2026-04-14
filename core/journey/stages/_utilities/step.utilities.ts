@@ -7,17 +7,25 @@
  *
  **/
 
-import {
-  FRCallback,
-  FRStep,
-  FRLoginFailure,
-  FRLoginSuccess,
-  StepType,
-  CallbackType,
-} from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
 
 export const authIdTimeoutErrorCode = '110';
 export const constrainedViolationMessage = 'constraint violation';
+
+type LoginFailureLike = {
+  type: 'LoginFailure';
+  payload: {
+    detail?: unknown;
+    message?: string;
+  };
+};
+
+type JourneyResultLike =
+  | { type: 'Step' }
+  | { type: 'LoginSuccess' }
+  | LoginFailureLike
+  | { error: string };
 
 /**
  * @function convertStringToKey -
@@ -55,7 +63,7 @@ export function convertStringToKey(string?: string | null): string {
 export function initCheckValidation() {
   let hasPrevError = false;
 
-  return function checkValidation(callback: FRCallback) {
+  return function checkValidation(callback: BaseCallback) {
     const failedPolices = callback.getOutputByName('failedPolicies', []);
     if (failedPolices.length && !hasPrevError) {
       hasPrevError = true;
@@ -69,8 +77,8 @@ export function initCheckValidation() {
  * @function shouldRedirectFromStep -
  * @returns {boolean}
  */
-export function shouldRedirectFromStep(step: FRStep) {
-  return step.getCallbacksOfType(CallbackType.RedirectCallback).length > 0;
+export function shouldRedirectFromStep(step: JourneyStep) {
+  return step.getCallbacksOfType(callbackType.RedirectCallback).length > 0;
 }
 
 /**
@@ -82,15 +90,15 @@ export function shouldRedirectFromStep(step: FRStep) {
  * @returns {boolean}
  */
 export function shouldPopulateWithPreviousCallbacks(
-  nextStep: FRLoginFailure,
-  previousCallbacks: FRCallback[] | undefined,
-  restartedStep: FRStep | FRLoginSuccess | FRLoginFailure,
+  nextStep: LoginFailureLike,
+  previousCallbacks: BaseCallback[] | undefined,
+  restartedStep: JourneyResultLike,
   stepNumber: number,
 ) {
   if (!Array.isArray(previousCallbacks)) {
     return false;
   }
-  if (restartedStep.type !== StepType.Step) {
+  if (!('type' in restartedStep) || restartedStep.type !== 'Step') {
     return false;
   }
 
