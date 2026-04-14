@@ -61,7 +61,7 @@ jobs:
       # npm, which can fail on runners with corrupted pre-installed npm.
       - name: Install npm for OIDC trusted publishing
         run: |
-          corepack enable npm
+          corepack enable
           corepack install -g npm@latest
           npm --version
 
