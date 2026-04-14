@@ -16,10 +16,7 @@
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
-  import {
-    convertStringToKey,
-    shouldRedirectFromStep,
-  } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey, shouldRedirectFromStep } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
   import EmailIcon from '$components/icons/email-icon.svelte';
