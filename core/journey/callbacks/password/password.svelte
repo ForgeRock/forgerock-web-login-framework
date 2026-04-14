@@ -14,7 +14,7 @@
    * This is intentionally separated from ValidatedCreatePasswordCallback as it does
    * allow for easier typing for the callback.
    */
-  import type { PasswordCallback } from '@forgerock/javascript-sdk';
+  import type { PasswordCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Base from './base.svelte';

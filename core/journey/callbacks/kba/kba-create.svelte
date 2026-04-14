@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { KbaCreateCallback, NameValue } from '@forgerock/javascript-sdk';
+  import type { KbaCreateCallback } from '@forgerock/journey-client/types';
   import { writable } from 'svelte/store';
   import type { z } from 'zod';
 
@@ -41,7 +41,7 @@
 
   let customQuestionIndex: string | null = null;
   let displayCustomQuestionInput = false;
-  let inputArr: NameValue[] | undefined;
+  let inputArr: Array<{ name: string }> | undefined;
   let inputName: string;
   let inputNameQuestion: string;
   let inputNameAnswer: string | false;

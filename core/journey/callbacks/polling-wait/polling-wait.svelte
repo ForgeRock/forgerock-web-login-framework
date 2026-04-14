@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { PollingWaitCallback } from '@forgerock/javascript-sdk';
+  import type { PollingWaitCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Spinner from '$components/primitives/spinner/spinner.svelte';

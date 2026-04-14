@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
+  import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
   import { afterUpdate } from 'svelte';
 
   // i18n
@@ -22,7 +22,7 @@
   import FingerprintIcon from '$components/icons/fingerprint-icon.svelte';
 
   // Types
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
 
   import type { StageFormObject } from '$journey/journey.interfaces';
 
@@ -36,7 +36,7 @@
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
@@ -51,7 +51,7 @@
   let requestsDeviceName = true;
   let waitingForWebAuthnAPI = false;
   let webAuthnApiCalled = false;
-  let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
+  let webAuthnType = WebAuthn.getWebAuthnStepType(step);
 
   function updateDeviceName(event: Event) {
     const target = event.target as unknown as { value: string };
@@ -78,7 +78,7 @@
       switch (webAuthnType) {
         case WebAuthnStepType.Registration: {
           try {
-            await FRWebAuthn.register<typeof deviceName>(step, deviceName);
+            await WebAuthn.register<typeof deviceName>(step, deviceName);
             noDeviceRegistered = true;
           } catch (err) {
             // TODO: handle error
@@ -86,7 +86,7 @@
           break;
         }
         case WebAuthnStepType.Authentication: {
-          await FRWebAuthn.authenticate(step);
+          await WebAuthn.authenticate(step);
           break;
         }
         default:

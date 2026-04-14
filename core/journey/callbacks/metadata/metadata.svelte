@@ -17,7 +17,7 @@
   } from '$journey/journey.interfaces';
   import type { styleSchema } from '$core/style.store';
   import type { Maybe } from '$core/interfaces';
-  import type { MetadataCallback } from '@forgerock/javascript-sdk';
+  import type { MetadataCallback } from '@forgerock/journey-client/types';
 
   export const callback: Maybe<MetadataCallback> = null;
   export const callbackMetadata: Maybe<CallbackMetadata> = null;

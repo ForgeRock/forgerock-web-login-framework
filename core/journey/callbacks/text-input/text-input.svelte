@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { TextInputCallback } from '@forgerock/javascript-sdk';
+  import type { TextInputCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Floating from '$components/compositions/input-floating/floating-label.svelte';

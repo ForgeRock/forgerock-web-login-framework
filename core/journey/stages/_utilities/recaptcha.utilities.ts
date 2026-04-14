@@ -7,7 +7,7 @@
  *
  **/
 
-import type { ReCaptchaCallback } from '@forgerock/javascript-sdk';
+import type { ReCaptchaCallback } from '@forgerock/journey-client/types';
 
 /*
  * Because hcaptch and grecaptcha would

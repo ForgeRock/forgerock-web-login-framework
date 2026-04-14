@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { SelectIdPCallback } from '@forgerock/javascript-sdk';
+  import type { SelectIdPCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import AppleIcon from '../../../components/icons/apple-icon.svelte';

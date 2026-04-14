@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { TermsAndConditionsCallback } from '@forgerock/javascript-sdk';
+  import type { TermsAndConditionsCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';

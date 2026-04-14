@@ -57,7 +57,7 @@
           key={`${key}-${option.value}`}
           classes="tw_input-spacing tw_grid tw_grid-cols-[2.5em_1fr] tw_relative"
         >
-          <span class="tw_animated-radio dark:tw_animated-radio_dark" />
+          <span class="tw_animated-radio dark:tw_animated-radio_dark"></span>
           {option.text}
         </Label>
       </div>
