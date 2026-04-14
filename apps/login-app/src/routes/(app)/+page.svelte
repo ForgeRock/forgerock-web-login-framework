@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,17 +8,14 @@
  -->
 
 <script lang="ts">
-  import { Config, FRUser, SessionManager } from '@forgerock/javascript-sdk';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
 
   import Box from '$components/primitives/box/centered.svelte';
   import Journey from '$journey/journey.svelte';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent } from '$core/locale.store';
-  import { initialize as initializeOAuth, type OAuthStore } from '$core/oauth/oauth.store';
-  import { initialize as initializeUser, type UserStore } from '$core/user/user.store';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -33,34 +30,12 @@
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
   const journeyStore: JourneyStore = initializeJourney();
-  const oauthStore: OAuthStore = initializeOAuth();
-  const userStore: UserStore = initializeUser();
 
-  let name = '';
-
-  async function logout() {
-    const { clientId } = Config.get();
-
-    /**
-     * If configuration has a clientId, then use FRUser to logout to ensure
-     * token revoking and removal; else, just end the session.
-     */
-    if (clientId) {
-      // Call SDK logout
-      await FRUser.logout();
-    } else {
-      await SessionManager.logout();
-    }
-
-    // Reset stores
-    journeyStore.reset();
-    oauthStore.reset();
-    userStore.reset();
-    // Fetch fresh journey step
-    journeyStore.start({
-      tree: journeyParam || authIndexValue || undefined,
-    });
-  }
+  let hasSubmitted = false;
+  let redirectForm: HTMLFormElement | null = null;
+  let loginResult: 'success' | 'failure' = 'failure';
+  let tokenId = '';
+  let journeyStepUrl = '';
   /**
    * Sets up locale store with appropriate content
    */
@@ -69,37 +44,72 @@
   // Use if not initializing journey in a "context module"
   onMount(async () => {
     if (suspendedIdParam || formPostEntryParam || (codeParam && stateParam)) {
-      journeyStore.resume(location.href);
+      await journeyStore.resume(location.href);
       goto('/', { replaceState: true });
     } else {
+
+      // noSession set to false is required to receive session token from AM
+      const query: Record<string, string> = {
+        noSession: 'false',
+      };
+
+      /**
+       * goto and gotoOnFail are sent at the beginning of journey
+       * to support temporarily suspended flows like email verification
+       * and to help AM set journey step successUrl
+       */
+      query.goto = data.redirectParams?.goto;
+      query.gotoOnFail = data.redirectParams?.gotoOnFail;
+
       journeyStore.start({
         tree: journeyParam || authIndexValue || undefined,
+        query,
         // recaptchaAction: 'MyTestAction',
       });
     }
   });
 
   $: {
-    if ($journeyStore?.successful && !$oauthStore.completed) {
-      oauthStore.get({ forceRenew: true });
+    /**
+     * hasSubmitted check prevents multiple form submissions
+     * submit only when hasSubmitted is false, then set it to true
+     */
+    if ($journeyStore?.completed && !hasSubmitted) {
+      hasSubmitted = true;
+
+      if ($journeyStore?.successful) {
+        loginResult = 'success';
+        journeyStepUrl = $journeyStore?.response?.successUrl ?? '';
+        tokenId = $journeyStore?.response?.tokenId ?? '';
+      } else {
+        loginResult = 'failure';
+        journeyStepUrl =
+          $journeyStore?.step?.payload?.detail?.failureUrl ??
+          // Some failure flows store failureUrl in error.detail instead of step payload.
+          $journeyStore?.error?.detail?.failureUrl ?? '';
+      }
+
+      // wait until the DOM is updated before submitting
+      tick().then(() => {
+        if (redirectForm) {
+          // use submit() instead of the modern requestSubmit() for compatibility with old browsers
+          redirectForm.submit();
+        }
+      });
     }
-    if ($oauthStore?.successful && !$userStore.completed) {
-      userStore.get();
-    }
-    name = ($userStore.response as { name: string })?.name;
   }
 </script>
 
 <Box>
-  {#if !$userStore.successful}
-    <Journey componentStyle="app" displayIcon={true} {journeyStore} />
+  <form method="POST" bind:this={redirectForm} hidden>
+    <input type="hidden" name="loginResult" value={loginResult} />
+    <input type="hidden" name="tokenId" value={tokenId} />
+    <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
+  </form>
+
+  {#if hasSubmitted}
+    <p class="tw_mb-6">You are being redirected...</p>
   {:else}
-    <p class="tw_mb-6">User: {name}</p>
-    <button
-      class="tw_button-base tw_focusable-element dark:tw_focusable-element_dark tw_button-secondary dark:tw_button-secondary_dark"
-      on:click={logout}
-    >
-      Logout
-    </button>
+    <Journey componentStyle="app" displayIcon={true} {journeyStore} />
   {/if}
 </Box>
