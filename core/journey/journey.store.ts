@@ -7,26 +7,20 @@
  *
  **/
 
-import {
-  Config,
-  FRAuth,
-  FRStep,
-  FRLoginFailure,
-  StepType,
-  FRCallback,
-} from '@forgerock/javascript-sdk';
-import type { StepOptions } from '@forgerock/javascript-sdk';
-import { get, writable, type Writable } from 'svelte/store';
+import type {
+  BaseCallback,
+  JourneyStep,
+  Step,
+  StartParam,
+  NextOptions,
+  ResumeOptions,
+  JourneyClient,
+  GenericError,
+} from '@forgerock/journey-client/types';
+import { writable, type Writable } from 'svelte/store';
 
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
-import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
-import type {
-  JourneyStore,
-  JourneyStoreValue,
-  StackStore,
-  StartOptions,
-  StepTypes,
-} from './journey.interfaces';
+import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
 import { interpolate } from '$core/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
@@ -35,19 +29,19 @@ import {
 } from './stages/_utilities/step.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import type { Maybe } from '$core/interfaces';
+import { getJourneyClient } from '$core/journey-client.config';
 
 /**
  * @function initializeJourney - Initializes the journey stack for tracking journey switches
  * @param {object} initOptions - The initial options to set
  * @returns {object} - The journey stack store with stack methods
  */
-function initializeStack(initOptions?: StepOptions) {
-  const initialValue = initOptions ? [initOptions] : [];
-  const { update, set, subscribe }: Writable<StepOptions[]> = writable(initialValue);
+function initializeStack() {
+  const { update, set, subscribe }: Writable<StartParam[]> = writable([]);
 
   // Assign to exported variable (see bottom of file)
   stack = {
-    latest: async (): Promise<StepOptions> => {
+    latest: async (): Promise<StartParam | undefined> => {
       return new Promise((resolve) => {
         // subscribe, grab the current value and unsubscribe
         subscribe((current) => {
@@ -56,7 +50,7 @@ function initializeStack(initOptions?: StepOptions) {
         })();
       });
     },
-    pop: async (): Promise<StepOptions[]> => {
+    pop: async (): Promise<StartParam[]> => {
       return new Promise((resolve) => {
         update((current) => {
           let state;
@@ -70,14 +64,14 @@ function initializeStack(initOptions?: StepOptions) {
         });
       });
     },
-    push: async (options?: StepOptions): Promise<StepOptions[]> => {
+    push: async (options?: StartParam): Promise<StartParam[]> => {
       return new Promise((resolve) => {
         update((current) => {
           let state;
 
           if (!current.length) {
-            state = [{ ...options }];
-          } else if (options && options?.tree !== current[current.length - 1]?.tree) {
+            state = options ? [options] : current;
+          } else if (options && options?.journey !== current[current.length - 1]?.journey) {
             state = [...current, options];
           } else {
             state = current;
@@ -109,82 +103,83 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
 
 /**
  * @function initialize - Initializes the journey store
- * @param {object} initOptions - The initial options to set
  * @returns {object} - The journey store
  */
-export function initialize(initOptions?: StepOptions): JourneyStore {
+export function initialize(): JourneyStore {
   const stack = initializeStack();
   let stepNumber = 0;
 
-  async function next(prevStep?: StepTypes, nextOptions?: StartOptions, resumeUrl?: string) {
-    if (!Config.get().serverConfig?.baseUrl) {
-      logErrorAndThrow('missingBaseUrl');
+  // Derive the real return type from the JourneyClient API so we don't duplicate the
+  // union or rely on unsafe `as` casts elsewhere in this module.
+  type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
+
+  function isJourneyError(result: unknown): result is GenericError {
+    if (typeof result !== 'object' || result === null) {
+      return false;
     }
 
-    /**
-     * Create an options object with nextOptions overriding anything from initOptions
-     * TODO: Does this object merge need to be more granular?
-     */
-    const options = {
-      ...initOptions,
-      ...nextOptions,
+    if (!('error' in result) || !('type' in result)) {
+      return false;
+    }
+
+    const maybeError = (result as { error?: unknown }).error;
+    const maybeType = (result as { type?: unknown }).type;
+    const maybeMessage = (result as { message?: unknown }).message;
+
+    if (typeof maybeError !== 'string' || typeof maybeType !== 'string') {
+      return false;
+    }
+
+    if (maybeMessage !== undefined && typeof maybeMessage !== 'string') {
+      return false;
+    }
+
+    return true;
+  }
+
+  function toJourneyError(err: unknown): GenericError {
+    const message = err instanceof Error ? err.message : interpolate('unknownNetworkError');
+    return {
+      error: 'unknown_error',
+      message,
+      type: 'unknown_error',
     };
+  }
 
-    /**
-     * Save previous step information just in case we have a total
-     * form failure due to 400 response from ForgeRock.
-     */
-    let previousCallbacks: FRCallback[] | undefined;
-
-    if (prevStep && prevStep.type === StepType.Step) {
-      previousCallbacks = prevStep?.callbacks;
-    }
-    const previousPayload = prevStep?.payload;
-    let nextStep: StepTypes;
-    journeyStore.set({
-      completed: false,
-      error: null,
-      loading: true,
-      metadata: get(journeyStore).metadata,
-      step: prevStep,
-      successful: false,
-      response: null,
-      recaptchaAction: nextOptions?.recaptchaAction,
-    });
-
-    try {
-      if (resumeUrl) {
-        // If resuming an unknown journey remove the tree from the options
-        options.tree = undefined;
-
-        /**
-         * Attempt to resume journey
-         */
-        nextStep = await FRAuth.resume(resumeUrl, options);
-      } else if (prevStep) {
-        // If continuing on a tree remove it from the options
-        options.tree = undefined;
-
-        /**
-         * Initial attempt to retrieve next step
-         */
-        nextStep = await FRAuth.next(prevStep as FRStep, options);
-      } else {
-        nextStep = await FRAuth.start(options);
-      }
-    } catch (err) {
-      console.error(`Next step request | ${err}`);
-
-      /**
-       * Setup an object to display failure message
-       */
-      nextStep = new FRLoginFailure({
-        message: interpolate('unknownNetworkError'),
-      });
+  async function handleJourneyResult(
+    result: JourneyResult,
+    context?: {
+      prevStep?: StepTypes;
+      previousCallbacks?: BaseCallback[];
+      previousPayload?: Step;
+      nextOptions?: NextOptions;
+    },
+  ) {
+    if (isJourneyError(result)) {
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: {
+          code: null,
+          message: result.message ?? result.error ?? interpolate('unknownNetworkError'),
+          stage: null,
+          troubleshoot: null,
+          detail: null,
+        },
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: false,
+        response: null,
+      }));
+      return;
     }
 
-    if (nextStep.type === StepType.Step) {
-      const stageAttribute = nextStep.getStage();
+    // Simplify by using direct discriminant checks on `type`.
+
+    if (result.type === 'Step') {
+      const stepResult = result as JourneyStep;
+      const stageAttribute = stepResult.getStage();
 
       let stageJson: Maybe<Record<string, unknown>> = null;
       let stageName: Maybe<string> = null;
@@ -193,19 +188,20 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
       if (stageAttribute && stageAttribute.includes('{')) {
         try {
           stageJson = JSON.parse(stageAttribute);
-        } catch (err) {
+        } catch {
           console.warn('Stage attribute value was not parsable');
         }
       } else if (stageAttribute) {
         stageName = stageAttribute;
       }
 
-      const callbackMetadata = buildCallbackMetadata(nextStep, initCheckValidation(), stageJson);
+      const callbackMetadata = buildCallbackMetadata(stepResult, initCheckValidation(), stageJson);
       const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
-      journeyStore.set({
+      journeyStore.update((current) => ({
+        ...current,
         completed: false,
         error: null,
         loading: false,
@@ -213,175 +209,228 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
           callbacks: callbackMetadata,
           step: stepMetadata,
         },
-        step: nextStep,
+        step: stepResult,
         successful: false,
         response: null,
-        recaptchaAction: nextOptions?.recaptchaAction,
-      });
-    } else if (nextStep.type === StepType.LoginSuccess) {
+      }));
+      return;
+    }
+
+    if (result.type === 'LoginSuccess') {
       /**
        * SUCCESSFUL COMPLETION BLOCK
        */
       stack.reset();
 
       // Set final state
-      journeyStore.set({
+      journeyStore.update((current) => ({
+        ...current,
         completed: true,
         error: null,
         loading: false,
         metadata: null,
         step: null,
         successful: true,
-        response: nextStep.payload,
-        recaptchaAction: nextOptions?.recaptchaAction,
-      });
-    } else if (nextStep.type === StepType.LoginFailure) {
+        response: result.payload,
+      }));
+      return;
+    }
+
+    if (result.type !== 'LoginFailure') {
       /**
        * FAILURE COMPLETION BLOCK
-       *
-       * Grab failure message, which may contain encoded HTML
        */
-      const failureMessageStr = htmlDecode(nextStep.payload.message || 'Unknown login error');
-      let restartedStep: StepTypes | null = null;
-
-      try {
-        /**
-         * Restart tree to get fresh step
-         */
-        const restartOptions = await stack.latest();
-        restartedStep = await FRAuth.next(undefined, restartOptions);
-      } catch (err) {
-        console.error(`Restart failed step request | ${err}`);
-
-        /**
-         * Setup an object to display failure message
-         */
-        restartedStep = new FRLoginFailure({
+      // Unexpected shape — treat as a network/unknown error
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: {
+          code: null,
           message: interpolate('unknownNetworkError'),
-        });
-      }
-
-      /**
-       * Now that we have a new authId (the identification of the
-       * fresh step) let's populate this new step with old callback data if
-       * this is step one and meets a few criteria.
-       *
-       * If error code is 110 or error message includes "Constrained Violation",
-       * then the issue needs special handling.
-       *
-       * If this is the first step in the journey, replace the callbacks with
-       * existing callbacks to resubmit with a fresh authId.
-       ******************************************************************* */
-      if (
-        shouldPopulateWithPreviousCallbacks(nextStep, previousCallbacks, restartedStep, stepNumber)
-      ) {
-        /**
-         * TypeScript notes:
-         *
-         * Assert that restartedStep is FRStep as that is required for the above condition to be true.
-         * Also, assert that previousCallbacks is FRCallback[] as that too is required for above to be true.
-         *
-         * Attempt a refactor using Ryan's suggestion found here: https://www.typescriptlang.org/play?#code/PTAEHUFMBsGMHsC2lQBd5oBYoCoE8AHSAZVgCcBLA1UABWgEM8BzM+AVwDsATAGiwoBnUENANQAd0gAjQRVSQAUCEmYKsTKGYUAbpGF4OY0BoadYKdJMoL+gzAzIoz3UNEiPOofEVKVqAHSKymAAmkYI7NCuqGqcANag8ABmIjQUXrFOKBJMggBcISGgoAC0oACCbvCwDKgU8JkY7p7ehCTkVDQS2E6gnPCxGcwmZqDSTgzxxWWVoASMFmgYkAAeRJTInN3ymj4d-jSCeNsMq-wuoPaOltigAKoASgAywhK7SbGQZIIz5VWCFzSeCrZagNYbChbHaxUDcCjJZLfSDbExIAgUdxkUBIursJzCFJtXydajBZJcWD1RqgJyofGcABqDGg7EgAB4cAA+AAUq3y3nBqwUPGEglQlE4IwA-FcJcNQALOOxENJvgBKUAAb0UJT1CNAPNQ7SJoIAvBbQAAiZWq75WzV0hmgUG6vXg6CCFBOsheVZukoB0CKAC+incNCGUtAZtpkHpvuZrI54slzF5VoAjA6ANzkynUrxCYjyqV8gWphUAH36KrVZHVAuB8BaXh17oNRpNqXNloA5JWpX3Ne33XqfZkyGy8+6w0GJziWV683PO8XS8wjXFmOqR0Go8wAhlYKzuPoeVbsNBoPBc6HgiocM0PL7QIh4H0GMD2JG7owpewDDMJA-AnuoiRfvAegiF4VoAKKrAwiALPoVpJNiVrgA4qADqAABykASFaQQqAA8l8ZDvF6-DAUcqCOAorjSHgcbvjoCpfF6aKINCwiXF8kgftEIgGBw2ILEwrAcDwQQlEAA
-         */
-        restartedStep = restartedStep as FRStep;
-        // Rebuild callbacks onto restartedStep
-        restartedStep.callbacks = previousCallbacks as FRCallback[];
-
-        // Rebuild payload onto restartedStep ensuring the use of the NEW authId
-        restartedStep.payload = {
-          ...previousPayload,
-          authId: restartedStep.payload.authId,
-        };
-
-        const details = nextStep.payload.detail as { errorCode: string } | null;
-
-        /**
-         * Only if the authId expires do we resubmit with same callback values
-         */
-        if (details?.errorCode === authIdTimeoutErrorCode) {
-          restartedStep = await FRAuth.next(restartedStep, options);
-        }
-      }
-
-      /**
-       * SET RESULT OF SUBSEQUENT REQUEST
-       *
-       * After the above attempts to salvage the form submission, let's return
-       * the final result to the user.
-       */
-      if (restartedStep.type === StepType.Step) {
-        const stageAttribute = restartedStep.getStage();
-
-        let stageJson: Maybe<Record<string, unknown>> = null;
-        let stageName: Maybe<string> = null;
-
-        // Check if stage attribute is serialized JSON
-        if (stageAttribute && stageAttribute.includes('{')) {
-          try {
-            stageJson = JSON.parse(stageAttribute);
-          } catch (err) {
-            console.warn('Stage attribute value was not parsable');
-          }
-        } else if (stageAttribute) {
-          stageName = stageAttribute;
-        }
-
-        const callbackMetadata = buildCallbackMetadata(
-          restartedStep,
-          initCheckValidation(),
-          stageJson,
-        );
-        const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
-
-        journeyStore.set({
-          completed: false,
-          error: {
-            code: nextStep.getCode(),
-            message: failureMessageStr,
-            stage: prevStep?.payload?.stage,
-            troubleshoot: null,
-            detail: nextStep.payload?.detail,
-          },
-          loading: false,
-          metadata: {
-            callbacks: callbackMetadata,
-            step: stepMetadata,
-          },
-          step: restartedStep,
-          successful: false,
-          response: null,
-          recaptchaAction: null,
-        });
-      } else if (restartedStep.type === StepType.LoginSuccess) {
-        journeyStore.set({
-          completed: true,
-          error: null,
-          loading: false,
-          metadata: null,
-          step: null,
-          successful: true,
-          response: restartedStep.payload,
-          recaptchaAction: null,
-        });
-      } else {
-        journeyStore.set({
-          completed: true,
-          error: {
-            code: nextStep.getCode(),
-            message: failureMessageStr,
-            stage: prevStep?.payload?.stage,
-            troubleshoot: null,
-            detail: nextStep.payload?.detail,
-          },
-          loading: false,
-          metadata: null,
-          step: null,
-          successful: false,
-          response: restartedStep.payload,
-          recaptchaAction: null,
-        });
-      }
+          stage: null,
+          troubleshoot: null,
+          detail: null,
+        },
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: false,
+        response: null,
+      }));
+      return;
     }
+
+    const failureResult = result;
+    const failureMessageStr = htmlDecode(failureResult.payload?.message || 'Unknown login error');
+
+    let restartedResult: JourneyResult | GenericError | null = null;
+
+    try {
+      const journeyClient = await getJourneyClient();
+      const restartOptions = await stack.latest();
+      restartedResult = await journeyClient.start(restartOptions);
+
+      if (
+        restartedResult &&
+        shouldPopulateWithPreviousCallbacks(
+          failureResult as never,
+          context?.previousCallbacks,
+          restartedResult as never,
+          stepNumber,
+        )
+      ) {
+        if (restartedResult && (restartedResult as JourneyResult).type === 'Step') {
+          const restartedStep = restartedResult as JourneyStep;
+          restartedStep.callbacks = context?.previousCallbacks as BaseCallback[];
+
+          restartedStep.payload = {
+            ...(context?.previousPayload as Step),
+            authId: restartedStep.payload.authId,
+          };
+
+          const details = failureResult.payload.detail as { errorCode: string } | null;
+          if (details?.errorCode === authIdTimeoutErrorCode) {
+            restartedResult = await journeyClient.next(restartedStep, context?.nextOptions);
+          }
+        }
+      }
+    } catch (err) {
+      console.error(`Restart failed step request | ${err}`);
+      restartedResult = toJourneyError(err);
+    }
+
+    if (restartedResult && isJourneyError(restartedResult)) {
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: {
+          code: failureResult.getCode ? failureResult.getCode() : null,
+          message: failureMessageStr,
+          stage: context?.prevStep?.payload?.stage,
+          troubleshoot: null,
+          detail: failureResult.payload?.detail,
+        },
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: false,
+        response: null,
+      }));
+      return;
+    }
+
+    if (restartedResult && (restartedResult as JourneyResult).type === 'Step') {
+      const restartedStep = restartedResult as JourneyStep;
+      const stageAttribute = restartedStep.getStage();
+
+      let stageJson: Maybe<Record<string, unknown>> = null;
+      let stageName: Maybe<string> = null;
+
+      if (stageAttribute && stageAttribute.includes('{')) {
+        try {
+          stageJson = JSON.parse(stageAttribute);
+        } catch {
+          console.warn('Stage attribute value was not parsable');
+        }
+      } else if (stageAttribute) {
+        stageName = stageAttribute;
+      }
+
+      const callbackMetadata = buildCallbackMetadata(
+        restartedStep,
+        initCheckValidation(),
+        stageJson,
+      );
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
+
+      journeyStore.update((current) => ({
+        ...current,
+        completed: false,
+        error: {
+          code: failureResult.getCode ? failureResult.getCode() : null,
+          message: failureMessageStr,
+          stage: context?.prevStep?.payload?.stage,
+          troubleshoot: null,
+          detail: failureResult.payload?.detail,
+        },
+        loading: false,
+        metadata: {
+          callbacks: callbackMetadata,
+          step: stepMetadata,
+        },
+        step: restartedStep,
+        successful: false,
+        response: null,
+      }));
+      return;
+    }
+
+    if (restartedResult && (restartedResult as JourneyResult).type === 'LoginSuccess') {
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: null,
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: true,
+        response: (restartedResult as { payload: Step }).payload,
+      }));
+      return;
+    }
+
+    journeyStore.update((current) => ({
+      ...current,
+      completed: true,
+      error: {
+        code: failureResult.getCode ? failureResult.getCode() : null,
+        message: failureMessageStr,
+        stage: context?.prevStep?.payload?.stage,
+        troubleshoot: null,
+        detail: failureResult.payload?.detail,
+      },
+      loading: false,
+      metadata: null,
+      step: null,
+      successful: false,
+      response:
+        restartedResult &&
+        typeof restartedResult === 'object' &&
+        restartedResult !== null &&
+        'payload' in restartedResult
+          ? (restartedResult as { payload: Step }).payload
+          : null,
+    }));
+  }
+
+  async function next(prevStep: JourneyStep, nextOptions?: NextOptions) {
+    const previousCallbacks = prevStep.callbacks;
+    const previousPayload = prevStep.payload;
+
+    journeyStore.update((current) => ({
+      ...current,
+      completed: false,
+      error: null,
+      loading: true,
+      step: prevStep,
+      successful: false,
+      response: null,
+    }));
+
+    let result;
+    try {
+      const journeyClient = await getJourneyClient();
+      result = await journeyClient.next(prevStep, nextOptions);
+    } catch (err) {
+      console.error(`Next step request | ${err}`);
+      result = toJourneyError(err);
+    }
+    await handleJourneyResult(result, {
+      prevStep,
+      previousCallbacks,
+      previousPayload,
+      nextOptions,
+    });
   }
 
   async function pop() {
@@ -391,33 +440,59 @@ export function initialize(initOptions?: StepOptions): JourneyStore {
     await start(currentJourney);
   }
 
-  async function push(newOptions: StepOptions) {
+  async function push(newOptions: StartParam) {
     reset();
     await stack.push(newOptions);
     await start(newOptions);
   }
 
-  async function resume(url: string, resumeOptions?: StepOptions) {
-    await next(undefined, resumeOptions, url);
+  async function resume(url: string, resumeOptions?: ResumeOptions) {
+    journeyStore.update((current) => ({
+      ...current,
+      completed: false,
+      error: null,
+      loading: true,
+      step: current.step ?? null,
+      successful: false,
+      response: null,
+    }));
+
+    let result;
+    try {
+      const journeyClient = await getJourneyClient();
+      result = await journeyClient.resume(url, resumeOptions);
+    } catch (err) {
+      console.error(`Resume request | ${err}`);
+      result = toJourneyError(err);
+    }
+    await handleJourneyResult(result);
   }
 
-  async function start(startOptions?: StartOptions) {
-    const configTree = Config.get().tree;
-    // If no tree is passed in, but there's a configured default tree, use that
-    if (!startOptions?.tree && configTree) {
-      if (startOptions) {
-        startOptions.tree = configTree;
-      } else {
-        startOptions = {
-          tree: configTree,
-        };
-      }
+  async function start(startOptions?: StartParam, recaptchaAction?: string) {
+    journeyStore.update((current) => ({
+      ...current,
+      completed: false,
+      error: null,
+      loading: true,
+      step: null,
+      successful: false,
+      response: null,
+      recaptchaAction: recaptchaAction ?? startOptions?.journey ?? null,
+    }));
+
+    if (startOptions) {
+      await stack.push(startOptions);
     }
-    if (!startOptions?.recaptchaAction && startOptions?.tree) {
-      startOptions.recaptchaAction = startOptions.tree;
+
+    let result;
+    try {
+      const journeyClient = await getJourneyClient();
+      result = await journeyClient.start(startOptions);
+    } catch (err) {
+      console.error(`Start request | ${err}`);
+      result = toJourneyError(err);
     }
-    await stack.push(startOptions);
-    await next(undefined, startOptions);
+    await handleJourneyResult(result);
   }
 
   function reset() {

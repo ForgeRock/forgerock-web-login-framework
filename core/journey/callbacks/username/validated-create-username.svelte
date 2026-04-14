@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ValidatedCreateUsernameCallback } from '@forgerock/javascript-sdk';
+  import type { ValidatedCreateUsernameCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import {

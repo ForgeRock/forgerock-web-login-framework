@@ -8,7 +8,8 @@
  -->
 
 <script lang="ts">
-  import { FRDevice, type DeviceProfileCallback } from '@forgerock/javascript-sdk';
+  import { FRDevice } from '@forgerock/javascript-sdk';
+  import type { DeviceProfileCallback } from '@forgerock/journey-client/types';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
   import type {

@@ -13,7 +13,7 @@
     isInputRequired,
     type FailedPolicy,
   } from '$journey/callbacks/_utilities/callback.utilities';
-  import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
+  import type { AttributeInputCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
@@ -30,7 +30,6 @@
   } from '$journey/journey.interfaces';
   import type { styleSchema } from '$core/style.store';
   import type { Maybe } from '$core/interfaces';
-  import type { StringDict } from '@forgerock/javascript-sdk/src/shared/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
@@ -45,7 +44,7 @@
   let inputName: string;
   let isRequired: boolean;
   let outputName: string;
-  let policies: StringDict<unknown>;
+  let policies: Record<string, unknown>;
   let previousValue: string;
   let prompt: string;
   let type: 'email' | 'text';

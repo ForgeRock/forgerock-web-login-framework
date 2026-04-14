@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { RedirectCallback } from '@forgerock/javascript-sdk';
+  import type { RedirectCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import type {

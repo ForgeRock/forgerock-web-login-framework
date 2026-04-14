@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { afterUpdate } from 'svelte';
-
   import Message from '$components/primitives/message/input-message.svelte';
   import type { Maybe } from '$core/interfaces';
   import Label from '$components/primitives/label/label.svelte';
@@ -56,7 +55,7 @@
     type="checkbox"
   />
   <Label {key} classes="tw_grid tw_grid-cols-[2.5em_1fr] tw_relative">
-    <span class="tw_animated-check dark:tw_animated-check_dark" />
+    <span class="tw_animated-check dark:tw_animated-check_dark"></span>
     <slot />
   </Label>
   <!--

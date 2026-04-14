@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
@@ -41,7 +41,7 @@
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   }>;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   let alertNeedsFocus = false;
   let formMessageKey = '';

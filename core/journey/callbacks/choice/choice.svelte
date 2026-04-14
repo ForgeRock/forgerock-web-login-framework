@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ChoiceCallback } from '@forgerock/javascript-sdk';
+  import type { ChoiceCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import RadioAnimated from '$components/compositions/radio/animated.svelte';

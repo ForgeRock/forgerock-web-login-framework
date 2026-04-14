@@ -8,7 +8,8 @@
  -->
 
 <script lang="ts">
-  import { WebAuthnStepType, type TextOutputCallback } from '@forgerock/javascript-sdk';
+  import { WebAuthnStepType } from '@forgerock/journey-client/webauthn';
+  import type { TextOutputCallback } from '@forgerock/journey-client/types';
   import Centered from '$components/primitives/box/centered.svelte';
 
   import TextOutput from './text-output.svelte';

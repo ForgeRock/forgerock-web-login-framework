@@ -34,7 +34,7 @@
 
   // Use if not initializing journey in a "context module"
   onMount(async () => {
-    journeyStore.start({ tree: 'Registration' });
+    journeyStore.start({ journey: 'Registration' });
   });
 
   $: {

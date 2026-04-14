@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ConfirmationCallback } from '@forgerock/javascript-sdk';
+  import type { ConfirmationCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Animated from '$components/compositions/checkbox/animated.svelte';

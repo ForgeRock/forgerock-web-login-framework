@@ -8,13 +8,13 @@
  **/
 
 import type {
-  FRStep,
-  FRLoginFailure,
-  FRLoginSuccess,
+  JourneyStep,
+  StartParam,
   Step,
-  StepOptions,
-  StepDetail,
-} from '@forgerock/javascript-sdk';
+  NextOptions,
+  ResumeOptions,
+} from '@forgerock/journey-client/types';
+import type { StepDetail } from '@forgerock/javascript-sdk';
 import type { Writable } from 'svelte/store';
 import type { Maybe } from '$core/interfaces';
 
@@ -29,16 +29,13 @@ export interface CallbackMetadata {
   idx: number;
   platform?: Record<string, unknown>;
 }
-export interface StartOptions extends StepOptions {
-  recaptchaAction?: string;
-}
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
-  next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
-  pop: () => void;
-  push: (changeOptions: StepOptions) => void;
+  next: (prevStep: JourneyStep, nextOptions?: NextOptions) => Promise<void>;
+  pop: () => Promise<void>;
+  push: (changeOptions: StartParam) => Promise<void>;
   reset: () => void;
-  resume: (url: string, resumeOptions?: StepOptions) => void;
-  start: (startOptions?: StartOptions) => void;
+  resume: (url: string, resumeOptions?: ResumeOptions) => Promise<void>;
+  start: (startOptions?: StartParam, recaptchaAction?: string) => Promise<void>;
 }
 export interface StageFormObject {
   icon: boolean;
@@ -49,7 +46,7 @@ export interface StageFormObject {
 export interface StageJourneyObject {
   loading: boolean;
   pop: () => void;
-  push: (options: StepOptions) => void;
+  push: (options: StartParam) => void;
   stack: StackStore;
 }
 export interface JourneyStoreValue {
@@ -71,10 +68,10 @@ export interface JourneyStoreValue {
   response: Maybe<Step>;
   recaptchaAction?: Maybe<string>;
 }
-export interface StackStore extends Pick<Writable<StepOptions[]>, 'subscribe'> {
-  latest: () => Promise<StepOptions>;
-  pop: () => Promise<StepOptions[]>;
-  push: (options?: StepOptions) => Promise<StepOptions[]>;
+export interface StackStore extends Pick<Writable<StartParam[]>, 'subscribe'> {
+  latest: () => Promise<StartParam | undefined>;
+  pop: () => Promise<StartParam[]>;
+  push: (options?: StartParam) => Promise<StartParam[]>;
   reset: () => void;
 }
 export interface StepMetadata {
@@ -89,4 +86,4 @@ export interface StepMetadata {
   platform?: Record<string, unknown>;
 }
 export type SelfSubmitFunction = () => void;
-export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
+export type StepTypes = JourneyStep | null;
