@@ -25,6 +25,7 @@ import { interpolate } from '$core/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
+  shouldRedirectFromStep,
   shouldPopulateWithPreviousCallbacks,
 } from './stages/_utilities/step.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
@@ -175,8 +176,6 @@ export function initialize(): JourneyStore {
       return;
     }
 
-    // Simplify by using direct discriminant checks on `type`.
-
     if (result.type === 'Step') {
       const stepResult = result as JourneyStep;
       const stageAttribute = stepResult.getStage();
@@ -213,6 +212,15 @@ export function initialize(): JourneyStore {
         successful: false,
         response: null,
       }));
+
+      if (shouldRedirectFromStep(stepResult)) {
+        void (async () => {
+          const journeyClient = await getJourneyClient();
+          await journeyClient.redirect(stepResult);
+        })().catch((err) => {
+          console.error('Redirect failed', err);
+        });
+      }
       return;
     }
 
@@ -460,7 +468,52 @@ export function initialize(): JourneyStore {
     let result;
     try {
       const journeyClient = await getJourneyClient();
-      result = await journeyClient.resume(url, resumeOptions);
+      /**
+       * Journey Client `resume()` already parses: `code`, `state`, `form_post_entry`, `responsekey`.
+       * We only parse the legacy URL params that Journey Client does NOT currently support.
+       */
+      let updatedResumeOptions = resumeOptions;
+
+      try {
+        const parsedUrl = new URL(url);
+        const params = parsedUrl.searchParams;
+
+        const error = params.get('error');
+        const errorCode = params.get('errorCode');
+        const errorMessage = params.get('errorMessage');
+        const nonce = params.get('nonce');
+        const scope = params.get('scope');
+        const RelayState = params.get('RelayState');
+        const suspendedId = params.get('suspendedId');
+        const authIndexValue = params.get('authIndexValue');
+        const journeyParam = params.get('journey') || resumeOptions?.journey || authIndexValue || undefined;
+
+        /**
+         * URL-derived params can override resumeOptions query property
+         * RelayState is PascalCase to match the property name that AM expects
+         */
+        const mergedQuery = {
+          ...resumeOptions?.query,
+          ...(error && { error }),
+          ...(errorCode && { errorCode }),
+          ...(errorMessage && { errorMessage }),
+          ...(nonce && { nonce }),
+          ...(RelayState && { RelayState }),
+          ...(scope && { scope }),
+          ...(suspendedId && { suspendedId }),
+        }
+
+        updatedResumeOptions = {
+          ...(journeyParam && { journey: journeyParam }),
+          ...(mergedQuery && { query: mergedQuery }),
+        };
+        
+      } catch {
+        // If URL parsing fails, fall back to the provided `resumeOptions` unchanged.
+        updatedResumeOptions = resumeOptions;
+      }
+
+      result = await journeyClient.resume(url, updatedResumeOptions);
     } catch (err) {
       console.error(`Resume request | ${err}`);
       result = toJourneyError(err);
