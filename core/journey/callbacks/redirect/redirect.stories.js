@@ -7,12 +7,10 @@
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 
-import response from './redirect.mock';
+import step from './redirect.mock';
 import Input from './redirect.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -28,6 +26,6 @@ export default {
 export const Base = {
   args: {
     step: step,
-    callback: step.getCallbackOfType(CallbackType.RedirectCallback),
+    callback: step.getCallbackOfType(callbackType.RedirectCallback),
   },
 };

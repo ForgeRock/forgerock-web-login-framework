@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ConfirmationCallback } from '@forgerock/javascript-sdk';
+  import type { ConfirmationCallback } from '@forgerock/journey-client/types';
   import Centered from '$components/primitives/box/centered.svelte';
 
   import Confirmation from './confirmation.svelte';

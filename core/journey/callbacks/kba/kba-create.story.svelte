@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { KbaCreateCallback } from '@forgerock/javascript-sdk';
+  import type { KbaCreateCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Kba from './kba-create.svelte';

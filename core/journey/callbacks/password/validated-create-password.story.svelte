@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ValidatedCreatePasswordCallback } from '@forgerock/javascript-sdk';
+  import type { ValidatedCreatePasswordCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './validated-create-password.svelte';

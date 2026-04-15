@@ -7,13 +7,15 @@
  *
  **/
 
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 
-export default {
+import { createJourneyStep } from '$journey/_utilities/step.mock';
+
+export default createJourneyStep({
   authId: 'foo',
   callbacks: [
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -26,7 +28,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -39,7 +41,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -53,7 +55,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -66,7 +68,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -79,7 +81,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.SuspendedTextOutputCallback,
+      type: callbackType.SuspendedTextOutputCallback,
       output: [
         {
           name: 'message',
@@ -93,10 +95,10 @@ export default {
       ],
     },
   ],
-};
+});
 
 export const docsBaseExample = {
-  type: CallbackType.TextOutputCallback,
+  type: callbackType.TextOutputCallback,
   output: [
     {
       name: 'message',
