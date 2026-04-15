@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { PasswordCallback } from '@forgerock/javascript-sdk';
+  import type { PasswordCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Password from './password.svelte';

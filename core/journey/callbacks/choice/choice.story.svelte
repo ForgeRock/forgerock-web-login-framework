@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { ChoiceCallback } from '@forgerock/javascript-sdk';
+  import type { ChoiceCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Choice from './choice.svelte';

@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { NameCallback } from '@forgerock/javascript-sdk';
+  import type { NameCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Name from './name.svelte';

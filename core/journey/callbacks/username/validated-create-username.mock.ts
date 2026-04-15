@@ -7,13 +7,15 @@
  *
  **/
 
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 
-export default {
+import { createJourneyStep } from '$journey/_utilities/step.mock';
+
+export default createJourneyStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGc',
   callbacks: [
     {
-      type: CallbackType.ValidatedCreateUsernameCallback,
+      type: callbackType.ValidatedCreateUsernameCallback,
       output: [
         {
           name: 'policies',
@@ -72,7 +74,7 @@ export default {
       _id: 0,
     },
     {
-      type: CallbackType.ValidatedCreateUsernameCallback,
+      type: callbackType.ValidatedCreateUsernameCallback,
       output: [
         {
           name: 'policies',
@@ -165,7 +167,7 @@ export default {
       _id: 9,
     },
   ],
-};
+});
 
 export const docsExample = {
   type: 'ValidatedCreateUsernameCallback',

@@ -7,12 +7,12 @@
  *
  **/
 
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 
 export const deviceProfileMockNoMessage = {
   callbacks: [
     {
-      type: CallbackType.DeviceProfileCallback,
+      type: callbackType.DeviceProfileCallback,
       output: [
         {
           name: 'metadata',
@@ -40,7 +40,7 @@ export const deviceProfileMockNoMessage = {
 export const deviceProfileMockMessage = {
   callbacks: [
     {
-      type: CallbackType.DeviceProfileCallback,
+      type: callbackType.DeviceProfileCallback,
       output: [
         {
           name: 'metadata',

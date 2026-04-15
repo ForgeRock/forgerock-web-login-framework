@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { HiddenValueCallback } from '@forgerock/javascript-sdk';
+  import type { HiddenValueCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import HiddenValue from './hidden-value.svelte';

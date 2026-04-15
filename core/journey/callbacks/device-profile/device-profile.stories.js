@@ -8,14 +8,15 @@
  **/
 
 import { expect } from 'storybook/test';
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { FRDevice } from '@forgerock/javascript-sdk';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { deviceProfileMockNoMessage, deviceProfileMockMessage } from './device-profile.mock';
 import DeviceProfile from './device-profile.story.svelte';
 import { within } from 'storybook/test';
 
-const stepWithNoMessage = new FRStep(deviceProfileMockNoMessage);
-const stepWithMessage = new FRStep(deviceProfileMockMessage);
+const stepWithNoMessage = createJourneyStep(deviceProfileMockNoMessage);
+const stepWithMessage = createJourneyStep(deviceProfileMockMessage);
 
 export default {
   argTypes: {
@@ -33,23 +34,23 @@ export default {
 
 export const Base = {
   args: {
-    callback: stepWithNoMessage.getCallbackOfType(CallbackType.DeviceProfileCallback),
+    callback: stepWithNoMessage.getCallbackOfType(callbackType.DeviceProfileCallback),
   },
 };
 export const WithMessage = {
   args: {
-    callback: stepWithMessage.getCallbackOfType(CallbackType.DeviceProfileCallback),
+    callback: stepWithMessage.getCallbackOfType(callbackType.DeviceProfileCallback),
   },
 };
 export const Interaction = {
   args: {
     ...Base.args,
-    callback: stepWithMessage.getCallbackOfType(CallbackType.DeviceProfileCallback),
+    callback: stepWithMessage.getCallbackOfType(callbackType.DeviceProfileCallback),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const device = new FRDevice({});
-    const cb = stepWithMessage.getCallbackOfType(CallbackType.DeviceProfileCallback);
+    const cb = stepWithMessage.getCallbackOfType(callbackType.DeviceProfileCallback);
 
     const msg = canvas.getByText('This is a message');
     await expect(msg).toBeInTheDocument();

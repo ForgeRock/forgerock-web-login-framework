@@ -7,26 +7,27 @@
  *
  **/
 
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 
-export default {
+export default createJourneyStep({
   authId: 'test-auth-id',
   callbacks: [
     {
-      type: CallbackType.TextInputCallback,
+      type: callbackType.TextInputCallback,
       output: [{ name: 'prompt', value: 'Security answer' }],
       input: [{ name: 'IDToken1', value: '' }],
       _id: 0,
     },
     {
-      type: CallbackType.TextInputCallback,
+      type: callbackType.TextInputCallback,
       output: [{ name: 'prompt', value: 'Recovery phrase' }],
       input: [{ name: 'IDToken2', value: 'my current phrase' }],
       _id: 1,
     },
   ],
   stage: 'DefaultLogin',
-};
+});
 
 export const docsExample = {
   type: 'TextInputCallback',
