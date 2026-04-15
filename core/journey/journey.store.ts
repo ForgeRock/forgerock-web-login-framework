@@ -28,8 +28,8 @@ import { interpolate } from '$core/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
-  shouldPopulateWithPreviousCallbacks,
   shouldRedirectFromStep,
+  shouldPopulateWithPreviousCallbacks,
 } from './stages/_utilities/step.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import type { Maybe } from '$core/interfaces';
