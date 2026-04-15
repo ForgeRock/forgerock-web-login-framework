@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
+  import type { AttributeInputCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './string-attribute-input.svelte';

@@ -7,14 +7,12 @@
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { userEvent, within } from 'storybook/test';
 import { expect } from 'storybook/test';
 
-import response from './text-input.mock';
+import step from './text-input.mock';
 import Input from './text-input.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -29,13 +27,13 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.TextInputCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.TextInputCallback)[0],
   },
 };
 
 export const Prefilled = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.TextInputCallback)[1],
+    callback: step.getCallbacksOfType(callbackType.TextInputCallback)[1],
   },
 };
 
@@ -43,7 +41,7 @@ export const Interaction = {
   args: { ...Base.args },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cb = step.getCallbacksOfType(CallbackType.TextInputCallback)[0];
+    const cb = step.getCallbacksOfType(callbackType.TextInputCallback)[0];
     const input = canvas.getByLabelText('Security answer');
 
     await userEvent.tab();

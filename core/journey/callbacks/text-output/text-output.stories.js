@@ -7,14 +7,12 @@
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { expect } from 'storybook/test';
 import { within } from 'storybook/test';
 
-import response from './text-output.mock';
+import step from './text-output.mock';
 import TextOutput from './text-output.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -30,36 +28,36 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[0],
   },
 };
 
 export const WithHTML = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[1],
+    callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[1],
   },
 };
 
 export const WithScript = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[2],
+    callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[2],
   },
 };
 
 export const Warning = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[3],
+    callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[3],
   },
 };
 
 export const Error = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.TextOutputCallback)[4],
+    callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[4],
   },
 };
 export const Suspended = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.SuspendedTextOutputCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.SuspendedTextOutputCallback)[0],
   },
 };
 

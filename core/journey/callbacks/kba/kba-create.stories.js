@@ -7,14 +7,12 @@
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { userEvent, within } from 'storybook/test';
 import { expect } from 'storybook/test';
 
-import response from './kba-create.mock';
+import step from './kba-create.mock';
 import Input from './kba-create.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -29,7 +27,7 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.KbaCreateCallback),
+    callback: step.getCallbackOfType(callbackType.KbaCreateCallback),
   },
 };
 
@@ -38,7 +36,7 @@ export const Interaction = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    const cb = step.getCallbackOfType(CallbackType.KbaCreateCallback);
+    const cb = step.getCallbackOfType(callbackType.KbaCreateCallback);
 
     await userEvent.tab();
 

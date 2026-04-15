@@ -8,7 +8,8 @@
  -->
 
 <script lang="ts">
-  import { Config, type DeviceProfileCallback } from '@forgerock/javascript-sdk';
+  import { Config } from '@forgerock/javascript-sdk';
+  import type { DeviceProfileCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import DeviceProfile from './device-profile.svelte';

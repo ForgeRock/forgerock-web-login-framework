@@ -7,14 +7,12 @@
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { expect } from 'storybook/test';
 import { userEvent, within } from 'storybook/test';
 
-import response from './validated-create-password.mock';
+import step from './validated-create-password.mock';
 import Input from './validated-create-password.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -29,7 +27,7 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.ValidatedCreatePasswordCallback)[0],
     style: {
       showPassword: 'button',
     },
@@ -38,7 +36,7 @@ export const Base = {
 
 export const ConfirmPassword = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.ValidatedCreatePasswordCallback)[0],
     style: {
       showPassword: 'button',
     },
@@ -50,7 +48,7 @@ export const ConfirmPassword = {
 
 export const Policies = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[1],
+    callback: step.getCallbacksOfType(callbackType.ValidatedCreatePasswordCallback)[1],
     style: {
       showPassword: 'button',
     },
@@ -59,7 +57,7 @@ export const Policies = {
 
 export const PolicyErrors = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[2],
+    callback: step.getCallbacksOfType(callbackType.ValidatedCreatePasswordCallback)[2],
     style: {
       showPassword: 'button',
     },
@@ -68,7 +66,7 @@ export const PolicyErrors = {
 
 export const PolicyErrorsAlt = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[3],
+    callback: step.getCallbacksOfType(callbackType.ValidatedCreatePasswordCallback)[3],
     style: {
       showPassword: 'button',
     },
@@ -79,7 +77,7 @@ export const Interaction = {
   args: { ...Base.args },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cb = step.getCallbacksOfType(CallbackType.ValidatedCreatePasswordCallback)[0];
+    const cb = step.getCallbacksOfType(callbackType.ValidatedCreatePasswordCallback)[0];
     await userEvent.tab();
 
     const input = canvas.getByLabelText('Password');

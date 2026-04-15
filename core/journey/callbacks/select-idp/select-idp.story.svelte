@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { SelectIdPCallback } from '@forgerock/javascript-sdk';
+  import type { SelectIdPCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import SelectIdp from './select-idp.svelte';

@@ -12,7 +12,7 @@
     AttributeInputCallback,
     ValidatedCreateUsernameCallback,
     ValidatedCreatePasswordCallback,
-  } from '@forgerock/javascript-sdk';
+  } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Policies from './policies.svelte';

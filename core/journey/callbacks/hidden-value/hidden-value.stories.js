@@ -7,12 +7,10 @@
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 
-import response from './hidden-value.mock';
+import step from './hidden-value.mock';
 import Input from './hidden-value.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -27,6 +25,6 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.HiddenValueCallback),
+    callback: step.getCallbackOfType(callbackType.HiddenValueCallback),
   },
 };
