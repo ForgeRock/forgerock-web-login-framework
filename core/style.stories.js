@@ -7,14 +7,14 @@
  *
  **/
 
-import { FRStep } from '@forgerock/javascript-sdk';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { fn } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { initialize } from '$journey/config.store';
 import Step from './style.story.svelte';
 import { registrationStep } from '$journey/stages/step.mock';
-const frRegistrationStep = new FRStep(registrationStep);
+const frRegistrationStep = createJourneyStep(registrationStep);
 
 initialize();
 

@@ -20,7 +20,7 @@
 
   function constructString() {
     const currentJourney = $configuredJourneysStore.find((journey) => {
-      return journey.journey === $stack[$stack.length - 2]?.tree;
+      return journey.journey === $stack[$stack.length - 2]?.journey;
     });
 
     const key = currentJourney?.key;
