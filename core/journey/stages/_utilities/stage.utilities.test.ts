@@ -25,14 +25,14 @@ describe('Test compare function for requested journey comparison', () => {
         match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
       },
       {
-        journey: undefined,
+        journey: 'Login',
         key: 'login',
         match: ['#/service/Login', '?journey'],
       },
     ];
     const stack = [
       {
-        tree: undefined,
+        journey: 'Login',
       },
     ];
     const { action, journey } = matchJourneyAndDecideAction(
@@ -57,17 +57,17 @@ describe('Test compare function for requested journey comparison', () => {
         match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
       },
       {
-        journey: undefined,
+        journey: 'Login',
         key: 'login',
         match: ['#/service/Login', '?journey'],
       },
     ];
     const stack = [
       {
-        tree: undefined,
+        journey: 'Login',
       },
       {
-        tree: 'ResetPassword',
+        journey: 'ResetPassword',
       },
     ];
     const { action, journey } = matchJourneyAndDecideAction('?journey', journeys, stack);
@@ -88,17 +88,17 @@ describe('Test compare function for requested journey comparison', () => {
         match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
       },
       {
-        journey: undefined,
+        journey: 'Login',
         key: 'login',
         match: ['#/service/Login', '?journey'],
       },
     ];
     const stack = [
       {
-        tree: undefined,
+        journey: 'Login',
       },
       {
-        tree: 'ResetPassword',
+        journey: 'ResetPassword',
       },
     ];
     const { action, journey } = matchJourneyAndDecideAction('/something', journeys, stack);

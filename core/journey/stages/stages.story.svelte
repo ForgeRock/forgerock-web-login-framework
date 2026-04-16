@@ -8,7 +8,8 @@
  -->
 
 <script lang="ts">
-  import { Config, type FRStep } from '@forgerock/javascript-sdk';
+  import { Config } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Centered from '$components/primitives/box/centered.svelte';
@@ -30,7 +31,7 @@
   export let form: StageFormObject;
   export let journey: StageJourneyObject;
   export let stage: string;
-  export let step: FRStep;
+  export let step: JourneyStep;
   export let style: z.infer<typeof partialStyleSchema>;
 
   // Now required due to logger utility

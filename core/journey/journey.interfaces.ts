@@ -14,9 +14,15 @@ import type {
   NextOptions,
   ResumeOptions,
 } from '@forgerock/journey-client/types';
-import type { StepDetail } from '@forgerock/javascript-sdk';
 import type { Writable } from 'svelte/store';
 import type { Maybe } from '$core/interfaces';
+
+/*
+ * TODO: Journey Client does not export StepDetail
+ * This should be replaced with an import from journey-client/types
+ * when Journey Client starts exporting StepDetail
+ */
+type StepDetail = NonNullable<Step['detail']>;
 
 export interface CallbackMetadata {
   derived: {
