@@ -7,13 +7,14 @@
  *
  **/
 
-import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 
-export const previousRegistrationStep = new FRStep({
+export const previousRegistrationStep = createJourneyStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
-      type: CallbackType.ValidatedCreateUsernameCallback,
+      type: callbackType.ValidatedCreateUsernameCallback,
       output: [
         {
           name: 'policies',
@@ -72,7 +73,7 @@ export const previousRegistrationStep = new FRStep({
       _id: 23,
     },
     {
-      type: CallbackType.ValidatedCreatePasswordCallback,
+      type: callbackType.ValidatedCreatePasswordCallback,
       output: [
         { name: 'echoOn', value: false },
         {
@@ -108,11 +109,11 @@ export const previousRegistrationStep = new FRStep({
   status: 200,
 });
 
-export const restartedRegistrationStep = new FRStep({
+export const restartedRegistrationStep = createJourneyStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
-      type: CallbackType.ValidatedCreateUsernameCallback,
+      type: callbackType.ValidatedCreateUsernameCallback,
       output: [
         {
           name: 'policies',
@@ -171,7 +172,7 @@ export const restartedRegistrationStep = new FRStep({
       _id: 23,
     },
     {
-      type: CallbackType.ValidatedCreatePasswordCallback,
+      type: callbackType.ValidatedCreatePasswordCallback,
       output: [
         { name: 'echoOn', value: false },
         {

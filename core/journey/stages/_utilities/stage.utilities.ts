@@ -7,11 +7,11 @@
  *
  **/
 
+import type { StartParam } from '@forgerock/journey-client/types';
 import { get } from 'svelte/store';
 import { configuredJourneysStore } from '$journey/config.store';
 
 import type { StageJourneyObject } from '$journey/journey.interfaces';
-import type { StepOptions } from '@forgerock/javascript-sdk';
 import type { StoreItem } from '$journey/config.store';
 
 /**
@@ -39,7 +39,7 @@ export function captureLinks(linkWrapper: HTMLElement, currentJourney: StageJour
 
     // Now, push or pop accordingly
     if (action === 'push') {
-      currentJourney.push({ tree: journey });
+      currentJourney.push({ journey });
     } else if (action === 'pop') {
       currentJourney.pop();
     }
@@ -56,8 +56,11 @@ export function captureLinks(linkWrapper: HTMLElement, currentJourney: StageJour
 export function matchJourneyAndDecideAction(
   href: string | false | null,
   journeys: StoreItem[],
-  stack: StepOptions[],
-) {
+  stack: StartParam[],
+):
+  | { action: 'push'; journey: string }
+  | { action: 'pop'; journey?: undefined }
+  | { action: null; journey?: undefined } {
   if (href) {
     /**
      * Does this href match an item configured in the journeys?
@@ -69,9 +72,13 @@ export function matchJourneyAndDecideAction(
     });
 
     if (match) {
+      if (!match.journey) {
+        return { action: null };
+      }
+
       const previousJourney = stack[stack.length - 2];
 
-      if (!previousJourney || previousJourney.tree !== match.journey) {
+      if (!previousJourney || previousJourney.journey !== match.journey) {
         return { action: 'push', journey: match.journey };
       } else {
         return { action: 'pop' };
