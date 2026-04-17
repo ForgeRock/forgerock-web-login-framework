@@ -7,14 +7,15 @@
  *
  **/
 
-import { CallbackType, type Step } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import type { Step } from '@forgerock/journey-client/types';
 
 /**
  * Mock AM response — a DefaultLogin step with username + password callbacks.
  *
  * Use this object to drive Storybook stories or Vitest tests without a live
- * AM connection. Pass it to `new FRStep(customLoginStep)` to get a fully-typed
- * SDK step, then pass the step as the `step` prop to your stage component.
+ * AM connection. Pass it to `createJourneyStep(customLoginStep)` to get a
+ * Journey Client step, then pass the step as the `step` prop to your stage component.
  *
  * Shape mirrors a real AM /json/authenticate response:
  *   authId      — fake JWT (valid shape; AM would reject it in a real request,
@@ -33,16 +34,16 @@ export const customLoginStep: Step = {
   callbacks: [
     {
       // First callback: username field.
-      type: CallbackType.NameCallback,
+      type: callbackType.NameCallback,
       output: [{ name: 'prompt', value: 'Username' }],
       input: [{ name: 'IDToken1', value: '' }],
       _id: 0,
     },
     {
       // Second callback: password field.
-      // PasswordCallback works identically to NameCallback from the SDK's
-      // perspective; the renderer switches to type="password" automatically.
-      type: CallbackType.PasswordCallback,
+      // PasswordCallback works identically to NameCallback; the renderer
+      // switches to type="password" automatically.
+      type: callbackType.PasswordCallback,
       output: [{ name: 'prompt', value: 'Password' }],
       input: [{ name: 'IDToken2', value: '' }],
       _id: 1,

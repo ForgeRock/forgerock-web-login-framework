@@ -3,7 +3,7 @@
 -->
 
 <script lang="ts">
-  import { Config, type FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import Centered from '$components/primitives/box/centered.svelte';
   import { initialize as initializeLinks } from '$core/links.store';
   import { initialize as initializeStyles } from '$core/style.store';
@@ -21,16 +21,8 @@
   /** journey — navigation state and loading flag; varies per story. */
   export let journey: StageJourneyObject;
 
-  /** step — the FRStep instance built from the mock AM response. */
-  export let step: FRStep;
-
-  // ─── One-time store initialization ───────────────────────────────────────
-  /**
-   * The SDK's logger reads Config.serverConfig.baseUrl on startup.
-   * Set a placeholder URL to silence the "baseUrl not configured" warning
-   * that would otherwise appear in the browser console for every story.
-   */
-  Config.set({ serverConfig: { baseUrl: 'https://example.com/am/' } });
+  /** step — the JourneyStep instance built from the mock AM response. */
+  export let step: JourneyStep;
 
   /**
    * Initialize the links store with a placeholder Terms & Conditions URL.

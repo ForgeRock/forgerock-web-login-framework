@@ -7,14 +7,16 @@
  *
  **/
 
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 
 /**
  * Mock AM response — a minimal step payload containing a single NameCallback.
  *
  * Use this object to drive Storybook stories or Vitest tests without a live
- * AM connection. Pass it to `new FRStep(response)` to get a fully-typed SDK
- * step, then extract the callback with `step.getCallbackOfType(...)`.
+ * AM connection. This module exports a Journey Client step (created via
+ * `createJourneyStep(...)`), so callers can directly extract callbacks with
+ * `step.getCallbackOfType(...)`.
  *
  * Shape mirrors a real AM /json/authenticate response:
  *   authId    — the JWT that AM uses to track session state across steps.
@@ -26,13 +28,13 @@ import { CallbackType } from '@forgerock/javascript-sdk';
  *   stage     — the stage name reported by the AM node (drives map-stage lookup).
  *   header    — displayed as the page/modal title (localization key: loginHeader).
  */
-export default {
+export default createJourneyStep({
   authId:
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IkxvZ2luIiwib3RrIjoiY3VzdG9tLW5hbWUtZGVtbyIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEifQ.demo',
   callbacks: [
     {
-      // CallbackType.NameCallback === 'NameCallback'
-      type: CallbackType.NameCallback,
+      // callbackType.NameCallback === 'NameCallback'
+      type: callbackType.NameCallback,
       // output carries data FROM the server (the visible label for this field).
       output: [{ name: 'prompt', value: 'User Name' }],
       // input is the slot the client fills in before submitting the step.
@@ -44,4 +46,4 @@ export default {
   stage: 'DefaultLogin',
   header: 'Sign In',
   description: '',
-};
+});

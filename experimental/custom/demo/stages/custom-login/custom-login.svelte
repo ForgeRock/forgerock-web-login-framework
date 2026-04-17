@@ -29,7 +29,7 @@
 -->
 
 <script lang="ts">
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { get } from 'svelte/store';
 
@@ -69,7 +69,7 @@
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
   export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   // ─── Style store subscription ────────────────────────────────────────────────
   let currentStyle: StyleObject = get(styleStore);
