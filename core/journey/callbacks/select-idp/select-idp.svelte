@@ -55,9 +55,13 @@
     const socialProviders = callback
       .getProviders()
       .filter((provider) => provider.provider !== 'localAuthentication');
-
-    if (localAuthentication.length > 0) {
-      // Assume that clicking "next" will indicate the user wants to use local authentication
+    /**
+     * If local authentication is available and the user hasn't selected a provider yet,
+     * assume that clicking "next" will indicate the user wants to use local authentication.
+     * Only set this default when the callback has no value; otherwise this can overwrite a
+     * social-provider selection during re-renders.
+     */
+    if (localAuthentication.length > 0 && !callback.getInputValue()) {
       callback.setProvider('localAuthentication');
     }
 
