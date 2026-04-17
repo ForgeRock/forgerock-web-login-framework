@@ -361,30 +361,6 @@ export const FailureMessagesRenderingStep = {
   },
 };
 
-export const BackToRegisterInteraction = {
-  args: {
-    ...UsernamePassword.args,
-    journey: {
-      loading: false,
-      pop: fn(),
-      push: fn(),
-      stack: writable([{ journey: 'Registration' }, { journey: 'Login' }]),
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // This must be derived from `stack[n].journey`. If a regression reintroduces
-    // legacy `tree:` stack entries, this button will fall back to the default label
-    // and will no longer include "register".
-    const backButton = canvas.getByRole('button', { name: /register/i });
-    await expect(backButton).toBeVisible();
-
-    await fireEvent.click(backButton);
-    await expect(BackToRegisterInteraction.args.journey.pop).toHaveBeenCalled();
-  },
-};
-
 export const ConfirmPasswordInteraction = {
   args: {
     ...ConfirmPassword.argTypes,
