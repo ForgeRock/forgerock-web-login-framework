@@ -48,7 +48,7 @@
 
 The Login Widget is an all-inclusive UI component for handling login, registration, and related user flows in any modern JavaScript app. It works with React, Vue, Angular, Svelte, or vanilla JavaScript — it does not currently support Node.js or server-side rendering (SSR).
 
-The widget uses the ForgeRock JavaScript SDK internally. It adds a UI rendering layer on top of the SDK to eliminate the need to develop and maintain UI components for complex authentication flows. Although this rendering layer is developed with Svelte and Tailwind, both are "compiled away" and have no runtime dependencies. The resulting widget is library- and framework-agnostic.
+The widget uses [Journey Client](https://developer.pingidentity.com/orchsdks/journey/usage/javascript/index.html) for journey execution, and the [ForgeRock SDK for JavaScript](https://docs.pingidentity.com/sdks/latest/sdks/tutorials/javascript/index.html) for OAuth/OIDC tokens, user info, and request utilities. It adds a UI rendering layer on top of these SDKs to eliminate the need to develop and maintain UI components for complex authentication flows. Although this rendering layer is developed with Svelte and Tailwind, both are "compiled away" and have no runtime dependencies. The resulting widget is library- and framework-agnostic.
 
 The widget can be rendered in two form factors:
 
@@ -139,6 +139,13 @@ import Widget, { configuration, journey } from '@forgerock/login-widget';
 // 1. Configure
 const config = configuration();
 config.set({
+  // REQUIRED for journeys
+  journeyClient: {
+    serverConfig: {
+      wellknown: 'https://your-tenant.forgeblocks.com/am/.well-known/am-configuration',
+    },
+  },
+  // REQUIRED if you use OAuth/OIDC tokens, user info, or request()
   forgerock: {
     serverConfig: {
       baseUrl: 'https://your-tenant.forgeblocks.com/am/',
@@ -257,8 +264,14 @@ import { configuration } from '@forgerock/login-widget';
 
 const config = configuration();
 config.set({
+  // REQUIRED for journeys
+  journeyClient: {
+    serverConfig: {
+      wellknown: 'https://your-tenant.forgeblocks.com/am/.well-known/am-configuration',
+    },
+  },
   forgerock: {
-    // REQUIRED
+    // REQUIRED if you use OAuth/OIDC tokens, user info, or request()
     serverConfig: {
       baseUrl: 'https://your-tenant.forgeblocks.com/am',
       timeout: 3000,
@@ -290,14 +303,12 @@ const journeyEvents = journey({
 
 // Start a journey
 journeyEvents.start({
-  forgerock: {}, // OPTIONAL; configuration overrides
-  journey: 'Login', // OPTIONAL; journey/tree name (defaults to server default)
+  journey: 'Login', // OPTIONAL; journey name (omit to let AM choose the default)
   resumeUrl: window.location.href, // OPTIONAL; URL for resuming a suspended journey
 });
 
 // Change to a different journey
 journeyEvents.change({
-  forgerock: {},
   journey: 'Registration',
 });
 
