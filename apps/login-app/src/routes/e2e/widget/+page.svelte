@@ -22,6 +22,11 @@
 
   onMount(async () => {
     configuration().set({
+      journeyClient: {
+        serverConfig: {
+          wellknown: 'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+        },
+      },
       forgerock: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
