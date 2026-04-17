@@ -73,6 +73,7 @@ E2E tests require ForgeRock AM connection details. Set these in your environment
 | `VITE_FR_AM_COOKIE_NAME`      | AM session cookie name |
 | `VITE_FR_OAUTH_PUBLIC_CLIENT` | OAuth 2.0 client ID    |
 | `VITE_FR_REALM_PATH`          | AM realm path          |
+| `FR_AM_WELLKNOWN_URL`         | AM wellknown URL       |
 
 ## Linting
 
