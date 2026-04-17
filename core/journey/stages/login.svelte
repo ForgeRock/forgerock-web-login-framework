@@ -113,7 +113,7 @@
     <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
       <button
         on:click|preventDefault={() => {
-          journey.push({ tree: 'ResetPassword' });
+          journey.push({ journey: 'ResetPassword' });
         }}
       >
         {interpolate('forgotPassword', null, 'Forgot Password?')}
@@ -121,7 +121,7 @@
       &nbsp;
       <button
         on:click|preventDefault={() => {
-          journey.push({ tree: 'ForgottenUsername' });
+          journey.push({ journey: 'ForgottenUsername' });
         }}
       >
         {interpolate('forgotUsername', null, 'Forgot Username?')}

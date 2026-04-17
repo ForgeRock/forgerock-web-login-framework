@@ -18,6 +18,8 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
         // Required: AM returns `invalid_scope` when no scope is requested and no default is configured.
         FR_OAUTH_SCOPE: 'openid profile email',
         FR_REALM_PATH: 'alpha',
+        FR_AM_WELLKNOWN_URL:
+          'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
       },
     };
 
