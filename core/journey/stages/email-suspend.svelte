@@ -16,11 +16,15 @@
 
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
+  import {
+    convertStringToKey,
+    shouldRedirectFromStep,
+  } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
   import EmailIcon from '$components/icons/email-icon.svelte';
   import { styleStore } from '$core/style.store';
+  import { getJourneyClient } from '$core/journey-client.config';
 
   // Types
   import type {
@@ -81,6 +85,13 @@
   });
 
   onMount(() => captureLinks(linkWrapper, journey));
+
+  $: {
+    shouldRedirectFromStep(step) &&
+      getJourneyClient()
+        .then((journeyClient) => journeyClient.redirect(step))
+        .catch((err) => console.error('Redirect failed', err));
+  }
 
   $: {
     formMessageKey = convertStringToKey(form?.message);

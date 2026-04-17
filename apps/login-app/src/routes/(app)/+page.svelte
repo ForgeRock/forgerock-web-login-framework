@@ -47,7 +47,6 @@
       await journeyStore.resume(location.href);
       goto('/', { replaceState: true });
     } else {
-
       // noSession set to false is required to receive session token from AM
       const query: Record<string, string> = {
         noSession: 'false',
@@ -62,7 +61,7 @@
       query.gotoOnFail = data.redirectParams?.gotoOnFail;
 
       journeyStore.start({
-        tree: journeyParam || authIndexValue || undefined,
+        journey: journeyParam || authIndexValue || 'Login',
         query,
         // recaptchaAction: 'MyTestAction',
       });

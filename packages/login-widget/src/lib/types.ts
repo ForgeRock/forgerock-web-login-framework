@@ -10,8 +10,8 @@
 import type {
   ConfigOptions as SdkConfigOptions,
   OAuth2Tokens as SdkOAuth2Tokens,
-  Step as SdkStep,
 } from '@forgerock/javascript-sdk';
+import type { Step as SdkStep } from '@forgerock/journey-client/types';
 
 import { widgetApiFactory } from './_utilities/api.utilities';
 import { componentApi } from './_utilities/component.utilities';
