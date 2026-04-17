@@ -28,7 +28,6 @@ import { interpolate } from '$core/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
-  shouldRedirectFromStep,
   shouldPopulateWithPreviousCallbacks,
 } from './stages/_utilities/step.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';

@@ -8,6 +8,7 @@
  **/
 
 import configure from '$core/sdk.config';
+import { setJourneyClientConfig } from '$core/journey-client.config';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { initialize as initializeLinks } from '$core/links.store';
 
@@ -16,6 +17,16 @@ import { browser } from '$app/environment';
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = ({ data }) => {
+  if (data.wellknown) {
+    setJourneyClientConfig({
+      serverConfig: {
+        wellknown: data.wellknown,
+      },
+    });
+  } else {
+    console.warn('Wellknown URL is not configured.');
+  }
+
   configure({
     clientId: data.clientId,
     redirectUri: `${browser ? window.location.origin : 'https://placeholder.com'}/callback`,
