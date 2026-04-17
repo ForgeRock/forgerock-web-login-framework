@@ -25,7 +25,6 @@ import { interpolate } from '$core/_utilities/i18n.utilities';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
-  shouldRedirectFromStep,
   shouldPopulateWithPreviousCallbacks,
 } from './stages/_utilities/step.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
@@ -134,7 +133,7 @@ export function initialize(): JourneyStore {
       result = await journeyClient.start(startOptions);
     } catch (err) {
       console.error(`Start request | ${err}`);
-      result = toJourneyError(err);
+      result = toGenericError(err);
     }
     await handleJourneyResult(result);
   }
@@ -159,7 +158,7 @@ export function initialize(): JourneyStore {
       result = await journeyClient.next(prevStep, nextOptions);
     } catch (err) {
       console.error(`Next step request | ${err}`);
-      result = toJourneyError(err);
+      result = toGenericError(err);
     }
     await handleJourneyResult(result, {
       prevStep,
@@ -231,7 +230,7 @@ export function initialize(): JourneyStore {
       result = await journeyClient.resume(url, updatedResumeOptions);
     } catch (err) {
       console.error(`Resume request | ${err}`);
-      result = toJourneyError(err);
+      result = toGenericError(err);
     }
     await handleJourneyResult(result);
   }
@@ -307,16 +306,6 @@ export function initialize(): JourneyStore {
         successful: false,
         response: null,
       }));
-
-      // Handle Redirect Callback type
-      if (shouldRedirectFromStep(stepResult)) {
-        try {
-          const journeyClient = await getJourneyClient();
-          await journeyClient.redirect(stepResult);
-        } catch (err) {
-          console.error('Redirect failed', err);
-        }
-      }
     } else if (result.type === 'LoginSuccess') {
       /**
        * SUCCESSFUL COMPLETION BLOCK
@@ -410,7 +399,7 @@ export function initialize(): JourneyStore {
       }
     } catch (err) {
       console.error(`Restart failed step request | ${err}`);
-      restartedResult = toJourneyError(err);
+      restartedResult = toGenericError(err);
     }
 
     /**
@@ -495,7 +484,7 @@ export function initialize(): JourneyStore {
     }
   }
 
-  function toJourneyError(err: unknown): GenericError {
+  function toGenericError(err: unknown): GenericError {
     const message = err instanceof Error ? err.message : interpolate('unknownNetworkError');
     return {
       error: 'unknown_error',

@@ -38,10 +38,18 @@ export const journeyClientConfigSchema: z.ZodType<JourneyClientConfig> = z
 
 let config: JourneyClientConfig | undefined;
 
+/**
+ * We cache the journey client promise instead of only caching the resolved client so concurrent callers
+ * share the same initialization work and we don't create multiple Journey Client instances in parallel.
+ */
+let clientPromise: Promise<JourneyClient> | undefined;
+
 export function setJourneyClientConfig(
   journeyClientConfig: JourneyClientConfig,
 ): JourneyClientConfig {
   config = journeyClientConfigSchema.parse(journeyClientConfig);
+  // Reset the cached client promise when config changes.
+  clientPromise = undefined;
   return config;
 }
 
@@ -49,5 +57,15 @@ export async function getJourneyClient(): Promise<JourneyClient> {
   if (!config) {
     throw new Error('Journey Client is not configured. Call setJourneyClientConfig() first.');
   }
-  return await journey({ config });
+
+  // Cache the journey client promise to reuse an existing journey client.
+  if (!clientPromise) {
+    clientPromise = journey({ config }).catch((err) => {
+      // If creation fails, clear the cache so a later call can try again.
+      clientPromise = undefined;
+      throw err;
+    });
+  }
+
+  return await clientPromise;
 }

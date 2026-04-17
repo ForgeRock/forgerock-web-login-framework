@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@forgerock/javascript-sdk": "^4.4.2",
+    "@forgerock/journey-client": "^2.0.0",
     "@forgerock/ping-protect": "^4.4.2",
     "qrcode": "1.5.3",
     "xss": "1.0.14",

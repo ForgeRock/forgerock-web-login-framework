@@ -72,7 +72,14 @@ export default defineConfig({
     sourcemap: true,
     rollupOptions: {
       // Externalize runtime dependencies — they're provided by the consumer
-      external: ['@forgerock/javascript-sdk', '@forgerock/ping-protect', 'qrcode', 'xss', 'zod'],
+      external: [
+        '@forgerock/javascript-sdk',
+        '@forgerock/journey-client',
+        '@forgerock/ping-protect',
+        'qrcode',
+        'xss',
+        'zod',
+      ],
       output: {
         // Single file bundle (no code splitting)
         inlineDynamicImports: true,
