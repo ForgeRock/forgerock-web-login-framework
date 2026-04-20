@@ -330,14 +330,9 @@ export function initialize(): JourneyStore {
       await restartJourney(failureMessageStr, context, failureResult);
     } else {
       // Handle GenericError case
-      const genericError = result;
+      const genericError = result as GenericError;
       const errorMessage =
-        // Journey Client can surface non-2xx responses as a missing `data` payload.
-        // When that happens on step submission (i.e., we have a `prevStep` context),
-        // show the standard login failure message rather than a technical error.
-        genericError.error === 'no_response_data' && context?.prevStep
-          ? interpolate('loginFailure')
-          : genericError.message ?? genericError.error ?? interpolate('unknownNetworkError');
+        genericError.message ?? genericError.error ?? interpolate('unknownNetworkError');
 
       await restartJourney(errorMessage, context);
     }
