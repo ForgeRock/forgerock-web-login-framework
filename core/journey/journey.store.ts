@@ -332,9 +332,13 @@ export function initialize(): JourneyStore {
       // Handle GenericError case
       const genericError = result;
       const errorMessage =
-        // Journey Client can surface non-2xx responses as a missing `data` payload.
-        // When that happens on step submission (i.e., we have a `prevStep` context),
-        // show the standard login failure message rather than a technical error.
+        /**
+         * TODO: Journey Client currently does not handle JourneyLoginFailure case
+         * It returns a GenericError type when it should be returning JourneyLoginFailure type
+         * The hack below temporarily passes failing tests for Login journey
+         * Remove this check when https://github.com/ForgeRock/ping-javascript-sdk/pull/574
+         * PR has been merged and journey client is published to npm
+         */
         genericError.error === 'no_response_data' && context?.prevStep
           ? interpolate('loginFailure')
           : genericError.message ?? genericError.error ?? interpolate('unknownNetworkError');
