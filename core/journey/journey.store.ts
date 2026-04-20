@@ -429,7 +429,7 @@ export function initialize(config?: JourneyClientConfig | undefined): JourneySto
       await restartJourney(failureMessageStr, context, failureResult);
     } else {
       // Handle GenericError case
-      const genericError = result;
+      const genericError = result as GenericError;
       const errorMessage =
         /**
          * TODO: Journey Client currently does not handle JourneyLoginFailure case
