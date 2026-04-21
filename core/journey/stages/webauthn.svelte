@@ -9,7 +9,7 @@
 
 <script lang="ts">
   import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
-  import { afterUpdate, onDestroy } from 'svelte';
+  import { afterUpdate } from 'svelte';
 
   // i18n
   import { interpolate } from '$core/_utilities/i18n.utilities';
@@ -31,7 +31,6 @@
   import Button from '$components/primitives/button/button.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import {
-    abortWebAuthnOperation,
     authenticateWebAuthnStep,
   } from '$core/journey/stages/_effects/webauthn.effects';
 
@@ -110,12 +109,6 @@
     }
     form.submit();
   }
-
-  onDestroy(() => {
-    if (waitingForWebAuthnAPI || webAuthnApiCalled) {
-      abortWebAuthnOperation();
-    }
-  });
 
   $: formMessageKey = convertStringToKey(form?.message);
 

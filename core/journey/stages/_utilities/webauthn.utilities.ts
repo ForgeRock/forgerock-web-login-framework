@@ -7,88 +7,92 @@
  *
  **/
 
-import {
-  CallbackType,
-  FRWebAuthn,
-  WebAuthnStepType,
-  type FRStep,
-  type HiddenValueCallback,
-  type MetadataCallback,
-  type WebAuthnAuthenticationMetadata,
-} from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
+import type {
+  HiddenValueCallback,
+  MetadataCallback,
+  JourneyStep,
+} from '@forgerock/journey-client/types';
 
-type WebAuthnMetadataShape = Partial<WebAuthnAuthenticationMetadata> & {
-  _action?: string;
-  _type?: string;
-  pubKeyCredParams?: unknown;
-  relyingPartyId?: string;
-  _relyingPartyId?: string;
-};
-
-export function isMixedLoginWebAuthnStep(step?: FRStep | null): boolean {
-  if (!step || !isWebAuthnAuthenticationStep(step)) {
+/**
+ * @function isMixedLoginWebAuthnStep - determines if a step is a mixed-login WebAuthn authentication step
+ * @param {JourneyStep | null | undefined} step - The current journey step
+ * @returns {boolean} True if the step looks like a mixed-login WebAuthn authentication step
+ */
+export function isMixedLoginWebAuthnStep(step?: JourneyStep | null): boolean {
+  if (!isWebAuthnAuthenticationStep(step)) {
     return false;
   }
 
-  const hasNameCallback = step.getCallbacksOfType(CallbackType.NameCallback).length > 0;
-  const hasMetadataCallback = !!getWebAuthnMetadataCallback(step);
-  const hasOutcomeCallback = !!getWebAuthnOutcomeCallback(step);
+  const definedStep = step as JourneyStep;
+
+  const hasNameCallback = definedStep.getCallbacksOfType(callbackType.NameCallback).length > 0;
+  const hasMetadataCallback = !!getWebAuthnMetadataCallback(definedStep);
+  const hasOutcomeCallback = hasWebAuthnOutcomeCallback(definedStep);
 
   return hasNameCallback && hasMetadataCallback && hasOutcomeCallback;
 }
 
-export function isWebAuthnAuthenticationStep(step?: FRStep | null): boolean {
+/**
+ * @function isWebAuthnAuthenticationStep - determines if a step is a WebAuthn authentication step (not registration)
+ * @param {JourneyStep | null | undefined} step - The current journey step
+ * @returns {boolean} True if the step is a WebAuthn authentication step
+ */
+function isWebAuthnAuthenticationStep(step?: JourneyStep | null): boolean {
   if (!step) {
     return false;
   }
 
-  let metadata = null;
   const metadataCallback = getWebAuthnMetadataCallback(step);
-  if (metadataCallback) {
-    metadata = metadataCallback.getData<WebAuthnAuthenticationMetadata>();
+  const hasOutcomeCallback = hasWebAuthnOutcomeCallback(step);
+
+  if (metadataCallback && hasOutcomeCallback) {
+    const data = metadataCallback.getOutputByName<object | null>('data', null);
+    /**
+     * Registration steps typically include `pubKeyCredParams` in the metadata payload
+     * which helps determine if this is a registration step
+     */
+    const hasPubKeyCredParams =
+      !!data &&
+      typeof data === 'object' &&
+      Object.prototype.hasOwnProperty.call(data, 'pubKeyCredParams');
+
+    /* Return false if this is a WebAuthn registration step. */
+    return !hasPubKeyCredParams;
   }
 
-  const outcomeCallback = getWebAuthnOutcomeCallback(step);
-
-  if (metadata && outcomeCallback) {
-    return !Object.prototype.hasOwnProperty.call(metadata, 'pubKeyCredParams');
-  }
-
-  return FRWebAuthn.getWebAuthnStepType(step) === WebAuthnStepType.Authentication;
+  return WebAuthn.getWebAuthnStepType(step) === WebAuthnStepType.Authentication;
 }
 
-function getWebAuthnMetadataCallback(step?: FRStep | null): MetadataCallback | undefined {
-  if (!step) {
-    return undefined;
-  }
-
+/**
+ * @function getWebAuthnMetadataCallback - gets the WebAuthn MetadataCallback from a step
+ * @param {JourneyStep} step - The current journey step
+ * @returns {MetadataCallback | undefined} The WebAuthn metadata callback, if present
+ */
+function getWebAuthnMetadataCallback(step: JourneyStep): MetadataCallback | undefined {
   return step
-    .getCallbacksOfType(CallbackType.MetadataCallback)
+    .getCallbacksOfType(callbackType.MetadataCallback)
     .find((callback): callback is MetadataCallback => {
-      const metadata = (callback as MetadataCallback).getData<WebAuthnMetadataShape>();
+      const data = (callback as MetadataCallback).getOutputByName<object | null>('data', null);
 
-      if (!metadata || typeof metadata !== 'object') {
+      if (!data || typeof data !== 'object') {
         return false;
       }
 
-      return (
-        metadata._action === 'webauthn_authentication' ||
-        metadata._type === 'WebAuthn' ||
-        Object.prototype.hasOwnProperty.call(metadata, 'relyingPartyId') ||
-        Object.prototype.hasOwnProperty.call(metadata, '_relyingPartyId')
-      );
+      return Object.prototype.hasOwnProperty.call(data, 'relyingPartyId');
     });
 }
 
-function getWebAuthnOutcomeCallback(step?: FRStep | null): HiddenValueCallback | undefined {
-  if (!step) {
-    return undefined;
-  }
-
-  return step
-    .getCallbacksOfType(CallbackType.HiddenValueCallback)
-    .find(
-      (callback): callback is HiddenValueCallback =>
-        (callback as HiddenValueCallback).getOutputByName<string>('id', '') === 'webAuthnOutcome',
+/**
+ * @function hasWebAuthnOutcomeCallback - checks if the step includes the WebAuthn outcome callback
+ * @param {JourneyStep} step - The current journey step
+ * @returns {boolean} True if a HiddenValueCallback with id "webAuthnOutcome" exists
+ */
+function hasWebAuthnOutcomeCallback(step: JourneyStep): boolean {
+  return step.getCallbacksOfType(callbackType.HiddenValueCallback).some((callback) => {
+    return (
+      (callback as HiddenValueCallback).getOutputByName<string>('id', '') === 'webAuthnOutcome'
     );
+  });
 }

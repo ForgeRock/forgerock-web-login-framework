@@ -47,7 +47,6 @@ const frUsernamePasswordStep = createJourneyStep(usernamePasswordStep);
 const frUsernamePasswordPasskeyStep = createJourneyStep({
   ...usernamePasswordStep,
   callbacks: [...usernamePasswordStep.callbacks, ...webAuthnAuthenticationStep.callbacks],
-  stage: 'DefaultLogin',
 });
 
 const frSocialMultipleProvidersLocalAuthFormStep = createJourneyStep(

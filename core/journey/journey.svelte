@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { afterUpdate, onDestroy } from 'svelte';
+  import { onDestroy } from 'svelte';
 
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
@@ -17,7 +17,7 @@
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
-  import { createPasskeyAutofillHandler } from '$core/journey/stages/_effects/webauthn.effects';
+  import { setupPasskeyAutofill } from '$core/journey/stages/_effects/webauthn.effects';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -33,15 +33,15 @@
   }
 
   let alertNeedsFocus = false;
+  $: {
+    alertNeedsFocus = $journeyStore && !$journeyStore.successful;
+  }
 
-  const handlePasskeyAutofill = createPasskeyAutofillHandler({
-    onSubmit: async (step) => {
-      journeyStore?.next(step);
-    },
-  });
+  const passkeyAutofill = journeyStore ? setupPasskeyAutofill(journeyStore) : null;
 
   function submitForm() {
-    void handlePasskeyAutofill('submit');
+    // Abort any in-flight conditional mediation request; ignore failures.
+    passkeyAutofill?.abort();
     // Get next step, passing previous step with new data
     const step = $journeyStore.step;
     if (step && step.type === 'Step') {
@@ -59,14 +59,8 @@
     }
   }
 
-  afterUpdate(() => {
-    alertNeedsFocus = $journeyStore && !$journeyStore.successful;
-
-    void handlePasskeyAutofill('update', $journeyStore?.step);
-  });
-
   onDestroy(() => {
-    void handlePasskeyAutofill('destroy');
+    passkeyAutofill?.destroy();
   });
 </script>
 

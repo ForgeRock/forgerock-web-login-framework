@@ -7,134 +7,160 @@
  *
  **/
 
-import { FRWebAuthn, StepType, type FRStep } from '@forgerock/javascript-sdk';
+import type { JourneyStep } from '@forgerock/journey-client/types';
+import { WebAuthn } from '@forgerock/journey-client/webauthn';
 
-import type { StepTypes } from '$journey/journey.interfaces';
+import type { JourneyStore, StepTypes } from '$journey/journey.interfaces';
 
 import { isMixedLoginWebAuthnStep } from '../_utilities/webauthn.utilities';
 
-type AuthenticateOptions = {
-  useConditionalMediation?: boolean;
-};
-
-export async function shouldAttemptPasskeyAutofill(step?: FRStep | null): Promise<boolean> {
-  if (!isMixedLoginWebAuthnStep(step)) {
-    return false;
-  }
-
-  return FRWebAuthn.isConditionalMediationSupported();
-}
-
-export async function authenticateWebAuthnStep(
-  step: FRStep,
-  options: AuthenticateOptions = {},
-): Promise<FRStep> {
-  if (!options.useConditionalMediation) {
-    return FRWebAuthn.authenticate(step);
-  }
-
-  return FRWebAuthn.authenticate(step, (requestOptions) => ({
-    ...requestOptions,
-    mediation: 'conditional',
-  }));
-}
-
-export function abortWebAuthnOperation(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.PingWebAuthnAbortController?.abort();
-}
-
-export type PasskeyAutofillHandlerAction = 'update' | 'submit' | 'destroy';
-
-type PasskeyAutofillHandlerOptions = {
-  onSubmit: (step: FRStep) => void | Promise<void>;
-};
-
-function getStepAuthId(step: unknown): string | null {
-  try {
-    const maybeStep = step as {
-      getAuthId?: () => string;
-      payload?: { authId?: string };
-      authId?: string;
-    };
-
-    return maybeStep?.getAuthId?.() ?? maybeStep?.payload?.authId ?? maybeStep?.authId ?? null;
-  } catch {
-    return null;
-  }
-}
-
 /**
- * Creates a stage-independent handler for passkey autofill (conditional mediation).
- *
- * This should be wired once per widget instance (e.g. in `journey.svelte`) and invoked
- * on lifecycle events.
+ * @function setupPasskeyAutofill - subscribes to journey changes and attempts passkey autofill on eligible steps
+ * @param {JourneyStore} journeyStore - The journey store to observe and advance
+ * @returns {{ abort: () => void; destroy: () => void }} Controls to abort in-flight requests and cleanup subscription
  */
-export function createPasskeyAutofillHandler(options: PasskeyAutofillHandlerOptions) {
-  let passkeyAutofillPending = false;
-  let passkeyAutofillRequestedForAuthId: string | null = null;
-  let passkeyAutofillPendingAuthId: string | null = null;
+export function setupPasskeyAutofill(journeyStore: JourneyStore) {
+  let lastAuthId: string | null = null;
+  let inFlightAbortController: AbortController | null = null;
 
-  return async function handlePasskeyAutofill(
-    action: PasskeyAutofillHandlerAction,
-    step?: StepTypes,
-  ): Promise<void> {
-    if (action === 'submit' || action === 'destroy') {
-      if (passkeyAutofillPending) {
-        abortWebAuthnOperation();
-        passkeyAutofillPending = false;
-        passkeyAutofillPendingAuthId = null;
-      }
+  async function update(step?: StepTypes): Promise<void> {
+    if (!step || step.type !== 'Step') {
       return;
     }
 
-    // action === 'update'
-    if (!step || step.type !== StepType.Step) {
+    const authId = step.payload?.authId ?? null;
+
+    if (!authId) {
       return;
     }
 
-    const authId = getStepAuthId(step);
-
-    // If the step changes while an autofill attempt is in-flight,
-    // abort to prevent leaking an active WebAuthn request.
-    if (
-      passkeyAutofillPending &&
-      passkeyAutofillPendingAuthId &&
-      authId &&
-      authId !== passkeyAutofillPendingAuthId
-    ) {
-      abortWebAuthnOperation();
-      passkeyAutofillPending = false;
-      passkeyAutofillPendingAuthId = null;
+    /*
+     * If the step changes while an autofill attempt is in-flight,
+     * abort to prevent leaving an active WebAuthn request running.
+     */
+    if (inFlightAbortController && lastAuthId && authId !== lastAuthId) {
+      abort();
     }
 
-    if (!authId || passkeyAutofillRequestedForAuthId === authId) {
+    if (lastAuthId === authId) {
       return;
     }
 
-    passkeyAutofillRequestedForAuthId = authId;
+    lastAuthId = authId;
 
     if (!(await shouldAttemptPasskeyAutofill(step))) {
       return;
     }
 
+    const abortController = new AbortController();
+    inFlightAbortController = abortController;
     try {
-      passkeyAutofillPending = true;
-      passkeyAutofillPendingAuthId = authId;
-
-      const updatedStep = await authenticateWebAuthnStep(step, { useConditionalMediation: true });
-
-      passkeyAutofillPending = false;
-      passkeyAutofillPendingAuthId = null;
-
-      await options.onSubmit(updatedStep);
+      const updatedStep = await authenticateWebAuthnStep(step, true, abortController);
+      await journeyStore.next(updatedStep);
     } catch (error) {
-      passkeyAutofillPending = false;
-      passkeyAutofillPendingAuthId = null;
       console.debug('Passkey autofill attempt did not complete', error);
+    } finally {
+      if (inFlightAbortController === abortController) {
+        inFlightAbortController = null;
+      }
     }
+  }
+
+  function abort(): void {
+    inFlightAbortController?.abort();
+    inFlightAbortController = null;
+  }
+
+  const unsubscribe = journeyStore.subscribe((value) => {
+    update(value?.step).catch((err) => {
+      console.debug('Passkey autofill update failed', err);
+    });
+  });
+
+  return {
+    abort,
+    destroy() {
+      unsubscribe();
+      abort();
+    },
   };
+}
+
+/**
+ * @function authenticateWebAuthnStep - authenticates a WebAuthn step, optionally using conditional mediation
+ * @param {JourneyStep} step - The WebAuthn journey step
+ * @param {boolean} [useConditionalMediation] - True to use conditional mediation (passkey autofill)
+ * @param {AbortController} [abortController] - Abort controller required for conditional mediation
+ * @returns {Promise<JourneyStep>} The same step with the WebAuthn outcome written to the hidden callback
+ * @throws {Error} If conditional mediation is requested without an AbortController
+ * @throws {Error} If the step does not contain the expected WebAuthn callbacks
+ */
+export async function authenticateWebAuthnStep(
+  step: JourneyStep,
+  useConditionalMediation?: boolean,
+  abortController?: AbortController,
+): Promise<JourneyStep> {
+  if (!useConditionalMediation) {
+    return WebAuthn.authenticate(step);
+  }
+
+  if (!abortController) {
+    throw new Error('AbortController is required for conditional mediation WebAuthn requests');
+  }
+
+  const { hiddenCallback, metadataCallback } = WebAuthn.getCallbacks(step);
+
+  if (!hiddenCallback || !metadataCallback) {
+    throw new Error('Incorrect callbacks for WebAuthn authentication');
+  }
+
+  const metadata = metadataCallback.getOutputValue('data') as Parameters<
+    typeof WebAuthn.createAuthenticationPublicKey
+  >[0] & { supportsJsonResponse?: boolean };
+
+  const publicKey = WebAuthn.createAuthenticationPublicKey(metadata);
+
+  const credential = (await window.navigator.credentials.get({
+    publicKey,
+    mediation: 'conditional',
+    signal: abortController.signal,
+  })) as PublicKeyCredential | null;
+
+  const outcome = WebAuthn.getAuthenticationOutcome(credential);
+
+  const hiddenValue =
+    metadata?.supportsJsonResponse && credential && 'authenticatorAttachment' in credential
+      ? JSON.stringify({
+          authenticatorAttachment: credential.authenticatorAttachment,
+          legacyData: outcome,
+        })
+      : outcome;
+
+  hiddenCallback.setInputValue(hiddenValue);
+  return step;
+}
+
+/**
+ * @function shouldAttemptPasskeyAutofill - determines if passkey autofill should be attempted for a step
+ * @param {JourneyStep | null | undefined} step - The current journey step
+ * @returns {Promise<boolean>} True if conditional mediation is available and the step is eligible
+ */
+export async function shouldAttemptPasskeyAutofill(step?: JourneyStep | null): Promise<boolean> {
+  if (typeof window === 'undefined' || !isMixedLoginWebAuthnStep(step)) {
+    return false;
+  }
+
+  const publicKeyCredential = window.PublicKeyCredential;
+  if (
+    !publicKeyCredential ||
+    typeof publicKeyCredential.isConditionalMediationAvailable !== 'function'
+  ) {
+    return false;
+  }
+
+  try {
+    return await publicKeyCredential.isConditionalMediationAvailable();
+  } catch {
+    return false;
+  }
 }

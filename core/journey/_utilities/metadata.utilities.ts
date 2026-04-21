@@ -32,6 +32,7 @@ export function buildCallbackMetadata(
   stageJson?: Record<string, unknown> | null,
 ) {
   const callbackCount: Record<string, number> = {};
+  const isPasskeyAutofillEligible = isMixedLoginWebAuthnStep(step);
 
   return step?.callbacks.map((callback, idx) => {
     const cb = callback;
@@ -57,7 +58,7 @@ export function buildCallbackMetadata(
         isReadyForSubmission: isCbReadyByDefault(callback),
         isSelfSubmitting: isSelfSubmitting(callback),
         isUserInputRequired: requiresUserInput(callback),
-        isPasskeyAutofillEligible: isMixedLoginWebAuthnStep(step),
+        isPasskeyAutofillEligible,
       },
       idx,
       // Only use the `platform` prop if there's metadata to add
