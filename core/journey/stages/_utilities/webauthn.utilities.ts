@@ -7,15 +7,17 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
 import {
-  CallbackType,
-  FRWebAuthn,
+  WebAuthn,
   WebAuthnStepType,
-  type FRStep,
-  type HiddenValueCallback,
-  type MetadataCallback,
   type WebAuthnAuthenticationMetadata,
-} from '@forgerock/javascript-sdk';
+} from '@forgerock/journey-client/webauthn';
+import type {
+  HiddenValueCallback,
+  MetadataCallback,
+  JourneyStep,
+} from '@forgerock/journey-client/types';
 
 type WebAuthnMetadataShape = Partial<WebAuthnAuthenticationMetadata> & {
   _action?: string;
@@ -25,19 +27,19 @@ type WebAuthnMetadataShape = Partial<WebAuthnAuthenticationMetadata> & {
   _relyingPartyId?: string;
 };
 
-export function isMixedLoginWebAuthnStep(step?: FRStep | null): boolean {
+export function isMixedLoginWebAuthnStep(step?: JourneyStep | null): boolean {
   if (!step || !isWebAuthnAuthenticationStep(step)) {
     return false;
   }
 
-  const hasNameCallback = step.getCallbacksOfType(CallbackType.NameCallback).length > 0;
+  const hasNameCallback = step.getCallbacksOfType(callbackType.NameCallback).length > 0;
   const hasMetadataCallback = !!getWebAuthnMetadataCallback(step);
   const hasOutcomeCallback = !!getWebAuthnOutcomeCallback(step);
 
   return hasNameCallback && hasMetadataCallback && hasOutcomeCallback;
 }
 
-export function isWebAuthnAuthenticationStep(step?: FRStep | null): boolean {
+export function isWebAuthnAuthenticationStep(step?: JourneyStep | null): boolean {
   if (!step) {
     return false;
   }
@@ -54,16 +56,16 @@ export function isWebAuthnAuthenticationStep(step?: FRStep | null): boolean {
     return !Object.prototype.hasOwnProperty.call(metadata, 'pubKeyCredParams');
   }
 
-  return FRWebAuthn.getWebAuthnStepType(step) === WebAuthnStepType.Authentication;
+  return WebAuthn.getWebAuthnStepType(step) === WebAuthnStepType.Authentication;
 }
 
-function getWebAuthnMetadataCallback(step?: FRStep | null): MetadataCallback | undefined {
+function getWebAuthnMetadataCallback(step?: JourneyStep | null): MetadataCallback | undefined {
   if (!step) {
     return undefined;
   }
 
   return step
-    .getCallbacksOfType(CallbackType.MetadataCallback)
+    .getCallbacksOfType(callbackType.MetadataCallback)
     .find((callback): callback is MetadataCallback => {
       const metadata = (callback as MetadataCallback).getData<WebAuthnMetadataShape>();
 
@@ -80,13 +82,13 @@ function getWebAuthnMetadataCallback(step?: FRStep | null): MetadataCallback | u
     });
 }
 
-function getWebAuthnOutcomeCallback(step?: FRStep | null): HiddenValueCallback | undefined {
+function getWebAuthnOutcomeCallback(step?: JourneyStep | null): HiddenValueCallback | undefined {
   if (!step) {
     return undefined;
   }
 
   return step
-    .getCallbacksOfType(CallbackType.HiddenValueCallback)
+    .getCallbacksOfType(callbackType.HiddenValueCallback)
     .find(
       (callback): callback is HiddenValueCallback =>
         (callback as HiddenValueCallback).getOutputByName<string>('id', '') === 'webAuthnOutcome',

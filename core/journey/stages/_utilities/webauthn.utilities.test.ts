@@ -7,9 +7,11 @@
  *
  **/
 
-import { CallbackType, FRStep, FRWebAuthn, type Step } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import type { JourneyStep, Step } from '@forgerock/journey-client/types';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { usernamePasswordStep } from '$journey/stages/step.mock';
 import { webAuthnAuthenticationStep } from '$journey/stages/mfa-stages.mock';
 
@@ -25,13 +27,13 @@ const liveMixedLoginWebAuthnStep: Step = {
   authId: 'x',
   callbacks: [
     {
-      type: CallbackType.NameCallback,
+      type: callbackType.NameCallback,
       output: [{ name: 'prompt', value: 'User Name' }],
       input: [{ name: 'IDToken1', value: '' }],
       _id: 0,
     },
     {
-      type: CallbackType.MetadataCallback,
+      type: callbackType.MetadataCallback,
       output: [
         {
           name: 'data',
@@ -54,7 +56,7 @@ const liveMixedLoginWebAuthnStep: Step = {
       _id: 1,
     },
     {
-      type: CallbackType.HiddenValueCallback,
+      type: callbackType.HiddenValueCallback,
       output: [
         { name: 'value', value: 'false' },
         { name: 'id', value: 'webAuthnOutcome' },
@@ -66,12 +68,12 @@ const liveMixedLoginWebAuthnStep: Step = {
   stage: 'DefaultLogin',
 };
 
-function createMixedLoginWebAuthnStep(): FRStep {
-  return new FRStep({
-    ...usernamePasswordStep,
+function createMixedLoginWebAuthnStep(): JourneyStep {
+  return createJourneyStep({
+    ...(usernamePasswordStep as Step),
     callbacks: [
-      ...(usernamePasswordStep.callbacks ?? []),
-      ...(webAuthnAuthenticationStep.callbacks ?? []),
+      ...((usernamePasswordStep.callbacks ?? []) as NonNullable<Step['callbacks']>),
+      ...((webAuthnAuthenticationStep.callbacks ?? []) as NonNullable<Step['callbacks']>),
     ],
     stage: 'DefaultLogin',
   } as Step);
@@ -82,57 +84,116 @@ afterEach(() => {
 });
 
 describe('WebAuthn helper utilities', () => {
+  function setupBrowserForWebAuthn(options: {
+    conditionalMediationAvailable?: boolean;
+    credentialsGetImpl: (requestOptions: unknown) => Promise<unknown>;
+  }) {
+    const win = {
+      navigator: {
+        credentials: {
+          get: vi.fn(options.credentialsGetImpl),
+        },
+      },
+      PublicKeyCredential: {
+        isConditionalMediationAvailable: vi
+          .fn()
+          .mockResolvedValue(!!options.conditionalMediationAvailable),
+      },
+    } as unknown as Window & {
+      PublicKeyCredential: {
+        isConditionalMediationAvailable: ReturnType<typeof vi.fn>;
+      };
+    };
+
+    (globalThis as unknown as { window?: Window }).window = win;
+    return {
+      win,
+      credentialsGet: win.navigator.credentials.get as unknown as ReturnType<typeof vi.fn>,
+      conditionalMediationSpy: win.PublicKeyCredential.isConditionalMediationAvailable,
+    };
+  }
+
+  function createMockPublicKeyCredential(): PublicKeyCredential {
+    const encoder = new TextEncoder();
+
+    const clientDataJSON = encoder.encode(JSON.stringify({ type: 'webauthn.get' })).buffer;
+    const authenticatorData = new Uint8Array([1, 2, 3, 4]).buffer;
+    const signature = new Uint8Array([5, 6, 7, 8]).buffer;
+    const userHandle = new Uint8Array([9, 10]).buffer;
+
+    return {
+      id: 'credential-id',
+      rawId: new Uint8Array([1]).buffer,
+      type: 'public-key',
+      response: {
+        clientDataJSON,
+        authenticatorData,
+        signature,
+        userHandle,
+      } as unknown as AuthenticatorAssertionResponse,
+      authenticatorAttachment: 'platform',
+      getClientExtensionResults: () => ({}),
+    } as unknown as PublicKeyCredential;
+  }
+
   it('identifies a mixed login plus WebAuthn authentication step', () => {
     expect(isMixedLoginWebAuthnStep(createMixedLoginWebAuthnStep())).toBe(true);
   });
 
   it('does not treat a standard login step as passkey autofill eligible', () => {
-    expect(isMixedLoginWebAuthnStep(new FRStep(usernamePasswordStep))).toBe(false);
+    expect(isMixedLoginWebAuthnStep(createJourneyStep(usernamePasswordStep))).toBe(false);
   });
 
   it('does not treat a dedicated WebAuthn stage as a mixed login step', () => {
-    expect(isMixedLoginWebAuthnStep(new FRStep(webAuthnAuthenticationStep as Step))).toBe(false);
+    expect(isMixedLoginWebAuthnStep(createJourneyStep(webAuthnAuthenticationStep as Step))).toBe(
+      false,
+    );
   });
 
   it('treats the live DefaultLogin authentication payload as passkey autofill eligible', () => {
-    expect(isMixedLoginWebAuthnStep(new FRStep(liveMixedLoginWebAuthnStep))).toBe(true);
+    expect(isMixedLoginWebAuthnStep(createJourneyStep(liveMixedLoginWebAuthnStep))).toBe(true);
   });
 
   it('checks conditional mediation support for mixed login steps only', async () => {
-    const conditionalMediationSpy = vi
-      .spyOn(FRWebAuthn, 'isConditionalMediationSupported')
-      .mockResolvedValue(true);
+    const { conditionalMediationSpy } = setupBrowserForWebAuthn({
+      conditionalMediationAvailable: true,
+      credentialsGetImpl: async () => createMockPublicKeyCredential(),
+    });
 
     await expect(shouldAttemptPasskeyAutofill(createMixedLoginWebAuthnStep())).resolves.toBe(true);
-    await expect(shouldAttemptPasskeyAutofill(new FRStep(usernamePasswordStep))).resolves.toBe(
-      false,
-    );
+    await expect(
+      shouldAttemptPasskeyAutofill(createJourneyStep(usernamePasswordStep)),
+    ).resolves.toBe(false);
 
     expect(conditionalMediationSpy).toHaveBeenCalledTimes(1);
   });
 
   it('passes a conditional mediation transformer when requested', async () => {
     const step = createMixedLoginWebAuthnStep();
-    const authenticateSpy = vi.spyOn(FRWebAuthn, 'authenticate').mockResolvedValue(step);
+
+    const { credentialsGet } = setupBrowserForWebAuthn({
+      conditionalMediationAvailable: true,
+      credentialsGetImpl: async () => createMockPublicKeyCredential(),
+    });
 
     await authenticateWebAuthnStep(step, { useConditionalMediation: true });
 
-    expect(authenticateSpy).toHaveBeenCalledTimes(1);
-    expect(authenticateSpy.mock.calls[0][0]).toBe(step);
+    expect(credentialsGet).toHaveBeenCalledTimes(1);
 
-    const transformer = authenticateSpy.mock.calls[0][1];
-    expect(typeof transformer).toBe('function');
-    expect(transformer?.({ publicKey: {} })).toEqual({
-      publicKey: {},
-      mediation: 'conditional',
-    });
+    const requestOptions = credentialsGet.mock.calls[0]?.[0] as
+      | { publicKey?: unknown; mediation?: unknown }
+      | undefined;
+    expect(requestOptions?.publicKey).toBeTruthy();
+    expect(requestOptions?.mediation).toBe('conditional');
   });
 
   it('creates a stage-independent passkey autofill handler', async () => {
     const step = createMixedLoginWebAuthnStep();
 
-    vi.spyOn(FRWebAuthn, 'isConditionalMediationSupported').mockResolvedValue(true);
-    const authenticateSpy = vi.spyOn(FRWebAuthn, 'authenticate').mockResolvedValue(step);
+    const { credentialsGet } = setupBrowserForWebAuthn({
+      conditionalMediationAvailable: true,
+      credentialsGetImpl: async () => createMockPublicKeyCredential(),
+    });
 
     const onSubmit = vi.fn();
     const handle = createPasskeyAutofillHandler({
@@ -141,7 +202,7 @@ describe('WebAuthn helper utilities', () => {
 
     await handle('update', step);
 
-    expect(authenticateSpy).toHaveBeenCalledTimes(1);
+    expect(credentialsGet).toHaveBeenCalledTimes(1);
     expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 
@@ -150,21 +211,30 @@ describe('WebAuthn helper utilities', () => {
 
     vi.spyOn(console, 'debug').mockImplementation(() => undefined);
 
-    vi.spyOn(FRWebAuthn, 'isConditionalMediationSupported').mockResolvedValue(true);
-    let rejectAuthenticate: ((reason?: unknown) => void) | null = null;
-    vi.spyOn(FRWebAuthn, 'authenticate').mockImplementation(
-      () =>
-        new Promise<FRStep>((_resolve, reject) => {
-          rejectAuthenticate = reject;
-        }),
-    );
+    let abortObserved = false;
 
-    const abortSpy = vi.fn(() => {
-      rejectAuthenticate?.(new Error('Abort'));
-    });
-    (globalThis as unknown as { window?: unknown }).window = {
-      PingWebAuthnAbortController: { abort: abortSpy },
+    const pending = {
+      resolve: null as ((value: unknown) => void) | null,
+      reject: null as ((reason?: unknown) => void) | null,
     };
+
+    setupBrowserForWebAuthn({
+      conditionalMediationAvailable: true,
+      credentialsGetImpl: async (requestOptions) => {
+        const signal = (requestOptions as { signal?: AbortSignal | undefined })?.signal;
+        return await new Promise((resolve, reject) => {
+          pending.resolve = resolve;
+          pending.reject = reject;
+
+          signal?.addEventListener('abort', () => {
+            abortObserved = true;
+            const e = new Error('Abort');
+            (e as unknown as { name: string }).name = 'AbortError';
+            reject(e);
+          });
+        });
+      },
+    });
 
     const handle = createPasskeyAutofillHandler({
       onSubmit: vi.fn(),
@@ -172,14 +242,14 @@ describe('WebAuthn helper utilities', () => {
 
     const updatePromise = handle('update', step);
 
-    // Allow the handler to proceed into the in-flight authenticate call
-    for (let i = 0; i < 10 && !rejectAuthenticate; i++) {
+    // Allow the handler to proceed into the in-flight credentials.get call
+    for (let i = 0; i < 10 && !pending.reject; i++) {
       await Promise.resolve();
     }
 
     await handle('submit');
     await updatePromise;
 
-    expect(abortSpy).toHaveBeenCalledTimes(1);
+    expect(abortObserved).toBe(true);
   });
 });

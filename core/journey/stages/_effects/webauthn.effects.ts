@@ -7,7 +7,8 @@
  *
  **/
 
-import { FRWebAuthn, StepType, type FRStep } from '@forgerock/javascript-sdk';
+import type { JourneyStep } from '@forgerock/journey-client/types';
+import { WebAuthn } from '@forgerock/journey-client/webauthn';
 
 import type { StepTypes } from '$journey/journey.interfaces';
 
@@ -16,41 +17,97 @@ import { isMixedLoginWebAuthnStep } from '../_utilities/webauthn.utilities';
 type AuthenticateOptions = {
   useConditionalMediation?: boolean;
 };
+let activeAbortController: AbortController | null = null;
 
-export async function shouldAttemptPasskeyAutofill(step?: FRStep | null): Promise<boolean> {
+async function isConditionalMediationAvailable(): Promise<boolean> {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  const ctor = window.PublicKeyCredential;
+  if (!ctor || typeof ctor.isConditionalMediationAvailable !== 'function') {
+    return false;
+  }
+
+  try {
+    return await ctor.isConditionalMediationAvailable();
+  } catch {
+    return false;
+  }
+}
+
+async function authenticateWebAuthnWithConditionalMediation(
+  step: JourneyStep,
+): Promise<JourneyStep> {
+  const { hiddenCallback, metadataCallback } = WebAuthn.getCallbacks(step);
+
+  if (!hiddenCallback || !metadataCallback) {
+    throw new Error('Incorrect callbacks for WebAuthn authentication');
+  }
+
+  const meta = metadataCallback.getOutputValue('data') as Parameters<
+    typeof WebAuthn.createAuthenticationPublicKey
+  >[0] & { supportsJsonResponse?: boolean };
+
+  const publicKey = WebAuthn.createAuthenticationPublicKey(meta);
+
+  const abortController = new AbortController();
+  activeAbortController = abortController;
+
+  try {
+    const credential = (await window.navigator.credentials.get({
+      publicKey,
+      mediation: 'conditional',
+      signal: abortController.signal,
+    })) as PublicKeyCredential | null;
+
+    const outcome = WebAuthn.getAuthenticationOutcome(credential);
+
+    const hiddenValue =
+      meta?.supportsJsonResponse && credential && 'authenticatorAttachment' in credential
+        ? JSON.stringify({
+            authenticatorAttachment: credential.authenticatorAttachment,
+            legacyData: outcome,
+          })
+        : outcome;
+
+    hiddenCallback.setInputValue(hiddenValue);
+    return step;
+  } finally {
+    if (activeAbortController === abortController) {
+      activeAbortController = null;
+    }
+  }
+}
+
+export async function shouldAttemptPasskeyAutofill(step?: JourneyStep | null): Promise<boolean> {
   if (!isMixedLoginWebAuthnStep(step)) {
     return false;
   }
 
-  return FRWebAuthn.isConditionalMediationSupported();
+  return isConditionalMediationAvailable();
 }
 
 export async function authenticateWebAuthnStep(
-  step: FRStep,
+  step: JourneyStep,
   options: AuthenticateOptions = {},
-): Promise<FRStep> {
+): Promise<JourneyStep> {
   if (!options.useConditionalMediation) {
-    return FRWebAuthn.authenticate(step);
+    return WebAuthn.authenticate(step);
   }
 
-  return FRWebAuthn.authenticate(step, (requestOptions) => ({
-    ...requestOptions,
-    mediation: 'conditional',
-  }));
+  return authenticateWebAuthnWithConditionalMediation(step);
 }
 
 export function abortWebAuthnOperation(): void {
-  if (typeof window === 'undefined') {
-    return;
-  }
-
-  window.PingWebAuthnAbortController?.abort();
+  activeAbortController?.abort();
+  activeAbortController = null;
 }
 
 export type PasskeyAutofillHandlerAction = 'update' | 'submit' | 'destroy';
 
 type PasskeyAutofillHandlerOptions = {
-  onSubmit: (step: FRStep) => void | Promise<void>;
+  onSubmit: (step: JourneyStep) => void | Promise<void>;
 };
 
 function getStepAuthId(step: unknown): string | null {
@@ -74,25 +131,21 @@ function getStepAuthId(step: unknown): string | null {
  * on lifecycle events.
  */
 export function createPasskeyAutofillHandler(options: PasskeyAutofillHandlerOptions) {
-  let passkeyAutofillPending = false;
-  let passkeyAutofillRequestedForAuthId: string | null = null;
-  let passkeyAutofillPendingAuthId: string | null = null;
+  let attemptedAuthId: string | null = null;
+  let inFlightAuthId: string | null = null;
 
   return async function handlePasskeyAutofill(
     action: PasskeyAutofillHandlerAction,
     step?: StepTypes,
   ): Promise<void> {
     if (action === 'submit' || action === 'destroy') {
-      if (passkeyAutofillPending) {
-        abortWebAuthnOperation();
-        passkeyAutofillPending = false;
-        passkeyAutofillPendingAuthId = null;
-      }
+      abortWebAuthnOperation();
+      inFlightAuthId = null;
       return;
     }
 
     // action === 'update'
-    if (!step || step.type !== StepType.Step) {
+    if (!step || step.type !== 'Step') {
       return;
     }
 
@@ -100,41 +153,31 @@ export function createPasskeyAutofillHandler(options: PasskeyAutofillHandlerOpti
 
     // If the step changes while an autofill attempt is in-flight,
     // abort to prevent leaking an active WebAuthn request.
-    if (
-      passkeyAutofillPending &&
-      passkeyAutofillPendingAuthId &&
-      authId &&
-      authId !== passkeyAutofillPendingAuthId
-    ) {
+    if (inFlightAuthId && authId && authId !== inFlightAuthId) {
       abortWebAuthnOperation();
-      passkeyAutofillPending = false;
-      passkeyAutofillPendingAuthId = null;
+      inFlightAuthId = null;
     }
 
-    if (!authId || passkeyAutofillRequestedForAuthId === authId) {
+    if (!authId || attemptedAuthId === authId) {
       return;
     }
 
-    passkeyAutofillRequestedForAuthId = authId;
+    attemptedAuthId = authId;
 
     if (!(await shouldAttemptPasskeyAutofill(step))) {
       return;
     }
 
+    inFlightAuthId = authId;
     try {
-      passkeyAutofillPending = true;
-      passkeyAutofillPendingAuthId = authId;
-
       const updatedStep = await authenticateWebAuthnStep(step, { useConditionalMediation: true });
-
-      passkeyAutofillPending = false;
-      passkeyAutofillPendingAuthId = null;
-
       await options.onSubmit(updatedStep);
     } catch (error) {
-      passkeyAutofillPending = false;
-      passkeyAutofillPendingAuthId = null;
       console.debug('Passkey autofill attempt did not complete', error);
+    } finally {
+      if (inFlightAuthId === authId) {
+        inFlightAuthId = null;
+      }
     }
   };
 }
