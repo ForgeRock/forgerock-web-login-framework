@@ -10,6 +10,6 @@
     "@playwright/test": "^1.44.1",
     "axe-playwright": "^1.2.3",
     "playwright": "^1.44.0",
-    "uuid": "9.0.1"
+    "uuid": "14.0.0"
   }
 }
