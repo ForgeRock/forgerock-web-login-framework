@@ -26,6 +26,7 @@ import {
   authIdTimeoutErrorCode,
   initCheckValidation,
   shouldPopulateWithPreviousCallbacks,
+  shouldRedirectFromStep,
 } from './stages/_utilities/step.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import type { Maybe } from '$core/interfaces';
@@ -246,6 +247,19 @@ export function initialize(): JourneyStore {
     const updatedStack = await stack.pop();
     const currentJourney = updatedStack[updatedStack.length - 1];
     await start(currentJourney);
+  }
+
+  async function redirect(step: JourneyStep) {
+    if (!shouldRedirectFromStep(step)) {
+      return;
+    }
+
+    try {
+      const journeyClient = await getJourneyClient();
+      await journeyClient.redirect(step);
+    } catch (err) {
+      console.error(`Redirect request | ${err}`);
+    }
   }
 
   function reset() {
@@ -509,6 +523,7 @@ export function initialize(): JourneyStore {
     reset,
     resume,
     start,
+    redirect,
     subscribe: journeyStore.subscribe,
   };
 }

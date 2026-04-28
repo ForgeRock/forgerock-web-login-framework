@@ -76,6 +76,7 @@
         pop: journeyStore.pop,
         push: journeyStore.push,
         stack,
+        redirect: journeyStore.redirect,
       }}
       metadata={$journeyStore.metadata}
       step={$journeyStore.step}

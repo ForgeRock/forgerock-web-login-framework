@@ -21,7 +21,6 @@
   import Sanitize from '$components/_utilities/server-strings.svelte';
   import EmailIcon from '$components/icons/email-icon.svelte';
   import { styleStore } from '$core/style.store';
-  import { getJourneyClient } from '$core/journey-client.config';
 
   // Types
   import type {
@@ -84,10 +83,9 @@
   onMount(() => captureLinks(linkWrapper, journey));
 
   $: {
-    shouldRedirectFromStep(step) &&
-      getJourneyClient()
-        .then((journeyClient) => journeyClient.redirect(step))
-        .catch((err) => console.error('Redirect failed', err));
+    if (shouldRedirectFromStep(step)) {
+      journey.redirect(step);
+    }
   }
 
   $: {

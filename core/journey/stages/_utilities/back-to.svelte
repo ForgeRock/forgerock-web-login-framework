@@ -18,7 +18,10 @@
   let stack = journey.stack;
   let string = '';
 
-  function constructString() {
+  $: {
+    // The parent can pass a new `journey` object; update `stack` so `$stack` reads from the latest store.
+    stack = journey.stack;
+
     const currentJourney = $configuredJourneysStore.find((journey) => {
       return journey.journey === $stack[$stack.length - 2]?.journey;
     });
@@ -26,11 +29,7 @@
     const key = currentJourney?.key;
     const capitalizedKey =
       typeof key === 'string' ? key.replace(/([a-z])/, (_, char) => `${char.toUpperCase()}`) : key;
-    return `backTo${capitalizedKey || 'Default'}`;
-  }
-
-  $: {
-    string = constructString();
+    string = `backTo${capitalizedKey || 'Default'}`;
   }
 </script>
 

@@ -42,6 +42,7 @@ export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscri
   reset: () => void;
   resume: (url: string, resumeOptions?: ResumeOptions) => Promise<void>;
   start: (startOptions?: StartParam, recaptchaAction?: string) => Promise<void>;
+  redirect: (step: JourneyStep) => Promise<void>;
 }
 export interface StageFormObject {
   icon: boolean;
@@ -53,6 +54,7 @@ export interface StageJourneyObject {
   loading: boolean;
   pop: () => void;
   push: (options: StartParam) => void;
+  redirect: (step: JourneyStep) => Promise<void>;
   stack: StackStore;
 }
 export interface JourneyStoreValue {
