@@ -102,7 +102,7 @@
           qrCodeUrl,
           // Properties required for ForgeRock QR Codes
           { errorCorrectionLevel: 'L', version: 20, width: 400 },
-          function (error: unknown) {
+          function (error) {
             if (error) {
               form.message = interpolate('qrCodeFailedToRender');
               console.error(error);
@@ -129,10 +129,10 @@
       const confirmationCb = confirmationCallbacks[0] as ConfirmationCallback;
       buttons = confirmationCb
         .getOptions()
-        .map((option: string, index: number) => ({ value: `${index}`, text: option }));
+        .map((option, index) => ({ value: `${index}`, text: option }));
     }
 
-    step.callbacks.forEach((callback: BaseCallback, idx: number) => {
+    step.callbacks.forEach((callback, idx) => {
       if (callback.getType() === callbackType.PollingWaitCallback) {
         pollingWaitCb = callback as PollingWaitCallback;
         pollingWaitIdx = idx;

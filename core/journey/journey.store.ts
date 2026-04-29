@@ -109,7 +109,7 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
 export function initialize(): JourneyStore {
   const stack = initializeStack();
   let stepNumber = 0;
-  // JourneyResult is not currently exported by Journey Client, so we define it here
+  // TODO: JourneyResult is not currently exported by Journey Client, so we define it here
   type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
 
   async function start(startOptions?: StartParam, recaptchaAction?: string) {

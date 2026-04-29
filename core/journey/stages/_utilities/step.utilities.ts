@@ -8,24 +8,15 @@
  **/
 
 import { callbackType } from '@forgerock/journey-client';
-import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
+
+import type { BaseCallback, JourneyClient, JourneyStep } from '@forgerock/journey-client/types';
 
 export const authIdTimeoutErrorCode = '110';
 export const constrainedViolationMessage = 'constraint violation';
 
-type LoginFailureLike = {
-  type: 'LoginFailure';
-  payload: {
-    detail?: unknown;
-    message?: string;
-  };
-};
-
-type JourneyResultLike =
-  | { type: 'Step' }
-  | { type: 'LoginSuccess' }
-  | LoginFailureLike
-  | { error: string };
+// TODO: JourneyResult and JourneyLoginFailure are not currently exported by Journey Client, so we define them here
+type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
+type JourneyLoginFailure = Extract<JourneyResult, { type: 'LoginFailure' }>;
 
 /**
  * @function convertStringToKey -
@@ -90,15 +81,15 @@ export function shouldRedirectFromStep(step: JourneyStep) {
  * @returns {boolean}
  */
 export function shouldPopulateWithPreviousCallbacks(
-  nextStep: LoginFailureLike,
+  nextStep: JourneyLoginFailure,
   previousCallbacks: BaseCallback[] | undefined,
-  restartedStep: JourneyResultLike,
+  restartedStep: JourneyResult | null,
   stepNumber: number,
-) {
+): restartedStep is JourneyStep {
   if (!Array.isArray(previousCallbacks)) {
     return false;
   }
-  if (!('type' in restartedStep) || restartedStep.type !== 'Step') {
+  if (!restartedStep || !('type' in restartedStep) || restartedStep.type !== 'Step') {
     return false;
   }
 
@@ -106,8 +97,8 @@ export function shouldPopulateWithPreviousCallbacks(
     return false;
   }
 
-  const details = nextStep.payload.detail as { errorCode: string } | null;
-  const message = nextStep.payload.message?.toLowerCase() as string | null;
+  const details = (nextStep.payload?.detail ?? null) as { errorCode: string } | null;
+  const message = nextStep.payload?.message?.toLowerCase() ?? null;
 
   /**
    * Now that we know we have previous callbacks, this is of type "Step",

@@ -17,13 +17,23 @@ import {
   shouldPopulateWithPreviousCallbacks,
 } from './step.utilities';
 
-type JourneyLoginFailure = {
-  type: 'LoginFailure';
-  payload: {
-    detail?: unknown;
-    message?: string;
+import type { JourneyClient, Step } from '@forgerock/journey-client/types';
+
+// TODO: JourneyResult and JourneyLoginFailure are not currently exported by Journey Client, so we define them here
+type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
+type JourneyLoginFailure = Extract<JourneyResult, { type: 'LoginFailure' }>;
+
+function createLoginFailure(payload: Step): JourneyLoginFailure {
+  return {
+    type: 'LoginFailure' as JourneyLoginFailure['type'],
+    payload,
+    getCode: () => payload.code ?? 0,
+    getDetail: () => undefined,
+    getMessage: () => payload.message,
+    getProcessedMessage: () => [],
+    getReason: () => payload.reason,
   };
-};
+}
 
 describe('Test string to key conversion', () => {
   it('should strip non-alphanumeric keys from string', () => {
@@ -81,13 +91,10 @@ describe('Test check validation', () => {
 
 describe('Test step population of previous callback', () => {
   it('should return true with Constrained Violation', () => {
-    const nextStep: JourneyLoginFailure = {
-      type: 'LoginFailure',
-      payload: {
-        message:
-          'Constraint Violation: The password value for attribute userPassword was found to be unacceptable: The provided password is shorter than the minimum required length of 8 characters',
-      },
-    };
+    const nextStep = createLoginFailure({
+      message:
+        'Constraint Violation: The password value for attribute userPassword was found to be unacceptable: The provided password is shorter than the minimum required length of 8 characters',
+    });
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
 
@@ -102,14 +109,8 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return true with authId timeout issue', () => {
-    const nextStep: JourneyLoginFailure = {
-      type: 'LoginFailure',
-      payload: {
-        detail: {
-          errorCode: '110',
-        },
-      },
-    };
+    const detailWithErrorCode = { result: false, errorCode: '110' };
+    const nextStep = createLoginFailure({ detail: detailWithErrorCode });
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
 
@@ -124,14 +125,8 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return undefined if no previous callbacks', () => {
-    const nextStep: JourneyLoginFailure = {
-      type: 'LoginFailure',
-      payload: {
-        detail: {
-          errorCode: '110',
-        },
-      },
-    };
+    const detailWithErrorCode = { result: false, errorCode: '110' };
+    const nextStep = createLoginFailure({ detail: detailWithErrorCode });
     const restartedStep = restartedRegistrationStep;
 
     const result = shouldPopulateWithPreviousCallbacks(nextStep, undefined, restartedStep, 1);
@@ -140,10 +135,7 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return undefined if generic 401', () => {
-    const nextStep: JourneyLoginFailure = {
-      type: 'LoginFailure',
-      payload: {},
-    };
+    const nextStep = createLoginFailure({});
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
 
@@ -158,19 +150,10 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return undefined if return step is failure', () => {
-    const nextStep: JourneyLoginFailure = {
-      type: 'LoginFailure',
-      payload: {
-        detail: {
-          errorCode: '110',
-        },
-      },
-    };
+    const detailWithErrorCode = { result: false, errorCode: '110' };
+    const nextStep = createLoginFailure({ detail: detailWithErrorCode });
     const previousStep = previousRegistrationStep;
-    const restartedStep: JourneyLoginFailure = {
-      type: 'LoginFailure',
-      payload: {},
-    };
+    const restartedStep = createLoginFailure({});
 
     const result = shouldPopulateWithPreviousCallbacks(
       nextStep,
@@ -183,10 +166,7 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return false because it is neither 1 nor a Constrained Violation', () => {
-    const nextStep: JourneyLoginFailure = {
-      type: 'LoginFailure',
-      payload: {},
-    };
+    const nextStep = createLoginFailure({});
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
 
