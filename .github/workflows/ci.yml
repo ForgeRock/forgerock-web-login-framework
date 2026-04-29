@@ -40,7 +40,7 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/generateCustomRegistry.mjs
+      - run: pnpm run generate:registry
         shell: bash
 
       # Cache Playwright browser binaries between runs (~200MB for Chromium)
@@ -130,10 +130,11 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/generateCustomRegistry.mjs
+      - run: pnpm run generate:registry
         shell: bash
       - run: pnpm run check:lint
       - run: pnpm run test
+      - run: pnpm --filter @forgerock/login-framework-cli run test
       - name: Install Playwright for Storybook tests
         run: pnpm --filter @forgerock/login-widget exec playwright install --with-deps chromium
       - name: Build Storybook
@@ -156,7 +157,7 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: node scripts/generateCustomRegistry.mjs
+      - run: pnpm run generate:registry
         shell: bash
       - uses: chromaui/action@latest
         with:

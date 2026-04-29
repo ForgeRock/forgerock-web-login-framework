@@ -46,7 +46,7 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
     return Generic;
   }
 
-  const stageName = currentStep?.getStage?.();
+  const stageName = currentStep?.getStage?.()?.trim();
 
   // Check custom registry first — handles both overrides of known stages
   // (e.g. DefaultLogin) and brand-new stage names for custom AM nodes.
