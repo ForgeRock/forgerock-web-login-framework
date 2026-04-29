@@ -1,10 +1,20 @@
 import auto from '@sveltejs/adapter-auto';
 import node from '@sveltejs/adapter-node';
+import cloudflare from '@sveltejs/adapter-cloudflare';
 import preprocess from 'svelte-preprocess';
 import { mdsvex } from 'mdsvex';
 import slug from 'remark-slug';
 import autolink from 'remark-autolink-headings';
 import path from 'path';
+
+// DEPLOY_TARGET selects the SvelteKit adapter. Build with `DEPLOY_TARGET=cloudflare`
+// from the deploy-templates/cloudflare directory. PREVIEW=true continues to select
+// adapter-node for the existing Docker / preview-server flows.
+const adapterFor = (target) => {
+  if (target === 'cloudflare') return cloudflare();
+  if (process.env.PREVIEW) return node();
+  return auto();
+};
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -16,7 +26,7 @@ const config = {
     },
   },
   kit: {
-    adapter: process.env.PREVIEW ? node() : auto(),
+    adapter: adapterFor(process.env.DEPLOY_TARGET),
     // $lib now defaults to SvelteKit's standard src/lib/ — the app's own code
     alias: {
       $core: path.resolve('../../core'),
