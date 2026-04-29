@@ -73,7 +73,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   cloud-run-preview:
     name: Cloud Run preview
-    if: false   # remove once configured
+    if: false # remove once configured
     # if: github.event_name == 'pull_request' && github.event.action != 'closed'
     runs-on: ubuntu-latest
     env:
@@ -138,7 +138,7 @@ jobs:
 
   cloud-run-teardown:
     name: Cloud Run teardown
-    if: false   # remove once configured
+    if: false # remove once configured
     # if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     env:
@@ -197,7 +197,7 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   cloudflare-preview:
     name: Cloudflare preview
-    if: false   # remove once configured
+    if: false # remove once configured
     # if: github.event_name == 'pull_request' && github.event.action != 'closed'
     runs-on: ubuntu-latest
     env:
@@ -261,7 +261,7 @@ jobs:
       # URIs are untouched. Idempotent — re-adds are no-ops, which is
       # what makes `cancel-in-progress` safe above.
       - name: Register preview URL in AM
-        uses: ryanbas21/update-cors-am-github-action@main  # TODO: pin to SHA
+        uses: ryanbas21/update-cors-am-github-action@main # TODO: pin to SHA
         with:
           AM_URL: ${{ secrets.FR_AM_URL }}
           USERNAME: ${{ secrets.FR_AM_ADMIN_USERNAME }}
@@ -311,7 +311,7 @@ jobs:
 
   cloudflare-teardown:
     name: Cloudflare teardown
-    if: false   # remove once configured
+    if: false # remove once configured
     # if: github.event_name == 'pull_request' && github.event.action == 'closed'
     runs-on: ubuntu-latest
     env:
@@ -356,7 +356,7 @@ jobs:
       # error, which is recoverable manually.
       - name: Deregister preview URL from AM
         if: always()
-        uses: ryanbas21/update-cors-am-github-action@main  # TODO: pin to SHA
+        uses: ryanbas21/update-cors-am-github-action@main # TODO: pin to SHA
         with:
           AM_URL: ${{ secrets.FR_AM_URL }}
           USERNAME: ${{ secrets.FR_AM_ADMIN_USERNAME }}

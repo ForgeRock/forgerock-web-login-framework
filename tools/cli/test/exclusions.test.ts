@@ -21,6 +21,13 @@ describe('isExcluded', () => {
     expect(isExcluded('storybook-static')).toBe(true);
     expect(isExcluded('specs')).toBe(true);
     expect(isExcluded('tools')).toBe(true);
+    expect(isExcluded('deploy-templates')).toBe(true);
+  });
+
+  it('excludes deploy-templates from the default framework copy', () => {
+    expect(isExcluded('deploy-templates/cloudflare/package.json')).toBe(true);
+    expect(isExcluded('deploy-templates/aws/alchemy.run.ts')).toBe(true);
+    expect(isExcluded('deploy-templates/self-hosted-docker/Dockerfile')).toBe(true);
   });
 
   it('excludes known directory prefixes (files inside excluded dirs)', () => {

@@ -22,6 +22,7 @@ const EXCLUDED_PREFIXES = [
   'docs/',
   'specs/',
   'tools/',
+  'deploy-templates/',
 ] as const;
 
 const EXCLUDED_FILES = [

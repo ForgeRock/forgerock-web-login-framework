@@ -53,12 +53,11 @@ export default class LoginAppFunction extends AWS.Lambda.Function<LoginAppFuncti
   // bundle, IAM role, and runtime are wired correctly.
   Effect.succeed({
     fetch: HttpServerResponse.json(
-        {
-          error: 'NotImplemented',
-          message:
-            'API route pending Effect http-api refactor. See deploy-templates/aws/README.md.',
-        },
-        { status: 501 },
-      ),
+      {
+        error: 'NotImplemented',
+        message: 'API route pending Effect http-api refactor. See deploy-templates/aws/README.md.',
+      },
+      { status: 501 },
+    ),
   }),
 ) {}
