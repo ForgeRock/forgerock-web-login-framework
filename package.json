@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.6.0",
   "scripts": {
     "changeset": "changeset",
-    "generate:registry": "node scripts/generateCustomRegistry.mjs",
+    "generate:registry": "pnpm --filter @forgerock/login-framework-cli run build && node tools/cli/dist/scripts/generate-registry.js .",
     "build:release": "pnpm --filter @forgerock/login-widget run build:release",
     "build:widget": "pnpm --filter @forgerock/login-widget run build",
     "build:app": "pnpm --filter @forgerock/login-widget run build && pnpm --filter @forgerock/login-app run build",
@@ -91,7 +91,9 @@
     "onlyBuiltDependencies": ["@swc/core", "esbuild", "svelte-preprocess", "unrs-resolver"],
     "overrides": {
       "picomatch@2": "2.3.2",
-      "picomatch@4": "4.0.4"
+      "picomatch@4": "4.0.4",
+      "uuid": "^14.0.0",
+      "yaml": ">=2.8.3"
     }
   }
 }

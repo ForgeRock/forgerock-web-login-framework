@@ -11,6 +11,9 @@ apps/login-app/build/
 packages/login-widget/dist/
 packages/login-widget/svelte-package/
 
+# CLI build output
+tools/cli/dist/
+
 # Environment
 .env
 .env.*
@@ -44,3 +47,5 @@ experimental/custom/callbacks/*/
 # Misc
 .syncthing*
 .eslintcache
+tools/cli/tmp/
+packages/login-widget/tmp/
