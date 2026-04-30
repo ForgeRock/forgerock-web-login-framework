@@ -9,7 +9,7 @@
 
 import { expect } from 'storybook/test';
 import { callbackType } from '@forgerock/journey-client';
-import { FRDevice } from '@forgerock/javascript-sdk';
+import { Device } from '@forgerock/journey-client/device';
 import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { deviceProfileMockNoMessage, deviceProfileMockMessage } from './device-profile.mock';
 import DeviceProfile from './device-profile.story.svelte';
@@ -49,7 +49,7 @@ export const Interaction = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const device = new FRDevice({});
+    const device = new Device({});
     const cb = stepWithMessage.getCallbackOfType(callbackType.DeviceProfileCallback);
 
     const msg = canvas.getByText('This is a message');

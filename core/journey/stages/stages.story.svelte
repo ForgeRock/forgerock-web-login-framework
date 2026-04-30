@@ -8,7 +8,6 @@
  -->
 
 <script lang="ts">
-  import { Config } from '@forgerock/javascript-sdk';
   import type { JourneyStep } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
@@ -33,9 +32,6 @@
   export let stage: string;
   export let step: JourneyStep;
   export let style: z.infer<typeof partialStyleSchema>;
-
-  // Now required due to logger utility
-  Config.set({ serverConfig: { baseUrl: 'https://example.com/am/' } });
 
   let stageName;
   let stageJson;

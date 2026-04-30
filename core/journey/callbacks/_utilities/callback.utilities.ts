@@ -15,7 +15,6 @@ import type {
 } from '@forgerock/journey-client/types';
 
 import { interpolate } from '$core/_utilities/i18n.utilities';
-import type { PolicyParams } from '@forgerock/javascript-sdk/src/auth/interfaces';
 
 /** *********************************************
  * INTERFACES AND TYPES
@@ -27,7 +26,8 @@ export interface Policy {
   params: Record<string, unknown>;
 }
 export interface FailedPolicy {
-  params: Partial<PolicyParams> | undefined;
+  // TODO: PolicyParams must be re-exported by journey-client from forgerock/sdk-types, until then we derive the type like below
+  params: PolicyRequirement['params'];
   policyRequirement: string;
   restructured: RestructuredParam[];
 }

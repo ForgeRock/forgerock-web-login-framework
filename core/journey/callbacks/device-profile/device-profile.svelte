@@ -8,8 +8,9 @@
  -->
 
 <script lang="ts">
-  import { FRDevice } from '@forgerock/javascript-sdk';
+  import { Device } from '@forgerock/journey-client/device';
   import type { DeviceProfileCallback } from '@forgerock/journey-client/types';
+
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
   import type {
@@ -23,7 +24,7 @@
   export let callbackMetadata: Maybe<CallbackMetadata> = null;
   export let stepMetadata: Maybe<StepMetadata> = null;
   export let selfSubmitFunction: SelfSubmitFunction;
-  const device = new FRDevice({});
+  const device = new Device({});
   let deviceMessage = (callback as DeviceProfileCallback).getMessage();
   async function initializeProfile() {
     const location = callback?.isLocationRequired() ?? false;
