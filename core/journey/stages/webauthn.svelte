@@ -30,9 +30,6 @@
 
   import Button from '$components/primitives/button/button.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import {
-    authenticateWebAuthnStep,
-  } from '$core/journey/stages/_effects/webauthn.effects';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
   export let allowWebAuthn = true;
@@ -98,7 +95,7 @@
           break;
         }
         case WebAuthnStepType.Authentication: {
-          await authenticateWebAuthnStep(step);
+          await WebAuthn.authenticate(step);
           break;
         }
         default:

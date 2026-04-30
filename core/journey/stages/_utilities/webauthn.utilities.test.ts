@@ -30,7 +30,7 @@ describe('WebAuthn helper utilities', () => {
     expect(isMixedLoginWebAuthnStep(createMixedLoginWebAuthnStep())).toBe(true);
   });
 
-  it('does not treat a standard login step as passkey autofill eligible', () => {
+  it('returns false for a standard login step', () => {
     expect(isMixedLoginWebAuthnStep(createJourneyStep(usernamePasswordStep))).toBe(false);
   });
 
@@ -40,11 +40,28 @@ describe('WebAuthn helper utilities', () => {
     );
   });
 
-  it('treats the live DefaultLogin authentication payload as passkey autofill eligible', () => {
+  it('returns true for the live DefaultLogin authentication payload', () => {
     expect(isMixedLoginWebAuthnStep(createJourneyStep(liveMixedLoginWebAuthnStep))).toBe(true);
   });
 
-  it('ignores metadata callbacks that do not contain an object data payload', () => {
+  it('returns false when the WebAuthn outcome callback is missing', () => {
+    const callbacks = liveMixedLoginWebAuthnStep.callbacks;
+
+    if (!callbacks) {
+      throw new Error('Test fixture liveMixedLoginWebAuthnStep is missing callbacks');
+    }
+
+    expect(
+      isMixedLoginWebAuthnStep(
+        createJourneyStep({
+          ...liveMixedLoginWebAuthnStep,
+          callbacks: callbacks.slice(0, 2),
+        }),
+      ),
+    ).toBe(false);
+  });
+
+  it('returns false when the metadata callback has an invalid data payload', () => {
     expect(isMixedLoginWebAuthnStep(createJourneyStep(stepWithInvalidMetadata))).toBe(false);
   });
 });

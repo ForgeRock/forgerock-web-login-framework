@@ -48,14 +48,15 @@ export function setupPasskeyAutofill(journeyStore: JourneyStore) {
 
     lastAuthId = authId;
 
-    if (!(await shouldAttemptPasskeyAutofill(step))) {
+    // TODO: use Webauthn.isConditionalMediationSupported when conditional mediation support is added to journey-client
+    if (!(await isConditionalMediationSupported(step))) {
       return;
     }
 
     const abortController = new AbortController();
     inFlightAbortController = abortController;
     try {
-      const updatedStep = await authenticateWebAuthnStep(step, true, abortController);
+      const updatedStep = await authenticateWebAuthnAutofill(step, abortController);
       await journeyStore.next(updatedStep);
     } catch (error) {
       console.debug('Passkey autofill attempt did not complete', error);
@@ -87,23 +88,18 @@ export function setupPasskeyAutofill(journeyStore: JourneyStore) {
 }
 
 /**
- * @function authenticateWebAuthnStep - authenticates a WebAuthn step, optionally using conditional mediation
+ * @function authenticateWebAuthnAutofill - authenticates a WebAuthn step using conditional mediation (passkey autofill)
  * @param {JourneyStep} step - The WebAuthn journey step
- * @param {boolean} [useConditionalMediation] - True to use conditional mediation (passkey autofill)
  * @param {AbortController} [abortController] - Abort controller required for conditional mediation
  * @returns {Promise<JourneyStep>} The same step with the WebAuthn outcome written to the hidden callback
  * @throws {Error} If conditional mediation is requested without an AbortController
  * @throws {Error} If the step does not contain the expected WebAuthn callbacks
  */
-export async function authenticateWebAuthnStep(
+// TODO: use Webauthn.* API when conditional mediation support has been added to journey-client
+export async function authenticateWebAuthnAutofill(
   step: JourneyStep,
-  useConditionalMediation?: boolean,
   abortController?: AbortController,
 ): Promise<JourneyStep> {
-  if (!useConditionalMediation) {
-    return WebAuthn.authenticate(step);
-  }
-
   if (!abortController) {
     throw new Error('AbortController is required for conditional mediation WebAuthn requests');
   }
@@ -141,11 +137,12 @@ export async function authenticateWebAuthnStep(
 }
 
 /**
- * @function shouldAttemptPasskeyAutofill - determines if passkey autofill should be attempted for a step
+ * @function isConditionalMediationSupported - determines if passkey autofill should be attempted for a step
  * @param {JourneyStep | null | undefined} step - The current journey step
  * @returns {Promise<boolean>} True if conditional mediation is available and the step is eligible
  */
-export async function shouldAttemptPasskeyAutofill(step?: JourneyStep | null): Promise<boolean> {
+// TODO: remove this function and use Webauthn.isConditionalMediationSupported when conditional mediation support is added to journey-client
+export async function isConditionalMediationSupported(step?: JourneyStep | null): Promise<boolean> {
   if (typeof window === 'undefined' || !isMixedLoginWebAuthnStep(step)) {
     return false;
   }
