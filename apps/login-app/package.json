@@ -19,7 +19,7 @@
     "@sveltejs/vite-plugin-svelte": "^4.0.4",
     "@types/grecaptcha": "^3.0.9",
     "@types/uuid": "^9.0.8",
-    "@vitejs/plugin-basic-ssl": "^2.1.3",
+    "@vitejs/plugin-basic-ssl": "^2.3.0",
     "autoprefixer": "^10.4.17",
     "dotenv": "^16.4.1",
     "mdsvex": "0.12.6",
