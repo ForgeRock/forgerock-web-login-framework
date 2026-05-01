@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { onDestroy } from 'svelte';
+  import { afterUpdate, onDestroy } from 'svelte';
 
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
@@ -33,9 +33,6 @@
   }
 
   let alertNeedsFocus = false;
-  $: {
-    alertNeedsFocus = $journeyStore && !$journeyStore.successful;
-  }
 
   const passkeyAutofill = journeyStore ? setupPasskeyAutofill(journeyStore) : null;
 
@@ -58,6 +55,10 @@
       console.error('Unable to restart journey', err);
     }
   }
+
+  afterUpdate(() => {
+    alertNeedsFocus = $journeyStore && !$journeyStore.successful;
+  })
 
   onDestroy(() => {
     passkeyAutofill?.destroy();

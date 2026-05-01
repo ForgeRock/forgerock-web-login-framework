@@ -7,6 +7,16 @@
  *
  **/
 
+/**
+ * We need these heavily mocked tests because playwright e2e tests cannot test autofill passkey.
+ * This is because passkey dropdown is a browser feature not available to DOM.
+ * CDP virtual authenticators have support for normal autofill like address and forms, but not for autofill passkey.
+ * So the closest we can get to e2e test is by integration tests here where we mock the journey but use real webauthn functions.
+ * We have e2e tests under widget modal and inline test.
+ * But the extent of those is only checking whether the autofill attribute is visible. Unable to complete the flow by clicking on that passkey dropdown.
+ * So combining those e2e with this integration test is the best for autofill passkey.
+ */
+
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { JourneyStep } from '@forgerock/journey-client/types';
