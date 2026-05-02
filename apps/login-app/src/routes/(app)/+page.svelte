@@ -29,7 +29,11 @@
   const journeyParam = $page.url.searchParams.get('journey');
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
 
-  const journeyStore: JourneyStore = initializeJourney();
+  const journeyStore: JourneyStore = initializeJourney({
+    serverConfig: {
+      wellknown: data.wellknown,
+    },
+  });
 
   let hasSubmitted = false;
   let redirectForm: HTMLFormElement | null = null;

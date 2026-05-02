@@ -19,7 +19,6 @@ import { PIProtect } from '@forgerock/ping-protect';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
 import configure from '$core/sdk.config';
-import { setJourneyClientConfig } from '$core/journey-client.config';
 
 // Import the stores for initialization
 import { componentStore } from '$core/component.store';
@@ -73,10 +72,6 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   }
 
   const configuration = (options?: WidgetConfigOptions) => {
-    if (options?.journeyClient) {
-      setJourneyClientConfig(options.journeyClient);
-    }
-
     if (options?.forgerock) {
       configure({
         // Set some basics by default
@@ -104,7 +99,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     /**
      * Initialize all the stores.
      */
-    journeyStore = initializeJourney();
+    journeyStore = initializeJourney(options?.journeyClient);
     oauthStore = initializeOauth(options?.forgerock);
     userStore = initializeUser(options?.forgerock);
 
@@ -119,10 +114,6 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
        * @returns {void}
        **/
       set(setOptions?: WidgetConfigOptions): void {
-        if (setOptions?.journeyClient) {
-          setJourneyClientConfig(setOptions.journeyClient);
-        }
-
         if (setOptions?.forgerock) {
           configure({
             // Set some basics by default
@@ -150,7 +141,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
          * Initialize the stores and ensure both variables point to the same reference.
          * Variables with _ are the reactive version of the original variable from above.
          */
-        journeyStore = initializeJourney();
+        journeyStore = initializeJourney(setOptions?.journeyClient);
         oauthStore = initializeOauth(setOptions?.forgerock);
         userStore = initializeUser(setOptions?.forgerock);
 

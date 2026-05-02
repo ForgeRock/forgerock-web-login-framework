@@ -50,9 +50,8 @@ export type UserInputCallbacks = (typeof userInputCallbacks)[number];
  * @function forceUserInputOptionalityCallbacks - Determines if a callback should be forced to be optional
  */
 const forceUserInputOptionalityCallbacks = {
-  SelectIdPCallback: (callback: BaseCallback) => {
-    const selectIdpCb = callback as SelectIdPCallback;
-    return !!selectIdpCb
+  SelectIdPCallback: (callback: SelectIdPCallback) => {
+    return !!callback
       .getProviders()
       .find((provider) => provider.provider === 'localAuthentication');
   },
@@ -86,7 +85,7 @@ export function canForceUserInputOptionality(callback: BaseCallback) {
     ];
 
   // If there is a function, run it and it will return a boolean
-  return fn ? fn(callback) : false;
+  return fn ? fn(callback as SelectIdPCallback) : false;
 }
 
 /**

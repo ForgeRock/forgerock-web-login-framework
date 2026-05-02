@@ -23,7 +23,11 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  const journeyStore: JourneyStore = initializeJourney();
+  const journeyStore: JourneyStore = initializeJourney({
+    serverConfig: {
+      wellknown: data.wellknown,
+    },
+  });
   const oauthStore: OAuthStore = initializeOAuth();
   const userStore: UserStore = initializeUser();
 

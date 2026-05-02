@@ -20,7 +20,7 @@ import type { journeyConfigSchema } from '$journey/config.store';
 import type { partialLinksSchema } from '$core/links.store';
 import type { partialStringsSchema } from '$core/locale.store';
 import type { partialStyleSchema } from '$core/style.store';
-import { journeyClientConfigSchema } from '$core/journey-client.config';
+import { journeyClientConfigSchema } from '$journey/journey.store';
 
 export interface JourneyOptions {
   oauth?: boolean; // defaults to true
