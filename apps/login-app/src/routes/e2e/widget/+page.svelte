@@ -21,7 +21,7 @@
   }
 
   onMount(async () => {
-    configuration().set({
+    configuration({
       journeyClient: {
         serverConfig: {
           wellknown: 'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',

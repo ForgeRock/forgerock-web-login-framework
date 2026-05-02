@@ -20,10 +20,6 @@
     email: string;
   };
 
-  const config = configuration();
-  const componentEvents = component();
-  const journeyEvents = journey();
-
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
   let recaptchaParam = $page.url.searchParams.get('recaptchaAction');
@@ -38,21 +34,6 @@
     userResponse = null;
   }
 
-  componentEvents.subscribe((event) => {
-    if (event.lastAction === 'mount') {
-      console.log('Form mounted');
-    }
-  });
-  journeyEvents.subscribe((event) => {
-    if (event?.user?.successful) {
-      userEvent = event.user;
-      userResponse = event.user.response as UserResponseObj;
-    }
-    if (event.journey.error || event.oauth.error || event.user.error) {
-      console.log('Login failure event fired');
-    }
-  });
-
   onMount(async () => {
     let content;
     /**
@@ -63,7 +44,7 @@
       content = response.ok && (await response.json());
     }
 
-    config.set({
+    configuration({
       journeyClient: {
         serverConfig: {
           wellknown: 'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
@@ -83,6 +64,26 @@
         termsAndConditions: 'https://www.forgerock.com/terms',
       },
     });
+
+    const componentEvents = component();
+    const journeyEvents = journey();
+
+    componentEvents.subscribe((event) => {
+      if (event.lastAction === 'mount') {
+        console.log('Form mounted');
+      }
+    });
+
+    journeyEvents.subscribe((event) => {
+      if (event?.user?.successful) {
+        userEvent = event.user;
+        userResponse = event.user.response as UserResponseObj;
+      }
+      if (event.journey.error || event.oauth.error || event.user.error) {
+        console.log('Login failure event fired');
+      }
+    });
+
     new Widget({ target: formEl, props: { type: 'inline' } });
     // Start the  journey after initialization or within the form.onMount event
     journeyEvents.start({
