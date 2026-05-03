@@ -13,9 +13,23 @@ import type { RequestHandler } from './$types';
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
 import { get, set } from '$server/sessions';
 
+function getJsonRealmPath(event: RequestEvent): string {
+  const referer = event.request.headers.get('referer');
+  const refererUrl = referer ? new URL(referer) : null;
+  const realmParam = event.url.searchParams.get('realm') ?? refererUrl?.searchParams.get('realm');
+
+  if (realmParam == null) {
+    return JSON_REALM_PATH;
+  }
+
+  const stripped = realmParam.replace(/^\/+/, '');
+  return stripped ? `/json/realms/root/realms/${stripped}` : '/json/realms/root';
+}
+
 export const POST: RequestHandler = async (event: RequestEvent) => {
   const body = await event.request.text();
   let cookieUuid = '';
+  const jsonRealmPath = getJsonRealmPath(event);
 
   // console.log(body.toString());
 
@@ -29,7 +43,7 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
   // console.log(`Cookie sent to AM: ${reqCookie}`);
 
   const response = await fetch(
-    `${AM_DOMAIN_PATH}${JSON_REALM_PATH}/authenticate?authIndexType=service&authIndexValue=Login`,
+    `${AM_DOMAIN_PATH}${jsonRealmPath}/authenticate?authIndexType=service&authIndexValue=Login`,
     {
       method: 'POST',
       headers: {

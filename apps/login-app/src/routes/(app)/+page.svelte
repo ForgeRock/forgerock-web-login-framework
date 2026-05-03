@@ -1,10 +1,10 @@
 <!--
- 
+
  Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
- 
+
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
- 
+
  -->
 
 <script lang="ts">
@@ -56,10 +56,12 @@
       /**
        * goto and gotoOnFail are sent at the beginning of journey
        * to support temporarily suspended flows like email verification
-       * and to help AM set journey step successUrl
+       * and to help AM set journey step successUrl.
+       * Only add these when present — undefined would be serialized as the
+       * literal string "undefined" by URLSearchParams and corrupt AM's successUrl.
        */
-      query.goto = data.redirectParams?.goto;
-      query.gotoOnFail = data.redirectParams?.gotoOnFail;
+      if (data.redirectParams?.goto) query.goto = data.redirectParams.goto;
+      if (data.redirectParams?.gotoOnFail) query.gotoOnFail = data.redirectParams.gotoOnFail;
 
       journeyStore.start({
         tree: journeyParam || authIndexValue || undefined,

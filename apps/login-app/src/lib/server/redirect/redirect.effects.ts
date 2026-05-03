@@ -34,19 +34,20 @@ const REDIRECT_QUERY_PARAMS = 'redirect_query_params';
 export function storeRedirectParams(event: RequestEvent): RedirectParams {
   const goto = event.url.searchParams.get('goto') || undefined;
   const gotoOnFail = event.url.searchParams.get('gotoOnFail') || undefined;
+  const realmParam = event.url.searchParams.get('realm');
+  const realm = realmParam != null ? realmParam.replace(/^\/+/, '') || 'root' : 'root';
 
-  if (goto || gotoOnFail) {
-    setHttpCookie(
-      event.cookies,
-      REDIRECT_QUERY_PARAMS,
-      JSON.stringify({
-        ...(goto ? { goto } : {}),
-        ...(gotoOnFail ? { gotoOnFail } : {}),
-      }),
-    );
-  }
+  setHttpCookie(
+    event.cookies,
+    REDIRECT_QUERY_PARAMS,
+    JSON.stringify({
+      ...(goto ? { goto } : {}),
+      ...(gotoOnFail ? { gotoOnFail } : {}),
+      realm,
+    }),
+  );
 
-  return { goto, gotoOnFail };
+  return { goto, gotoOnFail, realm };
 }
 
 /**
@@ -64,9 +65,10 @@ export async function createRedirectContext(
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
   const successUrl = tokenId && gotoUrl ? await validateUrl(tokenId, gotoUrl) : null;
-  const roles = tokenId ? await getUserRolesFromSession(tokenId) : [];
-  const realm = env.FR_REALM_PATH;
+  const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'alpha';
+  const roles = tokenId ? await getUserRolesFromSession(tokenId, realm) : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
+  const platformOrigin = env.FR_PLATFORM_ORIGIN || undefined;
 
   return {
     tokenId,
@@ -77,6 +79,7 @@ export async function createRedirectContext(
     roles,
     realm,
     amOrigin,
+    platformOrigin,
   };
 }
 
@@ -92,6 +95,7 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
   const cookieSchema = z.object({
     goto: z.string().optional(),
     gotoOnFail: z.string().optional(),
+    realm: z.string().optional(),
   });
 
   if (!cookieValue) {

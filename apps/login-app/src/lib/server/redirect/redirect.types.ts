@@ -18,11 +18,13 @@ export type RedirectData = {
   roles: string[];
   realm: string | undefined;
   amOrigin: string;
+  platformOrigin: string | undefined;
 };
 
 export type RedirectParams = {
   goto?: string;
   gotoOnFail?: string;
+  realm?: string;
 };
 
 export type RedirectFormValue = {
