@@ -65,7 +65,7 @@
       query.gotoOnFail = data.redirectParams?.gotoOnFail;
 
       journeyStore.start({
-        journey: journeyParam || authIndexValue || 'Login',
+        journey: journeyParam || authIndexValue || '',
         query,
         // recaptchaAction: 'MyTestAction',
       });

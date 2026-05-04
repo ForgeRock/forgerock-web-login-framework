@@ -18,7 +18,13 @@ vi.mock('./custom-registry', () => ({
 import { createJourneyStep } from '$journey/_utilities/step.mock';
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';
-import { createMixedLoginWebAuthnStep } from '$journey/stages/mfa-stages.mock';
+import MfaEnrollment from '$journey/stages/mfa-enrollment.svelte';
+import {
+  createMixedLoginWebAuthnStep,
+  getAuthenticatorAppLinksStep,
+  getAuthenticatorAppStep,
+  mfaEnrollmentStep,
+} from '$journey/stages/mfa-stages.mock';
 import { mapStepToStage } from './map-stage.utilities';
 import { step1, step3 } from './step.mock';
 
@@ -44,5 +50,26 @@ describe('Test mapping of step to stage', () => {
 
     const result = mapStepToStage(mixedWithoutStage);
     expect(result).toStrictEqual(Login);
+  });
+
+  it('maps steps with HiddenValueCallback id starting with skip- to MfaEnrollment', () => {
+    const stepWithSkipHidden = createJourneyStep(mfaEnrollmentStep as Step);
+
+    const result = mapStepToStage(stepWithSkipHidden);
+    expect(result).toStrictEqual(MfaEnrollment);
+  });
+
+  it('maps steps with HiddenValueCallback id starting with getapp- to MfaEnrollment', () => {
+    const stepWithGetAppHidden = createJourneyStep(getAuthenticatorAppStep as Step);
+
+    const result = mapStepToStage(stepWithGetAppHidden);
+    expect(result).toStrictEqual(MfaEnrollment);
+  });
+
+  it('maps steps with type-4 app-links script to MfaEnrollment', () => {
+    const stepWithAppLinksScript = createJourneyStep(getAuthenticatorAppLinksStep as Step);
+
+    const result = mapStepToStage(stepWithAppLinksScript);
+    expect(result).toStrictEqual(MfaEnrollment);
   });
 });
