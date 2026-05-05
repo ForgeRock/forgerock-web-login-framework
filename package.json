@@ -42,7 +42,7 @@
     "@sveltejs/vite-plugin-svelte": "^4.0.0",
     "@vueless/storybook-dark-mode": "^10.0.4",
     "axe-playwright": "^1.2.3",
-    "chromatic": "^10.9.1",
+    "chromatic": "^16.8.0",
     "color": "4.2.3",
     "commitizen": "^4.3.0",
     "concurrently": "^8.2.2",
