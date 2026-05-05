@@ -1,10 +1,10 @@
 <!--
- 
+
  Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
- 
+
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
- 
+
  -->
 
 <script lang="ts">
@@ -28,12 +28,14 @@
   const formPostEntryParam = $page.url.searchParams.get('form_post_entry');
   const journeyParam = $page.url.searchParams.get('journey');
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
+  const captchaModeRaw = $page.url.searchParams.get('captchaMode');
+  const captchaModeParam =
+    captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
 
-  const journeyStore: JourneyStore = initializeJourney({
-    serverConfig: {
-      wellknown: data.wellknown,
-    },
-  });
+  const journeyStore: JourneyStore = initializeJourney(
+    { serverConfig: { wellknown: data.wellknown } },
+    captchaModeParam ? { captcha: { mode: captchaModeParam } } : null,
+  );
 
   let hasSubmitted = false;
   let redirectForm: HTMLFormElement | null = null;
@@ -67,7 +69,6 @@
       journeyStore.start({
         journey: journeyParam || authIndexValue || '',
         query,
-        // recaptchaAction: 'MyTestAction',
       });
     }
   });

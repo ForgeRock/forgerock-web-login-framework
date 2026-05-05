@@ -22,6 +22,7 @@ export const stringsSchema = z
     alreadyHaveAnAccount: z.string(),
     backToDefault: z.string(),
     backToLogin: z.string(),
+    captchaError: z.string(),
     dontHaveAnAccount: z.string(),
     closeModal: z.string(),
     charactersCannotRepeatMoreThan: z.string(),

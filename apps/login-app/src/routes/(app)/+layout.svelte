@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -23,11 +23,6 @@
   <title>Login Application</title>
   <link rel="icon" href="/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <script
-    src="https://www.google.com/recaptcha/api.js?render=6LdIqXMoAAAAAP4APBlw7_5WDeMTlAAQJf42rPWz"
-    async
-  ></script>
-
   <style>
     /**
      * Self-hosting Open Sans for better privacy, potential performance and control

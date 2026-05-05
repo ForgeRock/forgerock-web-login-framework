@@ -19,6 +19,9 @@
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
   let recaptchaParam = $page.url.searchParams.get('recaptchaAction');
+  const captchaModeRaw = $page.url.searchParams.get('captchaMode');
+  const captchaModeParam =
+    captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
   let showPasswordParam = $page.url.searchParams.get('showPassword') as
     | 'none'
@@ -127,6 +130,7 @@
           header: false,
         },
       },
+      captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
     });
 
     componentEvents = component();

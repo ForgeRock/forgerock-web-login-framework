@@ -10,7 +10,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { buildCallbackMetadata, buildStepMetadata } from './metadata.utilities';
-import { step1, step2 } from './step.mock';
+import { createJourneyStep, step1, step2 } from './step.mock';
 
 describe('Test metadata builder function for callbacks', () => {
   it('should have metadata without stage attributes', () => {
@@ -135,6 +135,88 @@ describe('Test metadata builder function for callbacks', () => {
         },
       },
     ]);
+  });
+});
+
+describe('Test metadata builder function for callbacks with initializationOptions', () => {
+  const captchaStep = createJourneyStep({
+    authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
+    callbacks: [
+      {
+        type: 'ReCaptchaCallback',
+        output: [{ name: 'recaptchaSiteKey', value: 'test-site-key' }],
+        input: [{ name: 'IDToken1', value: '' }],
+        _id: 0,
+      },
+    ],
+    status: 200,
+  });
+
+  const enterpriseStep = createJourneyStep({
+    authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
+    callbacks: [
+      {
+        type: 'ReCaptchaEnterpriseCallback',
+        output: [
+          { name: 'recaptchaSiteKey', value: 'enterprise-site-key' },
+          { name: 'captchaApiUri', value: 'https://www.google.com/recaptcha/enterprise.js' },
+          { name: 'captchaDivClass', value: 'g-recaptcha' },
+        ],
+        input: [
+          { name: 'IDToken1token', value: '' },
+          { name: 'IDToken1action', value: '' },
+        ],
+        _id: 0,
+      },
+    ],
+    status: 200,
+  });
+
+  it('should attach initOptions.mode to ReCaptchaCallback when captcha config provided', () => {
+    const result = buildCallbackMetadata(captchaStep, () => false, null, {
+      captcha: { mode: 'invisible' },
+    });
+
+    expect(result[0].initOptions).toStrictEqual({ mode: 'invisible' });
+  });
+
+  it('should attach initOptions.mode to ReCaptchaEnterpriseCallback when captcha config provided', () => {
+    const result = buildCallbackMetadata(enterpriseStep, () => false, null, {
+      captcha: { mode: 'visible' },
+    });
+
+    expect(result[0].initOptions).toStrictEqual({ mode: 'visible' });
+  });
+
+  it('should attach initOptions.recaptchaAction when provided', () => {
+    const result = buildCallbackMetadata(captchaStep, () => false, null, {
+      recaptchaAction: 'LOGIN',
+    });
+
+    expect(result[0].initOptions).toStrictEqual({ recaptchaAction: 'LOGIN' });
+  });
+
+  it('should merge captcha config and recaptchaAction into initOptions', () => {
+    const result = buildCallbackMetadata(captchaStep, () => false, null, {
+      captcha: { mode: 'invisible' },
+      recaptchaAction: 'SIGNUP',
+    });
+
+    expect(result[0].initOptions).toStrictEqual({ mode: 'invisible', recaptchaAction: 'SIGNUP' });
+  });
+
+  it('should not attach initOptions when initializationOptions is null', () => {
+    const result = buildCallbackMetadata(captchaStep, () => false, null, null);
+
+    expect(result[0].initOptions).toBeUndefined();
+  });
+
+  it('should not attach initOptions when captcha config and recaptchaAction are absent', () => {
+    const result = buildCallbackMetadata(captchaStep, () => false, null, {
+      someOtherOption: true,
+    });
+
+    expect(result[0].initOptions).toBeUndefined();
   });
 });
 

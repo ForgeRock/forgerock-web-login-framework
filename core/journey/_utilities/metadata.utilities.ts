@@ -21,25 +21,30 @@ import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types'
 
 import type { CallbackMetadata } from '$journey/journey.interfaces';
 
+const captchaCallbackTypes = new Set(['ReCaptchaCallback', 'ReCaptchaEnterpriseCallback']);
+
 /**
  * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
  * @param {object} step - The modified Widget step object
  * @param {function} checkValidation - function that checks if current callback is the first invalid callback
+ * @param {object} stageJson - Optional stage JSON from AM
+ * @param {object} initializationOptions - Optional widget-level initialization options (e.g. captcha config)
  * @returns {array}
  */
 export function buildCallbackMetadata(
   step: JourneyStep,
   checkValidation: (callback: BaseCallback) => boolean,
   stageJson?: Record<string, unknown> | null,
+  initializationOptions?: Record<string, unknown> | null,
 ) {
   const callbackCount: Record<string, number> = {};
   const isPasskeyAutofillEligible = isMixedLoginWebAuthnStep(step);
 
   return step?.callbacks.map((callback, idx) => {
-    const cb = callback;
-    const callbackType = cb.getType();
+    const callbackType = callback.getType();
 
     let stageCbMetadata;
+    let initOptions;
 
     if (callbackCount[callbackType]) {
       callbackCount[callbackType] = callbackCount[callbackType] + 1;
@@ -50,6 +55,14 @@ export function buildCallbackMetadata(
     if (stageJson && stageJson[callbackType]) {
       const stageCbArray = stageJson[callbackType] as Record<string, string | boolean>[];
       stageCbMetadata = stageCbArray[callbackCount[callbackType] - 1];
+    }
+
+    if (captchaCallbackTypes.has(callbackType)) {
+      const captchaConfig = initializationOptions?.captcha as Record<string, unknown> | undefined;
+      const recaptchaAction = initializationOptions?.recaptchaAction as string | null | undefined;
+      if (captchaConfig || recaptchaAction) {
+        initOptions = { ...captchaConfig, ...(recaptchaAction && { recaptchaAction }) };
+      }
     }
 
     return {
@@ -68,6 +81,7 @@ export function buildCallbackMetadata(
           ...stageCbMetadata,
         },
       }),
+      ...(initOptions && { initOptions }),
     };
   });
 }

@@ -183,7 +183,6 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
   step: null,
   successful: false,
   response: null,
-  recaptchaAction: null,
 });
 
 /**
@@ -192,15 +191,22 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
  * @throws {Error} If no Journey Client configuration is available.
  * @returns {JourneyStore} Journey store API.
  */
-export function initialize(config?: JourneyClientConfig | undefined): JourneyStore {
+export function initialize(
+  config?: JourneyClientConfig | undefined,
+  initializationOptions?: Record<string, unknown> | null,
+): JourneyStore {
   setJourneyClientConfig(config);
 
   const stack = initializeStack();
   let stepNumber = 0;
+  let currentRecaptchaAction: string | null = null;
   // TODO: JourneyResult is not currently exported by Journey Client, so we define it here
   type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
 
   async function start(startOptions?: StartParam, recaptchaAction?: string) {
+    // Falls back to journey name (e.g. "Login") when no explicit recaptchaAction is given —
+    // matches original behavior where the journey tree name was used as the Enterprise CAPTCHA action.
+    currentRecaptchaAction = recaptchaAction ?? startOptions?.journey ?? null;
     journeyStore.update((current) => ({
       ...current,
       completed: false,
@@ -209,7 +215,6 @@ export function initialize(config?: JourneyClientConfig | undefined): JourneySto
       step: null,
       successful: false,
       response: null,
-      recaptchaAction: recaptchaAction ?? startOptions?.journey ?? null,
     }));
 
     if (startOptions) {
@@ -359,7 +364,6 @@ export function initialize(config?: JourneyClientConfig | undefined): JourneySto
       step: null,
       successful: false,
       response: null,
-      recaptchaAction: null,
     });
   }
 
@@ -390,7 +394,10 @@ export function initialize(config?: JourneyClientConfig | undefined): JourneySto
         stageName = stageAttribute;
       }
 
-      const callbackMetadata = buildCallbackMetadata(stepResult, initCheckValidation(), stageJson);
+      const callbackMetadata = buildCallbackMetadata(stepResult, initCheckValidation(), stageJson, {
+        ...initializationOptions,
+        recaptchaAction: currentRecaptchaAction,
+      });
       const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 
       // Iterate on a successful progression
@@ -540,6 +547,7 @@ export function initialize(config?: JourneyClientConfig | undefined): JourneySto
         restartedStep,
         initCheckValidation(),
         stageJson,
+        { ...initializationOptions, recaptchaAction: currentRecaptchaAction },
       );
       const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
 

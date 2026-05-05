@@ -24,6 +24,9 @@
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
   let recaptchaParam = $page.url.searchParams.get('recaptchaAction');
+  const captchaModeRaw = $page.url.searchParams.get('captchaMode');
+  const captchaModeParam =
+    captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
   let formEl: HTMLDivElement;
   let userEvent: UserStoreValue | null;
@@ -52,6 +55,7 @@
             'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
         },
       },
+      captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
       forgerock: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,

@@ -499,6 +499,20 @@ config.set({
 });
 ```
 
+### CAPTCHA Configuration
+
+AM does not signal invisible mode in the callback payload for either `ReCaptchaCallback` or `ReCaptchaEnterpriseCallback`. Use the `captcha` option to configure invisible rendering:
+
+```js
+config.set({
+  captcha: {
+    mode: 'invisible', // 'visible' (default) | 'invisible'
+  },
+});
+```
+
+**Script loading:** The widget automatically injects the required CAPTCHA script at mount time — no manual `<script>` tag is needed. If the provider API (`window.grecaptcha` / `window.hcaptcha`) is already present on the page when the widget mounts, injection is skipped.
+
 ## Supported Callbacks
 
 The widget supports the following ForgeRock callbacks:
@@ -511,7 +525,7 @@ The widget supports the following ForgeRock callbacks:
 - Social login (Apple, Facebook, Google)
 - Email suspend ("magic links")
 - Device profile
-- reCAPTCHA / hCaptcha
+- reCAPTCHA v2 (visible + invisible), reCAPTCHA Enterprise, hCaptcha (visible + invisible)
 - QR codes
 - Ping Protect
 
@@ -525,4 +539,4 @@ This project is licensed under the MIT License — see the [LICENSE](https://git
 
 ---
 
-&copy; Copyright 2022-2025 Ping Identity Corporation. All Rights Reserved.
+&copy; Copyright 2022-2026 Ping Identity Corporation. All Rights Reserved.

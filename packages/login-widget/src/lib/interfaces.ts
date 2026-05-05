@@ -10,6 +10,7 @@
 import type { InitParams } from '@forgerock/ping-protect';
 import type { z } from 'zod';
 
+import type { captchaConfigSchema } from '$core/captcha.config';
 import type { partialLinksSchema } from '$core/links.store';
 import type { partialStringsSchema } from '$core/locale.store';
 import type { OAuthTokenStoreValue } from '$core/oauth/oauth.store';
@@ -17,7 +18,6 @@ import type { partialConfigSchema } from '$core/sdk.config';
 import type { partialStyleSchema } from '$core/style.store';
 import type { UserStoreValue } from '$core/user/user.store';
 import type { journeyConfigSchema } from '$journey/config.store';
-// Import store types
 import type { JourneyStoreValue } from '$journey/journey.interfaces';
 import type { journeyClientConfigSchema } from '$journey/journey.store';
 
@@ -55,6 +55,7 @@ export interface Protect {
 }
 
 export interface WidgetConfigOptions {
+  captcha?: z.infer<typeof captchaConfigSchema>;
   forgerock?: z.infer<typeof partialConfigSchema>;
   journeyClient?: z.infer<typeof journeyClientConfigSchema>;
   content?: z.infer<typeof partialStringsSchema>;
