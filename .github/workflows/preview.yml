@@ -1,0 +1,368 @@
+# DRAFT — NOT ENABLED
+#
+# Per-PR preview environment for the login app.
+#
+# This workflow is intentionally gated to `workflow_dispatch` only — it
+# will not run on pull_request until you explicitly flip the trigger.
+# Two preview jobs are sketched below (Cloud Run, Cloudflare). Pick one
+# (or both) and complete the TODOs before enabling.
+#
+# To enable for PRs:
+#   1. Decide which target(s) you want.
+#   2. Replace the `on:` block with the commented `pull_request` trigger.
+#   3. Remove the `if: false` guards on the chosen job(s).
+#   4. Configure the secrets listed in the per-job header comments.
+#
+# Security note: every value derived from `github.*` or secrets is plumbed
+# through the `env:` block of each step rather than interpolated directly
+# into a `run:` script. This avoids shell-injection risks if any input is
+# ever attacker-controlled. Do not change this pattern.
+#
+# See deploy-templates/README.md for context on the two paths.
+
+name: Preview environment
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: 'Which preview target to run'
+        required: true
+        default: 'cloud-run'
+        type: choice
+        options:
+          - cloud-run
+          - cloudflare
+
+# When ready, replace the above with:
+# on:
+#   pull_request:
+#     types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+# One preview per PR: a fast `synchronize` push cancels any in-flight
+# run for the same PR. AM URI registration must be idempotent (the
+# action treats duplicate adds as no-ops) for this to be safe — without
+# that, a cancelled-then-restarted run could double-register the URI.
+concurrency:
+  group: preview-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────
+  # Option A — Cloud Run preview
+  # Deploys the login app as a per-PR Cloud Run service named `login-app-pr-<n>`.
+  # Uses the repo-root Dockerfile (no Alchemy — Alchemy has no GCP provider).
+  #
+  # Required secrets:
+  #   GCP_WORKLOAD_IDENTITY_PROVIDER
+  #   GCP_SERVICE_ACCOUNT
+  #   FR_AM_URL, FR_AM_COOKIE_NAME, FR_OAUTH_PUBLIC_CLIENT, FR_REALM_PATH
+  #
+  # Required vars:
+  #   GCP_PROJECT_ID
+  #   GCP_REGION                      — e.g. us-central1
+  #   GCP_AR_REPOSITORY               — Artifact Registry repository name
+  #
+  # COOKIE_SECRET is loaded from Secret Manager at deploy time
+  # (`--set-secrets COOKIE_SECRET=cookie-secret:latest`).
+  # ────────────────────────────────────────────────────────────────────
+  cloud-run-preview:
+    name: Cloud Run preview
+    if: false # remove once configured
+    # if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || github.run_id }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_AR_REPOSITORY: ${{ vars.GCP_AR_REPOSITORY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Configure docker for Artifact Registry
+        run: gcloud auth configure-docker "${GCP_REGION}-docker.pkg.dev" --quiet
+
+      - name: Build and push image
+        run: |
+          IMAGE="${GCP_REGION}-docker.pkg.dev/${GCP_PROJECT_ID}/${GCP_AR_REPOSITORY}/login-app:pr-${PR_NUMBER}"
+          docker build --target deploy -t "$IMAGE" .
+          docker push "$IMAGE"
+          echo "IMAGE=$IMAGE" >> "$GITHUB_ENV"
+
+      - name: Deploy to Cloud Run
+        id: deploy
+        env:
+          FR_AM_URL: ${{ secrets.FR_AM_URL }}
+          FR_AM_COOKIE_NAME: ${{ secrets.FR_AM_COOKIE_NAME }}
+          FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.FR_OAUTH_PUBLIC_CLIENT }}
+          FR_REALM_PATH: ${{ secrets.FR_REALM_PATH }}
+        run: |
+          SERVICE="login-app-pr-${PR_NUMBER}"
+          gcloud run deploy "$SERVICE" \
+            --image "$IMAGE" \
+            --region "$GCP_REGION" \
+            --platform managed \
+            --allow-unauthenticated \
+            --min-instances 0 \
+            --max-instances 1 \
+            --set-env-vars "FR_AM_URL=${FR_AM_URL},FR_AM_COOKIE_NAME=${FR_AM_COOKIE_NAME},FR_OAUTH_PUBLIC_CLIENT=${FR_OAUTH_PUBLIC_CLIENT},FR_REALM_PATH=${FR_REALM_PATH}" \
+            --set-secrets "COOKIE_SECRET=cookie-secret:latest"
+          URL=$(gcloud run services describe "$SERVICE" --region "$GCP_REGION" --format='value(status.url)')
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.url }}
+        with:
+          script: |
+            const url = process.env.PREVIEW_URL;
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `Cloud Run preview: ${url}`,
+            });
+
+  cloud-run-teardown:
+    name: Cloud Run teardown
+    if: false # remove once configured
+    # if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      GCP_REGION: ${{ vars.GCP_REGION }}
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Delete Cloud Run service
+        run: |
+          SERVICE="login-app-pr-${PR_NUMBER}"
+          gcloud run services delete "$SERVICE" \
+            --region "$GCP_REGION" \
+            --quiet || echo "Service not found, skipping"
+
+  # ────────────────────────────────────────────────────────────────────
+  # Option B — Cloudflare Workers preview
+  # Deploys deploy-templates/cloudflare per-PR. Genuinely dogfoods the
+  # customer-facing template.
+  #
+  # Required secrets:
+  #   CLOUDFLARE_ACCOUNT_ID
+  #   CLOUDFLARE_API_TOKEN            — Workers Edit + KV Edit
+  #   FR_AM_ADMIN_USERNAME            — reuses the existing repo secret
+  #                                     (already used by other workflows).
+  #                                     Hardening note: prefer a dedicated
+  #                                     service identity scoped to OAuth
+  #                                     client + CORS service in the future.
+  #   FR_AM_ADMIN_PASSWORD
+  #   FR_AM_URL                       — used by the AM action AND baked
+  #                                     into the Worker as runtime env
+  #   FR_AM_COOKIE_NAME, FR_OAUTH_PUBLIC_CLIENT, FR_REALM_PATH
+  #   COOKIE_SECRET                   — HMAC key for session cookies; the
+  #                                     alchemy template marks this as
+  #                                     Redacted so it deploys as a Worker
+  #                                     secret (secret_text), not plain_text
+  #
+  # Required vars:
+  #   CLOUDFLARE_WORKERS_SUBDOMAIN    — your account's *.workers.dev
+  #                                     subdomain (e.g. "myorg" → URLs
+  #                                     resolve as <name>.myorg.workers.dev)
+  #
+  # Order: deploy first, register origin in AM after. If we registered
+  # first and deploy failed, the URI would sit allowlisted in AM until
+  # PR close — a small but cumulative leak. Trade-off: a tiny race
+  # window between deploy success and registration completion where
+  # the very first navigation could hit a CORS error. Acceptable since
+  # the user is clicking from the PR comment that posts after both.
+  #
+  # Caveat: Cloudflare template is a SKELETON — sessions do not work
+  # on Workers until session refactor lands. Validates deploy pipeline
+  # only, not user-facing functionality.
+  # ────────────────────────────────────────────────────────────────────
+  cloudflare-preview:
+    name: Cloudflare preview
+    if: false # remove once configured
+    # if: github.event_name == 'pull_request' && github.event.action != 'closed'
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number || github.run_id }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      WORKERS_SUBDOMAIN: ${{ vars.CLOUDFLARE_WORKERS_SUBDOMAIN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Compute preview URL
+        id: url
+        run: |
+          URL="https://login-app-pr-${PR_NUMBER}.${WORKERS_SUBDOMAIN}.workers.dev"
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Install root deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build widget
+        run: pnpm run build:widget
+
+      - name: Install template deps
+        working-directory: deploy-templates/cloudflare
+        run: pnpm install --frozen-lockfile
+
+      - name: Deploy template
+        id: deploy
+        working-directory: deploy-templates/cloudflare
+        env:
+          STAGE: pr-${{ env.PR_NUMBER }}
+          # Runtime env baked into the deployed Worker. alchemy.run.ts
+          # reads these via process.env and binds them to the Worker's
+          # `env` so `$env/dynamic/private` resolves them in SvelteKit.
+          # COOKIE_SECRET is wrapped with Redacted in the template so it
+          # deploys as a secret_text binding, not plain_text.
+          FR_AM_URL: ${{ secrets.FR_AM_URL }}
+          FR_AM_COOKIE_NAME: ${{ secrets.FR_AM_COOKIE_NAME }}
+          FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.FR_OAUTH_PUBLIC_CLIENT }}
+          FR_REALM_PATH: ${{ secrets.FR_REALM_PATH }}
+          COOKIE_SECRET: ${{ secrets.COOKIE_SECRET }}
+        run: |
+          pnpm exec alchemy deploy --stage "$STAGE"
+          # The actual URL is computed in the `url` step above and is
+          # deterministic from PR number + workers subdomain. Alchemy's
+          # output URL should match; mismatch on first run = fix the
+          # naming convention in deploy-templates/cloudflare/alchemy.run.ts.
+
+      # Register the preview origin + redirect_uri on the existing OAuth
+      # client only after deploy succeeds (step default `if: success()`).
+      # The action appends (does not replace), so production-registered
+      # URIs are untouched. Idempotent — re-adds are no-ops, which is
+      # what makes `cancel-in-progress` safe above.
+      - name: Register preview URL in AM
+        uses: ryanbas21/update-cors-am-github-action@main # TODO: pin to SHA
+        with:
+          AM_URL: ${{ secrets.FR_AM_URL }}
+          USERNAME: ${{ secrets.FR_AM_ADMIN_USERNAME }}
+          PASSWORD: ${{ secrets.FR_AM_ADMIN_PASSWORD }}
+          REALM_PATH: ${{ secrets.FR_REALM_PATH }}
+          COOKIE_NAME: ${{ secrets.FR_AM_COOKIE_NAME }}
+          ORIGINS: ${{ steps.url.outputs.url }}
+          REDIRECTION_URIS: '["${{ steps.url.outputs.url }}"]'
+          REMOVE: 'false'
+
+      # Find-and-update keeps a single comment per PR rather than
+      # accumulating one per push. The HTML comment marker is the key
+      # we match on — must be unique to this workflow so we don't
+      # collide with other bots posting on the same PR.
+      - name: Upsert preview URL comment on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PREVIEW_URL: ${{ steps.url.outputs.url }}
+        with:
+          script: |
+            const url = process.env.PREVIEW_URL;
+            const marker = '<!-- login-app-preview-bot -->';
+            const body = `${marker}\n\nCloudflare preview (skeleton — sessions broken until refactor): ${url}\n\n_Updated for commit ${context.sha.slice(0, 7)}_`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              per_page: 100,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }
+
+  cloudflare-teardown:
+    name: Cloudflare teardown
+    if: false # remove once configured
+    # if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      WORKERS_SUBDOMAIN: ${{ vars.CLOUDFLARE_WORKERS_SUBDOMAIN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.6.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Compute preview URL
+        id: url
+        run: |
+          URL="https://login-app-pr-${PR_NUMBER}.${WORKERS_SUBDOMAIN}.workers.dev"
+          echo "url=${URL}" >> "$GITHUB_OUTPUT"
+
+      - name: Install template deps
+        working-directory: deploy-templates/cloudflare
+        run: pnpm install --frozen-lockfile
+
+      # Destroy first, then deregister. If we deregistered first and the
+      # destroy failed, a stray request to the still-live worker would
+      # hit AM with an unallowlisted origin and surface a CORS error
+      # instead of the cleaner "worker no longer exists" path.
+      - name: Destroy stage
+        working-directory: deploy-templates/cloudflare
+        env:
+          STAGE: pr-${{ env.PR_NUMBER }}
+        run: pnpm exec alchemy destroy --stage "$STAGE" || echo "Stage not found, skipping"
+
+      # `if: always()` so we still attempt to deregister even if destroy
+      # fails — leaving an orphaned URI in AM is worse than the destroy
+      # error, which is recoverable manually.
+      - name: Deregister preview URL from AM
+        if: always()
+        uses: ryanbas21/update-cors-am-github-action@main # TODO: pin to SHA
+        with:
+          AM_URL: ${{ secrets.FR_AM_URL }}
+          USERNAME: ${{ secrets.FR_AM_ADMIN_USERNAME }}
+          PASSWORD: ${{ secrets.FR_AM_ADMIN_PASSWORD }}
+          REALM_PATH: ${{ secrets.FR_REALM_PATH }}
+          COOKIE_NAME: ${{ secrets.FR_AM_COOKIE_NAME }}
+          ORIGINS: ${{ steps.url.outputs.url }}
+          REDIRECTION_URIS: '["${{ steps.url.outputs.url }}"]'
+          REMOVE: 'true'

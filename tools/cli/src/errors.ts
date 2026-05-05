@@ -52,3 +52,26 @@ export class InvalidComponentNameError extends Data.TaggedError('InvalidComponen
 export class ComponentAlreadyExistsError extends Data.TaggedError('ComponentAlreadyExistsError')<{
   readonly path: string;
 }> {}
+
+export class MissingDeployConfigError extends Data.TaggedError('MissingDeployConfigError')<{
+  readonly path: string;
+}> {}
+
+export class InvalidDeployConfigError extends Data.TaggedError('InvalidDeployConfigError')<{
+  readonly path: string;
+  readonly cause: string;
+}> {}
+
+export class NotInFrameworkProjectError extends Data.TaggedError('NotInFrameworkProjectError')<{
+  readonly path: string;
+}> {}
+
+export class AlchemyExitError extends Data.TaggedError('AlchemyExitError')<{
+  readonly exitCode: number;
+  readonly script: string;
+}> {}
+
+export class DeployTemplateNotFoundError extends Data.TaggedError('DeployTemplateNotFoundError')<{
+  readonly target: string;
+  readonly searched: string;
+}> {}

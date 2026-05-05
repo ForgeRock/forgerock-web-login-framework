@@ -1,0 +1,27 @@
+services:
+  login-app:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+      target: deploy
+    image: login-app:latest
+    ports:
+      - '3000:3000'
+    env_file:
+      - .env
+    environment:
+      # ORIGIN must match what the browser shows in the URL bar (scheme,
+      # host, port). SvelteKit's CSRF protection compares the request's
+      # `Origin` header against this value and rejects mismatches with 403.
+      - ORIGIN=${ORIGIN:-http://localhost:3000}
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - fetch('http://localhost:3000/api/locale').then(r => { if (!r.ok) throw 1 })
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s

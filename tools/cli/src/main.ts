@@ -8,17 +8,28 @@ import { initCommand } from './commands/init.js';
 import { generateCommand } from './commands/generate.js';
 import { releasesCommand } from './commands/releases.js';
 import { updateCommand } from './commands/update.js';
+import { deployCommand } from './commands/deploy.js';
 import { GithubReleaseLayer } from './services/release.js';
+import { NodeProcessRunnerLayer } from './services/process-runner.js';
 
 // Read the version from package.json at runtime so it stays in sync
 // with the published package version after changesets bumps it.
-const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+// Path is relative to the compiled location (dist/src/main.js), not the
+// source location (src/main.ts) — the bin entry only ever runs the
+// compiled file, so package.json sits two directories up.
+const { version } = createRequire(import.meta.url)('../../package.json') as { version: string };
 
 const rootCommand = Command.make('ping-lf').pipe(
   Command.withDescription(
     'CLI for initializing, scaffolding, and updating Ping Login Widget and Login App custom component projects.',
   ),
-  Command.withSubcommands([initCommand, generateCommand, updateCommand, releasesCommand]),
+  Command.withSubcommands([
+    initCommand,
+    generateCommand,
+    updateCommand,
+    releasesCommand,
+    deployCommand,
+  ]),
 );
 
 const cli = Command.run(rootCommand, {
@@ -87,7 +98,43 @@ cli(process.argv).pipe(
         `  Choose a different name or delete the existing directory first.\n`,
     ).pipe(Effect.andThen(Effect.die(err))),
   ),
+  Effect.catchTag('NotInFrameworkProjectError', (err) =>
+    Console.error(
+      `\nError: "${err.path}" is not an initialized framework project.\n` +
+        `  Run "ping-lf deploy" from a directory created by "ping-lf init".\n`,
+    ).pipe(Effect.andThen(Effect.die(err))),
+  ),
+  Effect.catchTag('MissingDeployConfigError', (err) =>
+    Console.error(
+      `\nError: no deploy config found at ${err.path}.\n` +
+        `  This project has not been configured for deployment yet.\n` +
+        `  Re-run "ping-lf init" with --deploy-target=<docker|cloudflare|aws>,\n` +
+        `  or create a .ping-lf/config.json by hand.\n`,
+    ).pipe(Effect.andThen(Effect.die(err))),
+  ),
+  Effect.catchTag('InvalidDeployConfigError', (err) =>
+    Console.error(
+      `\nError: deploy config at ${err.path} is invalid.\n  ${err.cause}\n\n` +
+        `  Fix the file or delete it and re-run "ping-lf init --deploy-target=<target>".\n`,
+    ).pipe(Effect.andThen(Effect.die(err))),
+  ),
+  Effect.catchTag('AlchemyExitError', (err) =>
+    Console.error(
+      `\nError: "pnpm run ${err.script}" exited with code ${err.exitCode}.\n` +
+        `  See the output above for details from the deploy template.\n`,
+    ).pipe(Effect.andThen(Effect.die(err))),
+  ),
+  Effect.catchTag('DeployTemplateNotFoundError', (err) =>
+    Console.error(
+      `\nError: deploy template "${err.target}" not found in framework source.\n` +
+        `  Searched: ${err.searched}\n\n` +
+        `  This usually means the framework version you initialized from does\n` +
+        `  not include deploy-templates/. Pick --deploy-target=none to skip,\n` +
+        `  or use --version to pick a release that includes the templates.\n`,
+    ).pipe(Effect.andThen(Effect.die(err))),
+  ),
   Effect.provide(GithubReleaseLayer),
+  Effect.provide(NodeProcessRunnerLayer),
   Effect.provide(NodeContext.layer),
   (effect) => NodeRuntime.runMain(effect, { disableErrorReporting: true }),
 );

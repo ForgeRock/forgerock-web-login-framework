@@ -1,0 +1,25 @@
+{
+  "name": "@pingidentity/login-app-deploy-cloudflare",
+  "version": "0.0.0-preview",
+  "private": true,
+  "type": "module",
+  "description": "Cloudflare Workers deployment template for the Ping Identity Login App (PREVIEW — sessions not yet supported).",
+  "scripts": {
+    "deploy": "alchemy deploy",
+    "dev": "alchemy dev",
+    "destroy": "alchemy destroy",
+    "logs": "alchemy logs",
+    "tail": "alchemy tail"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.20251104.0",
+    "@effect/platform-node": "4.0.0-beta.58",
+    "alchemy": "2.0.0-beta.23",
+    "effect": "4.0.0-beta.58"
+  },
+  "devDependencies": {
+    "@sveltejs/adapter-cloudflare": "^7.0.0",
+    "@types/node": "^25.6.0",
+    "typescript": "^5.5.0"
+  }
+}

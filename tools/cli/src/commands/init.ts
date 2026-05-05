@@ -1,25 +1,65 @@
-import { Args, Command, Options } from '@effect/cli';
+import { Args, Command, Options, Prompt } from '@effect/cli';
 import { FileSystem, Path } from '@effect/platform';
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
 
 import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
 import { writeVersion } from '../config/version.js';
+import type { DeployTarget } from '../config/deploy.js';
 import { copyWithExclusions, expandTilde, isFrameworkDirectory } from '../services/file-system.js';
 import { runRegistryScript } from '../services/registry.js';
+import { setupDeployTarget } from '../services/deploy-setup.js';
 import { resolveSource } from './source.js';
+
+type DeployTargetChoice = DeployTarget | 'none';
+
+const DEPLOY_TARGET_CHOICES = ['docker', 'cloudflare', 'aws', 'none'] as const;
+
+const deployTargetPrompt = Prompt.select<DeployTargetChoice>({
+  message: 'Pick a deployment target (or skip):',
+  choices: [
+    {
+      title: 'Self-hosted Docker',
+      value: 'docker',
+      description: 'docker-compose (production-ready, single-replica)',
+    },
+    {
+      title: 'Cloudflare Workers',
+      value: 'cloudflare',
+      description: 'Alchemy + Workers KV (preview — sessions WIP)',
+    },
+    {
+      title: 'AWS Lambda',
+      value: 'aws',
+      description: 'Alchemy + Lambda + DynamoDB (preview — sessions WIP)',
+    },
+    {
+      title: 'Skip',
+      value: 'none',
+      description: 'Configure deployment later by hand',
+    },
+  ],
+});
 
 /**
  * Minimal pnpm-workspace.yaml written to the customer project.
  * Intentionally omits `tools/` — that workspace entry exists only in the
  * upstream monorepo and is not needed (or valid) in a customer project.
+ * The `deploy` entry is included only when a deploy target was chosen so
+ * the template's package.json (alchemy + provider deps) gets installed.
  */
-const PNPM_WORKSPACE = `packages:
+const buildPnpmWorkspace = (includeDeploy: boolean) =>
+  `packages:
   - 'packages/*'
   - 'apps/*'
   - 'e2e'
-`;
+${includeDeploy ? "  - 'deploy'\n" : ''}`;
 
-const nextStepsMessage = (dir: string) => `
+const nextStepsMessage = (dir: string, target: DeployTargetChoice) => {
+  const deploySteps =
+    target === 'none'
+      ? ''
+      : `\nTo deploy:\n  ping-lf deploy           # runs the configured ${target} template\n`;
+  return `
 Done. Project initialized successfully.
 
 Next steps:
@@ -33,7 +73,8 @@ To scaffold your first custom component:
   ping-lf generate stage MyStage
 
 Read the authoring guide: experimental/custom/README.md
-`;
+${deploySteps}`;
+};
 
 export const initCommand = Command.make(
   'init',
@@ -57,8 +98,15 @@ export const initCommand = Command.make(
         ),
       ),
     ),
+    deployTarget: Options.optional(
+      Options.choice('deploy-target', DEPLOY_TARGET_CHOICES).pipe(
+        Options.withDescription(
+          'Deploy template to scaffold under deploy/. One of: docker, cloudflare, aws, none. If omitted, you will be prompted.',
+        ),
+      ),
+    ),
   },
-  ({ directory, local, version }) =>
+  ({ directory, local, version, deployTarget }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -84,6 +132,13 @@ export const initCommand = Command.make(
         }
       }
 
+      // ── 0a. Resolve deploy target (CLI flag wins; prompt if unset) ────────
+      // Prompt up-front so the user isn't waiting mid-download for a question.
+      const target: DeployTargetChoice = yield* Option.match(deployTarget, {
+        onNone: () => deployTargetPrompt,
+        onSome: (t) => Effect.succeed(t),
+      });
+
       // ── 1. Resolve source + copy framework (scoped: temp dir auto-cleaned) ──
       // Effect.scoped closes the Scope that release.fetch opens, triggering
       // automatic removal of the .framework-tmp directory after copying.
@@ -96,12 +151,23 @@ export const initCommand = Command.make(
           yield* fs.makeDirectory(resolvedDir, { recursive: true });
           yield* copyWithExclusions(sourceDir, resolvedDir);
 
+          // ── 2a. Copy chosen deploy template (skipped when target='none') ──
+          // Done inside the scoped block so sourceDir is still available before
+          // its temp-dir cleanup runs.
+          if (target !== 'none') {
+            yield* Console.log(`Setting up deploy template: ${target}...`);
+            yield* setupDeployTarget(resolvedDir, sourceDir, target);
+          }
+
           return resolvedVersion;
         }),
       );
 
       // ── 3. Write pnpm-workspace.yaml (omits tools/ present in upstream) ────
-      yield* fs.writeFileString(path.join(resolvedDir, 'pnpm-workspace.yaml'), PNPM_WORKSPACE);
+      yield* fs.writeFileString(
+        path.join(resolvedDir, 'pnpm-workspace.yaml'),
+        buildPnpmWorkspace(target !== 'none'),
+      );
 
       // ── 4. Scaffold experimental/custom/ ──────────────────────────────────
       // copyWithExclusions already copies experimental/custom/demo/,
@@ -136,7 +202,7 @@ export const initCommand = Command.make(
       });
 
       // ── 7. Print next steps ───────────────────────────────────────────────
-      yield* Console.log(nextStepsMessage(directory));
+      yield* Console.log(nextStepsMessage(directory, target));
     }),
 ).pipe(
   Command.withDescription(
