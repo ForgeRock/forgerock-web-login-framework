@@ -7,14 +7,13 @@
  *
  **/
 
-import { derived, type Readable } from 'svelte/store';
+import { derived } from 'svelte/store';
 
-import {
-  componentStore,
-  closeComponent,
-  mount,
-  type ComponentStoreValue,
-} from '$core/component.store';
+import { closeComponent, componentStore, mount } from '$core/component.store';
+
+import type { Readable } from 'svelte/store';
+
+import type { ComponentStoreValue } from '$core/component.store';
 
 // Re-export core store items for consumers that import from this module
 export { componentStore, closeComponent, mount, type ComponentStoreValue };

@@ -9,9 +9,9 @@
 
 <script lang="ts">
   /* eslint @typescript-eslint/no-empty-function: "off" */
-  import Grid from './grid.svelte';
-  import Button from '$components/primitives/button/button.svelte';
   import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import Button from '$components/primitives/button/button.svelte';
+  import Grid from './grid.svelte';
 </script>
 
 <Grid num={3}>

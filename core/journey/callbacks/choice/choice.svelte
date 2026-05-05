@@ -8,22 +8,22 @@
  -->
 
 <script lang="ts">
-  import type { ChoiceCallback } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
-
   import RadioAnimated from '$components/compositions/radio/animated.svelte';
   import RadioStandard from '$components/compositions/radio/standard.svelte';
   import SelectFloating from '$components/compositions/select-floating/floating-label.svelte';
   import SelectStacked from '$components/compositions/select-stacked/stacked-label.svelte';
   import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
 
+  import type { ChoiceCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

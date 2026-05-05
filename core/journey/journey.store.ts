@@ -8,30 +8,33 @@
  **/
 
 import { journey } from '@forgerock/journey-client';
-import type {
-  BaseCallback,
-  JourneyStep,
-  Step,
-  StartParam,
-  NextOptions,
-  ResumeOptions,
-  JourneyClient,
-  JourneyClientConfig,
-  GenericError,
-} from '@forgerock/journey-client/types';
-import { writable, type Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { z } from 'zod';
 
-import { htmlDecode } from '$journey/_utilities/decode.utilities';
-import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
 import { interpolate } from '$core/_utilities/i18n.utilities';
+import { htmlDecode } from '$journey/_utilities/decode.utilities';
+import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
   shouldPopulateWithPreviousCallbacks,
   shouldRedirectFromStep,
 } from './stages/_utilities/step.utilities';
-import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+
+import type {
+  BaseCallback,
+  GenericError,
+  JourneyClient,
+  JourneyClientConfig,
+  JourneyStep,
+  NextOptions,
+  ResumeOptions,
+  StartParam,
+  Step,
+} from '@forgerock/journey-client/types';
+import type { Writable } from 'svelte/store';
+
+import type { JourneyStore, JourneyStoreValue, StackStore, StepTypes } from './journey.interfaces';
 import type { Maybe } from '$core/interfaces';
 
 /**

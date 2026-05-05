@@ -9,21 +9,27 @@
 
 <script lang="ts">
   import { callbackType } from '@forgerock/journey-client';
-  import type { BaseCallback, ConfirmationCallback, JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate } from 'svelte';
 
-  // i18n
-  import { interpolate } from '$core/_utilities/i18n.utilities';
   import T from '$components/_utilities/locale-strings.svelte';
-
+  import KeyIcon from '$components/icons/key-icon.svelte';
   // Import components
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
-  import KeyIcon from '$components/icons/key-icon.svelte';
+  // i18n
+  import { interpolate } from '$core/_utilities/i18n.utilities';
   import { styleStore as style } from '$core/style.store';
+  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
+  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
 
+  import type {
+    BaseCallback,
+    ConfirmationCallback,
+    JourneyStep,
+  } from '@forgerock/journey-client/types';
+
+  import type { Maybe } from '$core/interfaces';
   // Types
   import type {
     CallbackMetadata,
@@ -31,8 +37,6 @@
     StageJourneyObject,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Maybe } from '$core/interfaces';
-  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;

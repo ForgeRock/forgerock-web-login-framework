@@ -8,11 +8,11 @@
  -->
 
 <script lang="ts">
-  import type { TermsAndConditionsCallback } from '@forgerock/journey-client/types';
-  import { initialize } from '$core/links.store';
-
   import Centered from '$components/primitives/box/centered.svelte';
+  import { initialize } from '$core/links.store';
   import Terms from './terms-conditions.svelte';
+
+  import type { TermsAndConditionsCallback } from '@forgerock/journey-client/types';
 
   export let callback: TermsAndConditionsCallback;
 

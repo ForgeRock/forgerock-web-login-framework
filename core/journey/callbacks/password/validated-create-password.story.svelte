@@ -8,19 +8,19 @@
  -->
 
 <script lang="ts">
-  import type { ValidatedCreatePasswordCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './validated-create-password.svelte';
-  import type { CallbackMetadata } from '$journey/journey.interfaces';
+
+  import type { ValidatedCreatePasswordCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
-  import type { z } from 'zod';
   import type { styleSchema } from '$core/style.store';
+  import type { CallbackMetadata } from '$journey/journey.interfaces';
 
   export let callback: ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata> = null;
-  export let style: z.infer<typeof styleSchema> ;
+  export let style: z.infer<typeof styleSchema>;
 
   let mergedCallbackMetadata = {
     derived: {

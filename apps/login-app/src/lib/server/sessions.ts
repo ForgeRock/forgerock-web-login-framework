@@ -9,8 +9,10 @@
 
 import { v4 as uuid } from 'uuid';
 import { z } from 'zod';
-import type { Cookies } from '@sveltejs/kit';
+
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
+
+import type { Cookies } from '@sveltejs/kit';
 
 import type { TokenId } from '$server/schemas';
 

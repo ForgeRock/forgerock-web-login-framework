@@ -7,8 +7,9 @@
  *
  **/
 
-import { fn, expect } from 'storybook/test';
-import { within, userEvent } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
+import { userEvent, within } from 'storybook/test';
+
 import Radio from './animated.story.svelte';
 
 export default {

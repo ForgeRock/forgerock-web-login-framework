@@ -7,8 +7,11 @@
  *
  **/
 
-import { UserManager, type ConfigOptions } from '@forgerock/javascript-sdk';
-import { writable, type Writable } from 'svelte/store';
+import { UserManager } from '@forgerock/javascript-sdk';
+import { writable } from 'svelte/store';
+
+import type { ConfigOptions } from '@forgerock/javascript-sdk';
+import type { Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
 

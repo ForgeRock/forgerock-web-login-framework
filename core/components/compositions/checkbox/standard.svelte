@@ -10,6 +10,7 @@
 <script lang="ts">
   import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
+
   import type { Maybe } from '$core/interfaces';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;

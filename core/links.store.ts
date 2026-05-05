@@ -7,8 +7,10 @@
  *
  **/
 
-import { writable, type Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { z } from 'zod';
+
+import type { Writable } from 'svelte/store';
 
 export const linksSchema = z
   .object({

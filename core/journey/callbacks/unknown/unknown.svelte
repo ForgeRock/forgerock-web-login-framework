@@ -8,16 +8,16 @@
  -->
 
 <script lang="ts">
+  import type { BaseCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Maybe } from '$core/interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { BaseCallback } from '@forgerock/journey-client/types';
 
   // Unused props. Setting to const prevents errors in console
   export const callbackMetadata: Maybe<CallbackMetadata> = null;

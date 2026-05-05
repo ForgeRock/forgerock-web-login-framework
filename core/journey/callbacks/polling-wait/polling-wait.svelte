@@ -8,19 +8,19 @@
  -->
 
 <script lang="ts">
-  import type { PollingWaitCallback } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
-
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
 
+  import type { PollingWaitCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const style: z.infer<typeof styleSchema> = {};

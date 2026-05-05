@@ -9,16 +9,18 @@
 
 <script lang="ts">
   import { Device } from '@forgerock/journey-client/device';
-  import type { DeviceProfileCallback } from '@forgerock/journey-client/types';
 
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
+
+  import type { DeviceProfileCallback } from '@forgerock/journey-client/types';
+
+  import type { Maybe } from '$core/interfaces';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Maybe } from '$core/interfaces';
 
   export let callback: DeviceProfileCallback;
   export let callbackMetadata: Maybe<CallbackMetadata> = null;

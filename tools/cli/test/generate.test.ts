@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
 import { Schema } from 'effect';
+import { describe, expect, it } from 'vitest';
+
 import { CallbackNameSchema, StageNameSchema } from '../src/commands/generate.js';
 
 const decodeCallback = Schema.decodeSync(CallbackNameSchema);

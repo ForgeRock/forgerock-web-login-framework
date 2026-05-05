@@ -14,18 +14,18 @@
    * This is intentionally separated from ValidatedCreatePasswordCallback as it does
    * allow for easier typing for the callback.
    */
+  import Base from './base.svelte';
+
   import type { PasswordCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
-  import Base from './base.svelte';
-
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

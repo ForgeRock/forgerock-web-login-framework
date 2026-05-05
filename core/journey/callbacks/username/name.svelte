@@ -8,20 +8,20 @@
  -->
 
 <script lang="ts">
+  import Floating from '$components/compositions/input-floating/floating-label.svelte';
+  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
+  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
+
   import type { NameCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
-  import Floating from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
-  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
-
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
@@ -52,7 +52,9 @@
 
 {#key callback}
   <Input
-    autocomplete={callbackMetadata?.derived?.isPasskeyAutofillEligible ? 'username webauthn' : undefined}
+    autocomplete={callbackMetadata?.derived?.isPasskeyAutofillEligible
+      ? 'username webauthn'
+      : undefined}
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     key={inputName}
     label={interpolate(textToKey(textInputLabel || callbackType), null, textInputLabel)}

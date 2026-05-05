@@ -10,13 +10,13 @@ Custom callback component. Replace this description with your own.
   import type { FRCallback } from '@forgerock/javascript-sdk';
   import type { z } from 'zod';
 
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   /**
    * The AM callback instance for this component. Use `callback.getInputValue()`
@@ -53,7 +53,9 @@ Custom callback component. Replace this description with your own.
 </script>
 
 <!-- Replace the markup below with your custom callback UI. -->
-<div class="__COMPONENT_SLUG__ tw_p-4 tw_rounded-lg tw_border tw_border-secondary-light dark:tw_border-secondary-dark">
+<div
+  class="__COMPONENT_SLUG__ tw_p-4 tw_rounded-lg tw_border tw_border-secondary-light dark:tw_border-secondary-dark"
+>
   <p class="tw_text-base tw_text-secondary-dark dark:tw_text-secondary-light">
     __COMPONENT_NAME__ callback — replace this with your implementation.
   </p>

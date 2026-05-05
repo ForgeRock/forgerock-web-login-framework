@@ -7,14 +7,15 @@
  *
  **/
 
+import { widgetApiFactory } from './_utilities/api.utilities';
+import { componentApi } from './_utilities/component.utilities';
+
 import type {
   ConfigOptions as SdkConfigOptions,
   OAuth2Tokens as SdkOAuth2Tokens,
 } from '@forgerock/javascript-sdk';
 import type { Step as SdkStep } from '@forgerock/journey-client/types';
-
-import { widgetApiFactory } from './_utilities/api.utilities';
-import { componentApi } from './_utilities/component.utilities';
+import type { PIProtect } from '@forgerock/ping-protect';
 
 import type {
   JourneyOptions as JourneyApiOptionsInit,
@@ -22,10 +23,9 @@ import type {
   JourneyOptionsStart as JourneyApiOptionsStart,
   WidgetConfigOptions as WidgetApiConfigOptions,
 } from './interfaces';
-import type { JourneyStoreValue as JourneyStoreEventValue } from '$journey/journey.interfaces';
 import type { OAuthTokenStoreValue as OAuthTokenStoreEventValue } from '$core/oauth/oauth.store';
 import type { UserStoreValue as UserStoreEventValue } from '$core/user/user.store';
-import type { PIProtect } from '@forgerock/ping-protect';
+import type { JourneyStoreValue as JourneyStoreEventValue } from '$journey/journey.interfaces';
 
 const _api = widgetApiFactory(componentApi());
 

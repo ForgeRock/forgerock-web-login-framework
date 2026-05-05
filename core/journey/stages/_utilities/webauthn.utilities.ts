@@ -9,6 +9,7 @@
 
 import { callbackType } from '@forgerock/journey-client';
 import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
+
 import type { JourneyStep } from '@forgerock/journey-client/types';
 
 /**

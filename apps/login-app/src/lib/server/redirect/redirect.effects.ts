@@ -7,22 +7,23 @@
  *
  **/
 
-import type { RequestEvent } from '@sveltejs/kit';
 import { z } from 'zod';
 
-import {
-  setHttpCookie,
-  getHttpCookie,
-  removeHttpCookie,
-  amFetchRequest,
-  getUserRolesFromSession,
-} from '$server/sessions';
-import type { TokenId } from '$server/schemas';
-import { env } from '$env/dynamic/private';
 import { AM_DOMAIN_PATH } from '$core/constants';
-
+import { env } from '$env/dynamic/private';
+import {
+  amFetchRequest,
+  getHttpCookie,
+  getUserRolesFromSession,
+  removeHttpCookie,
+  setHttpCookie,
+} from '$server/sessions';
 import { parseRedirectForm } from './redirect.utilities';
+
+import type { RequestEvent } from '@sveltejs/kit';
+
 import type { RedirectData, RedirectParams } from './redirect.types';
+import type { TokenId } from '$server/schemas';
 
 const REDIRECT_QUERY_PARAMS = 'redirect_query_params';
 

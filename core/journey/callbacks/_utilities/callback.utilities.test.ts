@@ -8,9 +8,9 @@
  **/
 
 import { callbackType } from '@forgerock/journey-client';
-import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { describe, expect, it } from 'vitest';
 
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import {
   getAttributeValidationFailureText,
   getInputTypeFromPolicies,

@@ -7,7 +7,8 @@
  *
  **/
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
+
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
 test('Inline widget with 2step login, keyboard only', async ({ page }) => {

@@ -3,21 +3,20 @@
 -->
 
 <script lang="ts">
-  import type { NameCallback } from '@forgerock/journey-client/types';
-
   /**
    * Centered — a layout primitive that centers its slot content horizontally
    * and vertically inside a constrained box. Used here so the component
    * renders at a predictable size in the Storybook canvas.
    */
   import Centered from '$components/primitives/box/centered.svelte';
-
   import CustomName from './custom-name.svelte';
+
+  import type { NameCallback } from '@forgerock/journey-client/types';
 
   /**
    * callback — the only arg passed in from Storybook stories.
    * Storybook controls map to exported `let` props in this wrapper.
-  * The story file uses `step.getCallbackOfType(callbackType.NameCallback)`
+   * The story file uses `step.getCallbackOfType(callbackType.NameCallback)`
    * to produce a real SDK callback instance from the mock response.
    */
   export let callback: NameCallback;

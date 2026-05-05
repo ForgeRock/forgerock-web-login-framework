@@ -13,21 +13,6 @@ import { fireEvent, userEvent, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
-import { initialize } from '../config.store';
-import Step from './stages.story.svelte';
-import {
-  confirmPasswordStep,
-  loginStep,
-  registrationStep,
-  registrationStepWithTwoKBAs,
-  usernameDisplay,
-  usernamePasswordStep,
-  deviceProfileComposition,
-  deviceProfileAloneData,
-  successMessagesRenderingStep,
-  failureMessagesRenderingStep,
-} from './step.mock';
-import { webAuthnAuthenticationStep } from './mfa-stages.mock';
 import {
   multipleProvidersLocalAuthFormStep,
   multipleProvidersLocalAuthNoFormStep,
@@ -35,6 +20,21 @@ import {
   singleProviderLocalAuthFormStep,
   singleProviderLocalAuthNoFormStep,
 } from '../callbacks/select-idp/select-idp.mock';
+import { initialize } from '../config.store';
+import { webAuthnAuthenticationStep } from './mfa-stages.mock';
+import Step from './stages.story.svelte';
+import {
+  confirmPasswordStep,
+  deviceProfileAloneData,
+  deviceProfileComposition,
+  failureMessagesRenderingStep,
+  loginStep,
+  registrationStep,
+  registrationStepWithTwoKBAs,
+  successMessagesRenderingStep,
+  usernameDisplay,
+  usernamePasswordStep,
+} from './step.mock';
 
 const deviceProfileComposed = createJourneyStep(deviceProfileComposition);
 const deviceProfileAlone = createJourneyStep(deviceProfileAloneData);

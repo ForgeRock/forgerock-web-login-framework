@@ -8,16 +8,18 @@
  -->
 
 <script lang="ts">
-  import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
 
+  import { goto } from '$app/navigation';
   import Box from '$components/primitives/box/centered.svelte';
-  import Journey from '$journey/journey.svelte';
-  import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent } from '$core/locale.store';
-  import { initialize as initializeOAuth, type OAuthStore } from '$core/oauth/oauth.store';
-  import { initialize as initializeUser, type UserStore } from '$core/user/user.store';
+  import { initialize as initializeOAuth } from '$core/oauth/oauth.store';
+  import { initialize as initializeUser } from '$core/user/user.store';
+  import { initialize as initializeJourney } from '$journey/journey.store';
+  import Journey from '$journey/journey.svelte';
 
+  import type { OAuthStore } from '$core/oauth/oauth.store';
+  import type { UserStore } from '$core/user/user.store';
   import type { JourneyStore } from '$journey/journey.interfaces';
 
   /** @type {import('./$types').PageData} */

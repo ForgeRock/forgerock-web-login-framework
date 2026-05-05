@@ -8,12 +8,13 @@
  **/
 
 import { callbackType } from '@forgerock/journey-client';
-import {
-  createCallback,
-  type BaseCallback,
-  type CallbackType as JourneyClientCallbackType,
-  type JourneyStep,
-  type Step,
+import { createCallback } from '@forgerock/journey-client/types';
+
+import type {
+  BaseCallback,
+  CallbackType as JourneyClientCallbackType,
+  JourneyStep,
+  Step,
 } from '@forgerock/journey-client/types';
 
 export function createJourneyStep(payload: Step): JourneyStep {

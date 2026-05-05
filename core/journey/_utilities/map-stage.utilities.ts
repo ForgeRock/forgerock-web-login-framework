@@ -7,23 +7,26 @@
  *
  **/
 
-import Generic from '$journey/stages/generic.svelte';
-import OneTimePassword from '$journey/stages/one-time-password.svelte';
-import Registration from '$journey/stages/registration.svelte';
-import Login from '$journey/stages/login.svelte';
-import WebAuthnStage from '$journey/stages/webauthn.svelte';
-import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
-import QrCode from '$journey/stages/qr-code.svelte';
-import EmailSuspend from '$journey/stages/email-suspend.svelte';
-import type { StepTypes } from '$journey/journey.interfaces';
-import type { Component } from 'svelte';
-import { customStageRegistry } from './custom-registry';
 import { callbackType } from '@forgerock/journey-client';
 import { QRCode } from '@forgerock/journey-client/qr-code';
 import { RecoveryCodes } from '@forgerock/journey-client/recovery-codes';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
-import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
+
+import EmailSuspend from '$journey/stages/email-suspend.svelte';
+import Generic from '$journey/stages/generic.svelte';
+import Login from '$journey/stages/login.svelte';
+import OneTimePassword from '$journey/stages/one-time-password.svelte';
+import QrCode from '$journey/stages/qr-code.svelte';
+import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
+import Registration from '$journey/stages/registration.svelte';
+import WebAuthnStage from '$journey/stages/webauthn.svelte';
 import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
+import { customStageRegistry } from './custom-registry';
+
+import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
+import type { Component } from 'svelte';
+
+import type { StepTypes } from '$journey/journey.interfaces';
 type StageTypes =
   | typeof WebAuthnStage
   | typeof OneTimePassword

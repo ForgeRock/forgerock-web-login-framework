@@ -8,11 +8,9 @@
  **/
 
 import { callbackType } from '@forgerock/journey-client';
-import {
-  ConfirmationCallback,
-  SelectIdPCallback,
-  type BaseCallback,
-} from '@forgerock/journey-client/types';
+
+import type { BaseCallback } from '@forgerock/journey-client/types';
+import type { ConfirmationCallback, SelectIdPCallback } from '@forgerock/journey-client/types';
 
 import type { CallbackMetadata } from '$journey/journey.interfaces';
 

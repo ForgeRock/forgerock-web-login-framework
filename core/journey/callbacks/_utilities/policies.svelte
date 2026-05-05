@@ -8,19 +8,20 @@
  -->
 
 <script lang="ts">
-  import type {
-    AttributeInputCallback,
-    ValidatedCreateUsernameCallback,
-    ValidatedCreatePasswordCallback,
-  } from '@forgerock/journey-client/types';
-
+  import T from '$components/_utilities/locale-strings.svelte';
   import {
     getValidationFailures,
     getValidationPolicies,
-    type RestructuredParam,
   } from '$journey/callbacks/_utilities/callback.utilities';
+
+  import type {
+    AttributeInputCallback,
+    ValidatedCreatePasswordCallback,
+    ValidatedCreateUsernameCallback,
+  } from '@forgerock/journey-client/types';
+
   import type { Maybe } from '$core/interfaces';
-  import T from '$components/_utilities/locale-strings.svelte';
+  import type { RestructuredParam } from '$journey/callbacks/_utilities/callback.utilities';
 
   type ValidatedCallbacks =
     | AttributeInputCallback<boolean | string>
@@ -61,7 +62,7 @@
       {/each}
     </ul>
   </div>
-{:else if (showPolicies && validationRules.length)}
+{:else if showPolicies && validationRules.length}
   <div class="tw_input-policies tw_w-full" id={`${key ? `${key}-message` : ''}`}>
     <p class="tw_text-secondary-dark dark:tw_text-secondary-light tw_w-full">
       <T key={messageKey} />

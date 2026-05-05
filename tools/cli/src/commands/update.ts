@@ -1,7 +1,7 @@
 import { Command, Options } from '@effect/cli';
 import { Console, Effect } from 'effect';
 
-import { writeVersion, assertValidProject } from '../config/version.js';
+import { assertValidProject, writeVersion } from '../config/version.js';
 import { copyWithExclusions } from '../services/file-system.js';
 import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';

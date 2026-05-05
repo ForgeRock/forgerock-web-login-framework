@@ -1,10 +1,10 @@
 import auto from '@sveltejs/adapter-auto';
 import node from '@sveltejs/adapter-node';
-import preprocess from 'svelte-preprocess';
 import { mdsvex } from 'mdsvex';
-import slug from 'remark-slug';
-import autolink from 'remark-autolink-headings';
 import path from 'path';
+import autolink from 'remark-autolink-headings';
+import slug from 'remark-slug';
+import preprocess from 'svelte-preprocess';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {

@@ -8,10 +8,10 @@
  -->
 
 <script lang="ts">
-  import type { PollingWaitCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import PollingWait from './polling-wait.svelte';
+
+  import type { PollingWaitCallback } from '@forgerock/journey-client/types';
 
   import type { SelfSubmitFunction } from '$journey/journey.interfaces';
 

@@ -11,8 +11,8 @@
   import { onMount } from 'svelte';
 
   import Button from '$components/primitives/button/button.svelte';
-  import Select from './stacked-label.svelte';
   import Form from '$components/primitives/form/form.svelte';
+  import Select from './stacked-label.svelte';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let defaultOption: string | null = null;

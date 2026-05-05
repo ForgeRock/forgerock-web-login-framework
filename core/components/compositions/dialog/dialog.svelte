@@ -9,9 +9,9 @@
 
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
-  import XIcon from '../../icons/x-icon.svelte';
-  import { styleStore } from '$core/style.store';
   import { closeComponent } from '$core/component.store';
+  import { styleStore } from '$core/style.store';
+  import XIcon from '../../icons/x-icon.svelte';
 
   import type { ComponentStoreValue } from '$core/component.store';
 

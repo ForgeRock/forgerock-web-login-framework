@@ -7,19 +7,19 @@
  *
  **/
 
-import type { Step } from '@forgerock/journey-client/types';
 import { describe, expect, it } from 'vitest';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
-import { usernamePasswordStep } from '$journey/stages/step.mock';
 import {
-  liveMixedLoginWebAuthnStep,
-  webAuthnAuthenticationStep,
   createMixedLoginWebAuthnStep,
+  liveMixedLoginWebAuthnStep,
   stepWithInvalidMetadata,
+  webAuthnAuthenticationStep,
 } from '$journey/stages/mfa-stages.mock';
-
+import { usernamePasswordStep } from '$journey/stages/step.mock';
 import { isMixedLoginWebAuthnStep } from './webauthn.utilities';
+
+import type { Step } from '@forgerock/journey-client/types';
 
 describe('WebAuthn helper utilities', () => {
   it('returns false for an undefined step', () => {

@@ -7,14 +7,14 @@
  *
  **/
 
+import { interpolate } from '$core/_utilities/i18n.utilities';
+
 import type {
   AttributeInputCallback,
   PolicyRequirement,
-  ValidatedCreateUsernameCallback,
   ValidatedCreatePasswordCallback,
+  ValidatedCreateUsernameCallback,
 } from '@forgerock/journey-client/types';
-
-import { interpolate } from '$core/_utilities/i18n.utilities';
 
 /** *********************************************
  * INTERFACES AND TYPES

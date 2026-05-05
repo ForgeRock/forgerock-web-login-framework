@@ -8,6 +8,7 @@
  **/
 
 import { expect, test } from '@playwright/test';
+
 import { asyncEvents } from '../../utilities/async-events.js';
 
 async function runTextInputFlow(page, callbackPayload, submittedValue, assertionFn) {

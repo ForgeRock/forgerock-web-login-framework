@@ -8,9 +8,9 @@
  -->
 
 <script lang="ts">
+  import T from '$components/_utilities/locale-strings.svelte';
   import Centered from '$components/primitives/box/centered.svelte';
   import Text from '$components/primitives/text/text.svelte';
-  import T from '$components/_utilities/locale-strings.svelte';
 </script>
 
 <Centered>

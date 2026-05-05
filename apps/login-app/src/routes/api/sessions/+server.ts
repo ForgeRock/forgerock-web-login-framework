@@ -7,11 +7,12 @@
  *
  **/
 
-import type { RequestEvent } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-
 import { AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
 import { get as getCookie, remove as removeCookie } from '$server/sessions';
+
+import type { RequestEvent } from '@sveltejs/kit';
+
+import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event: RequestEvent) => {
   const cookie = event.request.headers.get('cookie');

@@ -7,13 +7,14 @@
  *
  **/
 
-import { expect } from 'storybook/test';
 import { callbackType } from '@forgerock/journey-client';
 import { Device } from '@forgerock/journey-client/device';
-import { createJourneyStep } from '$journey/_utilities/step.mock';
-import { deviceProfileMockNoMessage, deviceProfileMockMessage } from './device-profile.mock';
-import DeviceProfile from './device-profile.story.svelte';
+import { expect } from 'storybook/test';
 import { within } from 'storybook/test';
+
+import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { deviceProfileMockMessage, deviceProfileMockNoMessage } from './device-profile.mock';
+import DeviceProfile from './device-profile.story.svelte';
 
 const stepWithNoMessage = createJourneyStep(deviceProfileMockNoMessage);
 const stepWithMessage = createJourneyStep(deviceProfileMockMessage);

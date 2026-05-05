@@ -8,13 +8,13 @@
  -->
 
 <script lang="ts">
-  import type { ChoiceCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Choice from './choice.svelte';
 
-  import type { CallbackMetadata } from '$journey/journey.interfaces';
+  import type { ChoiceCallback } from '@forgerock/journey-client/types';
+
   import type { Maybe } from '$core/interfaces';
+  import type { CallbackMetadata } from '$journey/journey.interfaces';
 
   export let callback: ChoiceCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;

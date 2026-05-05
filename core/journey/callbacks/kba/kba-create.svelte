@@ -8,25 +8,26 @@
  -->
 
 <script lang="ts">
-  import type { KbaCreateCallback } from '@forgerock/journey-client/types';
   import { writable } from 'svelte/store';
-  import type { z } from 'zod';
 
+  import T from '$components/_utilities/locale-strings.svelte';
   import InputFloating from '$components/compositions/input-floating/floating-label.svelte';
   import InputStacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import SelectFloating from '$components/compositions/select-floating/floating-label.svelte';
   import SelectStacked from '$components/compositions/select-stacked/stacked-label.svelte';
-  import T from '$components/_utilities/locale-strings.svelte';
-  import { interpolate } from '$core/_utilities/i18n.utilities';
   import LockIcon from '$components/icons/lock-icon.svelte';
+  import { interpolate } from '$core/_utilities/i18n.utilities';
 
+  import type { KbaCreateCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

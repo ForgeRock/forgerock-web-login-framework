@@ -13,11 +13,10 @@
 
   // i18n
   import T from '$components/_utilities/locale-strings.svelte';
-
+  import ClipboardIcon from '$components/icons/shield-check-icon.svelte';
   // Import primitives
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
-  import ClipboardIcon from '$components/icons/shield-check-icon.svelte';
 
   // Types
   import type { JourneyStep } from '@forgerock/journey-client/types';
@@ -100,7 +99,7 @@
     {/each}
   </ol>
   <p class="tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light tw_my-6">
-    <T html={true} key="useOneOfTheseCodes" values={{ name }}/>
+    <T html={true} key="useOneOfTheseCodes" values={{ name }} />
   </p>
 
   <Button busy={journey?.loading} style="primary" type="submit" width="full">

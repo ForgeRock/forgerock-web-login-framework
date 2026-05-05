@@ -8,10 +8,10 @@
  -->
 
 <script lang="ts">
-  import type { RedirectCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Redirect from './redirect.svelte';
+
+  import type { RedirectCallback } from '@forgerock/journey-client/types';
 
   export let callback: RedirectCallback;
 

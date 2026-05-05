@@ -10,9 +10,10 @@
 <script lang="ts">
   import { afterUpdate } from 'svelte';
 
-  import Message from '$components/primitives/message/input-message.svelte';
-  import type { Maybe } from '$core/interfaces';
   import Label from '$components/primitives/label/label.svelte';
+  import Message from '$components/primitives/message/input-message.svelte';
+
+  import type { Maybe } from '$core/interfaces';
 
   export let defaultOption: Maybe<string> = null;
   export let message = '';

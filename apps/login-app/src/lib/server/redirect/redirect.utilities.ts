@@ -8,8 +8,10 @@
  **/
 
 import { z } from 'zod';
-import { type RedirectData, type RedirectFormValue, type Resolver } from './redirect.types';
+
 import { tokenIdSchema } from '$server/schemas';
+
+import type { RedirectData, RedirectFormValue, Resolver } from './redirect.types';
 
 /**
  * @function resolveRedirect - Resolves a final redirect URL from the provided context.

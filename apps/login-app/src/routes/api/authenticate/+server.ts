@@ -7,11 +7,12 @@
  *
  **/
 
-import type { RequestEvent } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
 import { get, set } from '$server/sessions';
+
+import type { RequestEvent } from '@sveltejs/kit';
+
+import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event: RequestEvent) => {
   const body = await event.request.text();

@@ -7,8 +7,8 @@
  *
  **/
 
-import { expect } from 'storybook/test';
 import { callbackType } from '@forgerock/journey-client';
+import { expect } from 'storybook/test';
 import { within } from 'storybook/test';
 
 import step from './boolean.mock';

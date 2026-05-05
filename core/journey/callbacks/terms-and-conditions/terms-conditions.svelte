@@ -8,23 +8,23 @@
  -->
 
 <script lang="ts">
+  import T from '$components/_utilities/locale-strings.svelte';
+  import Animated from '$components/compositions/checkbox/animated.svelte';
+  import Standard from '$components/compositions/checkbox/standard.svelte';
+  import Link from '$components/primitives/link/link.svelte';
+  import { interpolate } from '$core/_utilities/i18n.utilities';
+  import { linksStore } from '$core/links.store';
+
   import type { TermsAndConditionsCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
-  import Animated from '$components/compositions/checkbox/animated.svelte';
-  import { interpolate } from '$core/_utilities/i18n.utilities';
-  import Link from '$components/primitives/link/link.svelte';
-  import { linksStore } from '$core/links.store';
-  import Standard from '$components/compositions/checkbox/standard.svelte';
-  import T from '$components/_utilities/locale-strings.svelte';
-
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const` prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

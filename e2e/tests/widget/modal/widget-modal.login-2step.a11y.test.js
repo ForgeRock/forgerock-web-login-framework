@@ -8,6 +8,7 @@
  **/
 
 import { expect, test } from '@playwright/test';
+
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
 
 test('Modal widget with 2step login, keyboard only', async ({ page }) => {

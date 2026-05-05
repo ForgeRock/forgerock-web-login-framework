@@ -7,8 +7,11 @@
  *
  **/
 
-import { TokenManager, type GetTokensOptions, type OAuth2Tokens } from '@forgerock/javascript-sdk';
-import { writable, type Writable } from 'svelte/store';
+import { TokenManager } from '@forgerock/javascript-sdk';
+import { writable } from 'svelte/store';
+
+import type { GetTokensOptions, OAuth2Tokens } from '@forgerock/javascript-sdk';
+import type { Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
 

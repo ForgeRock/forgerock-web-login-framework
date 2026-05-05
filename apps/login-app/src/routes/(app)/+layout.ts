@@ -7,12 +7,12 @@
  *
  **/
 
-import configure from '$core/sdk.config';
-import { initialize as initializeJourneys } from '$journey/config.store';
-import { initialize as initializeLinks } from '$core/links.store';
-
 import '../../app.css';
 import { browser } from '$app/environment';
+import { initialize as initializeLinks } from '$core/links.store';
+import configure from '$core/sdk.config';
+import { initialize as initializeJourneys } from '$journey/config.store';
+
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = ({ data }) => {

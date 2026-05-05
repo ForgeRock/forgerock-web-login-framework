@@ -9,9 +9,9 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { page } from '$app/stores';
 
-  import Widget, { configuration, component, journey, protect, user } from '$package/index';
+  import { page } from '$app/stores';
+  import Widget, { component, configuration, journey, protect, user } from '$package/index';
 
   let componentEvents: ReturnType<typeof component> | undefined;
   let journeyEvents: ReturnType<typeof journey> | undefined;
@@ -53,7 +53,8 @@
     configuration({
       journeyClient: {
         serverConfig: {
-          wellknown: 'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+          wellknown:
+            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
         },
       },
       forgerock: {

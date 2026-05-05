@@ -2,8 +2,8 @@ import { Args, Command, Options } from '@effect/cli';
 import { FileSystem, Path } from '@effect/platform';
 import { Console, Effect } from 'effect';
 
-import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
 import { writeVersion } from '../config/version.js';
+import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
 import { copyWithExclusions, expandTilde, isFrameworkDirectory } from '../services/file-system.js';
 import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';

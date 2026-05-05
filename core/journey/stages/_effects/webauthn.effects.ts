@@ -7,12 +7,13 @@
  *
  **/
 
-import type { JourneyStep } from '@forgerock/journey-client/types';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 
-import type { JourneyStore, StepTypes } from '$journey/journey.interfaces';
-
 import { isMixedLoginWebAuthnStep } from '../_utilities/webauthn.utilities';
+
+import type { JourneyStep } from '@forgerock/journey-client/types';
+
+import type { JourneyStore, StepTypes } from '$journey/journey.interfaces';
 
 /**
  * @function setupPasskeyAutofill - subscribes to journey changes and attempts passkey autofill on eligible steps

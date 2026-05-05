@@ -8,6 +8,7 @@
  **/
 
 import { callbackType } from '@forgerock/journey-client';
+
 import type { Step } from '@forgerock/journey-client/types';
 
 /**

@@ -7,9 +7,10 @@
  *
  **/
 
-import Input from './input.story.svelte';
 import { expect, fn } from 'storybook/test';
-import { within, userEvent } from 'storybook/test';
+import { userEvent, within } from 'storybook/test';
+
+import Input from './input.story.svelte';
 
 export default {
   argTypes: {

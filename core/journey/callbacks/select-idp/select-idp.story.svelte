@@ -8,10 +8,10 @@
  -->
 
 <script lang="ts">
-  import type { SelectIdPCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import SelectIdp from './select-idp.svelte';
+
+  import type { SelectIdPCallback } from '@forgerock/journey-client/types';
 
   export let socialCallback: SelectIdPCallback;
 

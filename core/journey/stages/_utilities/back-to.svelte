@@ -9,9 +9,9 @@
 
 <script lang="ts">
   import { interpolate } from '$core/_utilities/i18n.utilities';
+  import { configuredJourneysStore } from '$journey/config.store';
 
   import type { StageJourneyObject } from '$journey/journey.interfaces';
-  import { configuredJourneysStore } from '$journey/config.store';
 
   export let journey: StageJourneyObject;
 

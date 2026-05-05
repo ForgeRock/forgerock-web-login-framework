@@ -9,6 +9,7 @@
 
 <script lang="ts">
   import { interpolate } from '$core/_utilities/i18n.utilities';
+
   import type { Maybe } from '$core/interfaces';
 
   export let html = false;

@@ -8,8 +8,8 @@
  **/
 
 import { building } from '$app/environment';
-import { env } from '$env/dynamic/private';
 import { extractDomainFromUrl } from '$core/server/_utilities';
+import { env } from '$env/dynamic/private';
 
 if (!building) {
   const REQUIRED_ENV = ['FR_AM_URL', 'FR_AM_COOKIE_NAME', 'FR_REALM_PATH'] as const;

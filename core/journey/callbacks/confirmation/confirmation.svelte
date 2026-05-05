@@ -8,23 +8,23 @@
  -->
 
 <script lang="ts">
-  import type { ConfirmationCallback } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
-
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import Standard from '$components/compositions/checkbox/standard.svelte';
-  import Button from '$components/primitives/button/button.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
+  import Button from '$components/primitives/button/button.svelte';
   import Grid from '$components/primitives/grid/grid.svelte';
   import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
 
+  import type { ConfirmationCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const style: z.infer<typeof styleSchema> = {};

@@ -12,29 +12,30 @@ submit button, links).
 -->
 
 <script lang="ts">
-  import type { FRStep } from '@forgerock/javascript-sdk';
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { get } from 'svelte/store';
-  import type { z } from 'zod';
 
-  import { interpolate } from '$core/_utilities/i18n.utilities';
   import T from '$components/_utilities/locale-strings.svelte';
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
-  import { captureLinks } from '$journey/stages/_utilities/stage.utilities';
+  import { interpolate } from '$core/_utilities/i18n.utilities';
   import { styleStore } from '$core/style.store';
-  import type { styleSchema } from '$core/style.store';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
+  import { captureLinks } from '$journey/stages/_utilities/stage.utilities';
+  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
 
+  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     StageFormObject,
     StageJourneyObject,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { Maybe } from '$core/interfaces';
 
   /** Display mode — determines which chrome is visible (header, links, etc.). */
   export let componentStyle: 'app' | 'inline' | 'modal';

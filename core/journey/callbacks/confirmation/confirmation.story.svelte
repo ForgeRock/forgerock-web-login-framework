@@ -8,12 +8,13 @@
  -->
 
 <script lang="ts">
-  import type { ConfirmationCallback } from '@forgerock/journey-client/types';
   import Centered from '$components/primitives/box/centered.svelte';
-
   import Confirmation from './confirmation.svelte';
-  import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
+
+  import type { ConfirmationCallback } from '@forgerock/journey-client/types';
+
   import type { Maybe } from '$core/interfaces';
+  import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
 
   export let callback: ConfirmationCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;

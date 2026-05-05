@@ -9,14 +9,14 @@
 
 import { describe, expect, it } from 'vitest';
 
-import type { RedirectData } from './redirect.types';
-
 import {
   isDefaultPath,
   parseRedirectForm,
   resolveAgainstOrigin,
   resolveRedirect,
 } from './redirect.utilities';
+
+import type { RedirectData } from './redirect.types';
 
 describe('parseRedirectForm', () => {
   it('parses expected values', () => {

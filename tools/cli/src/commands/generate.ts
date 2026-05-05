@@ -1,12 +1,12 @@
 import { Args, Command, Prompt } from '@effect/cli';
 import { FileSystem, Path } from '@effect/platform';
 import { Console, Effect, Schema } from 'effect';
-import { fileURLToPath } from 'node:url';
 import nodePath from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-import { runRegistryScript } from '../services/registry.js';
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
+import { runRegistryScript } from '../services/registry.js';
 
 const CUSTOM_DIR = 'experimental/custom';
 

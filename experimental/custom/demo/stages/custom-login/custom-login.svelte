@@ -29,7 +29,6 @@
 -->
 
 <script lang="ts">
-  import type { JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { get } from 'svelte/store';
 
@@ -55,12 +54,17 @@
     interpolate,
     styleStore,
     T,
-    type CallbackMetadata,
-    type Maybe,
-    type StageFormObject,
-    type StageJourneyObject,
-    type StepMetadata,
-    type StyleObject,
+  } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
   } from '$login-framework';
 
   // ─── Stage props ─────────────────────────────────────────────────────────────
