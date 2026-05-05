@@ -15,6 +15,7 @@ COPY packages/login-widget/package.json packages/login-widget/
 COPY apps/login-app/package.json apps/login-app/
 COPY e2e/package.json e2e/
 COPY themes/package.json themes/
+COPY tools/cli/package.json tools/cli/
 
 RUN pnpm install --frozen-lockfile
 
