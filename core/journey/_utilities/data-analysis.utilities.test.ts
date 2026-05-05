@@ -1,16 +1,17 @@
 /**
  *
- * Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { describe, expect, it } from 'vitest';
 
 import { isStepReadyToSubmit, requiresUserInput } from './data-analysis.utilities';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 
 describe('Test data analysis functions for step and callback', () => {
   it('should identify a step ready to be self-submitted', () => {
@@ -66,11 +67,11 @@ describe('Test data analysis functions for step and callback', () => {
   });
 
   it('should identify TextInputCallback as requiring user input', () => {
-    const step = new FRStep({
+    const step = createJourneyStep({
       authId: 'test-auth-id',
       callbacks: [
         {
-          type: CallbackType.TextInputCallback,
+          type: callbackType.TextInputCallback,
           output: [{ name: 'prompt', value: 'Enter value' }],
           input: [{ name: 'IDToken1', value: '' }],
           _id: 0,
@@ -79,7 +80,7 @@ describe('Test data analysis functions for step and callback', () => {
       stage: 'Login',
     });
 
-    const callback = step.getCallbackOfType(CallbackType.TextInputCallback);
+    const callback = step.getCallbackOfType(callbackType.TextInputCallback);
 
     if (!callback) {
       throw new Error('Expected TextInputCallback to exist on test step');

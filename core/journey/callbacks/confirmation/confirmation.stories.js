@@ -1,20 +1,18 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { expect, fn } from 'storybook/test';
 import { userEvent, within } from 'storybook/test';
 
-import response from './confirmation.mock';
+import step from './confirmation.mock';
 import Confirmation from './confirmation.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -30,7 +28,7 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.ConfirmationCallback)[0],
     callbackMetadata: {
       derived: {
         isFirstInvalidInput: false,
@@ -53,7 +51,7 @@ export const Base = {
 
 export const SingleOptSelfSubmit = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[1],
+    callback: step.getCallbacksOfType(callbackType.ConfirmationCallback)[1],
     callbackMetadata: {
       derived: {
         isFirstInvalidInput: false,
@@ -76,7 +74,7 @@ export const SingleOptSelfSubmit = {
 
 export const SingleOptNotSelfSubmit = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[2],
+    callback: step.getCallbacksOfType(callbackType.ConfirmationCallback)[2],
     callbackMetadata: {
       derived: {
         isFirstInvalidInput: false,
@@ -102,7 +100,7 @@ export const SingleOptNotSelfSubmit = {
 
 export const TwoOptSelfSubmit = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.ConfirmationCallback)[0],
     callbackMetadata: {
       derived: {
         isFirstInvalidInput: false,
@@ -126,7 +124,7 @@ export const TwoOptSelfSubmit = {
 
 export const OnlyPositiveAnswer = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.ConfirmationCallback)[0],
     callbackMetadata: {
       derived: {
         isFirstInvalidInput: false,
@@ -169,11 +167,11 @@ export const BaseInteraction = {
 export const ButtonInteraction = {
   args: {
     ...TwoOptSelfSubmit.args,
-    callback: step.getCallbacksOfType(CallbackType.ConfirmationCallback)[3],
+    callback: step.getCallbacksOfType(callbackType.ConfirmationCallback)[3],
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cb = step.getCallbacksOfType(CallbackType.ConfirmationCallback)[3];
+    const cb = step.getCallbacksOfType(callbackType.ConfirmationCallback)[3];
     const posButton = canvas.getByRole('button', { name: 'Yup' });
 
     await userEvent.click(posButton);

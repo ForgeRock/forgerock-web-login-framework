@@ -1,19 +1,21 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 
-export default {
+import { createJourneyStep } from '$journey/_utilities/step.mock';
+
+export default createJourneyStep({
   authId: 'foo',
   callbacks: [
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -26,7 +28,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -39,7 +41,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -53,7 +55,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -66,7 +68,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.TextOutputCallback,
+      type: callbackType.TextOutputCallback,
       output: [
         {
           name: 'message',
@@ -79,7 +81,7 @@ export default {
       ],
     },
     {
-      type: CallbackType.SuspendedTextOutputCallback,
+      type: callbackType.SuspendedTextOutputCallback,
       output: [
         {
           name: 'message',
@@ -93,10 +95,10 @@ export default {
       ],
     },
   ],
-};
+});
 
 export const docsBaseExample = {
-  type: CallbackType.TextOutputCallback,
+  type: callbackType.TextOutputCallback,
   output: [
     {
       name: 'message',

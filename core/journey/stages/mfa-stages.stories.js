@@ -1,17 +1,17 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { FRStep } from '@forgerock/javascript-sdk';
 import { expect, fn } from 'storybook/test';
 import { fireEvent, waitFor, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { initialize } from '../config.store';
 import Step from './stages.story.svelte';
 import {
@@ -28,16 +28,16 @@ import {
 } from './mfa-stages.mock.ts';
 import { userEvent } from 'storybook/test';
 
-const frOneTimePassword = new FRStep(oneTimePasswordStep);
-const frMfaRegistrationOptions = new FRStep(mfaRegistrationOptionsStep);
-const frOathRegistration = new FRStep(oathRegistrationStep);
-const frOathRegistrationError = new FRStep(oathRegistrationErrorStep);
-const frPushRegistration = new FRStep(pushRegistrationStep);
-const frRecoveryCodes = new FRStep(recoveryCodes);
-const frRecoveryCodesWithName = new FRStep(recoveryCodesWithName);
-const frSuspendEmail = new FRStep(emailSuspendStep);
-const frWebAuthnAuthenticationStep = new FRStep(webAuthnAuthenticationStep);
-const frWebAuthnRegistrationStep = new FRStep(webAuthnRegistrationStep);
+const frOneTimePassword = createJourneyStep(oneTimePasswordStep);
+const frMfaRegistrationOptions = createJourneyStep(mfaRegistrationOptionsStep);
+const frOathRegistration = createJourneyStep(oathRegistrationStep);
+const frOathRegistrationError = createJourneyStep(oathRegistrationErrorStep);
+const frPushRegistration = createJourneyStep(pushRegistrationStep);
+const frRecoveryCodes = createJourneyStep(recoveryCodes);
+const frRecoveryCodesWithName = createJourneyStep(recoveryCodesWithName);
+const frSuspendEmail = createJourneyStep(emailSuspendStep);
+const frWebAuthnAuthenticationStep = createJourneyStep(webAuthnAuthenticationStep);
+const frWebAuthnRegistrationStep = createJourneyStep(webAuthnRegistrationStep);
 
 initialize();
 

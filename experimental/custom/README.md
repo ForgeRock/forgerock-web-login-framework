@@ -32,7 +32,12 @@ Name: DefaultLogin
 -->
 
 <script>
-  let { componentStyle, form, formEl, journey, metadata, step } = $props();
+  export let componentStyle;
+  export let form;
+  export let formEl;
+  export let journey;
+  export let metadata;
+  export let step;
 </script>
 
 <main>
@@ -62,13 +67,13 @@ The `@component` comment is required. The pre-build script reads it to register 
 | `formEl`         | `HTMLFormElement \| null`                                      | Reference to the form DOM element  |
 | `journey`        | `StageJourneyObject`                                           | Journey-level metadata and actions |
 | `metadata`       | `Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>` | Step and callback metadata         |
-| `step`           | `FRStep`                                                       | The raw ForgeRock SDK step object  |
+| `step`           | `JourneyStep`                                                  | The raw Journey Client step object |
 
 ### Callback component props
 
 | Prop                 | Type                        | Description                              |
 | -------------------- | --------------------------- | ---------------------------------------- |
-| `callback`           | `FRCallback`                | The specific callback instance           |
+| `callback`           | `BaseCallback`              | The specific callback instance           |
 | `callbackMetadata`   | `Maybe<CallbackMetadata>`   | Metadata for this callback               |
 | `style`              | `StyleSchema`               | Style directives from the widget         |
 | `selfSubmitFunction` | `Maybe<SelfSubmitFunction>` | Call to submit the form programmatically |
@@ -114,10 +119,10 @@ import {
 
 `$login-framework` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`experimental/custom/login-framework.ts`](./login-framework.ts).
 
-SDK types (callback classes, `FRStep`, etc.) are still imported directly from `@forgerock/javascript-sdk`:
+Journey Client types (callback classes, `JourneyStep`, etc.) are imported directly from `@forgerock/journey-client/types`:
 
 ```ts
-import type { NameCallback, FRStep } from '@forgerock/javascript-sdk';
+import type { NameCallback, JourneyStep } from '@forgerock/journey-client/types';
 ```
 
 ## Hot module reloading note

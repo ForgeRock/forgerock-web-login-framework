@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -11,30 +11,27 @@ import Generic from '$journey/stages/generic.svelte';
 import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import Registration from '$journey/stages/registration.svelte';
 import Login from '$journey/stages/login.svelte';
-import WebAuthn from '$journey/stages/webauthn.svelte';
-import RecoveryCodes from '$journey/stages/recovery-codes.svelte';
+import WebAuthnStage from '$journey/stages/webauthn.svelte';
+import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
 import QrCode from '$journey/stages/qr-code.svelte';
 import EmailSuspend from '$journey/stages/email-suspend.svelte';
 import type { StepTypes } from '$journey/journey.interfaces';
 import type { Component } from 'svelte';
 import { customStageRegistry } from './custom-registry';
-import {
-  SuspendedTextOutputCallback,
-  FRRecoveryCodes,
-  FRWebAuthn,
-  FRQRCode,
-  CallbackType,
-} from '@forgerock/javascript-sdk';
-
+import { callbackType } from '@forgerock/journey-client';
+import { QRCode } from '@forgerock/journey-client/qr-code';
+import { RecoveryCodes } from '@forgerock/journey-client/recovery-codes';
+import { WebAuthn } from '@forgerock/journey-client/webauthn';
+import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
 type StageTypes =
-  | typeof WebAuthn
+  | typeof WebAuthnStage
   | typeof OneTimePassword
   | typeof Registration
   | typeof Login
   | typeof Generic
   | typeof QrCode
   | typeof EmailSuspend
-  | typeof RecoveryCodes;
+  | typeof RecoveryCodesStage;
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
@@ -68,20 +65,20 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
   }
 
   // getWebAuthnStepType will return 0 if not a WebAuthn step
-  if (FRWebAuthn.getWebAuthnStepType(currentStep)) {
-    return WebAuthn;
+  if (WebAuthn.getWebAuthnStepType(currentStep)) {
+    return WebAuthnStage;
   }
 
-  if (FRRecoveryCodes.isDisplayStep(currentStep)) {
-    return RecoveryCodes;
+  if (RecoveryCodes.isDisplayStep(currentStep)) {
+    return RecoveryCodesStage;
   }
 
-  if (FRQRCode.isQRCodeStep(currentStep)) {
+  if (QRCode.isQRCodeStep(currentStep)) {
     return QrCode;
   }
 
   const suspendedTextOutput: Array<SuspendedTextOutputCallback> = currentStep.getCallbacksOfType(
-    CallbackType.SuspendedTextOutputCallback,
+    callbackType.SuspendedTextOutputCallback,
   );
   if (suspendedTextOutput.length > 0) {
     return EmailSuspend;

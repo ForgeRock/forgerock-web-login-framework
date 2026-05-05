@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { AttributeInputCallback } from '@forgerock/javascript-sdk';
+  import type { AttributeInputCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './string-attribute-input.svelte';

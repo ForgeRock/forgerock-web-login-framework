@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,7 +8,9 @@
  -->
 
 <script lang="ts">
-  import { FRDevice, type DeviceProfileCallback } from '@forgerock/javascript-sdk';
+  import { Device } from '@forgerock/journey-client/device';
+  import type { DeviceProfileCallback } from '@forgerock/journey-client/types';
+
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
   import type {
@@ -22,7 +24,7 @@
   export let callbackMetadata: Maybe<CallbackMetadata> = null;
   export let stepMetadata: Maybe<StepMetadata> = null;
   export let selfSubmitFunction: SelfSubmitFunction;
-  const device = new FRDevice({});
+  const device = new Device({});
   let deviceMessage = (callback as DeviceProfileCallback).getMessage();
   async function initializeProfile() {
     const location = callback?.isLocationRequired() ?? false;

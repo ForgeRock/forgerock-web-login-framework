@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -17,7 +17,7 @@
   } from '$journey/journey.interfaces';
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
-  import type { FRCallback } from '@forgerock/javascript-sdk';
+  import type { BaseCallback } from '@forgerock/journey-client/types';
 
   // Unused props. Setting to const prevents errors in console
   export const callbackMetadata: Maybe<CallbackMetadata> = null;
@@ -25,7 +25,7 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
 
-  export let callback: FRCallback;
+  export let callback: BaseCallback;
 
   const type = callback.getType();
 </script>

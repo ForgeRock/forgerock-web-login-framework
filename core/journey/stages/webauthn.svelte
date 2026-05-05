@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { FRWebAuthn, WebAuthnStepType } from '@forgerock/javascript-sdk';
+  import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
   import { afterUpdate } from 'svelte';
 
   // i18n
@@ -22,7 +22,7 @@
   import FingerprintIcon from '$components/icons/fingerprint-icon.svelte';
 
   // Types
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
 
   import type { StageFormObject } from '$journey/journey.interfaces';
 
@@ -36,7 +36,7 @@
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
@@ -44,14 +44,13 @@
 
   let alertNeedsFocus = false;
   let deviceName = '';
-  let noDeviceRegistered = false;
   let formMessageKey = '';
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
   let requestsDeviceName = true;
   let waitingForWebAuthnAPI = false;
   let webAuthnApiCalled = false;
-  let webAuthnType = FRWebAuthn.getWebAuthnStepType(step);
+  let webAuthnType = WebAuthn.getWebAuthnStepType(step);
 
   function updateDeviceName(event: Event) {
     const target = event.target as unknown as { value: string };
@@ -68,6 +67,17 @@
       alertNeedsFocus = false;
       formNeedsFocus = true;
     }
+
+    // Call the WebAuthn API without await, but only once per component lifecycle
+    if (allowWebAuthn && !webAuthnApiCalled) {
+      if (
+        (WebAuthnStepType.Registration === webAuthnType && !requestsDeviceName) ||
+        WebAuthnStepType.Authentication === webAuthnType
+      ) {
+        webAuthnApiCalled = true;
+        void callWebAuthnApi();
+      }
+    }
   });
 
   /**
@@ -78,15 +88,14 @@
       switch (webAuthnType) {
         case WebAuthnStepType.Registration: {
           try {
-            await FRWebAuthn.register<typeof deviceName>(step, deviceName);
-            noDeviceRegistered = true;
+            await WebAuthn.register<typeof deviceName>(step, deviceName);
           } catch (err) {
             // TODO: handle error
           }
           break;
         }
         case WebAuthnStepType.Authentication: {
-          await FRWebAuthn.authenticate(step);
+          await WebAuthn.authenticate(step);
           break;
         }
         default:
@@ -100,18 +109,6 @@
 
   $: formMessageKey = convertStringToKey(form?.message);
 
-  $: {
-    // Call the WebAuthn API without await, but only once per component lifecycle
-    if (allowWebAuthn && !noDeviceRegistered && !webAuthnApiCalled) {
-      if (
-        (WebAuthnStepType.Registration === webAuthnType && !requestsDeviceName) ||
-        WebAuthnStepType.Authentication === webAuthnType
-      ) {
-        webAuthnApiCalled = true;
-        callWebAuthnApi();
-      }
-    }
-  }
 </script>
 
 <Form

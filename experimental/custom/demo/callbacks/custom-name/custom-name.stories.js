@@ -22,21 +22,12 @@
  *            the story mounts. Used for automated accessibility + behaviour checks.
  */
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { userEvent, within } from 'storybook/test';
 import { expect } from 'storybook/test';
 
-import response from './custom-name.mock';
+import step from './custom-name.mock';
 import Story from './custom-name.story.svelte';
-
-/**
- * Construct a real SDK FRStep from the mock AM response.
- * FRStep wraps the raw payload and exposes typed getters like
- * getCallbackOfType(), getStage(), getHeader(), etc.
- * Using a real FRStep (rather than a plain object) ensures the component
- * behaves exactly as it would with a live AM response.
- */
-const step = new FRStep(response);
 
 // ─── Default export — story metadata ────────────────────────────────────────
 export default {
@@ -87,7 +78,7 @@ export default {
  */
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.NameCallback),
+    callback: step.getCallbackOfType(callbackType.NameCallback),
   },
 };
 
@@ -109,7 +100,7 @@ export const Interaction = {
 
     // Re-extract the callback so we can assert against the same instance that
     // the story mounted with (step is module-level, so it's the same object).
-    const cb = step.getCallbackOfType(CallbackType.NameCallback);
+    const cb = step.getCallbackOfType(callbackType.NameCallback);
 
     // Find the text input by its implicit ARIA role.
     const element = canvas.getByRole('textbox');

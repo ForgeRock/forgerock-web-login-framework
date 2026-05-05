@@ -93,6 +93,7 @@ Tests connect to a ForgeRock AM instance. The Playwright config provides default
 | `VITE_FR_OAUTH_PUBLIC_CLIENT` | OAuth 2.0 client ID                                     |
 | `VITE_FR_REALM_PATH`          | AM realm path                                           |
 | `PLAYWRIGHT_TEST_BASE_URL`    | Override the app URL (default: `http://localhost:3000`) |
+| `FR_AM_WELLKNOWN_URL`         | ForgeRock AM Wellknown URL                              |
 
 ## Debugging
 

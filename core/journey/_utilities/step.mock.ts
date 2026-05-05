@@ -1,19 +1,60 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+import {
+  createCallback,
+  type BaseCallback,
+  type CallbackType as JourneyClientCallbackType,
+  type JourneyStep,
+  type Step,
+} from '@forgerock/journey-client/types';
 
-export const step1 = new FRStep({
+export function createJourneyStep(payload: Step): JourneyStep {
+  const callbacks = (payload.callbacks ?? []).map(createCallback);
+
+  return {
+    payload,
+    callbacks,
+    type: 'Step' as JourneyStep['type'],
+    getCallbackOfType: <T extends BaseCallback>(type: JourneyClientCallbackType) => {
+      const callbacksOfType = callbacks.filter((x) => x.getType() === type);
+      if (callbacksOfType.length !== 1) {
+        throw new Error(
+          `Expected 1 callback of type "${type}", but found ${callbacksOfType.length}`,
+        );
+      }
+      return callbacksOfType[0] as T;
+    },
+    getCallbacksOfType: <T extends BaseCallback>(type: JourneyClientCallbackType) => {
+      return callbacks.filter((x) => x.getType() === type) as T[];
+    },
+    setCallbackValue: (type: JourneyClientCallbackType, value: unknown) => {
+      const callbacksToUpdate = callbacks.filter((x) => x.getType() === type);
+      if (callbacksToUpdate.length !== 1) {
+        throw new Error(
+          `Expected 1 callback of type "${type}", but found ${callbacksToUpdate.length}`,
+        );
+      }
+      callbacksToUpdate[0].setInputValue(value);
+    },
+    getDescription: () => payload.description,
+    getHeader: () => payload.header,
+    getStage: () => payload.stage,
+  };
+}
+
+export const step1 = createJourneyStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
-      type: CallbackType.ValidatedCreateUsernameCallback,
+      type: callbackType.ValidatedCreateUsernameCallback,
       output: [
         {
           name: 'policies',
@@ -72,7 +113,7 @@ export const step1 = new FRStep({
       _id: 23,
     },
     {
-      type: CallbackType.ValidatedCreatePasswordCallback,
+      type: callbackType.ValidatedCreatePasswordCallback,
       output: [
         { name: 'echoOn', value: false },
         {
@@ -108,11 +149,11 @@ export const step1 = new FRStep({
   status: 200,
 });
 
-export const step2 = new FRStep({
+export const step2 = createJourneyStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
   callbacks: [
     {
-      type: CallbackType.ValidatedCreateUsernameCallback,
+      type: callbackType.ValidatedCreateUsernameCallback,
       output: [
         {
           name: 'policies',
@@ -171,7 +212,7 @@ export const step2 = new FRStep({
       _id: 23,
     },
     {
-      type: CallbackType.ValidatedCreatePasswordCallback,
+      type: callbackType.ValidatedCreatePasswordCallback,
       output: [
         { name: 'echoOn', value: false },
         {
@@ -201,7 +242,7 @@ export const step2 = new FRStep({
       _id: 6,
     },
     {
-      type: CallbackType.ValidatedCreatePasswordCallback,
+      type: callbackType.ValidatedCreatePasswordCallback,
       output: [
         { name: 'echoOn', value: false },
         {
@@ -237,18 +278,18 @@ export const step2 = new FRStep({
   status: 200,
 });
 
-export const step3 = new FRStep({
+export const step3 = createJourneyStep({
   authId:
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IkxvZ2luIiwib3RrIjoiMnA1czBwbzNqcmw4ZDJwZm5nNzdubjFpbXAiLCJhdXRoSW5kZXhUeXBlIjoic2VydmljZSIsInJlYWxtIjoiL2FscGhhIiwic2Vzc2lvbklkIjoiKkFBSlRTUUFDTURJQUJIUjVjR1VBQ0VwWFZGOUJWVlJJQUFKVE1RQUNNREUuKmV5SjBlWEFpT2lKS1YxUWlMQ0pqZEhraU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkuWlhsS01HVllRV2xQYVVwTFZqRlJhVXhEU214aWJVMXBUMmxLUWsxVVNUUlJNRXBFVEZWb1ZFMXFWVEpKYVhkcFdWZDRia2xxYjJsYVIyeDVTVzR3TGk1TlNFSkdXaTExU2tGSE9FTnVibUZhVVhCaFpITm5MazB4UzFKak1qRmhTa28wWWpadE56WnBObFl6ZVVwUVZXeENRMlpLTldaWlYzVmpkMjFYTm5wRGNsRk1aV0pGWnpVMVVVbFpiRmRWYmxGa2QwUTVUVnBUWkhWRlFUZHBPVjlsTTFCQ2NqUnhWREU1VG0xZlRWRnpiSHBMZVhGbFpUUndSREJYT1dadWJqSTRlRXMwVUdZemVtTmZXbW93U1ZKVlRYZFBWMUZtVGxsNVdXSk9UMGQwZERVdE1IQnlXRkpmVDNWd2MxcG5kbk5zVlRKRGJFTnFZbGRSYlVReWNXZ3dRVTQyZEU1SVFtMTJlbk5UWmxjdE1XSjFibWh0UjBsSlVWRkJURUpyTFZCRGFpMVdUMk5LTkVVdFh6ZFlhMkpyZVVOdlF6VXpiRWwxT1RoRFdVOUlSRmM1ZUZGNlkzRkdaWFp0ZGxjdE0yNDFkamhXWlhSUmRuSmhTVmN0YTFSU05sVkVTbWhzT0VsMVRXbFhVVVpmVkdGWmJUTktUVlJDU2xkUWFHSjVUVEkyWlRGRVVYRmhhRFYxVWt4cVJtZFpaRTVOYkdWdVQzVlRiRUo2V1ZOR2R6ZG9hVmhWV1cxcVFUQnVTVW90Wkdka1puSjBUVTFsTVU1Q1lrOTJlRFI2ZFZrMFlrUk1aemhqTjJKQ2JGTklSa2sxY1hSTVVFVldhVGhEWkRSeVVrbEpkWE5YTmpSZmVHRm5Ta3BMTjI1NU1IbENSamt5UlhWaldqZEtiekZKT0c5MFJHOVpURVZHTXpOeFlXbHZTMnhFY25aeU5uQTBPRTVLWTB0dE4zQTRjbGN6VFhOV09VODFTMVF4V0dSc1pGOTBXa2RyYzFCVFMyb3pabmczWW01NWFWZ3dYM2czYkVGaE5GVnJhMjFxTkdGaU0yRTNNeTFYZHpoVlJIbG9XakZZVldSU1EwbEllV3BYUVZabmIyVllaM3BWWTBkT2NVeEVlR1U1TUhONVJuTmFObDlOT1dSR2IwWkJaakZTVjJSbk4yUTNkR3BPUjBGSlNFcHZVRTltYVRjdGJXSTBNakZ3UjJsSVNsUnBUVnBVV2tOUVVWVTRVa3BIT1VKbVMyWlBlVEZEWDBadlFVcDBSREp4TlZKUVFXVXpWamw2VkVvMVFUWXhXVUk0WVVwcWFVUkdWMnhaWTBsSmVFTndkakZ2WjJORFUyNWtjMkZ3YXpWRGExaFJMbmRWVDJacFZuVjBha2xXUTBSQ1JrczJkVVp3UVVFLjltazc5XzhVODdZOS0wUU4yS3Z0eTR2ME5wcnlERE82ckdzRU1qZ25LOHMiLCJleHAiOjE2NTM2ODUyMTUsImlhdCI6MTY1MzY4NDkxNX0.184MJHkRvk8CNpmhpLaNWe4cK3vse90CVFkmoR9VF0Q',
   callbacks: [
     {
-      type: CallbackType.NameCallback,
+      type: callbackType.NameCallback,
       output: [{ name: 'prompt', value: 'User Name' }],
       input: [{ name: 'IDToken1', value: '' }],
       _id: 0,
     },
     {
-      type: CallbackType.PasswordCallback,
+      type: callbackType.PasswordCallback,
       output: [{ name: 'prompt', value: 'Password' }],
       input: [{ name: 'IDToken2', value: '' }],
       _id: 1,

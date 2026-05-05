@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
@@ -42,7 +42,7 @@
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   }>;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   let alertNeedsFocus = false;
   let formMessageKey = '';
@@ -113,7 +113,7 @@
     <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
       <button
         on:click|preventDefault={() => {
-          journey.push({ tree: 'ResetPassword' });
+          journey.push({ journey: 'ResetPassword' });
         }}
       >
         {interpolate('forgotPassword', null, 'Forgot Password?')}
@@ -121,7 +121,7 @@
       &nbsp;
       <button
         on:click|preventDefault={() => {
-          journey.push({ tree: 'ForgottenUsername' });
+          journey.push({ journey: 'ForgottenUsername' });
         }}
       >
         {interpolate('forgotUsername', null, 'Forgot Username?')}

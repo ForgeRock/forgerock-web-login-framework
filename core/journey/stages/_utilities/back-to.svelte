@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -18,19 +18,18 @@
   let stack = journey.stack;
   let string = '';
 
-  function constructString() {
+  $: {
+    // The parent can pass a new `journey` object; update `stack` so `$stack` reads from the latest store.
+    stack = journey.stack;
+
     const currentJourney = $configuredJourneysStore.find((journey) => {
-      return journey.journey === $stack[$stack.length - 2]?.tree;
+      return journey.journey === $stack[$stack.length - 2]?.journey;
     });
 
     const key = currentJourney?.key;
     const capitalizedKey =
       typeof key === 'string' ? key.replace(/([a-z])/, (_, char) => `${char.toUpperCase()}`) : key;
-    return `backTo${capitalizedKey || 'Default'}`;
-  }
-
-  $: {
-    string = constructString();
+    string = `backTo${capitalizedKey || 'Default'}`;
   }
 </script>
 

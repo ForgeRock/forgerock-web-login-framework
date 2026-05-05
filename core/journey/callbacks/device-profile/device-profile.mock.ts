@@ -1,18 +1,18 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 
 export const deviceProfileMockNoMessage = {
   callbacks: [
     {
-      type: CallbackType.DeviceProfileCallback,
+      type: callbackType.DeviceProfileCallback,
       output: [
         {
           name: 'metadata',
@@ -40,7 +40,7 @@ export const deviceProfileMockNoMessage = {
 export const deviceProfileMockMessage = {
   callbacks: [
     {
-      type: CallbackType.DeviceProfileCallback,
+      type: callbackType.DeviceProfileCallback,
       output: [
         {
           name: 'metadata',

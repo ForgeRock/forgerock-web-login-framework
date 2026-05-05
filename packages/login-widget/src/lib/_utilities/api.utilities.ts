@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -99,7 +99,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     /**
      * Initialize all the stores.
      */
-    journeyStore = initializeJourney(options?.forgerock);
+    journeyStore = initializeJourney(options?.journeyClient);
     oauthStore = initializeOauth(options?.forgerock);
     userStore = initializeUser(options?.forgerock);
 
@@ -141,7 +141,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
          * Initialize the stores and ensure both variables point to the same reference.
          * Variables with _ are the reactive version of the original variable from above.
          */
-        journeyStore = initializeJourney(setOptions?.forgerock);
+        journeyStore = initializeJourney(setOptions?.journeyClient);
         oauthStore = initializeOauth(setOptions?.forgerock);
         userStore = initializeUser(setOptions?.forgerock);
 
@@ -211,12 +211,15 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       if (startOptions?.resumeUrl) {
         journeyStore.resume(startOptions.resumeUrl);
       } else {
-        journeyStore.start({
-          recaptchaAction: startOptions?.recaptchaAction,
-          ...startOptions?.forgerock,
-          // Only include a `tree` property if the `journey` options prop is truthy
-          ...(startOptions?.journey && { tree: startOptions?.journey }),
-        });
+        journeyStore.start(
+          startOptions?.journey
+            ? {
+                journey: startOptions.journey,
+                ...(startOptions.query && { query: startOptions.query }),
+              }
+            : undefined,
+          startOptions?.recaptchaAction,
+        );
       }
       return new Promise((resolve, reject) => {
         const unsubscribe = subscribe((event) => {

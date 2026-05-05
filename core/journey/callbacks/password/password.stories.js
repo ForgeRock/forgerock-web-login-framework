@@ -1,20 +1,18 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { expect } from 'storybook/test';
 import { userEvent, within } from 'storybook/test';
 
-import response from './password.mock';
+import step from './password.mock';
 import Input from './password.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -29,7 +27,7 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.PasswordCallback),
+    callback: step.getCallbackOfType(callbackType.PasswordCallback),
     style: {
       showPassword: 'button',
     },
@@ -38,7 +36,7 @@ export const Base = {
 
 export const PasswordWithCheckbox = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.PasswordCallback),
+    callback: step.getCallbackOfType(callbackType.PasswordCallback),
     style: {
       showPassword: 'checkbox',
     },
@@ -47,7 +45,7 @@ export const PasswordWithCheckbox = {
 
 export const PasswordWithNone = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.PasswordCallback),
+    callback: step.getCallbackOfType(callbackType.PasswordCallback),
     style: {
       showPassword: 'none',
     },
@@ -57,7 +55,7 @@ export const PasswordWithNone = {
 export const Interaction = {
   args: { ...Base.args },
   play: async ({ canvasElement }) => {
-    const cb = step.getCallbackOfType(CallbackType.PasswordCallback);
+    const cb = step.getCallbackOfType(callbackType.PasswordCallback);
     const canvas = within(canvasElement);
     const passwordField = canvas.getByLabelText('Password');
     await userEvent.tab();
@@ -76,7 +74,7 @@ export const Interaction = {
 export const InteractionWithCheckbox = {
   args: { ...PasswordWithCheckbox.args },
   play: async ({ canvasElement }) => {
-    const cb = step.getCallbackOfType(CallbackType.PasswordCallback);
+    const cb = step.getCallbackOfType(callbackType.PasswordCallback);
     const canvas = within(canvasElement);
     const passwordField = canvas.getByLabelText('Password');
     await userEvent.tab();
@@ -94,7 +92,7 @@ export const InteractionWithCheckbox = {
 export const InteractionWithNone = {
   args: { ...PasswordWithNone.args },
   play: async ({ canvasElement }) => {
-    const cb = step.getCallbackOfType(CallbackType.PasswordCallback);
+    const cb = step.getCallbackOfType(callbackType.PasswordCallback);
     const canvas = within(canvasElement);
     const passwordField = canvas.getByLabelText('Password');
     await userEvent.tab();

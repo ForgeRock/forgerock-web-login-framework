@@ -1,20 +1,18 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { expect } from 'storybook/test';
 import { userEvent, within } from 'storybook/test';
 
-import response from './choice.mock';
+import step from './choice.mock';
 import Input from './choice.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -32,7 +30,7 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.ChoiceCallback),
+    callback: step.getCallbackOfType(callbackType.ChoiceCallback),
   },
 };
 
@@ -49,7 +47,7 @@ export const Interaction = {
   args: { ...Base.args },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cb = step.getCallbacksOfType(CallbackType.ChoiceCallback)[0];
+    const cb = step.getCallbacksOfType(callbackType.ChoiceCallback)[0];
 
     const select = canvas.getByLabelText('Choose one');
     await userEvent.tab();
@@ -72,7 +70,7 @@ export const RadioInteraction = {
   args: { ...Radio.args },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cb = step.getCallbacksOfType(CallbackType.ChoiceCallback)[0];
+    const cb = step.getCallbacksOfType(callbackType.ChoiceCallback)[0];
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
 

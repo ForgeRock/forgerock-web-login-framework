@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -10,8 +10,8 @@
 import type {
   ConfigOptions as SdkConfigOptions,
   OAuth2Tokens as SdkOAuth2Tokens,
-  Step as SdkStep,
 } from '@forgerock/javascript-sdk';
+import type { Step as SdkStep } from '@forgerock/journey-client/types';
 
 import { widgetApiFactory } from './_utilities/api.utilities';
 import { componentApi } from './_utilities/component.utilities';

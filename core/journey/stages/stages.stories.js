@@ -1,17 +1,18 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { CallbackType, FRStep } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { expect, fn } from 'storybook/test';
 import { fireEvent, userEvent, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { initialize } from '../config.store';
 import Step from './stages.story.svelte';
 import {
@@ -34,24 +35,30 @@ import {
   singleProviderLocalAuthNoFormStep,
 } from '../callbacks/select-idp/select-idp.mock';
 
-const deviceProfileComposed = new FRStep(deviceProfileComposition);
-const deviceProfileAlone = new FRStep(deviceProfileAloneData);
-const frConfirmPassword = new FRStep(confirmPasswordStep);
-const frRegistrationStep = new FRStep(registrationStep);
-const frRegistrationStepWithTwoKBAs = new FRStep(registrationStepWithTwoKBAs);
-const frLoginStep = new FRStep(loginStep);
-const frUsernameDisplay = new FRStep(usernameDisplay);
-const frUsernamePasswordStep = new FRStep(usernamePasswordStep);
+const deviceProfileComposed = createJourneyStep(deviceProfileComposition);
+const deviceProfileAlone = createJourneyStep(deviceProfileAloneData);
+const frConfirmPassword = createJourneyStep(confirmPasswordStep);
+const frRegistrationStep = createJourneyStep(registrationStep);
+const frRegistrationStepWithTwoKBAs = createJourneyStep(registrationStepWithTwoKBAs);
+const frLoginStep = createJourneyStep(loginStep);
+const frUsernameDisplay = createJourneyStep(usernameDisplay);
+const frUsernamePasswordStep = createJourneyStep(usernamePasswordStep);
 
-const frSocialMultipleProvidersLocalAuthFormStep = new FRStep(multipleProvidersLocalAuthFormStep);
-const frSocialMultipleProvidersLocalAuthNoFormStep = new FRStep(
+const frSocialMultipleProvidersLocalAuthFormStep = createJourneyStep(
+  multipleProvidersLocalAuthFormStep,
+);
+const frSocialMultipleProvidersLocalAuthNoFormStep = createJourneyStep(
   multipleProvidersLocalAuthNoFormStep,
 );
-const frSocialMultipleProvidersNoLocalAuthStep = new FRStep(multipleProvidersNoLocalAuthStep);
-const frSocialSingleProviderLocalAuthFormStep = new FRStep(singleProviderLocalAuthFormStep);
-const frSocialSingleProviderLocalAuthNoFormStep = new FRStep(singleProviderLocalAuthNoFormStep);
-const frSuccessMessagesRendering = new FRStep(successMessagesRenderingStep);
-const frFailureMessagesRendering = new FRStep(failureMessagesRenderingStep);
+const frSocialMultipleProvidersNoLocalAuthStep = createJourneyStep(
+  multipleProvidersNoLocalAuthStep,
+);
+const frSocialSingleProviderLocalAuthFormStep = createJourneyStep(singleProviderLocalAuthFormStep);
+const frSocialSingleProviderLocalAuthNoFormStep = createJourneyStep(
+  singleProviderLocalAuthNoFormStep,
+);
+const frSuccessMessagesRendering = createJourneyStep(successMessagesRenderingStep);
+const frFailureMessagesRendering = createJourneyStep(failureMessagesRenderingStep);
 
 initialize();
 
@@ -119,7 +126,7 @@ export const UsernameDisplay = {
       loading: false,
       pop: fn(),
       push: fn(),
-      stack: writable([{ tree: 'Login' }]),
+      stack: writable([{ journey: 'Login' }]),
     },
     labelType: 'stacked',
     stage: frUsernameDisplay.getStage(),
@@ -138,7 +145,7 @@ export const UsernamePassword = {
       loading: false,
       pop: fn(),
       push: fn(),
-      stack: writable([{ tree: 'Login' }]),
+      stack: writable([{ journey: 'Login' }]),
     },
     labelType: 'stacked',
     stage: frUsernamePasswordStep.getStage(),
@@ -157,7 +164,7 @@ export const DeviceProfilePageNode = {
       loading: false,
       pop: fn(),
       push: fn(),
-      stack: writable([{ tree: 'Login' }]),
+      stack: writable([{ journey: 'Login' }]),
     },
     labelType: 'stacked',
     stage: deviceProfileComposed.getStage(),
@@ -176,7 +183,7 @@ export const DeviceProfileAlone = {
       loading: false,
       pop: fn(),
       push: fn(),
-      stack: writable([{ tree: 'Login' }]),
+      stack: writable([{ journey: 'Login' }]),
     },
     labelType: 'stacked',
     stage: deviceProfileAlone.getStage(),
@@ -364,10 +371,10 @@ export const ConfirmPasswordInteraction = {
     await userEvent.tab();
 
     const nameCb = frConfirmPassword.getCallbacksOfType(
-      CallbackType.ValidatedCreateUsernameCallback,
+      callbackType.ValidatedCreateUsernameCallback,
     )[0];
     const passwordCb = frConfirmPassword.getCallbacksOfType(
-      CallbackType.ValidatedCreatePasswordCallback,
+      callbackType.ValidatedCreatePasswordCallback,
     )[0];
 
     const username = canvas.getByLabelText('Username');
@@ -414,8 +421,8 @@ export const LoginInteraction = {
     const canvas = within(canvasElement);
     await userEvent.tab();
 
-    const nameCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.NameCallback)[0];
-    const passwordCb = frUsernamePasswordStep.getCallbacksOfType(CallbackType.PasswordCallback)[0];
+    const nameCb = frUsernamePasswordStep.getCallbacksOfType(callbackType.NameCallback)[0];
+    const passwordCb = frUsernamePasswordStep.getCallbacksOfType(callbackType.PasswordCallback)[0];
 
     const username = canvas.getByLabelText('Username');
     const password = canvas.getByLabelText('Password');
@@ -465,27 +472,27 @@ export const RegistrationInteraction = {
     const toc = canvas.getByRole('checkbox', { name: 'Please accept our Terms & Conditions' });
 
     const usernameCb = frRegistrationStep.getCallbacksOfType(
-      CallbackType.ValidatedCreateUsernameCallback,
+      callbackType.ValidatedCreateUsernameCallback,
     )[0];
     const passwordCb = frRegistrationStep.getCallbacksOfType(
-      CallbackType.ValidatedCreatePasswordCallback,
+      callbackType.ValidatedCreatePasswordCallback,
     )[0];
     const firstNameCb = frRegistrationStep.getCallbacksOfType(
-      CallbackType.StringAttributeInputCallback,
+      callbackType.StringAttributeInputCallback,
     )[0];
     const lastNameCb = frRegistrationStep.getCallbacksOfType(
-      CallbackType.StringAttributeInputCallback,
+      callbackType.StringAttributeInputCallback,
     )[1];
     const emailCb = frRegistrationStep.getCallbacksOfType(
-      CallbackType.StringAttributeInputCallback,
+      callbackType.StringAttributeInputCallback,
     )[2];
     const specialOffersCb = frRegistrationStep.getCallbacksOfType(
-      CallbackType.BooleanAttributeInputCallback,
+      callbackType.BooleanAttributeInputCallback,
     )[0];
     const securityQuestions = frRegistrationStep.getCallbacksOfType(
-      CallbackType.KbaCreateCallback,
+      callbackType.KbaCreateCallback,
     )[0];
-    const tocCb = frRegistrationStep.getCallbacksOfType(CallbackType.TermsAndConditionsCallback)[0];
+    const tocCb = frRegistrationStep.getCallbacksOfType(callbackType.TermsAndConditionsCallback)[0];
 
     await expect(username).toHaveFocus();
     await userEvent.type(username, 'user');

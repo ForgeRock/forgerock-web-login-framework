@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { FRAuth, FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate, onMount } from 'svelte';
 
   // i18n
@@ -18,10 +18,7 @@
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import {
-    convertStringToKey,
-    shouldRedirectFromStep,
-  } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey, shouldRedirectFromStep } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
   import Sanitize from '$components/_utilities/server-strings.svelte';
   import ShieldIcon from '$components/icons/shield-icon.svelte';
@@ -47,7 +44,7 @@
     callbacks: CallbackMetadata[];
     step: StepMetadata;
   }>;
-  export let step: FRStep;
+  export let step: JourneyStep;
 
   const formFailureMessageId = 'genericStepFailureMessage';
   const formHeaderId = 'genericStepHeader';
@@ -89,7 +86,12 @@
   onMount(() => captureLinks(linkWrapper, journey));
 
   $: {
-    shouldRedirectFromStep(step) && FRAuth.redirect(step);
+    if (shouldRedirectFromStep(step)) {
+      journey.redirect(step);
+    }
+  }
+
+  $: {
     formMessageKey = convertStringToKey(form?.message);
   }
 </script>

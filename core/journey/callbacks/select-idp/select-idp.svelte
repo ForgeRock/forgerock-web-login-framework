@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import type { SelectIdPCallback } from '@forgerock/javascript-sdk';
+  import type { SelectIdPCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import AppleIcon from '../../../components/icons/apple-icon.svelte';
@@ -55,9 +55,13 @@
     const socialProviders = callback
       .getProviders()
       .filter((provider) => provider.provider !== 'localAuthentication');
-
-    if (localAuthentication.length > 0) {
-      // Assume that clicking "next" will indicate the user wants to use local authentication
+    /**
+     * If local authentication is available and the user hasn't selected a provider yet,
+     * assume that clicking "next" will indicate the user wants to use local authentication.
+     * Only set this default when the callback has no value; otherwise this can overwrite a
+     * social-provider selection during re-renders.
+     */
+    if (localAuthentication.length > 0 && !callback.getInputValue()) {
       callback.setProvider('localAuthentication');
     }
 

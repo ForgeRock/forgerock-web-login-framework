@@ -1,13 +1,13 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { CallbackType, FRLoginFailure } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { describe, expect, it } from 'vitest';
 
 import { previousRegistrationStep, restartedRegistrationStep } from './step.mock';
@@ -16,6 +16,24 @@ import {
   initCheckValidation,
   shouldPopulateWithPreviousCallbacks,
 } from './step.utilities';
+
+import type { JourneyClient, Step } from '@forgerock/journey-client/types';
+
+// TODO: JourneyResult and JourneyLoginFailure are not currently exported by Journey Client, so we define them here
+type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
+type JourneyLoginFailure = Extract<JourneyResult, { type: 'LoginFailure' }>;
+
+function createLoginFailure(payload: Step): JourneyLoginFailure {
+  return {
+    type: 'LoginFailure' as JourneyLoginFailure['type'],
+    payload,
+    getCode: () => payload.code ?? 0,
+    getDetail: () => undefined,
+    getMessage: () => payload.message,
+    getProcessedMessage: () => [],
+    getReason: () => payload.reason,
+  };
+}
 
 describe('Test string to key conversion', () => {
   it('should strip non-alphanumeric keys from string', () => {
@@ -55,7 +73,7 @@ describe('Test check validation', () => {
   it('should return true with failed policies', () => {
     const checkValidation = initCheckValidation();
     const result = checkValidation(
-      restartedRegistrationStep.getCallbackOfType(CallbackType.ValidatedCreateUsernameCallback),
+      restartedRegistrationStep.getCallbackOfType(callbackType.ValidatedCreateUsernameCallback),
     );
 
     expect(result).toBe(true);
@@ -64,7 +82,7 @@ describe('Test check validation', () => {
   it('should return false with no failed policies', () => {
     const checkValidation = initCheckValidation();
     const result = checkValidation(
-      restartedRegistrationStep.getCallbackOfType(CallbackType.ValidatedCreatePasswordCallback),
+      restartedRegistrationStep.getCallbackOfType(callbackType.ValidatedCreatePasswordCallback),
     );
 
     expect(result).toBe(false);
@@ -73,11 +91,9 @@ describe('Test check validation', () => {
 
 describe('Test step population of previous callback', () => {
   it('should return true with Constrained Violation', () => {
-    const nextStep = new FRLoginFailure({
-      code: 401,
+    const nextStep = createLoginFailure({
       message:
         'Constraint Violation: The password value for attribute userPassword was found to be unacceptable: The provided password is shorter than the minimum required length of 8 characters',
-      reason: 'Unauthorized',
     });
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
@@ -93,15 +109,8 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return true with authId timeout issue', () => {
-    const nextStep = new FRLoginFailure({
-      code: 401,
-      detail: {
-        // eslint-disable-next-line
-        // @ts-ignore
-        errorCode: '110',
-      },
-      reason: 'Unauthorized',
-    });
+    const detailWithErrorCode = { result: false, errorCode: '110' };
+    const nextStep = createLoginFailure({ detail: detailWithErrorCode });
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
 
@@ -116,15 +125,8 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return undefined if no previous callbacks', () => {
-    const nextStep = new FRLoginFailure({
-      code: 401,
-      detail: {
-        // eslint-disable-next-line
-        // @ts-ignore
-        errorCode: '110',
-      },
-      reason: 'Unauthorized',
-    });
+    const detailWithErrorCode = { result: false, errorCode: '110' };
+    const nextStep = createLoginFailure({ detail: detailWithErrorCode });
     const restartedStep = restartedRegistrationStep;
 
     const result = shouldPopulateWithPreviousCallbacks(nextStep, undefined, restartedStep, 1);
@@ -133,10 +135,7 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return undefined if generic 401', () => {
-    const nextStep = new FRLoginFailure({
-      code: 401,
-      reason: 'Unauthorized',
-    });
+    const nextStep = createLoginFailure({});
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
 
@@ -151,20 +150,10 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return undefined if return step is failure', () => {
-    const nextStep = new FRLoginFailure({
-      code: 401,
-      detail: {
-        // eslint-disable-next-line
-        // @ts-ignore
-        errorCode: '110',
-      },
-      reason: 'Unauthorized',
-    });
+    const detailWithErrorCode = { result: false, errorCode: '110' };
+    const nextStep = createLoginFailure({ detail: detailWithErrorCode });
     const previousStep = previousRegistrationStep;
-    const restartedStep = new FRLoginFailure({
-      code: 401,
-      reason: 'Unauthorized',
-    });
+    const restartedStep = createLoginFailure({});
 
     const result = shouldPopulateWithPreviousCallbacks(
       nextStep,
@@ -177,10 +166,7 @@ describe('Test step population of previous callback', () => {
   });
 
   it('should return false because it is neither 1 nor a Constrained Violation', () => {
-    const nextStep = new FRLoginFailure({
-      code: 401,
-      reason: 'Unauthorized',
-    });
+    const nextStep = createLoginFailure({});
     const previousStep = previousRegistrationStep;
     const restartedStep = restartedRegistrationStep;
 

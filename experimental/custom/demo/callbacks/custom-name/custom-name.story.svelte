@@ -3,7 +3,7 @@
 -->
 
 <script lang="ts">
-  import type { NameCallback } from '@forgerock/javascript-sdk';
+  import type { NameCallback } from '@forgerock/journey-client/types';
 
   /**
    * Centered — a layout primitive that centers its slot content horizontally
@@ -17,7 +17,7 @@
   /**
    * callback — the only arg passed in from Storybook stories.
    * Storybook controls map to exported `let` props in this wrapper.
-   * The story file uses `step.getCallbackOfType(CallbackType.NameCallback)`
+  * The story file uses `step.getCallbackOfType(callbackType.NameCallback)`
    * to produce a real SDK callback instance from the mock response.
    */
   export let callback: NameCallback;
@@ -40,23 +40,9 @@
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: true,
+      isPasskeyAutofillEligible: false,
     },
     idx: 0,
-  };
-
-  /**
-   * stepMetadata — step-level metadata. The callback component receives this
-   * but typically only reads it to decide whether to self-submit. Setting
-   * isStepSelfSubmittable to return false is the safe default for stories.
-   */
-  const stepMetadata = {
-    derived: {
-      isStepSelfSubmittable: () => false,
-      isUserInputOptional: false,
-      numOfCallbacks: 1,
-      numOfSelfSubmittableCbs: 0,
-      numOfUserInputCbs: 1,
-    },
   };
 </script>
 
@@ -64,8 +50,6 @@
   <!--
     Pass all required props to the custom component.
     `callback` comes from Storybook args; the metadata objects are stubs above.
-    selfSubmitFunction and stepMetadata are optional in this demo — they are
-    included here to match the full callback prop contract.
   -->
-  <CustomName {callback} {callbackMetadata} {stepMetadata} />
+  <CustomName {callback} {callbackMetadata} />
 </Centered>

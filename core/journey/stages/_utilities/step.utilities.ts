@@ -1,23 +1,22 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import {
-  FRCallback,
-  FRStep,
-  FRLoginFailure,
-  FRLoginSuccess,
-  StepType,
-  CallbackType,
-} from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
+
+import type { BaseCallback, JourneyClient, JourneyStep } from '@forgerock/journey-client/types';
 
 export const authIdTimeoutErrorCode = '110';
 export const constrainedViolationMessage = 'constraint violation';
+
+// TODO: JourneyResult and JourneyLoginFailure are not currently exported by Journey Client, so we define them here
+type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
+type JourneyLoginFailure = Extract<JourneyResult, { type: 'LoginFailure' }>;
 
 /**
  * @function convertStringToKey -
@@ -55,7 +54,7 @@ export function convertStringToKey(string?: string | null): string {
 export function initCheckValidation() {
   let hasPrevError = false;
 
-  return function checkValidation(callback: FRCallback) {
+  return function checkValidation(callback: BaseCallback) {
     const failedPolices = callback.getOutputByName('failedPolicies', []);
     if (failedPolices.length && !hasPrevError) {
       hasPrevError = true;
@@ -69,8 +68,8 @@ export function initCheckValidation() {
  * @function shouldRedirectFromStep -
  * @returns {boolean}
  */
-export function shouldRedirectFromStep(step: FRStep) {
-  return step.getCallbacksOfType(CallbackType.RedirectCallback).length > 0;
+export function shouldRedirectFromStep(step: JourneyStep) {
+  return step.getCallbacksOfType(callbackType.RedirectCallback).length > 0;
 }
 
 /**
@@ -82,15 +81,15 @@ export function shouldRedirectFromStep(step: FRStep) {
  * @returns {boolean}
  */
 export function shouldPopulateWithPreviousCallbacks(
-  nextStep: FRLoginFailure,
-  previousCallbacks: FRCallback[] | undefined,
-  restartedStep: FRStep | FRLoginSuccess | FRLoginFailure,
+  nextStep: JourneyLoginFailure,
+  previousCallbacks: BaseCallback[] | undefined,
+  restartedStep: JourneyResult | null,
   stepNumber: number,
-) {
+): restartedStep is JourneyStep {
   if (!Array.isArray(previousCallbacks)) {
     return false;
   }
-  if (restartedStep.type !== StepType.Step) {
+  if (!restartedStep || !('type' in restartedStep) || restartedStep.type !== 'Step') {
     return false;
   }
 
@@ -98,8 +97,8 @@ export function shouldPopulateWithPreviousCallbacks(
     return false;
   }
 
-  const details = nextStep.payload.detail as { errorCode: string } | null;
-  const message = nextStep.payload.message?.toLowerCase() as string | null;
+  const details = (nextStep.payload?.detail ?? null) as { errorCode: string } | null;
+  const message = nextStep.payload?.message?.toLowerCase() ?? null;
 
   /**
    * Now that we know we have previous callbacks, this is of type "Step",

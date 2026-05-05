@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -14,7 +14,7 @@
    * This is intentionally separated from ValidatedCreatePasswordCallback as it does
    * allow for easier typing for the callback.
    */
-  import type { PasswordCallback } from '@forgerock/javascript-sdk';
+  import type { PasswordCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import Base from './base.svelte';

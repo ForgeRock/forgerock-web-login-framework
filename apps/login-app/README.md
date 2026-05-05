@@ -50,12 +50,13 @@ pnpm --filter @forgerock/login-app run preview
 
 The app requires environment variables to connect to a ForgeRock AM instance. Set these in a `.env` file at the repository root or export them in your shell.
 
-| Variable                      | Required | Description                                                            |
-| ----------------------------- | -------- | ---------------------------------------------------------------------- |
-| `VITE_FR_AM_URL`              | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`) |
-| `VITE_FR_AM_COOKIE_NAME`      | Yes      | AM session cookie name                                                 |
-| `VITE_FR_OAUTH_PUBLIC_CLIENT` | No       | OAuth 2.0 public client ID                                             |
-| `VITE_FR_REALM_PATH`          | No       | AM realm path                                                          |
+| Variable                      | Required | Description                                                                                                               |
+| ----------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `VITE_FR_AM_URL`              | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                    |
+| `VITE_FR_AM_COOKIE_NAME`      | Yes      | AM session cookie name                                                                                                    |
+| `VITE_FR_OAUTH_PUBLIC_CLIENT` | No       | OAuth 2.0 public client ID                                                                                                |
+| `VITE_FR_REALM_PATH`          | No       | AM realm path                                                                                                             |
+| `FR_AM_WELLKNOWN_URL`         | Yes      | ForgeRock AM Wellknown URL (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration`) |
 
 ## Type Checking
 

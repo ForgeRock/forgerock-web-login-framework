@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { Config, type DeviceProfileCallback } from '@forgerock/javascript-sdk';
+  import type { DeviceProfileCallback } from '@forgerock/journey-client/types';
 
   import Centered from '$components/primitives/box/centered.svelte';
   import DeviceProfile from './device-profile.svelte';
@@ -19,9 +19,6 @@
   export let callback: DeviceProfileCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let selfSubmitFunction: () => void;
-
-  // Now required due to logger utility
-  Config.set({ serverConfig: { baseUrl: 'https://example.com/am/' } });
 
   let mergedCallbackMetadata = {
     derived: {

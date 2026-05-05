@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -17,7 +17,7 @@
   } from '$journey/journey.interfaces';
   import type { styleSchema } from '$core/style.store';
   import type { Maybe } from '$core/interfaces';
-  import type { MetadataCallback } from '@forgerock/javascript-sdk';
+  import type { MetadataCallback } from '@forgerock/journey-client/types';
 
   export const callback: Maybe<MetadataCallback> = null;
   export const callbackMetadata: Maybe<CallbackMetadata> = null;

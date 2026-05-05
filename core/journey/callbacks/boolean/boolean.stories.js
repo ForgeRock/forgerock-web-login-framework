@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -8,13 +8,11 @@
  **/
 
 import { expect } from 'storybook/test';
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { within } from 'storybook/test';
 
-import response from './boolean.mock';
+import step from './boolean.mock';
 import Checkbox from './boolean.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -29,13 +27,13 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.BooleanAttributeInputCallback)[0],
   },
 };
 
 export const Error = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[1],
+    callback: step.getCallbacksOfType(callbackType.BooleanAttributeInputCallback)[1],
   },
 };
 export const Interaction = {
@@ -46,7 +44,7 @@ export const Interaction = {
     const canvas = within(canvasElement);
     const check = canvas.getByRole('checkbox');
 
-    const cb = step.getCallbacksOfType(CallbackType.BooleanAttributeInputCallback)[0];
+    const cb = step.getCallbacksOfType(callbackType.BooleanAttributeInputCallback)[0];
 
     expect(check).not.toBeChecked();
     check.click();

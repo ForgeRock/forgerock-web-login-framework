@@ -22,7 +22,7 @@
 
 <script lang="ts">
   // ─── SDK types ─────────────────────────────────────────────────────────────
-  import type { NameCallback } from '@forgerock/javascript-sdk';
+  import type { NameCallback } from '@forgerock/journey-client/types';
 
   // ─── Framework imports ──────────────────────────────────────────────────────
   /**

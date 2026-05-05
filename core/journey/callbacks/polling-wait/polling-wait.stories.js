@@ -1,20 +1,18 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { expect, fn } from 'storybook/test';
 import { within } from 'storybook/test';
 
-import response from './polling-wait.mock';
+import step from './polling-wait.mock';
 import PollingWait from './polling-wait.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -29,7 +27,7 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(CallbackType.PollingWaitCallback),
+    callback: step.getCallbackOfType(callbackType.PollingWaitCallback),
     selfSubmitFunction: fn(),
   },
 };
@@ -40,7 +38,7 @@ export const Interaction = {
     const canvas = within(canvasElement);
     await expect(Base.args.selfSubmitFunction).not.toBeCalled();
 
-    const callback = step.getCallbackOfType(CallbackType.PollingWaitCallback);
+    const callback = step.getCallbackOfType(callbackType.PollingWaitCallback);
     const message = callback.getMessage();
     const time = callback.getWaitTime();
 

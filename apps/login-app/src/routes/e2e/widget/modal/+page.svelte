@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -13,9 +13,8 @@
 
   import Widget, { configuration, component, journey, protect, user } from '$package/index';
 
-  const config = configuration();
-  const componentEvents = component();
-  const journeyEvents = journey();
+  let componentEvents: ReturnType<typeof component> | undefined;
+  let journeyEvents: ReturnType<typeof journey> | undefined;
 
   let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
   let journeyParam = $page.url.searchParams.get('journey');
@@ -40,24 +39,6 @@
     userResponse = null;
   }
 
-  componentEvents.subscribe((event) => {
-    if (event.lastAction === 'mount') {
-      console.log('Modal mounted');
-    }
-    if (event.lastAction === 'close') {
-      console.log(`Modal closed due to ${event && event.reason}`);
-    }
-  });
-  journeyEvents.subscribe((event) => {
-    if (event?.user?.successful) {
-      console.log(event.user);
-      userResponse = event.user.response as UserResponseObj;
-    }
-    if (event.journey.error || event.oauth.error || event.user.error) {
-      console.log('Login failure event fired');
-    }
-  });
-
   onMount(async () => {
     let content;
 
@@ -68,7 +49,13 @@
       const response = await fetch(`${window.location.origin}/api/locale`);
       content = response.ok && (await response.json());
     }
-    config.set({
+
+    configuration({
+      journeyClient: {
+        serverConfig: {
+          wellknown: 'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+        },
+      },
       forgerock: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
@@ -140,6 +127,29 @@
         },
       },
     });
+
+    componentEvents = component();
+    journeyEvents = journey();
+
+    componentEvents.subscribe((event) => {
+      if (event.lastAction === 'mount') {
+        console.log('Modal mounted');
+      }
+      if (event.lastAction === 'close') {
+        console.log(`Modal closed due to ${event && event.reason}`);
+      }
+    });
+
+    journeyEvents.subscribe((event) => {
+      if (event?.user?.successful) {
+        console.log(event.user);
+        userResponse = event.user.response as UserResponseObj;
+      }
+      if (event.journey.error || event.oauth.error || event.user.error) {
+        console.log('Login failure event fired');
+      }
+    });
+
     new Widget({ target: widgetEl });
     if (initializePingProtectEarly) {
       await protect.start({
@@ -167,16 +177,16 @@
   {:else}
     <button
       on:click={() => {
-        journeyEvents.start({
+        journeyEvents?.start({
           journey: journeyParam || authIndexValueParam || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
           recaptchaAction: recaptchaParam ?? undefined,
         });
-        componentEvents.open();
+        componentEvents?.open();
       }}
     >
       Open Login Modal
     </button>
   {/if}
 </div>
-<div bind:this={widgetEl} />
+<div bind:this={widgetEl}></div>

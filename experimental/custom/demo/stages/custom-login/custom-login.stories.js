@@ -7,19 +7,17 @@
  *
  **/
 
-import { FRStep } from '@forgerock/javascript-sdk';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { fn } from 'storybook/test';
 import { writable } from 'svelte/store';
 import { customLoginStep } from './custom-login.mock';
 import Story from './custom-login.story.svelte';
 
 /**
- * Construct a real SDK FRStep from the mock AM response payload.
- * FRStep wraps the raw JSON and exposes typed getters (getStage(), getHeader(),
- * getCallbackOfType(), etc.) and the iterable step.callbacks array used by
- * <CallbackMapper> in the stage component template.
+ * Construct a Journey Client step from the mock AM response payload.
+ * This provides the same step/callback contract used by the widget runtime.
  */
-const step = new FRStep(customLoginStep);
+const step = createJourneyStep(customLoginStep);
 
 // ─── Default export — story metadata ────────────────────────────────────────
 export default {
@@ -66,7 +64,7 @@ export default {
  * journey.stack   — writable store required by captureLinks().
  * journey.push / journey.pop — spy functions for navigation link testing.
  *
- * step — the FRStep built from the mock; drives the callback loop in the template.
+ * step — the JourneyStep built from the mock; drives the callback loop in the template.
  */
 const baseArgs = {
   form: {

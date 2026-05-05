@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -23,7 +23,11 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  const journeyStore: JourneyStore = initializeJourney();
+  const journeyStore: JourneyStore = initializeJourney({
+    serverConfig: {
+      wellknown: data.wellknown,
+    },
+  });
   const oauthStore: OAuthStore = initializeOAuth();
   const userStore: UserStore = initializeUser();
 
@@ -34,7 +38,7 @@
 
   // Use if not initializing journey in a "context module"
   onMount(async () => {
-    journeyStore.start({ tree: 'Registration' });
+    journeyStore.start({ journey: 'Registration' });
   });
 
   $: {

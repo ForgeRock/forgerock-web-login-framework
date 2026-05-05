@@ -1,20 +1,18 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { FRStep, CallbackType } from '@forgerock/javascript-sdk';
+import { callbackType } from '@forgerock/journey-client';
 import { within, userEvent } from 'storybook/test';
 import { expect } from 'storybook/test';
 
-import response from './string-attribute-input.mock';
+import step from './string-attribute-input.mock';
 import Input from './string-attribute-input.story.svelte';
-
-const step = new FRStep(response);
 
 export default {
   argTypes: {
@@ -29,19 +27,19 @@ export default {
 
 export const Base = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[0],
+    callback: step.getCallbacksOfType(callbackType.StringAttributeInputCallback)[0],
   },
 };
 
 export const Email = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[1],
+    callback: step.getCallbacksOfType(callbackType.StringAttributeInputCallback)[1],
   },
 };
 
 export const Error = {
   args: {
-    callback: step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[2],
+    callback: step.getCallbacksOfType(callbackType.StringAttributeInputCallback)[2],
   },
 };
 
@@ -49,7 +47,7 @@ export const Interaction = {
   args: { ...Base.args },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const cb = step.getCallbacksOfType(CallbackType.StringAttributeInputCallback)[0];
+    const cb = step.getCallbacksOfType(callbackType.StringAttributeInputCallback)[0];
     const input = canvas.getByLabelText('First name');
 
     await userEvent.tab();

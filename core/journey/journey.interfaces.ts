@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -8,15 +8,21 @@
  **/
 
 import type {
-  FRStep,
-  FRLoginFailure,
-  FRLoginSuccess,
+  JourneyStep,
+  StartParam,
   Step,
-  StepOptions,
-  StepDetail,
-} from '@forgerock/javascript-sdk';
+  NextOptions,
+  ResumeOptions,
+} from '@forgerock/journey-client/types';
 import type { Writable } from 'svelte/store';
 import type { Maybe } from '$core/interfaces';
+
+/*
+ * TODO: Journey Client does not export StepDetail
+ * This should be replaced with an import from journey-client/types
+ * when Journey Client starts exporting StepDetail
+ */
+type StepDetail = NonNullable<Step['detail']>;
 
 export interface CallbackMetadata {
   derived: {
@@ -29,16 +35,14 @@ export interface CallbackMetadata {
   idx: number;
   platform?: Record<string, unknown>;
 }
-export interface StartOptions extends StepOptions {
-  recaptchaAction?: string;
-}
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
-  next: (prevStep?: StepTypes, nextOptions?: StepOptions) => void;
-  pop: () => void;
-  push: (changeOptions: StepOptions) => void;
+  next: (prevStep: JourneyStep, nextOptions?: NextOptions) => Promise<void>;
+  pop: () => Promise<void>;
+  push: (changeOptions: StartParam) => Promise<void>;
   reset: () => void;
-  resume: (url: string, resumeOptions?: StepOptions) => void;
-  start: (startOptions?: StartOptions) => void;
+  resume: (url: string, resumeOptions?: ResumeOptions) => Promise<void>;
+  start: (startOptions?: StartParam, recaptchaAction?: string) => Promise<void>;
+  redirect: (step: JourneyStep) => Promise<void>;
 }
 export interface StageFormObject {
   icon: boolean;
@@ -49,7 +53,8 @@ export interface StageFormObject {
 export interface StageJourneyObject {
   loading: boolean;
   pop: () => void;
-  push: (options: StepOptions) => void;
+  push: (options: StartParam) => void;
+  redirect: (step: JourneyStep) => Promise<void>;
   stack: StackStore;
 }
 export interface JourneyStoreValue {
@@ -71,10 +76,10 @@ export interface JourneyStoreValue {
   response: Maybe<Step>;
   recaptchaAction?: Maybe<string>;
 }
-export interface StackStore extends Pick<Writable<StepOptions[]>, 'subscribe'> {
-  latest: () => Promise<StepOptions>;
-  pop: () => Promise<StepOptions[]>;
-  push: (options?: StepOptions) => Promise<StepOptions[]>;
+export interface StackStore extends Pick<Writable<StartParam[]>, 'subscribe'> {
+  latest: () => Promise<StartParam | undefined>;
+  pop: () => Promise<StartParam[]>;
+  push: (options?: StartParam) => Promise<StartParam[]>;
   reset: () => void;
 }
 export interface StepMetadata {
@@ -89,4 +94,4 @@ export interface StepMetadata {
   platform?: Record<string, unknown>;
 }
 export type SelfSubmitFunction = () => void;
-export type StepTypes = FRStep | FRLoginSuccess | FRLoginFailure | null;
+export type StepTypes = JourneyStep | null;

@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -25,14 +25,14 @@ describe('Test compare function for requested journey comparison', () => {
         match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
       },
       {
-        journey: undefined,
+        journey: 'Login',
         key: 'login',
         match: ['#/service/Login', '?journey'],
       },
     ];
     const stack = [
       {
-        tree: undefined,
+        journey: 'Login',
       },
     ];
     const { action, journey } = matchJourneyAndDecideAction(
@@ -57,17 +57,17 @@ describe('Test compare function for requested journey comparison', () => {
         match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
       },
       {
-        journey: undefined,
+        journey: 'Login',
         key: 'login',
         match: ['#/service/Login', '?journey'],
       },
     ];
     const stack = [
       {
-        tree: undefined,
+        journey: 'Login',
       },
       {
-        tree: 'ResetPassword',
+        journey: 'ResetPassword',
       },
     ];
     const { action, journey } = matchJourneyAndDecideAction('?journey', journeys, stack);
@@ -88,17 +88,17 @@ describe('Test compare function for requested journey comparison', () => {
         match: ['#/service/ForgottenUsername', '?journey=ForgottenUsername'],
       },
       {
-        journey: undefined,
+        journey: 'Login',
         key: 'login',
         match: ['#/service/Login', '?journey'],
       },
     ];
     const stack = [
       {
-        tree: undefined,
+        journey: 'Login',
       },
       {
-        tree: 'ResetPassword',
+        journey: 'ResetPassword',
       },
     ];
     const { action, journey } = matchJourneyAndDecideAction('/something', journeys, stack);

@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -16,7 +16,6 @@
   import T from '$components/_utilities/locale-strings.svelte';
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import { StepType } from '@forgerock/javascript-sdk';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -35,11 +34,20 @@
 
   function submitForm() {
     // Get next step, passing previous step with new data
-    journeyStore?.next($journeyStore.step);
+    const step = $journeyStore.step;
+    if (step && step.type === 'Step') {
+      journeyStore?.next(step);
+    }
   }
-  function tryAgain() {
+  async function tryAgain() {
     journeyStore?.reset();
-    journeyStore?.next();
+
+    try {
+      const latest = await stack.latest();
+      await journeyStore?.start(latest);
+    } catch (err) {
+      console.error('Unable to restart journey', err);
+    }
   }
 
   afterUpdate(() => {
@@ -52,7 +60,7 @@
     <div class="tw_text-center tw_w-full tw_py-4">
       <Spinner colorClass="tw_text-primary-light" layoutClasses="tw_h-28 tw_w-28" />
     </div>
-  {:else if $journeyStore.step?.type === StepType.Step}
+  {:else if $journeyStore.step?.type === 'Step'}
     <svelte:component
       this={mapStepToStage($journeyStore.step)}
       bind:formEl
@@ -68,6 +76,7 @@
         pop: journeyStore.pop,
         push: journeyStore.push,
         stack,
+        redirect: journeyStore.redirect,
       }}
       metadata={$journeyStore.metadata}
       step={$journeyStore.step}
