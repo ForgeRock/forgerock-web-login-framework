@@ -27,6 +27,7 @@ import {
   successMessagesRenderingStep,
   failureMessagesRenderingStep,
 } from './step.mock';
+import { webAuthnAuthenticationStep } from './mfa-stages.mock';
 import {
   multipleProvidersLocalAuthFormStep,
   multipleProvidersLocalAuthNoFormStep,
@@ -43,6 +44,10 @@ const frRegistrationStepWithTwoKBAs = createJourneyStep(registrationStepWithTwoK
 const frLoginStep = createJourneyStep(loginStep);
 const frUsernameDisplay = createJourneyStep(usernameDisplay);
 const frUsernamePasswordStep = createJourneyStep(usernamePasswordStep);
+const frUsernamePasswordPasskeyStep = createJourneyStep({
+  ...usernamePasswordStep,
+  callbacks: [...usernamePasswordStep.callbacks, ...webAuthnAuthenticationStep.callbacks],
+});
 
 const frSocialMultipleProvidersLocalAuthFormStep = createJourneyStep(
   multipleProvidersLocalAuthFormStep,
@@ -150,6 +155,30 @@ export const UsernamePassword = {
     labelType: 'stacked',
     stage: frUsernamePasswordStep.getStage(),
     step: frUsernamePasswordStep,
+  },
+};
+export const UsernamePasswordPasskey = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([{ tree: 'Login' }]),
+    },
+    labelType: 'stacked',
+    stage: frUsernamePasswordPasskeyStep.getStage(),
+    step: frUsernamePasswordPasskeyStep,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const usernameInput = canvas.getByRole('textbox', { name: /user\s*name/i });
+    await expect(usernameInput).toHaveAttribute('autocomplete', 'username webauthn');
   },
 };
 export const DeviceProfilePageNode = {

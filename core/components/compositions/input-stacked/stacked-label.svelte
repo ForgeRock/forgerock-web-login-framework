@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -12,6 +12,7 @@
   import Message from '$components/primitives/message/input-message.svelte';
   import type { Maybe } from '$core/interfaces';
 
+  export let autocomplete: 'username webauthn' | undefined = undefined;
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let forceValidityFailure = false;
   export let isFirstInvalidInput: boolean;
@@ -39,6 +40,7 @@
 
 <div class="tw_input-spacing tw_flex tw_flex-wrap">
   <Input
+    {autocomplete}
     {forceValidityFailure}
     {isFirstInvalidInput}
     inputClasses={`${hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''}`}

@@ -102,7 +102,7 @@
           break;
       }
     } catch (err) {
-      // TODO: handle error
+      console.debug('Passkey autofill attempt did not complete', err);
     }
     form.submit();
   }

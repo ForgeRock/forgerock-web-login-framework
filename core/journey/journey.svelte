@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { afterUpdate } from 'svelte';
+  import { afterUpdate, onDestroy } from 'svelte';
 
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
@@ -16,6 +16,8 @@
   import T from '$components/_utilities/locale-strings.svelte';
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
+
+  import { setupPasskeyAutofill } from '$core/journey/stages/_effects/webauthn.effects';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -32,7 +34,11 @@
 
   let alertNeedsFocus = false;
 
+  const passkeyAutofill = journeyStore ? setupPasskeyAutofill(journeyStore) : null;
+
   function submitForm() {
+    // Abort any in-flight conditional mediation request; ignore failures.
+    passkeyAutofill?.abort();
     // Get next step, passing previous step with new data
     const step = $journeyStore.step;
     if (step && step.type === 'Step') {
@@ -52,6 +58,10 @@
 
   afterUpdate(() => {
     alertNeedsFocus = $journeyStore && !$journeyStore.successful;
+  })
+
+  onDestroy(() => {
+    passkeyAutofill?.destroy();
   });
 </script>
 

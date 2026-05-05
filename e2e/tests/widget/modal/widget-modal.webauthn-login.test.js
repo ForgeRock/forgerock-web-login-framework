@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -44,4 +44,18 @@ test('Modal widget with webauthn login', async ({ page }) => {
   await verifyUserInfo(page, expect);
 
   await cdpSession.detach();
+});
+
+test('modal widget exposes passkey autofill attributes on the mixed authentication journey', async ({
+  page,
+}) => {
+  const { clickButton, navigate } = asyncEvents(page);
+
+  await navigate('widget/modal?journey=TEST_AutofillPasskeyWebAuthn');
+  await clickButton('Open Login Modal', '/authenticate');
+
+  const usernameInput = page.getByLabel('Username');
+
+  await expect(usernameInput).toBeVisible();
+  await expect(usernameInput).toHaveAttribute('autocomplete', 'username webauthn');
 });

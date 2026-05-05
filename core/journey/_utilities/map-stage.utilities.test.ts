@@ -20,6 +20,9 @@ import { step1, step3 } from './step.mock';
 
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';
+import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createMixedLoginWebAuthnStep } from '$journey/stages/mfa-stages.mock';
+import type { Step } from '@forgerock/journey-client/types';
 
 describe('Test mapping of step to stage', () => {
   it('should map to a given stage for a known step', () => {
@@ -32,5 +35,14 @@ describe('Test mapping of step to stage', () => {
     const result = mapStepToStage(step1);
 
     expect(result).toStrictEqual(Generic);
+  });
+
+  it('maps mixed login WebAuthn steps without a stage to Login', () => {
+    const mixed = createMixedLoginWebAuthnStep('auth-no-stage');
+    const { stage: _ignored, ...payloadWithoutStage } = mixed.payload as Step;
+    const mixedWithoutStage = createJourneyStep(payloadWithoutStage as Step);
+
+    const result = mapStepToStage(mixedWithoutStage);
+    expect(result).toStrictEqual(Login);
   });
 });

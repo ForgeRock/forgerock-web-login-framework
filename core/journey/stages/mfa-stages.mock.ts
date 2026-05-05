@@ -7,8 +7,10 @@
  *
  **/
 
-import type { Step } from '@forgerock/journey-client/types';
+import type { JourneyStep, Step } from '@forgerock/journey-client/types';
 import { callbackType } from '@forgerock/journey-client';
+import { createJourneyStep } from '../_utilities/step.mock';
+import { usernamePasswordStep } from './step.mock';
 
 export const mfaRegistrationOptionsStep: Step = {
   authId:
@@ -467,3 +469,85 @@ export const webAuthnRegistrationStep = {
     },
   ],
 };
+
+export const liveMixedLoginWebAuthnStep: Step = {
+  authId: 'x',
+  callbacks: [
+    {
+      type: callbackType.NameCallback,
+      output: [{ name: 'prompt', value: 'User Name' }],
+      input: [{ name: 'IDToken1', value: '' }],
+      _id: 0,
+    },
+    {
+      type: callbackType.MetadataCallback,
+      output: [
+        {
+          name: 'data',
+          value: {
+            _action: 'webauthn_authentication',
+            challenge: 'Ya8applUsry8oFtAlB9zrOzrx21MSQ6NUaJYWjAR8j0=',
+            allowCredentials: '',
+            _allowCredentials: [],
+            timeout: '60000',
+            userVerification: 'required',
+            conditional: false,
+            relyingPartyId: '',
+            _relyingPartyId: '',
+            extensions: {},
+            _type: 'WebAuthn',
+            supportsJsonResponse: true,
+          },
+        },
+      ],
+      _id: 1,
+    },
+    {
+      type: callbackType.HiddenValueCallback,
+      output: [
+        { name: 'value', value: 'false' },
+        { name: 'id', value: 'webAuthnOutcome' },
+      ],
+      input: [{ name: 'IDToken3', value: 'webAuthnOutcome' }],
+      _id: 2,
+    },
+  ],
+  stage: 'DefaultLogin',
+};
+
+export const stepWithInvalidMetadata: Step = {
+  authId: 'test-auth-id-invalid-metadata',
+  callbacks: [
+    {
+      type: callbackType.NameCallback,
+      output: [{ name: 'prompt', value: 'User Name' }],
+      input: [{ name: 'IDToken1', value: '' }],
+    },
+    {
+      type: callbackType.MetadataCallback,
+      output: [{ name: 'data', value: 'not-an-object' }],
+      input: [{ name: 'IDToken2', value: '' }],
+    },
+    {
+      type: callbackType.HiddenValueCallback,
+      output: [
+        { name: 'value', value: '' },
+        { name: 'id', value: 'webAuthnOutcome' },
+      ],
+      input: [{ name: 'IDToken3', value: 'webAuthnOutcome' }],
+    },
+  ],
+};
+
+export function createMixedLoginWebAuthnStep(authId?: string): JourneyStep {
+  const usernamePassword = usernamePasswordStep as Step;
+  return createJourneyStep({
+    ...usernamePassword,
+    authId: authId ?? usernamePassword.authId,
+    callbacks: [
+      ...((usernamePassword.callbacks ?? []) as NonNullable<Step['callbacks']>),
+      ...((webAuthnAuthenticationStep.callbacks ?? []) as NonNullable<Step['callbacks']>),
+    ],
+    stage: 'DefaultLogin',
+  } as Step);
+}

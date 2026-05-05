@@ -23,6 +23,7 @@ import { QRCode } from '@forgerock/journey-client/qr-code';
 import { RecoveryCodes } from '@forgerock/journey-client/recovery-codes';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
+import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
 type StageTypes =
   | typeof WebAuthnStage
   | typeof OneTimePassword
@@ -62,6 +63,13 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
     default:
       // Don't return function but continue on
       break;
+  }
+
+  // Mixed login + WebAuthn steps should render a callback-form stage so the
+  // username field exists for passkey autofill. This avoids mapping these steps
+  // to the pure WebAuthn stage when the AM `stage` value is missing.
+  if (isMixedLoginWebAuthnStep(currentStep)) {
+    return Login;
   }
 
   // getWebAuthnStepType will return 0 if not a WebAuthn step

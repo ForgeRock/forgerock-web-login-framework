@@ -52,6 +52,7 @@
 
 {#key callback}
   <Input
+    autocomplete={callbackMetadata?.derived?.isPasskeyAutofillEligible ? 'username webauthn' : undefined}
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     key={inputName}
     label={interpolate(textToKey(textInputLabel || callbackType), null, textInputLabel)}
