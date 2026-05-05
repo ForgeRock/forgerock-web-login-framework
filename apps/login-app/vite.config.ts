@@ -1,8 +1,9 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import basicSsl from '@vitejs/plugin-basic-ssl';
-import type { UserConfig } from 'vite';
-import { defineConfig } from 'vite';
 import { resolve } from 'path';
+import { defineConfig } from 'vite';
+
+import type { UserConfig } from 'vite';
 
 export default defineConfig(
   ({ mode }): UserConfig => ({

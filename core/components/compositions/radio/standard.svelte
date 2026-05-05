@@ -8,8 +8,9 @@
  -->
 
 <script lang="ts">
-  import Radio from '$components/primitives/radio/radio.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
+  import Radio from '$components/primitives/radio/radio.svelte';
+
   import type { Maybe } from '$core/interfaces';
 
   export let defaultOption: Maybe<string> = null;

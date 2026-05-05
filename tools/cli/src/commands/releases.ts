@@ -1,5 +1,6 @@
 import { Command } from '@effect/cli';
 import { Console, Effect } from 'effect';
+
 import { Release } from '../services/release.js';
 
 export const releasesCommand = Command.make('releases', {}, () =>

@@ -17,20 +17,21 @@
    */
 
   import { callbackType } from '@forgerock/journey-client';
-  import type { WebAuthnStepType } from '@forgerock/journey-client/webauthn';
-  import type { z } from 'zod';
-  import type { CustomRegistryEntry } from './custom-registry';
-  import { customCallbackRegistry } from './custom-registry';
 
   // Callback handler components
   import Boolean from '$journey/callbacks/boolean/boolean.svelte';
   import Choice from '$journey/callbacks/choice/choice.svelte';
   import Confirmation from '$journey/callbacks/confirmation/confirmation.svelte';
+  import DeviceProfile from '$journey/callbacks/device-profile/device-profile.svelte';
   import HiddenValue from '$journey/callbacks/hidden-value/hidden-value.svelte';
   import KbaCreate from '$journey/callbacks/kba/kba-create.svelte';
-  import Name from '$journey/callbacks/username/name.svelte';
+  import Metadata from '$journey/callbacks/metadata/metadata.svelte';
   import Password from '$journey/callbacks/password/password.svelte';
+  import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
+  import PingProtectEvaluation from '$journey/callbacks/ping-protect-evaluation/ping-protect-evaluation.svelte';
+  import PingProtectInitialize from '$journey/callbacks/ping-protect-initialize/ping-protect-initialize.svelte';
   import PollingWait from '$journey/callbacks/polling-wait/polling-wait.svelte';
+  import Recaptcha from '$journey/callbacks/recaptcha/recaptcha.svelte';
   import Redirect from '$journey/callbacks/redirect/redirect.svelte';
   import SelectIdp from '$journey/callbacks/select-idp/select-idp.svelte';
   import StringAttributeInput from '$journey/callbacks/string-attribute/string-attribute-input.svelte';
@@ -38,24 +39,25 @@
   import TextInput from '$journey/callbacks/text-input/text-input.svelte';
   import TextOutput from '$journey/callbacks/text-output/text-output.svelte';
   import Unknown from '$journey/callbacks/unknown/unknown.svelte';
-  import ValidatedCreatePassword from '$journey/callbacks/password/validated-create-password.svelte';
+  import Name from '$journey/callbacks/username/name.svelte';
   import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
-  import DeviceProfile from '$journey/callbacks/device-profile/device-profile.svelte';
-  import Recaptcha from '$journey/callbacks/recaptcha/recaptcha.svelte';
-  import Metadata from '$journey/callbacks/metadata/metadata.svelte';
-  import PingProtectEvaluation from '$journey/callbacks/ping-protect-evaluation/ping-protect-evaluation.svelte';
-  import PingProtectInitialize from '$journey/callbacks/ping-protect-initialize/ping-protect-initialize.svelte';
+  import { customCallbackRegistry } from './custom-registry';
 
   import type {
     AttributeInputCallback,
     BaseCallback,
     ChoiceCallback,
     ConfirmationCallback,
+    DeviceProfileCallback,
     HiddenValueCallback,
     KbaCreateCallback,
+    MetadataCallback,
     NameCallback,
     PasswordCallback,
+    PingOneProtectEvaluationCallback,
+    PingOneProtectInitializeCallback,
     PollingWaitCallback,
+    ReCaptchaCallback,
     RedirectCallback,
     SelectIdPCallback,
     SuspendedTextOutputCallback,
@@ -64,20 +66,18 @@
     TextOutputCallback,
     ValidatedCreatePasswordCallback,
     ValidatedCreateUsernameCallback,
-    DeviceProfileCallback,
-    MetadataCallback,
-    ReCaptchaCallback,
-    PingOneProtectEvaluationCallback,
-    PingOneProtectInitializeCallback,
   } from '@forgerock/journey-client/types';
+  import type { WebAuthnStepType } from '@forgerock/journey-client/webauthn';
+  import type { z } from 'zod';
 
+  import type { CustomRegistryEntry } from './custom-registry';
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   type Props = {
     callback: BaseCallback;

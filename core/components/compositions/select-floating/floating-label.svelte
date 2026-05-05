@@ -8,8 +8,9 @@
  -->
 
 <script lang="ts">
-  import Select from '$components/primitives/select/select.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
+  import Select from '$components/primitives/select/select.svelte';
+
   import type { Maybe } from '$core/interfaces';
 
   export let checkValidity: ((event: Event) => boolean) | null = null;

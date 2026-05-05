@@ -8,23 +8,23 @@
  -->
 
 <script lang="ts">
+  import T from '$components/_utilities/locale-strings.svelte';
+  import Floating from '$components/compositions/input-floating/floating-label.svelte';
+  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
+  import EyeIcon from '$components/icons/eye-icon.svelte';
+  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
+  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
+  import ConfirmInput from './confirm-input.svelte';
+
   import type {
     PasswordCallback,
     ValidatedCreatePasswordCallback,
   } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
-  import ConfirmInput from './confirm-input.svelte';
-  import EyeIcon from '$components/icons/eye-icon.svelte';
-  import Floating from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
-  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
-  import T from '$components/_utilities/locale-strings.svelte';
-
   import type { Maybe } from '$core/interfaces';
-  import type { CallbackMetadata } from '$journey/journey.interfaces';
   import type { styleSchema } from '$core/style.store';
-  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
+  import type { CallbackMetadata } from '$journey/journey.interfaces';
 
   export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
   export let callbackMetadata: Maybe<CallbackMetadata>;

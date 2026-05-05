@@ -7,8 +7,8 @@
  *
  **/
 
-import sanitize from 'xss';
 import { get } from 'svelte/store';
+import sanitize from 'xss';
 import { z } from 'zod';
 
 import { stringsStore } from '$core/locale.store';

@@ -1,9 +1,11 @@
 import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import svelte from 'eslint-plugin-svelte';
-import svelteParser from 'svelte-eslint-parser';
-import globals from 'globals';
+import importPlugin from 'eslint-plugin-import';
+import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import storybook from 'eslint-plugin-storybook';
+import svelte from 'eslint-plugin-svelte';
+import globals from 'globals';
+import svelteParser from 'svelte-eslint-parser';
+import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   // Base JS recommended rules
@@ -45,7 +47,26 @@ export default tseslint.config(
 
   // Custom rule overrides
   {
+    plugins: {
+      import: importPlugin,
+      'simple-import-sort': simpleImportSort,
+    },
     rules: {
+      'simple-import-sort/imports': [
+        'error',
+        {
+          groups: [
+            // 1) value imports from proper (package) modules
+            ['^\\u0000[^.$]', '^[^.$]'],
+            // 2) value imports from file-based modules (relative + $ aliases)
+            ['^\\u0000\\$', '^\\u0000\\.', '^\\$', '^\\.'],
+            // 3) type-only imports from proper modules
+            ['^[^.$].*\\u0000$'],
+            // 4) type-only imports from file-based modules (relative + $ aliases)
+            ['^(\\$|\\.).*\\u0000$'],
+          ],
+        },
+      ],
       // Disable navigation resolve rules - too strict for existing codebase
       'svelte/no-navigation-without-resolve': 'off',
       // Disable each-key requirement - existing codebase doesn't use keys
@@ -73,6 +94,24 @@ export default tseslint.config(
           allowTernary: true,
         },
       ],
+    },
+  },
+
+  // TypeScript/Svelte import style (keeps type-only imports in their own blocks)
+  {
+    files: ['**/*.{ts,tsx,svelte}'],
+    plugins: {
+      import: importPlugin,
+    },
+    rules: {
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'separate-type-imports',
+        },
+      ],
+      'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     },
   },
 

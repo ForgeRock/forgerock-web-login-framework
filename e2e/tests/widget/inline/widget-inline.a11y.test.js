@@ -7,7 +7,7 @@
  *
  **/
 
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';

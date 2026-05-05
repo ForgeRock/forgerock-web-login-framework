@@ -8,16 +8,16 @@
  -->
 
 <script lang="ts">
+  import type { HiddenValueCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
-  import type { HiddenValueCallback } from '@forgerock/journey-client/types';
 
   export const callback: Maybe<HiddenValueCallback> = null;
   export const callbackMetadata: Maybe<CallbackMetadata> = null;

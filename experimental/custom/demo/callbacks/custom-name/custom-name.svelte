@@ -22,8 +22,6 @@
 
 <script lang="ts">
   // ─── SDK types ─────────────────────────────────────────────────────────────
-  import type { NameCallback } from '@forgerock/journey-client/types';
-
   // ─── Framework imports ──────────────────────────────────────────────────────
   /**
    * Import everything you need from '$login-framework' — the framework's centralized
@@ -32,13 +30,11 @@
    *
    * Available exports (see experimental/custom/login-framework.ts for the full list):
    */
-  import {
-    Stacked,
-    interpolate,
-    textToKey,
-    type CallbackMetadata,
-    type Maybe,
-  } from '$login-framework';
+  import { interpolate, Stacked, textToKey } from '$login-framework';
+
+  import type { NameCallback } from '@forgerock/journey-client/types';
+
+  import type { CallbackMetadata, Maybe } from '$login-framework';
 
   // ─── Prop contract ──────────────────────────────────────────────────────────
   export let callback: NameCallback;

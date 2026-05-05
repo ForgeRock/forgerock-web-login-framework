@@ -9,6 +9,7 @@
 
 <script lang="ts">
   import sanitize from 'xss';
+
   import type { Maybe } from '$core/interfaces';
 
   export let classes = '';

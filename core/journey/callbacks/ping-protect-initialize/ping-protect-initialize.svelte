@@ -8,15 +8,17 @@
  -->
 
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import type { z } from 'zod';
-  import type { PingOneProtectInitializeCallback } from '@forgerock/javascript-sdk';
   import { PIProtect } from '@forgerock/ping-protect';
+  import { onMount } from 'svelte';
 
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import type { SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
+
+  import type { PingOneProtectInitializeCallback } from '@forgerock/javascript-sdk';
+  import type { z } from 'zod';
+
   import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
+  import type { SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
 
   export const style: z.infer<typeof styleSchema> = {};
   export const stepMetadata: Maybe<StepMetadata> = null;

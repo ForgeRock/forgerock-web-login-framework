@@ -8,13 +8,17 @@
  -->
 
 <script lang="ts">
+  import { PIProtect } from '@forgerock/ping-protect';
   import { onMount } from 'svelte';
+
   import T from '$components/_utilities/locale-strings.svelte';
-  import type { PingOneProtectEvaluationCallback } from '@forgerock/journey-client/types';
-  import { PIProtect, type InitParams } from '@forgerock/ping-protect';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import type { SelfSubmitFunction } from '$journey/journey.interfaces';
+
+  import type { PingOneProtectEvaluationCallback } from '@forgerock/journey-client/types';
+  import type { InitParams } from '@forgerock/ping-protect';
+
   import type { Maybe } from '$core/interfaces';
+  import type { SelfSubmitFunction } from '$journey/journey.interfaces';
 
   export let callback: PingOneProtectEvaluationCallback;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

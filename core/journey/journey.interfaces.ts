@@ -9,12 +9,13 @@
 
 import type {
   JourneyStep,
-  StartParam,
-  Step,
   NextOptions,
   ResumeOptions,
+  StartParam,
+  Step,
 } from '@forgerock/journey-client/types';
 import type { Writable } from 'svelte/store';
+
 import type { Maybe } from '$core/interfaces';
 
 /*

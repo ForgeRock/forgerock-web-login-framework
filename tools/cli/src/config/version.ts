@@ -1,5 +1,6 @@
-import { Console, Effect, Schema } from 'effect';
 import { FileSystem } from '@effect/platform';
+import { Console, Effect, Schema } from 'effect';
+
 import { GeneratorVersionError } from '../errors.js';
 
 const GeneratorVersionSchema = Schema.Struct({

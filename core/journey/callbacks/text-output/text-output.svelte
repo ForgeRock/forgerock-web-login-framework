@@ -8,19 +8,24 @@
  -->
 
 <script lang="ts">
-  import type { SuspendedTextOutputCallback, TextOutputCallback } from '@forgerock/journey-client/types';
   import sanitize from 'xss';
+
+  import Alert from '$components/primitives/alert/alert.svelte';
+  import Text from '$components/primitives/text/text.svelte';
+
+  import type {
+    SuspendedTextOutputCallback,
+    TextOutputCallback,
+  } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
-  import Alert from '$components/primitives/alert/alert.svelte';
-  import Text from '$components/primitives/text/text.svelte';
 
   // Unused props. Setting to const prevents errors in console
   export const callbackMetadata: Maybe<CallbackMetadata> = null;

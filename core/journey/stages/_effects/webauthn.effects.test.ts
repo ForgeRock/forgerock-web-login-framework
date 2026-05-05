@@ -17,24 +17,24 @@
  * So combining those e2e with this integration test is the best for autofill passkey.
  */
 
+import { callbackType } from '@forgerock/journey-client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { JourneyStep } from '@forgerock/journey-client/types';
-import { callbackType } from '@forgerock/journey-client';
-
-import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 import { createJourneyStep } from '$journey/_utilities/step.mock';
-import { usernamePasswordStep } from '$journey/stages/step.mock';
 import {
   createMixedLoginWebAuthnStep,
   liveMixedLoginWebAuthnStep,
 } from '$journey/stages/mfa-stages.mock';
-
+import { usernamePasswordStep } from '$journey/stages/step.mock';
 import {
   authenticateWebAuthnAutofill,
-  setupPasskeyAutofill,
   isConditionalMediationSupported,
+  setupPasskeyAutofill,
 } from './webauthn.effects';
+
+import type { JourneyStep } from '@forgerock/journey-client/types';
+
+import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 
 function toArrayBuffer(text: string): ArrayBuffer {
   return new TextEncoder().encode(text).buffer;

@@ -8,23 +8,24 @@
  -->
 
 <script lang="ts">
+  import Centered from '$components/primitives/box/centered.svelte';
+  import { initialize as initializeLinks } from '$core/links.store';
+  import { initialize as initializeStyles } from '$core/style.store';
+  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+  import { initCheckValidation } from './_utilities/step.utilities';
+  import EmailSuspend from './email-suspend.svelte';
+  import Generic from './generic.svelte';
+  import Login from './login.svelte';
+  import OneTimePassword from './one-time-password.svelte';
+  import QrCode from './qr-code.svelte';
+  import RecoveryCodes from './recovery-codes.svelte';
+  import Registration from './registration.svelte';
+  import WebAuthn from './webauthn.svelte';
+
   import type { JourneyStep } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
-  import Centered from '$components/primitives/box/centered.svelte';
-  import EmailSuspend from './email-suspend.svelte';
-  import Generic from './generic.svelte';
-  import { initialize as initializeLinks } from '$core/links.store';
-  import OneTimePassword from './one-time-password.svelte';
-  import QrCode from './qr-code.svelte';
-  import Registration from './registration.svelte';
-  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
-  import RecoveryCodes from './recovery-codes.svelte';
-  import { initCheckValidation } from './_utilities/step.utilities';
-  import { initialize as initializeStyles, partialStyleSchema } from '$core/style.store';
-  import Login from './login.svelte';
-  import WebAuthn from './webauthn.svelte';
-
+  import type { partialStyleSchema } from '$core/style.store';
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
   export let form: StageFormObject;

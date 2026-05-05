@@ -10,14 +10,13 @@
 <script lang="ts">
   import { afterUpdate, onDestroy } from 'svelte';
 
+  import T from '$components/_utilities/locale-strings.svelte';
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { stack } from '$journey/journey.store';
-  import T from '$components/_utilities/locale-strings.svelte';
-  import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-
   import { setupPasskeyAutofill } from '$core/journey/stages/_effects/webauthn.effects';
+  import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
+  import { stack } from '$journey/journey.store';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -58,7 +57,7 @@
 
   afterUpdate(() => {
     alertNeedsFocus = $journeyStore && !$journeyStore.successful;
-  })
+  });
 
   onDestroy(() => {
     passkeyAutofill?.destroy();

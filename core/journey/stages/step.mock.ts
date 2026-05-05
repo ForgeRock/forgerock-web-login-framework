@@ -7,8 +7,9 @@
  *
  **/
 
-import type { Step } from '@forgerock/journey-client/types';
 import { callbackType } from '@forgerock/journey-client';
+
+import type { Step } from '@forgerock/journey-client/types';
 
 export const deviceProfileAloneData: Step = {
   authId:

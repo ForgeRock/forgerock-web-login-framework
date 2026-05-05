@@ -9,8 +9,8 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { getLocale, interpolate, textToKey } from './i18n.utilities';
 import { initialize } from '$core/locale.store';
+import { getLocale, interpolate, textToKey } from './i18n.utilities';
 
 describe('Test getLocale utility function', () => {
   it('should convert es-US locale to appropriate directory', () => {

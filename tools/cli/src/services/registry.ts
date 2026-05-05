@@ -1,5 +1,5 @@
-import { Console, Effect } from 'effect';
 import { FileSystem, Path } from '@effect/platform';
+import { Console, Effect } from 'effect';
 
 import { RegistryScanError } from '../errors.js';
 

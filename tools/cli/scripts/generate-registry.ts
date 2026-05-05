@@ -9,8 +9,8 @@
  * Requires the CLI to be compiled first:
  *   pnpm --filter @forgerock/login-framework-cli run build
  */
-import { Effect } from 'effect';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
+import { Effect } from 'effect';
 
 const { runRegistryScript } = await import('../src/services/registry.js');
 

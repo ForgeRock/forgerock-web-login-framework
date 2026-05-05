@@ -7,39 +7,35 @@
  *
  **/
 
-import {
-  Config,
-  FRUser,
-  HttpClient,
-  SessionManager,
-  type ConfigOptions,
-} from '@forgerock/javascript-sdk';
-import { derived, get, type Readable } from 'svelte/store';
+import { Config, FRUser, HttpClient, SessionManager } from '@forgerock/javascript-sdk';
 import { PIProtect } from '@forgerock/ping-protect';
+import { derived, get } from 'svelte/store';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
-import configure from '$core/sdk.config';
-
 // Import the stores for initialization
 import { componentStore } from '$core/component.store';
+import { initialize as initializeLinks } from '$core/links.store';
+import { initialize as initializeContent } from '$core/locale.store';
+import { initialize as initializeOauth } from '$core/oauth/oauth.store';
+import configure from '$core/sdk.config';
+import { initialize as initializeStyle } from '$core/style.store';
+import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { initialize as initializeJourney } from '$journey/journey.store';
-import { initialize as initializeContent } from '$core/locale.store';
-import { initialize as initializeLinks } from '$core/links.store';
-import { initialize as initializeOauth } from '$core/oauth/oauth.store';
-import { initialize as initializeUser } from '$core/user/user.store';
-import { initialize as initializeStyle } from '$core/style.store';
 
-import type { componentApi as _componentApi } from './component.utilities';
+import type { ConfigOptions } from '@forgerock/javascript-sdk';
+import type { Readable } from 'svelte/store';
+
 import type {
   JourneyOptions,
   JourneyOptionsChange,
   JourneyOptionsStart,
   WidgetConfigOptions,
 } from '../interfaces';
-import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
+import type { componentApi as _componentApi } from './component.utilities';
 import type { OAuthStore, OAuthTokenStoreValue } from '$core/oauth/oauth.store';
 import type { UserStore, UserStoreValue } from '$core/user/user.store';
+import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 
 /**
  * @function widgetApiFactory - Creates the widget API

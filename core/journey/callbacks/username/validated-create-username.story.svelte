@@ -8,10 +8,10 @@
  -->
 
 <script lang="ts">
-  import type { ValidatedCreateUsernameCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Input from './validated-create-username.svelte';
+
+  import type { ValidatedCreateUsernameCallback } from '@forgerock/journey-client/types';
 
   export let callback: ValidatedCreateUsernameCallback;
 

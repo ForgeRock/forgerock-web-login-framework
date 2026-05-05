@@ -7,12 +7,12 @@
  *
  **/
 
-import type { RequestEvent } from '@sveltejs/kit';
-import type { PageServerLoad } from './$types';
-import type { z } from 'zod';
-
 import { getLocale } from '$core/_utilities/i18n.utilities';
 
+import type { RequestEvent } from '@sveltejs/kit';
+import type { z } from 'zod';
+
+import type { PageServerLoad } from './$types';
 import type { stringsSchema } from '$core/locale.store';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {

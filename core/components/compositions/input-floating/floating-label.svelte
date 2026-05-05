@@ -10,6 +10,7 @@
 <script lang="ts">
   import Input from '$components/primitives/input/input.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
+
   import type { Maybe } from '$core/interfaces';
 
   export let autocomplete: 'username webauthn' | undefined = undefined;
@@ -62,7 +63,7 @@
     bind:value
   />
   <slot name="input-button" />
-  
+
   <div class="tw_w-full" id={`${key}-message`}>
     <Message dirtyMessage={message} {showMessage} type={isInvalid ? 'error' : 'info'} />
     <slot />

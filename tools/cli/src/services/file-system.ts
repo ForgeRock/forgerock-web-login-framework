@@ -1,11 +1,12 @@
-import { Effect } from 'effect';
 import { FileSystem } from '@effect/platform';
-import type { PlatformError } from '@effect/platform/Error';
+import { Effect } from 'effect';
+import path from 'node:path';
+
 import { isExcluded } from '../config/exclusions.js';
 import { FileSystemError } from '../errors.js';
-
-import path from 'node:path';
 import { normalizeSeparators } from '../utils.js';
+
+import type { PlatformError } from '@effect/platform/Error';
 
 const wrapFsCall =
   (operation: string, fsPath: string) =>

@@ -9,24 +9,24 @@
 
 import { expect, fn } from 'storybook/test';
 import { fireEvent, waitFor, within } from 'storybook/test';
+import { userEvent } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { initialize } from '../config.store';
-import Step from './stages.story.svelte';
 import {
+  emailSuspendStep,
   mfaRegistrationOptionsStep,
-  oneTimePasswordStep,
-  oathRegistrationStep,
   oathRegistrationErrorStep,
+  oathRegistrationStep,
+  oneTimePasswordStep,
   pushRegistrationStep,
   recoveryCodes,
   recoveryCodesWithName,
-  emailSuspendStep,
   webAuthnAuthenticationStep,
   webAuthnRegistrationStep,
 } from './mfa-stages.mock.ts';
-import { userEvent } from 'storybook/test';
+import Step from './stages.story.svelte';
 
 const frOneTimePassword = createJourneyStep(oneTimePasswordStep);
 const frMfaRegistrationOptions = createJourneyStep(mfaRegistrationOptionsStep);

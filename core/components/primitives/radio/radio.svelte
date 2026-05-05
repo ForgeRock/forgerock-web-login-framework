@@ -8,10 +8,11 @@
  -->
 
 <script lang="ts">
-  import type { Maybe } from '$core/interfaces';
   import { afterUpdate } from 'svelte';
 
   import Label from '../label/label.svelte';
+
+  import type { Maybe } from '$core/interfaces';
 
   export let checked = false;
   export let isFirstInvalidInput: boolean;

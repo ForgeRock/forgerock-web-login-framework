@@ -7,10 +7,12 @@
  *
  **/
 
-import type { JourneyStep, Step } from '@forgerock/journey-client/types';
 import { callbackType } from '@forgerock/journey-client';
+
 import { createJourneyStep } from '../_utilities/step.mock';
 import { usernamePasswordStep } from './step.mock';
+
+import type { JourneyStep, Step } from '@forgerock/journey-client/types';
 
 export const mfaRegistrationOptionsStep: Step = {
   authId:

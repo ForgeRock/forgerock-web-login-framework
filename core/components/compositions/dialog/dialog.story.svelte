@@ -8,14 +8,14 @@
  -->
 
 <script lang="ts">
-  import type { z } from 'zod';
-
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Button from '$components/primitives/button/button.svelte';
-  import Dialog from './dialog.svelte';
   import Form from '$components/primitives/form/form.svelte';
-  import Input from '$components/compositions/input-floating/floating-label.svelte';
   import { initialize } from '$core/style.store';
+  import Dialog from './dialog.svelte';
+
+  import type { z } from 'zod';
 
   import type { logoSchema } from '$core/style.store';
 

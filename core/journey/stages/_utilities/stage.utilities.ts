@@ -7,12 +7,14 @@
  *
  **/
 
-import type { StartParam } from '@forgerock/journey-client/types';
 import { get } from 'svelte/store';
+
 import { configuredJourneysStore } from '$journey/config.store';
 
-import type { StageJourneyObject } from '$journey/journey.interfaces';
+import type { StartParam } from '@forgerock/journey-client/types';
+
 import type { StoreItem } from '$journey/config.store';
+import type { StageJourneyObject } from '$journey/journey.interfaces';
 
 /**
  * @function captureLinks - This is a callback for onMount that internally handled links and prevents navigation

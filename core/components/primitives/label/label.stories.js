@@ -9,6 +9,7 @@
 
 import { expect } from 'storybook/test';
 import { within } from 'storybook/test';
+
 import Label from './label.story.svelte';
 
 export default {

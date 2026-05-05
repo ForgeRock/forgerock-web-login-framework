@@ -8,19 +8,21 @@
  -->
 
 <script lang="ts">
-  import type { ReCaptchaCallback } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
   import { onMount } from 'svelte';
-  import { journeyStore } from '$journey/journey.store';
 
-  import type { SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
+  import { journeyStore } from '$journey/journey.store';
   import {
     handleCaptchaError,
     handleCaptchaToken,
     renderCaptcha,
   } from '$journey/stages/_utilities/recaptcha.utilities';
+
+  import type { ReCaptchaCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
+  import type { SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
 
   export let callback: Maybe<ReCaptchaCallback>;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

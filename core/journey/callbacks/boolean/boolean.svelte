@@ -8,21 +8,21 @@
  -->
 
 <script lang="ts">
+  import Animated from '$components/compositions/checkbox/animated.svelte';
+  import Standard from '$components/compositions/checkbox/standard.svelte';
+  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
   import { getAttributeValidationFailureText } from '$journey/callbacks/_utilities/callback.utilities';
+
   import type { AttributeInputCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
-  import Animated from '$components/compositions/checkbox/animated.svelte';
-  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
-  import Standard from '$components/compositions/checkbox/standard.svelte';
-
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

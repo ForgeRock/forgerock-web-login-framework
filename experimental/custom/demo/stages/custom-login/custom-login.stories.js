@@ -7,9 +7,10 @@
  *
  **/
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { fn } from 'storybook/test';
 import { writable } from 'svelte/store';
+
+import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { customLoginStep } from './custom-login.mock';
 import Story from './custom-login.story.svelte';
 

@@ -1,7 +1,8 @@
-import { Context, Effect, Layer, Scope, Schema } from 'effect';
 import { FileSystem, HttpClient, HttpClientResponse } from '@effect/platform';
 import { NodeHttpClient } from '@effect/platform-node';
+import { Context, Effect, Layer, Schema } from 'effect';
 import { extract } from 'tar';
+
 import {
   InvalidVersionError,
   ReleaseFsError,
@@ -9,6 +10,8 @@ import {
   ReleaseNotFoundError,
   ReleaseParseError,
 } from '../errors.js';
+
+import type { Scope } from 'effect';
 
 const REPO = 'ForgeRock/forgerock-web-login-framework';
 

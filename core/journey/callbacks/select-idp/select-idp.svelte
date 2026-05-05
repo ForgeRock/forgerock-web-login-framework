@@ -8,23 +8,23 @@
  -->
 
 <script lang="ts">
-  import type { SelectIdPCallback } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
-
+  import T from '$components/_utilities/locale-strings.svelte';
+  import Button from '$components/primitives/button/button.svelte';
+  import Grid from '$components/primitives/grid/grid.svelte';
   import AppleIcon from '../../../components/icons/apple-icon.svelte';
   import FacebookIcon from '../../../components/icons/facebook-icon.svelte';
   import GoogleIcon from '../../../components/icons/google-icon.svelte';
-  import Button from '$components/primitives/button/button.svelte';
-  import Grid from '$components/primitives/grid/grid.svelte';
-  import T from '$components/_utilities/locale-strings.svelte';
 
+  import type { SelectIdPCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   export const style: z.infer<typeof styleSchema> = {};
 

@@ -8,15 +8,16 @@
  -->
 
 <script lang="ts">
-  import type { PasswordCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Password from './password.svelte';
+
+  import type { PasswordCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
+
   import type { styleSchema } from '$core/style.store';
 
   export let callback: PasswordCallback;
-  export let style: z.infer<typeof styleSchema> ;
+  export let style: z.infer<typeof styleSchema>;
 
   let callbackMetadata = {
     derived: {

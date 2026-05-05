@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+
 import { isExcluded } from '../src/config/exclusions.js';
 
 describe('isExcluded', () => {

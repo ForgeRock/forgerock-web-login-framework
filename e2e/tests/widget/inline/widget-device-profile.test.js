@@ -8,6 +8,7 @@
  **/
 
 import { expect, test } from '@playwright/test';
+
 import { asyncEvents } from '../../utilities/async-events.js';
 
 test('Modal widget with collecting a device profile after login', async ({ page, context }) => {

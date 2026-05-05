@@ -7,10 +7,11 @@
  *
  **/
 
-import type { RequestEvent } from '@sveltejs/kit';
-import type { RequestHandler } from './$types';
-
 import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$core/constants';
+
+import type { RequestEvent } from '@sveltejs/kit';
+
+import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const response = await fetch(

@@ -8,14 +8,14 @@
  -->
 
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
   import { onMount, tick } from 'svelte';
 
+  import { goto } from '$app/navigation';
+  import { page } from '$app/stores';
   import Box from '$components/primitives/box/centered.svelte';
-  import Journey from '$journey/journey.svelte';
-  import { initialize as initializeJourney } from '$journey/journey.store';
   import { initialize as initializeContent } from '$core/locale.store';
+  import { initialize as initializeJourney } from '$journey/journey.store';
+  import Journey from '$journey/journey.svelte';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -89,7 +89,8 @@
         journeyStepUrl =
           $journeyStore?.step?.payload?.detail?.failureUrl ??
           // Some failure flows store failureUrl in error.detail instead of step payload.
-          $journeyStore?.error?.detail?.failureUrl ?? '';
+          $journeyStore?.error?.detail?.failureUrl ??
+          '';
       }
 
       // wait until the DOM is updated before submitting

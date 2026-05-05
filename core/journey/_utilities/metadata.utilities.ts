@@ -7,9 +7,7 @@
  *
  **/
 
-import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
-
-import type { CallbackMetadata } from '$journey/journey.interfaces';
+import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
 import {
   canForceUserInputOptionality,
   isCbReadyByDefault,
@@ -18,7 +16,10 @@ import {
   isUserInputOptional,
   requiresUserInput,
 } from './data-analysis.utilities';
-import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
+
+import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
+
+import type { CallbackMetadata } from '$journey/journey.interfaces';
 
 /**
  * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array

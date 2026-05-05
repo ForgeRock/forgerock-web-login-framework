@@ -8,9 +8,9 @@
  -->
 
 <script context="module" lang="ts">
+  import './main.css';
   import { widgetApiFactory } from './_utilities/api.utilities';
   import { componentApi } from './_utilities/component.utilities';
-  import './main.css';
 
   const api = widgetApiFactory(componentApi());
 
@@ -23,12 +23,14 @@
 </script>
 
 <script lang="ts">
-  import { onMount, SvelteComponent } from 'svelte';
+  import { onMount } from 'svelte';
 
-  import { mount } from './_utilities/component.utilities';
   import Dialog from '$components/compositions/dialog/dialog.svelte';
-  import Journey from '$journey/journey.svelte';
   import { styleStore } from '$core/style.store';
+  import Journey from '$journey/journey.svelte';
+  import { mount } from './_utilities/component.utilities';
+
+  import type { SvelteComponent } from 'svelte';
 
   export let type: 'modal' | 'inline' = 'modal';
 

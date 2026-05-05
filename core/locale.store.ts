@@ -7,13 +7,15 @@
  *
  **/
 
-import { writable, type Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import { z } from 'zod';
 
 // TODO: Reevaluate use of JS versus JSON without breaking type generation for lib
 // eslint-disable-next-line
 // @ts-ignore
 import fallback from '$locales/us/en/index.json';
+
+import type { Writable } from 'svelte/store';
 
 export const stringsSchema = z
   .object({

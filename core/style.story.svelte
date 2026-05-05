@@ -6,18 +6,19 @@
  of the MIT license. See the LICENSE file for details.
  
  -->
- 
-<script lang="ts">
-  import type { JourneyStep } from '@forgerock/journey-client/types'; 
-  import type { z } from 'zod';
 
+<script lang="ts">
   import Centered from '$components/primitives/box/centered.svelte';
-  import Generic from '$journey/stages/generic.svelte';
   import { initialize as initializeLinks } from '$core/links.store';
+  import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import { initCheckValidation } from '$journey/stages/_utilities/step.utilities';
-  import { initialize as initializeStyles, partialStyleSchema } from '$core/style.store';
+  import Generic from '$journey/stages/generic.svelte';
 
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { partialStyleSchema } from '$core/style.store';
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
   export let form: StageFormObject;

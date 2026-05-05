@@ -8,22 +8,29 @@
  -->
 
 <script lang="ts">
-  import type { JourneyStep } from '@forgerock/journey-client/types';
   import { afterUpdate, onMount } from 'svelte';
 
-  // i18n
-  import { interpolate } from '$core/_utilities/i18n.utilities';
   import T from '$components/_utilities/locale-strings.svelte';
-
+  import Sanitize from '$components/_utilities/server-strings.svelte';
+  import ShieldIcon from '$components/icons/shield-icon.svelte';
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
   import Button from '$components/primitives/button/button.svelte';
-  import { convertStringToKey, shouldRedirectFromStep } from '$journey/stages/_utilities/step.utilities';
   import Form from '$components/primitives/form/form.svelte';
-  import Sanitize from '$components/_utilities/server-strings.svelte';
-  import ShieldIcon from '$components/icons/shield-icon.svelte';
+  // i18n
+  import { interpolate } from '$core/_utilities/i18n.utilities';
   import { styleStore } from '$core/style.store';
+  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
+  import {
+    convertStringToKey,
+    shouldRedirectFromStep,
+  } from '$journey/stages/_utilities/step.utilities';
+  import BackTo from './_utilities/back-to.svelte';
+  import { captureLinks } from './_utilities/stage.utilities';
 
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type { Maybe } from '$core/interfaces';
   // Types
   import type {
     CallbackMetadata,
@@ -31,10 +38,6 @@
     StageJourneyObject,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import BackTo from './_utilities/back-to.svelte';
-  import { captureLinks } from './_utilities/stage.utilities';
-  import type { Maybe } from '$core/interfaces';
-  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;

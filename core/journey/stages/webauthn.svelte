@@ -11,25 +11,22 @@
   import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
   import { afterUpdate } from 'svelte';
 
-  // i18n
-  import { interpolate } from '$core/_utilities/i18n.utilities';
   import T from '$components/_utilities/locale-strings.svelte';
-
+  import Input from '$components/compositions/input-floating/floating-label.svelte';
+  import FingerprintIcon from '$components/icons/fingerprint-icon.svelte';
   // Import primitives
   import Alert from '$components/primitives/alert/alert.svelte';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
+  import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
-  import FingerprintIcon from '$components/icons/fingerprint-icon.svelte';
+  import Spinner from '$components/primitives/spinner/spinner.svelte';
+  // i18n
+  import { interpolate } from '$core/_utilities/i18n.utilities';
+  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
 
   // Types
   import type { JourneyStep } from '@forgerock/journey-client/types';
 
   import type { StageFormObject } from '$journey/journey.interfaces';
-
-  import Input from '$components/compositions/input-floating/floating-label.svelte';
-
-  import Button from '$components/primitives/button/button.svelte';
-  import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   // TODO: refactor the map stage to component utility to allow passing in FRWebAuthn
   export let allowWebAuthn = true;
@@ -108,7 +105,6 @@
   }
 
   $: formMessageKey = convertStringToKey(form?.message);
-
 </script>
 
 <Form

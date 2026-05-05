@@ -1,10 +1,10 @@
-import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import sveltePreprocess from 'svelte-preprocess';
+import autoprefixer from 'autoprefixer';
 import { resolve } from 'path';
 import postcssImport from 'postcss-import';
+import sveltePreprocess from 'svelte-preprocess';
 import tailwindcss from 'tailwindcss';
-import autoprefixer from 'autoprefixer';
+import { defineConfig } from 'vite';
 
 /**
  * IIFE build config — produces a self-contained bundle for <script> tag usage.

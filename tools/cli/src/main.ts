@@ -4,8 +4,8 @@ import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Console, Effect } from 'effect';
 import { createRequire } from 'node:module';
 
-import { initCommand } from './commands/init.js';
 import { generateCommand } from './commands/generate.js';
+import { initCommand } from './commands/init.js';
 import { releasesCommand } from './commands/releases.js';
 import { updateCommand } from './commands/update.js';
 import { GithubReleaseLayer } from './services/release.js';

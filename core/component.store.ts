@@ -7,9 +7,10 @@
  *
  **/
 
-import { writable, type Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 
 import type { SvelteComponent } from 'svelte';
+import type { Writable } from 'svelte/store';
 
 export interface ComponentStoreValue {
   lastAction: 'close' | 'open' | 'mount' | null;

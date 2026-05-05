@@ -7,8 +7,9 @@
  *
  **/
 
-import { test, expect } from '@playwright/test';
-import { username, password } from '../utilities/demo-user.js';
+import { expect, test } from '@playwright/test';
+
+import { password, username } from '../utilities/demo-user.js';
 
 test('Successful redirect', async ({ page }) => {
   await page.goto('/?goto=https://forgerock.github.io/');

@@ -8,10 +8,10 @@
  -->
 
 <script lang="ts">
-  import type { AttributeInputCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Checkbox from './boolean.svelte';
+
+  import type { AttributeInputCallback } from '@forgerock/journey-client/types';
 
   export let callback: AttributeInputCallback<boolean>;
 

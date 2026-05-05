@@ -8,26 +8,26 @@
  -->
 
 <script lang="ts">
-  import type { ValidatedCreateUsernameCallback } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
-
+  import Floating from '$components/compositions/input-floating/floating-label.svelte';
+  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
+  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
   import {
     getValidationFailures,
     isInputRequired,
-    type FailedPolicy,
   } from '$journey/callbacks/_utilities/callback.utilities';
-  import Floating from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
-  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
 
+  import type { ValidatedCreateUsernameCallback } from '@forgerock/journey-client/types';
+  import type { z } from 'zod';
+
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
+  import type { FailedPolicy } from '$journey/callbacks/_utilities/callback.utilities';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

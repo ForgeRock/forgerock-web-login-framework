@@ -8,14 +8,14 @@
  -->
 
 <script lang="ts">
-  import type {
-    AttributeInputCallback,
-    ValidatedCreateUsernameCallback,
-    ValidatedCreatePasswordCallback,
-  } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import Policies from './policies.svelte';
+
+  import type {
+    AttributeInputCallback,
+    ValidatedCreatePasswordCallback,
+    ValidatedCreateUsernameCallback,
+  } from '@forgerock/journey-client/types';
 
   type ValidatedCallbacks =
     | AttributeInputCallback<boolean | string>

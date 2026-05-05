@@ -8,6 +8,7 @@
  **/
 
 import { expect, test } from '@playwright/test';
+
 import { asyncEvents } from '../../utilities/async-events.js';
 
 // Skipped: PingProtect journeys removed from AM server

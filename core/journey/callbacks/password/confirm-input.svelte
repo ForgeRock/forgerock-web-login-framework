@@ -8,17 +8,17 @@
  -->
 
 <script lang="ts">
-  import type { z } from 'zod';
-
-  import EyeIcon from '$components/icons/eye-icon.svelte';
-  import Floating from '$components/compositions/input-floating/floating-label.svelte';
-  import { interpolate } from '$core/_utilities/i18n.utilities';
-  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import T from '$components/_utilities/locale-strings.svelte';
+  import Floating from '$components/compositions/input-floating/floating-label.svelte';
+  import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
+  import EyeIcon from '$components/icons/eye-icon.svelte';
+  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
+  import { interpolate } from '$core/_utilities/i18n.utilities';
+
+  import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
-  import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
 
   export let forceValidityFailure = false;
   export let passwordsDoNotMatch = false;
@@ -30,7 +30,7 @@
   export let isFirstInvalidInput: boolean;
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
-    const showPassword = style.showPassword;
+  const showPassword = style.showPassword;
 
   // Below needs to be `undefined` to be optional and allow default value in Message component
   export let showMessage: Maybe<boolean> = undefined;
@@ -81,31 +81,31 @@
   {showMessage}
   {type}
   value={typeof value === 'string' ? value : ''}
-><svelte:fragment slot="input-button">
-      {#if showPassword === "button"}
-        <button
+  ><svelte:fragment slot="input-button">
+    {#if showPassword === 'button'}
+      <button
         class="tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark"
         on:click={toggleVisibility}
         type="button"
-        >
-          <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
-            <T key="showPassword" />
-          </EyeIcon>
-        </button>
-      {/if}
-    </svelte:fragment>
-    <slot />
-</Input>
-{#if showPassword === "checkbox"}
-    <div class="tw_w-full tw_input-spacing" >
-      <Checkbox 
-        {isFirstInvalidInput}
-        isInvalid={false}
-        key = {key + style.showPassword}
-        onChange={toggleVisibility}
-        value={false}
       >
-        Show Password
-      </Checkbox>
-    </div>
-  {/if}
+        <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
+          <T key="showPassword" />
+        </EyeIcon>
+      </button>
+    {/if}
+  </svelte:fragment>
+  <slot />
+</Input>
+{#if showPassword === 'checkbox'}
+  <div class="tw_w-full tw_input-spacing">
+    <Checkbox
+      {isFirstInvalidInput}
+      isInvalid={false}
+      key={key + style.showPassword}
+      onChange={toggleVisibility}
+      value={false}
+    >
+      Show Password
+    </Checkbox>
+  </div>
+{/if}

@@ -8,24 +8,22 @@
  -->
 
 <script lang="ts">
+  import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
+  import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
+  import Policies from '$journey/callbacks/_utilities/policies.svelte';
+  import Base from '$journey/callbacks/password/base.svelte';
+
   import type { ValidatedCreatePasswordCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
-  import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
-  import Base from '$journey/callbacks/password/base.svelte';
-  import {
-    type FailedPolicy,
-    isInputRequired,
-  } from '$journey/callbacks/_utilities/callback.utilities';
-  import Policies from '$journey/callbacks/_utilities/policies.svelte';
-
+  import type { Maybe } from '$core/interfaces';
+  import type { styleSchema } from '$core/style.store';
+  import type { FailedPolicy } from '$journey/callbacks/_utilities/callback.utilities';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
     StepMetadata,
   } from '$journey/journey.interfaces';
-  import type { styleSchema } from '$core/style.store';
-  import type { Maybe } from '$core/interfaces';
 
   // Unused props. Setting to const prevents errors in console
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;

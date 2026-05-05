@@ -9,10 +9,11 @@
 
 <script lang="ts">
   import { WebAuthnStepType } from '@forgerock/journey-client/webauthn';
-  import type { TextOutputCallback } from '@forgerock/journey-client/types';
-  import Centered from '$components/primitives/box/centered.svelte';
 
+  import Centered from '$components/primitives/box/centered.svelte';
   import TextOutput from './text-output.svelte';
+
+  import type { TextOutputCallback } from '@forgerock/journey-client/types';
 
   export let callback: TextOutputCallback;
   export const recoveryCodes: string[] = [];

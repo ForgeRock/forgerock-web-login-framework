@@ -15,13 +15,13 @@ vi.mock('./custom-registry', () => ({
   customCallbackRegistry: {},
 }));
 
+import { createJourneyStep } from '$journey/_utilities/step.mock';
+import Generic from '$journey/stages/generic.svelte';
+import Login from '$journey/stages/login.svelte';
+import { createMixedLoginWebAuthnStep } from '$journey/stages/mfa-stages.mock';
 import { mapStepToStage } from './map-stage.utilities';
 import { step1, step3 } from './step.mock';
 
-import Generic from '$journey/stages/generic.svelte';
-import Login from '$journey/stages/login.svelte';
-import { createJourneyStep } from '$journey/_utilities/step.mock';
-import { createMixedLoginWebAuthnStep } from '$journey/stages/mfa-stages.mock';
 import type { Step } from '@forgerock/journey-client/types';
 
 describe('Test mapping of step to stage', () => {

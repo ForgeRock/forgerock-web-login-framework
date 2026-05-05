@@ -1,14 +1,16 @@
-import { describe, expect, it, vi, afterEach } from 'vitest';
-import { Effect, Either, Layer, Scope } from 'effect';
-import { FileSystem, FetchHttpClient } from '@effect/platform';
+import { FetchHttpClient, FileSystem } from '@effect/platform';
 import { SystemError } from '@effect/platform/Error';
+import { Effect, Either, Layer } from 'effect';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  Release,
   makeGithubReleaseLayer,
-  validateVersion,
   parseReleaseTags,
+  Release,
+  validateVersion,
 } from '../src/services/release.js';
+
+import type { Scope } from 'effect';
 
 // ── Mock tar ──────────────────────────────────────────────────────────────────
 

@@ -8,10 +8,10 @@
  -->
 
 <script lang="ts">
-  import type { TextInputCallback } from '@forgerock/journey-client/types';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import TextInput from './text-input.svelte';
+
+  import type { TextInputCallback } from '@forgerock/journey-client/types';
 
   export let callback: TextInputCallback;
 
