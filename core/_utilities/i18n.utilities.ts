@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -18,7 +18,7 @@ import { stringsStore } from '$core/locale.store';
  *
  * Demo: https://regex101.com/r/Mw9vTB/1
  */
-const valueSchema = z.record(z.string().regex(/^[^<>]*$/)).optional();
+const valueSchema = z.record(z.string(), z.string().regex(/^[^<>]*$/)).optional();
 
 /**
  * @function getLocale - Takes Accept-Language string,
