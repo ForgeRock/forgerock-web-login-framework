@@ -7,8 +7,10 @@
  *
  **/
 
-import { CallbackType, Config, type FRCallback } from '@forgerock/javascript-sdk';
+import { Config } from '@forgerock/javascript-sdk';
 import { z } from 'zod';
+
+import type { CallbackType, FRCallback } from '@forgerock/javascript-sdk';
 
 type CallbackFactoryFn = (callback: {
   _id?: number;

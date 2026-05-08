@@ -111,7 +111,6 @@ export default tseslint.config(
           fixStyle: 'separate-type-imports',
         },
       ],
-      'import/consistent-type-specifier-style': ['error', 'prefer-top-level'],
     },
   },
 
