@@ -7,7 +7,7 @@ Custom callback component. Replace this description with your own.
 -->
 
 <script lang="ts">
-  import type { FRCallback } from '@forgerock/javascript-sdk';
+  import type { BaseCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
@@ -19,10 +19,12 @@ Custom callback component. Replace this description with your own.
   } from '$journey/journey.interfaces';
 
   /**
-   * The AM callback instance for this component. Use `callback.getInputValue()`
-   * and `callback.setInputValue()` to read/write values sent back to the server.
+   * The Journey Client callback instance for this component.
+   * Typically you'll narrow this to a specific callback type:
+   *   import type { NameCallback } from '@forgerock/journey-client/types'
+   *   export let callback: NameCallback;
    */
-  export let callback: FRCallback;
+  export let callback: BaseCallback;
 
   /**
    * Optional function to trigger self-submission (e.g. after an async action).

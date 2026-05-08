@@ -6,7 +6,7 @@ Name: __COMPONENT_NAME__
 Custom stage component. Replace this description with your own.
 
 A stage controls the layout and submission behaviour of an entire authentication
-step (page node). It receives the full FRStep, maps each callback to its
+step (page node). It receives the full JourneyStep, maps each callback to its
 component via CallbackMapper, and renders the form chrome (header, alerts,
 submit button, links).
 -->
@@ -25,7 +25,7 @@ submit button, links).
   import { captureLinks } from '$journey/stages/_utilities/stage.utilities';
   import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
 
-  import type { FRStep } from '@forgerock/javascript-sdk';
+  import type { JourneyStep } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
@@ -52,8 +52,8 @@ submit button, links).
   /** Step + callback metadata from AM — policies, derived helpers, stage header. */
   export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
 
-  /** The raw FRStep from the JavaScript SDK — contains all callbacks for this step. */
-  export let step: FRStep;
+  /** The raw JourneyStep from Journey Client — contains all callbacks for this step. */
+  export let step: JourneyStep;
 
   // Subscribe to style store so the template can pass styles to child callbacks.
   let currentStyle: z.infer<typeof styleSchema> = get(styleStore);
