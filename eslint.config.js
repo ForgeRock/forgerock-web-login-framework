@@ -1,9 +1,11 @@
+import { includeIgnoreFile } from '@eslint/compat';
 import js from '@eslint/js';
 import importPlugin from 'eslint-plugin-import';
 import simpleImportSort from 'eslint-plugin-simple-import-sort';
 import storybook from 'eslint-plugin-storybook';
 import svelte from 'eslint-plugin-svelte';
 import globals from 'globals';
+import { resolve } from 'node:path';
 import svelteParser from 'svelte-eslint-parser';
 import tseslint from 'typescript-eslint';
 
@@ -114,21 +116,11 @@ export default tseslint.config(
     },
   },
 
-  // Ignore patterns
+  // Ignore everything listed in .gitignore
+  includeIgnoreFile(resolve('.gitignore')),
+
+  // Additional ignores not covered by .gitignore
   {
-    ignores: [
-      '**/storybook-static/**',
-      '.storybook/**',
-      'seed.spec.ts',
-      '**/*.cjs',
-      '**/*.json',
-      '**/dist/**',
-      'packages/login-widget/svelte-package/**',
-      '**/.svelte-kit/**',
-      '.husky/**',
-      'node_modules/**',
-      '**/build/**',
-      'core/**/*.d.ts',
-    ],
+    ignores: ['.storybook/**', 'seed.spec.ts', '**/*.cjs', '**/*.json'],
   },
 );
