@@ -50,15 +50,15 @@ export const initCommand = Command.make(
         ),
       ),
     ),
-    version: Options.optional(
-      Options.text('version').pipe(
+    tag: Options.optional(
+      Options.text('tag').pipe(
         Options.withDescription(
-          'Framework version tag to download (e.g. v1.2.0). If omitted, the main branch is used.',
+          'Framework release tag to download (e.g. v1.2.0). If omitted, the main branch is used.',
         ),
       ),
     ),
   },
-  ({ directory, local, version }) =>
+  ({ directory, local, tag }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -89,7 +89,7 @@ export const initCommand = Command.make(
       // automatic removal of the .framework-tmp directory after copying.
       const resolvedVersion = yield* Effect.scoped(
         Effect.gen(function* () {
-          const { sourceDir, resolvedVersion } = yield* resolveSource(local, version, resolvedDir);
+          const { sourceDir, resolvedVersion } = yield* resolveSource(local, tag, resolvedDir);
 
           // ── 2. Create target directory + copy framework (with exclusions) ──
           yield* Console.log('Copying framework files...');

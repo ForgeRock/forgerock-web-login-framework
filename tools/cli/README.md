@@ -35,10 +35,10 @@ pnpm dev
 
 **Options**
 
-| Flag              | Description                                                                                                            |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `--version <tag>` | Download a specific release (e.g. `v1.2.0`). Defaults to latest.                                                       |
-| `--local <path>`  | Use a local framework directory instead of downloading from GitHub. Useful for development or air-gapped environments. |
+| Flag             | Description                                                                                                            |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `--tag <tag>`    | Download a specific release tag (e.g. `v1.2.0`). Defaults to latest.                                                   |
+| `--local <path>` | Use a local framework directory instead of downloading from GitHub. Useful for development or air-gapped environments. |
 
 **What it does**
 
@@ -105,7 +105,7 @@ Run from the root of an initialized project.
 
 ```sh
 ping-lf update                     # update to latest
-ping-lf update --version v1.5.0    # pin to a specific version
+ping-lf update --tag v1.5.0        # pin to a specific release tag
 ping-lf update --local ../framework # use a local directory
 ```
 
