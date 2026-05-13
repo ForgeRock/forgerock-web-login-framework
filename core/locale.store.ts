@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -32,7 +32,12 @@ export const stringsSchema = z
     confirmPassword: z.string(),
     constraintViolationForPassword: z.string(),
     constraintViolationForValue: z.string(),
+    continueButton: z.string(),
     continueWith: z.string(),
+    downloadTheApp: z.string(),
+    getAuthenticatorApp: z.string(),
+    getAuthenticatorAppDescription: z.string(),
+    getAuthenticatorAppLinks: z.string(),
     copyUrl: z.string(),
     copyAndPasteUrlBelow: z.string(),
     customSecurityQuestion: z.string(),
@@ -88,6 +93,11 @@ export const stringsSchema = z
     registerYourDevice: z.string(),
     requiredField: z.string(),
     securityAnswer: z.string(),
+    setupTwoStepVerification: z.string(),
+    setupTwoStepVerificationButton: z.string(),
+    setupTwoStepVerificationDescription: z.string(),
+    setupTwoStepVerificationWarning: z.string(),
+    skipForNow: z.string(),
     scanQrCodeWithAuthenticator: z.string(),
     securityQuestions: z.string(),
     securityQuestionsPrompt: z.string(),

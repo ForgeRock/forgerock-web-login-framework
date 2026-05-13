@@ -139,6 +139,7 @@ export function interpolate(
     messageDirty = externalText;
   }
   const messageClean = sanitize(messageDirty, {
+    whiteList: { a: ['target', 'href', 'title', 'rel', 'class'], b: [], em: [] },
     /**
      * Allow `?` as first char in `href` value for anchor tags.
      * To preserve original behavior in addition to this one exception,
