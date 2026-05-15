@@ -27,7 +27,7 @@
     "prepare": "is-ci || husky install"
   },
   "devDependencies": {
-    "@changesets/changelog-github": "^0.5.1",
+    "@changesets/changelog-github": "^0.7.0",
     "@changesets/cli": "^2.29.4",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.2",
