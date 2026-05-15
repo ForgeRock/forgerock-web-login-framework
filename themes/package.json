@@ -2,6 +2,6 @@
   "name": "@forgerock/login-widget-theme",
   "private": true,
   "dependencies": {
-    "tailwindcss": "^3.3.3"
+    "tailwindcss": "^4.3.0"
   }
 }
