@@ -21,15 +21,21 @@ describe('isExcluded', () => {
     expect(isExcluded('node_modules')).toBe(true);
     expect(isExcluded('storybook-static')).toBe(true);
     expect(isExcluded('specs')).toBe(true);
-    expect(isExcluded('tools')).toBe(true);
   });
 
   it('excludes known directory prefixes (files inside excluded dirs)', () => {
     expect(isExcluded('.git/HEAD')).toBe(true);
     expect(isExcluded('node_modules/react/index.js')).toBe(true);
-    expect(isExcluded('tools/cli/src/main.ts')).toBe(true);
+    expect(isExcluded('tools/cli/dist/src/main.js')).toBe(true);
+    expect(isExcluded('tools/cli/node_modules/foo')).toBe(true);
     expect(isExcluded('.github/workflows/ci.yml')).toBe(true);
     expect(isExcluded('storybook-static/index.html')).toBe(true);
+  });
+
+  it('does not exclude tools/cli source files', () => {
+    expect(isExcluded('tools/cli/src/main.ts')).toBe(false);
+    expect(isExcluded('tools/cli/package.json')).toBe(false);
+    expect(isExcluded('tools/cli/scripts/generate-registry.ts')).toBe(false);
   });
 
   it('excludes nested node_modules in workspaces', () => {

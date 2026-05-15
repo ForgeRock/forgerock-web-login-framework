@@ -12,7 +12,7 @@ import { GithubReleaseLayer } from './services/release.js';
 
 // Read the version from package.json at runtime so it stays in sync
 // with the published package version after changesets bumps it.
-const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+const { version } = createRequire(import.meta.url)('../../package.json') as { version: string };
 
 const rootCommand = Command.make('ping-lf').pipe(
   Command.withDescription(

@@ -10,13 +10,14 @@ import { resolveSource } from './source.js';
 
 /**
  * Minimal pnpm-workspace.yaml written to the customer project.
- * Intentionally omits `tools/` — that workspace entry exists only in the
- * upstream monorepo and is not needed (or valid) in a customer project.
+ * Includes `tools/*` so the bundled CLI under tools/cli resolves via
+ * workspace:* in packages/login-widget.
  */
 const PNPM_WORKSPACE = `packages:
   - 'packages/*'
   - 'apps/*'
   - 'e2e'
+  - 'tools/*'
 `;
 
 const nextStepsMessage = (dir: string) => `

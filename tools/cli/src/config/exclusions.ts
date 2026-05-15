@@ -21,7 +21,8 @@ const EXCLUDED_PREFIXES = [
   'e2e/blob-report/',
   'docs/',
   'specs/',
-  'tools/',
+  'tools/cli/dist/',
+  'tools/cli/node_modules/',
 ] as const;
 
 const EXCLUDED_FILES = [
