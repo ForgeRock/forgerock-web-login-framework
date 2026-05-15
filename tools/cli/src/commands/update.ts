@@ -52,7 +52,6 @@ export const updateCommand = Command.make(
       // ── 4. Update .generator-version ──────────────────────────────────────
       yield* writeVersion(cwd, {
         version: resolvedVersion,
-        commitHash: '',
         generatedAt: new Date().toISOString(),
       });
       yield* Console.log(

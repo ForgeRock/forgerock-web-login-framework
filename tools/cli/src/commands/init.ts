@@ -131,7 +131,6 @@ export const initCommand = Command.make(
       // ── 6. Write .generator-version ────────────────────────────────────────
       yield* writeVersion(resolvedDir, {
         version: resolvedVersion,
-        commitHash: '',
         generatedAt: new Date().toISOString(),
       });
 

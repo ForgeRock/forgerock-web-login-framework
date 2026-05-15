@@ -31,7 +31,6 @@ afterEach(async () => {
 
 const sampleVersion: GeneratorVersion = {
   version: 'v1.2.3',
-  commitHash: 'abc1234',
   generatedAt: '2026-01-01T00:00:00.000Z',
 };
 

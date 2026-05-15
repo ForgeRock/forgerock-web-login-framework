@@ -5,7 +5,6 @@ import { GeneratorVersionError } from '../errors.js';
 
 const GeneratorVersionSchema = Schema.Struct({
   version: Schema.String,
-  commitHash: Schema.String,
   generatedAt: Schema.String,
 });
 
