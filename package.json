@@ -44,7 +44,7 @@
     "@vueless/storybook-dark-mode": "^10.0.4",
     "axe-playwright": "^1.2.3",
     "chromatic": "^10.9.1",
-    "color": "4.2.3",
+    "color": "5.0.3",
     "commitizen": "^4.3.0",
     "concurrently": "^8.2.2",
     "cz-conventional-changelog": "^3.3.0",
