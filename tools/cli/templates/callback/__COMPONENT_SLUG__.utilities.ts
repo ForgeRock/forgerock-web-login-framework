@@ -8,6 +8,6 @@
 /**
  * Example utility — replace with your own helpers.
  */
-export function format__COMPONENT_NAME__Label(value: string): string {
+export function format__COMPONENT_NAME_PASCAL__Label(value: string): string {
   return value.trim();
 }

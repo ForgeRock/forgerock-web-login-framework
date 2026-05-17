@@ -35,6 +35,17 @@ function toSlug(name: string): string {
 }
 
 /**
+ * Converts a kebab-case slug to PascalCase, safe for use as a TypeScript identifier.
+ * Examples: "my-login-stage" → "MyLoginStage", "otp-login" → "OtpLogin"
+ */
+function toPascalCase(slug: string): string {
+  return slug
+    .split('-')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join('');
+}
+
+/**
  * Validates a callback component name: must be a valid name (PascalCase, alphanumeric only).
  * Callback names are driven by AM's callback type strings (e.g. NameCallback, PasswordCallback).
  */
@@ -112,8 +123,12 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
     yield* fs.makeDirectory(componentDir, { recursive: true });
 
     // ── Copy and process template files ───────────────────────────────────
-    // Each file name contains __COMPONENT_SLUG__; its contents contain both
-    // __COMPONENT_NAME__ (PascalCase) and __COMPONENT_SLUG__ (kebab-case).
+    // Each file name contains __COMPONENT_SLUG__; its contents use:
+    //   __COMPONENT_NAME__        — raw display name (may contain spaces, e.g. "My Login Stage")
+    //   __COMPONENT_NAME_PASCAL__ — PascalCase identifier derived from slug (e.g. "MyLoginStage"),
+    //                               safe for use in TypeScript symbol positions (function names etc.)
+    //   __COMPONENT_SLUG__        — kebab-case slug (e.g. "my-login-stage")
+    const pascalName = toPascalCase(slug);
     const templateFiles = yield* fs.readDirectory(templatesDir);
     const createdFiles: string[] = [];
 
@@ -121,6 +136,7 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
       const targetFileName = templateFile.replaceAll('__COMPONENT_SLUG__', slug);
       const sourceContent = yield* fs.readFileString(p.join(templatesDir, templateFile));
       const processedContent = sourceContent
+        .replaceAll('__COMPONENT_NAME_PASCAL__', pascalName)
         .replaceAll('__COMPONENT_NAME__', name)
         .replaceAll('__COMPONENT_SLUG__', slug);
 
