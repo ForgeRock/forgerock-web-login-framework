@@ -55,7 +55,9 @@ function formatError(cause: Cause.Cause<unknown>): string {
 
 const toolLayer = Layer.mergeAll(GithubReleaseLayer, NodeContext.layer);
 
-const catchToolErrors = <A>(effect: Effect.Effect<A, unknown, FileSystem.FileSystem | Path.Path | Release>) =>
+const catchToolErrors = <A>(
+  effect: Effect.Effect<A, unknown, FileSystem.FileSystem | Path.Path | Release>,
+) =>
   effect.pipe(
     Effect.provide(toolLayer),
     Effect.catchAllCause((cause) => Effect.fail(formatError(cause))),
@@ -211,7 +213,12 @@ const ServerLayer = McpServer.toolkit(mcpToolkit).pipe(
   Layer.provide(handlerLayer),
   Layer.provide(
     Layer.mergeAll(
-      McpServer.layerStdio({ name: 'ping-lf', version, stdin: NodeStream.stdin, stdout: NodeSink.stdout }),
+      McpServer.layerStdio({
+        name: 'ping-lf',
+        version,
+        stdin: NodeStream.stdin,
+        stdout: NodeSink.stdout,
+      }),
       NodeContext.layer,
       Logger.add(Logger.prettyLogger({ stderr: true })),
     ),
