@@ -11,6 +11,8 @@ import { copyWithExclusions } from './services/file-system.js';
 import { runRegistryScript } from './services/registry.js';
 import { GithubReleaseLayer, Release } from './services/release.js';
 
+import type { FileSystem, Path } from '@effect/platform';
+
 const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
 
 // ── Shared error formatter ────────────────────────────────────────────────────
@@ -51,8 +53,13 @@ function formatError(cause: Cause.Cause<unknown>): string {
   return `Unexpected error: ${Cause.pretty(cause)}`;
 }
 
-const catchToolErrors = <A>(effect: Effect.Effect<A, unknown, never>) =>
-  effect.pipe(Effect.catchAllCause((cause) => Effect.fail(formatError(cause))));
+const toolLayer = Layer.mergeAll(GithubReleaseLayer, NodeContext.layer);
+
+const catchToolErrors = <A>(effect: Effect.Effect<A, unknown, FileSystem.FileSystem | Path.Path | Release>) =>
+  effect.pipe(
+    Effect.provide(toolLayer),
+    Effect.catchAllCause((cause) => Effect.fail(formatError(cause))),
+  );
 
 // ── Tool definitions ─────────────────────────────────────────────────────────
 
@@ -141,17 +148,13 @@ const handlerLayer = mcpToolkit.toLayer({
         directory,
         version: Option.fromNullable(ver),
         local: Option.fromNullable(local),
-      }).pipe(
-        Effect.map(() => `Project initialized successfully in "${directory}".`),
-        Effect.provide(Layer.merge(NodeContext.layer, GithubReleaseLayer)),
-      ),
+      }).pipe(Effect.map(() => `Project initialized successfully in "${directory}".`)),
     ),
 
   generate_callback: ({ name }) =>
     catchToolErrors(
       scaffoldComponent('callback', name).pipe(
         Effect.map(() => `Callback component "${name}" scaffolded successfully.`),
-        Effect.provide(NodeContext.layer),
       ),
     ),
 
@@ -159,7 +162,6 @@ const handlerLayer = mcpToolkit.toLayer({
     catchToolErrors(
       scaffoldComponent('stage', name).pipe(
         Effect.map(() => `Stage component "${name}" scaffolded successfully.`),
-        Effect.provide(NodeContext.layer),
       ),
     ),
 
@@ -189,7 +191,7 @@ const handlerLayer = mcpToolkit.toLayer({
         });
 
         return `Updated from ${currentVersion.version} to ${resolvedVersion}. Run "pnpm install" if dependencies changed.`;
-      }).pipe(Effect.provide(Layer.merge(NodeContext.layer, GithubReleaseLayer))),
+      }),
     ),
 
   list_releases: () =>
@@ -199,7 +201,6 @@ const handlerLayer = mcpToolkit.toLayer({
         Effect.map((releases) =>
           releases.map(({ tag, publishedAt }) => `${tag.padEnd(10)} ${publishedAt}`).join('\n'),
         ),
-        Effect.provide(GithubReleaseLayer),
       ),
     ),
 });
@@ -209,15 +210,12 @@ const handlerLayer = mcpToolkit.toLayer({
 const ServerLayer = McpServer.toolkit(mcpToolkit).pipe(
   Layer.provide(handlerLayer),
   Layer.provide(
-    McpServer.layerStdio({
-      name: 'ping-lf',
-      version,
-      stdin: NodeStream.stdin,
-      stdout: NodeSink.stdout,
-    }),
+    Layer.mergeAll(
+      McpServer.layerStdio({ name: 'ping-lf', version, stdin: NodeStream.stdin, stdout: NodeSink.stdout }),
+      NodeContext.layer,
+      Logger.add(Logger.prettyLogger({ stderr: true })),
+    ),
   ),
-  Layer.provide(NodeContext.layer),
-  Layer.provide(Logger.add(Logger.prettyLogger({ stderr: true }))),
 );
 
 export const runMcpServer = () => Layer.launch(ServerLayer).pipe(NodeRuntime.runMain);
