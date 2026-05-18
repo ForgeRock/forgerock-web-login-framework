@@ -10,6 +10,12 @@ import { releasesCommand } from './commands/releases.js';
 import { updateCommand } from './commands/update.js';
 import { GithubReleaseLayer } from './services/release.js';
 
+if (process.argv[2] === '--mcp') {
+  const { runMcpServer } = await import('./mcp.js');
+  runMcpServer(); // NodeRuntime.runMain owns the process lifecycle
+  process.exit(0); // belt-and-suspenders: unreachable under normal operation
+}
+
 // Read the version from package.json at runtime so it stays in sync
 // with the published package version after changesets bumps it.
 const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
