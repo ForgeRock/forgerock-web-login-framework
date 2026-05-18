@@ -78,7 +78,7 @@ function getTemplatesDir(): string {
   return nodePath.join(__dirname, '../templates');
 }
 
-function scaffoldComponent(type: 'callback' | 'stage', name: string) {
+export function scaffoldComponent(type: 'callback' | 'stage', name: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const p = yield* Path.Path;
