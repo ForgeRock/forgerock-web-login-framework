@@ -1,11 +1,14 @@
 import { Args, Command, Prompt } from '@effect/cli';
 import { FileSystem, Path } from '@effect/platform';
 import { Console, Effect, Schema } from 'effect';
+import { existsSync } from 'node:fs';
 import nodePath from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
+import { expandTilde } from '../services/file-system.js';
+import { runRegistryScript } from '../services/registry.js';
 import { toPascalCase } from '../utils.js';
 
 const CUSTOM_DIR = 'experimental/custom';
@@ -69,16 +72,18 @@ export const StageNameSchema = Schema.String.pipe(
 );
 
 /**
- * Resolves the templates directory relative to this compiled file.
- * Build script copies templates/ → dist/templates/, so from dist/commands/
- * the templates are one level up at dist/templates/.
+ * Resolves the templates directory relative to this file.
+ * In the compiled output (dist/src/commands/) the templates live one level up
+ * at dist/src/templates/. In Vitest (src/commands/) they live two levels up at
+ * the workspace root templates/ directory — the same fallback pattern used in mcp.ts.
  */
 function getTemplatesDir(): string {
   const __dirname = nodePath.dirname(fileURLToPath(import.meta.url));
-  return nodePath.join(__dirname, '../templates');
+  const compiledPath = nodePath.join(__dirname, '../templates');
+  return existsSync(compiledPath) ? compiledPath : nodePath.join(__dirname, '../../templates');
 }
 
-function scaffoldComponent(type: 'callback' | 'stage', name: string) {
+export function scaffoldComponent(type: 'callback' | 'stage', name: string, directory?: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const p = yield* Path.Path;
@@ -91,7 +96,7 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
       Effect.mapError(() => new InvalidComponentNameError({ name })),
     );
 
-    const cwd = process.cwd();
+    const cwd = p.resolve(expandTilde(directory ?? process.cwd()));
 
     // ── Guard: must be run from an initialized project root ───────────────
     yield* assertValidProject(cwd);
@@ -112,18 +117,15 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
     yield* fs.makeDirectory(componentDir, { recursive: true });
 
     // ── Copy and process template files ───────────────────────────────────
-    // Each file name contains __COMPONENT_SLUG__; its contents use:
-    //   __COMPONENT_NAME__        — raw display name (may contain spaces, e.g. "My Login Stage")
-    //   __COMPONENT_NAME_PASCAL__ — PascalCase identifier derived from slug (e.g. "MyLoginStage"),
-    //                               safe for use in TypeScript symbol positions (function names etc.)
-    //   __COMPONENT_SLUG__        — kebab-case slug (e.g. "my-login-stage")
-    const pascalName = toPascalCase(name);
+    // Each file name contains __COMPONENT_SLUG__; its contents contain both
+    // __COMPONENT_NAME__ (PascalCase) and __COMPONENT_SLUG__ (kebab-case).
     const templateFiles = yield* fs.readDirectory(templatesDir);
     const createdFiles: string[] = [];
 
     for (const templateFile of templateFiles) {
       const targetFileName = templateFile.replaceAll('__COMPONENT_SLUG__', slug);
       const sourceContent = yield* fs.readFileString(p.join(templatesDir, templateFile));
+      const pascalName = toPascalCase(name);
       const processedContent = sourceContent
         .replaceAll('__COMPONENT_NAME_PASCAL__', pascalName)
         .replaceAll('__COMPONENT_NAME__', name)
@@ -134,13 +136,16 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
       createdFiles.push(targetPath);
     }
 
+    // ── Regenerate custom-registry.ts ────────────────────────────────────
+    yield* Console.log('Regenerating custom component registry...');
+    yield* runRegistryScript(cwd);
+
     // ── Print summary ──────────────────────────────────────────────────────
     yield* Console.log(
       `Done. ${type} component scaffolded successfully.\n\n` +
         `Files created:\n` +
-        createdFiles.map((createdPath) => `  ${createdPath}`).join('\n') +
-        `\n\nNext: open ${p.join(componentDir, `${slug}.svelte`)} and implement your component.\n` +
-        `If a dev server is running, the registry will pick up the new component automatically.\n`,
+        createdFiles.map((f) => `  ${f}`).join('\n') +
+        `\n\nNext: open ${p.join(componentDir, `${slug}.svelte`)} and implement your component.\n`,
     );
   });
 }

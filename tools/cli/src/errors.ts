@@ -47,3 +47,8 @@ export class InvalidComponentNameError extends Data.TaggedError('InvalidComponen
 export class ComponentAlreadyExistsError extends Data.TaggedError('ComponentAlreadyExistsError')<{
   readonly path: string;
 }> {}
+
+export class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
+  readonly directory: string;
+  readonly cause?: unknown;
+}> {}
