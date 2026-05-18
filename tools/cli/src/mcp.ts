@@ -86,7 +86,10 @@ const InitTool = Tool.make('init', {
   },
   success: Schema.String,
   failure: Schema.String,
-}).annotate(Tool.Destructive, true).annotate(Tool.OpenWorld, true).annotate(Tool.Idempotent, false);
+})
+  .annotate(Tool.Destructive, true)
+  .annotate(Tool.OpenWorld, true)
+  .annotate(Tool.Idempotent, false);
 
 const GenerateCallbackTool = Tool.make('generate_callback', {
   description:
@@ -99,7 +102,10 @@ const GenerateCallbackTool = Tool.make('generate_callback', {
   },
   success: Schema.String,
   failure: Schema.String,
-}).annotate(Tool.Destructive, false).annotate(Tool.OpenWorld, false).annotate(Tool.Idempotent, false);
+})
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.OpenWorld, false)
+  .annotate(Tool.Idempotent, false);
 
 const GenerateStageTool = Tool.make('generate_stage', {
   description:
@@ -112,7 +118,10 @@ const GenerateStageTool = Tool.make('generate_stage', {
   },
   success: Schema.String,
   failure: Schema.String,
-}).annotate(Tool.Destructive, false).annotate(Tool.OpenWorld, false).annotate(Tool.Idempotent, false);
+})
+  .annotate(Tool.Destructive, false)
+  .annotate(Tool.OpenWorld, false)
+  .annotate(Tool.Idempotent, false);
 
 const UpdateTool = Tool.make('update', {
   description:
@@ -127,14 +136,20 @@ const UpdateTool = Tool.make('update', {
   },
   success: Schema.String,
   failure: Schema.String,
-}).annotate(Tool.Destructive, true).annotate(Tool.OpenWorld, true).annotate(Tool.Idempotent, false);
+})
+  .annotate(Tool.Destructive, true)
+  .annotate(Tool.OpenWorld, true)
+  .annotate(Tool.Idempotent, false);
 
 const ListReleasesTool = Tool.make('list_releases', {
   description: 'List available Login Framework releases from GitHub.',
   parameters: {},
   success: Schema.String,
   failure: Schema.String,
-}).annotate(Tool.Readonly, true).annotate(Tool.OpenWorld, true).annotate(Tool.Idempotent, true);
+})
+  .annotate(Tool.Readonly, true)
+  .annotate(Tool.OpenWorld, true)
+  .annotate(Tool.Idempotent, true);
 
 // ── Exported toolkit (used in tests) ─────────────────────────────────────────
 
