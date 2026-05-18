@@ -1,7 +1,7 @@
 import { McpServer, Tool, Toolkit } from '@effect/ai';
 import { NodeContext, NodeRuntime, NodeSink, NodeStream } from '@effect/platform-node';
 import { Cause, Effect, Layer, Logger, Option, Schema } from 'effect';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -15,10 +15,12 @@ import { GithubReleaseLayer, Release } from './services/release.js';
 
 import type { FileSystem, Path } from '@effect/platform';
 
-// dist/src/mcp.js → ../../package.json resolves to the package root
-const { version } = JSON.parse(
-  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
-) as { version: string };
+// Resolve package.json from either dist/src/ (compiled) or src/ (Vitest).
+const __dir = dirname(fileURLToPath(import.meta.url));
+const pkgPath = existsSync(resolve(__dir, '../../package.json'))
+  ? resolve(__dir, '../../package.json')
+  : resolve(__dir, '../package.json');
+const { version } = JSON.parse(readFileSync(pkgPath, 'utf8')) as { version: string };
 
 // ── Shared error formatter ────────────────────────────────────────────────────
 
