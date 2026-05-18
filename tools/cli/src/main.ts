@@ -2,7 +2,9 @@
 import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
 import { Console, Effect, Layer } from 'effect';
-import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { generateCommand } from './commands/generate.js';
 import { initCommand } from './commands/init.js';
@@ -14,9 +16,9 @@ if (process.argv[2] === '--mcp') {
   const { runMcpServer } = await import('./mcp.js');
   runMcpServer();
 } else {
-  // Read the version from package.json at runtime so it stays in sync
-  // with the published package version after changesets bumps it.
-  const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+  const { version } = JSON.parse(
+    readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
+  ) as { version: string };
 
   const rootCommand = Command.make('ping-lf').pipe(
     Command.withDescription(

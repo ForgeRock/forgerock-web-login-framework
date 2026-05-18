@@ -1,7 +1,9 @@
 import { McpServer, Tool, Toolkit } from '@effect/ai';
 import { NodeContext, NodeRuntime, NodeSink, NodeStream } from '@effect/platform-node';
 import { Cause, Effect, Layer, Logger, Option, Schema } from 'effect';
-import { createRequire } from 'node:module';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { scaffoldComponent } from './commands/generate.js';
 import { initProject } from './commands/init.js';
@@ -13,7 +15,10 @@ import { GithubReleaseLayer, Release } from './services/release.js';
 
 import type { FileSystem, Path } from '@effect/platform';
 
-const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+// dist/src/mcp.js → ../../package.json resolves to the package root
+const { version } = JSON.parse(
+  readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
+) as { version: string };
 
 // ── Shared error formatter ────────────────────────────────────────────────────
 
