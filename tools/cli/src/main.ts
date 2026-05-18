@@ -12,8 +12,7 @@ import { GithubReleaseLayer } from './services/release.js';
 
 if (process.argv[2] === '--mcp') {
   const { runMcpServer } = await import('./mcp.js');
-  runMcpServer(); // NodeRuntime.runMain owns the process lifecycle
-  process.exit(0); // belt-and-suspenders: unreachable under normal operation
+  runMcpServer();
 }
 
 // Read the version from package.json at runtime so it stays in sync
