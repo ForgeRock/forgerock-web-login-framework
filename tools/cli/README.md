@@ -97,6 +97,65 @@ See `experimental/custom/README.md` for the full prop contract.
 
 ---
 
+### `ping-lf releases`
+
+Lists available framework releases from GitHub.
+
+```sh
+ping-lf releases
+```
+
+---
+
+### `ping-lf --mcp`
+
+Boots the CLI as a local **MCP server** over stdio instead of running the CLI. Exposes the same four commands as typed tools that any MCP-compatible AI assistant can call directly.
+
+#### Claude Code (project-local)
+
+Create `.claude/mcp.json` at the root of your login project:
+
+```jsonc
+{
+  "mcpServers": {
+    "ping-lf": {
+      "command": "npx",
+      "args": ["@forgerock/login-framework-cli", "--mcp"]
+    }
+  }
+}
+```
+
+#### Claude Desktop
+
+Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
+
+```jsonc
+{
+  "mcpServers": {
+    "ping-lf": {
+      "command": "npx",
+      "args": ["@forgerock/login-framework-cli", "--mcp"],
+      "cwd": "/path/to/your/login-project"
+    }
+  }
+}
+```
+
+#### Available tools
+
+| Tool                | Description                              |
+| ------------------- | ---------------------------------------- |
+| `init`              | Bootstrap a new project (`init` command) |
+| `generate_callback` | Scaffold a custom callback component     |
+| `generate_stage`    | Scaffold a custom stage component        |
+| `update`            | Update the framework version             |
+| `list_releases`     | List available releases from GitHub      |
+
+The server inherits `cwd` from the process that launched it. For `generate_callback`, `generate_stage`, and `update`, that must be the root of an initialized project.
+
+---
+
 ### `ping-lf update`
 
 Fetches the latest (or a specified) framework version and overwrites the core framework files while **preserving** `experimental/custom/` and project-level configs. Regenerates the component registry after the update.
@@ -172,7 +231,8 @@ node /path/to/forgerock-web-login-framework/tools/cli/dist/main.js init my-proje
 ```
 tools/cli/
 ├── src/
-│   ├── main.ts                   # CLI entry point (ping-lf binary)
+│   ├── main.ts                   # Entry point — forks to MCP server or CLI
+│   ├── mcp.ts                    # MCP server (ping-lf --mcp)
 │   ├── errors.ts                 # Typed Effect errors
 │   ├── commands/
 │   │   ├── init.ts               # ping-lf init
@@ -196,5 +256,6 @@ tools/cli/
 
 - **[Effect](https://effect.website/)** — typed async handling, composable services, declarative errors
 - **[@effect/cli](https://github.com/Effect-TS/effect/tree/main/packages/cli)** — CLI parsing and help generation
+- **[@effect/ai](https://github.com/Effect-TS/effect/tree/main/packages/ai)** — MCP server (`McpServer`, `Tool`, `Toolkit`)
 - **[@effect/platform-node](https://github.com/Effect-TS/effect/tree/main/packages/platform-node)** — Node.js FileSystem, Path, HTTP client
 - **[Vitest](https://vitest.dev/)** — unit tests
