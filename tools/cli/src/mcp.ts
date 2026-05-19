@@ -1,4 +1,5 @@
 import { McpServer, Tool, Toolkit } from '@effect/ai';
+import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime, NodeSink, NodeStream } from '@effect/platform-node';
 import { Cause, Effect, Layer, Logger, Option, Schema } from 'effect';
 import { existsSync, readFileSync } from 'node:fs';
@@ -9,7 +10,7 @@ import { scaffoldComponent } from './commands/generate.js';
 import { initProject } from './commands/init.js';
 import { resolveSource } from './commands/source.js';
 import { assertValidProject, writeVersion } from './config/version.js';
-import { copyWithExclusions } from './services/file-system.js';
+import { copyWithExclusions, expandTilde } from './services/file-system.js';
 import { runRegistryScript } from './services/registry.js';
 import { GithubReleaseLayer, Release } from './services/release.js';
 
@@ -54,7 +55,11 @@ function formatError(cause: Cause.Cause<unknown>): string {
       case 'ComponentAlreadyExistsError':
         return `Component directory already exists: ${e['path']}`;
       default:
-        return `Error: ${JSON.stringify(e)}`;
+        try {
+          return `Error: ${JSON.stringify(e, (_k, v) => (v instanceof Error ? { message: v.message, name: v.name } : v))}`;
+        } catch {
+          return `Error: ${String(e)}`;
+        }
     }
   }
   return `Unexpected error: ${Cause.pretty(cause)}`;
@@ -67,7 +72,7 @@ const catchToolErrors = <A>(
 ) =>
   effect.pipe(
     Effect.provide(toolLayer),
-    Effect.catchAllCause((cause) => Effect.fail(formatError(cause))),
+    Effect.catchAll((err) => Effect.fail(formatError(Cause.fail(err)))),
   );
 
 // ── Tool definitions ─────────────────────────────────────────────────────────
@@ -93,6 +98,10 @@ const InitTool = Tool.make('init', {
   .annotate(Tool.OpenWorld, true)
   .annotate(Tool.Idempotent, false);
 
+const directoryParam = Schema.optional(Schema.String).annotations({
+  description: 'Absolute path to the initialized project root. Defaults to the current working directory.',
+});
+
 const GenerateCallbackTool = Tool.make('generate_callback', {
   description:
     'Scaffold a new custom callback component under experimental/custom/callbacks/. Run from an initialized project root.',
@@ -101,11 +110,12 @@ const GenerateCallbackTool = Tool.make('generate_callback', {
       description:
         'PascalCase component name (e.g. MyCallback). Must match the AM callback type string.',
     }),
+    directory: directoryParam,
   },
   success: Schema.String,
   failure: Schema.String,
 })
-  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Destructive, true)
   .annotate(Tool.OpenWorld, false)
   .annotate(Tool.Idempotent, false);
 
@@ -117,11 +127,12 @@ const GenerateStageTool = Tool.make('generate_stage', {
       description:
         'Stage name as configured on the AM journey Page Node (e.g. "DefaultLogin" or "My Login Stage").',
     }),
+    directory: directoryParam,
   },
   success: Schema.String,
   failure: Schema.String,
 })
-  .annotate(Tool.Destructive, false)
+  .annotate(Tool.Destructive, true)
   .annotate(Tool.OpenWorld, false)
   .annotate(Tool.Idempotent, false);
 
@@ -129,6 +140,7 @@ const UpdateTool = Tool.make('update', {
   description:
     'Fetch the latest (or specified) framework version and overwrite core files while preserving experimental/custom/. Run from an initialized project root.',
   parameters: {
+    directory: directoryParam,
     version: Schema.optional(Schema.String).annotations({
       description: 'Framework version tag to update to (e.g. v1.2.0). Defaults to latest.',
     }),
@@ -175,24 +187,24 @@ const handlerLayer = mcpToolkit.toLayer({
       }).pipe(Effect.map(() => `Project initialized successfully in "${directory}".`)),
     ),
 
-  generate_callback: ({ name }) =>
+  generate_callback: ({ name, directory }) =>
     catchToolErrors(
-      scaffoldComponent('callback', name).pipe(
+      scaffoldComponent('callback', name, directory).pipe(
         Effect.map(() => `Callback component "${name}" scaffolded successfully.`),
       ),
     ),
 
-  generate_stage: ({ name }) =>
+  generate_stage: ({ name, directory }) =>
     catchToolErrors(
-      scaffoldComponent('stage', name).pipe(
+      scaffoldComponent('stage', name, directory).pipe(
         Effect.map(() => `Stage component "${name}" scaffolded successfully.`),
       ),
     ),
 
-  update: ({ version: ver, local }) =>
+  update: ({ version: ver, local, directory }) =>
     catchToolErrors(
       Effect.gen(function* () {
-        const cwd = process.cwd();
+        const cwd = resolve(expandTilde(directory ?? process.cwd()));
         const currentVersion = yield* assertValidProject(cwd);
 
         const resolvedVersion = yield* Effect.scoped(
@@ -248,3 +260,7 @@ const ServerLayer = McpServer.toolkit(mcpToolkit).pipe(
 );
 
 export const runMcpServer = () => Layer.launch(ServerLayer).pipe(NodeRuntime.runMain);
+
+export const mcpCommand = Command.make('mcp', {}, () => Layer.launch(ServerLayer)).pipe(
+  Command.withDescription('Start as an MCP server over stdio.'),
+);

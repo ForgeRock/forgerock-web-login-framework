@@ -59,7 +59,7 @@ pnpm dev
 
 Scaffolds a new custom component under `experimental/custom/callbacks/<slug>/` or `experimental/custom/stages/<slug>/`, then regenerates `custom-registry.ts`.
 
-Run from the root of an initialized project.
+Run from the root of an initialized project, or pass `--directory <path>` to target a specific project root.
 
 ```sh
 # Override the built-in NameCallback renderer
@@ -107,9 +107,9 @@ ping-lf releases
 
 ---
 
-### `ping-lf --mcp`
+### `ping-lf mcp`
 
-Boots the CLI as a local **MCP server** over stdio instead of running the CLI. Exposes the same four commands as typed tools that any MCP-compatible AI assistant can call directly.
+Boots the CLI as a local **MCP server** over stdio. Exposes the same commands as typed tools that any MCP-compatible AI assistant can call directly.
 
 #### Claude Code (project-local)
 
@@ -120,7 +120,7 @@ Create `.claude/mcp.json` at the root of your login project:
   "mcpServers": {
     "ping-lf": {
       "command": "npx",
-      "args": ["@forgerock/login-framework-cli", "--mcp"]
+      "args": ["@forgerock/login-framework-cli", "mcp"]
     }
   }
 }
@@ -135,8 +135,7 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
   "mcpServers": {
     "ping-lf": {
       "command": "npx",
-      "args": ["@forgerock/login-framework-cli", "--mcp"],
-      "cwd": "/path/to/your/login-project"
+      "args": ["@forgerock/login-framework-cli", "mcp"]
     }
   }
 }
@@ -144,15 +143,15 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json`:
 
 #### Available tools
 
-| Tool                | Description                              |
-| ------------------- | ---------------------------------------- |
-| `init`              | Bootstrap a new project (`init` command) |
-| `generate_callback` | Scaffold a custom callback component     |
-| `generate_stage`    | Scaffold a custom stage component        |
-| `update`            | Update the framework version             |
-| `list_releases`     | List available releases from GitHub      |
+| Tool                | Description                          |
+| ------------------- | ------------------------------------ |
+| `init`              | Bootstrap a new project              |
+| `generate_callback` | Scaffold a custom callback component |
+| `generate_stage`    | Scaffold a custom stage component    |
+| `update`            | Update the framework version         |
+| `list_releases`     | List available releases from GitHub  |
 
-The server inherits `cwd` from the process that launched it. For `generate_callback`, `generate_stage`, and `update`, that must be the root of an initialized project.
+For `generate_callback`, `generate_stage`, and `update`, pass an absolute path via the `directory` parameter to target a specific project root. If omitted, the server's working directory is used.
 
 ---
 
@@ -163,9 +162,10 @@ Fetches the latest (or a specified) framework version and overwrites the core fr
 Run from the root of an initialized project.
 
 ```sh
-ping-lf update                     # update to latest
-ping-lf update --version v1.5.0    # pin to a specific version
-ping-lf update --local ../framework # use a local directory
+ping-lf update                          # update to latest
+ping-lf update --version v1.5.0         # pin to a specific version
+ping-lf update --local ../framework     # use a local directory
+ping-lf update --directory /path/to/project  # target a specific project root
 ```
 
 **What it preserves**

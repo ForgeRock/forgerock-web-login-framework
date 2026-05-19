@@ -1,14 +1,22 @@
 import { Command, Options } from '@effect/cli';
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
+import nodePath from 'node:path';
 
 import { assertValidProject, writeVersion } from '../config/version.js';
-import { copyWithExclusions } from '../services/file-system.js';
+import { copyWithExclusions, expandTilde } from '../services/file-system.js';
 import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';
 
 export const updateCommand = Command.make(
   'update',
   {
+    directory: Options.optional(
+      Options.text('directory').pipe(
+        Options.withDescription(
+          'Project root directory. Defaults to the current working directory.',
+        ),
+      ),
+    ),
     local: Options.optional(
       Options.text('local').pipe(
         Options.withDescription(
@@ -24,9 +32,9 @@ export const updateCommand = Command.make(
       ),
     ),
   },
-  ({ local, version }) =>
+  ({ local, version, directory }) =>
     Effect.gen(function* () {
-      const cwd = process.cwd();
+      const cwd = nodePath.resolve(expandTilde(Option.getOrElse(directory, () => process.cwd())));
 
       // ── 1. Verify this is an initialized project ──────────────────────────
       const currentVersion = yield* assertValidProject(cwd);

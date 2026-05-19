@@ -10,29 +10,39 @@ import { generateCommand } from './commands/generate.js';
 import { initCommand } from './commands/init.js';
 import { releasesCommand } from './commands/releases.js';
 import { updateCommand } from './commands/update.js';
+import { mcpCommand } from './mcp.js';
 import { GithubReleaseLayer } from './services/release.js';
 
-if (process.argv[2] === '--mcp') {
-  const { runMcpServer } = await import('./mcp.js');
-  runMcpServer();
-} else {
-  const { version } = JSON.parse(
-    readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), '../../package.json'), 'utf8'),
-  ) as { version: string };
+function readCliVersion(): string {
+  try {
+    const raw = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), '../../package.json'),
+      'utf8',
+    );
+    const parsed = JSON.parse(raw) as { version?: string };
+    if (!parsed.version) throw new Error('Missing "version" field in package.json');
+    return parsed.version;
+  } catch (err) {
+    process.stderr.write(`Failed to read CLI version: ${String(err)}\n`);
+    process.exit(1);
+  }
+}
 
-  const rootCommand = Command.make('ping-lf').pipe(
-    Command.withDescription(
-      'CLI for initializing, scaffolding, and updating Ping Login Widget and Login App custom component projects.',
-    ),
-    Command.withSubcommands([initCommand, generateCommand, updateCommand, releasesCommand]),
-  );
+const version = readCliVersion();
 
-  const cli = Command.run(rootCommand, {
-    name: 'ping-lf',
-    version,
-  });
+const rootCommand = Command.make('ping-lf').pipe(
+  Command.withDescription(
+    'CLI for initializing, scaffolding, and updating Ping Login Widget and Login App custom component projects.',
+  ),
+  Command.withSubcommands([initCommand, generateCommand, updateCommand, releasesCommand, mcpCommand]),
+);
 
-  cli(process.argv).pipe(
+const cli = Command.run(rootCommand, {
+  name: 'ping-lf',
+  version,
+});
+
+cli(process.argv).pipe(
     Effect.catchTag('DirectoryConflictError', (err) =>
       Console.error(
         `\nError: "${err.path}" already contains a framework project.` +
@@ -96,4 +106,3 @@ if (process.argv[2] === '--mcp') {
     Effect.provide(Layer.mergeAll(GithubReleaseLayer, NodeContext.layer)),
     (effect) => NodeRuntime.runMain(effect, { disableErrorReporting: true }),
   );
-}

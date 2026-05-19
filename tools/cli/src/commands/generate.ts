@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
+import { expandTilde } from '../services/file-system.js';
 import { runRegistryScript } from '../services/registry.js';
 
 const CUSTOM_DIR = 'experimental/custom';
@@ -78,7 +79,7 @@ function getTemplatesDir(): string {
   return nodePath.join(__dirname, '../templates');
 }
 
-export function scaffoldComponent(type: 'callback' | 'stage', name: string) {
+export function scaffoldComponent(type: 'callback' | 'stage', name: string, directory?: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const p = yield* Path.Path;
@@ -91,7 +92,7 @@ export function scaffoldComponent(type: 'callback' | 'stage', name: string) {
       Effect.mapError(() => new InvalidComponentNameError({ name })),
     );
 
-    const cwd = process.cwd();
+    const cwd = p.resolve(expandTilde(directory ?? process.cwd()));
 
     // ── Guard: must be run from an initialized project root ───────────────
     yield* assertValidProject(cwd);
