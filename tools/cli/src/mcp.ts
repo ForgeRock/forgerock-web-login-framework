@@ -56,7 +56,9 @@ function formatError(cause: Cause.Cause<unknown>): string {
         return `Component directory already exists: ${e['path']}`;
       default:
         try {
-          return `Error: ${JSON.stringify(e, (_k, v) => (v instanceof Error ? { message: v.message, name: v.name } : v))}`;
+          return `Error: ${JSON.stringify(e, (_k, v) =>
+            v instanceof Error ? { message: v.message, name: v.name } : v,
+          )}`;
         } catch {
           return `Error: ${String(e)}`;
         }
@@ -99,7 +101,8 @@ const InitTool = Tool.make('init', {
   .annotate(Tool.Idempotent, false);
 
 const directoryParam = Schema.optional(Schema.String).annotations({
-  description: 'Absolute path to the initialized project root. Defaults to the current working directory.',
+  description:
+    'Absolute path to the initialized project root. Defaults to the current working directory.',
 });
 
 const GenerateCallbackTool = Tool.make('generate_callback', {
