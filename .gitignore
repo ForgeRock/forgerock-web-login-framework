@@ -37,8 +37,8 @@ core/journey/_utilities/custom-registry.ts
 
 # Custom component implementations (developer-authored; gitignored so customer forks don't conflict)
 # The stage/ and callback/ folders themselves (with .gitkeep) remain tracked as scaffolding references.
-experimental/custom/stages/*/
-experimental/custom/callbacks/*/
+# experimental/custom/stages/*/
+# experimental/custom/callbacks/*/
 
 # Claude Code
 .claude/
@@ -49,3 +49,5 @@ experimental/custom/callbacks/*/
 .eslintcache
 tools/cli/tmp/
 packages/login-widget/tmp/
+
+.polaris/
