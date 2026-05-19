@@ -39,14 +39,25 @@ username is typed and reveals it with a circular iris animation.
   export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
   export let step: FRStep;
 
-  const VALID_USERNAMES: Record<string, boolean> = {
-    demo: true,
-    admin: true,
-    alice: true,
-    bob: true,
-    gabrielstein: true,
-    carol: true,
+  interface EmailEntry {
+    name: string;
+    greeting?: string;
+  }
+
+  const VALID_EMAILS: Record<string, EmailEntry> = {
+    'demo@example.com': { name: 'demo' },
+    'admin@example.com': { name: 'admin' },
+    'alice@example.com': { name: 'alice' },
+    'bob@example.com': { name: 'bob' },
+    'gabrielstein@example.com': { name: 'gabriel' },
+    'carol@example.com': { name: 'carol' },
+    'justin.lowery@pingidentity.com': { name: 'Justin', greeting: 'Hey hey hey,' },
+    'ryan.basmajian@pingidentity.com': { name: 'Ryan' },
+    'vatsalparikh@pingidentity.com': { name: 'Vatsal' },
+    'ajancheta@pingidentity.com': { name: 'AJ' },
   };
+
+  const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   let currentStyle: StyleObject = get(styleStore);
   const unsubStyle = styleStore.subscribe((v) => (currentStyle = v));
@@ -61,6 +72,8 @@ username is typed and reveals it with a circular iris animation.
   let avatarLoading = false;
   let lastCheckedUsername = '';
   let matchedUsername = '';
+  let matchedGreeting = '';
+  let emailError: string | null = null;
 
   function determineSubmission() {
     if (metadata?.step?.derived.isStepSelfSubmittable()) {
@@ -120,11 +133,38 @@ username is typed and reveals it with a circular iris animation.
     if (username === lastCheckedUsername) return;
     lastCheckedUsername = username;
 
-    if (!VALID_USERNAMES[username]) {
+    // Clear everything when field is empty.
+    if (!username) {
       avatarUrl = null;
       avatarVisible = false;
       avatarLoading = false;
       matchedUsername = '';
+      matchedGreeting = '';
+      emailError = null;
+      return;
+    }
+
+    // Show format error only once the input looks like the user is done typing.
+    if (!EMAIL_REGEX.test(username)) {
+      avatarUrl = null;
+      avatarVisible = false;
+      avatarLoading = false;
+      matchedUsername = '';
+      emailError = 'Please enter a valid email address.';
+      return;
+    }
+
+    emailError = null;
+
+    const entry = VALID_EMAILS[username];
+    const displayName = entry?.name;
+
+    if (!displayName) {
+      avatarUrl = null;
+      avatarVisible = false;
+      avatarLoading = false;
+      matchedUsername = '';
+      matchedGreeting = '';
       return;
     }
 
@@ -139,7 +179,8 @@ username is typed and reveals it with a circular iris animation.
     try {
       await preloadImage(url);
       avatarUrl = url;
-      matchedUsername = username;
+      matchedUsername = displayName;
+      matchedGreeting = entry?.greeting ?? '';
       avatarLoading = false;
       // Tiny delay lets the DOM paint the element before the animation class kicks in.
       requestAnimationFrame(() => {
@@ -203,7 +244,7 @@ username is typed and reveals it with a circular iris animation.
 
         <h1 class="welcome-heading">
           {#if avatarUrl && avatarVisible}
-            {interpolate('welcomeBack', null, 'Welcome back,')}
+            {matchedGreeting || interpolate('welcomeBack', null, 'Welcome back,')}
             <span class="username-highlight">{matchedUsername}</span>
           {:else}
             {interpolate('signIn', null, 'Sign in')}
@@ -234,6 +275,10 @@ username is typed and reveals it with a circular iris animation.
         />
       {/each}
     </div>
+
+    {#if emailError}
+      <p class="email-error" role="alert">{emailError}</p>
+    {/if}
 
     {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
       <button class="next-button" type="submit" disabled={journey?.loading}>
@@ -438,6 +483,18 @@ username is typed and reveals it with a circular iris animation.
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  /* ── Email validation error ── */
+  .email-error {
+    font-size: 0.8125rem;
+    color: #f87171;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+    border-radius: 0.5rem;
+    animation: fadeSlideIn 0.2s ease-out both;
   }
 
   /* ── Next button ── */
