@@ -247,10 +247,7 @@ username is typed and reveals it with a circular iris animation.
 
     {#if componentStyle !== 'inline'}
       <div bind:this={linkWrapper} class="footer-links">
-        <p class="footer-text">
-          <!-- svelte-ignore a11y-missing-content -->
-          <!-- T component renders locale-aware HTML links like "Don't have an account?" -->
-        </p>
+        <p class="footer-text"></p>
       </div>
     {/if}
   </div>
