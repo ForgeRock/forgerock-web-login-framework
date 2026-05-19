@@ -74,6 +74,7 @@ username is typed and reveals it with a circular iris animation.
   let matchedUsername = '';
   let matchedGreeting = '';
   let emailError: string | null = null;
+  let passwordFilled = false;
 
   function determineSubmission() {
     if (metadata?.step?.derived.isStepSelfSubmittable()) {
@@ -99,6 +100,8 @@ username is typed and reveals it with a circular iris animation.
   let inputObserver: MutationObserver | null = null;
   let inputEl: HTMLInputElement | null = null;
   let inputListener: ((e: Event) => void) | null = null;
+  let passwordEl: HTMLInputElement | null = null;
+  let passwordListener: ((e: Event) => void) | null = null;
 
   function watchUsernameInput() {
     // Poll briefly for the input rendered by CallbackMapper, then attach listener.
@@ -122,9 +125,27 @@ username is typed and reveals it with a circular iris animation.
     if (inputEl && inputListener) {
       inputEl.removeEventListener('input', inputListener);
     }
+    if (passwordEl && passwordListener) {
+      passwordEl.removeEventListener('input', passwordListener);
+    }
     if (inputObserver) {
       inputObserver.disconnect();
     }
+  }
+
+  function watchPasswordInput() {
+    const poll = setInterval(() => {
+      const found = document.querySelector<HTMLInputElement>('input[type="password"]');
+      if (found) {
+        clearInterval(poll);
+        passwordEl = found;
+        passwordListener = (e: Event) => {
+          passwordFilled = !!(e.target as HTMLInputElement).value;
+        };
+        passwordEl.addEventListener('input', passwordListener);
+      }
+    }, 50);
+    setTimeout(() => clearInterval(poll), 3000);
   }
 
   async function handleUsernameInput(value: string) {
@@ -140,6 +161,7 @@ username is typed and reveals it with a circular iris animation.
       avatarLoading = false;
       matchedUsername = '';
       matchedGreeting = '';
+      passwordFilled = false;
       emailError = null;
       return;
     }
@@ -150,6 +172,7 @@ username is typed and reveals it with a circular iris animation.
       avatarVisible = false;
       avatarLoading = false;
       matchedUsername = '';
+      passwordFilled = false;
       emailError = 'Please enter a valid email address.';
       return;
     }
@@ -165,6 +188,7 @@ username is typed and reveals it with a circular iris animation.
       avatarLoading = false;
       matchedUsername = '';
       matchedGreeting = '';
+      passwordFilled = false;
       return;
     }
 
@@ -204,6 +228,12 @@ username is typed and reveals it with a circular iris animation.
 
   $: {
     formMessageKey = convertStringToKey(form?.message);
+  }
+
+  $: if (avatarVisible) {
+    // Password field just mounted — start watching it.
+    passwordFilled = false;
+    watchPasswordInput();
   }
 </script>
 
@@ -262,26 +292,50 @@ username is typed and reveals it with a circular iris animation.
       </Alert>
     {/if}
 
-    <div class="callbacks-section">
-      {#each step?.callbacks as callback, idx}
-        <CallbackMapper
-          props={{
-            callback,
-            callbackMetadata: metadata?.callbacks[idx],
-            selfSubmitFunction: determineSubmission,
-            stepMetadata: metadata?.step && { ...metadata.step },
-            style: currentStyle,
-          }}
-        />
-      {/each}
+    <div class="dynamic-section">
+      <div class="callbacks-section">
+        {#each step?.callbacks as callback, idx}
+          {#if callback.getType() === 'PasswordCallback'}
+            {#if avatarVisible}
+              <div class="password-reveal">
+                <CallbackMapper
+                  props={{
+                    callback,
+                    callbackMetadata: metadata?.callbacks[idx],
+                    selfSubmitFunction: determineSubmission,
+                    stepMetadata: metadata?.step && { ...metadata.step },
+                    style: currentStyle,
+                  }}
+                />
+              </div>
+            {/if}
+          {:else}
+            <CallbackMapper
+              props={{
+                callback,
+                callbackMetadata: metadata?.callbacks[idx],
+                selfSubmitFunction: determineSubmission,
+                stepMetadata: metadata?.step && { ...metadata.step },
+                style: currentStyle,
+              }}
+            />
+          {/if}
+        {/each}
+      </div>
+
+      {#if emailError}
+        <p class="email-error" role="alert">{emailError}</p>
+      {:else if !avatarVisible && !avatarLoading}
+        <p class="input-hint">Enter your email to continue</p>
+      {/if}
     </div>
 
-    {#if emailError}
-      <p class="email-error" role="alert">{emailError}</p>
-    {/if}
-
     {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-      <button class="next-button" type="submit" disabled={journey?.loading}>
+      <button
+        class="next-button"
+        type="submit"
+        disabled={journey?.loading || !avatarVisible || !passwordFilled}
+      >
         {#if journey?.loading}
           <span class="btn-spinner" aria-hidden="true" />
         {:else}
@@ -478,11 +532,49 @@ username is typed and reveals it with a circular iris animation.
     margin: 0;
   }
 
+  /* ── Dynamic section (fixed height prevents layout shift) ── */
+  .dynamic-section {
+    height: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    overflow: hidden;
+  }
+
   /* ── Callbacks ── */
   .callbacks-section {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
+  }
+
+  /* ── Password reveal ── */
+  .password-reveal {
+    animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    overflow: hidden;
+  }
+
+  @keyframes slideDown {
+    from {
+      opacity: 0;
+      transform: translateY(-12px);
+      max-height: 0;
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      max-height: 200px;
+    }
+  }
+
+  /* ── Input hint ── */
+  .input-hint {
+    font-size: 0.8125rem;
+    color: rgba(255, 255, 255, 0.3);
+    margin: 0;
+    text-align: center;
+    font-style: italic;
   }
 
   /* ── Email validation error ── */
