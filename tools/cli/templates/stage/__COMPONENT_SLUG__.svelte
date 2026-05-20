@@ -15,27 +15,28 @@ submit button, links).
   import { afterUpdate, onDestroy, onMount } from 'svelte';
   import { get } from 'svelte/store';
 
-  import T from '$components/_utilities/locale-strings.svelte';
-  import Alert from '$components/primitives/alert/alert.svelte';
-  import Button from '$components/primitives/button/button.svelte';
-  import Form from '$components/primitives/form/form.svelte';
-  import { interpolate } from '$core/_utilities/i18n.utilities';
-  import { styleStore } from '$core/style.store';
-  import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
-  import { captureLinks } from '$journey/stages/_utilities/stage.utilities';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
+  import {
+    Alert,
+    Button,
+    CallbackMapper,
+    captureLinks,
+    convertStringToKey,
+    Form,
+    interpolate,
+    styleStore,
+    T,
+  } from '$login-framework';
 
   import type { JourneyStep } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
 
-  import type { Maybe } from '$core/interfaces';
-  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
+    Maybe,
     StageFormObject,
     StageJourneyObject,
     StepMetadata,
-  } from '$journey/journey.interfaces';
+    StyleObject,
+  } from '$login-framework';
 
   /** Display mode — determines which chrome is visible (header, links, etc.). */
   export let componentStyle: 'app' | 'inline' | 'modal';
@@ -56,7 +57,7 @@ submit button, links).
   export let step: JourneyStep;
 
   // Subscribe to style store so the template can pass styles to child callbacks.
-  let currentStyle: z.infer<typeof styleSchema> = get(styleStore);
+  let currentStyle: StyleObject = get(styleStore);
   const unsubStyle = styleStore.subscribe((v) => (currentStyle = v));
   onDestroy(unsubStyle);
 

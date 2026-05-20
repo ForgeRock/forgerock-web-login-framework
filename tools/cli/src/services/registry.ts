@@ -221,7 +221,9 @@ function buildRegistryContent(
   lines.push(`export const customStageRegistry: Record<string, CustomRegistryEntry> = {`);
   for (const { varName, name, acceptedProps } of stageEntries)
     lines.push(
-      `  ${JSON.stringify(name)}: { component: ${varName}, acceptedProps: ${JSON.stringify(
+      `  ${JSON.stringify(
+        name,
+      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
         acceptedProps,
       )} },`,
     );
@@ -231,7 +233,9 @@ function buildRegistryContent(
   lines.push(`export const customCallbackRegistry: Record<string, CustomRegistryEntry> = {`);
   for (const { varName, name, acceptedProps } of callbackEntries)
     lines.push(
-      `  ${JSON.stringify(name)}: { component: ${varName}, acceptedProps: ${JSON.stringify(
+      `  ${JSON.stringify(
+        name,
+      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
         acceptedProps,
       )} },`,
     );

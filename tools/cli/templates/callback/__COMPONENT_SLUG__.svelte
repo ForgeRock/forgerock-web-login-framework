@@ -8,15 +8,14 @@ Custom callback component. Replace this description with your own.
 
 <script lang="ts">
   import type { BaseCallback } from '@forgerock/journey-client/types';
-  import type { z } from 'zod';
 
-  import type { Maybe } from '$core/interfaces';
-  import type { styleSchema } from '$core/style.store';
   import type {
     CallbackMetadata,
+    Maybe,
     SelfSubmitFunction,
     StepMetadata,
-  } from '$journey/journey.interfaces';
+    StyleObject,
+  } from '$login-framework';
 
   /**
    * The callback instance for this component. Use `callback.getInputValue()`
@@ -46,7 +45,7 @@ Custom callback component. Replace this description with your own.
    * The widget's resolved style configuration (colors, logos, labels, etc.).
    * Use this to keep your custom callback visually consistent with the theme.
    */
-  export const style: z.infer<typeof styleSchema> = {};
+  export const style: StyleObject = {};
 
   // Suppress the "unused export" warning — remove `void` once you use `callback`.
   void callback;
