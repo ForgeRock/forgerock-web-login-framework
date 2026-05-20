@@ -19,10 +19,8 @@ Custom callback component. Replace this description with your own.
   } from '$journey/journey.interfaces';
 
   /**
-   * The Journey Client callback instance for this component.
-   * Typically you'll narrow this to a specific callback type:
-   *   import type { NameCallback } from '@forgerock/journey-client/types'
-   *   export let callback: NameCallback;
+   * The callback instance for this component. Use `callback.getInputValue()`
+   * and `callback.setInputValue()` to read/write values sent back to the server.
    */
   export let callback: BaseCallback;
 

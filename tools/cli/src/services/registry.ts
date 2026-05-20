@@ -1,5 +1,6 @@
 import { FileSystem, Path } from '@effect/platform';
 import { Console, Effect } from 'effect';
+import { parse } from 'svelte/compiler';
 
 import { RegistryScanError } from '../errors.js';
 
@@ -20,14 +21,20 @@ interface ComponentEntry {
 // Helpers (exported for testing)
 // --------------------------------------------------------------------------
 
-/** Extracts names of all `export let` prop declarations from a Svelte component's `<script>` block. */
+/** Extracts names of all `export let` prop declarations from a Svelte component's `<script>` block using the Svelte compiler AST. */
 export function parseAcceptedProps(content: string): string[] {
-  const scriptMatch = content.match(/<script[^>]*>([\s\S]*?)<\/script>/);
-  if (!scriptMatch) return [];
+  const abstractSyntaxTree = parse(content, { modern: false });
   const props: string[] = [];
-  const regex = /export\s+let\s+(\w+)/g;
-  let m: RegExpExecArray | null;
-  while ((m = regex.exec(scriptMatch[1])) !== null) props.push(m[1]);
+  for (const node of abstractSyntaxTree.instance?.content.body ?? []) {
+    if (node.type !== 'ExportNamedDeclaration') {
+      continue;
+    }
+    if (node.declaration?.type === 'VariableDeclaration' && node.declaration.kind === 'let') {
+      for (const declarator of node.declaration.declarations) {
+        props.push(declarator.id.name);
+      }
+    }
+  }
   return props;
 }
 

@@ -84,4 +84,9 @@ describe('parseAcceptedProps', () => {
     const content = `<script lang="ts">\nexport let name: string;\nexport let count = 0;\n</script>`;
     expect(parseAcceptedProps(content)).toEqual(['name', 'count']);
   });
+
+  it('ignores export const declarations', () => {
+    const content = `<script>\nexport let callback;\nexport const style = {};\nexport const stepMetadata = null;\n</script>`;
+    expect(parseAcceptedProps(content)).toEqual(['callback']);
+  });
 });
