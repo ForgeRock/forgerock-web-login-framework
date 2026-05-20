@@ -45,12 +45,12 @@ username is typed and reveals it with a circular iris animation.
   }
 
   const VALID_EMAILS: Record<string, EmailEntry> = {
-    'demo@example.com': { name: 'demo' },
-    'admin@example.com': { name: 'admin' },
-    'alice@example.com': { name: 'alice' },
-    'bob@example.com': { name: 'bob' },
-    'gabrielstein@example.com': { name: 'gabriel' },
-    'carol@example.com': { name: 'carol' },
+    'demo@example.com': { name: 'Demo' },
+    'admin@example.com': { name: 'Admin' },
+    'alice@example.com': { name: 'Alice' },
+    'bob@example.com': { name: 'Bob' },
+    'gabrielstein@pingidentity.com': { name: 'Gabriel' },
+    'carol@example.com': { name: 'Carol' },
     'justin.lowery@pingidentity.com': { name: 'Justin', greeting: 'Hey hey hey,' },
     'ryan.basmajian@pingidentity.com': { name: 'Ryan' },
     'vatsalparikh@pingidentity.com': { name: 'Vatsal' },
@@ -532,14 +532,13 @@ username is typed and reveals it with a circular iris animation.
     margin: 0;
   }
 
-  /* ── Dynamic section (fixed height prevents layout shift) ── */
+  /* ── Dynamic section (min-height prevents layout shift; overflow handled per-child) ── */
   .dynamic-section {
-    height: 130px;
+    min-height: 130px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     gap: 0.5rem;
-    overflow: hidden;
   }
 
   /* ── Callbacks ── */
