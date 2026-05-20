@@ -86,19 +86,6 @@
         color: white;
       }
     }
-
-    /**
-     * Demo override — removes the widget dialog/container chrome so custom
-     * stages render directly on the page background without a grey card wrapper.
-     */
-    dialog,
-    .tw_containing-box,
-    .tw_containing-box_dark,
-    [class*='tw_containing-box'] {
-      background-color: transparent !important;
-      box-shadow: none !important;
-      border: none !important;
-    }
   </style>
 </svelte:head>
 

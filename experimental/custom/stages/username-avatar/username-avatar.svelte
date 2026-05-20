@@ -90,10 +90,12 @@ username is typed and reveals it with a circular iris animation.
     if (componentStyle === 'modal') {
       captureLinks(linkWrapper, journey);
     }
+    document.body.classList.add('username-avatar-active');
     watchUsernameInput();
   });
 
   onDestroy(() => {
+    document.body.classList.remove('username-avatar-active');
     stopWatchingUsername();
   });
 
@@ -650,5 +652,15 @@ username is typed and reveals it with a circular iris animation.
     font-size: 0.8125rem;
     color: rgba(255, 255, 255, 0.35);
     margin: 0;
+  }
+
+  /* Neutralize the Box wrapper while this stage is mounted */
+  :global(body.username-avatar-active dialog),
+  :global(body.username-avatar-active .tw_containing-box),
+  :global(body.username-avatar-active .tw_containing-box_dark),
+  :global(body.username-avatar-active [class*='tw_containing-box']) {
+    background-color: transparent !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 </style>
