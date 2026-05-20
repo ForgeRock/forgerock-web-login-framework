@@ -158,6 +158,12 @@ Set the Stage field on your AM Page Node to "SocialLoginReversed".
 
   onMount(() => {
     if (componentStyle === 'modal') captureLinks(linkWrapper, journey);
+    const bg = 'linear-gradient(145deg, #0f0c29, #302b63, #24243e)';
+    document.documentElement.style.background = bg;
+    document.body.style.background = bg;
+    const rootEl = document.querySelector<HTMLElement>('.root');
+    if (rootEl) rootEl.style.background = bg;
+    document.documentElement.classList.add('social-login-reversed-active');
     document.body.classList.add('social-login-reversed-active');
 
     if (canvas) {
@@ -190,6 +196,11 @@ Set the Stage field on your AM Page Node to "SocialLoginReversed".
   });
 
   onDestroy(() => {
+    document.documentElement.style.background = '';
+    document.body.style.background = '';
+    const rootEl = document.querySelector<HTMLElement>('.root');
+    if (rootEl) rootEl.style.background = '';
+    document.documentElement.classList.remove('social-login-reversed-active');
     document.body.classList.remove('social-login-reversed-active');
     cancelAnimationFrame(animFrame);
     clearTimeout(breachDebounce);
@@ -325,12 +336,9 @@ Set the Stage field on your AM Page Node to "SocialLoginReversed".
   /* ── Shell & canvas ─────────────────────────────────────── */
   .stage-shell {
     position: relative;
-    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0d0d1a 0%, #1a0533 50%, #0d1a33 100%);
-    overflow: hidden;
   }
 
   .particle-canvas {
@@ -347,11 +355,9 @@ Set the Stage field on your AM Page Node to "SocialLoginReversed".
     z-index: 1;
     width: 100%;
     max-width: 420px;
-    margin: 2rem 1rem;
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    margin: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 1.5rem;
     padding: 2.25rem 2rem;
     box-shadow:
@@ -416,15 +422,11 @@ Set the Stage field on your AM Page Node to "SocialLoginReversed".
     color: #fff;
     margin: 0;
     letter-spacing: -0.02em;
-    background: linear-gradient(90deg, #e2d9f3, #ffffff);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
   }
 
   .card-sub {
     font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.45);
+    color: rgba(255, 255, 255, 0.55);
     margin: 0;
   }
 
@@ -623,20 +625,21 @@ Set the Stage field on your AM Page Node to "SocialLoginReversed".
     transform: translateY(0);
   }
 
-  /* Neutralize the Box wrapper while this stage is mounted */
-  :global(body.social-login-reversed-active),
-  :global(body.social-login-reversed-active > div) {
-    background: transparent !important;
-    min-height: unset !important;
+  /* Hide the separator hr rendered by SelectIdPCallback */
+  :global(body.social-login-reversed-active .card hr.tw_border-0) {
+    display: none !important;
   }
 
+  /* Neutralize the Box wrapper while this stage is mounted */
+  :global(body.social-login-reversed-active > div),
+  :global(body.social-login-reversed-active .tw_bg-body-light),
+  :global(body.social-login-reversed-active .tw_bg-body-dark),
   :global(body.social-login-reversed-active .tw_containing-box),
   :global(body.social-login-reversed-active .tw_containing-box_dark),
-  :global(body.social-login-reversed-active .tw_containing-box_medium) {
+  :global(body.social-login-reversed-active [class*='tw_containing-box']) {
     background: transparent !important;
     box-shadow: none !important;
     border: none !important;
-    padding: 0 !important;
-    max-width: unset !important;
+    min-height: unset !important;
   }
 </style>
