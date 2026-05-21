@@ -179,3 +179,38 @@ export type { Maybe } from '$core/interfaces';
  * Usage: export let style: StyleObject = {};
  */
 export type { StyleObject } from '$core/style.store';
+
+/** Base type for any AM callback. Use as the prop type when authoring a custom callback. */
+export type { BaseCallback } from '@forgerock/journey-client/types';
+
+/** A full journey step — the shape passed to a custom stage component as `step`. */
+export type { JourneyStep } from '@forgerock/journey-client/types';
+
+// ─── Storybook helpers ───────────────────────────────────────────────────────
+// These are convenience wrappers for use inside `*.story.svelte` and `*.mock.ts`
+// files. They are not part of the runtime API surface — production code should
+// not depend on them.
+
+/**
+ * Builds a `JourneyStep` from a raw AM `Step` payload. Use inside `.mock.ts`
+ * files to produce the `step` value passed to a custom callback or stage story.
+ */
+export { createJourneyStep } from '$journey/_utilities/step.mock';
+
+/**
+ * Builds the per-callback metadata array a stage component expects. Pair with
+ * `initCheckValidation()` when constructing the metadata for a story.
+ */
+export { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+
+/**
+ * Returns a no-op `checkValidation` function suitable for `buildCallbackMetadata`
+ * inside Storybook (where there is no real journey to validate against).
+ */
+export { initCheckValidation } from '$journey/stages/_utilities/step.utilities';
+
+/** Initialise the in-page links store. Call inside a story before rendering a stage. */
+export { initialize as initializeLinks } from '$core/links.store';
+
+/** Initialise the widget style store. Call inside a story before rendering a stage. */
+export { initialize as initializeStyles } from '$core/style.store';

@@ -1,0 +1,18 @@
+{
+  "_comment": "IDE-only tsconfig. See companion file in this directory for details.",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "allowJs": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "paths": {
+      "$login-framework": ["../../../experimental/custom/login-framework.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.svelte"]
+}
