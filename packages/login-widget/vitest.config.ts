@@ -17,6 +17,7 @@ export default defineConfig({
     include: [
       resolve('../../core/**/*.test.ts'),
       resolve('../../experimental/custom/**/*.test.ts'),
+      resolve('./src/**/*.test.ts'),
     ],
     exclude: ['node_modules', 'dist'],
     typecheck: {

@@ -27,14 +27,14 @@ importers:
         specifier: ^9.39.2
         version: 9.39.3
       '@forgerock/javascript-sdk':
-        specifier: ^4.9.0
-        version: 4.9.0(react@19.2.4)
+        specifier: ^4.9.1
+        version: 4.9.1(react@19.2.4)
       '@forgerock/journey-client':
         specifier: ^2.0.0
         version: 2.0.0(react@19.2.4)
       '@forgerock/ping-protect':
-        specifier: ^4.4.2
-        version: 4.6.2(react@19.2.4)
+        specifier: ^4.7.0
+        version: 4.7.1(react@19.2.4)
       '@storybook/addon-a11y':
         specifier: ^10.1.11
         version: 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
@@ -235,14 +235,14 @@ importers:
   packages/login-widget:
     dependencies:
       '@forgerock/javascript-sdk':
-        specifier: ^4.4.2
-        version: 4.8.3(react@19.2.4)
+        specifier: ^4.9.1
+        version: 4.9.1(react@19.2.4)
       '@forgerock/journey-client':
         specifier: ^2.0.0
         version: 2.0.0(react@19.2.4)
       '@forgerock/ping-protect':
-        specifier: ^4.4.2
-        version: 4.6.2(react@19.2.4)
+        specifier: ^4.7.1
+        version: 4.7.1(react@19.2.4)
       qrcode:
         specifier: 1.5.3
         version: 1.5.3
@@ -1090,17 +1090,14 @@ packages:
     resolution: {integrity: sha512-1B1VkCq6FuUNlQvlBYb+1jDu/gV297TIs/OeiaSR9l1H27SVW55ONE1e1Vp16NqP683+xEGzxYtv4XCiDPaQiw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@forgerock/javascript-sdk@4.8.3':
-    resolution: {integrity: sha512-6yOEsw1aZC8H/vTvdTgnta0eccEMTtcm6kh0L4aVkTOOa+pLTLq0ezq6hTcEL3Bn7nsGvgdlhhAoBPrvqbRp3w==}
-
-  '@forgerock/javascript-sdk@4.9.0':
-    resolution: {integrity: sha512-xNE4LMIFYvvPpsq04RqSGnZ+zT+LjOdHePPj6K4uukqewBaZMDmynozkOTtCFmWui7gqANuhf2arbdo3J5uTVQ==}
+  '@forgerock/javascript-sdk@4.9.1':
+    resolution: {integrity: sha512-VVRZ/ZBoghw0CRjzkhk1P1MYe9BPEDSRFhV6Hpq91I5Toqzj8dYGECr2pky/tlMRnkpuhzjYsUCg7QbumG1HYQ==}
 
   '@forgerock/journey-client@2.0.0':
     resolution: {integrity: sha512-nwVs+/ybJP/TPkUkaPXM4ThkZMmfae+RiE0dso0g6sW1ST366AVxQqEIxI7C4UJvKDsC+wfjprX5sjVdhlILdw==}
 
-  '@forgerock/ping-protect@4.6.2':
-    resolution: {integrity: sha512-Za3BxVcRX+zqIUlf1fwXysWpK7WiH7ogBFbJ3d3eObK1YelMaymGD4uWQdvrNFM1meDqyzA/Qi0wwwTifP9YMQ==}
+  '@forgerock/ping-protect@4.7.1':
+    resolution: {integrity: sha512-75SMVWH+cnmcqsRke4cwPhvOqoaNRG+Qm4WKGspx5kUT7qh9q17ZdIq5GoQeAebBvwT4oO+M8nqokc4YuxJXaw==}
 
   '@forgerock/sdk-logger@2.0.0':
     resolution: {integrity: sha512-H1MvYXM17v/IvolBdzFxCN1ZUq3+P/IOXBQA93Yma4CEBRzdzOUlusisQjAjsbm0kjTqv77EaW5j73belD0Qcg==}
@@ -6897,15 +6894,7 @@ snapshots:
 
   '@eslint/js@9.39.3': {}
 
-  '@forgerock/javascript-sdk@4.8.3(react@19.2.4)':
-    dependencies:
-      '@reduxjs/toolkit': 2.11.2(react@19.2.4)
-      immer: 10.2.0
-    transitivePeerDependencies:
-      - react
-      - react-redux
-
-  '@forgerock/javascript-sdk@4.9.0(react@19.2.4)':
+  '@forgerock/javascript-sdk@4.9.1(react@19.2.4)':
     dependencies:
       '@reduxjs/toolkit': 2.11.2(react@19.2.4)
       immer: 10.2.0
@@ -6927,9 +6916,9 @@ snapshots:
       - react
       - react-redux
 
-  '@forgerock/ping-protect@4.6.2(react@19.2.4)':
+  '@forgerock/ping-protect@4.7.1(react@19.2.4)':
     dependencies:
-      '@forgerock/javascript-sdk': 4.8.3(react@19.2.4)
+      '@forgerock/javascript-sdk': 4.9.1(react@19.2.4)
     transitivePeerDependencies:
       - react
       - react-redux

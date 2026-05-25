@@ -62,7 +62,25 @@ describe('journey.store (Journey Client configuration)', () => {
       },
     });
 
-    expect(config.serverConfig.wellknown).toBe(
+    expect(config?.serverConfig.wellknown).toBe(
+      'https://example.com/.well-known/openid-configuration',
+    );
+  });
+
+  it('setJourneyClientConfig() is a no-op when called without a config and no prior config exists', async () => {
+    const { setJourneyClientConfig } = await importSubject();
+    expect(setJourneyClientConfig()).toBeUndefined();
+  });
+
+  it('setJourneyClientConfig() returns the existing config when called without one after prior configuration', async () => {
+    const { setJourneyClientConfig } = await importSubject();
+    setJourneyClientConfig({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    const reused = setJourneyClientConfig();
+    expect(reused?.serverConfig.wellknown).toBe(
       'https://example.com/.well-known/openid-configuration',
     );
   });

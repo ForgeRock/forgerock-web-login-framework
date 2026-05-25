@@ -9,8 +9,8 @@
 
 <script context="module" lang="ts">
   import './main.css';
-  import { widgetApiFactory } from './_utilities/api.utilities';
   import { componentApi } from './_utilities/component.utilities';
+  import { widgetApiFactory } from './widget.api';
 
   const api = widgetApiFactory(componentApi());
 
