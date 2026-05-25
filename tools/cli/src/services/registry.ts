@@ -3,6 +3,7 @@ import { Console, Effect } from 'effect';
 import { parse } from 'svelte/compiler';
 
 import { RegistryScanError } from '../errors.js';
+import { toPascalCase } from '../utils.js';
 
 // --------------------------------------------------------------------------
 // Types
@@ -36,12 +37,6 @@ export function parseAcceptedProps(content: string): string[] {
     }
   }
   return props;
-}
-
-function toPascalCase(str: string): string {
-  return str
-    .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr: string) => chr.toUpperCase())
-    .replace(/^(.)/, (_, chr: string) => chr.toUpperCase());
 }
 
 /** Parses and validates the leading `<!-- @component -->` block from a Svelte file. */

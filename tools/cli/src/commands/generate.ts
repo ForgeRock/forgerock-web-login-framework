@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
 import { runRegistryScript } from '../services/registry.js';
+import { toPascalCase } from '../utils.js';
 
 const CUSTOM_DIR = 'experimental/custom';
 
@@ -32,17 +33,6 @@ function toSlug(name: string): string {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
-}
-
-/**
- * Converts a kebab-case slug to PascalCase, safe for use as a TypeScript identifier.
- * Examples: "my-login-stage" → "MyLoginStage", "otp-login" → "OtpLogin"
- */
-function toPascalCase(slug: string): string {
-  return slug
-    .split('-')
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join('');
 }
 
 /**
@@ -128,7 +118,7 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
     //   __COMPONENT_NAME_PASCAL__ — PascalCase identifier derived from slug (e.g. "MyLoginStage"),
     //                               safe for use in TypeScript symbol positions (function names etc.)
     //   __COMPONENT_SLUG__        — kebab-case slug (e.g. "my-login-stage")
-    const pascalName = toPascalCase(slug);
+    const pascalName = toPascalCase(name);
     const templateFiles = yield* fs.readDirectory(templatesDir);
     const createdFiles: string[] = [];
 

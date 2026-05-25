@@ -9,43 +9,18 @@ Custom callback component. Replace this description with your own.
 <script lang="ts">
   import type { BaseCallback } from '@forgerock/journey-client/types';
 
-  import type {
-    CallbackMetadata,
-    Maybe,
-    SelfSubmitFunction,
-    StepMetadata,
-    StyleObject,
-  } from '$login-framework';
-
   /**
    * The callback instance for this component. Use `callback.getInputValue()`
    * and `callback.setInputValue()` to read/write values sent back to the server.
    */
   export let callback: BaseCallback;
 
-  /**
-   * Optional function to trigger self-submission (e.g. after an async action).
-   * Set to `null` when the callback does not need to submit the form itself.
-   */
-  export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-
-  /**
-   * Metadata about the current step (page node) — includes stage name,
-   * header/description overrides, and derived helpers like `isStepSelfSubmittable()`.
-   */
-  export const stepMetadata: Maybe<StepMetadata> = null;
-
-  /**
-   * Per-callback metadata from the step — may include policies, failed policies,
-   * and other AM-provided hints for rendering.
-   */
-  export const callbackMetadata: Maybe<CallbackMetadata> = null;
-
-  /**
-   * The widget's resolved style configuration (colors, logos, labels, etc.).
-   * Use this to keep your custom callback visually consistent with the theme.
-   */
-  export const style: StyleObject = {};
+  // Optionally declare any of these if your component needs them:
+  // import type { CallbackMetadata, Maybe, SelfSubmitFunction, StepMetadata, StyleObject } from '$login-framework';
+  // export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
+  // export let stepMetadata: Maybe<StepMetadata> = null;
+  // export let callbackMetadata: Maybe<CallbackMetadata> = null;
+  // export let style: StyleObject = {};
 
   // Suppress the "unused export" warning — remove `void` once you use `callback`.
   void callback;
