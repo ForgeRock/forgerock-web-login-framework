@@ -2,6 +2,8 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { resolve } from 'path';
 import { defineConfig } from 'vitest/config';
 
+import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -12,7 +14,10 @@ export default defineConfig({
       '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
     },
   },
-  plugins: [svelte({ hot: !process.env.VITEST })],
+  plugins: [
+    customRegistry({ projectRoot: resolve('../..') }),
+    svelte({ hot: !process.env.VITEST }),
+  ],
   test: {
     include: [
       resolve('../../core/**/*.test.ts'),

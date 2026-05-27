@@ -3,12 +3,15 @@ import basicSsl from '@vitejs/plugin-basic-ssl';
 import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
+import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+
 import type { UserConfig } from 'vite';
 
 export default defineConfig(
   ({ mode }): UserConfig => ({
     envDir: resolve('../..'),
     plugins: [
+      customRegistry({ projectRoot: resolve('../..') }),
       // Only use SSL plugin in development mode, not production/preview
       ...(mode === 'development' ? [basicSsl()] : []),
       sveltekit(),

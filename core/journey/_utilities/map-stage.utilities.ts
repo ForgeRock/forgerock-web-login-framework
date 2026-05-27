@@ -22,7 +22,7 @@ import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
 import Registration from '$journey/stages/registration.svelte';
 import WebAuthnStage from '$journey/stages/webauthn.svelte';
 import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
-import { customStageRegistry } from './custom-registry';
+import { customStageRegistry } from './registry/custom-registry';
 
 import type {
   HiddenValueCallback,

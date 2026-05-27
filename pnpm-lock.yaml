@@ -20,6 +20,12 @@ importers:
       '@changesets/cli':
         specifier: ^2.29.4
         version: 2.29.8(@types/node@25.6.0)
+      '@effect/platform':
+        specifier: ^0.96.0
+        version: 0.96.0(effect@3.21.0)
+      '@effect/platform-node':
+        specifier: ^0.106.0
+        version: 0.106.0(@effect/cluster@0.58.0(@effect/platform@0.96.0(effect@3.21.0))(@effect/rpc@0.75.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/sql@0.51.0(@effect/experimental@0.60.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/workflow@0.18.0(@effect/experimental@0.60.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/platform@0.96.0(effect@3.21.0))(@effect/rpc@0.75.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(effect@3.21.0))(effect@3.21.0))(@effect/platform@0.96.0(effect@3.21.0))(@effect/rpc@0.75.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/sql@0.51.0(@effect/experimental@0.60.0(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(@effect/platform@0.96.0(effect@3.21.0))(effect@3.21.0))(effect@3.21.0)
       '@eslint/compat':
         specifier: ^2.1.0
         version: 2.1.0(eslint@8.57.1)
@@ -77,6 +83,9 @@ importers:
       cz-conventional-changelog:
         specifier: ^3.3.0
         version: 3.3.0(@types/node@25.6.0)(typescript@5.9.3)
+      effect:
+        specifier: ^3.21.0
+        version: 3.21.0
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -256,9 +265,6 @@ importers:
       '@babel/core':
         specifier: ^7.23.9
         version: 7.29.0
-      '@forgerock/login-framework-cli':
-        specifier: workspace:*
-        version: link:../../tools/cli
       '@hcaptcha/types':
         specifier: ^1.0.3
         version: 1.2.0

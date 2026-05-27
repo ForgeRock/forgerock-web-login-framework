@@ -11,8 +11,8 @@
   HOW OVERRIDES WORK
   ──────────────────
   Setting `Name: NameCallback` makes this component replace the built-in
-  NameCallback renderer everywhere in the journey. The pre-build script writes
-  custom-registry.ts, mapping:
+  NameCallback renderer everywhere in the journey. The framework's Vite plugin
+  writes custom-registry.ts on every build (and watches in dev), mapping:
 
     "NameCallback" → this component
 

@@ -10,7 +10,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 // Isolate the core mapping logic from any demo overrides in the custom registry.
-vi.mock('./custom-registry', () => ({
+vi.mock('./registry/custom-registry', () => ({
   customStageRegistry: {},
   customCallbackRegistry: {},
 }));

@@ -4,8 +4,7 @@
   "description": "CLI tool for scaffolding and managing Ping Login Widget and Login App custom component projects",
   "type": "module",
   "exports": {
-    ".": "./dist/src/main.js",
-    "./generate-registry": "./dist/scripts/generate-registry.js"
+    ".": "./dist/src/main.js"
   },
   "main": "./dist/src/main.js",
   "module": "./dist/src/main.js",

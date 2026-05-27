@@ -7,6 +7,9 @@ export function normalizeSeparators(p: string): string {
  * Converts an arbitrary string to PascalCase, safe for use as a TypeScript identifier.
  * Handles kebab-case, spaces, and preserves existing word boundaries in PascalCase input.
  * Examples: "my-login-stage" → "MyLoginStage", "My Login Stage" → "MyLoginStage", "DefaultLogin" → "DefaultLogin"
+ *
+ * Intentionally duplicated from core/journey/_utilities/registry/registry.ts — tools/cli cannot
+ * depend on core/ (build-time vs. runtime boundary), so each package owns its own copy.
  */
 export function toPascalCase(str: string): string {
   return str

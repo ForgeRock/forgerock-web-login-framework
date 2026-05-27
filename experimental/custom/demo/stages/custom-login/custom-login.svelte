@@ -11,8 +11,8 @@
   HOW OVERRIDES WORK
   ──────────────────
   Setting `Name: DefaultLogin` makes this component replace the built-in
-  DefaultLogin stage renderer. The pre-build script writes custom-registry.ts,
-  mapping:
+  DefaultLogin stage renderer. The framework's Vite plugin writes
+  custom-registry.ts on every build (and watches in dev), mapping:
 
     "DefaultLogin" → this component
 

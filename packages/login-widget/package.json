@@ -26,7 +26,6 @@
   },
   "license": "MIT",
   "scripts": {
-    "prebuild": "pnpm --filter @forgerock/login-framework-cli run build && node node_modules/@forgerock/login-framework-cli/dist/scripts/generate-registry.js ../..",
     "build": "vite build",
     "build:types": "svelte-package -o svelte-package",
     "build:iife": "vite build --config vite.config.iife.ts",
@@ -43,7 +42,6 @@
   },
   "devDependencies": {
     "@babel/core": "^7.23.9",
-    "@forgerock/login-framework-cli": "workspace:*",
     "@hcaptcha/types": "^1.0.3",
     "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",

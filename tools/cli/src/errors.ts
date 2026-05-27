@@ -32,11 +32,6 @@ export class GeneratorVersionError extends Data.TaggedError('GeneratorVersionErr
   readonly path?: string;
 }> {}
 
-export class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
-  readonly directory: string;
-  readonly cause?: unknown;
-}> {}
-
 export class DirectoryConflictError extends Data.TaggedError('DirectoryConflictError')<{
   readonly path: string;
 }> {}

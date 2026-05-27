@@ -28,10 +28,10 @@ This directory contains fully commented reference implementations of custom stag
    - Change `Name:` to the stage/callback name you want to override, or a brand-new name for an extension.
    - Keep `Type: stage` or `Type: callback` unchanged.
 
-4. Rebuild to regenerate `custom-registry.ts`:
+4. The framework's Vite plugin regenerates `custom-registry.ts` automatically — if `pnpm dev` is running, the new component is picked up within milliseconds. Otherwise:
 
    ```sh
-   pnpm build:widget   # or restart pnpm dev
+   pnpm build:widget   # or start pnpm dev
    ```
 
 ## Directory layout
@@ -53,6 +53,6 @@ demo/
 ```
 
 > **Note:** Files under `demo/` are committed to the repository as reference material.
-> They are **not** scanned by the pre-build script and are **not** registered in
+> They are **not** scanned by the framework's Vite plugin and are **not** registered in
 > `custom-registry.ts`. Only files under `experimental/custom/stages/` and
 > `experimental/custom/callbacks/` are picked up by the build.

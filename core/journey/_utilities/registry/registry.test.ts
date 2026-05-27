@@ -1,13 +1,29 @@
+import { Path } from '@effect/platform';
+import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
 import { describe, expect, it } from 'vitest';
 
-import { parseAcceptedProps, parseComponentHeader } from '../src/services/registry.js';
+import {
+  buildRegistryContent,
+  parseAcceptedProps,
+  parseComponentHeader,
+  toPascalCase,
+} from './registry.js';
 
 const decode = (filePath: string, content: string) =>
   Effect.runSync(parseComponentHeader(filePath, content));
 
 const decodeError = (filePath: string, content: string) =>
   Effect.runSync(Effect.flip(parseComponentHeader(filePath, content)));
+
+const nodePath = Effect.runSync(
+  Effect.provide(
+    Effect.gen(function* () {
+      return yield* Path.Path;
+    }),
+    NodeContext.layer,
+  ),
+);
 
 describe('parseComponentHeader', () => {
   describe('valid headers', () => {
@@ -88,5 +104,88 @@ describe('parseAcceptedProps', () => {
   it('ignores export const declarations', () => {
     const content = `<script>\nexport let callback;\nexport const style = {};\nexport const stepMetadata = null;\n</script>`;
     expect(parseAcceptedProps(content)).toEqual(['callback']);
+  });
+});
+
+describe('toPascalCase', () => {
+  it('converts kebab-case', () => {
+    expect(toPascalCase('my-login-stage')).toBe('MyLoginStage');
+  });
+
+  it('converts space-separated', () => {
+    expect(toPascalCase('My Login Stage')).toBe('MyLoginStage');
+  });
+
+  it('preserves PascalCase', () => {
+    expect(toPascalCase('DefaultLogin')).toBe('DefaultLogin');
+  });
+});
+
+describe('buildRegistryContent', () => {
+  const registryDir = '/repo/core/journey/_utilities/registry';
+
+  it('produces empty registries when no components are scanned', () => {
+    const output = buildRegistryContent(nodePath, registryDir, [], []);
+    expect(output).toContain(
+      'export const customStageRegistry: Record<string, CustomRegistryEntry> = {',
+    );
+    expect(output).toContain(
+      'export const customCallbackRegistry: Record<string, CustomRegistryEntry> = {',
+    );
+    expect(output).not.toContain('// Stage overrides');
+    expect(output).not.toContain('// Callback overrides');
+  });
+
+  it('emits import lines and registry entries for stages and callbacks', () => {
+    const output = buildRegistryContent(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/my-stage/my-stage.svelte',
+          name: 'My Stage',
+          type: 'stage',
+          acceptedProps: ['callback', 'style'],
+        },
+      ],
+      [
+        {
+          filePath: '/repo/experimental/custom/callbacks/my-cb/my-cb.svelte',
+          name: 'MyCb',
+          type: 'callback',
+          acceptedProps: ['callback'],
+        },
+      ],
+    );
+
+    expect(output).toContain(
+      `import StageMyStage from '../../../../experimental/custom/stages/my-stage/my-stage.svelte';`,
+    );
+    expect(output).toContain(
+      `import CallbackMyCb from '../../../../experimental/custom/callbacks/my-cb/my-cb.svelte';`,
+    );
+    expect(output).toContain(
+      `"My Stage": { get component() { return StageMyStage; }, acceptedProps: ["callback","style"] },`,
+    );
+    expect(output).toContain(
+      `"MyCb": { get component() { return CallbackMyCb; }, acceptedProps: ["callback"] },`,
+    );
+  });
+
+  it('uses PascalCase identifiers derived from arbitrary names', () => {
+    const output = buildRegistryContent(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/foo/foo.svelte',
+          name: 'My Login Stage',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(output).toContain('StageMyLoginStage');
   });
 });
