@@ -8,6 +8,8 @@ overrides:
   picomatch@2: 2.3.2
   picomatch@4: 4.0.4
   uuid: ^14.0.0
+  postcss-selector-parser: '>=7.0.0'
+  ws: '>=8.21.0'
   yaml: '>=2.8.3'
 
 importers:
@@ -5038,10 +5040,6 @@ packages:
     peerDependencies:
       postcss: ^8.4.29
 
-  postcss-selector-parser@6.1.2:
-    resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==}
-    engines: {node: '>=4'}
-
   postcss-selector-parser@7.1.1:
     resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
     engines: {node: '>=4'}
@@ -6127,8 +6125,8 @@ packages:
     resolution: {integrity: sha512-+QU2zd6OTD8XWIJCbffaiQeH9U73qIqafo1x6V1snCWYGJf6cVE0cDR4D8xRzcEnfI21IFrUPzPGtcPf8AC+Rw==}
     engines: {node: ^14.17.0 || ^16.13.0 || >=18.0.0}
 
-  ws@8.19.0:
-    resolution: {integrity: sha512-blAT2mjOEIi0ZzruJfIhb3nps74PRWTCz1IjglWEEpQl5XS/UNama6u2/rjFkDDouqr4L67ry+1aGIALViWjDg==}
+  ws@8.21.0:
+    resolution: {integrity: sha512-Vsp28b7DRcimFQvrqu2Wek3z1iYxDCWqHYB8Qsnk/S4RfaCQzPGPyBNuVjJV3cd6UiKtUtp6sNM77gWvzcCH+g==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -6640,7 +6638,7 @@ snapshots:
       '@parcel/watcher': 2.5.6
       effect: 3.21.0
       multipasta: 0.2.7
-      ws: 8.19.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -6655,7 +6653,7 @@ snapshots:
       effect: 3.21.0
       mime: 3.0.0
       undici: 7.24.6
-      ws: 8.19.0
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -11477,7 +11475,7 @@ snapshots:
   postcss-nested@6.2.0(postcss@8.5.12):
     dependencies:
       postcss: 8.5.12
-      postcss-selector-parser: 6.1.2
+      postcss-selector-parser: 7.1.1
 
   postcss-reporter@7.1.0(postcss@8.5.12):
     dependencies:
@@ -11492,11 +11490,6 @@ snapshots:
   postcss-scss@4.0.9(postcss@8.5.12):
     dependencies:
       postcss: 8.5.12
-
-  postcss-selector-parser@6.1.2:
-    dependencies:
-      cssesc: 3.0.0
-      util-deprecate: 1.0.2
 
   postcss-selector-parser@7.1.1:
     dependencies:
@@ -12012,7 +12005,7 @@ snapshots:
       recast: 0.23.11
       semver: 7.7.4
       use-sync-external-store: 1.6.0(react@19.2.4)
-      ws: 8.19.0
+      ws: 8.21.0
     optionalDependencies:
       prettier: 3.0.3
     transitivePeerDependencies:
@@ -12255,7 +12248,7 @@ snapshots:
       postcss-js: 4.1.0(postcss@8.5.12)
       postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.12)(yaml@2.8.3)
       postcss-nested: 6.2.0(postcss@8.5.12)
-      postcss-selector-parser: 6.1.2
+      postcss-selector-parser: 7.1.1
       resolve: 1.22.11
       sucrase: 3.35.1
     transitivePeerDependencies:
@@ -12943,7 +12936,7 @@ snapshots:
       imurmurhash: 0.1.4
       signal-exit: 4.1.0
 
-  ws@8.19.0: {}
+  ws@8.21.0: {}
 
   wsl-utils@0.1.0:
     dependencies:
