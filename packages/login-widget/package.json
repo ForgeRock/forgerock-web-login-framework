@@ -61,7 +61,7 @@
     "chromatic": "^10.9.1",
     "playwright": "^1.44.0",
     "postcss": "^8.5.10",
-    "postcss-cli": "^10.1.0",
+    "postcss-cli": "^11.0.1",
     "postcss-import": "^15.0.0",
     "storybook": "^10.1.11",
     "svelte": "^5.53.7",
