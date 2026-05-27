@@ -41,8 +41,6 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run generate:registry
-        shell: bash
 
       # Cache Playwright browser binaries between runs (~200MB for Chromium)
       # playwright is a devDependency of the e2e workspace, so commands must be scoped
@@ -132,8 +130,6 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run generate:registry
-        shell: bash
       - run: pnpm run check:lint
       - run: pnpm run test
       - run: pnpm --filter @forgerock/login-framework-cli run test
@@ -159,8 +155,6 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run generate:registry
-        shell: bash
       - uses: chromaui/action@latest
         with:
           onlyChanged: true

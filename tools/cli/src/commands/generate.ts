@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
-import { runRegistryScript } from '../services/registry.js';
+import { toPascalCase } from '../utils.js';
 
 const CUSTOM_DIR = 'experimental/custom';
 
@@ -112,8 +112,12 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
     yield* fs.makeDirectory(componentDir, { recursive: true });
 
     // ── Copy and process template files ───────────────────────────────────
-    // Each file name contains __COMPONENT_SLUG__; its contents contain both
-    // __COMPONENT_NAME__ (PascalCase) and __COMPONENT_SLUG__ (kebab-case).
+    // Each file name contains __COMPONENT_SLUG__; its contents use:
+    //   __COMPONENT_NAME__        — raw display name (may contain spaces, e.g. "My Login Stage")
+    //   __COMPONENT_NAME_PASCAL__ — PascalCase identifier derived from slug (e.g. "MyLoginStage"),
+    //                               safe for use in TypeScript symbol positions (function names etc.)
+    //   __COMPONENT_SLUG__        — kebab-case slug (e.g. "my-login-stage")
+    const pascalName = toPascalCase(name);
     const templateFiles = yield* fs.readDirectory(templatesDir);
     const createdFiles: string[] = [];
 
@@ -121,6 +125,7 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
       const targetFileName = templateFile.replaceAll('__COMPONENT_SLUG__', slug);
       const sourceContent = yield* fs.readFileString(p.join(templatesDir, templateFile));
       const processedContent = sourceContent
+        .replaceAll('__COMPONENT_NAME_PASCAL__', pascalName)
         .replaceAll('__COMPONENT_NAME__', name)
         .replaceAll('__COMPONENT_SLUG__', slug);
 
@@ -129,16 +134,13 @@ function scaffoldComponent(type: 'callback' | 'stage', name: string) {
       createdFiles.push(targetPath);
     }
 
-    // ── Regenerate custom-registry.ts ────────────────────────────────────
-    yield* Console.log('Regenerating custom component registry...');
-    yield* runRegistryScript(cwd);
-
     // ── Print summary ──────────────────────────────────────────────────────
     yield* Console.log(
       `Done. ${type} component scaffolded successfully.\n\n` +
         `Files created:\n` +
-        createdFiles.map((f) => `  ${f}`).join('\n') +
-        `\n\nNext: open ${p.join(componentDir, `${slug}.svelte`)} and implement your component.\n`,
+        createdFiles.map((createdPath) => `  ${createdPath}`).join('\n') +
+        `\n\nNext: open ${p.join(componentDir, `${slug}.svelte`)} and implement your component.\n` +
+        `If a dev server is running, the registry will pick up the new component automatically.\n`,
     );
   });
 }

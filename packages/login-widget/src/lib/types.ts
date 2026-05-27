@@ -7,8 +7,8 @@
  *
  **/
 
-import { widgetApiFactory } from './_utilities/api.utilities';
 import { componentApi } from './_utilities/component.utilities';
+import { widgetApiFactory } from './widget.api';
 
 import type {
   ConfigOptions as SdkConfigOptions,

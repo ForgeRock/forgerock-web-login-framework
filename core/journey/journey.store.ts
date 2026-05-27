@@ -72,19 +72,20 @@ let journeyClientPromise: Promise<JourneyClient> | undefined;
 
 /**
  * @function setJourneyClientConfig - Sets (or ensures) the Journey Client configuration.
- * @param {JourneyClientConfig} [config] If omitted, reuses existing config.
- * @throws {Error} If called without config before configuration is set.
+ * Calling without a config is a no-op; the config requirement is enforced lazily
+ * by `getJourneyClient()` at the point the client is actually needed.
+ * @param {JourneyClientConfig} [config] If omitted, leaves existing config untouched.
  * @throws {z.ZodError} If provided config fails validation.
- * @returns {JourneyClientConfig} The active Journey Client configuration.
+ * @returns {JourneyClientConfig | undefined} The active config, or undefined if none has been set.
  */
-export function setJourneyClientConfig(config?: JourneyClientConfig): JourneyClientConfig {
-  const parsed =
-    config === undefined ? journeyClientConfig : journeyClientConfigSchema.parse(config);
-
-  if (!parsed) {
-    throw new Error('Journey Client is not configured. Call setJourneyClientConfig() first.');
+export function setJourneyClientConfig(
+  config?: JourneyClientConfig,
+): JourneyClientConfig | undefined {
+  if (config === undefined) {
+    return journeyClientConfig;
   }
 
+  const parsed = journeyClientConfigSchema.parse(config);
   const hasChanged = parsed.serverConfig.wellknown !== journeyClientConfig?.serverConfig.wellknown;
   journeyClientConfig = parsed;
   // Reset the cached client promise when config changes.

@@ -27,13 +27,13 @@ import { initialize as initializeJourney } from '$journey/journey.store';
 import type { ConfigOptions } from '@forgerock/javascript-sdk';
 import type { Readable } from 'svelte/store';
 
+import type { componentApi as _componentApi } from './_utilities/component.utilities';
 import type {
   JourneyOptions,
   JourneyOptionsChange,
   JourneyOptionsStart,
   WidgetConfigOptions,
-} from '../interfaces';
-import type { componentApi as _componentApi } from './component.utilities';
+} from './interfaces';
 import type { OAuthStore, OAuthTokenStoreValue } from '$core/oauth/oauth.store';
 import type { UserStore, UserStoreValue } from '$core/user/user.store';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';

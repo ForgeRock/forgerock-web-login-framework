@@ -42,7 +42,7 @@
   import Unknown from '$journey/callbacks/unknown/unknown.svelte';
   import Name from '$journey/callbacks/username/name.svelte';
   import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
-  import { customCallbackRegistry } from './custom-registry';
+  import { customCallbackRegistry } from './registry/custom-registry';
 
   import type {
     AttributeInputCallback,
@@ -72,7 +72,7 @@
   import type { WebAuthnStepType } from '@forgerock/journey-client/webauthn';
   import type { z } from 'zod';
 
-  import type { CustomRegistryEntry } from './custom-registry';
+  import type { CustomRegistryEntry } from './registry/custom-registry';
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
   import type {

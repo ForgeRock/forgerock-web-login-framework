@@ -6,10 +6,15 @@ import sveltePreprocess from 'svelte-preprocess';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
+import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+
 export default defineConfig({
-  // Use isolated tsconfig for esbuild (avoids dependency on .svelte-kit/tsconfig.json)
+  // Isolated tsconfig for esbuild — avoids dependency on .svelte-kit/tsconfig.json.
+  // Passed as a JSON string because esbuild's typed `TsconfigRaw` only allows the
+  // subset of keys it inspects; the rest (module, moduleResolution, strict, etc.)
+  // are documented for parity with tsconfig.json but ignored at transform time.
   esbuild: {
-    tsconfigRaw: {
+    tsconfigRaw: JSON.stringify({
       compilerOptions: {
         target: 'ESNext',
         module: 'ESNext',
@@ -20,9 +25,10 @@ export default defineConfig({
         esModuleInterop: true,
         skipLibCheck: true,
       },
-    },
+    }),
   },
   plugins: [
+    customRegistry({ projectRoot: resolve('../..') }),
     svelte({
       compilerOptions: {
         dev: false,
@@ -52,7 +58,7 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      plugins: [postcssImport, tailwindcss, autoprefixer],
+      plugins: [postcssImport(), tailwindcss, autoprefixer],
     },
   },
   server: {

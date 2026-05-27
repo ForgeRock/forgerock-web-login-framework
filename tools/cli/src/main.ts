@@ -12,7 +12,7 @@ import { GithubReleaseLayer } from './services/release.js';
 
 // Read the version from package.json at runtime so it stays in sync
 // with the published package version after changesets bumps it.
-const { version } = createRequire(import.meta.url)('../package.json') as { version: string };
+const { version } = createRequire(import.meta.url)('../../package.json') as { version: string };
 
 const rootCommand = Command.make('ping-lf').pipe(
   Command.withDescription(
@@ -46,7 +46,7 @@ cli(process.argv).pipe(
         `  ${err.cause}\n\n` +
         `  • Check your network connection and try again.\n` +
         `  • Use a local path:   ping-lf init <dir> --local <path>\n` +
-        `  • Specify a version:  ping-lf init <dir> --version v1.0.0\n`,
+        `  • Specify a tag:      ping-lf init <dir> --tag v1.0.0\n`,
     ).pipe(Effect.andThen(Effect.die(err))),
   ),
   Effect.catchTag('ReleaseParseError', (err) =>

@@ -5,13 +5,10 @@ import { Console, Effect } from 'effect';
 import { writeVersion } from '../config/version.js';
 import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
 import { copyWithExclusions, expandTilde, isFrameworkDirectory } from '../services/file-system.js';
-import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';
 
 /**
  * Minimal pnpm-workspace.yaml written to the customer project.
- * Intentionally omits `tools/` — that workspace entry exists only in the
- * upstream monorepo and is not needed (or valid) in a customer project.
  */
 const PNPM_WORKSPACE = `packages:
   - 'packages/*'
@@ -50,15 +47,15 @@ export const initCommand = Command.make(
         ),
       ),
     ),
-    version: Options.optional(
-      Options.text('version').pipe(
+    tag: Options.optional(
+      Options.text('tag').pipe(
         Options.withDescription(
-          'Framework version tag to download (e.g. v1.2.0). If omitted, the main branch is used.',
+          'Framework release tag to download (e.g. v1.2.0). If omitted, the main branch is used.',
         ),
       ),
     ),
   },
-  ({ directory, local, version }) =>
+  ({ directory, local, tag }) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -89,7 +86,7 @@ export const initCommand = Command.make(
       // automatic removal of the .framework-tmp directory after copying.
       const resolvedVersion = yield* Effect.scoped(
         Effect.gen(function* () {
-          const { sourceDir, resolvedVersion } = yield* resolveSource(local, version, resolvedDir);
+          const { sourceDir, resolvedVersion } = yield* resolveSource(local, tag, resolvedDir);
 
           // ── 2. Create target directory + copy framework (with exclusions) ──
           yield* Console.log('Copying framework files...');
@@ -121,21 +118,13 @@ export const initCommand = Command.make(
         { concurrency: 'unbounded', discard: true },
       );
 
-      // ── 5. Generate custom-registry.ts ────────────────────────────────────
-      // Run the canonical registry script so the file is immediately present
-      // with the correct CustomRegistryEntry format. The empty callbacks/ and
-      // stages/ dirs produce empty registries — no custom components yet.
-      yield* Console.log('Generating custom component registry...');
-      yield* runRegistryScript(resolvedDir);
-
-      // ── 6. Write .generator-version ────────────────────────────────────────
+      // ── 5. Write .generator-version ────────────────────────────────────────
       yield* writeVersion(resolvedDir, {
         version: resolvedVersion,
-        commitHash: '',
         generatedAt: new Date().toISOString(),
       });
 
-      // ── 7. Print next steps ───────────────────────────────────────────────
+      // ── 6. Print next steps ───────────────────────────────────────────────
       yield* Console.log(nextStepsMessage(directory));
     }),
 ).pipe(

@@ -4,8 +4,7 @@
   "description": "CLI tool for scaffolding and managing Ping Login Widget and Login App custom component projects",
   "type": "module",
   "exports": {
-    ".": "./dist/src/main.js",
-    "./generate-registry": "./dist/scripts/generate-registry.js"
+    ".": "./dist/src/main.js"
   },
   "main": "./dist/src/main.js",
   "module": "./dist/src/main.js",
@@ -41,6 +40,7 @@
     "@effect/printer-ansi": "^0.49.0",
     "@effect/typeclass": "^0.40.0",
     "effect": "^3.21.0",
+    "svelte": "^5.55.7",
     "tar": "^7.5.13"
   },
   "devDependencies": {

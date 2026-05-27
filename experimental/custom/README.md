@@ -47,7 +47,7 @@ Name: DefaultLogin
 <!-- <style> is optional; scoped to this component and takes final precedence -->
 ```
 
-The `@component` comment is required. The pre-build script reads it to register your component. **A missing or malformed header will fail the build.**
+The `@component` comment is required. The framework's Vite plugin reads it to register your component during dev and build. **A missing or malformed header will fail the build.**
 
 ## Types
 
@@ -127,10 +127,10 @@ import type { NameCallback, JourneyStep } from '@forgerock/journey-client/types'
 
 ## Hot module reloading note
 
-Adding a **new** component file to `/experimental/custom/` requires re-running the pre-build script before the widget picks it up:
+The framework's Vite plugin watches `experimental/custom/{stages,callbacks}/` during `pnpm dev` and regenerates `custom-registry.ts` automatically when you add, remove, or rename a component file. Editing an existing registered component reloads normally via Vite HMR.
+
+If you generate a component while only Storybook is running (Storybook uses its own Vite config and doesn't load this plugin), trigger a regeneration with:
 
 ```sh
 pnpm build:widget   # or restart pnpm dev
 ```
-
-Editing an existing registered component reloads normally.

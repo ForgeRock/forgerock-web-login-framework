@@ -6,6 +6,8 @@ import sveltePreprocess from 'svelte-preprocess';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
+import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+
 /**
  * IIFE build config — produces a self-contained bundle for <script> tag usage.
  *
@@ -18,8 +20,11 @@ import { defineConfig } from 'vite';
  * Run order in build:release: build (ESM) → build:iife (this) → types pipeline
  */
 export default defineConfig({
+  // Stringified so esbuild parses it itself; its typed `TsconfigRaw` rejects keys
+  // it doesn't read (module, moduleResolution, strict, …) even though they're valid
+  // tsconfig. Listed for parity with tsconfig.json.
   esbuild: {
-    tsconfigRaw: {
+    tsconfigRaw: JSON.stringify({
       compilerOptions: {
         target: 'ESNext',
         module: 'ESNext',
@@ -30,9 +35,10 @@ export default defineConfig({
         esModuleInterop: true,
         skipLibCheck: true,
       },
-    },
+    }),
   },
   plugins: [
+    customRegistry({ projectRoot: resolve('../..') }),
     svelte({
       compilerOptions: {
         dev: false,
@@ -60,7 +66,7 @@ export default defineConfig({
   },
   css: {
     postcss: {
-      plugins: [postcssImport, tailwindcss, autoprefixer],
+      plugins: [postcssImport(), tailwindcss, autoprefixer],
     },
   },
   define: {
