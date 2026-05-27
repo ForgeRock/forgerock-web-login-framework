@@ -12,6 +12,7 @@ import { PIProtect } from '@forgerock/ping-protect';
 import { derived, get } from 'svelte/store';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
+import { captchaConfigSchema } from '$core/captcha.config';
 // Import the stores for initialization
 import { componentStore } from '$core/component.store';
 import { initialize as initializeLinks } from '$core/links.store';
@@ -95,7 +96,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     /**
      * Initialize all the stores.
      */
-    journeyStore = initializeJourney(options?.journeyClient);
+    journeyStore = initializeJourney(options?.journeyClient, {
+      ...(options?.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
+    });
     oauthStore = initializeOauth(options?.forgerock);
     userStore = initializeUser(options?.forgerock);
 
@@ -137,7 +140,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
          * Initialize the stores and ensure both variables point to the same reference.
          * Variables with _ are the reactive version of the original variable from above.
          */
-        journeyStore = initializeJourney(setOptions?.journeyClient);
+        journeyStore = initializeJourney(setOptions?.journeyClient, {
+          ...(setOptions?.captcha && { captcha: captchaConfigSchema.parse(setOptions.captcha) }),
+        });
         oauthStore = initializeOauth(setOptions?.forgerock);
         userStore = initializeUser(setOptions?.forgerock);
 

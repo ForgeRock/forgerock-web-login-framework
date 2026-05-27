@@ -2,6 +2,7 @@
   "alreadyHaveAnAccount": "Already have an account? <a href='?journey'>Sign in here!</a>",
   "backToDefault": "Back to Sign In",
   "backToLogin": "Back to Sign In",
+  "captchaError": "CAPTCHA verification failed. Please try again.",
   "closeModal": "Close",
   "charactersCannotRepeatMoreThan": "A character cannot repeat more than {max} times",
   "charactersCannotRepeatMoreThanCaseInsensitive": "A character cannot repeat more than {max} times (case insensitive)",

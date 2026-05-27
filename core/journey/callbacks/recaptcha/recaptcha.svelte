@@ -1,42 +1,42 @@
 <!--
- 
+
  Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
- 
+
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
- 
+
  -->
 
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { journeyStore } from '$journey/journey.store';
+  import Alert from '$components/primitives/alert/alert.svelte';
+  import { interpolate } from '$core/_utilities/i18n.utilities';
   import {
-    handleCaptchaError,
-    handleCaptchaToken,
+    loadCaptchaScript,
     renderCaptcha,
-  } from '$journey/stages/_utilities/recaptcha.utilities';
+    renderCaptchaInvisible,
+    resolveGrecaptcha,
+  } from '$journey/callbacks/_effects/captcha.effects';
 
   import type { ReCaptchaCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
-  import type { SelfSubmitFunction, StepMetadata } from '$journey/journey.interfaces';
+  import type {
+    CallbackMetadata,
+    CaptchaMode,
+    SelfSubmitFunction,
+    StepMetadata,
+  } from '$journey/journey.interfaces';
 
-  export let callback: Maybe<ReCaptchaCallback>;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
-  /**
-   * This is a component level variable that is set from the journey store
-   * If it isn't passed in via journey.start, we
-   * default to the journey.tree value. However, journey.tree won't
-   * necessarily be set on mount. It is async, so we
-   * have to wait for it to resolve. Therefore, defaulting to
-   * an empty string so its falsey.
-   */
-  let recaptchaAction = '';
+  export let callback: Maybe<ReCaptchaCallback>;
+  export let callbackMetadata: Maybe<CallbackMetadata>;
+  let captchaError = '';
 
   const siteKey = callback?.getSiteKey() ?? '';
   let isV3 = callback?.getOutputByName('reCaptchaV3', false);
@@ -48,60 +48,148 @@
   const recaptchaClass: string =
     callback?.getOutputByName<string>('captchaDivClass', 'h-captcha') ?? 'h-captcha';
 
-  onMount(() => {
-    if (isV3) {
-      // If ReCaptcha v3, do nothing and return early
+  const captchaProvider: 'hcaptcha' | 'grecaptcha' =
+    recaptchaClass === 'g-recaptcha' ? 'grecaptcha' : 'hcaptcha';
+
+  const CAPTCHA_SCRIPT_URLS: Record<'grecaptcha' | 'hcaptcha', string> = {
+    grecaptcha: 'https://www.google.com/recaptcha/api.js',
+    hcaptcha: 'https://js.hcaptcha.com/1/api.js',
+  };
+
+  const CAPTCHA_ELEMENT_IDS: Record<'grecaptcha' | 'hcaptcha', string> = {
+    grecaptcha: 'fr-recaptcha',
+    hcaptcha: 'fr-hcaptcha',
+  };
+
+  // v3 is always Google; v2 provider is derived from captchaDivClass
+  const scriptProvider: 'grecaptcha' | 'hcaptcha' = isV3 ? 'grecaptcha' : captchaProvider;
+  const scriptSrc = CAPTCHA_SCRIPT_URLS[scriptProvider];
+  const captchaElementId = CAPTCHA_ELEMENT_IDS[captchaProvider];
+
+  let scriptReady = false;
+
+  let captchaMode: CaptchaMode = 'visible';
+  $: captchaMode = callbackMetadata?.initOptions?.mode === 'invisible' ? 'invisible' : 'visible';
+  $: recaptchaAction = (callbackMetadata?.initOptions?.recaptchaAction as string | undefined) ?? '';
+
+  onMount(async () => {
+    if (!callback) {
       return;
     }
-    if (callback) {
-      window.frHandleCaptchaError = handleCaptchaError(callback);
-      window.frHandleCaptcha = handleCaptchaToken(callback);
-      window.frHandleExpiredCallback = function handleExpiredCallback() {
+
+    try {
+      await loadCaptchaScript({ src: scriptSrc, provider: scriptProvider });
+      scriptReady = true;
+    } catch (err) {
+      captchaError = 'captchaError';
+      return;
+    }
+
+    if (isV3) {
+      return;
+    }
+
+    const onSuccess = (token: string) => callback?.setResult(token);
+
+    if (captchaMode === 'invisible') {
+      const onError = () => {
+        captchaError = 'captchaError';
+      };
+      const onExpired = () => {
         callback?.setResult('');
-        renderCaptcha({ nameOfCaptcha: 'hcaptcha', siteKey });
+        captchaError = '';
+        renderCaptchaInvisible({
+          nameOfCaptcha: captchaProvider,
+          siteKey,
+          elementId: captchaElementId,
+          onSuccess,
+          onExpired: () => {},
+          onError,
+        });
+      };
+      renderCaptchaInvisible({
+        nameOfCaptcha: captchaProvider,
+        siteKey,
+        elementId: captchaElementId,
+        onSuccess,
+        onExpired,
+        onError,
+      });
+    } else {
+      const onError = () => {
+        captchaError = 'captchaError';
+      };
+      const onExpired = () => {
+        callback?.setResult('');
+        captchaError = '';
+        renderCaptcha({
+          nameOfCaptcha: captchaProvider,
+          siteKey,
+          elementId: captchaElementId,
+          onSuccess,
+          onExpired: () => {},
+          onError,
+        });
       };
       renderCaptcha({
-        nameOfCaptcha: recaptchaClass === 'g-recaptcha' ? 'grecaptcha' : 'hcaptcha',
+        nameOfCaptcha: captchaProvider,
         siteKey,
+        elementId: captchaElementId,
+        onSuccess,
+        onExpired,
+        onError,
       });
     }
   });
-  // defining this outside of the reactive block and guarding it with a isV3 check so it only runs when v3
-  // is defined as true and we have a recaptcha action to assign.
+
   function executeV3Captcha() {
-    if (isV3 && recaptchaAction.length) {
-      try {
-        window.grecaptcha.ready(async function () {
-          const value = await window.grecaptcha.execute(siteKey, {
+    if (isV3 && scriptReady && recaptchaAction.length) {
+      const grc = resolveGrecaptcha();
+      if (!grc) {
+        captchaError = 'captchaError';
+        return;
+      }
+      grc.ready(async function () {
+        try {
+          const value = await grc.execute(siteKey, {
             action: recaptchaAction,
           });
           callback?.setResult(value);
-        });
-      } catch (err) {
-        throw new Error(
-          `Error executing recaptcha. Please make sure you have passed a siteKey and you have loaded the google recaptcha script in your app prior to this Error: ${err}`,
-        );
-      }
+        } catch {
+          captchaError = 'captchaError';
+        }
+      });
     }
   }
-  journeyStore.subscribe((value) => {
-    recaptchaAction = value?.recaptchaAction ?? '';
-  });
   $: {
-    if (recaptchaAction.length) {
+    if (recaptchaAction.length && scriptReady) {
       executeV3Captcha();
     }
   }
 </script>
 
 {#if isV3 === false}
-  <div
-    id="fr-recaptcha"
-    class={`${recaptchaClass} tw_flex-1 tw_w-full tw_input-spacing`}
-    data-sitekey={siteKey}
-    data-expired-callback="frHandleExpiredCallback"
-    data-chalexpired-callback="frHandleExpiredCallback"
-    data-error-callback="frHandleErrorCallback"
-    data-callback="frHandleCaptcha"
-  ></div>
+  {#if captchaMode === 'invisible'}
+    <div id={captchaElementId} class="tw_hidden"></div>
+    {#if captchaError}
+      <Alert id="captchaError" type="error">
+        {interpolate(captchaError, null, 'CAPTCHA verification failed. Please try again.')}
+      </Alert>
+    {/if}
+  {:else}
+    <div
+      id={captchaElementId}
+      class={`${recaptchaClass} tw_flex-1 tw_w-full tw_input-spacing`}
+      data-sitekey={siteKey}
+    ></div>
+    {#if captchaError}
+      <Alert id="captchaError" type="error">
+        {interpolate(captchaError, null, 'CAPTCHA verification failed. Please try again.')}
+      </Alert>
+    {/if}
+  {/if}
+{:else if captchaError}
+  <Alert id="captchaError" type="error">
+    {interpolate(captchaError, null, 'CAPTCHA verification failed. Please try again.')}
+  </Alert>
 {/if}

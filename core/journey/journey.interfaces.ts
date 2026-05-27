@@ -25,6 +25,8 @@ import type { Maybe } from '$core/interfaces';
  */
 type StepDetail = NonNullable<Step['detail']>;
 
+export type CaptchaMode = 'visible' | 'invisible';
+
 export interface CallbackMetadata {
   derived: {
     canForceUserInputOptionality: boolean;
@@ -35,6 +37,7 @@ export interface CallbackMetadata {
     isPasskeyAutofillEligible: boolean;
   };
   idx: number;
+  initOptions?: Record<string, unknown>;
   platform?: Record<string, unknown>;
 }
 export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscribe'> {
@@ -76,7 +79,6 @@ export interface JourneyStoreValue {
   step?: StepTypes;
   successful: boolean;
   response: Maybe<Step>;
-  recaptchaAction?: Maybe<string>;
 }
 export interface StackStore extends Pick<Writable<StartParam[]>, 'subscribe'> {
   latest: () => Promise<StartParam | undefined>;

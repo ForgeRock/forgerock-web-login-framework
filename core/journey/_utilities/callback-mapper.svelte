@@ -32,6 +32,7 @@
   import PingProtectInitialize from '$journey/callbacks/ping-protect-initialize/ping-protect-initialize.svelte';
   import PollingWait from '$journey/callbacks/polling-wait/polling-wait.svelte';
   import Recaptcha from '$journey/callbacks/recaptcha/recaptcha.svelte';
+  import RecaptchaEnterprise from '$journey/callbacks/recaptcha-enterprise/recaptcha-enterprise.svelte';
   import Redirect from '$journey/callbacks/redirect/redirect.svelte';
   import SelectIdp from '$journey/callbacks/select-idp/select-idp.svelte';
   import StringAttributeInput from '$journey/callbacks/string-attribute/string-attribute-input.svelte';
@@ -58,6 +59,7 @@
     PingOneProtectInitializeCallback,
     PollingWaitCallback,
     ReCaptchaCallback,
+    ReCaptchaEnterpriseCallback,
     RedirectCallback,
     SelectIdPCallback,
     SuspendedTextOutputCallback,
@@ -113,6 +115,7 @@
   let _MetadataCallback: MetadataCallback;
   let _DeviceProfileCallback: DeviceProfileCallback;
   let _RecaptchaCallback: ReCaptchaCallback;
+  let _RecaptchaEnterpriseCallback: ReCaptchaEnterpriseCallback;
   let _PingProtectEvaluation: PingOneProtectEvaluationCallback;
   let _PingProtectInitialize: PingOneProtectInitializeCallback;
   let _BaseCallback: BaseCallback;
@@ -141,6 +144,9 @@
         break;
       case callbackType.ReCaptchaCallback:
         _RecaptchaCallback = props.callback as ReCaptchaCallback;
+        break;
+      case callbackType.ReCaptchaEnterpriseCallback:
+        _RecaptchaEnterpriseCallback = props.callback as ReCaptchaEnterpriseCallback;
         break;
       case callbackType.PasswordCallback:
         _PasswordCallback = props.callback as PasswordCallback;
@@ -319,6 +325,12 @@
     callback: _RecaptchaCallback,
   }}
   <Recaptcha {...newProps} />
+{:else if cbType === callbackType.ReCaptchaEnterpriseCallback}
+  {@const newProps = {
+    ...props,
+    callback: _RecaptchaEnterpriseCallback,
+  }}
+  <RecaptchaEnterprise {...newProps} />
 {:else if cbType === callbackType.PingOneProtectEvaluationCallback}
   {@const newProps = {
     ...props,
