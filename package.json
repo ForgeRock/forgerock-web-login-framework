@@ -37,7 +37,7 @@
   "dependencies": {
     "@forgerock/javascript-sdk": "^3.4.0",
     "playwright": "^1.29.2",
-    "uuid": "^9.0.0",
+    "uuid": "^11.0.0",
     "xss": "^1.0.14",
     "zod": "^3.19.1"
   },
