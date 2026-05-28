@@ -10,15 +10,17 @@
 import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
+import { fetchIdmTheme } from '$server/idm-theme.effects';
 
 import type { LayoutServerLoad } from './$types';
 
-export const load: LayoutServerLoad = () => {
+export const load: LayoutServerLoad = async ({ url }) => {
   const amUrl = env.FR_AM_URL;
   const clientId = env.FR_OAUTH_PUBLIC_CLIENT;
   const realmPath = env.FR_REALM_PATH;
   const wellknown = env.FR_AM_WELLKNOWN_URL;
   const scope = env.FR_OAUTH_SCOPE;
+  const idmBaseUrl = env.FR_IDM_URL ?? amUrl;
 
   if (!amUrl || !realmPath || !wellknown) {
     throw error(
@@ -27,9 +29,16 @@ export const load: LayoutServerLoad = () => {
     );
   }
 
+  const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
+  const { theme: idmTheme, backgroundImageUrl } = idmBaseUrl
+    ? await fetchIdmTheme(idmBaseUrl, realmPath, journeyName)
+    : { theme: undefined, backgroundImageUrl: undefined };
+
   return {
     amUrl,
+    backgroundImageUrl,
     clientId,
+    idmTheme,
     realmPath,
     scope,
     wellknown,

@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -51,6 +51,7 @@ module.exports = {
        * for use as a background with white text
        */
       light: colorLib(colors.sky[600]).darken(0.075).hex(),
+      off: colors.slate[700],
     },
     tertiary: {
       dark: colors.slate[800],

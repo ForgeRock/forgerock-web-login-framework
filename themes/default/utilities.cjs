@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -25,8 +25,7 @@ module.exports = (theme) => ({
     transition:
       'background-color ease-in-out 0.15s, outline-color ease-in-out 0.2s, outline-offset ease-in-out 0.1s',
     '&:focus': {
-      '--outline-color':
-        'hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1)',
+      '--outline-color': `hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1)`,
       outlineOffset: '0',
       outlineWidth: '3px',
       outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
@@ -46,8 +45,7 @@ module.exports = (theme) => ({
       .fade(0.7)
       .toString()})`,
     '&:focus': {
-      '--outline-color':
-        'hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1)',
+      '--outline-color': `hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1)`,
       outlineColor: `var(--outline-color, ${colorLib(theme('ringColor.DEFAULT'))
         .lighten(0.2)
         .fade(0.1)

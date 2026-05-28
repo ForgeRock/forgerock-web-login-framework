@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -13,16 +13,16 @@ module.exports = function (theme) {
      * Container theme settings
      */
     '.containing-box': {
-      '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+      '--bg-color': `var(--fr-card-bg-color, hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l)))`,
       backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       borderColor: theme('colors.black'),
-      borderRadius: theme('borderRadius.DEFAULT'),
+      borderRadius: `var(--fr-card-border-radius, ${theme('borderRadius.DEFAULT')})`,
       boxShadow: theme('boxShadow.DEFAULT'),
       padding: `${theme('spacing.6')} ${theme('spacing.4')}`,
       width: '500px',
     },
     '.containing-box_dark': {
-      '--bg-color': 'hsl(var(--tw-colors-background-dark-hs),var(--tw-colors-background-dark-l))',
+      '--bg-color': `var(--fr-card-bg-color, hsl(var(--tw-colors-background-dark-hs),var(--tw-colors-background-dark-l)))`,
       backgroundColor: `var(--bg-color, ${theme('colors.background.dark')})`,
     },
     '.containing-box_medium': {

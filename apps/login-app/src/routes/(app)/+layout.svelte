@@ -1,11 +1,28 @@
 <!--
- 
+
  Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
- 
+
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
- 
+
  -->
+
+<script lang="ts">
+  import { buildThemeVarsEntries } from '$core/_utilities/theme.utilities';
+
+  import type { ThemeObject } from '$core/style.store';
+
+  export let data: { idmTheme?: ThemeObject; backgroundImageUrl?: string };
+
+  $: themeStyle = [
+    ...(data.idmTheme ? buildThemeVarsEntries(data.idmTheme) : []),
+    ...(data.backgroundImageUrl
+      ? [['--fr-page-bg-image', `url("${data.backgroundImageUrl}")`] as [string, string]]
+      : []),
+  ]
+    .map(([k, v]) => `${k}:${v}`)
+    .join(';');
+</script>
 
 <svelte:head>
   <!--
@@ -21,7 +38,7 @@
 
   <meta charset="utf-8" />
   <title>Login Application</title>
-  <link rel="icon" href="/favicon.ico" />
+  <link rel="icon" href={data.idmTheme?.favicon ?? '/favicon.ico'} />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
     /**
@@ -68,6 +85,9 @@
     .root {
       height: 100%;
       min-height: 100%;
+    }
+
+    html {
       background-color: #f6f8fa;
     }
 
@@ -84,4 +104,12 @@
   </style>
 </svelte:head>
 
-<slot />
+<div class="theme-root" style={themeStyle}>
+  <slot />
+</div>
+
+<style>
+  .theme-root {
+    height: 100%;
+  }
+</style>

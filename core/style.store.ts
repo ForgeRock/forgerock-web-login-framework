@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -11,6 +11,46 @@ import { writable } from 'svelte/store';
 import { z } from 'zod';
 
 import type { Writable } from 'svelte/store';
+
+const hexColorRegex = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
+
+export const urlRegex =
+  /^(https?:\/\/[^\s"'<>{}\\]+|data:image\/[a-zA-Z+]+;base64,[a-zA-Z0-9+/=]+)$/;
+
+const fontFamilyRegex = /^[a-zA-Z0-9\s,'\-."]+$/;
+
+const hexField = z.string().regex(hexColorRegex).optional().catch(undefined);
+
+export const themeSchema = z
+  .object({
+    primaryColor: hexField,
+    primaryOffColor: hexField,
+    secondaryColor: hexField,
+    backgroundColor: hexField,
+    linkColor: hexField,
+    linkActiveColor: hexField,
+    logo: z.string().regex(urlRegex).optional().catch(undefined),
+    favicon: z.string().regex(urlRegex).optional().catch(undefined),
+    logoHeight: z.number().optional(),
+    fontFamily: z.string().regex(fontFamilyRegex).optional().catch(undefined),
+    buttonBorderRadius: z.number().optional(),
+    cardBorderRadius: z.number().optional(),
+    cardBgColor: hexField,
+    inputBgColor: hexField,
+    inputBorderColor: hexField,
+    inputLabelColor: hexField,
+    inputFocusRingColor: hexField,
+    selectAccentColor: hexField,
+    selectHoverBgColor: hexField,
+    buttonFocusRingColor: hexField,
+    inputTextColor: hexField,
+    cardTextColor: hexField,
+    bodyTextColor: hexField,
+    buttonTextColor: hexField,
+  })
+  .strict();
+
+export type ThemeObject = z.infer<typeof themeSchema>;
 
 export const logoSchema = z
   .object({
@@ -41,6 +81,7 @@ export const styleSchema = z
       })
       .strict()
       .optional(),
+    theme: themeSchema.optional(),
   })
   .strict();
 
@@ -56,6 +97,7 @@ const fallbackStyles = {
   logo: undefined,
   sections: undefined,
   stage: undefined,
+  theme: undefined,
 } as const;
 
 export const styleStore: Writable<z.infer<typeof partialStyleSchema>> = writable(fallbackStyles);

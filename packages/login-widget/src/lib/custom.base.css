@@ -31,8 +31,9 @@
   -moz-tab-size: 4; /* 3 */
   -o-tab-size: 4;
   tab-size: 4; /* 3 */
+  color: var(--fr-body-text-color, inherit);
   font-family:
-    'Open Sans',
+    var(--fr-font-family, 'Open Sans'),
     ui-sans-serif,
     system-ui,
     -apple-system,

@@ -41,7 +41,7 @@
     "@effect/typeclass": "^0.40.0",
     "effect": "^3.21.0",
     "svelte": "^5.55.7",
-    "tar": "^7.5.13"
+    "tar": "^7.5.16"
   },
   "devDependencies": {
     "typescript": "^5.2.2",

@@ -9,6 +9,7 @@
 
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
+  import { encodeCssUrl } from '$core/_utilities/theme.utilities';
   import { closeComponent } from '$core/component.store';
   import { styleStore } from '$core/style.store';
   import XIcon from '../../icons/x-icon.svelte';
@@ -62,11 +63,11 @@
     <div class="tw_dialog-header dark:tw_dialog-header_dark">
       <div
         class="tw_dialog-logo dark:tw_dialog-logo_dark"
-        style={`--logo-dark: url("${$styleStore?.logo?.dark}"); --logo-light: url("${
-          $styleStore?.logo?.light
-        }"); ${$styleStore?.logo?.height ? `height: ${$styleStore?.logo.height}px;` : ''} ${
-          $styleStore?.logo?.width ? `width: ${$styleStore?.logo.width}px;` : ''
-        }`}
+        style={`--logo-dark: ${encodeCssUrl(
+          $styleStore?.logo?.dark ?? '',
+        )}; --logo-light: ${encodeCssUrl($styleStore?.logo?.light ?? '')}; ${
+          $styleStore?.logo?.height ? `height: ${$styleStore?.logo.height}px;` : ''
+        } ${$styleStore?.logo?.width ? `width: ${$styleStore?.logo.width}px;` : ''}`}
       ></div>
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
@@ -99,7 +100,9 @@
       {#if $styleStore?.logo}
         <div
           class="tw_dialog-logo dark:tw_dialog-logo_dark"
-          style={`--logo-dark: url("${$styleStore?.logo?.dark}"); --logo-light: url("${$styleStore?.logo?.light}")`}
+          style={`--logo-dark: ${encodeCssUrl(
+            $styleStore?.logo?.dark ?? '',
+          )}; --logo-light: ${encodeCssUrl($styleStore?.logo?.light ?? '')}`}
         ></div>
       {/if}
     </div>

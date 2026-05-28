@@ -9,6 +9,7 @@
 
 <script lang="ts">
   import Centered from '$components/primitives/box/centered.svelte';
+  import { applyThemeVars } from '$core/_effects/theme.effects';
   import { initialize as initializeLinks } from '$core/links.store';
   import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
@@ -28,6 +29,7 @@
   export let step: JourneyStep;
   export let style: z.infer<typeof partialStyleSchema>;
 
+  let storyRootEl: HTMLElement | null = null;
   let stageName;
 
   // Mimic what happens in the `journey.store` module
@@ -55,9 +57,12 @@
 
   $: {
     initializeStyles(style);
+    applyThemeVars(storyRootEl, style?.theme);
   }
 </script>
 
-<Centered>
-  <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
-</Centered>
+<div bind:this={storyRootEl} class="fr_widget-root">
+  <Centered>
+    <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
+  </Centered>
+</div>
