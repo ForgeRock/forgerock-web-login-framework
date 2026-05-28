@@ -8,6 +8,7 @@ overrides:
   picomatch@2: 2.3.2
   picomatch@4: 4.0.4
   uuid: ^14.0.0
+  postcss-selector-parser: '>=7.0.0'
   ws: '>=8.21.0'
   yaml: '>=2.8.3'
 
@@ -5038,10 +5039,6 @@ packages:
     engines: {node: '>=12.0'}
     peerDependencies:
       postcss: ^8.4.29
-
-  postcss-selector-parser@6.1.2:
-    resolution: {integrity: sha512-Q8qQfPiZ+THO/3ZrOrO0cJJKfpYCagtMUkXbnEfmgUjwXg6z/WBeOyS9APBBPCTSiDV+s4SwQGu8yFsiMRIudg==}
-    engines: {node: '>=4'}
 
   postcss-selector-parser@7.1.1:
     resolution: {integrity: sha512-orRsuYpJVw8LdAwqqLykBj9ecS5/cRHlI5+nvTo8LcCKmzDmqVORXtOIYEEQuL9D4BxtA1lm5isAqzQZCoQ6Eg==}
@@ -11478,7 +11475,7 @@ snapshots:
   postcss-nested@6.2.0(postcss@8.5.12):
     dependencies:
       postcss: 8.5.12
-      postcss-selector-parser: 6.1.2
+      postcss-selector-parser: 7.1.1
 
   postcss-reporter@7.1.0(postcss@8.5.12):
     dependencies:
@@ -11493,11 +11490,6 @@ snapshots:
   postcss-scss@4.0.9(postcss@8.5.12):
     dependencies:
       postcss: 8.5.12
-
-  postcss-selector-parser@6.1.2:
-    dependencies:
-      cssesc: 3.0.0
-      util-deprecate: 1.0.2
 
   postcss-selector-parser@7.1.1:
     dependencies:
@@ -12256,7 +12248,7 @@ snapshots:
       postcss-js: 4.1.0(postcss@8.5.12)
       postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.12)(yaml@2.8.3)
       postcss-nested: 6.2.0(postcss@8.5.12)
-      postcss-selector-parser: 6.1.2
+      postcss-selector-parser: 7.1.1
       resolve: 1.22.11
       sucrase: 3.35.1
     transitivePeerDependencies:

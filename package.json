@@ -101,6 +101,7 @@
       "picomatch@2": "2.3.2",
       "picomatch@4": "4.0.4",
       "uuid": "^14.0.0",
+      "postcss-selector-parser": ">=7.0.0",
       "ws": ">=8.21.0",
       "yaml": ">=2.8.3"
     }
