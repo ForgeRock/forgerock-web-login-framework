@@ -28,6 +28,7 @@
   const formPostEntryParam = $page.url.searchParams.get('form_post_entry');
   const journeyParam = $page.url.searchParams.get('journey');
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
+  const uuidParam = $page.url.searchParams.get('uuid');
   const captchaModeRaw = $page.url.searchParams.get('captchaMode');
   const captchaModeParam =
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
@@ -65,6 +66,7 @@
        */
       query.goto = data.redirectParams?.goto;
       query.gotoOnFail = data.redirectParams?.gotoOnFail;
+      query.uuid = uuidParam as string;
 
       journeyStore.start({
         journey: journeyParam || authIndexValue || '',

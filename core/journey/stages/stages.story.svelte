@@ -13,6 +13,7 @@
   import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import { initCheckValidation } from './_utilities/step.utilities';
+  import AdminRegistration from './admin-registration.svelte';
   import EmailSuspend from './email-suspend.svelte';
   import Generic from './generic.svelte';
   import Login from './login.svelte';
@@ -64,7 +65,9 @@
 </script>
 
 <Centered>
-  {#if stage === 'EmailSuspend'}
+  {#if stage === 'AdminRegistration'}
+    <AdminRegistration componentStyle="modal" {form} {journey} {step} />
+  {:else if stage === 'EmailSuspend'}
     <EmailSuspend componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else if stage === 'OneTimePassword'}
     <OneTimePassword componentStyle="modal" {form} {journey} {metadata} {step} />

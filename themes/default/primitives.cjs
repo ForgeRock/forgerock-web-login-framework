@@ -407,12 +407,9 @@ module.exports = function (theme) {
       },
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
-        '--outline-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l), 0.3)',
         '--bg-color':
           'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
-        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.dark'))
-          .fade(0.3)
-          .toString()})`,
+        outlineWidth: '0',
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&[aria-invalid="true"]:hover': {
@@ -458,12 +455,8 @@ module.exports = function (theme) {
           .toString()})`,
       },
       '&[aria-invalid="true"]:focus': {
-        '--outline-color':
-          'hsl(var(--tw-colors-error-light-hs),var(--tw-colors-error-light-l), 0.3) !important',
         '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
-        outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.light'))
-          .fade(0.3)
-          .toString()}) !important`,
+        outlineWidth: '0',
         backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
           .fade(0.25)
           .toString()})`,
