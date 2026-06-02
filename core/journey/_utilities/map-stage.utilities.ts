@@ -12,7 +12,7 @@ import { QRCode } from '@forgerock/journey-client/qr-code';
 import { RecoveryCodes } from '@forgerock/journey-client/recovery-codes';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 
-import AdminRegistration from '$journey/stages/admin-registration.svelte';
+import AdminRegistration from '$journey/stages/admin-registration/admin-registration.svelte';
 import EmailSuspend from '$journey/stages/email-suspend.svelte';
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';

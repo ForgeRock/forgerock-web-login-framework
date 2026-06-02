@@ -50,7 +50,7 @@
     {forceValidityFailure}
     {isFirstInvalidInput}
     inputClasses={`tw_input-floating dark:tw_input-floating_dark ${
-      hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none' : ''
+      hasRightIcon ? '!tw_border-r-0 !tw_rounded-r-none tw_input-has-button' : ''
     }`}
     {key}
     onChange={onChangeWrapper}

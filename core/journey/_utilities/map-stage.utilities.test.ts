@@ -16,7 +16,7 @@ vi.mock('./registry/custom-registry', () => ({
 }));
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
-import AdminRegistration from '$journey/stages/admin-registration.svelte';
+import AdminRegistration from '$journey/stages/admin-registration/admin-registration.svelte';
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';
 import MfaEnrollment from '$journey/stages/mfa-enrollment.svelte';
@@ -28,6 +28,7 @@ import {
 } from '$journey/stages/mfa-stages.mock';
 import {
   adminRegInvalidInviteStep,
+  adminRegOtpErrorStep,
   adminRegOtpStep,
   adminRegPrivacyPolicyStep,
   adminRegWelcomeStep,
@@ -97,6 +98,11 @@ describe('Test mapping of step to stage', () => {
 
   it('maps admin registration invalid invite step (p1aic- script) to AdminRegistration', () => {
     const result = mapStepToStage(createJourneyStep(adminRegInvalidInviteStep as Step));
+    expect(result).toStrictEqual(AdminRegistration);
+  });
+
+  it('maps admin registration OTP error step (p1aic-otp-answer hidden + if(true) retry script) to AdminRegistration', () => {
+    const result = mapStepToStage(createJourneyStep(adminRegOtpErrorStep as Step));
     expect(result).toStrictEqual(AdminRegistration);
   });
 });

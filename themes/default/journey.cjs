@@ -181,6 +181,11 @@ module.exports = function (theme) {
         fill: 'currentcolor',
       },
     },
+    '.input-has-button': {
+      '&:focus': {
+        position: 'relative',
+      },
+    },
     '.password-button': {
       '--bg-color':
         'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',

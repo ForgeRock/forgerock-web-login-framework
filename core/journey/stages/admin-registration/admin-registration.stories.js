@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
+ * Copyright © 2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -11,15 +11,15 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
-import { initialize } from '../config.store';
-import Step from './stages.story.svelte';
+import { initialize } from '../../config.store';
+import Step from '../stages.story.svelte';
 import {
   adminRegInvalidInviteStep,
   adminRegOtpErrorStep,
   adminRegOtpStep,
   adminRegPrivacyPolicyStep,
   adminRegWelcomeStep,
-} from './step.mock.ts';
+} from '../step.mock.ts';
 
 const frAdminRegWelcome = createJourneyStep(adminRegWelcomeStep);
 const frAdminRegOtp = createJourneyStep(adminRegOtpStep);

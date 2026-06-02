@@ -66,7 +66,9 @@
        */
       query.goto = data.redirectParams?.goto;
       query.gotoOnFail = data.redirectParams?.gotoOnFail;
-      query.uuid = uuidParam as string;
+      if (uuidParam) {
+        query.uuid = uuidParam;
+      }
 
       journeyStore.start({
         journey: journeyParam || authIndexValue || '',

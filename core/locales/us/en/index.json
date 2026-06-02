@@ -6,7 +6,7 @@
   "adminRegOtpHeader": "Admin Invite Code",
   "adminRegOtpResendPrompt": "Didn't get a code?",
   "adminRegOtpResend": "Resend",
-  "adminRegPrivacyPolicyAgreement": "I agree to the Ping Identity <a target='_blank' href='https://www.pingidentity.com/en-us/docs/legal/privacy'>privacy policy</a>.",
+  "adminRegPrivacyPolicyAgreement": "I agree to the Ping Identity <a target='_blank' rel='noopener noreferrer' href='https://www.pingidentity.com/en-us/docs/legal/privacy'>privacy policy</a>.",
   "adminRegPrivacyPolicyDescription": "Select your region of residence to review the applicable privacy policy.",
   "adminRegPrivacyPolicyHeader": "Accept Privacy Policy",
   "adminRegPrivacyPolicySelectRegion": "Region of residence",
