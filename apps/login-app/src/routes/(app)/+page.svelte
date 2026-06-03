@@ -16,6 +16,7 @@
   import { initialize as initializeContent } from '$core/locale.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
+  import { appStages } from '$lib/stages';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -119,6 +120,6 @@
   {#if hasSubmitted}
     <p class="tw_mb-6">You are being redirected...</p>
   {:else}
-    <Journey componentStyle="app" displayIcon={true} {journeyStore} />
+    <Journey componentStyle="app" displayIcon={true} {journeyStore} stages={appStages} />
   {/if}
 </Box>

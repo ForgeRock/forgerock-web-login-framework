@@ -18,12 +18,13 @@
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import { stack } from '$journey/journey.store';
 
-  import type { JourneyStore } from '$journey/journey.interfaces';
+  import type { JourneyStore, StageComponent } from '$journey/journey.interfaces';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let displayIcon: boolean;
   export let formEl: HTMLFormElement | null = null;
   export let journeyStore: JourneyStore;
+  export let stages: Record<string, StageComponent> = {};
 
   if (!$journeyStore) {
     console.error(
@@ -71,7 +72,7 @@
     </div>
   {:else if $journeyStore.step?.type === 'Step'}
     <svelte:component
-      this={mapStepToStage($journeyStore.step)}
+      this={mapStepToStage($journeyStore.step, stages)}
       bind:formEl
       {componentStyle}
       form={{

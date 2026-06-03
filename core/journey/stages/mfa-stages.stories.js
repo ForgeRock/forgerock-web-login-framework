@@ -16,9 +16,6 @@ import { createJourneyStep } from '$journey/_utilities/step.mock';
 import { initialize } from '../config.store';
 import {
   emailSuspendStep,
-  getAuthenticatorAppLinksStep,
-  getAuthenticatorAppStep,
-  mfaEnrollmentStep,
   mfaRegistrationOptionsStep,
   oathRegistrationErrorStep,
   oathRegistrationStep,
@@ -31,11 +28,8 @@ import {
 } from './mfa-stages.mock.ts';
 import Step from './stages.story.svelte';
 
-const frGetAuthenticatorAppLinks = createJourneyStep(getAuthenticatorAppLinksStep);
-const frGetAuthenticatorApp = createJourneyStep(getAuthenticatorAppStep);
 const frOneTimePassword = createJourneyStep(oneTimePasswordStep);
 const frMfaRegistrationOptions = createJourneyStep(mfaRegistrationOptionsStep);
-const frMfaEnrollment = createJourneyStep(mfaEnrollmentStep);
 const frOathRegistration = createJourneyStep(oathRegistrationStep);
 const frOathRegistrationError = createJourneyStep(oathRegistrationErrorStep);
 const frPushRegistration = createJourneyStep(pushRegistrationStep);
@@ -63,66 +57,6 @@ export default {
   title: 'Journey/MFA Stages',
 };
 
-/**
- * Static Stories
- */
-export const MfaEnrollment = {
-  args: {
-    form: {
-      icon: true,
-      message: '',
-      status: '',
-      submit: fn(),
-    },
-    journey: {
-      loading: false,
-      pop: fn(),
-      push: fn(),
-      stack: writable([]),
-    },
-    stage: 'MfaEnrollment',
-    step: frMfaEnrollment,
-  },
-};
-
-export const GetAuthenticatorApp = {
-  args: {
-    form: {
-      icon: true,
-      message: '',
-      status: '',
-      submit: fn(),
-    },
-    journey: {
-      loading: false,
-      pop: fn(),
-      push: fn(),
-      stack: writable([]),
-    },
-    stage: 'MfaEnrollment',
-    step: frGetAuthenticatorApp,
-  },
-};
-
-export const GetAuthenticatorAppLinks = {
-  args: {
-    form: {
-      icon: true,
-      message: '',
-      status: '',
-      submit: fn(),
-    },
-    journey: {
-      loading: false,
-      pop: fn(),
-      push: fn(),
-      stack: writable([]),
-    },
-    stage: 'MfaEnrollment',
-    step: frGetAuthenticatorAppLinks,
-  },
-};
-
 export const MfaRegistrationOptions = {
   args: {
     form: {
@@ -141,6 +75,7 @@ export const MfaRegistrationOptions = {
     step: frMfaRegistrationOptions,
   },
 };
+
 export const OneTimePassword = {
   args: {
     form: {
@@ -159,6 +94,7 @@ export const OneTimePassword = {
     step: frOneTimePassword,
   },
 };
+
 export const OathRegistration = {
   args: {
     form: {
@@ -177,6 +113,7 @@ export const OathRegistration = {
     step: frOathRegistration,
   },
 };
+
 export const OathRegistrationError = {
   args: {
     form: {
@@ -195,6 +132,7 @@ export const OathRegistrationError = {
     step: frOathRegistrationError,
   },
 };
+
 export const PushRegistration = {
   args: {
     form: {
@@ -312,45 +250,6 @@ export const WebAuthnRegistration = {
 /**
  * Interaction Tests
  */
-export const MfaEnrollmentInteraction = {
-  args: {
-    ...MfaEnrollment.argTypes,
-    ...MfaEnrollment.args,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByText('Set up 2-step verification')).toBeTruthy();
-    await expect(canvas.queryByRole('button', { name: 'Set up' })).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: 'Skip for now' })).toBeInTheDocument();
-  },
-};
-
-export const GetAuthenticatorAppInteraction = {
-  args: {
-    ...GetAuthenticatorApp.argTypes,
-    ...GetAuthenticatorApp.args,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.getByText('Set up the ForgeRock Authenticator')).toBeTruthy();
-    await expect(canvas.queryByRole('button', { name: 'Next' })).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: 'Download the app' })).toBeInTheDocument();
-  },
-};
-
-export const GetAuthenticatorAppLinksInteraction = {
-  args: {
-    ...GetAuthenticatorAppLinks.argTypes,
-    ...GetAuthenticatorAppLinks.args,
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('link', { name: 'Apple App Store' })).toBeInTheDocument();
-    await expect(canvas.queryByRole('link', { name: 'Google Play Store' })).toBeInTheDocument();
-    await expect(canvas.queryByRole('button', { name: 'Continue' })).toBeInTheDocument();
-  },
-};
-
 export const OathRegistrationInteraction = {
   args: {
     ...OathRegistration.argTypes,
@@ -490,6 +389,7 @@ export const PushRegistrationInteraction = {
     expect(nextBtn).not.toBeInTheDocument();
   },
 };
+
 export const OneTimePasswordInteraction = {
   args: {
     ...OneTimePassword.argTypes,

@@ -13,11 +13,9 @@
   import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
   import { initCheckValidation } from './_utilities/step.utilities';
-  import AdminRegistration from './admin-registration/admin-registration.svelte';
   import EmailSuspend from './email-suspend.svelte';
   import Generic from './generic.svelte';
   import Login from './login.svelte';
-  import MfaEnrollment from './mfa-enrollment.svelte';
   import OneTimePassword from './one-time-password.svelte';
   import QrCode from './qr-code.svelte';
   import RecoveryCodes from './recovery-codes.svelte';
@@ -65,9 +63,7 @@
 </script>
 
 <Centered>
-  {#if stage === 'AdminRegistration'}
-    <AdminRegistration componentStyle="modal" {form} {journey} {step} />
-  {:else if stage === 'EmailSuspend'}
+  {#if stage === 'EmailSuspend'}
     <EmailSuspend componentStyle="modal" {form} {journey} {metadata} {step} />
   {:else if stage === 'OneTimePassword'}
     <OneTimePassword componentStyle="modal" {form} {journey} {metadata} {step} />
@@ -81,8 +77,6 @@
     <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {step} />
   {:else if stage === 'QRCode'}
     <QrCode componentStyle="modal" {form} {journey} {metadata} {step} />
-  {:else if stage === 'MfaEnrollment'}
-    <MfaEnrollment componentStyle="modal" {form} {journey} {step} />
   {:else}
     <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
   {/if}

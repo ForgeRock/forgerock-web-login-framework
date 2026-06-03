@@ -10,6 +10,7 @@ export default {
   stories: [
     '../core/**/*.stories.@(js|jsx|ts|tsx|svelte)',
     '../experimental/custom/**/*.stories.@(js|jsx|ts|tsx|svelte)',
+    '../apps/login-app/src/lib/**/*.stories.@(js|jsx|ts|tsx|svelte)',
   ],
   staticDirs: ['../apps/login-app/static'],
 
@@ -48,6 +49,7 @@ export default {
           $journey: resolve(__dirname, '../core/journey'),
           $locales: resolve(__dirname, '../core/locales'),
           '$login-framework': resolve(__dirname, '../experimental/custom/login-framework.ts'),
+          $lib: resolve(__dirname, '../apps/login-app/src/lib'),
         },
       },
     });

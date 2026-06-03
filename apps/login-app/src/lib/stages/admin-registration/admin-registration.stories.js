@@ -11,15 +11,15 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
-import { initialize } from '../../config.store';
-import Step from '../stages.story.svelte';
+import { initialize } from '$journey/config.store';
 import {
   adminRegInvalidInviteStep,
   adminRegOtpErrorStep,
   adminRegOtpStep,
   adminRegPrivacyPolicyStep,
   adminRegWelcomeStep,
-} from '../step.mock.ts';
+} from '$journey/stages/step.mock.ts';
+import Step from '../stages.story.svelte';
 
 const frAdminRegWelcome = createJourneyStep(adminRegWelcomeStep);
 const frAdminRegOtp = createJourneyStep(adminRegOtpStep);

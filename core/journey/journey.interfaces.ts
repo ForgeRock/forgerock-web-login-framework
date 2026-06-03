@@ -14,6 +14,7 @@ import type {
   StartParam,
   Step,
 } from '@forgerock/journey-client/types';
+import type { Component } from 'svelte';
 import type { Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
@@ -62,6 +63,14 @@ export interface StageJourneyObject {
   redirect: (step: JourneyStep) => Promise<void>;
   stack: StackStore;
 }
+export type StageComponent = Component<{
+  componentStyle: 'app' | 'inline' | 'modal';
+  form: StageFormObject;
+  formEl?: HTMLFormElement | null;
+  journey: StageJourneyObject;
+  metadata: JourneyStoreValue['metadata'];
+  step: JourneyStep;
+}>;
 export interface JourneyStoreValue {
   completed: boolean;
   error: Maybe<{

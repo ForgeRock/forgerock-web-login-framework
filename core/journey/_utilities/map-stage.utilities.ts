@@ -12,11 +12,9 @@ import { QRCode } from '@forgerock/journey-client/qr-code';
 import { RecoveryCodes } from '@forgerock/journey-client/recovery-codes';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 
-import AdminRegistration from '$journey/stages/admin-registration/admin-registration.svelte';
 import EmailSuspend from '$journey/stages/email-suspend.svelte';
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';
-import MfaEnrollment from '$journey/stages/mfa-enrollment.svelte';
 import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import QrCode from '$journey/stages/qr-code.svelte';
 import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
@@ -30,27 +28,19 @@ import type {
   SuspendedTextOutputCallback,
   TextOutputCallback,
 } from '@forgerock/journey-client/types';
-import type { Component } from 'svelte';
 
-import type { StepTypes } from '$journey/journey.interfaces';
-type StageTypes =
-  | typeof AdminRegistration
-  | typeof WebAuthnStage
-  | typeof OneTimePassword
-  | typeof Registration
-  | typeof Login
-  | typeof Generic
-  | typeof MfaEnrollment
-  | typeof QrCode
-  | typeof EmailSuspend
-  | typeof RecoveryCodesStage;
+import type { StageComponent, StepTypes } from '$journey/journey.interfaces';
 
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
- * @returns {object} - The stage Svelte component
+ * @param {object} stages - Optional map of app-owned stage names to components
+ * @returns {StageComponent} - The resolved Svelte stage component
  */
-export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
+export function mapStepToStage(
+  currentStep: StepTypes,
+  stages: Record<string, StageComponent> = {},
+): StageComponent {
   // Handle unlikely error state
   if (!currentStep || currentStep.type !== 'Step') {
     return Generic;
@@ -111,7 +101,7 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
     const id = cb.getOutputByName('id', '') as string;
     return id.startsWith('skip-') || id.startsWith('getapp-');
   });
-  if (hasMfaHidden) return MfaEnrollment;
+  if (hasMfaHidden) return stages['MfaEnrollment'] ?? Generic;
 
   // recognize app links screen based on the presence of app store URL links and message type 4 text output callback
   const textOutputCallbacks = currentStep.getCallbacksOfType(
@@ -122,7 +112,7 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
       cb.getMessageType() === '4' &&
       (cb.getMessage().includes('itunes.apple.com') || cb.getMessage().includes('play.google.com')),
   );
-  if (hasAppLinksScript) return MfaEnrollment;
+  if (hasAppLinksScript) return stages['MfaEnrollment'] ?? Generic;
 
   // recognize PingOne AIC admin registration screens, one unique signal per screen:
   // - invalid invite:  type-4 script message contains 'Invitation not valid'
@@ -141,7 +131,7 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
       const id = cb.getOutputByName('id', '') as string;
       return id === 'p1aic-otp-answer' || id.startsWith('jurisdiction-input-');
     });
-  if (isAdminRegistration) return AdminRegistration;
+  if (isAdminRegistration) return stages['AdminRegistration'] ?? Generic;
 
   return Generic;
 }
