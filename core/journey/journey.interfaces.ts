@@ -74,6 +74,11 @@ export interface StageJourneyObject {
 //   metadata?: JourneyStoreValue['metadata']
 //   step?: JourneyStep
 export type StageComponent = new (options: ComponentConstructorOptions<never>) => SvelteComponent;
+
+export interface StageRegistryEntry {
+  component: StageComponent;
+  detect: (step: JourneyStep) => boolean;
+}
 export interface JourneyStoreValue {
   completed: boolean;
   error: Maybe<{

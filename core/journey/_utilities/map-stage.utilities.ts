@@ -23,23 +23,19 @@ import WebAuthnStage from '$journey/stages/webauthn.svelte';
 import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
 import { customStageRegistry } from './registry/custom-registry';
 
-import type {
-  HiddenValueCallback,
-  SuspendedTextOutputCallback,
-  TextOutputCallback,
-} from '@forgerock/journey-client/types';
+import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
 
-import type { StageComponent, StepTypes } from '$journey/journey.interfaces';
+import type { StageComponent, StageRegistryEntry, StepTypes } from '$journey/journey.interfaces';
 
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
- * @param {object} stages - Optional map of app-owned stage names to components
+ * @param {object} externalStages - Optional map of externally-provided stage names to registry entries with detect functions
  * @returns {StageComponent} - The resolved Svelte stage component
  */
 export function mapStepToStage(
   currentStep: StepTypes,
-  stages: Record<string, StageComponent> = {},
+  externalStages: Record<string, StageRegistryEntry> = {},
 ): StageComponent {
   // Handle unlikely error state
   if (!currentStep || currentStep.type !== 'Step') {
@@ -51,7 +47,9 @@ export function mapStepToStage(
   // Check custom registry first — handles both overrides of known stages
   // (e.g. DefaultLogin) and brand-new stage names for custom AM nodes.
   if (stageName && customStageRegistry[stageName]) {
-    return customStageRegistry[stageName].component;
+    // custom-registry.ts is auto-generated and types component as Svelte 5 Component;
+    // cast through unknown to match StageComponent (Svelte 4 constructor signature).
+    return customStageRegistry[stageName].component as unknown as StageComponent;
   }
 
   // Prioritize stage value if present for known defaults
@@ -94,59 +92,10 @@ export function mapStepToStage(
     return EmailSuspend;
   }
 
-  const hiddenValueCallbacks = currentStep.getCallbacksOfType(
-    callbackType.HiddenValueCallback,
-  ) as HiddenValueCallback[];
-  const textOutputCallbacks = currentStep.getCallbacksOfType(
-    callbackType.TextOutputCallback,
-  ) as TextOutputCallback[];
-
-  if (
-    hiddenValueCallbacks.some((cb) =>
-      (cb.getOutputByName('id', '') as string).startsWith('jurisdiction-input-'),
-    )
-  ) {
-    return stages['AdminInvitePrivacyPolicy'] ?? Generic;
-  }
-
-  if (
-    hiddenValueCallbacks.some(
-      (cb) => (cb.getOutputByName('id', '') as string) === 'p1aic-otp-answer',
-    )
-  ) {
-    return stages['AdminInviteVerifyCode'] ?? Generic;
-  }
-
-  if (
-    hiddenValueCallbacks.some((cb) =>
-      (cb.getOutputByName('id', '') as string).startsWith('getapp-'),
-    )
-  ) {
-    return stages['MfaDownloadApp'] ?? Generic;
-  }
-
-  if (
-    hiddenValueCallbacks.some((cb) => (cb.getOutputByName('id', '') as string).startsWith('skip-'))
-  ) {
-    return stages['MfaSetupPrompt'] ?? Generic;
-  }
-
-  const type4Messages = textOutputCallbacks
-    .filter((cb) => cb.getMessageType() === '4')
-    .map((cb) => cb.getMessage());
-
-  if (type4Messages.some((msg) => msg.includes('Invitation not valid'))) {
-    return stages['AdminInviteInvalid'] ?? Generic;
-  }
-
-  if (type4Messages.some((msg) => msg.includes('p1aic-tenant-name'))) {
-    return stages['AdminInviteWelcome'] ?? Generic;
-  }
-
-  if (
-    type4Messages.some((msg) => msg.includes('itunes.apple.com') || msg.includes('play.google.com'))
-  ) {
-    return stages['MfaAppStoreLinks'] ?? Generic;
+  for (const stage of Object.values(externalStages)) {
+    if (stage.detect(currentStep)) {
+      return stage.component;
+    }
   }
 
   return Generic;
