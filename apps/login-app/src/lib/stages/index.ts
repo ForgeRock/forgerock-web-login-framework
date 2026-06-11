@@ -7,12 +7,22 @@
  *
  **/
 
-import AdminRegistration from './admin-registration/admin-registration.svelte';
-import MfaEnrollment from './mfa-enrollment.svelte';
+import AdminInviteInvalid from './admin-invite-invalid.svelte';
+import AdminInvitePrivacyPolicy from './admin-invite-privacy-policy.svelte';
+import AdminInviteVerifyCode from './admin-invite-verify-code.svelte';
+import AdminInviteWelcome from './admin-invite-welcome.svelte';
+import MfaAppStoreLinks from './mfa-app-store-links.svelte';
+import MfaDownloadApp from './mfa-download-app.svelte';
+import MfaSetupPrompt from './mfa-setup-prompt.svelte';
 
 import type { StageComponent } from '$journey/journey.interfaces';
 
 export const appStages: Record<string, StageComponent> = {
-  AdminRegistration,
-  MfaEnrollment,
+  AdminInviteInvalid,
+  AdminInvitePrivacyPolicy,
+  AdminInviteVerifyCode,
+  AdminInviteWelcome,
+  MfaAppStoreLinks,
+  MfaDownloadApp,
+  MfaSetupPrompt,
 };

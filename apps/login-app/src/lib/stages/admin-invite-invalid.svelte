@@ -11,10 +11,10 @@
   import T from '$components/_utilities/locale-strings.svelte';
   import Text from '$components/primitives/text/text.svelte';
 
-  export let headerId: string;
+  const formHeaderId = 'adminInviteInvalidHeader';
 </script>
 
-<header id={headerId}>
+<header id={formHeaderId}>
   <h1 class="tw_primary-header dark:tw_primary-header_dark">
     <T key="adminRegInvalidInviteHeader" />
   </h1>

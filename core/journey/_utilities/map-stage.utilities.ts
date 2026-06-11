@@ -97,41 +97,57 @@ export function mapStepToStage(
   const hiddenValueCallbacks = currentStep.getCallbacksOfType(
     callbackType.HiddenValueCallback,
   ) as HiddenValueCallback[];
-  const hasMfaHidden = hiddenValueCallbacks.some((cb) => {
-    const id = cb.getOutputByName('id', '') as string;
-    return id.startsWith('skip-') || id.startsWith('getapp-');
-  });
-  if (hasMfaHidden) return stages['MfaEnrollment'] ?? Generic;
-
-  // recognize app links screen based on the presence of app store URL links and message type 4 text output callback
   const textOutputCallbacks = currentStep.getCallbacksOfType(
     callbackType.TextOutputCallback,
   ) as TextOutputCallback[];
-  const hasAppLinksScript = textOutputCallbacks.some(
-    (cb) =>
-      cb.getMessageType() === '4' &&
-      (cb.getMessage().includes('itunes.apple.com') || cb.getMessage().includes('play.google.com')),
-  );
-  if (hasAppLinksScript) return stages['MfaEnrollment'] ?? Generic;
 
-  // recognize PingOne AIC admin registration screens, one unique signal per screen:
-  // - invalid invite:  type-4 script message contains 'Invitation not valid'
-  // - welcome:         type-4 script contains p1aic-tenant-name (tenant name span)
-  // - otp (first load): HiddenValueCallback id 'p1aic-otp-answer' + type-4 script with if(false) guard on retry warning
-  // - otp (retry):     HiddenValueCallback id 'p1aic-otp-answer' + type-4 script with if(true) guard on retry warning
-  // - privacy policy:  HiddenValueCallback id starts with 'jurisdiction-input-'
-  const isAdminRegistration =
-    textOutputCallbacks.some(
-      (cb) =>
-        cb.getMessageType() === '4' &&
-        (cb.getMessage().includes('Invitation not valid') ||
-          cb.getMessage().includes('p1aic-tenant-name')),
-    ) ||
-    hiddenValueCallbacks.some((cb) => {
-      const id = cb.getOutputByName('id', '') as string;
-      return id === 'p1aic-otp-answer' || id.startsWith('jurisdiction-input-');
-    });
-  if (isAdminRegistration) return stages['AdminRegistration'] ?? Generic;
+  if (
+    hiddenValueCallbacks.some((cb) =>
+      (cb.getOutputByName('id', '') as string).startsWith('jurisdiction-input-'),
+    )
+  ) {
+    return stages['AdminInvitePrivacyPolicy'] ?? Generic;
+  }
+
+  if (
+    hiddenValueCallbacks.some(
+      (cb) => (cb.getOutputByName('id', '') as string) === 'p1aic-otp-answer',
+    )
+  ) {
+    return stages['AdminInviteVerifyCode'] ?? Generic;
+  }
+
+  if (
+    hiddenValueCallbacks.some((cb) =>
+      (cb.getOutputByName('id', '') as string).startsWith('getapp-'),
+    )
+  ) {
+    return stages['MfaDownloadApp'] ?? Generic;
+  }
+
+  if (
+    hiddenValueCallbacks.some((cb) => (cb.getOutputByName('id', '') as string).startsWith('skip-'))
+  ) {
+    return stages['MfaSetupPrompt'] ?? Generic;
+  }
+
+  const type4Messages = textOutputCallbacks
+    .filter((cb) => cb.getMessageType() === '4')
+    .map((cb) => cb.getMessage());
+
+  if (type4Messages.some((msg) => msg.includes('Invitation not valid'))) {
+    return stages['AdminInviteInvalid'] ?? Generic;
+  }
+
+  if (type4Messages.some((msg) => msg.includes('p1aic-tenant-name'))) {
+    return stages['AdminInviteWelcome'] ?? Generic;
+  }
+
+  if (
+    type4Messages.some((msg) => msg.includes('itunes.apple.com') || msg.includes('play.google.com'))
+  ) {
+    return stages['MfaAppStoreLinks'] ?? Generic;
+  }
 
   return Generic;
 }

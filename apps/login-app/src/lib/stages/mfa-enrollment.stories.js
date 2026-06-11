@@ -19,9 +19,9 @@ import {
 } from '$journey/stages/mfa-stages.mock.ts';
 import Step from './stages.story.svelte';
 
-const frGetAuthenticatorAppLinks = createJourneyStep(getAuthenticatorAppLinksStep);
-const frGetAuthenticatorApp = createJourneyStep(getAuthenticatorAppStep);
-const frMfaEnrollment = createJourneyStep(mfaEnrollmentStep);
+const frMfaSetupPrompt = createJourneyStep(mfaEnrollmentStep);
+const frMfaDownloadApp = createJourneyStep(getAuthenticatorAppStep);
+const frMfaAppStoreLinks = createJourneyStep(getAuthenticatorAppLinksStep);
 
 initialize();
 
@@ -39,7 +39,7 @@ export default {
   title: 'Journey/MFA Enrollment Stages',
 };
 
-export const MfaEnrollment = {
+export const SetupPrompt = {
   args: {
     form: {
       icon: true,
@@ -53,12 +53,12 @@ export const MfaEnrollment = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'MfaEnrollment',
-    step: frMfaEnrollment,
+    stage: 'MfaSetupPrompt',
+    step: frMfaSetupPrompt,
   },
 };
 
-export const GetAuthenticatorApp = {
+export const DownloadApp = {
   args: {
     form: {
       icon: true,
@@ -72,12 +72,12 @@ export const GetAuthenticatorApp = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'MfaEnrollment',
-    step: frGetAuthenticatorApp,
+    stage: 'MfaDownloadApp',
+    step: frMfaDownloadApp,
   },
 };
 
-export const GetAuthenticatorAppLinks = {
+export const AppStoreLinks = {
   args: {
     form: {
       icon: true,
@@ -91,14 +91,14 @@ export const GetAuthenticatorAppLinks = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'MfaEnrollment',
-    step: frGetAuthenticatorAppLinks,
+    stage: 'MfaAppStoreLinks',
+    step: frMfaAppStoreLinks,
   },
 };
 
-export const MfaEnrollmentInteraction = {
+export const SetupPromptInteraction = {
   args: {
-    ...MfaEnrollment.args,
+    ...SetupPrompt.args,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -108,9 +108,9 @@ export const MfaEnrollmentInteraction = {
   },
 };
 
-export const GetAuthenticatorAppInteraction = {
+export const DownloadAppInteraction = {
   args: {
-    ...GetAuthenticatorApp.args,
+    ...DownloadApp.args,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -120,14 +120,89 @@ export const GetAuthenticatorAppInteraction = {
   },
 };
 
-export const GetAuthenticatorAppLinksInteraction = {
+export const AppStoreLinksInteraction = {
   args: {
-    ...GetAuthenticatorAppLinks.args,
+    ...AppStoreLinks.args,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     await expect(canvas.queryByRole('link', { name: 'Apple App Store' })).toBeInTheDocument();
     await expect(canvas.queryByRole('link', { name: 'Google Play Store' })).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: 'Continue' })).toBeInTheDocument();
+  },
+};
+
+export const SetupPromptWithError = {
+  args: {
+    form: {
+      icon: true,
+      message: 'Something went wrong',
+      status: 'error',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([]),
+    },
+    stage: 'MfaSetupPrompt',
+    step: frMfaSetupPrompt,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = canvas.getAllByRole('alert')[0];
+    await expect(alert).toBeInTheDocument();
+    await expect(alert).toHaveTextContent(/something went wrong/i);
+  },
+};
+
+export const DownloadAppWithError = {
+  args: {
+    form: {
+      icon: true,
+      message: 'Something went wrong',
+      status: 'error',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([]),
+    },
+    stage: 'MfaDownloadApp',
+    step: frMfaDownloadApp,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = canvas.getByRole('alert');
+    await expect(alert).toBeInTheDocument();
+    await expect(alert).toHaveTextContent(/something went wrong/i);
+  },
+};
+
+export const AppStoreLinksWithError = {
+  args: {
+    form: {
+      icon: true,
+      message: 'Something went wrong',
+      status: 'error',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([]),
+    },
+    stage: 'MfaAppStoreLinks',
+    step: frMfaAppStoreLinks,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = canvas.getByRole('alert');
+    await expect(alert).toBeInTheDocument();
+    await expect(alert).toHaveTextContent(/something went wrong/i);
   },
 };

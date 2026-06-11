@@ -9,8 +9,13 @@
 
 <script lang="ts">
   import Centered from '$components/primitives/box/centered.svelte';
-  import AdminRegistration from './admin-registration/admin-registration.svelte';
-  import MfaEnrollment from './mfa-enrollment.svelte';
+  import AdminInviteInvalid from './admin-invite-invalid.svelte';
+  import AdminInvitePrivacyPolicy from './admin-invite-privacy-policy.svelte';
+  import AdminInviteVerifyCode from './admin-invite-verify-code.svelte';
+  import AdminInviteWelcome from './admin-invite-welcome.svelte';
+  import MfaAppStoreLinks from './mfa-app-store-links.svelte';
+  import MfaDownloadApp from './mfa-download-app.svelte';
+  import MfaSetupPrompt from './mfa-setup-prompt.svelte';
 
   import type { JourneyStep } from '@forgerock/journey-client/types';
 
@@ -23,9 +28,19 @@
 </script>
 
 <Centered>
-  {#if stage === 'AdminRegistration'}
-    <AdminRegistration componentStyle="modal" {form} {journey} {step} />
-  {:else if stage === 'MfaEnrollment'}
-    <MfaEnrollment componentStyle="modal" {form} {journey} {step} />
+  {#if stage === 'AdminInviteWelcome'}
+    <AdminInviteWelcome componentStyle="modal" {form} {journey} {step} />
+  {:else if stage === 'AdminInviteVerifyCode'}
+    <AdminInviteVerifyCode componentStyle="modal" {form} {journey} {step} />
+  {:else if stage === 'AdminInvitePrivacyPolicy'}
+    <AdminInvitePrivacyPolicy componentStyle="modal" {form} {journey} {step} />
+  {:else if stage === 'AdminInviteInvalid'}
+    <AdminInviteInvalid componentStyle="modal" {form} {journey} {step} />
+  {:else if stage === 'MfaSetupPrompt'}
+    <MfaSetupPrompt componentStyle="modal" {form} {journey} {step} />
+  {:else if stage === 'MfaDownloadApp'}
+    <MfaDownloadApp componentStyle="modal" {form} {journey} {step} />
+  {:else if stage === 'MfaAppStoreLinks'}
+    <MfaAppStoreLinks componentStyle="modal" {form} {journey} {step} />
   {/if}
 </Centered>

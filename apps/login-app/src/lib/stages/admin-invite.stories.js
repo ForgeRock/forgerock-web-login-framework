@@ -19,12 +19,12 @@ import {
   adminRegPrivacyPolicyStep,
   adminRegWelcomeStep,
 } from '$journey/stages/step.mock.ts';
-import Step from '../stages.story.svelte';
+import Step from './stages.story.svelte';
 
-const frAdminRegWelcome = createJourneyStep(adminRegWelcomeStep);
-const frAdminRegOtp = createJourneyStep(adminRegOtpStep);
-const frAdminRegPrivacyPolicy = createJourneyStep(adminRegPrivacyPolicyStep);
-const frAdminRegInvalidInvite = createJourneyStep(adminRegInvalidInviteStep);
+const frAdminInviteWelcome = createJourneyStep(adminRegWelcomeStep);
+const frAdminInviteVerifyCode = createJourneyStep(adminRegOtpStep);
+const frAdminInvitePrivacyPolicy = createJourneyStep(adminRegPrivacyPolicyStep);
+const frAdminInviteInvalid = createJourneyStep(adminRegInvalidInviteStep);
 
 initialize();
 
@@ -39,7 +39,7 @@ export default {
   parameters: {
     layout: 'fullscreen',
   },
-  title: 'Journey/Admin Registration Stages',
+  title: 'Journey/Admin Invite Stages',
 };
 
 export const Welcome = {
@@ -56,12 +56,12 @@ export const Welcome = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'AdminRegistration',
-    step: frAdminRegWelcome,
+    stage: 'AdminInviteWelcome',
+    step: frAdminInviteWelcome,
   },
 };
 
-export const OtpVerify = {
+export const VerifyCode = {
   args: {
     form: {
       icon: true,
@@ -75,12 +75,12 @@ export const OtpVerify = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'AdminRegistration',
-    step: frAdminRegOtp,
+    stage: 'AdminInviteVerifyCode',
+    step: frAdminInviteVerifyCode,
   },
 };
 
-export const OtpVerifyError = {
+export const VerifyCodeError = {
   args: {
     form: {
       icon: true,
@@ -94,12 +94,12 @@ export const OtpVerifyError = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'AdminRegistration',
+    stage: 'AdminInviteVerifyCode',
     step: createJourneyStep(adminRegOtpErrorStep),
   },
 };
 
-export const OtpResend = {
+export const VerifyCodeResend = {
   args: {
     form: {
       icon: true,
@@ -113,7 +113,7 @@ export const OtpResend = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'AdminRegistration',
+    stage: 'AdminInviteVerifyCode',
     step: createJourneyStep(adminRegOtpStep),
   },
   play: async ({ args, canvasElement }) => {
@@ -142,8 +142,8 @@ export const PrivacyPolicy = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'AdminRegistration',
-    step: frAdminRegPrivacyPolicy,
+    stage: 'AdminInvitePrivacyPolicy',
+    step: frAdminInvitePrivacyPolicy,
   },
 };
 
@@ -161,8 +161,8 @@ export const PrivacyPolicyReady = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'AdminRegistration',
-    step: frAdminRegPrivacyPolicy,
+    stage: 'AdminInvitePrivacyPolicy',
+    step: frAdminInvitePrivacyPolicy,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -192,7 +192,82 @@ export const InvalidInvite = {
       push: fn(),
       stack: writable([]),
     },
-    stage: 'AdminRegistration',
-    step: frAdminRegInvalidInvite,
+    stage: 'AdminInviteInvalid',
+    step: frAdminInviteInvalid,
+  },
+};
+
+export const WelcomeWithError = {
+  args: {
+    form: {
+      icon: true,
+      message: 'Something went wrong',
+      status: 'error',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([]),
+    },
+    stage: 'AdminInviteWelcome',
+    step: frAdminInviteWelcome,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = canvas.getByRole('alert');
+    await expect(alert).toBeInTheDocument();
+    await expect(alert).toHaveTextContent(/something went wrong/i);
+  },
+};
+
+export const VerifyCodeWithError = {
+  args: {
+    form: {
+      icon: true,
+      message: 'Something went wrong',
+      status: 'error',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([]),
+    },
+    stage: 'AdminInviteVerifyCode',
+    step: frAdminInviteVerifyCode,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = canvas.getByRole('alert');
+    await expect(alert).toBeInTheDocument();
+    await expect(alert).toHaveTextContent(/something went wrong/i);
+  },
+};
+
+export const PrivacyPolicyWithError = {
+  args: {
+    form: {
+      icon: true,
+      message: 'Something went wrong',
+      status: 'error',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([]),
+    },
+    stage: 'AdminInvitePrivacyPolicy',
+    step: frAdminInvitePrivacyPolicy,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const alert = canvas.getByRole('alert');
+    await expect(alert).toBeInTheDocument();
+    await expect(alert).toHaveTextContent(/something went wrong/i);
   },
 };

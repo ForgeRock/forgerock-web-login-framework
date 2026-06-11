@@ -38,9 +38,23 @@ import type { Step } from '@forgerock/journey-client/types';
 
 import type { StageComponent } from '$journey/journey.interfaces';
 
-const MockAdminRegistration = {} as StageComponent;
-const MockMfaEnrollment = {} as StageComponent;
-const mockStages = { AdminRegistration: MockAdminRegistration, MfaEnrollment: MockMfaEnrollment };
+const MockAdminInviteWelcome = {} as StageComponent;
+const MockAdminInviteVerifyCode = {} as StageComponent;
+const MockAdminInvitePrivacyPolicy = {} as StageComponent;
+const MockAdminInviteInvalid = {} as StageComponent;
+const MockMfaSetupPrompt = {} as StageComponent;
+const MockMfaDownloadApp = {} as StageComponent;
+const MockMfaAppStoreLinks = {} as StageComponent;
+
+const mockStages = {
+  AdminInviteWelcome: MockAdminInviteWelcome,
+  AdminInviteVerifyCode: MockAdminInviteVerifyCode,
+  AdminInvitePrivacyPolicy: MockAdminInvitePrivacyPolicy,
+  AdminInviteInvalid: MockAdminInviteInvalid,
+  MfaSetupPrompt: MockMfaSetupPrompt,
+  MfaDownloadApp: MockMfaDownloadApp,
+  MfaAppStoreLinks: MockMfaAppStoreLinks,
+};
 
 describe('Test mapping of step to stage', () => {
   it('should map to a given stage for a known step', () => {
@@ -64,55 +78,57 @@ describe('Test mapping of step to stage', () => {
     expect(result).toStrictEqual(Login);
   });
 
-  it('maps steps with HiddenValueCallback id starting with skip- to MfaEnrollment', () => {
+  // MFA stages
+  it('maps steps with HiddenValueCallback id starting with skip- to MfaSetupPrompt', () => {
     const result = mapStepToStage(createJourneyStep(mfaEnrollmentStep as Step), mockStages);
-    expect(result).toStrictEqual(MockMfaEnrollment);
+    expect(result).toStrictEqual(MockMfaSetupPrompt);
   });
 
-  it('maps steps with HiddenValueCallback id starting with getapp- to MfaEnrollment', () => {
+  it('maps steps with HiddenValueCallback id starting with getapp- to MfaDownloadApp', () => {
     const result = mapStepToStage(createJourneyStep(getAuthenticatorAppStep as Step), mockStages);
-    expect(result).toStrictEqual(MockMfaEnrollment);
+    expect(result).toStrictEqual(MockMfaDownloadApp);
   });
 
-  it('maps steps with type-4 app-links script to MfaEnrollment', () => {
+  it('maps steps with type-4 app-links script to MfaAppStoreLinks', () => {
     const result = mapStepToStage(
       createJourneyStep(getAuthenticatorAppLinksStep as Step),
       mockStages,
     );
-    expect(result).toStrictEqual(MockMfaEnrollment);
+    expect(result).toStrictEqual(MockMfaAppStoreLinks);
   });
 
-  it('falls back to Generic when MfaEnrollment step has no stages provided', () => {
+  it('falls back to Generic when MfaSetupPrompt step has no stages provided', () => {
     const result = mapStepToStage(createJourneyStep(mfaEnrollmentStep as Step));
     expect(result).toStrictEqual(Generic);
   });
 
-  it('maps admin registration welcome step (p1aic- script) to AdminRegistration', () => {
+  // Admin invite stages
+  it('maps admin invite welcome step (p1aic-tenant-name script) to AdminInviteWelcome', () => {
     const result = mapStepToStage(createJourneyStep(adminRegWelcomeStep as Step), mockStages);
-    expect(result).toStrictEqual(MockAdminRegistration);
+    expect(result).toStrictEqual(MockAdminInviteWelcome);
   });
 
-  it('maps admin registration OTP step (p1aic-otp-answer hidden) to AdminRegistration', () => {
+  it('maps admin invite OTP step (p1aic-otp-answer hidden) to AdminInviteVerifyCode', () => {
     const result = mapStepToStage(createJourneyStep(adminRegOtpStep as Step), mockStages);
-    expect(result).toStrictEqual(MockAdminRegistration);
+    expect(result).toStrictEqual(MockAdminInviteVerifyCode);
   });
 
-  it('maps admin registration privacy policy step (jurisdiction-input hidden) to AdminRegistration', () => {
-    const result = mapStepToStage(createJourneyStep(adminRegPrivacyPolicyStep as Step), mockStages);
-    expect(result).toStrictEqual(MockAdminRegistration);
-  });
-
-  it('maps admin registration invalid invite step (p1aic- script) to AdminRegistration', () => {
-    const result = mapStepToStage(createJourneyStep(adminRegInvalidInviteStep as Step), mockStages);
-    expect(result).toStrictEqual(MockAdminRegistration);
-  });
-
-  it('maps admin registration OTP error step (p1aic-otp-answer hidden + if(true) retry script) to AdminRegistration', () => {
+  it('maps admin invite OTP error step (p1aic-otp-answer hidden + if(true) retry script) to AdminInviteVerifyCode', () => {
     const result = mapStepToStage(createJourneyStep(adminRegOtpErrorStep as Step), mockStages);
-    expect(result).toStrictEqual(MockAdminRegistration);
+    expect(result).toStrictEqual(MockAdminInviteVerifyCode);
   });
 
-  it('falls back to Generic when AdminRegistration step has no stages provided', () => {
+  it('maps admin invite privacy policy step (jurisdiction-input hidden) to AdminInvitePrivacyPolicy', () => {
+    const result = mapStepToStage(createJourneyStep(adminRegPrivacyPolicyStep as Step), mockStages);
+    expect(result).toStrictEqual(MockAdminInvitePrivacyPolicy);
+  });
+
+  it('maps admin invite invalid step (Invitation not valid script) to AdminInviteInvalid', () => {
+    const result = mapStepToStage(createJourneyStep(adminRegInvalidInviteStep as Step), mockStages);
+    expect(result).toStrictEqual(MockAdminInviteInvalid);
+  });
+
+  it('falls back to Generic when AdminInviteWelcome step has no stages provided', () => {
     const result = mapStepToStage(createJourneyStep(adminRegWelcomeStep as Step));
     expect(result).toStrictEqual(Generic);
   });

@@ -126,17 +126,24 @@
     Customize this section with your own logo, headline, and subtitle copy.
   -->
   {#if componentStyle !== 'inline'}
-    <div class="tw_flex tw_items-baseline tw_gap-3 tw_mb-4">
-      <span
-        class="tw_text-header-dark dark:tw_text-header-light tw_text-lg tw_font-bold tw_shrink-0 select-none"
-        aria-hidden="true">✦</span
+    <div class="tw_flex tw_flex-col tw_items-center tw_gap-2 tw_mb-4">
+      <!--
+        Logo / icon placeholder.
+        Replace this <div> with your own logo, e.g.:
+          <img src="/your-logo.svg" alt="Acme Corp" class="tw_h-12" />
+        Or import and use a Svelte icon component from your design system.
+      -->
+      <div
+        class="tw_w-16 tw_h-16 tw_rounded-full tw_bg-blue-600 tw_flex tw_items-center tw_justify-center"
+        aria-hidden="true"
       >
-      <span
-        class="tw_text-2xl tw_font-light tw_text-header-dark dark:tw_text-header-light tw_shrink-0"
-        style="white-space: nowrap;"
-      >
+        <span class="tw_text-white tw_text-2xl tw_font-bold select-none">✦</span>
+      </div>
+
+      <h1 class="tw_primary-header dark:tw_primary-header_dark">
         <T key="loginHeader" />
-      </span>
+      </h1>
+
       <p class="tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light">
         {interpolate('customLoginSubtitle', null, 'Welcome back — please sign in to continue.')}
       </p>
