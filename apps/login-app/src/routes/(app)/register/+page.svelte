@@ -17,6 +17,7 @@
   import { initialize as initializeUser } from '$core/user/user.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
+  import { loginAppStages } from '$lib/stages';
 
   import type { OAuthStore } from '$core/oauth/oauth.store';
   import type { UserStore } from '$core/user/user.store';
@@ -58,5 +59,5 @@
 </script>
 
 <Box>
-  <Journey componentStyle="app" displayIcon={true} {journeyStore} />
+  <Journey componentStyle="app" displayIcon={true} {journeyStore} externalStages={loginAppStages} />
 </Box>

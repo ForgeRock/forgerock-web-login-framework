@@ -15,7 +15,6 @@ import { WebAuthn } from '@forgerock/journey-client/webauthn';
 import EmailSuspend from '$journey/stages/email-suspend.svelte';
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';
-import MfaEnrollment from '$journey/stages/mfa-enrollment.svelte';
 import OneTimePassword from '$journey/stages/one-time-password.svelte';
 import QrCode from '$journey/stages/qr-code.svelte';
 import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
@@ -24,31 +23,20 @@ import WebAuthnStage from '$journey/stages/webauthn.svelte';
 import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
 import { customStageRegistry } from './registry/custom-registry';
 
-import type {
-  HiddenValueCallback,
-  SuspendedTextOutputCallback,
-  TextOutputCallback,
-} from '@forgerock/journey-client/types';
-import type { Component } from 'svelte';
+import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
 
-import type { StepTypes } from '$journey/journey.interfaces';
-type StageTypes =
-  | typeof WebAuthnStage
-  | typeof OneTimePassword
-  | typeof Registration
-  | typeof Login
-  | typeof Generic
-  | typeof MfaEnrollment
-  | typeof QrCode
-  | typeof EmailSuspend
-  | typeof RecoveryCodesStage;
+import type { StageComponent, StageRegistryEntry, StepTypes } from '$journey/journey.interfaces';
 
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
- * @returns {object} - The stage Svelte component
+ * @param {object} externalStages - Optional map of externally-provided stage names to registry entries with detect functions
+ * @returns {StageComponent} - The resolved Svelte stage component
  */
-export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
+export function mapStepToStage(
+  currentStep: StepTypes,
+  externalStages: Record<string, StageRegistryEntry> = {},
+): StageComponent {
   // Handle unlikely error state
   if (!currentStep || currentStep.type !== 'Step') {
     return Generic;
@@ -59,7 +47,9 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
   // Check custom registry first — handles both overrides of known stages
   // (e.g. DefaultLogin) and brand-new stage names for custom AM nodes.
   if (stageName && customStageRegistry[stageName]) {
-    return customStageRegistry[stageName].component;
+    // custom-registry.ts is auto-generated and types component as Svelte 5 Component;
+    // cast through unknown to match StageComponent (Svelte 4 constructor signature).
+    return customStageRegistry[stageName].component as unknown as StageComponent;
   }
 
   // Prioritize stage value if present for known defaults
@@ -102,25 +92,11 @@ export function mapStepToStage(currentStep: StepTypes): StageTypes | Component {
     return EmailSuspend;
   }
 
-  const hiddenValueCallbacks = currentStep.getCallbacksOfType(
-    callbackType.HiddenValueCallback,
-  ) as HiddenValueCallback[];
-  const hasMfaHidden = hiddenValueCallbacks.some((cb) => {
-    const id = cb.getOutputByName('id', '') as string;
-    return id.startsWith('skip-') || id.startsWith('getapp-');
-  });
-  if (hasMfaHidden) return MfaEnrollment;
-
-  // recognize app links screen based on the presence of app store URL links and message type 4 text output callback
-  const textOutputCallbacks = currentStep.getCallbacksOfType(
-    callbackType.TextOutputCallback,
-  ) as TextOutputCallback[];
-  const hasAppLinksScript = textOutputCallbacks.some(
-    (cb) =>
-      cb.getMessageType() === '4' &&
-      (cb.getMessage().includes('itunes.apple.com') || cb.getMessage().includes('play.google.com')),
-  );
-  if (hasAppLinksScript) return MfaEnrollment;
+  for (const stage of Object.values(externalStages)) {
+    if (stage.detect(currentStep)) {
+      return stage.component;
+    }
+  }
 
   return Generic;
 }

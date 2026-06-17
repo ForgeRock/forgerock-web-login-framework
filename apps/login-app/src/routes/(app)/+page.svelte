@@ -16,6 +16,7 @@
   import { initialize as initializeContent } from '$core/locale.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
+  import { loginAppStages } from '$lib/stages';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -28,6 +29,7 @@
   const formPostEntryParam = $page.url.searchParams.get('form_post_entry');
   const journeyParam = $page.url.searchParams.get('journey');
   const suspendedIdParam = $page.url.searchParams.get('suspendedId');
+  const uuidParam = $page.url.searchParams.get('uuid');
   const captchaModeRaw = $page.url.searchParams.get('captchaMode');
   const captchaModeParam =
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
@@ -65,6 +67,9 @@
        */
       query.goto = data.redirectParams?.goto;
       query.gotoOnFail = data.redirectParams?.gotoOnFail;
+      if (uuidParam) {
+        query.uuid = uuidParam;
+      }
 
       journeyStore.start({
         journey: journeyParam || authIndexValue || '',
@@ -115,6 +120,11 @@
   {#if hasSubmitted}
     <p class="tw_mb-6">You are being redirected...</p>
   {:else}
-    <Journey componentStyle="app" displayIcon={true} {journeyStore} />
+    <Journey
+      componentStyle="app"
+      displayIcon={true}
+      {journeyStore}
+      externalStages={loginAppStages}
+    />
   {/if}
 </Box>

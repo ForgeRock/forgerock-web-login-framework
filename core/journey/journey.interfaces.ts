@@ -14,6 +14,7 @@ import type {
   StartParam,
   Step,
 } from '@forgerock/journey-client/types';
+import type { ComponentConstructorOptions, SvelteComponent } from 'svelte';
 import type { Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
@@ -61,6 +62,22 @@ export interface StageJourneyObject {
   push: (options: StartParam) => void;
   redirect: (step: JourneyStep) => Promise<void>;
   stack: StackStore;
+}
+// ComponentConstructorOptions<never> satisfies constructor contravariance for all Svelte 4
+// components regardless of their required props. Prop type safety is lost here; migrating
+// stage components to Svelte 5 runes ($props) would restore it via Component<Props>.
+// Expected props:
+//   componentStyle?: 'app' | 'inline' | 'modal'
+//   form?: StageFormObject
+//   formEl?: HTMLFormElement | null
+//   journey?: StageJourneyObject
+//   metadata?: JourneyStoreValue['metadata']
+//   step?: JourneyStep
+export type StageComponent = new (options: ComponentConstructorOptions<never>) => SvelteComponent;
+
+export interface StageRegistryEntry {
+  component: StageComponent;
+  detect: (step: JourneyStep) => boolean;
 }
 export interface JourneyStoreValue {
   completed: boolean;

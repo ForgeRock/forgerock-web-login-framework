@@ -49,3 +49,4 @@ experimental/custom/callbacks/*/
 .eslintcache
 tools/cli/tmp/
 packages/login-widget/tmp/
+.playwright-mcp/

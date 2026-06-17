@@ -19,6 +19,22 @@ import type { Writable } from 'svelte/store';
 
 export const stringsSchema = z
   .object({
+    adminRegInvalidInviteHeader: z.string(),
+    adminRegInvalidInviteDescription: z.string(),
+    adminRegOtpDescription: z.string(),
+    adminRegOtpError: z.string(),
+    adminRegOtpHeader: z.string(),
+    adminRegOtpResendPrompt: z.string(),
+    adminRegOtpResend: z.string(),
+    adminRegPrivacyPolicyAgreement: z.string(),
+    adminRegPrivacyPolicyDescription: z.string(),
+    adminRegPrivacyPolicyHeader: z.string(),
+    adminRegPrivacyPolicySelectRegion: z.string(),
+    adminRegSendVerificationCode: z.string(),
+    adminRegWelcomeDescriptionPre: z.string(),
+    adminRegWelcomeDescriptionPost: z.string(),
+    adminRegWelcomeVerification: z.string(),
+    adminRegWelcomeHeader: z.string(),
     alreadyHaveAnAccount: z.string(),
     backToDefault: z.string(),
     backToLogin: z.string(),

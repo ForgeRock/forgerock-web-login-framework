@@ -16,7 +16,6 @@
   import EmailSuspend from './email-suspend.svelte';
   import Generic from './generic.svelte';
   import Login from './login.svelte';
-  import MfaEnrollment from './mfa-enrollment.svelte';
   import OneTimePassword from './one-time-password.svelte';
   import QrCode from './qr-code.svelte';
   import RecoveryCodes from './recovery-codes.svelte';
@@ -78,8 +77,6 @@
     <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {step} />
   {:else if stage === 'QRCode'}
     <QrCode componentStyle="modal" {form} {journey} {metadata} {step} />
-  {:else if stage === 'MfaEnrollment'}
-    <MfaEnrollment componentStyle="modal" {form} {journey} {step} />
   {:else}
     <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
   {/if}
