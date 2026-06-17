@@ -127,3 +127,29 @@ export const StandardChecksRadios = {
     },
   },
 };
+
+export const ThemeOverride = {
+  args: {
+    form: {
+      icon: true,
+      message: '',
+      status: '',
+      submit: fn(),
+    },
+    journey: {
+      loading: false,
+      pop: fn(),
+      push: fn(),
+      stack: writable([]),
+    },
+    stage: '',
+    step: frRegistrationStep,
+    style: {
+      theme: {
+        primaryColor: '#cc0000',
+        buttonRounded: 20,
+        journeyCardBorderRadius: 16,
+      },
+    },
+  },
+};

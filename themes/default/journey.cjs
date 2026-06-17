@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -187,8 +187,7 @@ module.exports = function (theme) {
       },
     },
     '.password-button': {
-      '--bg-color':
-        'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%)))`,
       backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
         .darken(0.02)
         .toString()})`,
@@ -203,7 +202,7 @@ module.exports = function (theme) {
       alignItems: 'center',
     },
     '.password-button_dark': {
-      '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.5)',
+      '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.5))`,
       backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
         .fade(0.5)
         .toString()})`,

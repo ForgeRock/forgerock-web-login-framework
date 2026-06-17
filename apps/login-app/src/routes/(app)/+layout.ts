@@ -11,6 +11,7 @@ import '../../app.css';
 import { browser } from '$app/environment';
 import { initialize as initializeLinks } from '$core/links.store';
 import configure from '$core/sdk.config';
+import { initialize as initializeStyles } from '$core/style.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 
 import type { LayoutLoad } from './$types';
@@ -30,6 +31,19 @@ export const load: LayoutLoad = ({ data }) => {
   initializeLinks({
     termsAndConditions: 'https://www.forgerock.com/terms',
   });
+
+  if (data.idmTheme) {
+    initializeStyles({
+      theme: data.idmTheme,
+      ...(data.idmTheme.logo && {
+        logo: {
+          light: data.idmTheme.logo,
+          dark: data.idmTheme.logo,
+          ...(data.idmTheme.logoHeight && { height: data.idmTheme.logoHeight }),
+        },
+      }),
+    });
+  }
 
   return data;
 };

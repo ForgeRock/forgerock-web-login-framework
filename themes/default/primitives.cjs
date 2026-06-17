@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -155,7 +155,7 @@ module.exports = function (theme) {
       borderColor: `var(--border-color, ${theme('colors.warning.dark')})`,
 
       '& svg': {
-        '--color': `hsl(var(--tw-colors-warning-dark-hs),var(tw-tw-colors-warning-dark-l))`,
+        '--color': `hsl(var(--tw-colors-warning-dark-hs),var(--tw-colors-warning-dark-l))`,
         color: `var(--color, ${theme('colors.warning.dark')})`,
         fill: 'currentColor',
       },
@@ -181,7 +181,7 @@ module.exports = function (theme) {
     '.button-base': {
       // NOTE: Ensure all button have borders for consistent height between regular and outline buttons
       border: `${theme('borderWidth.DEFAULT')} solid`,
-      borderRadius: theme('borderRadius.DEFAULT'),
+      borderRadius: `var(--fr-button-border-radius, ${theme('borderRadius.DEFAULT')})`,
       fontSize: theme('fontSize.base'),
       outlineOffset: '0',
       position: 'relative',
@@ -192,13 +192,16 @@ module.exports = function (theme) {
       '&:focus': {
         outlineOffset: '2px',
       },
+      '&&&:focus': {
+        outlineColor: `var(--fr-button-focus-ring-color, hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1))`,
+      },
       '&:active': {
         outlineOffset: '3px',
       },
       '&::before': {
         background: `black`,
         outline: `${theme('borderWidth.DEFAULT')} solid black`,
-        borderRadius: theme('borderRadius.DEFAULT'),
+        borderRadius: `var(--fr-button-border-radius, ${theme('borderRadius.DEFAULT')})`,
         content: '""',
         display: 'block',
         height: '100%',
@@ -219,7 +222,7 @@ module.exports = function (theme) {
       '--border-color': 'hsl(var(--tw-colors-primary-dark-hs),var(--tw-colors-primary-dark-l))',
       backgroundColor: `var(--bg-color, ${theme('colors.primary.dark')})`,
       borderColor: `var(--border-color, ${theme('colors.primary.dark')})`,
-      color: theme('colors.white'),
+      color: `var(--fr-button-text-color, ${theme('colors.white')})`,
       '&:hover::before, &:focus::before': {
         opacity: `0.2`,
       },
@@ -348,8 +351,7 @@ module.exports = function (theme) {
      * String input and select primitive theme settings
      */
     '.input-base': {
-      '--bg-color':
-        'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%)))`,
       '--border': `${theme(
         'borderWidth.DEFAULT',
       )} solid hsl(var(--tw-colors-secondary-default-hs),var(--tw-colors-secondary-default-l))`,
@@ -359,30 +361,28 @@ module.exports = function (theme) {
         .darken(0.02)
         .toString()})`,
 
-      border: `var(--border, ${theme('borderWidth.DEFAULT')} solid ${theme(
+      border: `var(--fr-input-border, ${theme('borderWidth.DEFAULT')} solid ${theme(
         'colors.secondary.DEFAULT',
       )})`,
-      border: `${theme('borderWidth.DEFAULT')} solid ${theme('colors.secondary.DEFAULT')}`,
       borderRadius: theme('borderRadius.DEFAULT'),
-      color: theme('colors.black'),
+      color: `var(--fr-input-text-color, ${theme('colors.black')})`,
       fontSize: `var(--font-size, ${theme('fontSize.base')})`,
       lineHeight: theme('spacing.6'),
       padding: theme('spacing.3'),
 
       '&:hover': {
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l)))`,
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
-      '&:focus': {
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+      '&&:focus': {
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l)))`,
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
+        outlineColor: `var(--fr-focus-ring-color, hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1))`,
+        outlineWidth: '1px',
       },
       '&[aria-invalid="true"]': {
         '--border-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%)))`,
         background: `no-repeat url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='${colorLib(
           theme('colors.error.dark'),
         ).rgb()}' viewBox='0 0 16 16'%3E%3Cpath d='M16 8A8 8 0 1 1 0 8a8 8 0 0 1 16 0zM8 4a.905.905 0 0 0-.9.995l.35 3.507a.552.552 0 0 0 1.1 0l.35-3.507A.905.905 0 0 0 8 4zm.002 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2z'/%3E%3C/svg%3E");`,
@@ -408,16 +408,14 @@ module.exports = function (theme) {
       // Double class to increase specificity by 1 level
       '&&[aria-invalid="true"]:focus': {
         '--outline-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l), 0.3)',
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l)))`,
         outlineColor: `var(--outline-color, ${colorLib(theme('colors.error.dark'))
           .fade(0.3)
           .toString()})`,
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       '&[aria-invalid="true"]:hover': {
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l)))`,
         backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
       },
       // TODO: is this needed? I don't think so.
@@ -426,22 +424,25 @@ module.exports = function (theme) {
       // },
     },
     '.input-base_dark': {
-      '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.5)',
-      '--border-color': 'hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
+      '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.5))`,
+      '--border-color': `var(--fr-input-border-color-value, hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l)))`,
       backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
         .fade(0.5)
         .toString()})`,
       borderColor: `var(--border-color, ${theme('colors.secondary.dark')})`,
-      color: theme('colors.white'),
+      color: `var(--fr-input-text-color, ${theme('colors.white')})`,
 
-      '&:focus': {
-        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
+      // Double-class specificity beats .focusable-element_dark:focus (same variants layer, later source order)
+      '&&:focus': {
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25))`,
         backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
           .fade(0.25)
           .toString()})`,
+        outlineColor: `var(--fr-focus-ring-color, hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1))`,
+        outlineWidth: '1px',
       },
       '&:hover': {
-        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25)',
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-body-dark-hs),var(--tw-colors-body-dark-l), 0.25))`,
         backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
           .fade(0.25)
           .toString()})`,
@@ -486,13 +487,13 @@ module.exports = function (theme) {
 
     '.input-label': {
       '--font-size': 'var(--tw-font-size-base-type)',
-      '--color': 'hsl(var(--tw-colors-label-dark-hs), var(--tw-colors-label-dark-l))',
+      '--color': `var(--fr-input-label-color, hsl(var(--tw-colors-label-dark-hs), var(--tw-colors-label-dark-l)))`,
       fontSize: `var(--font-size, ${theme('fontSize.base')})`,
       color: `var(--color, ${theme('colors.label.dark')})`,
     },
 
     '.input-label_dark': {
-      '--color': 'hsl(var(--tw-colors-label-light-hs),var(--tw-colors-label-light-l))',
+      '--color': `var(--fr-input-label-color, hsl(var(--tw-colors-label-light-hs),var(--tw-colors-label-light-l)))`,
       color: `var(--color, ${theme('colors.label.light')})`,
 
       ':where(input:autofill) + &': {
@@ -560,10 +561,10 @@ module.exports = function (theme) {
       color: `var(--color, ${theme('colors.link.light')})`,
     },
     '.select-base': {
-      '--bg-color':
-        'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+      '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%)))`,
       '--color': 'hsl(var(--tw-colors-label-dark-hs), var(--tw-colors-label-dark-l))',
 
+      accentColor: `var(--fr-select-accent-color, hsl(var(--tw-colors-primary-dark-hs),var(--tw-colors-primary-dark-l)))`,
       appearance: 'none',
       /**
        * The below background property prevents Storybook a11y from determining contrast.
@@ -583,22 +584,21 @@ module.exports = function (theme) {
       height: 'calc(3rem + 2px)',
 
       '&:hover': {
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
+        '--bg-color': `var(--fr-select-hover-bg-color, var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))))`,
         backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
           .darken(0.05)
           .toString()})`,
       },
-      '&:focus': {
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%))',
+      '&&:focus': {
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 5%)))`,
         backgroundColor: `var(--bg-color, ${colorLib(theme('colors.background.light'))
           .darken(0.05)
           .toString()})`,
+        outlineColor: `var(--fr-focus-ring-color, hsl(var(--tw-colors-focus-default-hs),var(--tw-colors-focus-default-l), 0.1))`,
+        outlineWidth: '1px',
       },
       '&[aria-invalid="true"]': {
-        '--bg-color':
-          'hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%))',
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-background-light-hs), calc(var(--tw-colors-background-light-l) - 2%)))`,
 
         backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
           theme('colors.secondary.dark'),
@@ -613,8 +613,9 @@ module.exports = function (theme) {
       },
     },
     '.select-base_dark': {
-      '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.5)',
+      '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.5))`,
       '--color': 'hsl(var(--tw-colors-label-light-hs), var(--tw-colors-label-light-l))',
+      accentColor: `var(--fr-select-accent-color, hsl(var(--tw-colors-primary-light-hs),var(--tw-colors-primary-light-l)))`,
       background: `no-repeat right ${theme(
         'spacing.3',
       )} center / 16px 12px url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='${colorLib(
@@ -626,17 +627,20 @@ module.exports = function (theme) {
       color: `var(--color, ${theme('colors.label.light')})`,
 
       '&:hover,': {
-        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25)',
+        '--bg-color': `var(--fr-select-hover-bg-color, var(--fr-input-bg-color, hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25)))`,
         backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
           .fade(0.25)
           .toString()})`,
       },
 
-      '&:focus': {
-        '--bg-color': 'hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25)',
+      // Double-class specificity beats .focusable-element_dark:focus (same variants layer, later source order)
+      '&&:focus': {
+        '--bg-color': `var(--fr-input-bg-color, hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l), 0.25))`,
         backgroundColor: `var(--bg-color, ${colorLib(theme('colors.body.dark'))
           .fade(0.25)
           .toString()})`,
+        outlineColor: `var(--fr-focus-ring-color, hsl(var(--tw-colors-focus-default-hs), calc(var(--tw-colors-focus-default-l) + 20%), 0.1))`,
+        outlineWidth: '1px',
       },
 
       '&[aria-invalid="true"]': {

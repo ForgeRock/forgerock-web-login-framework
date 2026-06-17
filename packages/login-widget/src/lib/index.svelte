@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -26,6 +26,7 @@
   import { onMount } from 'svelte';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
+  import { applyThemeVars } from '$core/_effects/theme.effects';
   import { styleStore } from '$core/style.store';
   import Journey from '$journey/journey.svelte';
   import { mount } from './_utilities/component.utilities';
@@ -40,6 +41,9 @@
   let dialogComp: SvelteComponent;
   let dialogEl: HTMLDialogElement;
   let formEl: HTMLFormElement;
+  let widgetRootEl: HTMLDivElement;
+
+  $: applyThemeVars(widgetRootEl, $styleStore?.theme);
 
   onMount(() => {
     mount(dialogComp, dialogEl);
@@ -47,7 +51,7 @@
 </script>
 
 {#if type === 'modal'}
-  <div class="fr_widget-root">
+  <div bind:this={widgetRootEl} class="fr_widget-root">
     <Dialog
       bind:dialogEl
       bind:this={dialogComp}
@@ -64,7 +68,7 @@
     </Dialog>
   </div>
 {:else}
-  <div class="fr_widget-root">
+  <div bind:this={widgetRootEl} class="fr_widget-root">
     <!-- Default `displayIcon` to `true` if `style.stages.icon` is `undefined` or `null` -->
     <Journey
       bind:formEl
@@ -74,3 +78,9 @@
     />
   </div>
 {/if}
+
+<style>
+  .fr_widget-root {
+    font-family: var(--fr-font-family, 'Open Sans'), ui-sans-serif, system-ui, sans-serif;
+  }
+</style>

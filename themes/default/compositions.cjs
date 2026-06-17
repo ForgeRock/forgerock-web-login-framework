@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -121,13 +121,13 @@ module.exports = (config, theme) => ({
    * Dialog box theme settings
    */
   '.dialog-box': {
-    '--bg-color': 'hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l))',
+    '--bg-color': `var(--fr-card-bg-color, hsl(var(--tw-colors-background-light-hs),var(--tw-colors-background-light-l)))`,
     '--border':
       '1px solid hsl(var(--tw-colors-secondary-dark-hs),var(--tw-colors-secondary-dark-l))',
     backgroundColor: `var(--bg-color, ${theme('colors.background.light')})`,
     border: `var(--border, 1px solid ${theme('colors.secondary.dark')})`,
     bottom: 0,
-    borderRadius: theme('borderRadius.DEFAULT'),
+    borderRadius: `var(--fr-card-border-radius, ${theme('borderRadius.DEFAULT')})`,
     boxShadow: theme('boxShadow.lg'),
     height: '100%',
     margin: `${theme('spacing.2')} 0 0 0`,
@@ -155,7 +155,7 @@ module.exports = (config, theme) => ({
     },
   },
   '.dialog-box_dark': {
-    '--bg-color': 'hsl(var(--tw-colors-background-dark-hs),var(--tw-colors-background-dark-l))',
+    '--bg-color': `var(--fr-card-bg-color, hsl(var(--tw-colors-background-dark-hs),var(--tw-colors-background-dark-l)))`,
     backgroundColor: `var(--bg-color, ${theme('colors.background.dark')})`,
     borderColor: theme('colors.black'),
 
@@ -167,6 +167,7 @@ module.exports = (config, theme) => ({
     },
   },
   '.dialog-body': {
+    color: `var(--fr-card-text-color, inherit)`,
     margin: `${theme('spacing.10')} ${theme('spacing.6')}`,
   },
   '.dialog-header': {
@@ -177,8 +178,8 @@ module.exports = (config, theme) => ({
     alignItems: 'stretch',
     backgroundColor: `var(--bg-color, ${theme('colors.tertiary.light')})`,
     borderBottom: `var(--border-bottom, 1px solid ${theme('colors.secondary.DEFAULT')})`,
-    borderTopLeftRadius: theme('borderRadius.DEFAULT'),
-    borderTopRightRadius: theme('borderRadius.DEFAULT'),
+    borderTopLeftRadius: `var(--fr-card-border-radius, ${theme('borderRadius.DEFAULT')})`,
+    borderTopRightRadius: `var(--fr-card-border-radius, ${theme('borderRadius.DEFAULT')})`,
     display: 'flex',
     justifyContent: 'center',
     minHeight: theme('spacing.40'),
@@ -248,7 +249,7 @@ module.exports = (config, theme) => ({
     },
   },
   '.dialog-x': {
-    borderRadius: theme('borderRadius.DEFAULT'),
+    borderRadius: `var(--fr-card-border-radius, ${theme('borderRadius.DEFAULT')})`,
     marginRight: theme('spacing.2'),
     position: 'absolute',
     right: theme('spacing.4'),

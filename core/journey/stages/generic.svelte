@@ -19,6 +19,7 @@
   import Form from '$components/primitives/form/form.svelte';
   // i18n
   import { interpolate } from '$core/_utilities/i18n.utilities';
+  import { encodeCssUrl } from '$core/_utilities/theme.utilities';
   import { styleStore } from '$core/style.store';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
   import {
@@ -106,7 +107,18 @@
   needsFocus={formNeedsFocus}
   onSubmitWhenValid={submitFormWrapper}
 >
-  {#if form?.icon && componentStyle !== 'inline'}
+  {#if $styleStore?.logo && componentStyle !== 'modal'}
+    <div class="tw_flex tw_justify-center tw_pb-4">
+      <div
+        class="tw_dialog-logo dark:tw_dialog-logo_dark"
+        style={`--logo-light: ${encodeCssUrl(
+          $styleStore.logo.light ?? '',
+        )}; --logo-dark: ${encodeCssUrl($styleStore.logo.dark ?? '')}; height: ${
+          $styleStore.logo.height ? `${$styleStore.logo.height}px` : '72px'
+        }; width: ${$styleStore.logo.width ? `${$styleStore.logo.width}px` : '200px'};`}
+      ></div>
+    </div>
+  {:else if form?.icon && componentStyle !== 'inline'}
     <div class="tw_flex tw_justify-center">
       <ShieldIcon classes="tw_text-gray-400 tw_fill-current" size="72px" />
     </div>

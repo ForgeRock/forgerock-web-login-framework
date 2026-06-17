@@ -1,0 +1,73 @@
+<!--
+
+ Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
+
+ This software may be modified and distributed under the terms
+ of the MIT license. See the LICENSE file for details.
+
+ -->
+
+<script lang="ts">
+  import { onMount } from 'svelte';
+
+  import { page } from '$app/stores';
+  import Widget, { component, configuration, journey } from '$package/index';
+
+  let componentEvents: ReturnType<typeof component> | undefined;
+  let journeyEvents: ReturnType<typeof journey> | undefined;
+  let widgetEl: HTMLDivElement;
+
+  onMount(() => {
+    const params = $page.url.searchParams;
+    const primaryColorParam = params.get('primaryColor');
+    const buttonBorderRadiusParam = params.get('buttonBorderRadius');
+    const cardBorderRadiusParam = params.get('cardBorderRadius');
+
+    configuration({
+      journeyClient: {
+        serverConfig: {
+          wellknown:
+            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+        },
+      },
+      forgerock: {
+        clientId: 'WebOAuthClient',
+        redirectUri: `${window.location.origin}/callback`,
+        scope: 'openid profile email me.read',
+        serverConfig: {
+          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
+          timeout: 5000,
+        },
+        realmPath: 'alpha',
+      },
+      style: {
+        theme: {
+          ...(primaryColorParam !== null ? { primaryColor: primaryColorParam } : {}),
+          ...(buttonBorderRadiusParam !== null
+            ? { buttonBorderRadius: Number(buttonBorderRadiusParam) }
+            : {}),
+          ...(cardBorderRadiusParam !== null
+            ? { cardBorderRadius: Number(cardBorderRadiusParam) }
+            : {}),
+        },
+      },
+    });
+
+    componentEvents = component();
+    journeyEvents = journey();
+
+    new Widget({ target: widgetEl });
+  });
+</script>
+
+<div class="tw_p-6">
+  <button
+    on:click={() => {
+      journeyEvents?.start({ journey: 'TEST_Login' });
+      componentEvents?.open();
+    }}
+  >
+    Open Login Modal
+  </button>
+</div>
+<div bind:this={widgetEl}></div>

@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -16,6 +16,7 @@ const journey = require('./journey.cjs');
 const primitives = require('./primitives.cjs');
 const designTokens = require('./tokens.cjs');
 const utilities = require('./utilities.cjs');
+const { buildTokenVars } = require('./token-vars.cjs');
 
 /**
  * The below theme just extends from the default them found here:
@@ -48,6 +49,7 @@ module.exports = {
    */
   plugins: [
     plugin(({ addComponents, addUtilities, config, theme }) => {
+      const vars = buildTokenVars(theme);
       addComponents({
         /**
          * Non-alpha order is intentional
@@ -56,6 +58,7 @@ module.exports = {
         ...boxes(theme),
         ...compositions(config, theme),
         ...journey(theme),
+        ':where(:root)': vars,
       });
       addUtilities(utilities(theme));
     }),
