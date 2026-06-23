@@ -14,6 +14,8 @@
   import AppleIcon from '../../../components/icons/apple-icon.svelte';
   import FacebookIcon from '../../../components/icons/facebook-icon.svelte';
   import GoogleIcon from '../../../components/icons/google-icon.svelte';
+  import LinkedinIcon from '../../../components/icons/linkedin-icon.svelte';
+  import MicrosoftIcon from '../../../components/icons/microsoft-icon.svelte';
 
   import type { SelectIdPCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
@@ -104,6 +106,28 @@
         onClick={() => setBtnValue(idp.value)}
       >
         <GoogleIcon classes="tw_inline-block tw_fill-current" />
+        <T key="continueWith" />
+        {idp.text}
+      </Button>
+    {:else if idp.text.toUpperCase().includes('LINKEDIN')}
+      <Button
+        classes="tw_button-linkedin dark:tw_button-linkedin_dark"
+        type="button"
+        width="auto"
+        onClick={() => setBtnValue(idp.value)}
+      >
+        <LinkedinIcon classes="tw_inline-block tw_fill-current" />
+        <T key="continueWith" />
+        {idp.text}
+      </Button>
+    {:else if idp.text.toUpperCase().includes('MICROSOFT')}
+      <Button
+        classes="tw_button-microsoft dark:tw_button-microsoft_dark"
+        type="button"
+        width="auto"
+        onClick={() => setBtnValue(idp.value)}
+      >
+        <MicrosoftIcon classes="tw_inline-block tw_fill-current" />
         <T key="continueWith" />
         {idp.text}
       </Button>
