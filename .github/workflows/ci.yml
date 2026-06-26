@@ -158,6 +158,7 @@ jobs:
       - uses: chromaui/action@latest
         with:
           onlyChanged: true
+          externals: 'themes/default/**'
           exitOnceUploaded: true
           traceChanged: true
           diagnosticsFile: chromatic-diagnostics.json
