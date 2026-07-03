@@ -28,6 +28,23 @@ export default createJourneyStep({
     'New here? <a href="#/service/Registration">Create an account</a><br><a href="#/service/ForgottenUsername">Forgot username?</a><a href="#/service/ResetPassword"> Forgot password?</a>',
 });
 
+export const passkeyAutofillStep = createJourneyStep({
+  authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
+  callbacks: [
+    {
+      type: callbackType.NameCallback,
+      output: [
+        { name: 'prompt', value: 'User Name' },
+        { name: 'autocompleteValues', value: ['username', 'webauthn'] },
+      ],
+      input: [{ name: 'IDToken1', value: '' }],
+      _id: 0,
+    },
+  ],
+  stage: 'UsernamePassword',
+  header: 'Sign In',
+});
+
 export const docsExample = {
   type: 'NameCallback',
   output: [

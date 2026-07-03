@@ -102,6 +102,7 @@
   "shouldContainALowercase": "Should contain a lowercase letter",
   "shouldContainASymbol": "Should contain a symbol",
   "showPassword": "Show password",
+  "signInWithPasskey": "Sign in with a passkey",
   "signalsEvaluation": "Evaluating device information.",
   "skipButton": "Skip",
   "sn": "Last name",

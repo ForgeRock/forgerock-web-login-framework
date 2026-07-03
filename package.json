@@ -33,7 +33,7 @@
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.2",
     "@forgerock/javascript-sdk": "^4.9.1",
-    "@forgerock/journey-client": "^2.0.0",
+    "@forgerock/journey-client": "0.0.0-beta-20260627000156",
     "@forgerock/ping-protect": "^4.7.0",
     "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",

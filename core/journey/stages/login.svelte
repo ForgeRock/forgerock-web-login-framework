@@ -8,6 +8,7 @@
  -->
 
 <script lang="ts">
+  import { WebAuthn } from '@forgerock/journey-client/webauthn';
   import { afterUpdate, onMount } from 'svelte';
 
   import T from '$components/_utilities/locale-strings.svelte';
@@ -21,6 +22,7 @@
   import { encodeCssUrl } from '$core/_utilities/theme.utilities';
   import { styleStore } from '$core/style.store';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
+  import { authenticateWebAuthnManual } from '$journey/stages/_effects/webauthn.effects';
   import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
   import { captureLinks } from './_utilities/stage.utilities';
 
@@ -48,6 +50,12 @@
   let alertNeedsFocus = false;
   let formMessageKey = '';
   let linkWrapper: HTMLElement;
+  let passkeyButtonBusy = false;
+
+  const webAuthnMetadata = WebAuthn.getMetadataCallback(step)?.getOutputValue<{
+    manualButtonEnabled?: boolean;
+  }>('data');
+  const showPasskeyButton = !!webAuthnMetadata?.manualButtonEnabled;
 
   function determineSubmission() {
     // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
@@ -56,6 +64,16 @@
     // The below variation is more liberal first self-submittable cb to call this wins.
     if (metadata?.step?.derived.isStepSelfSubmittable()) {
       form?.submit();
+    }
+  }
+
+  async function signInWithPasskey() {
+    passkeyButtonBusy = true;
+    try {
+      await authenticateWebAuthnManual(step);
+      form.submit();
+    } catch {
+      passkeyButtonBusy = false;
     }
   }
 
@@ -118,6 +136,19 @@
   {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
     <Button busy={journey?.loading} style="primary" type="submit" width="full">
       <T key="loginButton" />
+    </Button>
+  {/if}
+
+  {#if showPasskeyButton}
+    <hr class="tw_border-0 tw_border-b tw_border-secondary-light dark:tw_border-secondary-dark" />
+    <Button
+      busy={passkeyButtonBusy}
+      style="secondary"
+      type="button"
+      width="full"
+      onClick={signInWithPasskey}
+    >
+      {interpolate('signInWithPasskey', null, 'Sign in with a passkey')}
     </Button>
   {/if}
 

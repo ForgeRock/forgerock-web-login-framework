@@ -11,7 +11,7 @@ import { callbackType } from '@forgerock/journey-client';
 import { userEvent, within } from 'storybook/test';
 import { expect } from 'storybook/test';
 
-import step from './name.mock';
+import step, { passkeyAutofillStep } from './name.mock';
 import Input from './name.story.svelte';
 
 export default {
@@ -33,8 +33,7 @@ export const Base = {
 
 export const PasskeyAutofill = {
   args: {
-    ...Base.args,
-    isPasskeyAutofillEligible: true,
+    callback: passkeyAutofillStep.getCallbackOfType(callbackType.NameCallback),
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

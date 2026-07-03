@@ -7,7 +7,6 @@
  *
  **/
 
-import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
 import {
   canForceUserInputOptionality,
   isCbReadyByDefault,
@@ -38,7 +37,6 @@ export function buildCallbackMetadata(
   initializationOptions?: Record<string, unknown> | null,
 ) {
   const callbackCount: Record<string, number> = {};
-  const isPasskeyAutofillEligible = isMixedLoginWebAuthnStep(step);
 
   return step?.callbacks.map((callback, idx) => {
     const callbackType = callback.getType();
@@ -72,7 +70,6 @@ export function buildCallbackMetadata(
         isReadyForSubmission: isCbReadyByDefault(callback),
         isSelfSubmitting: isSelfSubmitting(callback),
         isUserInputRequired: requiresUserInput(callback),
-        isPasskeyAutofillEligible,
       },
       idx,
       // Only use the `platform` prop if there's metadata to add

@@ -55,7 +55,6 @@ function makeCallbackMetadata(mode) {
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: false,
-      isPasskeyAutofillEligible: false,
     },
     idx: 0,
     initOptions: { mode },

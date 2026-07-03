@@ -21,7 +21,6 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -32,7 +31,6 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -56,7 +54,6 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -67,7 +64,6 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -97,7 +93,6 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -108,7 +103,6 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -123,7 +117,6 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -227,7 +220,6 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -238,7 +230,6 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -253,7 +244,6 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,

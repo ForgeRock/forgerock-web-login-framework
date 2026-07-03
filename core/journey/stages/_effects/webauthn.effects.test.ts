@@ -18,6 +18,7 @@
  */
 
 import { callbackType } from '@forgerock/journey-client';
+import { WebAuthn } from '@forgerock/journey-client/webauthn';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
@@ -27,7 +28,7 @@ import {
 } from '$journey/stages/mfa-stages.mock';
 import { usernamePasswordStep } from '$journey/stages/step.mock';
 import {
-  authenticateWebAuthnAutofill,
+  authenticateWebAuthnManual,
   isConditionalMediationSupported,
   setupPasskeyAutofill,
 } from './webauthn.effects';
@@ -156,19 +157,15 @@ describe('isConditionalMediationSupported', () => {
 
   it('returns false when step is not eligible', async () => {
     const isConditionalMediationAvailable = vi.fn().mockResolvedValue(true);
-    stubWindow({
-      PublicKeyCredential: { isConditionalMediationAvailable },
-      navigator: { credentials: { get: vi.fn() } },
-    });
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', { isConditionalMediationAvailable });
 
     await expect(isConditionalMediationSupported(null)).resolves.toBe(false);
   });
 
   it('returns false when conditional mediation API is missing', async () => {
-    stubWindow({
-      PublicKeyCredential: {},
-      navigator: { credentials: { get: vi.fn() } },
-    });
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', {});
 
     await expect(isConditionalMediationSupported(createMixedLoginWebAuthnStep())).resolves.toBe(
       false,
@@ -177,10 +174,8 @@ describe('isConditionalMediationSupported', () => {
 
   it('returns false when isConditionalMediationAvailable rejects', async () => {
     const isConditionalMediationAvailable = vi.fn().mockRejectedValue(new Error('nope'));
-    stubWindow({
-      PublicKeyCredential: { isConditionalMediationAvailable },
-      navigator: { credentials: { get: vi.fn() } },
-    });
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', { isConditionalMediationAvailable });
 
     await expect(isConditionalMediationSupported(createMixedLoginWebAuthnStep())).resolves.toBe(
       false,
@@ -189,10 +184,8 @@ describe('isConditionalMediationSupported', () => {
 
   it('returns true when conditional mediation is available', async () => {
     const isConditionalMediationAvailable = vi.fn().mockResolvedValue(true);
-    stubWindow({
-      PublicKeyCredential: { isConditionalMediationAvailable },
-      navigator: { credentials: { get: vi.fn() } },
-    });
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', { isConditionalMediationAvailable });
 
     await expect(isConditionalMediationSupported(createMixedLoginWebAuthnStep())).resolves.toBe(
       true,
@@ -200,73 +193,53 @@ describe('isConditionalMediationSupported', () => {
   });
 });
 
-describe('authenticateWebAuthnAutofill', () => {
-  it('requests a credential using conditional mediation and writes an outcome', async () => {
-    const get = vi.fn().mockResolvedValue(createMockCredential({ id: 'cred-auth' }));
-    stubWindow({ navigator: { credentials: { get } } });
+describe('authenticateWebAuthnManual', () => {
+  it('requests a credential with mediation required and writes an outcome', async () => {
+    const credential = createMockCredential({ id: 'cred-manual' });
+    vi.spyOn(WebAuthn, 'getAuthenticationCredential').mockResolvedValue(credential);
 
     const step = createMixedLoginWebAuthnStep();
-    await expect(authenticateWebAuthnAutofill(step, new AbortController())).resolves.toBe(step);
+    await expect(authenticateWebAuthnManual(step)).resolves.toBe(step);
 
-    expect(get).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mediation: 'conditional',
-        publicKey: expect.any(Object),
-        signal: expect.any(Object),
-      }),
+    expect(WebAuthn.getAuthenticationCredential).toHaveBeenCalledWith(
+      expect.any(Object),
+      'required',
     );
 
     const outcome = getWebAuthnOutcomeValue(step);
-    expect(outcome).toContain('cred-auth');
-  });
-
-  it('throws when called without an AbortController', async () => {
-    await expect(authenticateWebAuthnAutofill(createMixedLoginWebAuthnStep())).rejects.toThrow(
-      'AbortController is required for conditional mediation WebAuthn requests',
-    );
+    expect(outcome).toContain('cred-manual');
   });
 
   it('throws when WebAuthn callbacks are missing', async () => {
     await expect(
-      authenticateWebAuthnAutofill(createJourneyStep(usernamePasswordStep), new AbortController()),
+      authenticateWebAuthnManual(createJourneyStep(usernamePasswordStep)),
     ).rejects.toThrow('Incorrect callbacks for WebAuthn authentication');
   });
 
   it('writes a JSON payload when supportsJsonResponse is true and authenticatorAttachment exists', async () => {
-    const get = vi
-      .fn()
-      .mockResolvedValue(
-        createMockCredential({ id: 'cred-json', authenticatorAttachment: 'platform' }),
-      );
-    stubWindow({ navigator: { credentials: { get } } });
+    const credential = createMockCredential({
+      id: 'cred-json',
+      authenticatorAttachment: 'platform',
+    });
+    vi.spyOn(WebAuthn, 'getAuthenticationCredential').mockResolvedValue(credential);
 
     const step = createJourneyStep(liveMixedLoginWebAuthnStep);
-    await authenticateWebAuthnAutofill(step, new AbortController());
-
-    expect(get).toHaveBeenCalledWith(
-      expect.objectContaining({
-        mediation: 'conditional',
-        publicKey: expect.any(Object),
-        signal: expect.any(Object),
-      }),
-    );
+    await authenticateWebAuthnManual(step);
 
     const hiddenValue = getWebAuthnOutcomeValue(step);
     expect(hiddenValue).toBeTruthy();
 
     const parsed = JSON.parse(hiddenValue as string) as Record<string, unknown>;
-    expect(parsed).toMatchObject({
-      authenticatorAttachment: 'platform',
-    });
+    expect(parsed).toMatchObject({ authenticatorAttachment: 'platform' });
     expect(typeof parsed.legacyData).toBe('string');
   });
 
   it('writes the legacy outcome when supportsJsonResponse is false', async () => {
-    const get = vi.fn().mockResolvedValue(createMockCredential({ id: 'cred-legacy' }));
-    stubWindow({ navigator: { credentials: { get } } });
-    const step = createMixedLoginWebAuthnStep();
+    const credential = createMockCredential({ id: 'cred-legacy' });
+    vi.spyOn(WebAuthn, 'getAuthenticationCredential').mockResolvedValue(credential);
 
-    await authenticateWebAuthnAutofill(step, new AbortController());
+    const step = createMixedLoginWebAuthnStep();
+    await authenticateWebAuthnManual(step);
 
     const hiddenValue = getWebAuthnOutcomeValue(step);
     expect(hiddenValue).toContain('cred-legacy');
@@ -276,35 +249,30 @@ describe('authenticateWebAuthnAutofill', () => {
 describe('setupPasskeyAutofill', () => {
   it('advances the journey when a step is eligible', async () => {
     const isConditionalMediationAvailable = vi.fn().mockResolvedValue(true);
-    const get = vi.fn().mockResolvedValue(createMockCredential({ id: 'cred-next' }));
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', { isConditionalMediationAvailable });
 
-    stubWindow({
-      PublicKeyCredential: { isConditionalMediationAvailable },
-      navigator: { credentials: { get } },
-    });
+    const step = createMixedLoginWebAuthnStep('auth-a');
+    vi.spyOn(WebAuthn, 'authenticate').mockResolvedValue(step);
 
     const { emitStep, journeyStore, nextSpy } = createMockJourneyStore();
-    const step = createMixedLoginWebAuthnStep('auth-a');
 
     setupPasskeyAutofill(journeyStore);
     emitStep(step);
 
     await waitFor(() => nextSpy.mock.calls.length === 1);
     expect(nextSpy).toHaveBeenCalledWith(step);
-    expect(getWebAuthnOutcomeValue(step)).toContain('cred-next');
   });
 
   it('does not re-attempt for the same authId', async () => {
     const isConditionalMediationAvailable = vi.fn().mockResolvedValue(true);
-    const get = vi.fn().mockResolvedValue(createMockCredential({ id: 'cred-once' }));
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', { isConditionalMediationAvailable });
 
-    stubWindow({
-      PublicKeyCredential: { isConditionalMediationAvailable },
-      navigator: { credentials: { get } },
-    });
+    const step = createMixedLoginWebAuthnStep('auth-a');
+    const authenticateSpy = vi.spyOn(WebAuthn, 'authenticate').mockResolvedValue(step);
 
     const { emitStep, journeyStore, nextSpy } = createMockJourneyStore();
-    const step = createMixedLoginWebAuthnStep('auth-a');
 
     setupPasskeyAutofill(journeyStore);
 
@@ -314,30 +282,29 @@ describe('setupPasskeyAutofill', () => {
     emitStep(step);
     await flushPromises();
 
-    expect(get).toHaveBeenCalledTimes(1);
+    expect(authenticateSpy).toHaveBeenCalledTimes(1);
     expect(nextSpy).toHaveBeenCalledTimes(1);
   });
 
   it('aborts an in-flight request when authId changes', async () => {
     const isConditionalMediationAvailable = vi.fn().mockResolvedValue(true);
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', { isConditionalMediationAvailable });
 
     const pending: Array<{
       signal: AbortSignal;
-      resolve: (value: unknown) => void;
+      resolve: (value: JourneyStep) => void;
       reject: (err: unknown) => void;
     }> = [];
 
-    const get = vi.fn().mockImplementation(({ signal }: { signal: AbortSignal }) => {
-      return new Promise((resolve, reject) => {
-        pending.push({ signal, resolve, reject });
-        signal.addEventListener('abort', () => reject(new Error('aborted')));
-      });
-    });
-
-    stubWindow({
-      PublicKeyCredential: { isConditionalMediationAvailable },
-      navigator: { credentials: { get } },
-    });
+    vi.spyOn(WebAuthn, 'authenticate').mockImplementation(
+      (_step: JourneyStep, signal?: AbortSignal) => {
+        return new Promise((resolve, reject) => {
+          pending.push({ signal: signal as AbortSignal, resolve, reject });
+          signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+      },
+    );
 
     const { emitStep, journeyStore, nextSpy } = createMockJourneyStore();
     const stepA = createMixedLoginWebAuthnStep('auth-a');
@@ -355,31 +322,30 @@ describe('setupPasskeyAutofill', () => {
 
     expect(pending[0].signal.aborted).toBe(true);
 
-    pending[1].resolve(createMockCredential({ id: 'cred-step-b' }));
+    pending[1].resolve(stepB);
     await waitFor(() => nextSpy.mock.calls.length === 1);
     expect(nextSpy).toHaveBeenCalledWith(stepB);
   });
 
   it('destroy unsubscribes and aborts in-flight requests', async () => {
     const isConditionalMediationAvailable = vi.fn().mockResolvedValue(true);
+    stubWindow({});
+    vi.stubGlobal('PublicKeyCredential', { isConditionalMediationAvailable });
 
     const pending: Array<{
       signal: AbortSignal;
-      resolve: (value: unknown) => void;
+      resolve: (value: JourneyStep) => void;
       reject: (err: unknown) => void;
     }> = [];
 
-    const get = vi.fn().mockImplementation(({ signal }: { signal: AbortSignal }) => {
-      return new Promise((resolve, reject) => {
-        pending.push({ signal, resolve, reject });
-        signal.addEventListener('abort', () => reject(new Error('aborted')));
-      });
-    });
-
-    stubWindow({
-      PublicKeyCredential: { isConditionalMediationAvailable },
-      navigator: { credentials: { get } },
-    });
+    vi.spyOn(WebAuthn, 'authenticate').mockImplementation(
+      (_step: JourneyStep, signal?: AbortSignal) => {
+        return new Promise((resolve, reject) => {
+          pending.push({ signal: signal as AbortSignal, resolve, reject });
+          signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        });
+      },
+    );
 
     const mockJourneyStore = createMockJourneyStore();
     const controls = setupPasskeyAutofill(mockJourneyStore.journeyStore);
