@@ -8,6 +8,8 @@
  **/
 
 const colorLib = require('color');
+const { relativeLightness } = require('./lightness.cjs');
+
 module.exports = function (theme) {
   return {
     /**
@@ -74,8 +76,11 @@ module.exports = function (theme) {
     },
     '.alert-error_dark': {
       '--bg-color': 'hsl(var(--tw-colors-error-dark-hs),var(--tw-colors-error-dark-l))',
-      '--border-color':
-        'hsl(var(--tw-colors-error-dark-hs), calc(var(--tw-colors-error-dark-l) - 20%))',
+      '--border-color': `hsl(var(--tw-colors-error-dark-hs), ${relativeLightness(
+        '--tw-colors-error-dark-l',
+        'darken',
+        0.2,
+      )})`,
       backgroundColor: `var(--bg-color, ${theme('colors.error.dark')})`,
       borderColor: `var(--border-color, ${colorLib(theme('colors.error.dark'))
         .darken(0.2)
@@ -88,8 +93,11 @@ module.exports = function (theme) {
       },
     },
     '.alert-info': {
-      '--bg-color':
-        'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
+      '--bg-color': `hsl(var(--tw-colors-primary-light-hs), ${relativeLightness(
+        '--tw-colors-primary-light-l',
+        'lighten',
+        0.9,
+      )})`,
       '--border-color': 'hsl(var(--tw-colors-primary-light-hs),var(--tw-colors-primary-light-l))',
       backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light'))
         .lighten(0.9)
@@ -103,10 +111,16 @@ module.exports = function (theme) {
       },
     },
     '.alert-info_dark': {
-      '--bg-color':
-        'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) - 40%))',
-      '--border-color':
-        'hsl(var(--tw-colors-primary-dark-hs), calc(var(--tw-colors-primary-dark-l) - 20%))',
+      '--bg-color': `hsl(var(--tw-colors-primary-light-hs), ${relativeLightness(
+        '--tw-colors-primary-light-l',
+        'darken',
+        0.4,
+      )})`,
+      '--border-color': `hsl(var(--tw-colors-primary-dark-hs), ${relativeLightness(
+        '--tw-colors-primary-dark-l',
+        'darken',
+        0.2,
+      )})`,
       backgroundColor: `var(--bg-color, ${colorLib(theme('colors.primary.light'))
         .darken(0.4)
         .toString()})`,
@@ -115,8 +129,11 @@ module.exports = function (theme) {
         .toString()})`,
 
       '& svg': {
-        '--color':
-          'hsl(var(--tw-colors-primary-light-hs), calc(var(--tw-colors-primary-light-l) + 90%))',
+        '--color': `hsl(var(--tw-colors-primary-light-hs), ${relativeLightness(
+          '--tw-colors-primary-light-l',
+          'lighten',
+          0.9,
+        )})`,
         color: `var(--color, ${colorLib(theme('colors.primary.light')).lighten(0.9).toString()})`,
         fill: 'currentColor',
       },
@@ -135,8 +152,11 @@ module.exports = function (theme) {
     },
     '.alert-success_dark': {
       '--bg-color': 'hsl(var(--tw-colors-success-dark-hs),var(--tw-colors-success-dark-l))',
-      '--border-color':
-        'hsl(var(--tw-colors-success-dark-hs), calc(var(--tw-colors-success-dark-l) - 20%))',
+      '--border-color': `hsl(var(--tw-colors-success-dark-hs), ${relativeLightness(
+        '--tw-colors-success-dark-l',
+        'darken',
+        0.2,
+      )})`,
       backgroundColor: `var(--bg-color, ${theme('colors.success.dark')})`,
       borderColor: `var(--border-color, ${colorLib(theme('colors.success.dark'))
         .darken(0.2)
@@ -162,8 +182,11 @@ module.exports = function (theme) {
     },
     '.alert-warning_dark': {
       '--bg-color': 'hsl(var(--tw-colors-warning-dark-hs),var(--tw-colors-warning-dark-l))',
-      '--border-color':
-        'hsl(var(--tw-colors-warning-dark-hs), calc(var(--tw-colors-warning-dark-l) - 20%))',
+      '--border-color': `hsl(var(--tw-colors-warning-dark-hs), ${relativeLightness(
+        '--tw-colors-warning-dark-l',
+        'darken',
+        0.2,
+      )})`,
       backgroundColor: `var(--bg-color, ${theme('colors.warning.dark')})`,
       borderColor: `var(--border-color, ${colorLib(theme('colors.warning.dark'))
         .darken(0.2)
