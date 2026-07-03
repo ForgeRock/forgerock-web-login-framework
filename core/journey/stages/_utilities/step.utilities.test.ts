@@ -17,11 +17,7 @@ import {
   shouldPopulateWithPreviousCallbacks,
 } from './step.utilities';
 
-import type { JourneyClient, Step } from '@forgerock/journey-client/types';
-
-// TODO: JourneyResult and JourneyLoginFailure are not currently exported by Journey Client, so we define them here
-type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
-type JourneyLoginFailure = Extract<JourneyResult, { type: 'LoginFailure' }>;
+import type { JourneyLoginFailure, Step } from '@forgerock/journey-client/types';
 
 function createLoginFailure(payload: Step): JourneyLoginFailure {
   return {

@@ -26,6 +26,7 @@ import type {
   GenericError,
   JourneyClient,
   JourneyClientConfig,
+  JourneyResult,
   JourneyStep,
   NextOptions,
   ResumeOptions,
@@ -201,8 +202,6 @@ export function initialize(
   const stack = initializeStack();
   let stepNumber = 0;
   let currentRecaptchaAction: string | null = null;
-  // TODO: JourneyResult is not currently exported by Journey Client, so we define it here
-  type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
 
   async function start(startOptions?: StartParam, recaptchaAction?: string) {
     // Falls back to journey name (e.g. "Login") when no explicit recaptchaAction is given —
@@ -278,49 +277,15 @@ export function initialize(
     try {
       const journeyClient = await getJourneyClient();
       /**
-       * Journey Client `resume()` already parses: `code`, `state`, `form_post_entry`, `responsekey`.
-       * We only parse the legacy URL params that Journey Client does NOT currently support.
+       * Journey Client `resume()` parses the legacy URL params itself (error, errorCode,
+       * errorMessage, nonce, RelayState, scope, suspendedId, authIndexValue, plus the
+       * redirect params code/state/form_post_entry/responsekey). The one thing it does not
+       * read is a `journey` query param, so forward that through when present.
        */
-      let updatedResumeOptions = resumeOptions;
-
-      try {
-        const parsedUrl = new URL(url);
-        const params = parsedUrl.searchParams;
-
-        const error = params.get('error');
-        const errorCode = params.get('errorCode');
-        const errorMessage = params.get('errorMessage');
-        const nonce = params.get('nonce');
-        const scope = params.get('scope');
-        const RelayState = params.get('RelayState');
-        const suspendedId = params.get('suspendedId');
-        const authIndexValue = params.get('authIndexValue');
-        const journeyParam =
-          params.get('journey') || resumeOptions?.journey || authIndexValue || undefined;
-
-        /**
-         * URL-derived params can override resumeOptions query property
-         * RelayState is PascalCase to match the property name that AM expects
-         */
-        const mergedQuery = {
-          ...resumeOptions?.query,
-          ...(error && { error }),
-          ...(errorCode && { errorCode }),
-          ...(errorMessage && { errorMessage }),
-          ...(nonce && { nonce }),
-          ...(RelayState && { RelayState }),
-          ...(scope && { scope }),
-          ...(suspendedId && { suspendedId }),
-        };
-
-        updatedResumeOptions = {
-          ...(journeyParam && { journey: journeyParam }),
-          ...(mergedQuery && { query: mergedQuery }),
-        };
-      } catch {
-        // If URL parsing fails, fall back to the provided `resumeOptions` unchanged.
-        updatedResumeOptions = resumeOptions;
-      }
+      const journeyParam = new URL(url).searchParams.get('journey');
+      const updatedResumeOptions = journeyParam
+        ? { ...resumeOptions, journey: journeyParam }
+        : resumeOptions;
 
       result = await journeyClient.resume(url, updatedResumeOptions);
     } catch (err) {
@@ -442,16 +407,7 @@ export function initialize(
       // Handle GenericError case
       const genericError = result;
       const errorMessage =
-        /**
-         * TODO: Journey Client currently does not handle JourneyLoginFailure case
-         * It returns a GenericError type when it should be returning JourneyLoginFailure type
-         * The hack below temporarily passes failing tests for Login journey
-         * Remove this check when https://github.com/ForgeRock/ping-javascript-sdk/pull/574
-         * PR has been merged and journey client is published to npm
-         */
-        genericError.error === 'no_response_data' && context?.prevStep
-          ? interpolate('loginFailure')
-          : genericError.message ?? genericError.error ?? interpolate('unknownNetworkError');
+        genericError.message ?? genericError.error ?? interpolate('unknownNetworkError');
 
       await restartJourney(errorMessage, context);
     }

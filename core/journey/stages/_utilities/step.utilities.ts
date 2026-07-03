@@ -9,14 +9,15 @@
 
 import { callbackType } from '@forgerock/journey-client';
 
-import type { BaseCallback, JourneyClient, JourneyStep } from '@forgerock/journey-client/types';
+import type {
+  BaseCallback,
+  JourneyLoginFailure,
+  JourneyResult,
+  JourneyStep,
+} from '@forgerock/journey-client/types';
 
 export const authIdTimeoutErrorCode = '110';
 export const constrainedViolationMessage = 'constraint violation';
-
-// TODO: JourneyResult and JourneyLoginFailure are not currently exported by Journey Client, so we define them here
-type JourneyResult = Awaited<ReturnType<JourneyClient['start']>>;
-type JourneyLoginFailure = Extract<JourneyResult, { type: 'LoginFailure' }>;
 
 /**
  * @function convertStringToKey -
