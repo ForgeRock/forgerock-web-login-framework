@@ -6,6 +6,7 @@ import { customRegistry } from '../../core/journey/_utilities/registry/vite-plug
 
 export default defineConfig({
   resolve: {
+    conditions: ['browser'],
     alias: {
       $core: resolve('../../core'),
       $components: resolve('../../core/components'),

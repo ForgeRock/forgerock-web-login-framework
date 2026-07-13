@@ -31,7 +31,8 @@
   onMount(() => {
     async function handleGetData() {
       try {
-        await PIProtect.getData();
+        const data = await PIProtect.getData();
+        callback.setData(data);
       } catch (error) {
         if (error instanceof Error) {
           callback.setClientError(error.message);
