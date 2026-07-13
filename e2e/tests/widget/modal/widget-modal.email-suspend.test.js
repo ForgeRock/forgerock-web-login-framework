@@ -62,3 +62,42 @@ test('Modal widget with email suspend', async ({ page }) => {
   // There should be no submit button within form
   await expect(form.getByRole('button')).not.toBeAttached();
 });
+
+/**
+ * Resume-from-URL: when the page is opened with a suspendedId (as an email magic link
+ * would land the user), the widget calls journey.resume(location.href). journey-client 2.1
+ * parses the legacy resume params itself; the store only forwards a `journey` query param.
+ * This drives that resume path and asserts the resume request carries the suspendedId.
+ */
+test('Modal widget resumes a suspended journey from the URL', async ({ page }) => {
+  const { clickButton } = asyncEvents(page);
+
+  const suspendedId = 'resume-e2e-suspended-id';
+
+  // Intercept the resume request and return a completed login so the flow terminates.
+  let resumeUrlSeen = null;
+  await page.route('*/**/authenticate?*', async (route, request) => {
+    if (request.url().includes(`suspendedId=${suspendedId}`)) {
+      resumeUrlSeen = request.url();
+      await route.fulfill({
+        json: {
+          tokenId: 'resume-success-token',
+          successUrl: '/openam/console',
+          realm: '/alpha',
+        },
+      });
+      return;
+    }
+    await route.continue();
+  });
+
+  await page.goto(`widget/modal?journey=TEST_Login&suspendedId=${suspendedId}`, {
+    waitFor: 'load',
+  });
+
+  // Opening the modal with a suspendedId triggers journey.resume(location.href).
+  await clickButton('Open Login Modal', `suspendedId=${suspendedId}`);
+
+  // The resume request fired against the suspended URL, exercising the resume() path.
+  expect(resumeUrlSeen).toContain(`suspendedId=${suspendedId}`);
+});

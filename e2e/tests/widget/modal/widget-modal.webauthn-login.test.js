@@ -52,7 +52,7 @@ test('modal widget exposes passkey autofill attributes on the mixed authenticati
 }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
-  await navigate('widget/modal?journey=TEST_AutofillPasskeyWebAuthn');
+  await navigate('widget/modal?journey=TEST_AutofillPasskeyWebAuthn_autocomplete_conditional');
   await clickButton('Open Login Modal', '/authenticate');
 
   const usernameInput = page.getByLabel('Username');

@@ -49,7 +49,7 @@ test('inline widget exposes passkey autofill attributes on the mixed authenticat
 }) => {
   const { navigate } = asyncEvents(page);
 
-  await navigate('widget/inline?journey=TEST_AutofillPasskeyWebAuthn');
+  await navigate('widget/inline?journey=TEST_AutofillPasskeyWebAuthn_autocomplete_conditional');
 
   const usernameInput = page.getByLabel('Username');
 

@@ -11,6 +11,7 @@ import { interpolate } from '$core/_utilities/i18n.utilities';
 
 import type {
   AttributeInputCallback,
+  PolicyParams,
   PolicyRequirement,
   ValidatedCreatePasswordCallback,
   ValidatedCreateUsernameCallback,
@@ -26,8 +27,7 @@ export interface Policy {
   params: Record<string, unknown>;
 }
 export interface FailedPolicy {
-  // TODO: PolicyParams must be re-exported by journey-client from forgerock/sdk-types, until then we derive the type like below
-  params: PolicyRequirement['params'];
+  params?: Partial<PolicyParams>;
   policyRequirement: string;
   restructured: RestructuredParam[];
 }
