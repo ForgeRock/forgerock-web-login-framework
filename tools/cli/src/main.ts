@@ -1,24 +1,46 @@
 #!/usr/bin/env node
 import { Command } from '@effect/cli';
 import { NodeContext, NodeRuntime } from '@effect/platform-node';
-import { Console, Effect } from 'effect';
-import { createRequire } from 'node:module';
+import { Console, Effect, Layer } from 'effect';
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { generateCommand } from './commands/generate.js';
 import { initCommand } from './commands/init.js';
 import { releasesCommand } from './commands/releases.js';
 import { updateCommand } from './commands/update.js';
+import { mcpCommand, ServerLayer } from './mcp.js';
 import { GithubReleaseLayer } from './services/release.js';
 
-// Read the version from package.json at runtime so it stays in sync
-// with the published package version after changesets bumps it.
-const { version } = createRequire(import.meta.url)('../../package.json') as { version: string };
+function readCliVersion(): string {
+  try {
+    const raw = readFileSync(
+      resolve(dirname(fileURLToPath(import.meta.url)), '../../package.json'),
+      'utf8',
+    );
+    const parsed = JSON.parse(raw) as { version?: string };
+    if (!parsed.version) throw new Error('Missing "version" field in package.json');
+    return parsed.version;
+  } catch (err) {
+    process.stderr.write(`Failed to read CLI version: ${String(err)}\n`);
+    process.exit(1);
+  }
+}
+
+const version = readCliVersion();
 
 const rootCommand = Command.make('ping-lf').pipe(
   Command.withDescription(
     'CLI for initializing, scaffolding, and updating Ping Login Widget and Login App custom component projects.',
   ),
-  Command.withSubcommands([initCommand, generateCommand, updateCommand, releasesCommand]),
+  Command.withSubcommands([
+    initCommand,
+    generateCommand,
+    updateCommand,
+    releasesCommand,
+    mcpCommand,
+  ]),
 );
 
 const cli = Command.run(rootCommand, {
@@ -26,68 +48,76 @@ const cli = Command.run(rootCommand, {
   version,
 });
 
-cli(process.argv).pipe(
-  Effect.catchTag('DirectoryConflictError', (err) =>
-    Console.error(
-      `\nError: "${err.path}" already contains a framework project.` +
-        `\n  Did you mean to use --local?\n` +
-        `\n    ping-lf init <new-directory> --local ${err.path}\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.catchTag('DirectoryNotEmptyError', (err) =>
-    Console.error(
-      `\nError: "${err.path}" already exists and is not empty.` +
-        `\n  Choose a different directory name, or delete the existing directory first.\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.catchTag('ReleaseNetworkError', (err) =>
-    Console.error(
-      `\nError: Could not reach GitHub to download the release.\n` +
-        `  ${err.cause}\n\n` +
-        `  • Check your network connection and try again.\n` +
-        `  • Use a local path:   ping-lf init <dir> --local <path>\n` +
-        `  • Specify a tag:      ping-lf init <dir> --tag v1.0.0\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.catchTag('ReleaseParseError', (err) =>
-    Console.error(`\nError: Failed to parse the release data.\n  ${err.cause}\n`).pipe(
-      Effect.andThen(Effect.die(err)),
-    ),
-  ),
-  Effect.catchTag('ReleaseFsError', (err) =>
-    Console.error(
-      `\nError: Filesystem error during release download (${err.operation}).\n  ${err.cause}\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.catchTag('InvalidVersionError', (err) =>
-    Console.error(
-      `\nError: "${err.version}" is not a valid version tag.\n` +
-        `  Expected semver format like v1.0.0.\n` +
-        `  Use "ping-lf releases" to list available versions.\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.catchTag('ReleaseNotFoundError', (err) =>
-    Console.error(
-      `\nError: No releases found on GitHub.` +
-        (err.cause ? `\n  ${err.cause}` : '') +
-        `\n\n  • Check your network connection and try again.\n` +
-        `  • Use a local path:   ping-lf init <dir> --local <path>\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.catchTag('InvalidComponentNameError', (err) =>
-    Console.error(
-      `\nError: "${err.name}" is not a valid component name.\n` +
-        `  Names must be PascalCase, start with an uppercase letter, and contain only letters and digits.\n` +
-        `  Examples: MyCallback, JWTLogin, DefaultStage\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.catchTag('ComponentAlreadyExistsError', (err) =>
-    Console.error(
-      `\nError: component directory already exists: ${err.path}\n` +
-        `  Choose a different name or delete the existing directory first.\n`,
-    ).pipe(Effect.andThen(Effect.die(err))),
-  ),
-  Effect.provide(GithubReleaseLayer),
-  Effect.provide(NodeContext.layer),
-  (effect) => NodeRuntime.runMain(effect, { disableErrorReporting: true }),
-);
+// Detect `ping-lf mcp` early so we can launch the MCP server via Layer.launch,
+// which cannot be composed with the @effect/cli Effect pipeline. When --help or
+// -h is present we fall through to the CLI so the user still gets usage output.
+const isMcpLaunch =
+  process.argv[2] === 'mcp' && !process.argv.includes('--help') && !process.argv.includes('-h');
+
+const program = isMcpLaunch
+  ? Layer.launch(ServerLayer)
+  : cli(process.argv).pipe(
+      Effect.catchTag('DirectoryConflictError', (err) =>
+        Console.error(
+          `\nError: "${err.path}" already contains a framework project.` +
+            `\n  Did you mean to use --local?\n` +
+            `\n    ping-lf init <new-directory> --local ${err.path}\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.catchTag('DirectoryNotEmptyError', (err) =>
+        Console.error(
+          `\nError: "${err.path}" already exists and is not empty.` +
+            `\n  Choose a different directory name, or delete the existing directory first.\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.catchTag('ReleaseNetworkError', (err) =>
+        Console.error(
+          `\nError: Could not reach GitHub to download the release.\n` +
+            `  ${err.cause}\n\n` +
+            `  • Check your network connection and try again.\n` +
+            `  • Use a local path:   ping-lf init <dir> --local <path>\n` +
+            `  • Specify a version:  ping-lf init <dir> --version v1.0.0\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.catchTag('ReleaseParseError', (err) =>
+        Console.error(`\nError: Failed to parse the release data.\n  ${err.cause}\n`).pipe(
+          Effect.andThen(Effect.die(err)),
+        ),
+      ),
+      Effect.catchTag('ReleaseFsError', (err) =>
+        Console.error(
+          `\nError: Filesystem error during release download (${err.operation}).\n  ${err.cause}\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.catchTag('InvalidVersionError', (err) =>
+        Console.error(
+          `\nError: "${err.version}" is not a valid version tag.\n` +
+            `  Expected semver format like v1.0.0.\n` +
+            `  Use "ping-lf releases" to list available versions.\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.catchTag('ReleaseNotFoundError', (err) =>
+        Console.error(
+          `\nError: No releases found on GitHub.` +
+            (err.cause ? `\n  ${err.cause}` : '') +
+            `\n\n  • Check your network connection and try again.\n` +
+            `  • Use a local path:   ping-lf init <dir> --local <path>\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.catchTag('InvalidComponentNameError', (err) =>
+        Console.error(
+          `\nError: "${err.name}" is not a valid component name.\n` +
+            `  Names must be PascalCase, start with an uppercase letter, and contain only letters and digits.\n` +
+            `  Examples: MyCallback, JWTLogin, DefaultStage\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.catchTag('ComponentAlreadyExistsError', (err) =>
+        Console.error(
+          `\nError: component directory already exists: ${err.path}\n` +
+            `  Choose a different name or delete the existing directory first.\n`,
+        ).pipe(Effect.andThen(Effect.die(err))),
+      ),
+      Effect.provide(Layer.mergeAll(GithubReleaseLayer, NodeContext.layer)),
+    );
+
+NodeRuntime.runMain(program, { disableErrorReporting: true });

@@ -1,13 +1,22 @@
 import { Command, Options } from '@effect/cli';
-import { Console, Effect } from 'effect';
+import { Console, Effect, Option } from 'effect';
+import nodePath from 'node:path';
 
 import { assertValidProject, writeVersion } from '../config/version.js';
-import { copyWithExclusions } from '../services/file-system.js';
+import { copyWithExclusions, expandTilde } from '../services/file-system.js';
+import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';
 
 export const updateCommand = Command.make(
   'update',
   {
+    directory: Options.optional(
+      Options.text('directory').pipe(
+        Options.withDescription(
+          'Project root directory. Defaults to the current working directory.',
+        ),
+      ),
+    ),
     local: Options.optional(
       Options.text('local').pipe(
         Options.withDescription(
@@ -15,17 +24,17 @@ export const updateCommand = Command.make(
         ),
       ),
     ),
-    tag: Options.optional(
-      Options.text('tag').pipe(
+    version: Options.optional(
+      Options.text('version').pipe(
         Options.withDescription(
-          'Framework release tag to update to (e.g. v1.2.0). If omitted, the main branch is used.',
+          'Framework version tag to update to (e.g. v1.2.0). If omitted, the main branch is used.',
         ),
       ),
     ),
   },
-  ({ local, tag }) =>
+  ({ local, version, directory }) =>
     Effect.gen(function* () {
-      const cwd = process.cwd();
+      const cwd = nodePath.resolve(expandTilde(Option.getOrElse(directory, () => process.cwd())));
 
       // ── 1. Verify this is an initialized project ──────────────────────────
       const currentVersion = yield* assertValidProject(cwd);
@@ -37,20 +46,25 @@ export const updateCommand = Command.make(
       // automatic removal of the .framework-tmp directory after copying.
       const resolvedVersion = yield* Effect.scoped(
         Effect.gen(function* () {
-          const { sourceDir, resolvedVersion } = yield* resolveSource(local, tag, cwd);
+          const { sourceDir, resolvedVersion } = yield* resolveSource(local, version, cwd);
           yield* Console.log('Copying updated framework files...');
           yield* copyWithExclusions(sourceDir, cwd);
           return resolvedVersion;
         }),
       );
 
-      // ── 3. Update .generator-version ──────────────────────────────────────
+      // ── 3. Regenerate custom-registry.ts ──────────────────────────────────
+      yield* Console.log('Regenerating custom component registry...');
+      yield* runRegistryScript(cwd);
+
+      // ── 4. Update .generator-version ──────────────────────────────────────
       yield* writeVersion(cwd, {
         version: resolvedVersion,
         generatedAt: new Date().toISOString(),
       });
       yield* Console.log(
         `\nDone. Updated from ${currentVersion.version} to ${resolvedVersion}.\n` +
+          'Custom component registry regenerated.\n' +
           'Run "pnpm install" if package dependencies changed.\n',
       );
     }),

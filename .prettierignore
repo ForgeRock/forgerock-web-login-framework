@@ -7,3 +7,4 @@ packages/login-widget/svelte-package
 package-lock.json
 pnpm-lock.yaml
 core/**/*.d.ts
+.opencode/
