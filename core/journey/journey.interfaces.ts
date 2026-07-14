@@ -16,6 +16,7 @@ import type {
   StepDetail,
 } from '@forgerock/journey-client/types';
 import type { ComponentConstructorOptions, SvelteComponent } from 'svelte';
+import type { FullAutoFill } from 'svelte/elements';
 import type { Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
@@ -29,7 +30,7 @@ export interface CallbackMetadata {
     isReadyForSubmission: boolean;
     isSelfSubmitting: boolean;
     isUserInputRequired: boolean;
-    isPasskeyAutofillEligible: boolean;
+    autocompleteValues: FullAutoFill | undefined;
   };
   idx: number;
   initOptions?: Record<string, unknown>;

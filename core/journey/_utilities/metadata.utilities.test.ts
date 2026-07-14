@@ -9,6 +9,7 @@
 
 import { describe, expect, it } from 'vitest';
 
+import { createPasskeyAutofillStep } from '$journey/stages/mfa-stages.mock';
 import { buildCallbackMetadata, buildStepMetadata } from './metadata.utilities';
 import { createJourneyStep, step1, step2 } from './step.mock';
 
@@ -21,7 +22,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -32,7 +33,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -56,7 +57,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -67,7 +68,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -97,7 +98,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -108,7 +109,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -123,7 +124,7 @@ describe('Test metadata builder function for callbacks', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -135,6 +136,14 @@ describe('Test metadata builder function for callbacks', () => {
         },
       },
     ]);
+  });
+
+  it('should populate autocompleteValues from a passkey autofill step', () => {
+    const step = createPasskeyAutofillStep();
+    const result = buildCallbackMetadata(step, () => false, null);
+
+    const autocompleteValues = result.map((cb) => cb.derived.autocompleteValues);
+    expect(autocompleteValues.every((value) => value === 'username webauthn')).toBe(true);
   });
 });
 
@@ -227,7 +236,7 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -238,7 +247,7 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,
@@ -253,7 +262,7 @@ describe('Test metadata builder function for step', () => {
         derived: {
           canForceUserInputOptionality: false,
           isFirstInvalidInput: false,
-          isPasskeyAutofillEligible: false,
+          autocompleteValues: undefined,
           isReadyForSubmission: false,
           isSelfSubmitting: false,
           isUserInputRequired: true,

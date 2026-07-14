@@ -21,7 +21,7 @@ import {
   singleProviderLocalAuthNoFormStep,
 } from '../callbacks/select-idp/select-idp.mock';
 import { initialize } from '../config.store';
-import { webAuthnAuthenticationStep } from './mfa-stages.mock';
+import { createPasskeyAutofillStep } from './mfa-stages.mock';
 import Step from './stages.story.svelte';
 import {
   confirmPasswordStep,
@@ -44,10 +44,7 @@ const frRegistrationStepWithTwoKBAs = createJourneyStep(registrationStepWithTwoK
 const frLoginStep = createJourneyStep(loginStep);
 const frUsernameDisplay = createJourneyStep(usernameDisplay);
 const frUsernamePasswordStep = createJourneyStep(usernamePasswordStep);
-const frUsernamePasswordPasskeyStep = createJourneyStep({
-  ...usernamePasswordStep,
-  callbacks: [...usernamePasswordStep.callbacks, ...webAuthnAuthenticationStep.callbacks],
-});
+const frPasskeyAutofillStep = createPasskeyAutofillStep();
 
 const frSocialMultipleProvidersLocalAuthFormStep = createJourneyStep(
   multipleProvidersLocalAuthFormStep,
@@ -172,8 +169,8 @@ export const UsernamePasswordPasskey = {
       stack: writable([{ tree: 'Login' }]),
     },
     labelType: 'stacked',
-    stage: frUsernamePasswordPasskeyStep.getStage(),
-    step: frUsernamePasswordPasskeyStep,
+    stage: frPasskeyAutofillStep.getStage(),
+    step: frPasskeyAutofillStep,
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -12,6 +12,7 @@
   import Name from './name.svelte';
 
   import type { NameCallback } from '@forgerock/journey-client/types';
+  import type { FullAutoFill } from 'svelte/elements';
 
   export let callback: NameCallback;
 
@@ -22,7 +23,7 @@
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: true,
-      isPasskeyAutofillEligible: true,
+      autocompleteValues: 'username webauthn' as FullAutoFill,
     },
     idx: 0,
   };

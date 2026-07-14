@@ -12,7 +12,9 @@
 
   import Label from '$components/primitives/label/label.svelte';
 
-  export let autocomplete: 'username webauthn' | undefined = undefined;
+  import type { FullAutoFill } from 'svelte/elements';
+
+  export let autocomplete: FullAutoFill | undefined = undefined;
   export let forceValidityFailure = false;
   export let isFirstInvalidInput: boolean;
   export let inputClasses = '';

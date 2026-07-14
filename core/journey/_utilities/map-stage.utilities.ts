@@ -65,9 +65,10 @@ export function mapStepToStage(
       break;
   }
 
-  // Mixed login + WebAuthn steps should render a callback-form stage so the
-  // username field exists for passkey autofill. This avoids mapping these steps
-  // to the pure WebAuthn stage when the AM `stage` value is missing.
+  // Mixed login + WebAuthn steps should render the login form so the username
+  // and password fields remain available. Passkey autofill (when enabled) is
+  // layered on top of this form. This avoids mapping these steps to the pure
+  // WebAuthn stage when the AM `stage` value is missing.
   if (isMixedLoginWebAuthnStep(currentStep)) {
     return Login;
   }

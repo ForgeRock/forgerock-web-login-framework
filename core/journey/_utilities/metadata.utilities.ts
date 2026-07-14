@@ -7,7 +7,7 @@
  *
  **/
 
-import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
+import { getAutocompleteValues } from '../stages/_utilities/webauthn.utilities';
 import {
   canForceUserInputOptionality,
   isCbReadyByDefault,
@@ -18,6 +18,7 @@ import {
 } from './data-analysis.utilities';
 
 import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
+import type { FullAutoFill } from 'svelte/elements';
 
 import type { CallbackMetadata } from '$journey/journey.interfaces';
 
@@ -38,7 +39,9 @@ export function buildCallbackMetadata(
   initializationOptions?: Record<string, unknown> | null,
 ) {
   const callbackCount: Record<string, number> = {};
-  const isPasskeyAutofillEligible = isMixedLoginWebAuthnStep(step);
+  const autocompleteValues = (getAutocompleteValues(step).join(' ') || undefined) as
+    | FullAutoFill
+    | undefined;
 
   return step?.callbacks.map((callback, idx) => {
     const callbackType = callback.getType();
@@ -72,7 +75,7 @@ export function buildCallbackMetadata(
         isReadyForSubmission: isCbReadyByDefault(callback),
         isSelfSubmitting: isSelfSubmitting(callback),
         isUserInputRequired: requiresUserInput(callback),
-        isPasskeyAutofillEligible,
+        autocompleteValues,
       },
       idx,
       // Only use the `platform` prop if there's metadata to add
