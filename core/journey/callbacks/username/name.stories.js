@@ -34,7 +34,7 @@ export const Base = {
 export const PasskeyAutofill = {
   args: {
     ...Base.args,
-    isPasskeyAutofillEligible: true,
+    autocompleteValues: 'username webauthn',
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

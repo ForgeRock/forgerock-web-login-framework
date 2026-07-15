@@ -10,41 +10,64 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events';
+import {
+  cleanUpRegisteredDevice,
+  getSessionToken,
+} from '../../utilities/delete-webauthn-device.js';
 
 test.use({ browserName: 'chromium' });
-test('Modal widget with webauthn login', async ({ page }) => {
-  const { clickButton, navigate } = asyncEvents(page);
 
-  const cdpSession = await page.context().newCDPSession(page);
+test.describe('modal widget with webauthn login', () => {
+  let cdpSession;
+  let authenticatorId;
+  let registeredCredentialId;
+  let sessionToken;
 
-  await cdpSession.send('WebAuthn.enable');
-
-  await cdpSession.send('WebAuthn.addVirtualAuthenticator', {
-    options: {
-      protocol: 'ctap2',
-      transport: 'internal',
-      hasUserVerification: true,
-      isUserVerified: true,
-      hasResidentKey: true,
-    },
+  test.beforeEach(async ({ page, request }) => {
+    sessionToken = await getSessionToken(request, 'demouser', 'j56eKtae*1');
+    cdpSession = await page.context().newCDPSession(page);
+    await cdpSession.send('WebAuthn.enable');
+    ({ authenticatorId } = await cdpSession.send('WebAuthn.addVirtualAuthenticator', {
+      options: {
+        protocol: 'ctap2',
+        transport: 'internal',
+        hasUserVerification: true,
+        isUserVerified: true,
+        hasResidentKey: true,
+      },
+    }));
+    registeredCredentialId = null;
+    cdpSession.on('WebAuthn.credentialAdded', ({ credential }) => {
+      registeredCredentialId = credential.credentialId
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/u, '');
+    });
   });
 
-  await navigate('widget/modal?journey=TEST_WebAuthn-Registration');
+  test.afterEach(async ({ request }) => {
+    await cleanUpRegisteredDevice(request, registeredCredentialId, sessionToken);
+    await cdpSession.send('WebAuthn.removeVirtualAuthenticator', { authenticatorId });
+    await cdpSession.detach();
+  });
 
-  await clickButton('Open Login Modal', '/authenticate');
+  test('registers and authenticates', async ({ page }) => {
+    const { clickButton, navigate } = asyncEvents(page);
 
-  // Try successful login
-  await page.getByLabel('Username').fill('demouser');
-  await page.getByLabel('Password').fill('j56eKtae*1');
-  await page.getByRole('button', { name: 'Next' }).click();
-  await expect(page.getByText('Name your device', { exact: true })).toBeVisible();
-  await expect(page.getByLabel('Optionally name your device')).toBeVisible();
+    await navigate('widget/modal?journey=TEST_WebAuthn-Registration');
 
-  await clickButton('Next', '/authenticate');
+    await clickButton('Open Login Modal', '/authenticate');
 
-  await verifyUserInfo(page, expect);
+    await page.getByLabel('Username').fill('demouser');
+    await page.getByLabel('Password').fill('j56eKtae*1');
+    await page.getByRole('button', { name: 'Next' }).click();
+    await expect(page.getByText('Name your device', { exact: true })).toBeVisible();
+    await expect(page.getByLabel('Optionally name your device')).toBeVisible();
 
-  await cdpSession.detach();
+    await clickButton('Next', '/authenticate');
+
+    await verifyUserInfo(page, expect);
+  });
 });
 
 test('modal widget exposes passkey autofill attributes on the mixed authentication journey', async ({

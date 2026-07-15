@@ -30,6 +30,7 @@ export interface CallbackMetadata {
     isReadyForSubmission: boolean;
     isSelfSubmitting: boolean;
     isUserInputRequired: boolean;
+    // FullAutoFill is imported from svelte/elements (not DOM's AutoFill) — AutoFill is a TypeScript ambient global invisible to ESLint's no-undef rule
     autocompleteValues: FullAutoFill | undefined;
   };
   idx: number;

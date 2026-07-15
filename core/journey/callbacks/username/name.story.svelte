@@ -15,15 +15,16 @@
   import type { FullAutoFill } from 'svelte/elements';
 
   export let callback: NameCallback;
+  export let autocompleteValues: FullAutoFill | undefined = undefined;
 
-  let callbackMetadata = {
+  $: callbackMetadata = {
     derived: {
       canForceUserInputOptionality: false,
       isFirstInvalidInput: false,
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: true,
-      autocompleteValues: 'username webauthn' as FullAutoFill,
+      autocompleteValues,
     },
     idx: 0,
   };

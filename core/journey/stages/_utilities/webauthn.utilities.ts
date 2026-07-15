@@ -42,7 +42,10 @@ export function isMixedLoginWebAuthnStep(step?: JourneyStep | null): boolean {
  */
 export function getAutocompleteValues(step?: JourneyStep | null): string[] {
   const nameCallback = step?.getCallbacksOfType(callbackType.NameCallback)[0];
-  return nameCallback?.getOutputByName<string[]>('autocompleteValues', []) ?? [];
+  const values = nameCallback?.getOutputByName<unknown>('autocompleteValues', []);
+  return Array.isArray(values)
+    ? values.filter((value): value is string => typeof value === 'string')
+    : [];
 }
 
 /**
