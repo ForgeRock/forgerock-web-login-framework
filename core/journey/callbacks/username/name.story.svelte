@@ -12,17 +12,19 @@
   import Name from './name.svelte';
 
   import type { NameCallback } from '@forgerock/journey-client/types';
+  import type { FullAutoFill } from 'svelte/elements';
 
   export let callback: NameCallback;
+  export let autocompleteValues: FullAutoFill | undefined = undefined;
 
-  let callbackMetadata = {
+  $: callbackMetadata = {
     derived: {
       canForceUserInputOptionality: false,
       isFirstInvalidInput: false,
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: true,
-      isPasskeyAutofillEligible: true,
+      autocompleteValues,
     },
     idx: 0,
   };

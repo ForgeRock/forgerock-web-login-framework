@@ -43,7 +43,7 @@ function makeCallbackMetadata(mode, recaptchaAction) {
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: false,
-      isPasskeyAutofillEligible: false,
+      autocompleteValues: undefined,
     },
     idx: 0,
     initOptions: { mode, ...(recaptchaAction && { recaptchaAction }) },

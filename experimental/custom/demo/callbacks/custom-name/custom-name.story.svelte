@@ -39,7 +39,7 @@
       isReadyForSubmission: false,
       isSelfSubmitting: false,
       isUserInputRequired: true,
-      isPasskeyAutofillEligible: false,
+      autocompleteValues: undefined,
     },
     idx: 0,
   };

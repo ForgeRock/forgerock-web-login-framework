@@ -11,9 +11,11 @@
   import Input from '$components/primitives/input/input.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
 
+  import type { FullAutoFill } from 'svelte/elements';
+
   import type { Maybe } from '$core/interfaces';
 
-  export let autocomplete: 'username webauthn' | undefined = undefined;
+  export let autocomplete: FullAutoFill | undefined = undefined;
   export let checkValidity: ((event: Event) => boolean) | null = null;
   export let forceValidityFailure = false;
   export let isFirstInvalidInput: boolean;

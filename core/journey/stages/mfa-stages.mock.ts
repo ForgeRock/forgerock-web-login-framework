@@ -472,12 +472,15 @@ export const webAuthnRegistrationStep = {
   ],
 };
 
-export const liveMixedLoginWebAuthnStep: Step = {
+export const livePasskeyAutofillStep: Step = {
   authId: 'x',
   callbacks: [
     {
       type: callbackType.NameCallback,
-      output: [{ name: 'prompt', value: 'User Name' }],
+      output: [
+        { name: 'prompt', value: 'User Name' },
+        { name: 'autocompleteValues', value: ['username', 'webauthn'] },
+      ],
       input: [{ name: 'IDToken1', value: '' }],
       _id: 0,
     },
@@ -493,7 +496,8 @@ export const liveMixedLoginWebAuthnStep: Step = {
             _allowCredentials: [],
             timeout: '60000',
             userVerification: 'required',
-            conditional: false,
+            conditional: true,
+            mediation: 'conditional',
             relyingPartyId: '',
             _relyingPartyId: '',
             extensions: {},
@@ -543,13 +547,99 @@ export const stepWithInvalidMetadata: Step = {
 
 export function createMixedLoginWebAuthnStep(authId?: string): JourneyStep {
   const usernamePassword = usernamePasswordStep as Step;
+  const nameCallback = {
+    type: callbackType.NameCallback,
+    output: [{ name: 'prompt', value: 'User Name' }],
+    input: [{ name: 'IDToken1', value: '' }],
+    _id: 0,
+  };
+  const metadataCallback = {
+    type: callbackType.MetadataCallback,
+    output: [
+      {
+        name: 'data',
+        value: {
+          _action: 'webauthn_authentication',
+          challenge: 'Ya8applUsry8oFtAlB9zrOzrx21MSQ6NUaJYWjAR8j0=',
+          allowCredentials: '',
+          _allowCredentials: [],
+          timeout: '60000',
+          userVerification: 'required',
+          relyingPartyId: '',
+          _relyingPartyId: '',
+          _type: 'WebAuthn',
+        },
+      },
+    ],
+    _id: 1,
+  };
+  const hiddenValueCallback = {
+    type: callbackType.HiddenValueCallback,
+    output: [
+      { name: 'value', value: 'false' },
+      { name: 'id', value: 'webAuthnOutcome' },
+    ],
+    input: [{ name: 'IDToken3', value: 'webAuthnOutcome' }],
+    _id: 2,
+  };
   return createJourneyStep({
     ...usernamePassword,
     authId: authId ?? usernamePassword.authId,
-    callbacks: [
-      ...((usernamePassword.callbacks ?? []) as NonNullable<Step['callbacks']>),
-      ...((webAuthnAuthenticationStep.callbacks ?? []) as NonNullable<Step['callbacks']>),
+    callbacks: [nameCallback, metadataCallback, hiddenValueCallback],
+    stage: 'DefaultLogin',
+  } as Step);
+}
+
+export function createPasskeyAutofillStep(authId?: string): JourneyStep {
+  const usernamePassword = usernamePasswordStep as Step;
+  const nameCallback = {
+    type: callbackType.NameCallback,
+    output: [
+      { name: 'prompt', value: 'User Name' },
+      { name: 'autocompleteValues', value: ['username', 'webauthn'] },
     ],
+    input: [{ name: 'IDToken1', value: '' }],
+    _id: 0,
+  };
+  // Passkey autofill requires AM conditional mediation, so this metadata sets
+  // `mediation: 'conditional'` (unlike the pure passwordless webAuthnAuthenticationStep).
+  const metadataCallback = {
+    type: callbackType.MetadataCallback,
+    output: [
+      {
+        name: 'data',
+        value: {
+          _action: 'webauthn_authentication',
+          challenge: 'Ya8applUsry8oFtAlB9zrOzrx21MSQ6NUaJYWjAR8j0=',
+          allowCredentials: '',
+          _allowCredentials: [],
+          timeout: '60000',
+          userVerification: 'required',
+          conditional: true,
+          mediation: 'conditional',
+          relyingPartyId: '',
+          _relyingPartyId: '',
+          extensions: {},
+          _type: 'WebAuthn',
+          supportsJsonResponse: true,
+        },
+      },
+    ],
+    _id: 1,
+  };
+  const hiddenValueCallback = {
+    type: callbackType.HiddenValueCallback,
+    output: [
+      { name: 'value', value: 'false' },
+      { name: 'id', value: 'webAuthnOutcome' },
+    ],
+    input: [{ name: 'IDToken3', value: 'webAuthnOutcome' }],
+    _id: 2,
+  };
+  return createJourneyStep({
+    ...usernamePassword,
+    authId: authId ?? usernamePassword.authId,
+    callbacks: [nameCallback, metadataCallback, hiddenValueCallback],
     stage: 'DefaultLogin',
   } as Step);
 }
