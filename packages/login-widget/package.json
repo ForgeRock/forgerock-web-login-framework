@@ -32,16 +32,7 @@
     "build:release": "pnpm run build && pnpm run build:iife && pnpm run build:types && node scripts/copyTypes.mjs && node scripts/processTypes.mjs",
     "test": "vitest"
   },
-  "dependencies": {
-    "qrcode": "1.5.3",
-    "xss": "^1.0.15"
-  },
-  "peerDependencies": {
-    "@forgerock/javascript-sdk": "^4.9.1",
-    "@forgerock/journey-client": "^2.1.0",
-    "@forgerock/ping-protect": "^4.7.1",
-    "zod": "^4.3.6"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@babel/core": "^7.29.7",
     "@hcaptcha/types": "^1.0.3",
