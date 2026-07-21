@@ -42,8 +42,7 @@
     });
 
     // Using observable method:
-    const { get, subscribe } = user.info();
-    get();
+    const { subscribe } = user.info();
     subscribe((event: UserStoreValue) => {
       console.log(event);
       loading = event.loading;

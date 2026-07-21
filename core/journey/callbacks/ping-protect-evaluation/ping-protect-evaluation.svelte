@@ -12,7 +12,7 @@
 
   import T from '$components/_utilities/locale-strings.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import { getData, pauseBehavioralData, resumeBehavioralData } from '$core/protect/protect.store';
+  import { protectStore } from '$core/protect/protect.store';
 
   import type { PingOneProtectEvaluationCallback } from '@forgerock/journey-client/types';
 
@@ -30,12 +30,11 @@
 
   onMount(() => {
     async function handleGetData() {
-      const result = await getData();
+      const result = await protectStore.getData();
       if (typeof result === 'object') {
         callback.setClientError(result.error);
       } else {
         callback.setData(result);
-        console.log('Data set on Protect evaluation callback');
       }
       return selfSubmitFunction && selfSubmitFunction();
     }
@@ -46,9 +45,9 @@
     isBehavioralDataPaused = pingProtect?.behavioralDataCollection ?? false;
     if (typeof window !== 'undefined') {
       if (isBehavioralDataPaused === true) {
-        pauseBehavioralData();
+        protectStore.pauseBehavioralData();
       } else {
-        resumeBehavioralData();
+        protectStore.resumeBehavioralData();
       }
     }
   }

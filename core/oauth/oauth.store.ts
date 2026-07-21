@@ -8,11 +8,11 @@
  **/
 
 import { oidc } from '@forgerock/oidc-client';
-import { writable } from 'svelte/store';
+import { get as getStoreValue, writable } from 'svelte/store';
 import { z } from 'zod';
 
 import type { GetTokensOptions, OauthTokens, OidcClient } from '@forgerock/oidc-client/types';
-import type { Writable } from 'svelte/store';
+import type { Readable, Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
 
@@ -21,13 +21,6 @@ const interactionNeeded = 'The request requires some interaction that is not all
 const timeoutErrorMessage =
   'Timeouts are likely an issue with OAuth client misconfiguration. If you are getting a 4xx error in the network tab, copy the full `/authorize` URL and paste it directly into your browsers URL field to directly visit the page. The error should be displayed on the page.';
 const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
-
-/**
- * The narrowed, ready-to-use OIDC client (the success branch of the `oidc()` factory union).
- * Exported so `user.store.ts` can type its injected `getOidcClient` parameter without
- * importing the underlying SDK type directly.
- */
-export type OidcClientReady = Extract<OidcClient, { token: object }>;
 
 /**
  * Configure the OIDC Client.
@@ -60,10 +53,10 @@ export const oidcClientConfigSchema = z
 export type OidcClientConfig = z.infer<typeof oidcClientConfigSchema>;
 
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
-  getTokens: (getOptions?: GetTokensOptions) => void;
-  getOidcClient: () => Promise<OidcClientReady>;
+  get: (getOptions?: GetTokensOptions) => void;
   reset: () => void;
 }
+
 export interface OAuthTokenStoreValue {
   completed: boolean;
   error: Maybe<{
@@ -87,77 +80,97 @@ function getTroubleshootingMessage(message: Maybe<string>) {
   }
 }
 
+const INITIAL_STATE: OAuthTokenStoreValue = {
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+};
+
 /**
- * @function initialize - Creates a fresh, isolated OAuth store instance.
+ * @function createOidcClientStore
  *
- * All state (client config, client promise, store writable) lives inside this
- * closure — nothing is shared at module scope. Each call returns an independent
- * instance, so multiple widget instances or test runs cannot interfere with
- * each other.
+ * Wraps the `oidc()` factory in a Svelte store. Starts as `null`, transitions to
+ * the resolved `OidcClient` (success or error shape) when the wellknown fetch settles.
+ * Inject the returned store into `initialize` (oauth and user) so both share the
+ * same client instance without module-level state.
  *
- * @param {OidcClientConfig} [config] - Optional OIDC client configuration. When omitted,
- *   `getOidcClient()` will throw (lazily) if called.
- * @param {GetTokensOptions} [initOptions] - Default options forwarded to `token.get`.
+ * @param {OidcClientConfig} config — OIDC client configuration (validated by Zod).
+ * @returns {Readable<OidcClient | null>}
  */
-export function initialize(config?: OidcClientConfig, initOptions?: GetTokensOptions): OAuthStore {
-  // Closure-scoped: isolated per initialize() call, not shared across callers.
-  const parsedConfig = config ? oidcClientConfigSchema.parse(config) : undefined;
-  let oidcClientPromise: Promise<OidcClientReady> | undefined;
-  const oauthStore = writable<OAuthTokenStoreValue>({
-    completed: false,
-    error: null,
-    loading: false,
-    successful: false,
-    response: null,
+export function createOidcClientStore(config: OidcClientConfig): Readable<OidcClient | null> {
+  const parsedConfig = oidcClientConfigSchema.parse(config);
+  const { subscribe, set } = writable<OidcClient | null>(null);
+
+  oidc({ config: parsedConfig }).then((client) => {
+    set(client);
   });
 
-  /**
-   * Returns a cached, ready-to-use OIDC client promise.
-   * Exposed on the returned store so `user.store` and `widget.api` can inject it
-   * without reaching back into module scope.
-   */
-  async function getOidcClient(): Promise<OidcClientReady> {
-    if (!parsedConfig) {
-      throw new Error('OIDC Client is not configured.');
-    }
-    if (!oidcClientPromise) {
-      oidcClientPromise = (async () => {
-        const client = await oidc({ config: parsedConfig });
-        // The factory resolves to an error shape when initialization fails.
-        if (client.error) {
-          throw new Error(client.error);
-        }
-        return client as OidcClientReady;
-      })().catch((err) => {
-        // Clear the cache on failure so the next call can retry.
-        oidcClientPromise = undefined;
-        throw err;
-      });
-    }
-    return oidcClientPromise;
-  }
+  return { subscribe };
+}
 
-  async function getTokens(getOptions?: GetTokensOptions) {
+/**
+ * @function initialize - Initializes the OAuth store with a get function and a reset function
+ * @param {Readable<OidcClient | null>} oidcClientStore - The OIDC client store to use for token retrieval
+ * @param {GetTokensOptions} initOptions - Default options to pass to `token.get`
+ * @returns {OAuthStore} - The OAuth store
+ */
+export function initialize(
+  oidcClientStore: Readable<OidcClient | null> | undefined,
+  initOptions?: GetTokensOptions,
+): OAuthStore {
+  const oauthStore = writable<OAuthTokenStoreValue>(INITIAL_STATE);
+
+  async function get(getOptions?: GetTokensOptions) {
+    if (!oidcClientStore) {
+      oauthStore.set({
+        completed: true,
+        error: { message: 'OIDC client not configured', troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return;
+    }
+
     const options = {
       // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/client.store.ts#L315-L322
       // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/authorize.request.micros.ts#L122
       // backgroundRenew must be true or token.get() returns an error instead of fetching new tokens.
-      // prompt=none is injected automatically by authorize.request.micros.ts — no need to set it via authorizeOptions.
+      // prompt=none is passed in automatically by authorize.request.micros.ts — no need to set it via authorizeOptions.
       backgroundRenew: true,
       ...initOptions,
       ...getOptions,
     };
 
-    oauthStore.set({
-      completed: false,
-      error: null,
-      loading: true,
-      successful: false,
-      response: null,
-    });
+    const oidcClient = getStoreValue(oidcClientStore);
+
+    if (!oidcClient) {
+      oauthStore.set({
+        completed: true,
+        error: { message: 'OIDC client not ready', troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return;
+    }
+
+    if ('error' in oidcClient) {
+      oauthStore.set({
+        completed: true,
+        error: { message: String(oidcClient.error), troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return;
+    }
+
+    oauthStore.set({ ...INITIAL_STATE, loading: true });
 
     try {
-      const oidcClient = await getOidcClient();
       const tokens = await oidcClient.token.get(options);
 
       if ('error' in tokens) {
@@ -184,7 +197,6 @@ export function initialize(config?: OidcClientConfig, initOptions?: GetTokensOpt
         response: tokens,
       });
     } catch (err: unknown) {
-      // Always an Error in practice; fallback covers unexpected third-party throws.
       const message = err instanceof Error ? err.message : 'Unknown OAuth error';
       oauthStore.set({
         completed: true,
@@ -197,18 +209,11 @@ export function initialize(config?: OidcClientConfig, initOptions?: GetTokensOpt
   }
 
   function reset() {
-    oauthStore.set({
-      completed: false,
-      error: null,
-      loading: false,
-      successful: false,
-      response: null,
-    });
+    oauthStore.set(INITIAL_STATE);
   }
 
   return {
-    getTokens,
-    getOidcClient,
+    get,
     reset,
     subscribe: oauthStore.subscribe,
   };

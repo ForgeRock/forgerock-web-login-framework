@@ -171,6 +171,8 @@
       await protect.start({
         envId: initializePingProtectEarly,
         behavioralDataCollection: pauseBehavioralData === 'true',
+        consoleLogEnabled:
+          initializePingProtectEarly && initializePingProtectEarly?.length !== 0 ? true : false,
       });
       await protect.getData();
       protect.pauseBehavioralData();

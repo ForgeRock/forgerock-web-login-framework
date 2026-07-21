@@ -7,9 +7,22 @@
  *
  **/
 
+import { get } from 'svelte/store';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
+const oidcMock = vi.fn();
+
+vi.mock(
+  '@forgerock/oidc-client',
+  async (importOriginal: () => Promise<Record<string, unknown>>) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      oidc: oidcMock,
+    };
+  },
+);
 
 vi.mock(
   '@forgerock/journey-client',
@@ -71,6 +84,9 @@ describe('widgetApiFactory', () => {
   beforeEach(() => {
     vi.resetModules();
     journeyTerminateMock.mockClear();
+    oidcMock.mockReset();
+    // Default: a never-resolving promise so eager oidc() init calls don't throw.
+    oidcMock.mockReturnValue(new Promise(() => {}));
   });
 
   describe('public API surface (2.0.0)', () => {
@@ -105,10 +121,12 @@ describe('widgetApiFactory', () => {
     };
 
     it('resets all stores to initial state after a successful logout', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
       api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
-      oauthStore.getOidcClient = async () => makeOidcClient();
+      // Wait for the OIDC client store to be populated before logging out
+      await vi.waitFor(() => expect(get(oauthStore.oidcClientStore)).not.toBeNull());
 
       await api.user.logout();
 
@@ -121,19 +139,21 @@ describe('widgetApiFactory', () => {
       });
     });
 
-    it('resets all stores to initial state even when both server calls fail', async () => {
+    it('resets all stores to initial state even when both server calls fail (and re-throws)', async () => {
       journeyTerminateMock.mockRejectedValueOnce(new Error('terminate failed'));
-      const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
-      const { oauthStore, userStore, journeyStore } = api.getStores();
-      oauthStore.getOidcClient = async () =>
+      oidcMock.mockResolvedValueOnce(
         makeOidcClient({
           logout: async () => {
             throw new Error('oidc failed');
           },
-        });
+        }),
+      );
+      const api = await importSubject();
+      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      const { oauthStore, userStore, journeyStore } = api.getStores();
+      await vi.waitFor(() => expect(get(oauthStore.oidcClientStore)).not.toBeNull());
 
-      await api.user.logout();
+      await expect(api.user.logout()).rejects.toThrow('terminate failed');
 
       expect(readStore(oauthStore)).toMatchObject(initialStoreState);
       expect(readStore(userStore)).toMatchObject(initialStoreState);

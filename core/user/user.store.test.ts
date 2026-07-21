@@ -7,9 +7,10 @@
  *
  **/
 
+import { readable, writable } from 'svelte/store';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { OidcClientReady } from '$core/oauth/oauth.store';
+import type { OidcClient } from '@forgerock/oidc-client/types';
 
 function readStore<T>(store: { subscribe: (run: (value: T) => void) => () => void }): T {
   let captured!: T;
@@ -19,12 +20,12 @@ function readStore<T>(store: { subscribe: (run: (value: T) => void) => () => voi
   return captured;
 }
 
-function mockClientWithUserInfo(infoResult: unknown): OidcClientReady {
+function mockClientWithUserInfo(infoResult: unknown): OidcClient {
   return {
     authorize: { url: vi.fn(), background: vi.fn() },
     token: { exchange: vi.fn(), get: vi.fn(), revoke: vi.fn() },
     user: { info: vi.fn().mockResolvedValue(infoResult), logout: vi.fn() },
-  } as unknown as OidcClientReady;
+  } as unknown as OidcClient;
 }
 
 const userInfo = { sub: 'user-123', email: 'user@example.com' };
@@ -36,8 +37,8 @@ describe('user.store', () => {
 
   it('emits a successful state with the user info when user.info resolves', async () => {
     const { initialize } = await import('./user.store');
-    const getOidcClient = vi.fn().mockResolvedValue(mockClientWithUserInfo(userInfo));
-    const store = initialize(getOidcClient);
+    const oidcClientStore = readable<OidcClient | null>(mockClientWithUserInfo(userInfo));
+    const store = initialize(oidcClientStore);
 
     store.get();
     await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
@@ -50,14 +51,14 @@ describe('user.store', () => {
 
   it('emits an error state (without throwing) when user.info returns a GenericError', async () => {
     const { initialize } = await import('./user.store');
-    const getOidcClient = vi.fn().mockResolvedValue(
+    const oidcClientStore = readable<OidcClient | null>(
       mockClientWithUserInfo({
         error: 'state_error',
         message: 'No access token',
         type: 'state_error',
       }),
     );
-    const store = initialize(getOidcClient);
+    const store = initialize(oidcClientStore);
 
     store.get();
     await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
@@ -68,21 +69,38 @@ describe('user.store', () => {
     expect(value.response).toBeNull();
   });
 
-  it('emits an error state when getOidcClient throws', async () => {
+  it('emits an error state when user.info throws', async () => {
     const { initialize } = await import('./user.store');
-    const getOidcClient = vi.fn().mockRejectedValue(new Error('init failed'));
-    const store = initialize(getOidcClient);
+    const client = mockClientWithUserInfo(null);
+    (client.user as { info: ReturnType<typeof vi.fn> }).info.mockRejectedValue(
+      new Error('info failed'),
+    );
+    const oidcClientStore = readable<OidcClient | null>(client);
+    const store = initialize(oidcClientStore);
 
     store.get();
     await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
 
-    expect(readStore(store).error?.message).toBe('init failed');
+    expect(readStore(store).error?.message).toBe('info failed');
   });
 
-  it('emits an error state when get() is called with a getOidcClient that rejects with "not configured"', async () => {
+  it('emits an error state when the oidcClientStore contains an error-shaped OidcClient (init failed)', async () => {
     const { initialize } = await import('./user.store');
-    const getOidcClient = vi.fn().mockRejectedValue(new Error('OIDC Client is not configured.'));
-    const store = initialize(getOidcClient);
+    const oidcClientStore = readable<OidcClient | null>({
+      error: 'OIDC init failed',
+      type: 'wellknown_error',
+    } as unknown as OidcClient);
+    const store = initialize(oidcClientStore);
+
+    store.get();
+    await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
+
+    expect(readStore(store).error?.message).toBe('OIDC init failed');
+  });
+
+  it('emits an error state when initialize() is called without an oidcClientStore', async () => {
+    const { initialize } = await import('./user.store');
+    const store = initialize(undefined);
 
     store.get();
     await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
@@ -93,10 +111,24 @@ describe('user.store', () => {
     expect(value.response).toBeNull();
   });
 
+  it('emits an error state immediately when get() is called before oidcClientStore resolves', async () => {
+    const { initialize } = await import('./user.store');
+
+    const controlledStore = writable<OidcClient | null>(null);
+    const store = initialize(controlledStore);
+
+    store.get();
+    await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
+
+    const value = readStore(store);
+    expect(value.successful).toBe(false);
+    expect(value.error?.message).toMatch(/not ready/i);
+  });
+
   it('reset() returns the store to its initial state', async () => {
     const { initialize } = await import('./user.store');
-    const getOidcClient = vi.fn().mockResolvedValue(mockClientWithUserInfo(userInfo));
-    const store = initialize(getOidcClient);
+    const oidcClientStore = readable<OidcClient | null>(mockClientWithUserInfo(userInfo));
+    const store = initialize(oidcClientStore);
 
     store.get();
     await vi.waitFor(() => expect(readStore(store).completed).toBe(true));

@@ -7,6 +7,7 @@
  *
  **/
 
+import { get } from 'svelte/store';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const protectMock = vi.fn();
@@ -29,7 +30,8 @@ function makeProtectClient() {
 }
 
 async function importSubject() {
-  return import('./protect.store');
+  const mod = await import('./protect.store');
+  return mod.protectStore;
 }
 
 describe('protect.store — Zod validation', () => {
@@ -39,18 +41,16 @@ describe('protect.store — Zod validation', () => {
   });
 
   it('throws a ZodError when envId is present but undefined', async () => {
-    const { start } = await importSubject();
-    // The key must be present to enter the Zod validation branch ('envId' in config).
-    // Passing undefined as the value triggers the "required" error message.
-    await expect(() => start({ envId: undefined } as unknown as { envId: string })).toThrow(
+    const store = await importSubject();
+    await expect(() => store.start({ envId: undefined } as unknown as { envId: string })).toThrow(
       /envId/i,
     );
   });
 
   it('throws a ZodError when an unrecognized key is passed (strict schema)', async () => {
-    const { start } = await importSubject();
+    const store = await importSubject();
     await expect(() =>
-      start({ envId: 'abc', unknownKey: true } as unknown as { envId: string }),
+      store.start({ envId: 'abc', unknownKey: true } as unknown as { envId: string }),
     ).toThrow();
   });
 
@@ -58,9 +58,8 @@ describe('protect.store — Zod validation', () => {
     const client = makeProtectClient();
     protectMock.mockReturnValue(client);
 
-    const { start } = await importSubject();
-    // SignalsInitializationOptions has no envId — a plain Record<string, string>
-    await start({ someKey: 'someValue' });
+    const store = await importSubject();
+    await store.start({ someKey: 'someValue' });
 
     expect(protectMock).toHaveBeenCalledWith({ someKey: 'someValue' });
   });
@@ -69,8 +68,8 @@ describe('protect.store — Zod validation', () => {
     const client = makeProtectClient();
     protectMock.mockReturnValue(client);
 
-    const { start } = await importSubject();
-    await expect(start({ envId: 'my-env-id' })).resolves.toBeUndefined();
+    const store = await importSubject();
+    await expect(store.start({ envId: 'my-env-id' })).resolves.toBeUndefined();
 
     expect(protectMock).toHaveBeenCalledWith(expect.objectContaining({ envId: 'my-env-id' }));
   });
@@ -83,20 +82,20 @@ describe('protect.store — uninitialized guards', () => {
   });
 
   it('getData() returns an error object when called before start()', async () => {
-    const { getData } = await importSubject();
-    const result = await getData();
+    const store = await importSubject();
+    const result = await store.getData();
     expect(result).toEqual({ error: 'PingOne Signals SDK is not initialized' });
   });
 
   it('pauseBehavioralData() returns an error object when called before start()', async () => {
-    const { pauseBehavioralData } = await importSubject();
-    const result = pauseBehavioralData();
+    const store = await importSubject();
+    const result = store.pauseBehavioralData();
     expect(result).toEqual({ error: 'PingOne Signals SDK is not initialized' });
   });
 
   it('resumeBehavioralData() returns an error object when called before start()', async () => {
-    const { resumeBehavioralData } = await importSubject();
-    const result = resumeBehavioralData();
+    const store = await importSubject();
+    const result = store.resumeBehavioralData();
     expect(result).toEqual({ error: 'PingOne Signals SDK is not initialized' });
   });
 });
@@ -111,8 +110,8 @@ describe('protect.store — delegation', () => {
     const client = makeProtectClient();
     protectMock.mockReturnValue(client);
 
-    const { start } = await importSubject();
-    await start({ envId: 'my-env-id' });
+    const store = await importSubject();
+    await store.start({ envId: 'my-env-id' });
 
     expect(client.start).toHaveBeenCalledTimes(1);
   });
@@ -121,9 +120,9 @@ describe('protect.store — delegation', () => {
     const client = makeProtectClient();
     protectMock.mockReturnValue(client);
 
-    const { start, getData } = await importSubject();
-    await start({ envId: 'my-env-id' });
-    const result = await getData();
+    const store = await importSubject();
+    await store.start({ envId: 'my-env-id' });
+    const result = await store.getData();
 
     expect(client.getData).toHaveBeenCalledTimes(1);
     expect(result).toBe('device-data-string');
@@ -133,9 +132,9 @@ describe('protect.store — delegation', () => {
     const client = makeProtectClient();
     protectMock.mockReturnValue(client);
 
-    const { start, pauseBehavioralData } = await importSubject();
-    await start({ envId: 'my-env-id' });
-    pauseBehavioralData();
+    const store = await importSubject();
+    await store.start({ envId: 'my-env-id' });
+    store.pauseBehavioralData();
 
     expect(client.pauseBehavioralData).toHaveBeenCalledTimes(1);
   });
@@ -144,9 +143,9 @@ describe('protect.store — delegation', () => {
     const client = makeProtectClient();
     protectMock.mockReturnValue(client);
 
-    const { start, resumeBehavioralData } = await importSubject();
-    await start({ envId: 'my-env-id' });
-    resumeBehavioralData();
+    const store = await importSubject();
+    await store.start({ envId: 'my-env-id' });
+    store.resumeBehavioralData();
 
     expect(client.resumeBehavioralData).toHaveBeenCalledTimes(1);
   });
@@ -156,12 +155,34 @@ describe('protect.store — delegation', () => {
     const client2 = makeProtectClient();
     protectMock.mockReturnValueOnce(client1).mockReturnValueOnce(client2);
 
-    const { start, getData } = await importSubject();
-    await start({ envId: 'first-env-id' });
-    await start({ envId: 'second-env-id' });
-    await getData();
+    const store = await importSubject();
+    await store.start({ envId: 'first-env-id' });
+    await store.start({ envId: 'second-env-id' });
+    await store.getData();
 
     expect(client1.getData).not.toHaveBeenCalled();
     expect(client2.getData).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('protect.store — Svelte store contract', () => {
+  beforeEach(() => {
+    protectMock.mockReset();
+    vi.resetModules();
+  });
+
+  it('subscribe() is null before start()', async () => {
+    const { protectStore: store } = await import('./protect.store');
+    expect(get(store)).toBeNull();
+  });
+
+  it('subscribe() holds the protect client after start()', async () => {
+    const client = makeProtectClient();
+    protectMock.mockReturnValue(client);
+
+    const { protectStore: store } = await import('./protect.store');
+    await store.start({ envId: 'my-env-id' });
+
+    expect(get(store)).toBe(client);
   });
 });

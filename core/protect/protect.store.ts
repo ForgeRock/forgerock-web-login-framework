@@ -8,6 +8,7 @@
  **/
 
 import { protect } from '@forgerock/protect';
+import { get, writable } from 'svelte/store';
 import { z } from 'zod';
 
 import type {
@@ -15,6 +16,7 @@ import type {
   ProtectConfig as SdkProtectConfig,
   SignalsInitializationOptions,
 } from '@forgerock/protect/types';
+import type { Readable } from 'svelte/store';
 
 /**
  * The legacy `@forgerock/ping-protect` `PIProtect` export was a singleton: one callback could
@@ -23,8 +25,8 @@ import type {
  * The new `@forgerock/protect` `protect(config)` factory returns a *stateful protectClient* whose
  * `getData`/`pauseBehavioralData`/`resumeBehavioralData` only work after `start()` has run on
  * that same protectClient. To preserve the cross-callback behavior the widget relies on, we hold a
- * single shared protectClient here and reuse it across all consumers (both Ping Protect callbacks
- * and the public `protect` widget API).
+ * single shared protectClient in a Svelte store here and reuse it across all consumers (both Ping
+ * Protect callbacks and the public `protect` widget API).
  */
 
 /**
@@ -56,19 +58,29 @@ export const protectConfigSchema = z
     agentIdentification: z.boolean().optional(),
     agentTimeout: z.number().optional(),
     agentPort: z.number().optional(),
+    consoleLogEnabled: z.boolean().optional(),
   })
   .strict();
 
 export type ProtectConfig = z.infer<typeof protectConfigSchema>;
 
-let protectClient: Protect | undefined;
+export interface ProtectStore extends Readable<Protect | null> {
+  start: (
+    config: ProtectConfig | SignalsInitializationOptions,
+  ) => Promise<void | { error: string }>;
+  getData: () => Promise<string | { error: string }>;
+  pauseBehavioralData: () => void | { error: string };
+  resumeBehavioralData: () => void | { error: string };
+}
+
+const protectClientStore = writable<Protect | null>(null);
 
 /**
- * @function start - Creates (or recreates) the shared Protect protectClient and starts it.
+ * @function start - Creates (or recreates) the shared Protect client and starts it.
  * @throws {z.ZodError} If a ProtectConfig is provided and fails validation.
  * @returns {Promise<void | { error: string }>}
  */
-export function start(config: ProtectConfig | SignalsInitializationOptions) {
+function start(config: ProtectConfig | SignalsInitializationOptions) {
   /**
    * Accepts either a `ProtectConfig` (has `envId` — validated by Zod) or a
    * `SignalsInitializationOptions` (from `callback.getConfig()` — passed through directly).
@@ -76,15 +88,17 @@ export function start(config: ProtectConfig | SignalsInitializationOptions) {
    */
   const safeConfig: SdkProtectConfig | SignalsInitializationOptions =
     'envId' in config ? protectConfigSchema.parse(config) : config;
-  protectClient = protect(safeConfig);
+  const protectClient = protect(safeConfig);
+  protectClientStore.set(protectClient);
   return protectClient.start();
 }
 
 /**
- * @function getData - Returns device data from the shared Protect protectClient.
+ * @function getData - Returns device data from the shared Protect client.
  * @returns {Promise<string | { error: string }>}
  */
-export function getData() {
+function getData() {
+  const protectClient = get(protectClientStore);
   if (!protectClient) {
     return Promise.resolve({ error: 'PingOne Signals SDK is not initialized' });
   }
@@ -92,10 +106,11 @@ export function getData() {
 }
 
 /**
- * @function pauseBehavioralData - Pauses behavioral data collection on the shared protectClient.
+ * @function pauseBehavioralData - Pauses behavioral data collection on the shared client.
  * @returns {void | { error: string }}
  */
-export function pauseBehavioralData() {
+function pauseBehavioralData() {
+  const protectClient = get(protectClientStore);
   if (!protectClient) {
     return { error: 'PingOne Signals SDK is not initialized' };
   }
@@ -103,12 +118,21 @@ export function pauseBehavioralData() {
 }
 
 /**
- * @function resumeBehavioralData - Resumes behavioral data collection on the shared protectClient.
+ * @function resumeBehavioralData - Resumes behavioral data collection on the shared client.
  * @returns {void | { error: string }}
  */
-export function resumeBehavioralData() {
+function resumeBehavioralData() {
+  const protectClient = get(protectClientStore);
   if (!protectClient) {
     return { error: 'PingOne Signals SDK is not initialized' };
   }
   return protectClient.resumeBehavioralData();
 }
+
+export const protectStore: ProtectStore = {
+  subscribe: protectClientStore.subscribe,
+  start,
+  getData,
+  pauseBehavioralData,
+  resumeBehavioralData,
+};

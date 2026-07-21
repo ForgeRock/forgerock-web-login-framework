@@ -12,11 +12,6 @@ import { expect, test } from '@playwright/test';
 import { asyncEvents } from '../../utilities/async-events.js';
 
 test('Widget calls PingProtect via callback', async ({ page }) => {
-  const logs: string[] = [];
-  page.on('console', async (msg) => {
-    logs.push(msg.text());
-  });
-
   const { navigate } = asyncEvents(page);
 
   await navigate('widget/modal?journey=TEST_Protect');
@@ -24,28 +19,35 @@ test('Widget calls PingProtect via callback', async ({ page }) => {
 
   await expect(page.getByRole('dialog')).toBeVisible();
 
-  // PingOneProtectInitialize auto-submits a second /authenticate after start() completes.
-  // Wait for both round-trips before the Page Node (username/password) is rendered.
-  // PingOneProtectInitialize runs start() then auto-submits. Username only appears after
-  // both the Signals SDK init and the second /authenticate round-trip complete.
+  // PingOneProtectInitialize auto-submits after start() completes.
+  // The username field only appears after start() succeeds and the next
+  // /authenticate round-trip lands — proving initialize ran the success branch.
   const usernameField = page.getByLabel('User Name').or(page.getByLabel('Username'));
   await expect(usernameField).toBeVisible();
-
-  // Log is emitted synchronously inside the callback before self-submit fires
-  expect(logs.includes('Protect initialized by callback for data collection')).toBe(true);
 
   await usernameField.fill('demouser');
   await page.getByLabel('Password').fill('j56eKtae*1');
 
-  // After credentials, the journey hits PingOneProtectEvaluate which calls getData() then
-  // auto-submits. Wait for that second /authenticate to complete before asserting the log.
+  // Must be set up before clicking Next so it catches the request when evaluate auto-submits.
+  const evaluateRequestPromise = page.waitForRequest(
+    (req) =>
+      req.method() === 'POST' &&
+      req.url().includes('/authenticate') &&
+      req.postDataJSON()?.callbacks?.[0]?.type === 'PingOneProtectEvaluationCallback',
+  );
+
   await Promise.all([
     page.waitForResponse((res) => res.url().includes('/authenticate') && res.status() === 200),
     page.getByRole('button', { name: 'Next' }).click(),
   ]);
 
-  // The evaluation callback auto-submits a further /authenticate — wait for it to land
   await page.waitForResponse((res) => res.url().includes('/authenticate'));
 
-  expect(logs.includes('Data set on Protect evaluation callback')).toBe(true);
+  // IDToken1signals populated proves getData() succeeded and setData() was called —
+  // the success branch in ping-protect-evaluation.svelte is the only path that sets this value.
+  const evaluateRequest = await evaluateRequestPromise;
+  const body = evaluateRequest.postDataJSON() as {
+    callbacks: Array<{ input: Array<{ name: string; value: string }> }>;
+  };
+  expect(body.callbacks[0].input[0].value).toBeTruthy();
 });

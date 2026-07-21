@@ -7,7 +7,7 @@
  *
  **/
 
-import { derived, get } from 'svelte/store';
+import { derived, get, readable } from 'svelte/store';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
 import { captchaConfigSchema } from '$core/captcha.config';
@@ -15,19 +15,14 @@ import { captchaConfigSchema } from '$core/captcha.config';
 import { componentStore } from '$core/component.store';
 import { initialize as initializeLinks } from '$core/links.store';
 import { initialize as initializeContent } from '$core/locale.store';
-import { initialize as initializeOauth } from '$core/oauth/oauth.store';
-import {
-  getData,
-  pauseBehavioralData,
-  resumeBehavioralData,
-  start,
-} from '$core/protect/protect.store';
+import { createOidcClientStore, initialize as initializeOauth } from '$core/oauth/oauth.store';
+import { protectStore } from '$core/protect/protect.store';
 import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
 
-import type { GetTokensOptions } from '@forgerock/oidc-client/types';
+import type { OidcClient } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 import type { componentApi as _componentApi } from './_utilities/component.utilities';
@@ -56,6 +51,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let userStore: UserStore;
+  let oidcClientStore: Readable<OidcClient | null>;
 
   function getStores() {
     return {
@@ -72,14 +68,14 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   }
 
   const configuration = (options?: WidgetConfigOptions) => {
-    // initialize() creates a fresh, isolated store instance per call.
-    // getOidcClient is injected into the user store so it shares the same
-    // OIDC client instance without reaching into module-level state.
-    oauthStore = initializeOauth(options?.oidcClient);
-    userStore = initializeUser(oauthStore.getOidcClient);
+    if (options?.oidcClient) {
+      oidcClientStore = createOidcClientStore(options.oidcClient);
+    }
     journeyStore = initializeJourney(options?.journeyClient, {
       ...(options?.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
     });
+    oauthStore = initializeOauth(oidcClientStore);
+    userStore = initializeUser(oidcClientStore);
 
     initializeContent(options?.content);
     initializeJourneys(options?.journeys);
@@ -92,11 +88,15 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
        * @returns {void}
        **/
       set(setOptions?: WidgetConfigOptions): void {
-        oauthStore = initializeOauth(setOptions?.oidcClient ?? options?.oidcClient);
-        userStore = initializeUser(oauthStore.getOidcClient);
-        journeyStore = initializeJourney(setOptions?.journeyClient ?? options?.journeyClient, {
+        const oidcConfig = setOptions?.oidcClient ?? options?.oidcClient;
+        if (oidcConfig) {
+          oidcClientStore = createOidcClientStore(oidcConfig);
+        }
+        journeyStore = initializeJourney(setOptions?.journeyClient, {
           ...(setOptions?.captcha && { captcha: captchaConfigSchema.parse(setOptions.captcha) }),
         });
+        oauthStore = initializeOauth(oidcClientStore);
+        userStore = initializeUser(oidcClientStore);
 
         initializeContent(setOptions?.content);
         initializeJourneys(setOptions?.journeys);
@@ -139,7 +139,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
             }
           } else if ($journeyStore.successful) {
             if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
-              oauthStore.getTokens();
+              oauthStore.get();
             } else if (!requestsOauth) {
               formFactor === 'modal' && componentApi.close({ reason: 'auto' });
             }
@@ -202,41 +202,104 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   };
   const user = {
     /**
-     * User Info
-     * @param: void
-     * @returns: UserStore
+     * User Info — reactive derived store. Automatically fetches user info
+     * when the OIDC client is ready. Subscribe to receive state updates.
+     * @returns {{ subscribe: Readable<UserStoreValue>['subscribe'] }}
      */
     info() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      const { get, subscribe } = userStore;
+      const INITIAL_USER_STATE: UserStoreValue = {
+        completed: false,
+        error: null,
+        loading: false,
+        successful: false,
+        response: null,
+      };
 
-      function wrappedGet() {
-        get();
-        return new Promise((resolve, reject) => {
-          const unsubscribe = userStore.subscribe((event) => {
-            if (event.successful) {
-              resolve(event);
-              unsubscribe();
-            } else if (event.error) {
-              reject(event);
-              unsubscribe();
-            }
-          });
-        });
-      }
+      const source: Readable<OidcClient | null> = oidcClientStore ?? readable(null);
 
-      return { get: wrappedGet, subscribe };
+      const { subscribe } = derived<Readable<OidcClient | null>, UserStoreValue>(
+        source,
+        ($client, set) => {
+          if (!$client) {
+            return;
+          }
+
+          if ('error' in $client) {
+            set({
+              completed: true,
+              error: { message: String($client.error), troubleshoot: null },
+              loading: false,
+              successful: false,
+              response: null,
+            });
+            return;
+          }
+
+          let cancelled = false;
+          set({ ...INITIAL_USER_STATE, loading: true });
+
+          $client.user
+            .info()
+            .then((result) => {
+              if (cancelled) {
+                return;
+              }
+              if ('error' in result) {
+                const message =
+                  typeof result.message === 'string' ? result.message : String(result.error);
+                const code = typeof result.code === 'number' ? result.code : null;
+                set({
+                  completed: true,
+                  error: { code, message, troubleshoot: null },
+                  loading: false,
+                  successful: false,
+                  response: null,
+                });
+                return;
+              }
+              set({
+                completed: true,
+                error: null,
+                loading: false,
+                successful: true,
+                response: result,
+              });
+            })
+            .catch((err: unknown) => {
+              if (cancelled) {
+                return;
+              }
+              const message = err instanceof Error ? err.message : 'Unknown user info error';
+              set({
+                completed: true,
+                error: { message, troubleshoot: null },
+                loading: false,
+                successful: false,
+                response: null,
+              });
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        },
+        INITIAL_USER_STATE,
+      );
+
+      return { subscribe };
     },
     /**
-     * Logout a user: revoke tokens, end the OIDC session, and destroy the AM session.
+     * Logout a user from an AM Session
      * @async
      * @param: void
      * @returns: Promise<void>
+     * @throws {Error} If called before configuration(), or if server-side session/token termination fails
      **/
-    async logout(): Promise<void> {
+    async logout() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
@@ -249,49 +312,112 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       try {
         const journeyClient = await getJourneyClient();
         await journeyClient.terminate();
-      } catch (err: unknown) {
-        // Warn instead of throw; throwing to the caller would be misleading since there's nothing to recover from.
-        console.warn('Session termination failed:', err instanceof Error ? err.message : err);
-      }
 
-      try {
-        const oidcClient = await oauthStore.getOidcClient();
-        await oidcClient.user.logout();
-      } catch (err: unknown) {
-        // Warn instead of throw; throwing to the caller would be misleading since there's nothing to recover from.
-        console.warn('OIDC logout failed:', err instanceof Error ? err.message : err);
+        const oidcClientValue = oidcClientStore ? get(oidcClientStore) : null;
+        if (oidcClientValue && !('error' in oidcClientValue)) {
+          await oidcClientValue.user.logout();
+        }
+
+        resetAndRestartStores();
+      } catch (err) {
+        // Regardless of errors, reset all stores and restart journey
+        resetAndRestartStores();
+        throw err;
       }
-      // Regardless of errors, reset all stores and restart journey
-      resetAndRestartStores();
     },
     /**
-     * Returns the widget's Tokens object
-     * @param void;
-     * @returns OAuthStore
+     * Tokens — reactive derived store. Automatically fetches tokens when the
+     * OIDC client is ready. Subscribe to receive state updates.
+     * @returns {{ subscribe: Readable<OAuthTokenStoreValue>['subscribe'] }}
      */
     tokens() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      const { getTokens, subscribe } = oauthStore;
+      const INITIAL_TOKEN_STATE: OAuthTokenStoreValue = {
+        completed: false,
+        error: null,
+        loading: false,
+        successful: false,
+        response: null,
+      };
 
-      function wrappedGet(options?: GetTokensOptions) {
-        getTokens(options);
-        return new Promise((resolve, reject) => {
-          const unsubscribe = oauthStore.subscribe((event) => {
-            if (event.successful) {
-              resolve(event);
-              unsubscribe();
-            } else if (event.error) {
-              reject(event);
-              unsubscribe();
-            }
-          });
-        });
-      }
+      const source: Readable<OidcClient | null> = oidcClientStore ?? readable(null);
 
-      return { get: wrappedGet, subscribe };
+      const { subscribe } = derived<Readable<OidcClient | null>, OAuthTokenStoreValue>(
+        source,
+        ($client, set) => {
+          if (!$client) {
+            return;
+          }
+
+          if ('error' in $client) {
+            set({
+              completed: true,
+              error: { message: String($client.error), troubleshoot: null },
+              loading: false,
+              successful: false,
+              response: null,
+            });
+            return;
+          }
+
+          let cancelled = false;
+          set({ ...INITIAL_TOKEN_STATE, loading: true });
+
+          $client.token
+            .get({ backgroundRenew: true })
+            .then((result) => {
+              if (cancelled) {
+                return;
+              }
+              if ('error' in result) {
+                const message =
+                  ('message' in result && result.message) ||
+                  ('error_description' in result && result.error_description) ||
+                  result.error;
+                const code =
+                  'code' in result && typeof result.code === 'number' ? result.code : null;
+                set({
+                  completed: true,
+                  error: { code, message, troubleshoot: null },
+                  loading: false,
+                  successful: false,
+                  response: null,
+                });
+                return;
+              }
+              set({
+                completed: true,
+                error: null,
+                loading: false,
+                successful: true,
+                response: result,
+              });
+            })
+            .catch((err: unknown) => {
+              if (cancelled) {
+                return;
+              }
+              const message = err instanceof Error ? err.message : 'Unknown OAuth error';
+              set({
+                completed: true,
+                error: { message, troubleshoot: null },
+                loading: false,
+                successful: false,
+                response: null,
+              });
+            });
+
+          return () => {
+            cancelled = true;
+          };
+        },
+        INITIAL_TOKEN_STATE,
+      );
+
+      return { subscribe };
     },
   };
 
@@ -301,10 +427,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     getStores,
     journey,
     protect: {
-      start,
-      getData,
-      pauseBehavioralData,
-      resumeBehavioralData,
+      start: protectStore.start,
+      getData: protectStore.getData,
+      pauseBehavioralData: protectStore.pauseBehavioralData,
+      resumeBehavioralData: protectStore.resumeBehavioralData,
     },
     user,
   };

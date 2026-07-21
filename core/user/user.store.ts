@@ -7,18 +7,19 @@
  *
  **/
 
-import { writable } from 'svelte/store';
+import { get as getStoreValue, writable } from 'svelte/store';
 
 import type { UserInfoResponse } from '@forgerock/oidc-client/types';
-import type { Writable } from 'svelte/store';
+import type { OidcClient } from '@forgerock/oidc-client/types';
+import type { Readable, Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
-import type { OidcClientReady } from '$core/oauth/oauth.store';
 
 export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
   get: () => void;
   reset: () => void;
 }
+
 export interface UserStoreValue {
   completed: boolean;
   error: Maybe<{
@@ -31,36 +32,61 @@ export interface UserStoreValue {
   response: Maybe<UserInfoResponse>;
 }
 
+const INITIAL_STATE: UserStoreValue = {
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+};
+
 /**
- * @function initialize - Creates a fresh, isolated user store instance.
- *
- * `getOidcClient` is injected rather than imported from `oauth.store` so that
- * this module has no runtime dependency on module-level state in its sibling.
- * Each `initialize()` call creates its own writable — instances are isolated.
- *
- * @param {() => Promise<OidcClientReady>} getOidcClient - Injected from the
- *   `OAuthStore` returned by `oauth.store.initialize()`.
+ * @function initialize - Initializes the user store with a get function and a reset function
+ * @param {Readable<OidcClient | null>} oidcClientStore - The OIDC client store to use for user info retrieval
+ * @returns {UserStore} - The user store
  */
-export function initialize(getOidcClient: () => Promise<OidcClientReady>): UserStore {
-  const userStore = writable<UserStoreValue>({
-    completed: false,
-    error: null,
-    loading: false,
-    successful: false,
-    response: null,
-  });
+export function initialize(oidcClientStore: Readable<OidcClient | null> | undefined): UserStore {
+  const userStore = writable<UserStoreValue>(INITIAL_STATE);
 
   async function get() {
-    userStore.set({
-      completed: false,
-      error: null,
-      loading: true,
-      successful: false,
-      response: null,
-    });
+    if (!oidcClientStore) {
+      userStore.set({
+        completed: true,
+        error: { message: 'OIDC client not configured', troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return;
+    }
+
+    const oidcClient = getStoreValue(oidcClientStore);
+
+    if (!oidcClient) {
+      userStore.set({
+        completed: true,
+        error: { message: 'OIDC client not ready', troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return;
+    }
+
+    if ('error' in oidcClient) {
+      userStore.set({
+        completed: true,
+        error: { message: String(oidcClient.error), troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return;
+    }
+
+    userStore.set({ ...INITIAL_STATE, loading: true });
 
     try {
-      const oidcClient = await getOidcClient();
       const user = await oidcClient.user.info();
 
       if ('error' in user) {
@@ -84,7 +110,6 @@ export function initialize(getOidcClient: () => Promise<OidcClientReady>): UserS
         response: user,
       });
     } catch (err: unknown) {
-      // Always an Error in practice; fallback covers unexpected third-party throws.
       const message = err instanceof Error ? err.message : 'Unknown user info error';
       userStore.set({
         completed: true,
@@ -97,13 +122,7 @@ export function initialize(getOidcClient: () => Promise<OidcClientReady>): UserS
   }
 
   function reset() {
-    userStore.set({
-      completed: false,
-      error: null,
-      loading: false,
-      successful: false,
-      response: null,
-    });
+    userStore.set(INITIAL_STATE);
   }
 
   return {

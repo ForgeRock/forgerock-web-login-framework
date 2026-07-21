@@ -11,7 +11,7 @@
   import { onMount } from 'svelte';
 
   import Spinner from '$components/primitives/spinner/spinner.svelte';
-  import { start } from '$core/protect/protect.store';
+  import { protectStore } from '$core/protect/protect.store';
 
   import type { PingOneProtectInitializeCallback } from '@forgerock/journey-client/types';
   import type { z } from 'zod';
@@ -29,12 +29,11 @@
   onMount(() => {
     async function loadingPingProtect() {
       const config = callback.getConfig();
-      const result = await start(config);
+      const result = await protectStore.start(config);
       if (result && 'error' in result) {
         callback.setClientError(result.error);
       } else {
         loaded = true;
-        console.log('Protect initialized by callback for data collection');
       }
       return selfSubmitFunction && selfSubmitFunction();
     }
