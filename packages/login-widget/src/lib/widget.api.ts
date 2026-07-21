@@ -7,7 +7,7 @@
  *
  **/
 
-import { derived, get, readable } from 'svelte/store';
+import { derived, get } from 'svelte/store';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
 import { captchaConfigSchema } from '$core/captcha.config';
@@ -71,6 +71,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     if (options?.oidcClient) {
       oidcClientStore = createOidcClientStore(options.oidcClient);
     }
+
     journeyStore = initializeJourney(options?.journeyClient, {
       ...(options?.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
     });
@@ -89,9 +90,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
        **/
       set(setOptions?: WidgetConfigOptions): void {
         const oidcConfig = setOptions?.oidcClient ?? options?.oidcClient;
+
         if (oidcConfig) {
           oidcClientStore = createOidcClientStore(oidcConfig);
         }
+
         journeyStore = initializeJourney(setOptions?.journeyClient, {
           ...(setOptions?.captcha && { captcha: captchaConfigSchema.parse(setOptions.captcha) }),
         });
@@ -211,83 +214,19 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         logErrorAndThrow('missingStores');
       }
 
-      const INITIAL_USER_STATE: UserStoreValue = {
-        completed: false,
-        error: null,
-        loading: false,
-        successful: false,
-        response: null,
-      };
+      if (!oidcClientStore) {
+        return { subscribe: userStore.subscribe };
+      }
 
-      const source: Readable<OidcClient | null> = oidcClientStore ?? readable(null);
+      const { subscribe } = derived(
+        [oidcClientStore, userStore],
+        ([$oidcClientStore, $userStore], set) => {
+          set($userStore);
 
-      const { subscribe } = derived<Readable<OidcClient | null>, UserStoreValue>(
-        source,
-        ($client, set) => {
-          if (!$client) {
-            return;
+          if ($oidcClientStore && !$userStore.loading && !$userStore.completed) {
+            userStore.get();
           }
-
-          if ('error' in $client) {
-            set({
-              completed: true,
-              error: { message: String($client.error), troubleshoot: null },
-              loading: false,
-              successful: false,
-              response: null,
-            });
-            return;
-          }
-
-          let cancelled = false;
-          set({ ...INITIAL_USER_STATE, loading: true });
-
-          $client.user
-            .info()
-            .then((result) => {
-              if (cancelled) {
-                return;
-              }
-              if ('error' in result) {
-                const message =
-                  typeof result.message === 'string' ? result.message : String(result.error);
-                const code = typeof result.code === 'number' ? result.code : null;
-                set({
-                  completed: true,
-                  error: { code, message, troubleshoot: null },
-                  loading: false,
-                  successful: false,
-                  response: null,
-                });
-                return;
-              }
-              set({
-                completed: true,
-                error: null,
-                loading: false,
-                successful: true,
-                response: result,
-              });
-            })
-            .catch((err: unknown) => {
-              if (cancelled) {
-                return;
-              }
-              const message = err instanceof Error ? err.message : 'Unknown user info error';
-              set({
-                completed: true,
-                error: { message, troubleshoot: null },
-                loading: false,
-                successful: false,
-                response: null,
-              });
-            });
-
-          return () => {
-            cancelled = true;
-          };
         },
-        INITIAL_USER_STATE,
       );
 
       return { subscribe };
@@ -305,9 +244,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       }
 
       /**
-       *  1. journeyClient.terminate() — POST /sessions?_action=logout, destroys the AM SSO session
-       *  2. oidcClient.user.logout() — end_session_endpoint (OIDC session) + revocation_endpoint
-       *     (access token) + clears local token storage.
+       * 1. journeyClient.terminate() — POST /sessions?_action=logout, destroys the AM SSO session
+       * 2. oidcClient.user.logout() — end_session_endpoint (OIDC session) + revocation_endpoint
+       * (access token) + clears local token storage.
        */
       try {
         const journeyClient = await getJourneyClient();
@@ -335,86 +274,19 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         logErrorAndThrow('missingStores');
       }
 
-      const INITIAL_TOKEN_STATE: OAuthTokenStoreValue = {
-        completed: false,
-        error: null,
-        loading: false,
-        successful: false,
-        response: null,
-      };
+      if (!oidcClientStore) {
+        return { subscribe: oauthStore.subscribe };
+      }
 
-      const source: Readable<OidcClient | null> = oidcClientStore ?? readable(null);
+      const { subscribe } = derived(
+        [oidcClientStore, oauthStore],
+        ([$oidcClientStore, $oauthStore], set) => {
+          set($oauthStore);
 
-      const { subscribe } = derived<Readable<OidcClient | null>, OAuthTokenStoreValue>(
-        source,
-        ($client, set) => {
-          if (!$client) {
-            return;
+          if ($oidcClientStore && !$oauthStore.loading && !$oauthStore.completed) {
+            oauthStore.get();
           }
-
-          if ('error' in $client) {
-            set({
-              completed: true,
-              error: { message: String($client.error), troubleshoot: null },
-              loading: false,
-              successful: false,
-              response: null,
-            });
-            return;
-          }
-
-          let cancelled = false;
-          set({ ...INITIAL_TOKEN_STATE, loading: true });
-
-          $client.token
-            .get({ backgroundRenew: true })
-            .then((result) => {
-              if (cancelled) {
-                return;
-              }
-              if ('error' in result) {
-                const message =
-                  ('message' in result && result.message) ||
-                  ('error_description' in result && result.error_description) ||
-                  result.error;
-                const code =
-                  'code' in result && typeof result.code === 'number' ? result.code : null;
-                set({
-                  completed: true,
-                  error: { code, message, troubleshoot: null },
-                  loading: false,
-                  successful: false,
-                  response: null,
-                });
-                return;
-              }
-              set({
-                completed: true,
-                error: null,
-                loading: false,
-                successful: true,
-                response: result,
-              });
-            })
-            .catch((err: unknown) => {
-              if (cancelled) {
-                return;
-              }
-              const message = err instanceof Error ? err.message : 'Unknown OAuth error';
-              set({
-                completed: true,
-                error: { message, troubleshoot: null },
-                loading: false,
-                successful: false,
-                response: null,
-              });
-            });
-
-          return () => {
-            cancelled = true;
-          };
         },
-        INITIAL_TOKEN_STATE,
       );
 
       return { subscribe };

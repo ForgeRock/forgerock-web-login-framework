@@ -30,14 +30,9 @@ import type { Readable } from 'svelte/store';
  */
 
 /**
- * Schema for the consumer-facing public API (widget.api.ts `protect.start()`).
- * Validates the `ProtectConfig` shape only — requires `envId` and typed fields.
- * `.strict()` rejects unrecognized keys so typos (e.g. `evnId`) surface as a ZodError.
- *
- * NOT used for the callback path — `callback.getConfig()` can return either `ProtectConfig`
- * or `SignalsInitializationOptions` (a `Record<string, string>` with no `envId`). That path
- * skips validation and passes the config directly to the `protect()` factory, which accepts
- * both shapes natively.
+ * Schema for the consumer-facing public API shape.
+ * Validates the `ProtectConfig` shape — requires `envId` and typed fields.
+ * `.strict()` rejects unrecognized keys when the input is parsed as `ProtectConfig`.
  */
 export const protectConfigSchema = z
   .object({
@@ -62,7 +57,23 @@ export const protectConfigSchema = z
   })
   .strict();
 
+/**
+ * Schema for callback-provided PingOne Signals initialization options.
+ * The Ping JS SDK defines this as an arbitrary string key-value map.
+ */
+export const signalsInitializationOptionsSchema = z.record(z.string(), z.string());
+
+/**
+ * Schema for all supported Protect start config shapes.
+ * This replaces the previous manual `'envId' in config` branching.
+ */
+export const protectStartConfigSchema = z.union([
+  protectConfigSchema,
+  signalsInitializationOptionsSchema,
+]);
+
 export type ProtectConfig = z.infer<typeof protectConfigSchema>;
+export type ProtectStartConfig = z.infer<typeof protectStartConfigSchema>;
 
 export interface ProtectStore extends Readable<Protect | null> {
   start: (
@@ -77,17 +88,13 @@ const protectClientStore = writable<Protect | null>(null);
 
 /**
  * @function start - Creates (or recreates) the shared Protect client and starts it.
- * @throws {z.ZodError} If a ProtectConfig is provided and fails validation.
+ * @throws {z.ZodError} If config does not match any supported Protect start config shape.
  * @returns {Promise<void | { error: string }>}
  */
 function start(config: ProtectConfig | SignalsInitializationOptions) {
-  /**
-   * Accepts either a `ProtectConfig` (has `envId` — validated by Zod) or a
-   * `SignalsInitializationOptions` (from `callback.getConfig()` — passed through directly).
-   * The underlying `protect()` factory handles both shapes natively.
-   */
-  const safeConfig: SdkProtectConfig | SignalsInitializationOptions =
-    'envId' in config ? protectConfigSchema.parse(config) : config;
+  const safeConfig = protectStartConfigSchema.parse(config) as
+    | SdkProtectConfig
+    | SignalsInitializationOptions;
   const protectClient = protect(safeConfig);
   protectClientStore.set(protectClient);
   return protectClient.start();
