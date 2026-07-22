@@ -169,8 +169,9 @@ apps/login-app         ──►  core/  ──►  @forgerock/oidc-client
 
 **Store layer** (`core/`): one singleton store per concern. `style.store.ts`,
 `locale.store.ts`, `links.store.ts`, `component.store.ts`,
-`oauth/oauth.store.ts`, `user/user.store.ts`, `journey/journey.store.ts`,
-`journey/config.store.ts`. Stores own state; everything else derives from them.
+`oidc/oidc.store.ts`, `oauth/oauth.store.ts`, `user/user.store.ts`,
+`journey/journey.store.ts`, `journey/config.store.ts`. Stores own state;
+everything else derives from them.
 
 **Journey layer** (`core/journey/`): the authentication flow. Strict internal
 hierarchy — `_utilities/` (lowest) → `stages/` and `callbacks/`. **Callbacks
@@ -214,6 +215,7 @@ core/                          # Shared logic — NOT a workspace, compiled per 
 │   └── callbacks/             # One directory per AM callback type (22)
 │       ├── _utilities/
 │       └── _effects/
+├── oidc/oidc.store.ts         # createOidcClientStore — shared OIDC client
 ├── oauth/oauth.store.ts
 ├── user/user.store.ts
 ├── server/                    # Server-side utilities

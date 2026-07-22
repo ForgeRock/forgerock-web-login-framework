@@ -69,6 +69,7 @@ const coreFilesToCopy = [
   'links.store.d.ts',
   'locale.store.d.ts',
   'style.store.d.ts',
+  'oidc/oidc.store.d.ts',
   'oauth/oauth.store.d.ts',
   'user/user.store.d.ts',
   'protect/protect.store.d.ts',

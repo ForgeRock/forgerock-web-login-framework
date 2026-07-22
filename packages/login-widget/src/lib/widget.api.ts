@@ -15,14 +15,14 @@ import { captchaConfigSchema } from '$core/captcha.config';
 import { componentStore } from '$core/component.store';
 import { initialize as initializeLinks } from '$core/links.store';
 import { initialize as initializeContent } from '$core/locale.store';
-import { createOidcClientStore, initialize as initializeOauth } from '$core/oauth/oauth.store';
+import { initialize as initializeOauth } from '$core/oauth/oauth.store';
+import { createOidcClientStore } from '$core/oidc/oidc.store';
 import { protectStore } from '$core/protect/protect.store';
 import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
 
-import type { OidcClient } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 import type { componentApi as _componentApi } from './_utilities/component.utilities';
@@ -33,6 +33,7 @@ import type {
   WidgetConfigOptions,
 } from './interfaces';
 import type { OAuthStore, OAuthTokenStoreValue } from '$core/oauth/oauth.store';
+import type { OidcClientStore } from '$core/oidc/oidc.store';
 import type { UserStore, UserStoreValue } from '$core/user/user.store';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 
@@ -51,7 +52,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let userStore: UserStore;
-  let oidcClientStore: Readable<OidcClient | null>;
+  let oidcClientStore: OidcClientStore | undefined;
 
   function getStores() {
     return {
@@ -223,7 +224,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         ([$oidcClientStore, $userStore], set) => {
           set($userStore);
 
-          if ($oidcClientStore && !$userStore.loading && !$userStore.completed) {
+          if ($oidcClientStore) {
             userStore.get();
           }
         },
@@ -283,7 +284,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         ([$oidcClientStore, $oauthStore], set) => {
           set($oauthStore);
 
-          if ($oidcClientStore && !$oauthStore.loading && !$oauthStore.completed) {
+          if ($oidcClientStore) {
             oauthStore.get();
           }
         },

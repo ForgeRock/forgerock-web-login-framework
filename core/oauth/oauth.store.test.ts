@@ -7,39 +7,15 @@
  *
  **/
 
-import { get, readable, writable } from 'svelte/store';
+import { readable, writable } from 'svelte/store';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import type { OauthTokens, OidcClient } from '@forgerock/oidc-client/types';
-
-import type { OidcClientConfig } from './oauth.store';
-
-const oidcMock = vi.fn();
-
-vi.mock(
-  '@forgerock/oidc-client',
-  async (importOriginal: () => Promise<Record<string, unknown>>) => {
-    const actual = await importOriginal();
-    return {
-      ...actual,
-      oidc: oidcMock,
-    };
-  },
-);
 
 async function importSubject() {
   const mod = await import('./oauth.store');
   return mod;
 }
-
-const validConfig: OidcClientConfig = {
-  clientId: 'WebOAuthClient',
-  redirectUri: 'https://example.com/callback',
-  scope: 'openid profile',
-  serverConfig: {
-    wellknown: 'https://example.com/.well-known/openid-configuration',
-  },
-};
 
 const tokens: OauthTokens = {
   accessToken: 'abc',
@@ -62,92 +38,9 @@ function readStore<T>(store: { subscribe: (run: (value: T) => void) => () => voi
   return captured;
 }
 
-describe('oauth.store — createOidcClientStore', () => {
-  beforeEach(() => {
-    oidcMock.mockReset();
-    vi.resetModules();
-    oidcMock.mockReturnValue(new Promise(() => {}));
-  });
-
-  it('validates config — wellknown and redirectUri must be URLs', async () => {
-    const { createOidcClientStore } = await importSubject();
-
-    expect(() =>
-      createOidcClientStore({
-        ...validConfig,
-        serverConfig: { wellknown: 'not-a-url' },
-      }),
-    ).toThrow(/wellknown/i);
-
-    expect(() =>
-      createOidcClientStore({
-        ...validConfig,
-        redirectUri: 'not-a-url',
-      }),
-    ).toThrow(/redirectUri/i);
-
-    expect(() => createOidcClientStore(validConfig)).not.toThrow();
-  });
-
-  it('reports a "required" error when wellknown is missing entirely', async () => {
-    const { createOidcClientStore } = await importSubject();
-    expect(() =>
-      createOidcClientStore({
-        ...validConfig,
-        serverConfig: {} as { wellknown: string },
-      }),
-    ).toThrow(/required/i);
-  });
-
-  it('starts as null while oidc() is still resolving', async () => {
-    oidcMock.mockReturnValue(new Promise(() => {}));
-    const { createOidcClientStore } = await importSubject();
-    const oidcClientStore = createOidcClientStore(validConfig);
-
-    expect(get(oidcClientStore)).toBeNull();
-  });
-
-  it('transitions to the ready client when oidc() resolves successfully', async () => {
-    const client = mockClientReturning(tokens);
-    oidcMock.mockResolvedValueOnce(client);
-
-    const { createOidcClientStore } = await importSubject();
-    const oidcClientStore = createOidcClientStore(validConfig);
-
-    await vi.waitFor(() => expect(get(oidcClientStore)).toBe(client));
-  });
-
-  it('transitions to an error-shaped OidcClient when oidc() resolves with an error shape', async () => {
-    oidcMock.mockResolvedValueOnce({ error: 'wellknown_error', type: 'wellknown_error' });
-
-    const { createOidcClientStore } = await importSubject();
-    const oidcClientStore = createOidcClientStore(validConfig);
-
-    await vi.waitFor(() => expect(get(oidcClientStore)).not.toBeNull());
-    expect(get(oidcClientStore)).toMatchObject({ error: 'wellknown_error' });
-  });
-
-  it('two createOidcClientStore calls are fully isolated', async () => {
-    const client1 = mockClientReturning(tokens);
-    const client2 = mockClientReturning(tokens);
-    oidcMock.mockResolvedValueOnce(client1).mockResolvedValueOnce(client2);
-
-    const { createOidcClientStore } = await importSubject();
-    const storeA = createOidcClientStore(validConfig);
-    const storeB = createOidcClientStore({ ...validConfig, clientId: 'DifferentClient' });
-
-    await vi.waitFor(() => {
-      expect(get(storeA)).toBe(client1);
-      expect(get(storeB)).toBe(client2);
-    });
-  });
-});
-
 describe('oauth.store — initialize() token retrieval', () => {
   beforeEach(() => {
-    oidcMock.mockReset();
     vi.resetModules();
-    oidcMock.mockReturnValue(new Promise(() => {}));
   });
 
   it('emits loading:true synchronously when get() is called', async () => {
@@ -387,6 +280,71 @@ describe('oauth.store — initialize() token retrieval', () => {
     await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
 
     expect(readStore(store).error?.message).toBe('Unknown OAuth error');
+  });
+
+  it('does not call token.get again while loading', async () => {
+    const client = mockClientReturning(tokens);
+    const oidcClientStore = readable<OidcClient | null>(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize(oidcClientStore);
+
+    let resolveGet: (value: unknown) => void;
+    const deferredGet = new Promise((resolve) => {
+      resolveGet = resolve;
+    });
+    (
+      client as ReturnType<typeof mockClientReturning> & {
+        token: { get: ReturnType<typeof vi.fn> };
+      }
+    ).token.get.mockReturnValue(deferredGet);
+
+    store.get();
+    store.get();
+
+    expect(
+      (
+        client as ReturnType<typeof mockClientReturning> & {
+          token: { get: ReturnType<typeof vi.fn> };
+        }
+      ).token.get,
+    ).toHaveBeenCalledTimes(1);
+
+    resolveGet!(tokens);
+    await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
+  });
+
+  it('does not call token.get again after completion until reset() is called', async () => {
+    const client = mockClientReturning(tokens);
+    const oidcClientStore = readable<OidcClient | null>(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize(oidcClientStore);
+
+    store.get();
+    await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
+
+    store.get();
+
+    expect(
+      (
+        client as ReturnType<typeof mockClientReturning> & {
+          token: { get: ReturnType<typeof vi.fn> };
+        }
+      ).token.get,
+    ).toHaveBeenCalledTimes(1);
+
+    store.reset();
+    store.get();
+    await vi.waitFor(() =>
+      expect(
+        (
+          client as ReturnType<typeof mockClientReturning> & {
+            token: { get: ReturnType<typeof vi.fn> };
+          }
+        ).token.get,
+      ).toHaveBeenCalledTimes(2),
+    );
   });
 
   it('reset() before any get() is a safe no-op', async () => {

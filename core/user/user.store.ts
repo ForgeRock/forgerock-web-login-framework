@@ -10,10 +10,10 @@
 import { get as getStoreValue, writable } from 'svelte/store';
 
 import type { UserInfoResponse } from '@forgerock/oidc-client/types';
-import type { OidcClient } from '@forgerock/oidc-client/types';
-import type { Readable, Writable } from 'svelte/store';
+import type { Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
+import type { OidcClientStore } from '$core/oidc/oidc.store';
 
 export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
   get: () => void;
@@ -42,10 +42,10 @@ const INITIAL_STATE: UserStoreValue = {
 
 /**
  * @function initialize - Initializes the user store with a get function and a reset function
- * @param {Readable<OidcClient | null>} oidcClientStore - The OIDC client store to use for user info retrieval
+ * @param {OidcClientStore} oidcClientStore - The OIDC client store to use for user info retrieval
  * @returns {UserStore} - The user store
  */
-export function initialize(oidcClientStore: Readable<OidcClient | null> | undefined): UserStore {
+export function initialize(oidcClientStore: OidcClientStore | undefined): UserStore {
   const userStore = writable<UserStoreValue>(INITIAL_STATE);
 
   async function get() {
@@ -81,6 +81,11 @@ export function initialize(oidcClientStore: Readable<OidcClient | null> | undefi
         successful: false,
         response: null,
       });
+      return;
+    }
+
+    const currentState = getStoreValue(userStore);
+    if (currentState.loading || currentState.completed) {
       return;
     }
 
