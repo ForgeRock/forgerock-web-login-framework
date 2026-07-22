@@ -23,6 +23,7 @@ import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
 
+import type { GetTokensOptions } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 import type { componentApi as _componentApi } from './_utilities/component.utilities';
@@ -36,6 +37,60 @@ import type { OAuthStore, OAuthTokenStoreValue } from '$core/oauth/oauth.store';
 import type { OidcClientStore } from '$core/oidc/oidc.store';
 import type { UserStore, UserStoreValue } from '$core/user/user.store';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
+
+/** A store value that reports the outcome of a `get()` fetch. */
+interface FetchState {
+  completed: boolean;
+  error: unknown;
+}
+
+/**
+ * Runs a store's `get()` and returns a Promise for the result — resolving the
+ * tokens/user info, or throwing when the fetch fails.
+ *
+ * On page reload the OIDC client isn't ready yet (its wellknown fetch is still
+ * in flight), so we wait for it before triggering; calling `get()` too early
+ * would produce a spurious "not ready" error. With no client configured, the
+ * fetch runs anyway and reports its own "not configured" error.
+ */
+async function fetchWhenReady<Value extends FetchState>(
+  valueStore: Readable<Value>,
+  triggerFetch: () => void,
+  oidcClientStore: OidcClientStore | undefined,
+): Promise<Value> {
+  // Wait for the OIDC client to exist before fetching.
+  if (oidcClientStore && !get(oidcClientStore)) {
+    await new Promise<void>((resolve) => {
+      const unsubscribe = oidcClientStore.subscribe((client) => {
+        if (client) {
+          unsubscribe();
+          resolve();
+        }
+      });
+    });
+  }
+
+  triggerFetch();
+
+  // Resolve with the completed fetch state. A cached `get()` no-ops and leaves
+  // the store already completed, so read synchronously first; otherwise wait
+  // for the store to transition to completed.
+  const result = get(valueStore).completed
+    ? get(valueStore)
+    : await new Promise<Value>((resolve) => {
+        const unsubscribe = valueStore.subscribe((value) => {
+          if (value.completed) {
+            unsubscribe();
+            resolve(value);
+          }
+        });
+      });
+
+  if (result.error) {
+    throw result;
+  }
+  return result;
+}
 
 /**
  * @function widgetApiFactory - Creates the widget API
@@ -206,31 +261,22 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   };
   const user = {
     /**
-     * User Info — reactive derived store. Automatically fetches user info
-     * when the OIDC client is ready. Subscribe to receive state updates.
-     * @returns {{ subscribe: Readable<UserStoreValue>['subscribe'] }}
+     * User Info. `subscribe` exposes the raw user store for reactive reads
+     * without side effects; `get()` fetches user info, waiting for the OIDC
+     * client to be ready before it does, and resolves with the completed
+     * state (or rejects on error).
+     * @returns {{ get: () => Promise<UserStoreValue>, subscribe: Readable<UserStoreValue>['subscribe'] }}
      */
     info() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      if (!oidcClientStore) {
-        return { subscribe: userStore.subscribe };
+      function get() {
+        return fetchWhenReady(userStore, () => userStore.get(), oidcClientStore);
       }
 
-      const { subscribe } = derived(
-        [oidcClientStore, userStore],
-        ([$oidcClientStore, $userStore], set) => {
-          set($userStore);
-
-          if ($oidcClientStore) {
-            userStore.get();
-          }
-        },
-      );
-
-      return { subscribe };
+      return { get, subscribe: userStore.subscribe };
     },
     /**
      * Logout a user from an AM Session
@@ -266,31 +312,23 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       }
     },
     /**
-     * Tokens — reactive derived store. Automatically fetches tokens when the
-     * OIDC client is ready. Subscribe to receive state updates.
-     * @returns {{ subscribe: Readable<OAuthTokenStoreValue>['subscribe'] }}
+     * Tokens. `subscribe` exposes the raw oauth store for reactive reads
+     * without side effects; `get(options)` fetches tokens, waiting for the
+     * OIDC client to be ready before it does, and resolves with the completed
+     * state (or rejects on error). `get(options)` forwards `options` to the
+     * OIDC client's token retrieval.
+     * @returns {{ get: (options?: GetTokensOptions) => Promise<OAuthTokenStoreValue>, subscribe: Readable<OAuthTokenStoreValue>['subscribe'] }}
      */
     tokens() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      if (!oidcClientStore) {
-        return { subscribe: oauthStore.subscribe };
+      function get(options?: GetTokensOptions) {
+        return fetchWhenReady(oauthStore, () => oauthStore.get(options), oidcClientStore);
       }
 
-      const { subscribe } = derived(
-        [oidcClientStore, oauthStore],
-        ([$oidcClientStore, $oauthStore], set) => {
-          set($oauthStore);
-
-          if ($oidcClientStore) {
-            oauthStore.get();
-          }
-        },
-      );
-
-      return { subscribe };
+      return { get, subscribe: oauthStore.subscribe };
     },
   };
 

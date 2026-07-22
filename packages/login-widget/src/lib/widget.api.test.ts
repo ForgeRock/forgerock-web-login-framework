@@ -165,6 +165,64 @@ describe('widgetApiFactory', () => {
     });
   });
 
+  describe('user.tokens() / user.info() — { get, subscribe } contract', () => {
+    // Guards the 020fdb9 regression: tokens()/info() dropped their `get()` method
+    // (returning subscribe-only), which broke the sample app's `user.tokens().get()`
+    // hydration/route-validation calls with "get is not a function". The readiness-
+    // gate and fetch behaviours are covered at the store level (oauth.store.test.ts /
+    // user.store.test.ts) and end-to-end (reload-auth-persistence.spec.js).
+    it('tokens() and info() expose both get and subscribe', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+
+      const tokensApi = api.user.tokens();
+      const infoApi = api.user.info();
+      expect(typeof tokensApi.get).toBe('function');
+      expect(typeof tokensApi.subscribe).toBe('function');
+      expect(typeof infoApi.get).toBe('function');
+      expect(typeof infoApi.subscribe).toBe('function');
+    });
+
+    it('tokens().get() and info().get() return a promise', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+
+      // Swallow settlement — this asserts the call shape, not the fetch result.
+      const tokensGet = api.user.tokens().get();
+      const infoGet = api.user.info().get();
+      expect(tokensGet).toBeInstanceOf(Promise);
+      expect(infoGet).toBeInstanceOf(Promise);
+      await Promise.allSettled([tokensGet, infoGet]);
+    });
+
+    // Regression: a repeated get() runs against an already-completed store. Reading
+    // that store's value must not crash on Svelte's synchronous subscribe emission
+    // (a TDZ "Cannot access 'unsubscribe' before initialization"). Such a crash
+    // rejected get(), and the sample app's route guard turned that into a logout.
+    it('a repeated get() on an already-completed store settles without crashing', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+
+      // First get() drives the store to `completed`. Second get() hits the
+      // already-completed path — the one that used to throw a ReferenceError.
+      await api.user
+        .tokens()
+        .get()
+        .catch((value) => value);
+      const settled = await api.user
+        .tokens()
+        .get()
+        .catch((value) => value);
+
+      expect(settled).not.toBeInstanceOf(ReferenceError);
+      // Its own store value carries a `completed` flag; a TDZ crash would not.
+      expect(settled).toHaveProperty('completed', true);
+    });
+  });
+
   describe('pre-configuration guards', () => {
     it('journey() throws when called before configuration()', async () => {
       const api = await importSubject();
