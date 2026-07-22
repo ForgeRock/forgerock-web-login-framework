@@ -32,6 +32,7 @@
     "@effect/platform-node": "^0.106.0",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.2",
+
     "@forgerock/javascript-sdk": "^4.9.1",
     "@forgerock/journey-client": "^2.1.0",
     "@forgerock/ping-protect": "^4.7.0",

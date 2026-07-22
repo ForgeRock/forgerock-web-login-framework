@@ -1,10 +1,10 @@
 <!--
- 
+
  Copyright © 2025 Ping Identity Corporation. All right reserved.
- 
+
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
- 
+
  -->
 
 <script>
@@ -91,7 +91,7 @@
     }
   </style>
   <script
-    src="https://www.google.com/recaptcha/api.js?render=6LdIqXMoAAAAAP4APBlw7_5WDeMTlAAQJf42rPWz"
+    src="https://www.google.com/recaptcha/api.js?render=6Lf8jdIsAAAAAC7Ljx4e8moPX9jzzTxhleeT3K_t"
     async
   ></script>
 </svelte:head>

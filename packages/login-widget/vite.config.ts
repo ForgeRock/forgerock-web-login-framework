@@ -2,6 +2,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 import autoprefixer from 'autoprefixer';
 import { resolve } from 'path';
 import postcssImport from 'postcss-import';
+import { visualizer } from 'rollup-plugin-visualizer';
 import sveltePreprocess from 'svelte-preprocess';
 import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
@@ -29,6 +30,7 @@ export default defineConfig({
   },
   plugins: [
     customRegistry({ projectRoot: resolve('../..') }),
+    visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }),
     svelte({
       compilerOptions: {
         dev: false,
@@ -77,19 +79,7 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: true,
     rollupOptions: {
-      // Externalize runtime dependencies — they're provided by the consumer
-      external: [
-        '@forgerock/javascript-sdk',
-        '@forgerock/journey-client',
-        '@forgerock/ping-protect',
-        'qrcode',
-        'xss',
-        'zod',
-      ],
       output: {
-        // Single file bundle (no code splitting)
-        inlineDynamicImports: true,
-        // Consistent naming
         entryFileNames: 'index.js',
         assetFileNames: 'widget.[ext]',
       },
