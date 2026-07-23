@@ -38,60 +38,6 @@ import type { OidcClientStore } from '$core/oidc/oidc.store';
 import type { UserStore, UserStoreValue } from '$core/user/user.store';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 
-/** A store value that reports the outcome of a `get()` fetch. */
-interface FetchState {
-  completed: boolean;
-  error: unknown;
-}
-
-/**
- * Runs a store's `get()` and returns a Promise for the result — resolving the
- * tokens/user info, or throwing when the fetch fails.
- *
- * On page reload the OIDC client isn't ready yet (its wellknown fetch is still
- * in flight), so we wait for it before triggering; calling `get()` too early
- * would produce a spurious "not ready" error. With no client configured, the
- * fetch runs anyway and reports its own "not configured" error.
- */
-async function fetchWhenReady<Value extends FetchState>(
-  valueStore: Readable<Value>,
-  triggerFetch: () => void,
-  oidcClientStore: OidcClientStore | undefined,
-): Promise<Value> {
-  // Wait for the OIDC client to exist before fetching.
-  if (oidcClientStore && !get(oidcClientStore)) {
-    await new Promise<void>((resolve) => {
-      const unsubscribe = oidcClientStore.subscribe((client) => {
-        if (client) {
-          unsubscribe();
-          resolve();
-        }
-      });
-    });
-  }
-
-  triggerFetch();
-
-  // Resolve with the completed fetch state. A cached `get()` no-ops and leaves
-  // the store already completed, so read synchronously first; otherwise wait
-  // for the store to transition to completed.
-  const result = get(valueStore).completed
-    ? get(valueStore)
-    : await new Promise<Value>((resolve) => {
-        const unsubscribe = valueStore.subscribe((value) => {
-          if (value.completed) {
-            unsubscribe();
-            resolve(value);
-          }
-        });
-      });
-
-  if (result.error) {
-    throw result;
-  }
-  return result;
-}
-
 /**
  * @function widgetApiFactory - Creates the widget API
  * @param {object} componentApi - The component API
@@ -123,7 +69,25 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     userStore.reset();
   }
 
-  const configuration = (options?: WidgetConfigOptions) => {
+  /**
+   * @function configure - Configures the widget and constructs its clients.
+   *
+   * The async boundary: the OIDC client is built from an async wellknown fetch,
+   * so `configure` resolves only once that client exists. Awaiting it at boot
+   * guarantees downstream `get()` calls never race the null-client window — the
+   * fix for the "kicked to sign-in on reload" bug. Call it again to reconfigure
+   * (last-one-wins).
+   *
+   * The stores are wired synchronously (before the first await), so the journey
+   * store is usable as soon as `configure` is called. The await gates only the
+   * OIDC client's readiness. The journey client stays lazy — it is built when a
+   * journey starts, so a widget configured without a `journeyClient` still works.
+   *
+   * @param {WidgetConfigOptions} options - The configuration options for the widget
+   * @returns {Promise<void>} Resolves when the OIDC client is constructed
+   * @throws {Error} If config is invalid (Zod) or the OIDC client fails to construct
+   */
+  async function configure(options?: WidgetConfigOptions): Promise<void> {
     if (options?.oidcClient) {
       oidcClientStore = createOidcClientStore(options.oidcClient);
     }
@@ -139,31 +103,16 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     initializeLinks(options?.links);
     initializeStyle(options?.style);
 
-    return {
-      /** Set the Login Widget's Configuration
-       * @param {WidgetConfigOptions} options - The configuration options for the Login Widget
-       * @returns {void}
-       **/
-      set(setOptions?: WidgetConfigOptions): void {
-        const oidcConfig = setOptions?.oidcClient ?? options?.oidcClient;
-
-        if (oidcConfig) {
-          oidcClientStore = createOidcClientStore(oidcConfig);
-        }
-
-        journeyStore = initializeJourney(setOptions?.journeyClient, {
-          ...(setOptions?.captcha && { captcha: captchaConfigSchema.parse(setOptions.captcha) }),
-        });
-        oauthStore = initializeOauth(oidcClientStore);
-        userStore = initializeUser(oidcClientStore);
-
-        initializeContent(setOptions?.content);
-        initializeJourneys(setOptions?.journeys);
-        initializeLinks(setOptions?.links);
-        initializeStyle(setOptions?.style);
-      },
-    };
-  };
+    // Await client construction so downstream get()s never race the null window.
+    // getClient() resolves with the client or a GenericError shape (never rejects);
+    // surface a construction failure as a rejected configure().
+    if (oidcClientStore) {
+      const oidcClient = await oidcClientStore.getClient();
+      if ('error' in oidcClient) {
+        throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
+      }
+    }
+  }
   const journey = (options?: JourneyOptions) => {
     if (!journeyStore || !oauthStore || !userStore) {
       logErrorAndThrow('missingStores');
@@ -261,10 +210,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   };
   const user = {
     /**
-     * User Info. `subscribe` exposes the raw user store for reactive reads
-     * without side effects; `get()` fetches user info, waiting for the OIDC
-     * client to be ready before it does, and resolves with the completed
-     * state (or rejects on error).
+     * User Info. `subscribe` exposes the raw user store for reactive reads;
+     * `get()` fetches user info and resolves with the completed store value, or
+     * rejects with it on error. `configure()` has already awaited the OIDC
+     * client, so the fetch never races the null-client window.
      * @returns {{ get: () => Promise<UserStoreValue>, subscribe: Readable<UserStoreValue>['subscribe'] }}
      */
     info() {
@@ -272,8 +221,12 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         logErrorAndThrow('missingStores');
       }
 
-      function get() {
-        return fetchWhenReady(userStore, () => userStore.get(), oidcClientStore);
+      async function get() {
+        const state = await userStore.get();
+        if (state.error) {
+          return Promise.reject(state);
+        }
+        return state;
       }
 
       return { get, subscribe: userStore.subscribe };
@@ -312,11 +265,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       }
     },
     /**
-     * Tokens. `subscribe` exposes the raw oauth store for reactive reads
-     * without side effects; `get(options)` fetches tokens, waiting for the
-     * OIDC client to be ready before it does, and resolves with the completed
-     * state (or rejects on error). `get(options)` forwards `options` to the
-     * OIDC client's token retrieval.
+     * Tokens. `subscribe` exposes the raw oauth store for reactive reads;
+     * `get(options)` fetches tokens and resolves with the completed store
+     * value, or rejects with it on error. `options` is forwarded to the OIDC
+     * client's token retrieval. `configure()` has already awaited the OIDC
+     * client, so the fetch never races the null-client window.
      * @returns {{ get: (options?: GetTokensOptions) => Promise<OAuthTokenStoreValue>, subscribe: Readable<OAuthTokenStoreValue>['subscribe'] }}
      */
     tokens() {
@@ -324,8 +277,12 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         logErrorAndThrow('missingStores');
       }
 
-      function get(options?: GetTokensOptions) {
-        return fetchWhenReady(oauthStore, () => oauthStore.get(options), oidcClientStore);
+      async function get(options?: GetTokensOptions) {
+        const state = await oauthStore.get(options);
+        if (state.error) {
+          return Promise.reject(state);
+        }
+        return state;
       }
 
       return { get, subscribe: oauthStore.subscribe };
@@ -334,7 +291,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
 
   return {
     component: componentApi,
-    configuration,
+    configure,
     getStores,
     journey,
     protect: {

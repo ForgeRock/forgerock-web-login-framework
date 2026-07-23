@@ -9,14 +9,13 @@
 
 import { get as getStoreValue, writable } from 'svelte/store';
 
-import type { UserInfoResponse } from '@forgerock/oidc-client/types';
-import type { Writable } from 'svelte/store';
+import type { OidcClient, UserInfoResponse } from '@forgerock/oidc-client/types';
+import type { Readable, Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
-import type { OidcClientStore } from '$core/oidc/oidc.store';
 
 export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
-  get: () => void;
+  get: () => Promise<UserStoreValue>;
   reset: () => void;
 }
 
@@ -42,10 +41,10 @@ const INITIAL_STATE: UserStoreValue = {
 
 /**
  * @function initialize - Initializes the user store with a get function and a reset function
- * @param {OidcClientStore} oidcClientStore - The OIDC client store to use for user info retrieval
+ * @param {Readable<OidcClient | null>} oidcClientStore - The OIDC client store to read the client from
  * @returns {UserStore} - The user store
  */
-export function initialize(oidcClientStore: OidcClientStore | undefined): UserStore {
+export function initialize(oidcClientStore: Readable<OidcClient | null> | undefined): UserStore {
   const userStore = writable<UserStoreValue>(INITIAL_STATE);
 
   async function get() {
@@ -57,7 +56,7 @@ export function initialize(oidcClientStore: OidcClientStore | undefined): UserSt
         successful: false,
         response: null,
       });
-      return;
+      return getStoreValue(userStore);
     }
 
     const oidcClient = getStoreValue(oidcClientStore);
@@ -70,7 +69,7 @@ export function initialize(oidcClientStore: OidcClientStore | undefined): UserSt
         successful: false,
         response: null,
       });
-      return;
+      return getStoreValue(userStore);
     }
 
     if ('error' in oidcClient) {
@@ -81,12 +80,12 @@ export function initialize(oidcClientStore: OidcClientStore | undefined): UserSt
         successful: false,
         response: null,
       });
-      return;
+      return getStoreValue(userStore);
     }
 
     const currentState = getStoreValue(userStore);
     if (currentState.loading || currentState.completed) {
-      return;
+      return currentState;
     }
 
     userStore.set({ ...INITIAL_STATE, loading: true });
@@ -104,7 +103,7 @@ export function initialize(oidcClientStore: OidcClientStore | undefined): UserSt
           successful: false,
           response: null,
         });
-        return;
+        return getStoreValue(userStore);
       }
 
       userStore.set({
@@ -124,6 +123,8 @@ export function initialize(oidcClientStore: OidcClientStore | undefined): UserSt
         response: null,
       });
     }
+
+    return getStoreValue(userStore);
   }
 
   function reset() {

@@ -9,11 +9,10 @@
 
 import { get as getStoreValue, writable } from 'svelte/store';
 
-import type { GetTokensOptions, OauthTokens } from '@forgerock/oidc-client/types';
-import type { Writable } from 'svelte/store';
+import type { GetTokensOptions, OauthTokens, OidcClient } from '@forgerock/oidc-client/types';
+import type { Readable, Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
-import type { OidcClientStore } from '$core/oidc/oidc.store';
 
 const authorizationTimedOut = 'Authorization timed out';
 const interactionNeeded = 'The request requires some interaction that is not allowed.';
@@ -22,7 +21,7 @@ const timeoutErrorMessage =
 const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
 
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
-  get: (getOptions?: GetTokensOptions) => void;
+  get: (getOptions?: GetTokensOptions) => Promise<OAuthTokenStoreValue>;
   reset: () => void;
 }
 
@@ -59,12 +58,12 @@ const INITIAL_STATE: OAuthTokenStoreValue = {
 
 /**
  * @function initialize - Initializes the OAuth store with a get function and a reset function
- * @param {OidcClientStore} oidcClientStore - The OIDC client store to use for token retrieval
+ * @param {Readable<OidcClient | null>} oidcClientStore - The OIDC client store to read the client from
  * @param {GetTokensOptions} initOptions - Default options to pass to `token.get`
  * @returns {OAuthStore} - The OAuth store
  */
 export function initialize(
-  oidcClientStore: OidcClientStore | undefined,
+  oidcClientStore: Readable<OidcClient | null> | undefined,
   initOptions?: GetTokensOptions,
 ): OAuthStore {
   const oauthStore = writable<OAuthTokenStoreValue>(INITIAL_STATE);
@@ -78,7 +77,7 @@ export function initialize(
         successful: false,
         response: null,
       });
-      return;
+      return getStoreValue(oauthStore);
     }
 
     const options = {
@@ -101,7 +100,7 @@ export function initialize(
         successful: false,
         response: null,
       });
-      return;
+      return getStoreValue(oauthStore);
     }
 
     if ('error' in oidcClient) {
@@ -112,12 +111,12 @@ export function initialize(
         successful: false,
         response: null,
       });
-      return;
+      return getStoreValue(oauthStore);
     }
 
     const currentState = getStoreValue(oauthStore);
     if (currentState.loading || currentState.completed) {
-      return;
+      return currentState;
     }
 
     oauthStore.set({ ...INITIAL_STATE, loading: true });
@@ -138,7 +137,7 @@ export function initialize(
           successful: false,
           response: null,
         });
-        return;
+        return getStoreValue(oauthStore);
       }
 
       oauthStore.set({
@@ -158,6 +157,8 @@ export function initialize(
         response: null,
       });
     }
+
+    return getStoreValue(oauthStore);
   }
 
   function reset() {

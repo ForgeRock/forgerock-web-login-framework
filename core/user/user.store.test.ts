@@ -49,6 +49,53 @@ describe('user.store', () => {
     expect(value.response).toEqual(userInfo);
   });
 
+  it('get() resolves with the terminal store value', async () => {
+    const { initialize } = await import('./user.store');
+    const oidcClientStore = readable<OidcClient | null>(mockClientWithUserInfo(userInfo));
+    const store = initialize(oidcClientStore);
+
+    const returned = await store.get();
+    expect(returned).toMatchObject({
+      completed: true,
+      successful: true,
+      error: null,
+      response: userInfo,
+    });
+    // The returned value matches what subscribers see.
+    expect(returned).toEqual(readStore(store));
+  });
+
+  it('get() returns the error store value (does not throw) on a failed fetch', async () => {
+    const { initialize } = await import('./user.store');
+    const oidcClientStore = readable<OidcClient | null>(
+      mockClientWithUserInfo({
+        error: 'state_error',
+        message: 'No access token',
+        type: 'state_error',
+      }),
+    );
+    const store = initialize(oidcClientStore);
+
+    const returned = await store.get();
+    expect(returned).toMatchObject({
+      completed: true,
+      successful: false,
+      error: { message: 'No access token' },
+    });
+  });
+
+  it('the latched get() returns the current (cached) value without re-fetching', async () => {
+    const { initialize } = await import('./user.store');
+    const client = mockClientWithUserInfo(userInfo);
+    const oidcClientStore = readable<OidcClient | null>(client);
+    const store = initialize(oidcClientStore);
+
+    const first = await store.get();
+    const second = await store.get();
+    expect(second).toEqual(first);
+    expect((client.user as { info: ReturnType<typeof vi.fn> }).info).toHaveBeenCalledTimes(1);
+  });
+
   it('emits an error state (without throwing) when user.info returns a GenericError', async () => {
     const { initialize } = await import('./user.store');
     const oidcClientStore = readable<OidcClient | null>(

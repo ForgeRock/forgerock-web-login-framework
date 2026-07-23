@@ -10,7 +10,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { configuration, user } from '$package/index';
+  import { configure, user } from '$package/index';
 
   import type { UserStoreValue } from '$package/types';
 
@@ -23,7 +23,7 @@
   }
 
   onMount(async () => {
-    configuration({
+    await configure({
       journeyClient: {
         serverConfig: {
           wellknown:

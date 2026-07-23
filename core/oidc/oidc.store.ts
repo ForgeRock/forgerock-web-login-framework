@@ -11,7 +11,7 @@ import { oidc } from '@forgerock/oidc-client';
 import { writable } from 'svelte/store';
 import { z } from 'zod';
 
-import type { OidcClient } from '@forgerock/oidc-client/types';
+import type { GenericError, OidcClient } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 /**
@@ -43,13 +43,22 @@ export const oidcClientConfigSchema = z
   .strict();
 
 export type OidcClientConfig = z.infer<typeof oidcClientConfigSchema>;
-export type OidcClientStore = Readable<OidcClient | null>;
+export type OidcClientStore = Readable<OidcClient | null> & {
+  /**
+   * Resolves with the constructed client (or a `GenericError` if construction
+   * failed). Awaiting this is the readiness gate — the store is already
+   * populated by the time it resolves, so callers never see the `null` window.
+   */
+  getClient: () => Promise<OidcClient>;
+};
 
 /**
  * @function createOidcClientStore
  *
- * Wraps the `oidc()` factory in a Svelte store. Starts as `null`, transitions to
- * the resolved `OidcClient` when the wellknown fetch settles.
+ * Wraps the `oidc()` factory in a Svelte store. The client is constructed once;
+ * `getClient()` shares that single construction promise so awaiting it is the
+ * readiness gate. `subscribe` exposes the same client reactively — `null` until
+ * construction settles, then the resolved client (or a `GenericError`).
  * Inject the returned store into OAuth and User stores so both share the same
  * client instance without module-level state.
  *
@@ -60,13 +69,21 @@ export function createOidcClientStore(config: OidcClientConfig): OidcClientStore
   const parsedConfig = oidcClientConfigSchema.parse(config);
   const { subscribe, set } = writable<OidcClient | null>(null);
 
-  oidc({ config: parsedConfig })
+  // Construct once and keep the promise. `set` runs synchronously inside the
+  // `.then`, so the store is populated before `getClient()` resolves.
+  const clientPromise = oidc({ config: parsedConfig })
     .then((client) => {
       set(client);
+      return client;
     })
     .catch((err: unknown) => {
-      set({ error: err instanceof Error ? err.message : String(err) } as unknown as OidcClient);
+      const error: GenericError = {
+        error: err instanceof Error ? err.message : String(err),
+        type: 'unknown_error',
+      };
+      set(error);
+      return error;
     });
 
-  return { subscribe };
+  return { subscribe, getClient: () => clientPromise };
 }

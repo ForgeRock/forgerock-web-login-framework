@@ -7,7 +7,6 @@
  *
  **/
 
-import { get } from 'svelte/store';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
@@ -98,16 +97,37 @@ describe('widgetApiFactory', () => {
     it('exposes the expected top-level API members', async () => {
       const api = await importSubject();
       expect(Object.keys(api).sort()).toEqual(
-        ['component', 'configuration', 'getStores', 'journey', 'protect', 'user'].sort(),
+        ['component', 'configure', 'getStores', 'journey', 'protect', 'user'].sort(),
       );
     });
   });
 
-  describe('configuration() with oidcClient', () => {
+  describe('configure() with oidcClient', () => {
     it('accepts an oidcClient config and enables journey() when journeyClient is also set', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
       expect(() => api.journey()).not.toThrow();
+    });
+
+    it('resolves only after the OIDC client is constructed', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+
+      // configure() awaited getClient(), so the client store is already populated
+      // and a token fetch resolves rather than reporting "not ready".
+      const value = await api.user.tokens().get();
+      expect(value.successful).toBe(true);
+    });
+
+    it('rejects when the OIDC client fails to construct', async () => {
+      oidcMock.mockRejectedValueOnce(new Error('wellknown fetch failed'));
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient }),
+      ).rejects.toThrow(/wellknown fetch failed/);
     });
   });
 
@@ -123,10 +143,9 @@ describe('widgetApiFactory', () => {
     it('resets all stores to initial state after a successful logout', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      // await configure() guarantees the OIDC client is constructed before logout.
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
-      // Wait for the OIDC client store to be populated before logging out
-      await vi.waitFor(() => expect(get(oauthStore.oidcClientStore)).not.toBeNull());
 
       await api.user.logout();
 
@@ -149,9 +168,8 @@ describe('widgetApiFactory', () => {
         }),
       );
       const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
-      await vi.waitFor(() => expect(get(oauthStore.oidcClientStore)).not.toBeNull());
 
       await expect(api.user.logout()).rejects.toThrow('terminate failed');
 
@@ -174,7 +192,7 @@ describe('widgetApiFactory', () => {
     it('tokens() and info() expose both get and subscribe', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
 
       const tokensApi = api.user.tokens();
       const infoApi = api.user.info();
@@ -187,7 +205,7 @@ describe('widgetApiFactory', () => {
     it('tokens().get() and info().get() return a promise', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
 
       // Swallow settlement — this asserts the call shape, not the fetch result.
       const tokensGet = api.user.tokens().get();
@@ -204,10 +222,10 @@ describe('widgetApiFactory', () => {
     it('a repeated get() on an already-completed store settles without crashing', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
 
       // First get() drives the store to `completed`. Second get() hits the
-      // already-completed path — the one that used to throw a ReferenceError.
+      // already-completed latch, which returns the current (cached) store value.
       await api.user
         .tokens()
         .get()
@@ -218,27 +236,52 @@ describe('widgetApiFactory', () => {
         .catch((value) => value);
 
       expect(settled).not.toBeInstanceOf(ReferenceError);
-      // Its own store value carries a `completed` flag; a TDZ crash would not.
-      expect(settled).toHaveProperty('completed', true);
+      // The latch returns the cached store value; a valid token means success.
+      expect(settled).toMatchObject({ completed: true, successful: true });
+    });
+
+    it('get() rejects with the store value when the fetch errors', async () => {
+      oidcMock.mockResolvedValueOnce(
+        makeOidcClient({
+          tokenGet: async () => ({ error: 'state_error', message: 'No tokens found' }),
+        }),
+      );
+      const api = await importSubject();
+      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+
+      // Matches main: a failed fetch rejects, and the rejection payload is the
+      // store value (carrying `error`), not a bare Error.
+      const rejected = await api.user
+        .tokens()
+        .get()
+        .then(() => null)
+        .catch((value) => value);
+
+      expect(rejected).toMatchObject({
+        completed: true,
+        successful: false,
+        error: { message: 'No tokens found' },
+      });
     });
   });
 
   describe('pre-configuration guards', () => {
-    it('journey() throws when called before configuration()', async () => {
+    it('journey() throws when called before configure()', async () => {
       const api = await importSubject();
       expect(() => api.journey()).toThrow('Error: missing configuration.');
     });
 
-    it('user.info() throws when called before configuration()', async () => {
+    it('user.info() throws when called before configure()', async () => {
       const api = await importSubject();
       expect(() => api.user.info()).toThrow('Error: missing configuration.');
     });
   });
 
-  describe('configuration() without journeyClient', () => {
+  describe('configure() without oidcClient or journeyClient', () => {
+    // With no oidcClient, configure() has nothing to await and resolves immediately.
     it('exposes a usable journeyStore — its initial value is observable via subscribe', async () => {
       const api = await importSubject();
-      api.configuration();
+      await api.configure();
       const { journeyStore } = api.getStores();
 
       const value = readStore(journeyStore);
@@ -253,23 +296,17 @@ describe('widgetApiFactory', () => {
 
     it('journeyStore.reset() does not throw — the regression that broke user.logout()', async () => {
       const api = await importSubject();
-      api.configuration();
+      await api.configure();
       const { journeyStore } = api.getStores();
       expect(() => journeyStore.reset()).not.toThrow();
     });
   });
 
-  describe('configuration().set()', () => {
-    it('set({ journeyClient }) after configuration() without journeyClient enables journey() to be called', async () => {
+  describe('reconfigure — calling configure() again', () => {
+    it('a second configure() with journeyClient enables journey()', async () => {
       const api = await importSubject();
-      api.configuration().set({ journeyClient: validJourneyClient });
-
-      expect(() => api.journey()).not.toThrow();
-    });
-
-    it('set() without journeyClient preserves a previously configured journey client', async () => {
-      const api = await importSubject();
-      api.configuration({ journeyClient: validJourneyClient }).set();
+      await api.configure();
+      await api.configure({ journeyClient: validJourneyClient });
 
       expect(() => api.journey()).not.toThrow();
     });

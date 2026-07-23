@@ -117,6 +117,62 @@ describe('oauth.store — initialize() token retrieval', () => {
     expect(value.response).toEqual(tokens);
   });
 
+  it('get() resolves with the terminal store value', async () => {
+    const client = mockClientReturning(tokens);
+    const oidcClientStore = readable<OidcClient | null>(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize(oidcClientStore);
+
+    const returned = await store.get();
+    expect(returned).toMatchObject({
+      completed: true,
+      successful: true,
+      error: null,
+      response: tokens,
+    });
+    // The returned value matches what subscribers see.
+    expect(returned).toEqual(readStore(store));
+  });
+
+  it('get() returns the error store value (does not throw) on a failed fetch', async () => {
+    const client = mockClientReturning({
+      error: 'state_error',
+      message: 'No tokens found',
+      type: 'state_error',
+    });
+    const oidcClientStore = readable<OidcClient | null>(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize(oidcClientStore);
+
+    const returned = await store.get();
+    expect(returned).toMatchObject({
+      completed: true,
+      successful: false,
+      error: { message: 'No tokens found' },
+    });
+  });
+
+  it('the latched get() returns the current (cached) value without re-fetching', async () => {
+    const client = mockClientReturning(tokens);
+    const oidcClientStore = readable<OidcClient | null>(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize(oidcClientStore);
+
+    const first = await store.get();
+    const second = await store.get();
+    expect(second).toEqual(first);
+    expect(
+      (
+        client as ReturnType<typeof mockClientReturning> & {
+          token: { get: ReturnType<typeof vi.fn> };
+        }
+      ).token.get,
+    ).toHaveBeenCalledTimes(1);
+  });
+
   it('emits an error state (without throwing) when token.get returns a GenericError', async () => {
     const client = mockClientReturning({
       error: 'state_error',

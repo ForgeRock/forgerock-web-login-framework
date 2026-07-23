@@ -19,7 +19,12 @@ export function logErrorAndThrow(type: string) {
 
     console.error(errorMessage);
     console.error(
-      'Please configure Widget by importing `configuration` and calling `set` with your settings.',
+      'Import `configure` and `await` it before using the journey, user, or protect APIs. Example:\n' +
+        "  import { configure } from '@forgerock/login-widget';\n" +
+        '  await configure({\n' +
+        "    journeyClient: { serverConfig: { wellknown: 'https://<tenant>/am/oauth2/<realm>/.well-known/openid-configuration' } },\n" +
+        "    oidcClient: { clientId: '<client-id>', redirectUri: '<your-app-origin>/callback', scope: 'openid profile email', serverConfig: { wellknown: 'https://<tenant>/am/oauth2/<realm>/.well-known/openid-configuration' } },\n" +
+        '  });',
     );
 
     throw new Error(errorMessage);

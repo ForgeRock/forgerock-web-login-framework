@@ -11,17 +11,17 @@
   import { onMount } from 'svelte';
 
   import { page } from '$app/stores';
-  import Widget, { configuration, journey } from '$package/index';
+  import Widget, { configure, journey } from '$package/index';
 
   let formEl: HTMLDivElement;
 
-  onMount(() => {
+  onMount(async () => {
     const params = $page.url.searchParams;
     const primaryColorParam = params.get('primaryColor');
     const buttonBorderRadiusParam = params.get('buttonBorderRadius');
     const cardBorderRadiusParam = params.get('cardBorderRadius');
 
-    configuration({
+    await configure({
       journeyClient: {
         serverConfig: {
           wellknown:

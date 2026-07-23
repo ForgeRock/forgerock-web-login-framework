@@ -138,6 +138,49 @@ describe('oidc.store — createOidcClientStore', () => {
     );
   });
 
+  it('getClient() resolves with the constructed client', async () => {
+    const client = mockClient();
+    oidcMock.mockResolvedValueOnce(client);
+
+    const { createOidcClientStore } = await importSubject();
+    const oidcClientStore = createOidcClientStore(validConfig);
+
+    await expect(oidcClientStore.getClient()).resolves.toBe(client);
+  });
+
+  it('getClient() resolves with the error shape when oidc() rejects', async () => {
+    oidcMock.mockRejectedValueOnce(new Error('wellknown fetch failed'));
+
+    const { createOidcClientStore } = await importSubject();
+    const oidcClientStore = createOidcClientStore(validConfig);
+
+    await expect(oidcClientStore.getClient()).resolves.toMatchObject({
+      error: 'wellknown fetch failed',
+    });
+  });
+
+  it('getClient() returns the same promise on repeat calls — one construction', async () => {
+    const client = mockClient();
+    oidcMock.mockResolvedValueOnce(client);
+
+    const { createOidcClientStore } = await importSubject();
+    const oidcClientStore = createOidcClientStore(validConfig);
+
+    expect(oidcClientStore.getClient()).toBe(oidcClientStore.getClient());
+    expect(oidcMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('the store is already populated by the time getClient() resolves', async () => {
+    const client = mockClient();
+    oidcMock.mockResolvedValueOnce(client);
+
+    const { createOidcClientStore } = await importSubject();
+    const oidcClientStore = createOidcClientStore(validConfig);
+
+    const resolved = await oidcClientStore.getClient();
+    expect(get(oidcClientStore)).toBe(resolved);
+  });
+
   it('two createOidcClientStore calls are fully isolated', async () => {
     const client1 = mockClient();
     const client2 = mockClient();

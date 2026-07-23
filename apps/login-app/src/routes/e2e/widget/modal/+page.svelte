@@ -11,7 +11,7 @@
   import { onMount } from 'svelte';
 
   import { page } from '$app/stores';
-  import Widget, { component, configuration, journey, protect, user } from '$package/index';
+  import Widget, { component, configure, journey, protect, user } from '$package/index';
 
   import type {
     ComponentEventValue,
@@ -60,7 +60,7 @@
       content = response.ok && (await response.json());
     }
 
-    configuration({
+    await configure({
       journeyClient: {
         serverConfig: {
           wellknown:
