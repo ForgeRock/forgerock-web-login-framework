@@ -24,20 +24,12 @@
 
   onMount(async () => {
     await configure({
-      journeyClient: {
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
-      },
+      wellknown:
+        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
       oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
       },
     });
 

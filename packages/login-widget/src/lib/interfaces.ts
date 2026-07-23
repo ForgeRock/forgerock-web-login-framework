@@ -19,7 +19,6 @@ import type { partialStyleSchema } from '$core/style.store';
 import type { UserStoreValue } from '$core/user/user.store';
 import type { journeyConfigSchema } from '$journey/config.store';
 import type { JourneyStoreValue } from '$journey/journey.interfaces';
-import type { journeyClientConfigSchema } from '$journey/journey.store';
 
 export interface JourneyOptions {
   oauth?: boolean; // defaults to true
@@ -56,8 +55,8 @@ export interface Protect {
 
 export interface WidgetConfigOptions {
   captcha?: z.infer<typeof captchaConfigSchema>;
-  oidcClient?: z.infer<typeof oidcClientConfigSchema>;
-  journeyClient?: z.infer<typeof journeyClientConfigSchema>;
+  wellknown?: string;
+  oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig'>;
   content?: z.infer<typeof partialStringsSchema>;
   journeys?: z.infer<typeof journeyConfigSchema>;
   links?: z.infer<typeof partialLinksSchema>;

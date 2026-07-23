@@ -24,20 +24,12 @@
     const cardBorderRadiusParam = params.get('cardBorderRadius');
 
     await configure({
-      journeyClient: {
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
-      },
+      wellknown:
+        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
       oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
       },
       style: {
         theme: {
@@ -60,13 +52,15 @@
 </script>
 
 <div class="tw_p-6">
-  <button
-    on:click={() => {
-      journeyEvents?.start({ journey: 'TEST_Login' });
-      componentEvents?.open();
-    }}
-  >
-    Open Login Modal
-  </button>
+  {#if journeyEvents && componentEvents}
+    <button
+      on:click={() => {
+        journeyEvents.start({ journey: 'TEST_Login' });
+        componentEvents.open();
+      }}
+    >
+      Open Login Modal
+    </button>
+  {/if}
 </div>
 <div bind:this={widgetEl}></div>

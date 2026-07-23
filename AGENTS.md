@@ -55,9 +55,9 @@ and hoisted to root `node_modules` via `public-hoist-pattern` rules in
 ### Public API
 
 `widgetApiFactory` (`packages/login-widget/src/lib/widget.api.ts`) wraps the
-`core/` stores into the exported public functions: `configuration`, `journey`,
-`user`, `component`, and `protect`. `index.svelte` re-exports these from its
-module context.
+`core/` stores into the exported public functions: `configure` (async — must be
+awaited at boot before any other API call), `journey`, `user`, `component`, and
+`protect`. `index.svelte` re-exports these from its module context.
 
 ## Widget Build
 

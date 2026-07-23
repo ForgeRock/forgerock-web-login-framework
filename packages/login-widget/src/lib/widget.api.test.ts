@@ -46,15 +46,12 @@ async function importSubject() {
   return widgetApiFactory(componentApi());
 }
 
-const validJourneyClient = {
-  serverConfig: { wellknown: 'https://example.com/.well-known/openid-configuration' },
-};
+const validWellknown = 'https://example.com/.well-known/openid-configuration';
 
 const validOidcClient = {
   clientId: 'WebOAuthClient',
   redirectUri: 'https://example.com/callback',
   scope: 'openid profile',
-  serverConfig: { wellknown: 'https://example.com/.well-known/openid-configuration' },
 };
 
 function makeOidcClient({
@@ -103,17 +100,17 @@ describe('widgetApiFactory', () => {
   });
 
   describe('configure() with oidcClient', () => {
-    it('accepts an oidcClient config and enables journey() when journeyClient is also set', async () => {
+    it('accepts an oidcClient config and enables journey() when wellknown is also set', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
       expect(() => api.journey()).not.toThrow();
     });
 
     it('resolves only after the OIDC client is constructed', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
 
       // configure() awaited getClient(), so the client store is already populated
       // and a token fetch resolves rather than reporting "not ready".
@@ -126,8 +123,16 @@ describe('widgetApiFactory', () => {
       const api = await importSubject();
 
       await expect(
-        api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient }),
+        api.configure({ wellknown: validWellknown, oidcClient: validOidcClient }),
       ).rejects.toThrow(/wellknown fetch failed/);
+    });
+
+    it('rejects when oidcClient is set without a top-level wellknown', async () => {
+      const api = await importSubject();
+
+      await expect(api.configure({ oidcClient: validOidcClient })).rejects.toThrow(
+        /`wellknown` is required when `oidcClient` is configured/,
+      );
     });
   });
 
@@ -144,7 +149,7 @@ describe('widgetApiFactory', () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
       // await configure() guarantees the OIDC client is constructed before logout.
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
 
       await api.user.logout();
@@ -168,7 +173,7 @@ describe('widgetApiFactory', () => {
         }),
       );
       const api = await importSubject();
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
 
       await expect(api.user.logout()).rejects.toThrow('terminate failed');
@@ -192,7 +197,7 @@ describe('widgetApiFactory', () => {
     it('tokens() and info() expose both get and subscribe', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
 
       const tokensApi = api.user.tokens();
       const infoApi = api.user.info();
@@ -205,7 +210,7 @@ describe('widgetApiFactory', () => {
     it('tokens().get() and info().get() return a promise', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
 
       // Swallow settlement — this asserts the call shape, not the fetch result.
       const tokensGet = api.user.tokens().get();
@@ -222,7 +227,7 @@ describe('widgetApiFactory', () => {
     it('a repeated get() on an already-completed store settles without crashing', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
 
       // First get() drives the store to `completed`. Second get() hits the
       // already-completed latch, which returns the current (cached) store value.
@@ -247,7 +252,7 @@ describe('widgetApiFactory', () => {
         }),
       );
       const api = await importSubject();
-      await api.configure({ journeyClient: validJourneyClient, oidcClient: validOidcClient });
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
 
       // Matches main: a failed fetch rejects, and the rejection payload is the
       // store value (carrying `error`), not a bare Error.
@@ -277,7 +282,7 @@ describe('widgetApiFactory', () => {
     });
   });
 
-  describe('configure() without oidcClient or journeyClient', () => {
+  describe('configure() without oidcClient or wellknown', () => {
     // With no oidcClient, configure() has nothing to await and resolves immediately.
     it('exposes a usable journeyStore — its initial value is observable via subscribe', async () => {
       const api = await importSubject();
@@ -303,10 +308,10 @@ describe('widgetApiFactory', () => {
   });
 
   describe('reconfigure — calling configure() again', () => {
-    it('a second configure() with journeyClient enables journey()', async () => {
+    it('a second configure() with wellknown enables journey()', async () => {
       const api = await importSubject();
       await api.configure();
-      await api.configure({ journeyClient: validJourneyClient });
+      await api.configure({ wellknown: validWellknown });
 
       expect(() => api.journey()).not.toThrow();
     });

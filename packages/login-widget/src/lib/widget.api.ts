@@ -43,7 +43,7 @@ import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interface
  * @param {object} componentApi - The component API
  * @returns {object} - The widget API
  * @property {object} componentApi - The component API for either inline or modal
- * @property {object} configuration - Sets the configuration for the widget
+ * @property {function} configure - Async; configures the widget and constructs its clients
  * @property {function} getStores - Returns the stores: journeyStore, oauthStore, userStore
  * @property {object} journey - the journey API
  * @property {object} protect - the PingOne Protect API
@@ -71,28 +71,27 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
 
   /**
    * @function configure - Configures the widget and constructs its clients.
-   *
-   * The async boundary: the OIDC client is built from an async wellknown fetch,
-   * so `configure` resolves only once that client exists. Awaiting it at boot
-   * guarantees downstream `get()` calls never race the null-client window — the
-   * fix for the "kicked to sign-in on reload" bug. Call it again to reconfigure
-   * (last-one-wins).
-   *
-   * The stores are wired synchronously (before the first await), so the journey
-   * store is usable as soon as `configure` is called. The await gates only the
-   * OIDC client's readiness. The journey client stays lazy — it is built when a
-   * journey starts, so a widget configured without a `journeyClient` still works.
-   *
    * @param {WidgetConfigOptions} options - The configuration options for the widget
-   * @returns {Promise<void>} Resolves when the OIDC client is constructed
-   * @throws {Error} If config is invalid (Zod) or the OIDC client fails to construct
+   * @returns {Promise<void>} Resolves when both clients are constructed
+   * @throws {Error} If config is invalid (Zod) or either client fails to construct
    */
   async function configure(options?: WidgetConfigOptions): Promise<void> {
+    const wellknown = options?.wellknown;
+    const journeyClientConfig = wellknown ? { serverConfig: { wellknown } } : undefined;
+
     if (options?.oidcClient) {
-      oidcClientStore = createOidcClientStore(options.oidcClient);
+      // The OIDC client cannot be constructed without a well-known URL. Fail fast rather
+      // than silently skip construction and leave token/user/logout APIs unusable.
+      if (!wellknown) {
+        throw new Error('`wellknown` is required when `oidcClient` is configured.');
+      }
+      oidcClientStore = createOidcClientStore({
+        ...options.oidcClient,
+        serverConfig: { wellknown },
+      });
     }
 
-    journeyStore = initializeJourney(options?.journeyClient, {
+    journeyStore = initializeJourney(journeyClientConfig, {
       ...(options?.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
     });
     oauthStore = initializeOauth(oidcClientStore);
@@ -103,14 +102,15 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     initializeLinks(options?.links);
     initializeStyle(options?.style);
 
-    // Await client construction so downstream get()s never race the null window.
-    // getClient() resolves with the client or a GenericError shape (never rejects);
-    // surface a construction failure as a rejected configure().
-    if (oidcClientStore) {
-      const oidcClient = await oidcClientStore.getClient();
-      if ('error' in oidcClient) {
-        throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
-      }
+    // oidcClientStore.getClient() resolves with the client or a GenericError shape (never rejects);
+    // getJourneyClient() can reject — Promise.all propagates that as a rejected configure().
+    const oidcPromise = oidcClientStore ? oidcClientStore.getClient() : Promise.resolve(null);
+    const journeyPromise = journeyClientConfig ? getJourneyClient() : Promise.resolve(null);
+
+    const [oidcClient] = await Promise.all([oidcPromise, journeyPromise]);
+
+    if (oidcClientStore && oidcClient && 'error' in oidcClient) {
+      throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
     }
   }
   const journey = (options?: JourneyOptions) => {
@@ -236,7 +236,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
      * @async
      * @param: void
      * @returns: Promise<void>
-     * @throws {Error} If called before configuration(), or if server-side session/token termination fails
+     * @throws {Error} If called before configure(), or if server-side session/token termination fails
      **/
     async logout() {
       if (!journeyStore || !oauthStore || !userStore) {

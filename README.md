@@ -48,26 +48,18 @@ Import the CSS and widget, configure, and instantiate:
 
 ```js
 import '@forgerock/login-widget/widget.css';
-import Widget, { configuration, journey } from '@forgerock/login-widget';
+import Widget, { configure, journey } from '@forgerock/login-widget';
 
-const config = configuration();
-config.set({
-  // REQUIRED for journeys
-  journeyClient: {
-    serverConfig: {
-      wellknown:
-        'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
-    },
-  },
+// configure() is async — await it before calling journey().start() or any other API
+await configure({
+  // REQUIRED — the well-known URL, shared by the journey and OIDC clients
+  wellknown:
+    'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
   // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
   oidcClient: {
     clientId: 'WebOAuthClient',
     redirectUri: `${window.location.origin}/callback`,
     scope: 'openid profile email',
-    serverConfig: {
-      wellknown:
-        'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
-    },
   },
 });
 

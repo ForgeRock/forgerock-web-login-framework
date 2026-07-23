@@ -61,21 +61,12 @@
     }
 
     await configure({
-      journeyClient: {
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
-      },
+      wellknown:
+        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
       oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
-        serverConfig: {
-          wellknown: journeyParam?.includes('PingProtect')
-            ? 'https://openam-protect2.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration'
-            : 'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
       },
       content: {
         ...content,
@@ -190,15 +181,15 @@
       <li id="email"><strong>Email</strong>: {userResponse?.email}</li>
     </ul>
     <button on:click={logout}>Logout</button>
-  {:else}
+  {:else if journeyEvents && componentEvents}
     <button
       on:click={() => {
-        journeyEvents?.start({
+        journeyEvents.start({
           journey: journeyParam || authIndexValueParam || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
           recaptchaAction: recaptchaParam ?? undefined,
         });
-        componentEvents?.open();
+        componentEvents.open();
       }}
     >
       Open Login Modal

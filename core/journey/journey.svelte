@@ -29,8 +29,14 @@
   export let externalStages: Record<string, StageRegistryEntry> = {};
 
   if (!$journeyStore) {
+    console.error('Error: missing configuration.');
     console.error(
-      'Widget missing configuration. Import and call `configuration()`, then use `set()` to configure.',
+      'Import `configure` and `await` it before using the journey, user, or protect APIs. Example:\n' +
+        "  import { configure } from '@forgerock/login-widget';\n" +
+        '  await configure({\n' +
+        "    wellknown: 'https://<tenant>/am/oauth2/<realm>/.well-known/openid-configuration',\n" +
+        "    oidcClient: { clientId: '<client-id>', redirectUri: '<your-app-origin>/callback', scope: 'openid profile email' },\n" +
+        '  });',
     );
   }
 
