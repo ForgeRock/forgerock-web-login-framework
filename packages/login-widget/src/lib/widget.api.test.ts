@@ -126,13 +126,16 @@ describe('widgetApiFactory', () => {
         api.configure({ wellknown: validWellknown, oidcClient: validOidcClient }),
       ).rejects.toThrow(/wellknown fetch failed/);
     });
+  });
 
-    it('rejects when oidcClient is set without a top-level wellknown', async () => {
+  describe('configure() — wellknown is required', () => {
+    it('rejects when wellknown is missing', async () => {
       const api = await importSubject();
 
-      await expect(api.configure({ oidcClient: validOidcClient })).rejects.toThrow(
-        /`wellknown` is required when `oidcClient` is configured/,
-      );
+      await expect(
+        // Untyped (IIFE) callers can omit wellknown; the guard must still fire.
+        api.configure({ oidcClient: validOidcClient } as unknown as { wellknown: string }),
+      ).rejects.toThrow(/wellknown url is required/);
     });
   });
 
@@ -282,11 +285,10 @@ describe('widgetApiFactory', () => {
     });
   });
 
-  describe('configure() without oidcClient or wellknown', () => {
-    // With no oidcClient, configure() has nothing to await and resolves immediately.
+  describe('configure() without oidcClient', () => {
     it('exposes a usable journeyStore — its initial value is observable via subscribe', async () => {
       const api = await importSubject();
-      await api.configure();
+      await api.configure({ wellknown: validWellknown });
       const { journeyStore } = api.getStores();
 
       const value = readStore(journeyStore);
@@ -301,19 +303,9 @@ describe('widgetApiFactory', () => {
 
     it('journeyStore.reset() does not throw — the regression that broke user.logout()', async () => {
       const api = await importSubject();
-      await api.configure();
+      await api.configure({ wellknown: validWellknown });
       const { journeyStore } = api.getStores();
       expect(() => journeyStore.reset()).not.toThrow();
-    });
-  });
-
-  describe('reconfigure — calling configure() again', () => {
-    it('a second configure() with wellknown enables journey()', async () => {
-      const api = await importSubject();
-      await api.configure();
-      await api.configure({ wellknown: validWellknown });
-
-      expect(() => api.journey()).not.toThrow();
     });
   });
 });

@@ -28,7 +28,6 @@ import type { JourneyStoreValue as JourneyStoreEventValue } from '$journey/journ
 const _api = widgetApiFactory(componentApi());
 
 // Widget API Types
-export type ConfigurationApi = ReturnType<typeof _api.configuration>;
 export type JourneyApi = ReturnType<typeof _api.journey>;
 export type UserInfoApi = ReturnType<typeof _api.user.info>;
 export type UserTokensApi = ReturnType<typeof _api.user.tokens>;

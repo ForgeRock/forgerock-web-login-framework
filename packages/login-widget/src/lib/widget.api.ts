@@ -72,46 +72,42 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   /**
    * @function configure - Configures the widget and constructs its clients.
    * @param {WidgetConfigOptions} options - The configuration options for the widget
-   * @returns {Promise<void>} Resolves when both clients are constructed
-   * @throws {Error} If config is invalid (Zod) or either client fails to construct
+   * @returns {Promise<void>} Resolves once the Journey Client (and the OIDC client, if configured) is constructed
+   * @throws {Error} If `wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
    */
-  async function configure(options?: WidgetConfigOptions): Promise<void> {
+  async function configure(options: WidgetConfigOptions): Promise<void> {
     const wellknown = options?.wellknown;
-    const journeyClientConfig = wellknown ? { serverConfig: { wellknown } } : undefined;
+    if (!wellknown) {
+      throw new Error('wellknown url is required to configure the widget');
+    }
 
-    if (options?.oidcClient) {
-      // The OIDC client cannot be constructed without a well-known URL. Fail fast rather
-      // than silently skip construction and leave token/user/logout APIs unusable.
-      if (!wellknown) {
-        throw new Error('`wellknown` is required when `oidcClient` is configured.');
-      }
+    // initialize journey client
+    journeyStore = initializeJourney(
+      { serverConfig: { wellknown } },
+      { ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }) },
+    );
+    await getJourneyClient();
+
+    // initialize oidc client, if present
+    if (options.oidcClient) {
       oidcClientStore = createOidcClientStore({
         ...options.oidcClient,
         serverConfig: { wellknown },
       });
+      const oidcClient = await oidcClientStore.getClient();
+      if ('error' in oidcClient) {
+        throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
+      }
     }
 
-    journeyStore = initializeJourney(journeyClientConfig, {
-      ...(options?.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
-    });
+    // OAuth and User stores derive from the OIDC client store (undefined when OIDC isn't configured).
     oauthStore = initializeOauth(oidcClientStore);
     userStore = initializeUser(oidcClientStore);
 
-    initializeContent(options?.content);
-    initializeJourneys(options?.journeys);
-    initializeLinks(options?.links);
-    initializeStyle(options?.style);
-
-    // oidcClientStore.getClient() resolves with the client or a GenericError shape (never rejects);
-    // getJourneyClient() can reject — Promise.all propagates that as a rejected configure().
-    const oidcPromise = oidcClientStore ? oidcClientStore.getClient() : Promise.resolve(null);
-    const journeyPromise = journeyClientConfig ? getJourneyClient() : Promise.resolve(null);
-
-    const [oidcClient] = await Promise.all([oidcPromise, journeyPromise]);
-
-    if (oidcClientStore && oidcClient && 'error' in oidcClient) {
-      throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
-    }
+    initializeContent(options.content);
+    initializeJourneys(options.journeys);
+    initializeLinks(options.links);
+    initializeStyle(options.style);
   }
   const journey = (options?: JourneyOptions) => {
     if (!journeyStore || !oauthStore || !userStore) {

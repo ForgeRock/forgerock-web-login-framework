@@ -54,8 +54,8 @@ export interface Protect {
 }
 
 export interface WidgetConfigOptions {
+  wellknown: string;
   captcha?: z.infer<typeof captchaConfigSchema>;
-  wellknown?: string;
   oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig'>;
   content?: z.infer<typeof partialStringsSchema>;
   journeys?: z.infer<typeof journeyConfigSchema>;
