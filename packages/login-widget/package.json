@@ -52,7 +52,7 @@
     "babel-loader": "^9.1.2",
     "chromatic": "^10.9.1",
     "playwright": "^1.44.0",
-    "postcss": "^8.5.10",
+    "postcss": "^8.5.18",
     "postcss-cli": "^10.1.0",
     "postcss-import": "^15.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
