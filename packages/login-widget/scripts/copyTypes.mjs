@@ -66,12 +66,12 @@ if (copiedCount === 0) {
 const coreFilesToCopy = [
   'interfaces.d.ts',
   'component.store.d.ts',
-  'sdk.config.d.ts',
   'links.store.d.ts',
   'locale.store.d.ts',
   'style.store.d.ts',
   'oauth/oauth.store.d.ts',
   'user/user.store.d.ts',
+  'protect/protect.store.d.ts',
   'journey/journey.interfaces.d.ts',
   'journey/config.store.d.ts',
 ];

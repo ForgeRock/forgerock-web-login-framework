@@ -7,14 +7,13 @@
  *
  **/
 
-import type { InitParams } from '@forgerock/ping-protect';
 import type { z } from 'zod';
 
 import type { captchaConfigSchema } from '$core/captcha.config';
 import type { partialLinksSchema } from '$core/links.store';
 import type { partialStringsSchema } from '$core/locale.store';
-import type { OAuthTokenStoreValue } from '$core/oauth/oauth.store';
-import type { partialConfigSchema } from '$core/sdk.config';
+import type { OAuthTokenStoreValue, oidcClientConfigSchema } from '$core/oauth/oauth.store';
+import type { ProtectConfig } from '$core/protect/protect.store';
 import type { partialStyleSchema } from '$core/style.store';
 import type { UserStoreValue } from '$core/user/user.store';
 import type { journeyConfigSchema } from '$journey/config.store';
@@ -48,15 +47,15 @@ export interface Response {
 }
 
 export interface Protect {
-  start: (config: InitParams) => Promise<void>;
-  resumeBehavioralData: () => void;
-  pauseBehavioralData: () => void;
-  getData: () => Promise<string | undefined>;
+  start: (config: ProtectConfig) => Promise<void | { error: string }>;
+  resumeBehavioralData: () => void | { error: string };
+  pauseBehavioralData: () => void | { error: string };
+  getData: () => Promise<string | { error: string }>;
 }
 
 export interface WidgetConfigOptions {
   captcha?: z.infer<typeof captchaConfigSchema>;
-  forgerock?: z.infer<typeof partialConfigSchema>;
+  oidcClient?: z.infer<typeof oidcClientConfigSchema>;
   journeyClient?: z.infer<typeof journeyClientConfigSchema>;
   content?: z.infer<typeof partialStringsSchema>;
   journeys?: z.infer<typeof journeyConfigSchema>;

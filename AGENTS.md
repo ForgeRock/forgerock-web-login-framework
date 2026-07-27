@@ -45,18 +45,19 @@ Vite config):
 | `$locales`    | `core/locales/`    |
 
 **Dependency hoisting:** `core/`'s runtime deps (e.g.
-`@forgerock/javascript-sdk`, `xss`, `zod`, `qrcode`) are declared in
-`packages/login-widget/package.json` and hoisted to root `node_modules` via
-`public-hoist-pattern` rules in `.npmrc`. **When adding a new dependency that
-`core/` imports, add it to `packages/login-widget/package.json` and, if needed,
-add a `public-hoist-pattern` entry in `.npmrc`.**
+`@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
+`xss`, `zod`, `qrcode`) are declared in `packages/login-widget/package.json`
+and hoisted to root `node_modules` via `public-hoist-pattern` rules in
+`.npmrc`. **When adding a new dependency that `core/` imports, add it to
+`packages/login-widget/package.json` and, if needed, add a
+`public-hoist-pattern` entry in `.npmrc`.**
 
 ### Public API
 
 `widgetApiFactory` (`packages/login-widget/src/lib/widget.api.ts`) wraps the
 `core/` stores into the exported public functions: `configuration`, `journey`,
-`user`, `request`, `component`, and `protect`. `index.svelte` re-exports these
-from its module context.
+`user`, `component`, and `protect`. `index.svelte` re-exports these from its
+module context.
 
 ## Widget Build
 
@@ -70,8 +71,8 @@ from its module context.
   `dist/`.
 - **Svelte compat mode:** `componentApi: 4` preserves the
   `new Widget({ target })` instantiation pattern for consumers.
-- **Externalized runtime deps** (ES build): `@forgerock/javascript-sdk`,
-  `@forgerock/ping-protect`, `qrcode`, `xss`, `zod`.
+- **Externalized runtime deps** (ES build): `@forgerock/journey-client`,
+  `@forgerock/oidc-client`, `@forgerock/protect`, `qrcode`, `xss`, `zod`.
 
 ## Commands
 
@@ -153,15 +154,17 @@ E2E tests and the login-app require AM connection details via `.env` or shell:
 
 State and logic live in `core/` as **singleton Svelte stores** — there is no
 Redux/RTK and no network-client layer here (network calls are delegated to the
-externalized `@forgerock/javascript-sdk`). The widget composes UI on top of
-those stores, and `packages/login-widget` packages the result for publishing.
+externalized `@forgerock/journey-client` and `@forgerock/oidc-client`). The
+widget composes UI on top of those stores, and `packages/login-widget` packages
+the result for publishing.
 
 Dependencies flow in one direction — UI and the published package depend on
 `core/`, never the reverse:
 
 ```
-packages/login-widget  ──►  core/  ──►  @forgerock/javascript-sdk
-apps/login-app         ──►  core/        (externalized runtime dep)
+packages/login-widget  ──►  core/  ──►  @forgerock/journey-client
+apps/login-app         ──►  core/  ──►  @forgerock/oidc-client
+                                         (externalized runtime deps)
 ```
 
 **Store layer** (`core/`): one singleton store per concern. `style.store.ts`,
@@ -190,7 +193,7 @@ ES, IIFE, and type-declaration outputs (see [Widget Build](#widget-build)).
 ```
 core/                          # Shared logic — NOT a workspace, compiled per consumer
 ├── *.store.ts                 # Singleton Svelte stores (style, locale, links, component)
-├── *.config.ts                # Config parsers (sdk.config.ts, captcha.config.ts)
+├── *.config.ts                # Config parsers (captcha.config.ts)
 ├── interfaces.ts              # Shared type contracts
 ├── _utilities/                # Pure cross-cutting helpers (i18n, errors, theme)
 ├── _effects/                  # Cross-cutting side-effects (theme.effects.ts)

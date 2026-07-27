@@ -7,8 +7,6 @@
  *
  **/
 
-import { Config, FRUser, HttpClient, SessionManager } from '@forgerock/javascript-sdk';
-import { PIProtect } from '@forgerock/ping-protect';
 import { derived, get } from 'svelte/store';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
@@ -18,13 +16,18 @@ import { componentStore } from '$core/component.store';
 import { initialize as initializeLinks } from '$core/links.store';
 import { initialize as initializeContent } from '$core/locale.store';
 import { initialize as initializeOauth } from '$core/oauth/oauth.store';
-import configure from '$core/sdk.config';
+import {
+  getData,
+  pauseBehavioralData,
+  resumeBehavioralData,
+  start,
+} from '$core/protect/protect.store';
 import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
-import { initialize as initializeJourney } from '$journey/journey.store';
+import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
 
-import type { ConfigOptions } from '@forgerock/javascript-sdk';
+import type { GetTokensOptions } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 import type { componentApi as _componentApi } from './_utilities/component.utilities';
@@ -46,7 +49,7 @@ import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interface
  * @property {object} configuration - Sets the configuration for the widget
  * @property {function} getStores - Returns the stores: journeyStore, oauthStore, userStore
  * @property {object} journey - the journey API
- * @property {function} request - The HttpClient.request function from the SDK
+ * @property {object} protect - the PingOne Protect API
  * @property {object} user - the user API
  */
 export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>) {
@@ -69,38 +72,14 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   }
 
   const configuration = (options?: WidgetConfigOptions) => {
-    if (options?.forgerock) {
-      configure({
-        // Set some basics by default
-        ...{
-          // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-          clientId: 'WebLoginWidgetClient',
-          // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-          // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-          realmPath: 'alpha',
-          // TODO: Once we move to SSR, this default should be more intelligent
-          redirectUri:
-            typeof window === 'object'
-              ? // Construct URL with origin and path only, stripping off hash and query params
-                `${window.location.origin}${window.location.pathname}`
-              : 'https://localhost:3000/callback',
-          scope: 'openid email',
-        },
-        // Let user provided config override defaults
-        ...options?.forgerock,
-        // Force 'legacy' to remove confusion
-        ...{ support: 'legacy' },
-      });
-    }
-
-    /**
-     * Initialize all the stores.
-     */
+    // initialize() creates a fresh, isolated store instance per call.
+    // getOidcClient is injected into the user store so it shares the same
+    // OIDC client instance without reaching into module-level state.
+    oauthStore = initializeOauth(options?.oidcClient);
+    userStore = initializeUser(oauthStore.getOidcClient);
     journeyStore = initializeJourney(options?.journeyClient, {
       ...(options?.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
     });
-    oauthStore = initializeOauth(options?.forgerock);
-    userStore = initializeUser(options?.forgerock);
 
     initializeContent(options?.content);
     initializeJourneys(options?.journeys);
@@ -113,38 +92,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
        * @returns {void}
        **/
       set(setOptions?: WidgetConfigOptions): void {
-        if (setOptions?.forgerock) {
-          configure({
-            // Set some basics by default
-            ...{
-              // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-              clientId: 'WebLoginWidgetClient',
-              // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-              // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-              realmPath: 'alpha',
-              // TODO: Once we move to SSR, this default should be more intelligent
-              redirectUri:
-                typeof window === 'object'
-                  ? window.location.href
-                  : 'https://localhost:3000/callback',
-              scope: 'openid email',
-            },
-            // Let user provided config override defaults
-            ...setOptions?.forgerock,
-            // Force 'legacy' to remove confusion
-            ...{ support: 'legacy' },
-          });
-        }
-
-        /**
-         * Initialize the stores and ensure both variables point to the same reference.
-         * Variables with _ are the reactive version of the original variable from above.
-         */
-        journeyStore = initializeJourney(setOptions?.journeyClient, {
+        oauthStore = initializeOauth(setOptions?.oidcClient ?? options?.oidcClient);
+        userStore = initializeUser(oauthStore.getOidcClient);
+        journeyStore = initializeJourney(setOptions?.journeyClient ?? options?.journeyClient, {
           ...(setOptions?.captcha && { captcha: captchaConfigSchema.parse(setOptions.captcha) }),
         });
-        oauthStore = initializeOauth(setOptions?.forgerock);
-        userStore = initializeUser(setOptions?.forgerock);
 
         initializeContent(setOptions?.content);
         initializeJourneys(setOptions?.journeys);
@@ -187,7 +139,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
             }
           } else if ($journeyStore.successful) {
             if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
-              oauthStore.get();
+              oauthStore.getTokens();
             } else if (!requestsOauth) {
               formFactor === 'modal' && componentApi.close({ reason: 'auto' });
             }
@@ -261,8 +213,8 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
 
       const { get, subscribe } = userStore;
 
-      function wrappedGet(options?: ConfigOptions) {
-        get(options);
+      function wrappedGet() {
+        get();
         return new Promise((resolve, reject) => {
           const unsubscribe = userStore.subscribe((event) => {
             if (event.successful) {
@@ -279,40 +231,38 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       return { get: wrappedGet, subscribe };
     },
     /**
-     * Logout a user from an AM Session
+     * Logout a user: revoke tokens, end the OIDC session, and destroy the AM session.
      * @async
      * @param: void
      * @returns: Promise<void>
      **/
-    async logout() {
+    async logout(): Promise<void> {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      const { clientId } = Config.get();
-
-      let obj;
-
       /**
-       * If configuration has a clientId, then use FRUser to logout to ensure
-       * token revoking and removal; else, just end the session.
+       *  1. journeyClient.terminate() — POST /sessions?_action=logout, destroys the AM SSO session
+       *  2. oidcClient.user.logout() — end_session_endpoint (OIDC session) + revocation_endpoint
+       *     (access token) + clears local token storage.
        */
-      if (clientId) {
-        obj = FRUser;
-      } else {
-        obj = SessionManager;
+      try {
+        const journeyClient = await getJourneyClient();
+        await journeyClient.terminate();
+      } catch (err: unknown) {
+        // Warn instead of throw; throwing to the caller would be misleading since there's nothing to recover from.
+        console.warn('Session termination failed:', err instanceof Error ? err.message : err);
       }
 
       try {
-        await obj.logout();
-        resetAndRestartStores();
-      } catch (err) {
-        // Regardless of errors, reset all stores and restart journey
-        resetAndRestartStores();
-        throw err;
+        const oidcClient = await oauthStore.getOidcClient();
+        await oidcClient.user.logout();
+      } catch (err: unknown) {
+        // Warn instead of throw; throwing to the caller would be misleading since there's nothing to recover from.
+        console.warn('OIDC logout failed:', err instanceof Error ? err.message : err);
       }
-      // Return undefined as there's no response information to share
-      return;
+      // Regardless of errors, reset all stores and restart journey
+      resetAndRestartStores();
     },
     /**
      * Returns the widget's Tokens object
@@ -324,10 +274,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
         logErrorAndThrow('missingStores');
       }
 
-      const { get, subscribe } = oauthStore;
+      const { getTokens, subscribe } = oauthStore;
 
-      function wrappedGet(options?: ConfigOptions) {
-        get(options);
+      function wrappedGet(options?: GetTokensOptions) {
+        getTokens(options);
         return new Promise((resolve, reject) => {
           const unsubscribe = oauthStore.subscribe((event) => {
             if (event.successful) {
@@ -351,12 +301,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     getStores,
     journey,
     protect: {
-      start: PIProtect.start.bind(PIProtect),
-      getData: PIProtect.getData.bind(PIProtect),
-      pauseBehavioralData: PIProtect.pauseBehavioralData.bind(PIProtect),
-      resumeBehavioralData: PIProtect.resumeBehavioralData.bind(PIProtect),
+      start,
+      getData,
+      pauseBehavioralData,
+      resumeBehavioralData,
     },
-    request: HttpClient.request.bind(HttpClient),
     user,
   };
 }

@@ -13,13 +13,16 @@ import type { JourneyClient, JourneyClientConfig } from '@forgerock/journey-clie
 
 const journeyMock = vi.fn();
 
-vi.mock('@forgerock/journey-client', async (importOriginal) => {
-  const actual = (await importOriginal()) as Record<string, unknown>;
-  return {
-    ...actual,
-    journey: journeyMock,
-  };
-});
+vi.mock(
+  '@forgerock/journey-client',
+  async (importOriginal: () => Promise<Record<string, unknown>>) => {
+    const actual = await importOriginal();
+    return {
+      ...actual,
+      journey: journeyMock,
+    };
+  },
+);
 
 async function importSubject() {
   const mod = await import('./journey.store');

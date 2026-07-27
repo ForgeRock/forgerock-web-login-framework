@@ -16,10 +16,8 @@ import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url }) => {
   const amUrl = env.FR_AM_URL;
-  const clientId = env.FR_OAUTH_PUBLIC_CLIENT;
   const realmPath = env.FR_REALM_PATH;
   const wellknown = env.FR_AM_WELLKNOWN_URL;
-  const scope = env.FR_OAUTH_SCOPE;
   const idmBaseUrl = env.FR_IDM_URL ?? amUrl;
 
   if (!amUrl || !realmPath || !wellknown) {
@@ -37,10 +35,8 @@ export const load: LayoutServerLoad = async ({ url }) => {
   return {
     amUrl,
     backgroundImageUrl,
-    clientId,
     idmTheme,
     realmPath,
-    scope,
     wellknown,
   };
 };

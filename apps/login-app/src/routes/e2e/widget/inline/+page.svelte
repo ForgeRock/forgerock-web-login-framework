@@ -56,14 +56,14 @@
         },
       },
       captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
-      forgerock: {
+      oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
         serverConfig: {
-          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
+          wellknown:
+            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
         },
-        realmPath: 'alpha',
       },
       content,
       links: {
@@ -83,7 +83,7 @@
     journeyEvents.subscribe((event) => {
       if (event?.user?.successful) {
         userEvent = event.user;
-        userResponse = event.user.response as UserResponseObj;
+        userResponse = event.user.response as unknown as UserResponseObj;
       }
       if (event.journey.error || event.oauth.error || event.user.error) {
         console.log('Login failure event fired');

@@ -1,22 +1,22 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { UserManager } from '@forgerock/javascript-sdk';
 import { writable } from 'svelte/store';
 
-import type { ConfigOptions } from '@forgerock/javascript-sdk';
+import type { UserInfoResponse } from '@forgerock/oidc-client/types';
 import type { Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
+import type { OidcClientReady } from '$core/oauth/oauth.store';
 
 export interface UserStore extends Pick<Writable<UserStoreValue>, 'subscribe'> {
-  get: (getOptions?: ConfigOptions) => void;
+  get: () => void;
   reset: () => void;
 }
 export interface UserStoreValue {
@@ -28,39 +28,29 @@ export interface UserStoreValue {
   }>;
   loading: boolean;
   successful: boolean;
-  response: unknown;
+  response: Maybe<UserInfoResponse>;
 }
 
-export const userStore: Writable<UserStoreValue> = writable({
-  completed: false,
-  error: null,
-  loading: false,
-  successful: false,
-  response: null,
-});
-
 /**
- * @function initialize - Initializes the user store with a get function and a reset function
- * @param {object} initOptions - The options to pass to the UserManager.getCurrentUser function
- * @returns {object} - The user store
+ * @function initialize - Creates a fresh, isolated user store instance.
+ *
+ * `getOidcClient` is injected rather than imported from `oauth.store` so that
+ * this module has no runtime dependency on module-level state in its sibling.
+ * Each `initialize()` call creates its own writable — instances are isolated.
+ *
+ * @param {() => Promise<OidcClientReady>} getOidcClient - Injected from the
+ *   `OAuthStore` returned by `oauth.store.initialize()`.
  */
-export function initialize(initOptions?: ConfigOptions) {
-  /**
-   * Get user info from the server
-   * New state is returned in your `userEvents.subscribe` callback function
-   * @params: getOptions?: ConfigOptions
-   * @returns: Promise<void>
-   */
-  async function get(getOptions?: ConfigOptions) {
-    /**
-     * Create an options object with getOptions overriding anything from initOptions
-     * TODO: Does this object merge need to be more granular?
-     */
-    const options = {
-      ...initOptions,
-      ...getOptions,
-    };
+export function initialize(getOidcClient: () => Promise<OidcClientReady>): UserStore {
+  const userStore = writable<UserStoreValue>({
+    completed: false,
+    error: null,
+    loading: false,
+    successful: false,
+    response: null,
+  });
 
+  async function get() {
     userStore.set({
       completed: false,
       error: null,
@@ -70,7 +60,21 @@ export function initialize(initOptions?: ConfigOptions) {
     });
 
     try {
-      const user = await UserManager.getCurrentUser(options);
+      const oidcClient = await getOidcClient();
+      const user = await oidcClient.user.info();
+
+      if ('error' in user) {
+        const message = typeof user.message === 'string' ? user.message : String(user.error);
+        const code = typeof user.code === 'number' ? user.code : null;
+        userStore.set({
+          completed: true,
+          error: { code, message, troubleshoot: null },
+          loading: false,
+          successful: false,
+          response: null,
+        });
+        return;
+      }
 
       userStore.set({
         completed: true,
@@ -80,18 +84,15 @@ export function initialize(initOptions?: ConfigOptions) {
         response: user,
       });
     } catch (err: unknown) {
-      if (err instanceof Error) {
-        userStore.set({
-          completed: true,
-          error: {
-            message: err.message,
-            troubleshoot: null,
-          },
-          loading: false,
-          successful: false,
-          response: null,
-        });
-      }
+      // Always an Error in practice; fallback covers unexpected third-party throws.
+      const message = err instanceof Error ? err.message : 'Unknown user info error';
+      userStore.set({
+        completed: true,
+        error: { message, troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
     }
   }
 

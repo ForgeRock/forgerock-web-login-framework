@@ -13,6 +13,13 @@
   import { page } from '$app/stores';
   import Widget, { component, configuration, journey, protect, user } from '$package/index';
 
+  import type {
+    ComponentEventValue,
+    JourneyStoreValue,
+    OAuthTokenStoreValue,
+    UserStoreValue,
+  } from '$package/types';
+
   let componentEvents: ReturnType<typeof component> | undefined;
   let journeyEvents: ReturnType<typeof journey> | undefined;
 
@@ -60,17 +67,15 @@
             'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
         },
       },
-      forgerock: {
+      oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
         serverConfig: {
-          baseUrl: journeyParam?.includes('PingProtect')
-            ? 'https://openam-protect2.forgeblocks.com/am'
-            : 'https://openam-sdks.forgeblocks.com/am/',
-          timeout: 5000,
+          wellknown: journeyParam?.includes('PingProtect')
+            ? 'https://openam-protect2.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration'
+            : 'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
         },
-        realmPath: 'alpha',
       },
       content: {
         ...content,
@@ -136,7 +141,7 @@
     componentEvents = component();
     journeyEvents = journey();
 
-    componentEvents.subscribe((event) => {
+    componentEvents.subscribe((event: ComponentEventValue) => {
       if (event.lastAction === 'mount') {
         console.log('Modal mounted');
       }
@@ -145,23 +150,27 @@
       }
     });
 
-    journeyEvents.subscribe((event) => {
-      if (event?.user?.successful) {
-        console.log(event.user);
-        userResponse = event.user.response as UserResponseObj;
-      }
-      if (event.journey.error || event.oauth.error || event.user.error) {
-        console.log('Login failure event fired');
-      }
-    });
+    journeyEvents.subscribe(
+      (event: {
+        journey: JourneyStoreValue;
+        oauth: OAuthTokenStoreValue;
+        user: UserStoreValue;
+      }) => {
+        if (event?.user?.successful) {
+          console.log(event.user);
+          userResponse = event.user.response as unknown as UserResponseObj;
+        }
+        if (event.journey.error || event.oauth.error || event.user.error) {
+          console.log('Login failure event fired');
+        }
+      },
+    );
 
     new Widget({ target: widgetEl });
     if (initializePingProtectEarly) {
       await protect.start({
         envId: initializePingProtectEarly,
         behavioralDataCollection: pauseBehavioralData === 'true',
-        consoleLogEnabled:
-          initializePingProtectEarly && initializePingProtectEarly?.length !== 0 ? true : false,
       });
       await protect.getData();
       protect.pauseBehavioralData();

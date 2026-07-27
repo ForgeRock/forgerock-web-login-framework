@@ -34,7 +34,7 @@ The ForgeRock Login Widget is an all-inclusive UI component for adding authentic
 
 It works with React, Vue, Angular, Svelte, and vanilla JavaScript — any modern client-side JavaScript framework. It does not currently support server-side rendering (SSR) or Node.js.
 
-The widget uses [Journey Client](https://developer.pingidentity.com/orchsdks/journey/usage/javascript/index.html) for journey execution, and the [ForgeRock SDK for JavaScript](https://docs.pingidentity.com/sdks/latest/sdks/tutorials/javascript/index.html) for OAuth/OIDC tokens, user info, and request utilities. It adds a UI rendering layer with state management. This rendering layer is built with [Svelte](https://svelte.dev/) and [Tailwind](https://tailwindcss.com/), but both are compiled away — the resulting widget is framework-agnostic with no runtime dependencies.
+The widget uses [Journey Client](https://developer.pingidentity.com/orchsdks/journey/usage/javascript/index.html) for journey execution, and [OIDC Client](https://developer.pingidentity.com/orchsdks/oidc/usage/javascript-centralized-login.html) for OAuth/OIDC tokens and user info. It adds a UI rendering layer with state management. This rendering layer is built with [Svelte](https://svelte.dev/) and [Tailwind](https://tailwindcss.com/), but both are compiled away — the resulting widget is framework-agnostic with no runtime dependencies.
 
 ## Quick Start
 
@@ -55,14 +55,18 @@ config.set({
   // REQUIRED for journeys
   journeyClient: {
     serverConfig: {
-      wellknown: 'https://your-tenant.forgeblocks.com/am/.well-known/am-configuration',
+      wellknown:
+        'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
     },
   },
-  forgerock: {
-    // REQUIRED if you use OAuth/OIDC tokens, user info, or request()
+  // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
+  oidcClient: {
+    clientId: 'WebOAuthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
     serverConfig: {
-      baseUrl: 'https://your-tenant.forgeblocks.com/am/',
-      timeout: 3000,
+      wellknown:
+        'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
     },
   },
 });

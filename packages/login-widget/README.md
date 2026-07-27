@@ -142,14 +142,18 @@ config.set({
   // REQUIRED for journeys
   journeyClient: {
     serverConfig: {
-      wellknown: 'https://your-tenant.forgeblocks.com/am/.well-known/am-configuration',
+      wellknown:
+        'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
     },
   },
-  // REQUIRED if you use OAuth/OIDC tokens, user info, or request()
-  forgerock: {
+  // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
+  oidcClient: {
+    clientId: 'YourOauthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
     serverConfig: {
-      baseUrl: 'https://your-tenant.forgeblocks.com/am/',
-      timeout: 3000,
+      wellknown:
+        'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
     },
   },
 });
@@ -267,20 +271,19 @@ config.set({
   // REQUIRED for journeys
   journeyClient: {
     serverConfig: {
-      wellknown: 'https://your-tenant.forgeblocks.com/am/.well-known/am-configuration',
+      wellknown:
+        'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
     },
   },
-  forgerock: {
-    // REQUIRED if you use OAuth/OIDC tokens, user info, or request()
+  // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
+  oidcClient: {
+    clientId: 'WebOAuthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
     serverConfig: {
-      baseUrl: 'https://your-tenant.forgeblocks.com/am',
-      timeout: 3000,
+      wellknown:
+        'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
     },
-    // OPTIONAL (defaults shown)
-    clientId: 'WebLoginWidgetClient',
-    realmPath: 'alpha',
-    redirectUri: window.location.href,
-    scope: 'openid email',
   },
   // OPTIONAL — see dedicated sections below
   content: {},
@@ -289,7 +292,9 @@ config.set({
 });
 ```
 
-For more SDK configuration options, see the [SDK configuration documentation](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/04-configure-sdk.html#sdk_configuration_properties).
+> **Migration note (2.0.0):** The `forgerock` config object has been replaced by `oidcClient`.
+> Endpoint discovery is now driven entirely by the `serverConfig.wellknown` URL — `baseUrl`,
+> `realmPath`, `timeout`, and `support` are no longer used. `clientId`, `redirectUri`, and `scope` are now required when configuring `oidcClient`.
 
 ### Journey
 
@@ -420,31 +425,28 @@ user.logout(); // Clears user data and emits events to subscribers
 }
 ```
 
-### Request
+### Calling protected resources
 
-An alias to the JavaScript SDK's `HttpClient.request` — a convenience wrapper around `fetch` that auto-injects the Access Token into the `Authorization` header.
+> **Removed in 2.0.0:** The `request` export (an alias to the legacy `HttpClient.request`) has been
+> removed. `@forgerock/oidc-client` does not provide an HTTP client. Get the access token from
+> `user.tokens()` and call `fetch` directly, adding the `Authorization` header yourself:
 
 ```js
-import { request } from '@forgerock/login-widget';
+import { user } from '@forgerock/login-widget';
 
-const response = await request({
-  url: 'https://protected.resource.com',
-  init: { method: 'GET' },
+const tokenEvents = user.tokens();
+const { response: tokens } = await tokenEvents.get();
+
+const response = await fetch('https://protected.resource.com', {
+  method: 'GET',
+  headers: {
+    Authorization: `Bearer ${tokens.accessToken}`,
+  },
 });
 ```
 
-**Options:**
-
-```js
-{
-  bypassAuthentication: false,  // Boolean; skip token injection
-  init: {},                     // fetch() options
-  timeout: 3000,                // Fetch timeout in milliseconds
-  url: '',                      // Resource URL
-}
-```
-
-> **Note**: The response is a native [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object and is not persisted in the widget.
+> **Note**: The legacy `request` automatically refreshed tokens on a 401 and parsed Identity Gateway
+> policy advice. Those behaviors are not provided by the new SDK and must be implemented by the consumer if needed.
 
 ### Styling Configuration
 

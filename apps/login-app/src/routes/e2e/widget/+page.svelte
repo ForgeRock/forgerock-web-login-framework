@@ -12,7 +12,9 @@
 
   import { configuration, user } from '$package/index';
 
-  let loading: unknown;
+  import type { UserStoreValue } from '$package/types';
+
+  let loading: boolean | null;
   let userInfo: Record<string, unknown> | null;
 
   async function logout() {
@@ -28,22 +30,21 @@
             'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
         },
       },
-      forgerock: {
+      oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
         serverConfig: {
-          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
-          timeout: 5000,
+          wellknown:
+            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
         },
-        realmPath: 'alpha',
       },
     });
 
     // Using observable method:
     const { get, subscribe } = user.info();
     get();
-    subscribe((event: { loading: unknown; response: unknown }) => {
+    subscribe((event: UserStoreValue) => {
       console.log(event);
       loading = event.loading;
       userInfo = event.response as Record<string, unknown>;

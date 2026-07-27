@@ -8,36 +8,34 @@
  -->
 
 <script lang="ts">
-  import { PIProtect } from '@forgerock/ping-protect';
   import { onMount } from 'svelte';
 
   import T from '$components/_utilities/locale-strings.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
+  import { getData, pauseBehavioralData, resumeBehavioralData } from '$core/protect/protect.store';
 
   import type { PingOneProtectEvaluationCallback } from '@forgerock/journey-client/types';
-  import type { InitParams } from '@forgerock/ping-protect';
 
   import type { Maybe } from '$core/interfaces';
+  import type { ProtectConfig } from '$core/protect/protect.store';
   import type { SelfSubmitFunction } from '$journey/journey.interfaces';
 
   export let callback: PingOneProtectEvaluationCallback;
   export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let pingProtect: InitParams = {
+  export let pingProtect: ProtectConfig = {
     envId: '',
   };
 
-  let pauseBehavioralData = false;
+  let isBehavioralDataPaused = false;
 
   onMount(() => {
     async function handleGetData() {
-      try {
-        await PIProtect.getData();
-      } catch (error) {
-        if (error instanceof Error) {
-          callback.setClientError(error.message);
-        } else {
-          callback.setClientError('An error occurred while initializing PingProtect');
-        }
+      const result = await getData();
+      if (typeof result === 'object') {
+        callback.setClientError(result.error);
+      } else {
+        callback.setData(result);
+        console.log('Data set on Protect evaluation callback');
       }
       return selfSubmitFunction && selfSubmitFunction();
     }
@@ -45,12 +43,12 @@
   });
 
   $: {
-    pauseBehavioralData = pingProtect?.behavioralDataCollection ?? false;
+    isBehavioralDataPaused = pingProtect?.behavioralDataCollection ?? false;
     if (typeof window !== 'undefined') {
-      if (pauseBehavioralData === true) {
-        PIProtect.pauseBehavioralData();
+      if (isBehavioralDataPaused === true) {
+        pauseBehavioralData();
       } else {
-        PIProtect.resumeBehavioralData();
+        resumeBehavioralData();
       }
     }
   }
