@@ -31,7 +31,7 @@
   onMount(() => {
     async function handleGetData() {
       const result = await protectStore.getData();
-      if (typeof result === 'object') {
+      if (result && typeof result === 'object' && 'error' in result) {
         callback.setClientError(result.error);
       } else {
         callback.setData(result);
@@ -45,9 +45,15 @@
     isBehavioralDataPaused = pingProtect?.behavioralDataCollection ?? false;
     if (typeof window !== 'undefined') {
       if (isBehavioralDataPaused === true) {
-        protectStore.pauseBehavioralData();
+        const pauseResult = protectStore.pauseBehavioralData();
+        if (pauseResult && 'error' in pauseResult) {
+          callback.setClientError(pauseResult.error);
+        }
       } else {
-        protectStore.resumeBehavioralData();
+        const resumeResult = protectStore.resumeBehavioralData();
+        if (resumeResult && 'error' in resumeResult) {
+          callback.setClientError(resumeResult.error);
+        }
       }
     }
   }

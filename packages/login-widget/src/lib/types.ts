@@ -17,7 +17,6 @@ import type {
   JourneyOptions as JourneyApiOptionsInit,
   JourneyOptionsChange as JourneyApiOptionsChange,
   JourneyOptionsStart as JourneyApiOptionsStart,
-  Protect,
   WidgetConfigOptions as WidgetApiConfigOptions,
 } from './interfaces';
 import type { ComponentStoreValue } from '$core/component.store';
@@ -31,7 +30,7 @@ const _api = widgetApiFactory(componentApi());
 export type JourneyApi = ReturnType<typeof _api.journey>;
 export type UserInfoApi = ReturnType<typeof _api.user.info>;
 export type UserTokensApi = ReturnType<typeof _api.user.tokens>;
-export type ProtectApi = Protect;
+export type ProtectApi = typeof _api.protect;
 // Widget API Options Type
 export type JourneyOptions = JourneyApiOptionsInit;
 export type JourneyOptionsChange = JourneyApiOptionsChange;

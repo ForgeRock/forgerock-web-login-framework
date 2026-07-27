@@ -40,18 +40,24 @@ describe('protect.store — Zod validation', () => {
     vi.resetModules();
   });
 
-  it('throws a ZodError when envId is present but undefined', async () => {
+  it('returns an error object when envId is present but undefined', async () => {
     const store = await importSubject();
-    await expect(() => store.start({ envId: undefined } as unknown as { envId: string })).toThrow(
-      /envId/i,
-    );
+    const result = await store.start({ envId: undefined } as unknown as { envId: string });
+    expect(result).toMatchObject({ error: expect.stringContaining('envId') });
   });
 
-  it('throws a ZodError when an unrecognized key is passed (strict schema)', async () => {
+  it('passes unrecognized keys through to the SDK (schema is not strict)', async () => {
+    // The schema enumerates a subset of the fields the SDK/AM support, so unknown
+    // keys (e.g. AM's `customHost`) must pass through rather than be rejected. See
+    // the non-strict rationale in protect.store.ts.
+    const client = makeProtectClient();
+    protectMock.mockReturnValue(client);
+
     const store = await importSubject();
-    await expect(() =>
-      store.start({ envId: 'abc', unknownKey: true } as unknown as { envId: string }),
-    ).toThrow();
+    const config = { envId: 'abc', customHost: 'https://custom.example.com' };
+    await store.start(config as unknown as { envId: string });
+
+    expect(protectMock).toHaveBeenCalledWith(expect.objectContaining(config));
   });
 
   it('passes through SignalsInitializationOptions (no envId) without Zod validation', async () => {
@@ -84,19 +90,19 @@ describe('protect.store — uninitialized guards', () => {
   it('getData() returns an error object when called before start()', async () => {
     const store = await importSubject();
     const result = await store.getData();
-    expect(result).toEqual({ error: 'PingOne Signals SDK is not initialized' });
+    expect(result).toEqual({ error: 'Protect client not initialized' });
   });
 
   it('pauseBehavioralData() returns an error object when called before start()', async () => {
     const store = await importSubject();
     const result = store.pauseBehavioralData();
-    expect(result).toEqual({ error: 'PingOne Signals SDK is not initialized' });
+    expect(result).toEqual({ error: 'Protect client not initialized' });
   });
 
   it('resumeBehavioralData() returns an error object when called before start()', async () => {
     const store = await importSubject();
     const result = store.resumeBehavioralData();
-    expect(result).toEqual({ error: 'PingOne Signals SDK is not initialized' });
+    expect(result).toEqual({ error: 'Protect client not initialized' });
   });
 });
 

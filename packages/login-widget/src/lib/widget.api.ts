@@ -31,6 +31,7 @@ import type {
   JourneyOptions,
   JourneyOptionsChange,
   JourneyOptionsStart,
+  Protect,
   WidgetConfigOptions,
 } from './interfaces';
 import type { OAuthStore, OAuthTokenStoreValue } from '$core/oauth/oauth.store';
@@ -295,7 +296,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       getData: protectStore.getData,
       pauseBehavioralData: protectStore.pauseBehavioralData,
       resumeBehavioralData: protectStore.resumeBehavioralData,
-    },
+    } satisfies Protect,
     user,
   };
 }

@@ -7,6 +7,7 @@
  *
  **/
 
+import type { SignalsInitializationOptions } from '@forgerock/protect/types';
 import type { z } from 'zod';
 
 import type { captchaConfigSchema } from '$core/captcha.config';
@@ -47,7 +48,9 @@ export interface Response {
 }
 
 export interface Protect {
-  start: (config: ProtectConfig) => Promise<void | { error: string }>;
+  start: (
+    config: ProtectConfig | SignalsInitializationOptions,
+  ) => Promise<void | { error: string }>;
   resumeBehavioralData: () => void | { error: string };
   pauseBehavioralData: () => void | { error: string };
   getData: () => Promise<string | { error: string }>;
