@@ -65,6 +65,7 @@ if (copiedCount === 0) {
 
 const coreFilesToCopy = [
   'interfaces.d.ts',
+  'captcha.config.d.ts',
   'component.store.d.ts',
   'links.store.d.ts',
   'locale.store.d.ts',
