@@ -71,8 +71,11 @@ awaited at boot before any other API call), `journey`, `user`, `component`, and
   `dist/`.
 - **Svelte compat mode:** `componentApi: 4` preserves the
   `new Widget({ target })` instantiation pattern for consumers.
-- **Externalized runtime deps** (ES build): `@forgerock/journey-client`,
-  `@forgerock/oidc-client`, `@forgerock/protect`, `qrcode`, `xss`, `zod`.
+- **Bundled runtime deps:** both builds inline all runtime dependencies —
+  `@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
+  `qrcode`, `xss`, `zod`. Neither `vite.config.ts` (ES) nor
+  `vite.config.iife.ts` (IIFE, `external: []`) externalizes them; Vite library
+  mode bundles dependencies unless a `rollupOptions.external` list opts them out.
 
 ## Commands
 
@@ -153,10 +156,10 @@ E2E tests and the login-app require AM connection details via `.env` or shell:
 ## Architecture Overview
 
 State and logic live in `core/` as **singleton Svelte stores** — there is no
-Redux/RTK and no network-client layer here (network calls are delegated to the
-externalized `@forgerock/journey-client` and `@forgerock/oidc-client`). The
-widget composes UI on top of those stores, and `packages/login-widget` packages
-the result for publishing.
+Redux/RTK and no network-client layer here (network calls are delegated to
+`@forgerock/journey-client` and `@forgerock/oidc-client`, which are bundled into
+the published output). The widget composes UI on top of those stores, and
+`packages/login-widget` packages the result for publishing.
 
 Dependencies flow in one direction — UI and the published package depend on
 `core/`, never the reverse:
@@ -164,7 +167,7 @@ Dependencies flow in one direction — UI and the published package depend on
 ```
 packages/login-widget  ──►  core/  ──►  @forgerock/journey-client
 apps/login-app         ──►  core/  ──►  @forgerock/oidc-client
-                                         (externalized runtime deps)
+                                         (bundled runtime deps)
 ```
 
 **Store layer** (`core/`): one singleton store per concern. `style.store.ts`,

@@ -207,10 +207,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   };
   const user = {
     /**
-     * User Info. `subscribe` exposes the raw user store for reactive reads;
-     * `get()` fetches user info and resolves with the completed store value, or
-     * rejects with it on error. `configure()` has already awaited the OIDC
-     * client, so the fetch never races the null-client window.
+     * User Info
      * @returns {{ get: () => Promise<UserStoreValue>, subscribe: Readable<UserStoreValue>['subscribe'] }}
      */
     info() {
@@ -262,11 +259,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       }
     },
     /**
-     * Tokens. `subscribe` exposes the raw oauth store for reactive reads;
-     * `get(options)` fetches tokens and resolves with the completed store
-     * value, or rejects with it on error. `options` is forwarded to the OIDC
-     * client's token retrieval. `configure()` has already awaited the OIDC
-     * client, so the fetch never races the null-client window.
+     * Tokens
      * @returns {{ get: (options?: GetTokensOptions) => Promise<OAuthTokenStoreValue>, subscribe: Readable<OAuthTokenStoreValue>['subscribe'] }}
      */
     tokens() {
