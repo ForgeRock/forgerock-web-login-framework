@@ -1,5 +1,5 @@
 /**
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -66,12 +66,13 @@ if (copiedCount === 0) {
 const coreFilesToCopy = [
   'interfaces.d.ts',
   'component.store.d.ts',
-  'sdk.config.d.ts',
   'links.store.d.ts',
   'locale.store.d.ts',
   'style.store.d.ts',
+  'oidc/oidc.store.d.ts',
   'oauth/oauth.store.d.ts',
   'user/user.store.d.ts',
+  'protect/protect.store.d.ts',
   'journey/journey.interfaces.d.ts',
   'journey/config.store.d.ts',
 ];

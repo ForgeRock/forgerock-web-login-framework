@@ -1,17 +1,16 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { TokenManager } from '@forgerock/javascript-sdk';
-import { writable } from 'svelte/store';
+import { get as getStoreValue, writable } from 'svelte/store';
 
-import type { GetTokensOptions, OAuth2Tokens } from '@forgerock/javascript-sdk';
-import type { Writable } from 'svelte/store';
+import type { GetTokensOptions, OauthTokens, OidcClient } from '@forgerock/oidc-client/types';
+import type { Readable, Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
 
@@ -22,9 +21,10 @@ const timeoutErrorMessage =
 const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
 
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
-  get: (getOptions?: GetTokensOptions) => void;
+  get: (getOptions?: GetTokensOptions) => Promise<OAuthTokenStoreValue>;
   reset: () => void;
 }
+
 export interface OAuthTokenStoreValue {
   completed: boolean;
   error: Maybe<{
@@ -34,18 +34,10 @@ export interface OAuthTokenStoreValue {
   }>;
   loading: boolean;
   successful: boolean;
-  response: Maybe<OAuth2Tokens> | void;
+  response: Maybe<OauthTokens> | void;
 }
 
-export const oauthStore: Writable<OAuthTokenStoreValue> = writable({
-  completed: false,
-  error: null,
-  loading: false,
-  successful: false,
-  response: null,
-});
-
-function getTroubleshootingMessage(message: string) {
+function getTroubleshootingMessage(message: Maybe<string>) {
   switch (message) {
     case interactionNeeded:
       return sessionCookieConsentMessage;
@@ -56,75 +48,121 @@ function getTroubleshootingMessage(message: string) {
   }
 }
 
+const INITIAL_STATE: OAuthTokenStoreValue = {
+  completed: false,
+  error: null,
+  loading: false,
+  successful: false,
+  response: null,
+};
+
 /**
  * @function initialize - Initializes the OAuth store with a get function and a reset function
- * @param {object} initOptions - The options to pass to the TokenManager.getTokens function
- * @returns {object} - The OAuth store
- * @example initialize({ query: { prompt: 'none' } });
+ * @param {Readable<OidcClient | null>} oidcClientStore - The OIDC client store to read the client from
+ * @param {GetTokensOptions} initOptions - Default options to pass to `token.get`
+ * @returns {OAuthStore} - The OAuth store
  */
-export function initialize(initOptions?: GetTokensOptions) {
-  /**
-   * Get tokens from the server
-   * new tokens are available in the subscribe method
-   * @params: getOptions?: GetTokensOptions
-   * @returns: Promise<void>
-   */
+export function initialize(
+  oidcClientStore: Readable<OidcClient | null> | undefined,
+  initOptions?: GetTokensOptions,
+): OAuthStore {
+  const oauthStore = writable<OAuthTokenStoreValue>(INITIAL_STATE);
+
   async function get(getOptions?: GetTokensOptions) {
-    /**
-     * Create an options object with getOptions overriding anything from initOptions
-     * TODO: Does this object merge need to be more granular?
-     */
+    if (!oidcClientStore) {
+      oauthStore.set({
+        completed: true,
+        error: { message: 'OIDC client not configured', troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return getStoreValue(oauthStore);
+    }
+
     const options = {
-      ...{ query: { prompt: 'none' } },
+      // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/client.store.ts#L315-L322
+      // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/authorize.request.micros.ts#L122
+      // backgroundRenew must be true or token.get() returns an error instead of fetching new tokens.
+      // prompt=none is passed in automatically by authorize.request.micros.ts — no need to set it via authorizeOptions.
+      backgroundRenew: true,
       ...initOptions,
       ...getOptions,
     };
 
-    let tokens: OAuth2Tokens | void;
+    const oidcClient = getStoreValue(oidcClientStore);
 
-    oauthStore.set({
-      completed: false,
-      error: null,
-      loading: true,
-      successful: false,
-      response: null,
-    });
+    if (!oidcClient) {
+      oauthStore.set({
+        completed: true,
+        error: { message: 'OIDC client not ready', troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return getStoreValue(oauthStore);
+    }
+
+    if ('error' in oidcClient) {
+      oauthStore.set({
+        completed: true,
+        error: { message: String(oidcClient.error), troubleshoot: null },
+        loading: false,
+        successful: false,
+        response: null,
+      });
+      return getStoreValue(oauthStore);
+    }
+
+    const currentState = getStoreValue(oauthStore);
+    if (currentState.loading || currentState.completed) {
+      return currentState;
+    }
+
+    oauthStore.set({ ...INITIAL_STATE, loading: true });
 
     try {
-      tokens = await TokenManager.getTokens(options);
-    } catch (err: unknown) {
-      if (err instanceof Error) {
+      const tokens = await oidcClient.token.get(options);
+
+      if ('error' in tokens) {
+        const message =
+          ('message' in tokens && tokens.message) ||
+          ('error_description' in tokens && tokens.error_description) ||
+          tokens.error;
+        const code = 'code' in tokens && typeof tokens.code === 'number' ? tokens.code : null;
         oauthStore.set({
           completed: true,
-          error: {
-            message: err.message,
-            troubleshoot: getTroubleshootingMessage(err.message),
-          },
+          error: { code, message, troubleshoot: getTroubleshootingMessage(message) },
           loading: false,
           successful: false,
           response: null,
         });
+        return getStoreValue(oauthStore);
       }
-      return;
+
+      oauthStore.set({
+        completed: true,
+        error: null,
+        loading: false,
+        successful: true,
+        response: tokens,
+      });
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Unknown OAuth error';
+      oauthStore.set({
+        completed: true,
+        error: { message, troubleshoot: getTroubleshootingMessage(message) },
+        loading: false,
+        successful: false,
+        response: null,
+      });
     }
 
-    oauthStore.set({
-      completed: true,
-      error: null,
-      loading: false,
-      successful: true,
-      response: tokens,
-    });
+    return getStoreValue(oauthStore);
   }
 
   function reset() {
-    oauthStore.set({
-      completed: false,
-      error: null,
-      loading: false,
-      successful: false,
-      response: null,
-    });
+    oauthStore.set(INITIAL_STATE);
   }
 
   return {

@@ -11,7 +11,14 @@
   import { onMount } from 'svelte';
 
   import { page } from '$app/stores';
-  import Widget, { component, configuration, journey, protect, user } from '$package/index';
+  import Widget, { component, configure, journey, protect, user } from '$package/index';
+
+  import type {
+    ComponentEventValue,
+    JourneyStoreValue,
+    OAuthTokenStoreValue,
+    UserStoreValue,
+  } from '$package/types';
 
   let componentEvents: ReturnType<typeof component> | undefined;
   let journeyEvents: ReturnType<typeof journey> | undefined;
@@ -53,24 +60,13 @@
       content = response.ok && (await response.json());
     }
 
-    configuration({
-      journeyClient: {
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
-      },
-      forgerock: {
+    await configure({
+      wellknown:
+        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+      oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
-        serverConfig: {
-          baseUrl: journeyParam?.includes('PingProtect')
-            ? 'https://openam-protect2.forgeblocks.com/am'
-            : 'https://openam-sdks.forgeblocks.com/am/',
-          timeout: 5000,
-        },
-        realmPath: 'alpha',
       },
       content: {
         ...content,
@@ -136,7 +132,7 @@
     componentEvents = component();
     journeyEvents = journey();
 
-    componentEvents.subscribe((event) => {
+    componentEvents.subscribe((event: ComponentEventValue) => {
       if (event.lastAction === 'mount') {
         console.log('Modal mounted');
       }
@@ -145,15 +141,21 @@
       }
     });
 
-    journeyEvents.subscribe((event) => {
-      if (event?.user?.successful) {
-        console.log(event.user);
-        userResponse = event.user.response as UserResponseObj;
-      }
-      if (event.journey.error || event.oauth.error || event.user.error) {
-        console.log('Login failure event fired');
-      }
-    });
+    journeyEvents.subscribe(
+      (event: {
+        journey: JourneyStoreValue;
+        oauth: OAuthTokenStoreValue;
+        user: UserStoreValue;
+      }) => {
+        if (event?.user?.successful) {
+          console.log(event.user);
+          userResponse = event.user.response as unknown as UserResponseObj;
+        }
+        if (event.journey.error || event.oauth.error || event.user.error) {
+          console.log('Login failure event fired');
+        }
+      },
+    );
 
     new Widget({ target: widgetEl });
     if (initializePingProtectEarly) {
@@ -179,15 +181,15 @@
       <li id="email"><strong>Email</strong>: {userResponse?.email}</li>
     </ul>
     <button on:click={logout}>Logout</button>
-  {:else}
+  {:else if journeyEvents && componentEvents}
     <button
       on:click={() => {
-        journeyEvents?.start({
+        journeyEvents.start({
           journey: journeyParam || authIndexValueParam || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
           recaptchaAction: recaptchaParam ?? undefined,
         });
-        componentEvents?.open();
+        componentEvents.open();
       }}
     >
       Open Login Modal

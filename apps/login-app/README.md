@@ -31,7 +31,7 @@ pnpm build:widget
 pnpm --filter @forgerock/login-app run dev
 ```
 
-The app runs at `http://localhost:5173` by default (Vite's default port).
+The app runs at `https://localhost:8443` by default.
 
 ## Building
 
@@ -50,13 +50,12 @@ pnpm --filter @forgerock/login-app run preview
 
 The app requires environment variables to connect to a ForgeRock AM instance. Set these in a `.env` file at the repository root or export them in your shell.
 
-| Variable                      | Required | Description                                                                                                               |
-| ----------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `VITE_FR_AM_URL`              | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                    |
-| `VITE_FR_AM_COOKIE_NAME`      | Yes      | AM session cookie name                                                                                                    |
-| `VITE_FR_OAUTH_PUBLIC_CLIENT` | No       | OAuth 2.0 public client ID                                                                                                |
-| `VITE_FR_REALM_PATH`          | No       | AM realm path                                                                                                             |
-| `FR_AM_WELLKNOWN_URL`         | Yes      | ForgeRock AM Wellknown URL (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration`) |
+| Variable              | Required | Description                                                                                                               |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `FR_AM_URL`           | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                    |
+| `FR_AM_COOKIE_NAME`   | Yes      | AM session cookie name                                                                                                    |
+| `FR_REALM_PATH`       | Yes      | AM realm path                                                                                                             |
+| `FR_AM_WELLKNOWN_URL` | Yes      | ForgeRock AM Wellknown URL (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration`) |
 
 ## Type Checking
 
@@ -66,4 +65,4 @@ pnpm check:svelte
 
 ---
 
-&copy; Copyright 2022-2025 Ping Identity Corporation. All Rights Reserved.
+&copy; Copyright 2022-2026 Ping Identity Corporation. All Rights Reserved.

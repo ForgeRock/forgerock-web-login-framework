@@ -19,16 +19,12 @@ export function logErrorAndThrow(type: string) {
 
     console.error(errorMessage);
     console.error(
-      'Please configure Widget by importing `configuration` and calling `set` with your settings.',
-    );
-
-    throw new Error(errorMessage);
-  } else if (type === 'missingBaseUrl') {
-    const errorMessage = 'Error: missing `serverConfig.baseUrl`.';
-
-    console.error(errorMessage);
-    console.error(
-      'Please configure Widget by importing `configuration` and calling `set` with your ForgeRock server URL.',
+      'Import `configure` and `await` it before using the journey, user, or protect APIs. Example:\n' +
+        "  import { configure } from '@forgerock/login-widget';\n" +
+        '  await configure({\n' +
+        "    wellknown: 'https://<tenant>/am/oauth2/<realm>/.well-known/openid-configuration',\n" +
+        "    oidcClient: { clientId: '<client-id>', redirectUri: '<your-app-origin>/callback', scope: 'openid profile email' },\n" +
+        '  });',
     );
 
     throw new Error(errorMessage);

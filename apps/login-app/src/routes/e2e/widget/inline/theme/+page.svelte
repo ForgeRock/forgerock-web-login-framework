@@ -11,32 +11,23 @@
   import { onMount } from 'svelte';
 
   import { page } from '$app/stores';
-  import Widget, { configuration, journey } from '$package/index';
+  import Widget, { configure, journey } from '$package/index';
 
   let formEl: HTMLDivElement;
 
-  onMount(() => {
+  onMount(async () => {
     const params = $page.url.searchParams;
     const primaryColorParam = params.get('primaryColor');
     const buttonBorderRadiusParam = params.get('buttonBorderRadius');
     const cardBorderRadiusParam = params.get('cardBorderRadius');
 
-    configuration({
-      journeyClient: {
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
-      },
-      forgerock: {
+    await configure({
+      wellknown:
+        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+      oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
-        serverConfig: {
-          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
-          timeout: 5000,
-        },
-        realmPath: 'alpha',
       },
       style: {
         theme: {

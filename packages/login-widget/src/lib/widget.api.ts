@@ -7,8 +7,6 @@
  *
  **/
 
-import { Config, FRUser, HttpClient, SessionManager } from '@forgerock/javascript-sdk';
-import { PIProtect } from '@forgerock/ping-protect';
 import { derived, get } from 'svelte/store';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
@@ -18,13 +16,14 @@ import { componentStore } from '$core/component.store';
 import { initialize as initializeLinks } from '$core/links.store';
 import { initialize as initializeContent } from '$core/locale.store';
 import { initialize as initializeOauth } from '$core/oauth/oauth.store';
-import configure from '$core/sdk.config';
+import { createOidcClientStore } from '$core/oidc/oidc.store';
+import { protectStore } from '$core/protect/protect.store';
 import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
-import { initialize as initializeJourney } from '$journey/journey.store';
+import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
 
-import type { ConfigOptions } from '@forgerock/javascript-sdk';
+import type { GetTokensOptions } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 import type { componentApi as _componentApi } from './_utilities/component.utilities';
@@ -32,9 +31,11 @@ import type {
   JourneyOptions,
   JourneyOptionsChange,
   JourneyOptionsStart,
+  Protect,
   WidgetConfigOptions,
 } from './interfaces';
 import type { OAuthStore, OAuthTokenStoreValue } from '$core/oauth/oauth.store';
+import type { OidcClientStore } from '$core/oidc/oidc.store';
 import type { UserStore, UserStoreValue } from '$core/user/user.store';
 import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interfaces';
 
@@ -43,16 +44,17 @@ import type { JourneyStore, JourneyStoreValue } from '$journey/journey.interface
  * @param {object} componentApi - The component API
  * @returns {object} - The widget API
  * @property {object} componentApi - The component API for either inline or modal
- * @property {object} configuration - Sets the configuration for the widget
+ * @property {function} configure - Async; configures the widget and constructs its clients
  * @property {function} getStores - Returns the stores: journeyStore, oauthStore, userStore
  * @property {object} journey - the journey API
- * @property {function} request - The HttpClient.request function from the SDK
+ * @property {object} protect - the PingOne Protect API
  * @property {object} user - the user API
  */
 export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>) {
   let journeyStore: JourneyStore;
   let oauthStore: OAuthStore;
   let userStore: UserStore;
+  let oidcClientStore: OidcClientStore | undefined;
 
   function getStores() {
     return {
@@ -68,91 +70,46 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     userStore.reset();
   }
 
-  const configuration = (options?: WidgetConfigOptions) => {
-    if (options?.forgerock) {
-      configure({
-        // Set some basics by default
-        ...{
-          // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-          clientId: 'WebLoginWidgetClient',
-          // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-          // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-          realmPath: 'alpha',
-          // TODO: Once we move to SSR, this default should be more intelligent
-          redirectUri:
-            typeof window === 'object'
-              ? // Construct URL with origin and path only, stripping off hash and query params
-                `${window.location.origin}${window.location.pathname}`
-              : 'https://localhost:3000/callback',
-          scope: 'openid email',
-        },
-        // Let user provided config override defaults
-        ...options?.forgerock,
-        // Force 'legacy' to remove confusion
-        ...{ support: 'legacy' },
-      });
+  /**
+   * @function configure - Configures the widget and constructs its clients.
+   * @param {WidgetConfigOptions} options - The configuration options for the widget
+   * @returns {Promise<void>} Resolves once the Journey Client (and the OIDC client, if configured) is constructed
+   * @throws {Error} If `wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
+   */
+  async function configure(options: WidgetConfigOptions): Promise<void> {
+    const wellknown = options?.wellknown;
+    if (!wellknown) {
+      throw new Error('wellknown url is required to configure the widget');
     }
 
-    /**
-     * Initialize all the stores.
-     */
-    journeyStore = initializeJourney(options?.journeyClient, {
-      ...(options?.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
-    });
-    oauthStore = initializeOauth(options?.forgerock);
-    userStore = initializeUser(options?.forgerock);
+    // initialize journey client
+    journeyStore = initializeJourney(
+      { serverConfig: { wellknown } },
+      { ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }) },
+    );
+    await getJourneyClient();
 
-    initializeContent(options?.content);
-    initializeJourneys(options?.journeys);
-    initializeLinks(options?.links);
-    initializeStyle(options?.style);
+    // initialize oidc client, if present
+    if (options.oidcClient) {
+      oidcClientStore = createOidcClientStore({
+        ...options.oidcClient,
+        serverConfig: { wellknown },
+      });
+      const oidcClient = await oidcClientStore.getClient();
+      if ('error' in oidcClient) {
+        throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
+      }
+    }
 
-    return {
-      /** Set the Login Widget's Configuration
-       * @param {WidgetConfigOptions} options - The configuration options for the Login Widget
-       * @returns {void}
-       **/
-      set(setOptions?: WidgetConfigOptions): void {
-        if (setOptions?.forgerock) {
-          configure({
-            // Set some basics by default
-            ...{
-              // TODO: Could this be a default OAuth client provided by Platform UI OOTB?
-              clientId: 'WebLoginWidgetClient',
-              // TODO: If a realmPath is not provided, should we call the realm endpoint and detect a likely default?
-              // https://backstage.forgerock.com/docs/am/7/setup-guide/sec-rest-realm-rest.html#rest-api-list-realm
-              realmPath: 'alpha',
-              // TODO: Once we move to SSR, this default should be more intelligent
-              redirectUri:
-                typeof window === 'object'
-                  ? window.location.href
-                  : 'https://localhost:3000/callback',
-              scope: 'openid email',
-            },
-            // Let user provided config override defaults
-            ...setOptions?.forgerock,
-            // Force 'legacy' to remove confusion
-            ...{ support: 'legacy' },
-          });
-        }
+    // OAuth and User stores derive from the OIDC client store (undefined when OIDC isn't configured).
+    oauthStore = initializeOauth(oidcClientStore);
+    userStore = initializeUser(oidcClientStore);
 
-        /**
-         * Initialize the stores and ensure both variables point to the same reference.
-         * Variables with _ are the reactive version of the original variable from above.
-         */
-        journeyStore = initializeJourney(setOptions?.journeyClient, {
-          ...(setOptions?.captcha && { captcha: captchaConfigSchema.parse(setOptions.captcha) }),
-        });
-        oauthStore = initializeOauth(setOptions?.forgerock);
-        userStore = initializeUser(setOptions?.forgerock);
-
-        initializeContent(setOptions?.content);
-        initializeJourneys(setOptions?.journeys);
-        initializeLinks(setOptions?.links);
-        initializeStyle(setOptions?.style);
-      },
-    };
-  };
+    initializeContent(options.content);
+    initializeJourneys(options.journeys);
+    initializeLinks(options.links);
+    initializeStyle(options.style);
+  }
   const journey = (options?: JourneyOptions) => {
     if (!journeyStore || !oauthStore || !userStore) {
       logErrorAndThrow('missingStores');
@@ -251,112 +208,88 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
   const user = {
     /**
      * User Info
-     * @param: void
-     * @returns: UserStore
+     * @returns {{ get: () => Promise<UserStoreValue>, subscribe: Readable<UserStoreValue>['subscribe'] }}
      */
     info() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      const { get, subscribe } = userStore;
-
-      function wrappedGet(options?: ConfigOptions) {
-        get(options);
-        return new Promise((resolve, reject) => {
-          const unsubscribe = userStore.subscribe((event) => {
-            if (event.successful) {
-              resolve(event);
-              unsubscribe();
-            } else if (event.error) {
-              reject(event);
-              unsubscribe();
-            }
-          });
-        });
+      async function get() {
+        const state = await userStore.get();
+        if (state.error) {
+          return Promise.reject(state);
+        }
+        return state;
       }
 
-      return { get: wrappedGet, subscribe };
+      return { get, subscribe: userStore.subscribe };
     },
     /**
      * Logout a user from an AM Session
      * @async
      * @param: void
      * @returns: Promise<void>
+     * @throws {Error} If called before configure(), or if server-side session/token termination fails
      **/
     async logout() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      const { clientId } = Config.get();
-
-      let obj;
-
       /**
-       * If configuration has a clientId, then use FRUser to logout to ensure
-       * token revoking and removal; else, just end the session.
+       * 1. journeyClient.terminate() — POST /sessions?_action=logout, destroys the AM SSO session
+       * 2. oidcClient.user.logout() — end_session_endpoint (OIDC session) + revocation_endpoint
+       * (access token) + clears local token storage.
        */
-      if (clientId) {
-        obj = FRUser;
-      } else {
-        obj = SessionManager;
-      }
-
       try {
-        await obj.logout();
+        const journeyClient = await getJourneyClient();
+        await journeyClient.terminate();
+
+        const oidcClientValue = oidcClientStore ? get(oidcClientStore) : null;
+        if (oidcClientValue && !('error' in oidcClientValue)) {
+          await oidcClientValue.user.logout();
+        }
+
         resetAndRestartStores();
       } catch (err) {
         // Regardless of errors, reset all stores and restart journey
         resetAndRestartStores();
         throw err;
       }
-      // Return undefined as there's no response information to share
-      return;
     },
     /**
-     * Returns the widget's Tokens object
-     * @param void;
-     * @returns OAuthStore
+     * Tokens
+     * @returns {{ get: (options?: GetTokensOptions) => Promise<OAuthTokenStoreValue>, subscribe: Readable<OAuthTokenStoreValue>['subscribe'] }}
      */
     tokens() {
       if (!journeyStore || !oauthStore || !userStore) {
         logErrorAndThrow('missingStores');
       }
 
-      const { get, subscribe } = oauthStore;
-
-      function wrappedGet(options?: ConfigOptions) {
-        get(options);
-        return new Promise((resolve, reject) => {
-          const unsubscribe = oauthStore.subscribe((event) => {
-            if (event.successful) {
-              resolve(event);
-              unsubscribe();
-            } else if (event.error) {
-              reject(event);
-              unsubscribe();
-            }
-          });
-        });
+      async function get(options?: GetTokensOptions) {
+        const state = await oauthStore.get(options);
+        if (state.error) {
+          return Promise.reject(state);
+        }
+        return state;
       }
 
-      return { get: wrappedGet, subscribe };
+      return { get, subscribe: oauthStore.subscribe };
     },
   };
 
   return {
     component: componentApi,
-    configuration,
+    configure,
     getStores,
     journey,
     protect: {
-      start: PIProtect.start.bind(PIProtect),
-      getData: PIProtect.getData.bind(PIProtect),
-      pauseBehavioralData: PIProtect.pauseBehavioralData.bind(PIProtect),
-      resumeBehavioralData: PIProtect.resumeBehavioralData.bind(PIProtect),
-    },
-    request: HttpClient.request.bind(HttpClient),
+      start: protectStore.start,
+      getData: protectStore.getData,
+      pauseBehavioralData: protectStore.pauseBehavioralData,
+      resumeBehavioralData: protectStore.resumeBehavioralData,
+    } satisfies Protect,
     user,
   };
 }

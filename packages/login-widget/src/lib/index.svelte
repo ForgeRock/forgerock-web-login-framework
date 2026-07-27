@@ -14,10 +14,9 @@
 
   const api = widgetApiFactory(componentApi());
 
-  export const configuration = api.configuration;
+  export const configure = api.configure;
   export const journey = api.journey;
   export const component = componentApi;
-  export const request = api.request;
   export const user = api.user;
   export const protect = api.protect;
 </script>

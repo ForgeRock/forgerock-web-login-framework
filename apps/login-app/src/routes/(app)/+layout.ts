@@ -8,24 +8,13 @@
  **/
 
 import '../../app.css';
-import { browser } from '$app/environment';
 import { initialize as initializeLinks } from '$core/links.store';
-import configure from '$core/sdk.config';
 import { initialize as initializeStyles } from '$core/style.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 
 import type { LayoutLoad } from './$types';
 
 export const load: LayoutLoad = ({ data }) => {
-  configure({
-    clientId: data.clientId,
-    redirectUri: `${browser ? window.location.origin : 'https://placeholder.com'}/callback`,
-    ...(data.scope && { scope: data.scope }),
-    serverConfig: {
-      baseUrl: data.amUrl,
-    },
-    realmPath: data.realmPath,
-  });
   initializeJourneys();
 
   initializeLinks({

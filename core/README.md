@@ -40,7 +40,6 @@ core/
 ├── interfaces.ts        # Shared TypeScript interfaces
 ├── links.store.ts       # Links configuration store
 ├── locale.store.ts      # Locale/content configuration store
-├── sdk.config.ts        # SDK configuration store
 ├── style.store.ts       # Styling configuration store
 └── tsconfig.json        # TypeScript config with path aliases
 ```

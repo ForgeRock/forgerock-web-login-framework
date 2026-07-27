@@ -45,18 +45,19 @@ Vite config):
 | `$locales`    | `core/locales/`    |
 
 **Dependency hoisting:** `core/`'s runtime deps (e.g.
-`@forgerock/javascript-sdk`, `xss`, `zod`, `qrcode`) are declared in
-`packages/login-widget/package.json` and hoisted to root `node_modules` via
-`public-hoist-pattern` rules in `.npmrc`. **When adding a new dependency that
-`core/` imports, add it to `packages/login-widget/package.json` and, if needed,
-add a `public-hoist-pattern` entry in `.npmrc`.**
+`@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
+`xss`, `zod`, `qrcode`) are declared in `packages/login-widget/package.json`
+and hoisted to root `node_modules` via `public-hoist-pattern` rules in
+`.npmrc`. **When adding a new dependency that `core/` imports, add it to
+`packages/login-widget/package.json` and, if needed, add a
+`public-hoist-pattern` entry in `.npmrc`.**
 
 ### Public API
 
 `widgetApiFactory` (`packages/login-widget/src/lib/widget.api.ts`) wraps the
-`core/` stores into the exported public functions: `configuration`, `journey`,
-`user`, `request`, `component`, and `protect`. `index.svelte` re-exports these
-from its module context.
+`core/` stores into the exported public functions: `configure` (async — must be
+awaited at boot before any other API call), `journey`, `user`, `component`, and
+`protect`. `index.svelte` re-exports these from its module context.
 
 ## Widget Build
 
@@ -70,8 +71,11 @@ from its module context.
   `dist/`.
 - **Svelte compat mode:** `componentApi: 4` preserves the
   `new Widget({ target })` instantiation pattern for consumers.
-- **Externalized runtime deps** (ES build): `@forgerock/javascript-sdk`,
-  `@forgerock/ping-protect`, `qrcode`, `xss`, `zod`.
+- **Bundled runtime deps:** both builds inline all runtime dependencies —
+  `@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
+  `qrcode`, `xss`, `zod`. Neither `vite.config.ts` (ES) nor
+  `vite.config.iife.ts` (IIFE, `external: []`) externalizes them; Vite library
+  mode bundles dependencies unless a `rollupOptions.external` list opts them out.
 
 ## Commands
 
@@ -152,22 +156,25 @@ E2E tests and the login-app require AM connection details via `.env` or shell:
 ## Architecture Overview
 
 State and logic live in `core/` as **singleton Svelte stores** — there is no
-Redux/RTK and no network-client layer here (network calls are delegated to the
-externalized `@forgerock/javascript-sdk`). The widget composes UI on top of
-those stores, and `packages/login-widget` packages the result for publishing.
+Redux/RTK and no network-client layer here (network calls are delegated to
+`@forgerock/journey-client` and `@forgerock/oidc-client`, which are bundled into
+the published output). The widget composes UI on top of those stores, and
+`packages/login-widget` packages the result for publishing.
 
 Dependencies flow in one direction — UI and the published package depend on
 `core/`, never the reverse:
 
 ```
-packages/login-widget  ──►  core/  ──►  @forgerock/javascript-sdk
-apps/login-app         ──►  core/        (externalized runtime dep)
+packages/login-widget  ──►  core/  ──►  @forgerock/journey-client
+apps/login-app         ──►  core/  ──►  @forgerock/oidc-client
+                                         (bundled runtime deps)
 ```
 
 **Store layer** (`core/`): one singleton store per concern. `style.store.ts`,
 `locale.store.ts`, `links.store.ts`, `component.store.ts`,
-`oauth/oauth.store.ts`, `user/user.store.ts`, `journey/journey.store.ts`,
-`journey/config.store.ts`. Stores own state; everything else derives from them.
+`oidc/oidc.store.ts`, `oauth/oauth.store.ts`, `user/user.store.ts`,
+`journey/journey.store.ts`, `journey/config.store.ts`. Stores own state;
+everything else derives from them.
 
 **Journey layer** (`core/journey/`): the authentication flow. Strict internal
 hierarchy — `_utilities/` (lowest) → `stages/` and `callbacks/`. **Callbacks
@@ -190,7 +197,7 @@ ES, IIFE, and type-declaration outputs (see [Widget Build](#widget-build)).
 ```
 core/                          # Shared logic — NOT a workspace, compiled per consumer
 ├── *.store.ts                 # Singleton Svelte stores (style, locale, links, component)
-├── *.config.ts                # Config parsers (sdk.config.ts, captcha.config.ts)
+├── *.config.ts                # Config parsers (captcha.config.ts)
 ├── interfaces.ts              # Shared type contracts
 ├── _utilities/                # Pure cross-cutting helpers (i18n, errors, theme)
 ├── _effects/                  # Cross-cutting side-effects (theme.effects.ts)
@@ -211,6 +218,7 @@ core/                          # Shared logic — NOT a workspace, compiled per 
 │   └── callbacks/             # One directory per AM callback type (22)
 │       ├── _utilities/
 │       └── _effects/
+├── oidc/oidc.store.ts         # createOidcClientStore — shared OIDC client
 ├── oauth/oauth.store.ts
 ├── user/user.store.ts
 ├── server/                    # Server-side utilities

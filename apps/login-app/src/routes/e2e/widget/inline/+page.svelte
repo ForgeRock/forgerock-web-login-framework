@@ -11,7 +11,7 @@
   import { onMount } from 'svelte';
 
   import { page } from '$app/stores';
-  import Widget, { component, configuration, journey, user } from '$package/index';
+  import Widget, { component, configure, journey, user } from '$package/index';
 
   import type { UserStoreValue } from '$package/types';
 
@@ -48,22 +48,14 @@
       content = response.ok && (await response.json());
     }
 
-    configuration({
-      journeyClient: {
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
-      },
+    await configure({
+      wellknown:
+        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
       captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
-      forgerock: {
+      oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
-        serverConfig: {
-          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
-        },
-        realmPath: 'alpha',
       },
       content,
       links: {
@@ -83,7 +75,7 @@
     journeyEvents.subscribe((event) => {
       if (event?.user?.successful) {
         userEvent = event.user;
-        userResponse = event.user.response as UserResponseObj;
+        userResponse = event.user.response as unknown as UserResponseObj;
       }
       if (event.journey.error || event.oauth.error || event.user.error) {
         console.log('Login failure event fired');

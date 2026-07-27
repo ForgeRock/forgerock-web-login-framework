@@ -30,7 +30,7 @@ export default defineConfig({
   },
   plugins: [
     customRegistry({ projectRoot: resolve('../..') }),
-    visualizer({ open: true, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }),
+    visualizer({ open: false, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }),
     svelte({
       compilerOptions: {
         dev: false,

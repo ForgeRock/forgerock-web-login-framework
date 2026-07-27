@@ -627,19 +627,25 @@ export function createPasskeyAutofillStep(authId?: string): JourneyStep {
     ],
     _id: 1,
   };
+  const passwordCallback = {
+    type: callbackType.PasswordCallback,
+    output: [{ name: 'prompt', value: 'Password' }],
+    input: [{ name: 'IDToken3', value: '' }],
+    _id: 2,
+  };
   const hiddenValueCallback = {
     type: callbackType.HiddenValueCallback,
     output: [
       { name: 'value', value: 'false' },
       { name: 'id', value: 'webAuthnOutcome' },
     ],
-    input: [{ name: 'IDToken3', value: 'webAuthnOutcome' }],
-    _id: 2,
+    input: [{ name: 'IDToken4', value: 'webAuthnOutcome' }],
+    _id: 3,
   };
   return createJourneyStep({
     ...usernamePassword,
     authId: authId ?? usernamePassword.authId,
-    callbacks: [nameCallback, metadataCallback, hiddenValueCallback],
+    callbacks: [nameCallback, metadataCallback, passwordCallback, hiddenValueCallback],
     stage: 'DefaultLogin',
   } as Step);
 }

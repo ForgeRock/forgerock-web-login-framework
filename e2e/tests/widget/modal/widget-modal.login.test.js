@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -64,4 +64,23 @@ test('Modal widget with login', async ({ page }) => {
 
   // Journey onFailure()
   expect(messageArray.includes('Login failure event fired')).toBe(true);
+});
+
+test('user.logout() clears session and returns to login state', async ({ page }) => {
+  const { clickButton, navigate } = asyncEvents(page);
+
+  await navigate('widget/modal?journey=TEST_Login');
+
+  await clickButton('Open Login Modal', '/authenticate');
+  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Password').fill('j56eKtae*1');
+  await clickButton('Sign In', '/authenticate');
+
+  await verifyUserInfo(page, expect);
+
+  await page.getByRole('button', { name: 'Logout' }).click();
+
+  // After logout the login button should reappear and user info should be gone
+  await expect(page.getByRole('button', { name: 'Open Login Modal' })).toBeVisible();
+  await expect(page.getByText('Full name')).not.toBeVisible();
 });

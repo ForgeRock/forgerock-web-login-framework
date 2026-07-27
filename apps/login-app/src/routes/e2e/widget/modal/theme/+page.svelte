@@ -11,34 +11,25 @@
   import { onMount } from 'svelte';
 
   import { page } from '$app/stores';
-  import Widget, { component, configuration, journey } from '$package/index';
+  import Widget, { component, configure, journey } from '$package/index';
 
   let componentEvents: ReturnType<typeof component> | undefined;
   let journeyEvents: ReturnType<typeof journey> | undefined;
   let widgetEl: HTMLDivElement;
 
-  onMount(() => {
+  onMount(async () => {
     const params = $page.url.searchParams;
     const primaryColorParam = params.get('primaryColor');
     const buttonBorderRadiusParam = params.get('buttonBorderRadius');
     const cardBorderRadiusParam = params.get('cardBorderRadius');
 
-    configuration({
-      journeyClient: {
-        serverConfig: {
-          wellknown:
-            'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
-        },
-      },
-      forgerock: {
+    await configure({
+      wellknown:
+        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+      oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,
         scope: 'openid profile email me.read',
-        serverConfig: {
-          baseUrl: 'https://openam-sdks.forgeblocks.com/am/',
-          timeout: 5000,
-        },
-        realmPath: 'alpha',
       },
       style: {
         theme: {
@@ -61,13 +52,15 @@
 </script>
 
 <div class="tw_p-6">
-  <button
-    on:click={() => {
-      journeyEvents?.start({ journey: 'TEST_Login' });
-      componentEvents?.open();
-    }}
-  >
-    Open Login Modal
-  </button>
+  {#if journeyEvents && componentEvents}
+    <button
+      on:click={() => {
+        journeyEvents.start({ journey: 'TEST_Login' });
+        componentEvents.open();
+      }}
+    >
+      Open Login Modal
+    </button>
+  {/if}
 </div>
 <div bind:this={widgetEl}></div>

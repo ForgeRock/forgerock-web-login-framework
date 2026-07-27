@@ -7,19 +7,19 @@
  *
  **/
 
-import type { InitParams } from '@forgerock/ping-protect';
+import type { SignalsInitializationOptions } from '@forgerock/protect/types';
 import type { z } from 'zod';
 
 import type { captchaConfigSchema } from '$core/captcha.config';
 import type { partialLinksSchema } from '$core/links.store';
 import type { partialStringsSchema } from '$core/locale.store';
 import type { OAuthTokenStoreValue } from '$core/oauth/oauth.store';
-import type { partialConfigSchema } from '$core/sdk.config';
+import type { oidcClientConfigSchema } from '$core/oidc/oidc.store';
+import type { ProtectConfig } from '$core/protect/protect.store';
 import type { partialStyleSchema } from '$core/style.store';
 import type { UserStoreValue } from '$core/user/user.store';
 import type { journeyConfigSchema } from '$journey/config.store';
 import type { JourneyStoreValue } from '$journey/journey.interfaces';
-import type { journeyClientConfigSchema } from '$journey/journey.store';
 
 export interface JourneyOptions {
   oauth?: boolean; // defaults to true
@@ -48,16 +48,18 @@ export interface Response {
 }
 
 export interface Protect {
-  start: (config: InitParams) => Promise<void>;
-  resumeBehavioralData: () => void;
-  pauseBehavioralData: () => void;
-  getData: () => Promise<string | undefined>;
+  start: (
+    config: ProtectConfig | SignalsInitializationOptions,
+  ) => Promise<void | { error: string }>;
+  resumeBehavioralData: () => void | { error: string };
+  pauseBehavioralData: () => void | { error: string };
+  getData: () => Promise<string | { error: string }>;
 }
 
 export interface WidgetConfigOptions {
+  wellknown: string;
   captcha?: z.infer<typeof captchaConfigSchema>;
-  forgerock?: z.infer<typeof partialConfigSchema>;
-  journeyClient?: z.infer<typeof journeyClientConfigSchema>;
+  oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig'>;
   content?: z.infer<typeof partialStringsSchema>;
   journeys?: z.infer<typeof journeyConfigSchema>;
   links?: z.infer<typeof partialLinksSchema>;

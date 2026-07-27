@@ -134,23 +134,17 @@ Add a dedicated element to your HTML file as a direct child of `<body>`, separat
 Import, configure, and instantiate:
 
 ```js
-import Widget, { configuration, journey } from '@forgerock/login-widget';
+import Widget, { configure, journey } from '@forgerock/login-widget';
 
-// 1. Configure
-const config = configuration();
-config.set({
-  // REQUIRED for journeys
-  journeyClient: {
-    serverConfig: {
-      wellknown: 'https://your-tenant.forgeblocks.com/am/.well-known/am-configuration',
-    },
-  },
-  // REQUIRED if you use OAuth/OIDC tokens, user info, or request()
-  forgerock: {
-    serverConfig: {
-      baseUrl: 'https://your-tenant.forgeblocks.com/am/',
-      timeout: 3000,
-    },
+// 1. Configure — async; awaiting it ensures both clients are ready before use
+await configure({
+  // REQUIRED — the well-known URL, shared by the journey and OIDC clients
+  wellknown: 'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
+  oidcClient: {
+    clientId: 'YourOauthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
   },
 });
 
@@ -163,7 +157,7 @@ const journeyEvents = journey();
 journeyEvents.start();
 ```
 
-> **Tip**: Set configuration at the top level of your application (`index.js` or `app.js`) to ensure it is available before calling `journeyEvents.start()` or any other Widget API.
+> **Tip**: `configure()` is async — always `await` it at the top level of your application (`index.js` or `app.js`) before calling `journey().start()` or any other Widget API. This ensures both the OIDC and journey clients are fully constructed before any fetch is attempted.
 
 ## Observables Pattern
 
@@ -260,27 +254,18 @@ widget.$destroy();
 ### Configuration
 
 ```js
-import { configuration } from '@forgerock/login-widget';
+import { configure } from '@forgerock/login-widget';
 
-const config = configuration();
-config.set({
-  // REQUIRED for journeys
-  journeyClient: {
-    serverConfig: {
-      wellknown: 'https://your-tenant.forgeblocks.com/am/.well-known/am-configuration',
-    },
-  },
-  forgerock: {
-    // REQUIRED if you use OAuth/OIDC tokens, user info, or request()
-    serverConfig: {
-      baseUrl: 'https://your-tenant.forgeblocks.com/am',
-      timeout: 3000,
-    },
-    // OPTIONAL (defaults shown)
-    clientId: 'WebLoginWidgetClient',
-    realmPath: 'alpha',
-    redirectUri: window.location.href,
-    scope: 'openid email',
+// configure() is async — await it before calling any other Widget API
+await configure({
+  // REQUIRED — the well-known URL, shared by the journey and OIDC clients
+  wellknown:
+    'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
+  // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
+  oidcClient: {
+    clientId: 'WebOAuthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
   },
   // OPTIONAL — see dedicated sections below
   content: {},
@@ -289,7 +274,10 @@ config.set({
 });
 ```
 
-For more SDK configuration options, see the [SDK configuration documentation](https://backstage.forgerock.com/docs/sdks/latest/javascript/webloginframework/04-configure-sdk.html#sdk_configuration_properties).
+> **Migration note (2.0.0):** The `forgerock` config object has been replaced by `oidcClient`.
+> Endpoint discovery is now driven by a single top-level `wellknown` URL, shared by the
+> journey and OIDC clients — `baseUrl`, `realmPath`, `timeout`, and `support` are no longer
+> used. `clientId`, `redirectUri`, and `scope` are now required when configuring `oidcClient`.
 
 ### Journey
 
@@ -420,38 +408,35 @@ user.logout(); // Clears user data and emits events to subscribers
 }
 ```
 
-### Request
+### Calling protected resources
 
-An alias to the JavaScript SDK's `HttpClient.request` — a convenience wrapper around `fetch` that auto-injects the Access Token into the `Authorization` header.
+> **Removed in 2.0.0:** The `request` export (an alias to the legacy `HttpClient.request`) has been
+> removed. `@forgerock/oidc-client` does not provide an HTTP client. Get the access token from
+> `user.tokens()` and call `fetch` directly, adding the `Authorization` header yourself:
 
 ```js
-import { request } from '@forgerock/login-widget';
+import { user } from '@forgerock/login-widget';
 
-const response = await request({
-  url: 'https://protected.resource.com',
-  init: { method: 'GET' },
+const tokenEvents = user.tokens();
+const { response: tokens } = await tokenEvents.get();
+
+const response = await fetch('https://protected.resource.com', {
+  method: 'GET',
+  headers: {
+    Authorization: `Bearer ${tokens.accessToken}`,
+  },
 });
 ```
 
-**Options:**
-
-```js
-{
-  bypassAuthentication: false,  // Boolean; skip token injection
-  init: {},                     // fetch() options
-  timeout: 3000,                // Fetch timeout in milliseconds
-  url: '',                      // Resource URL
-}
-```
-
-> **Note**: The response is a native [`Response`](https://developer.mozilla.org/en-US/docs/Web/API/Response) object and is not persisted in the widget.
+> **Note**: The legacy `request` automatically refreshed tokens on a 401 and parsed Identity Gateway
+> policy advice. Those behaviors are not provided by the new SDK and must be implemented by the consumer if needed.
 
 ### Styling Configuration
 
 Configure the widget's visual appearance:
 
 ```js
-config.set({
+await configure({
   style: {
     checksAndRadios: 'animated', // OPTIONAL; 'animated' or 'standard'
     labels: 'floating', // OPTIONAL; 'floating' or 'stacked'
@@ -480,7 +465,7 @@ config.set({
 Set the URL for your Terms & Conditions page (used by `TermsAndConditionsCallback`):
 
 ```js
-config.set({
+await configure({
   links: {
     termsAndConditions: 'https://example.com/terms',
   },
@@ -492,7 +477,7 @@ config.set({
 Override the widget's default content with custom text. For the full schema, see the [en-US locale file](https://github.com/ForgeRock/forgerock-web-login-framework/tree/main/core/locales).
 
 ```js
-config.set({
+await configure({
   content: {
     // Custom content that overrides Widget defaults
   },
@@ -504,7 +489,7 @@ config.set({
 AM does not signal invisible mode in the callback payload for either `ReCaptchaCallback` or `ReCaptchaEnterpriseCallback`. Use the `captcha` option to configure invisible rendering:
 
 ```js
-config.set({
+await configure({
   captcha: {
     mode: 'invisible', // 'visible' (default) | 'invisible'
   },
