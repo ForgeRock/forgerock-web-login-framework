@@ -1,6 +1,6 @@
 {
   "name": "@forgerock/login-framework-cli",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "CLI tool for scaffolding and managing Ping Login Widget and Login App custom component projects",
   "type": "module",
   "exports": {
@@ -11,7 +11,9 @@
   "bin": {
     "ping-lf": "./dist/src/main.js"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.json && chmod +x dist/src/main.js && ([ -d templates ] && cp -r templates/ dist/src/templates/ || true)",
     "dev": "tsc --watch",
@@ -19,7 +21,15 @@
     "test:watch": "vitest",
     "prepublishOnly": "pnpm build"
   },
-  "keywords": ["ping-identity", "forgerock", "login", "widget", "cli", "generator", "svelte"],
+  "keywords": [
+    "ping-identity",
+    "forgerock",
+    "login",
+    "widget",
+    "cli",
+    "generator",
+    "svelte"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",

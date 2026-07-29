@@ -1,5 +1,74 @@
 # [1.3.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.1...v1.3.0) (2024-06-05)
 
+## 2.0.0
+
+### Major Changes
+
+- [#552](https://github.com/ForgeRock/forgerock-web-login-framework/pull/552) [`6758e54`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/6758e540ebd4a739d00db6e817442c254d0a5fa4) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Migrate OAuth/OIDC, user info, and logout from `@forgerock/javascript-sdk` to `@forgerock/oidc-client`, and Ping Protect from `@forgerock/ping-protect` to `@forgerock/protect`. `@forgerock/javascript-sdk` is no longer a dependency.
+
+  The synchronous `configuration()` export is replaced by an async `configure()`. Call and `await` it once with your settings — the two-step `configuration().set(...)` pattern is removed.
+
+- [#468](https://github.com/ForgeRock/forgerock-web-login-framework/pull/468) [`89ae057`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/89ae057d5b203499e3a3266289dde9eea7ce14a5) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Migrate the journey flow implementation from `@forgerock/javascript-sdk` to `@forgerock/journey-client`.
+
+### Minor Changes
+
+- [#478](https://github.com/ForgeRock/forgerock-web-login-framework/pull/478) [`3d52dfc`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/3d52dfc92ae66a8ef2d51fa39e15cce77586415e) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add invisible reCAPTCHA v2, invisible hCaptcha, and reCAPTCHA Enterprise support.
+
+  - Support invisible mode for both Google reCAPTCHA v2 and hCaptcha via `await configure({ captcha: { mode: 'invisible' } })`.
+  - Add `ReCaptchaEnterpriseCallback` handler for AM journeys using the Enterprise CAPTCHA node — renders visible checkbox or score-based invisible flow automatically from callback data.
+  - Add `resolveGrecaptcha()` helper that prefers `window.grecaptcha.enterprise` and falls back to classic `window.grecaptcha`, keeping existing consumers with migrated keys working without changes.
+  - Show inline `<Alert type="error">` on CAPTCHA failure or expiry for invisible modes.
+  - Fix `renderCaptcha` to accept an optional `elementId` param to avoid DOM id collisions between classic and Enterprise components.
+
+- [#458](https://github.com/ForgeRock/forgerock-web-login-framework/pull/458) [`b0db37f`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/b0db37f0d7cda840b4748e977e71247cb54bd8d6) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add support for custom callback and stage components.
+
+- [#450](https://github.com/ForgeRock/forgerock-web-login-framework/pull/450) [`2265fd7`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/2265fd7f77cea57cb0b77f701a4c16e80a9d44f1) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add `TextInputCallback` support in the login widget callback renderer.
+
+  - Map and render `TextInputCallback` using existing text input composition patterns.
+  - Include callback metadata handling so steps treat `TextInputCallback` as required user input.
+  - Add Storybook coverage and Playwright E2E coverage for submit flow and TextInput edge cases.
+
+- [#470](https://github.com/ForgeRock/forgerock-web-login-framework/pull/470) [`b2bec85`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/b2bec85a8187ef4d4621e5215cf779d8faf52763) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Autofill with passkeys for Webauthn journeys
+
+- [#520](https://github.com/ForgeRock/forgerock-web-login-framework/pull/520) [`9355ed1`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/9355ed1e6aea497b47c02c23beb7e80fe00bb440) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add IDM theming support. Consumers can now pass a `theme` object to `await configure({ style: { theme } })` to apply design tokens as CSS custom properties on the widget root. Supports `primaryColor`, `secondaryColor`, `backgroundColor`, `linkColor`, `linkActiveColor`, `fontFamily`, `buttonBorderRadius`, `cardBorderRadius`, `cardBgColor`, `inputBgColor`, `inputBorderColor`, `inputLabelColor`, `inputTextColor`, `inputFocusRingColor`, `selectAccentColor`, `selectHoverBgColor`, `cardTextColor`, `bodyTextColor`, `buttonTextColor`, `buttonFocusRingColor`, `logo`, `logoHeight`, and `primaryOffColor`. The Login App SSR layer fetches theme values from the IDM `/openidm/config/ui/themerealm` endpoint automatically.
+
+- [#516](https://github.com/ForgeRock/forgerock-web-login-framework/pull/516) [`ad1b599`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/ad1b599dfd2ac2ca586670c2dc3c52c502241591) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Add dedicated stage for PingOne AIC admin registration flow (welcome, OTP verify, privacy policy, invalid invite).
+
+- [#400](https://github.com/ForgeRock/forgerock-web-login-framework/pull/400) [`5f8b168`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/5f8b16811d3a4fd79f7b7f11501a8c6b34f0c119) Thanks [@ryanbas21](https://github.com/ryanbas21)! - Migrate to Svelte 5, pnpm monorepo architecture, and fix published type declarations
+
+  - Upgrade Svelte from v3/v4 to v5 with backward-compatible legacy mode
+  - Restructure project into pnpm workspaces: `packages/login-widget`, `apps/login-app`, `e2e/`, `core/`
+  - Fix published type declarations by namespacing core types under `dist/core/` with correct relative paths
+  - Upgrade Storybook from v7 to v10
+  - Replace Rollup with Vite for all builds
+  - Overhaul CI pipeline for pnpm strict dependency isolation
+
+- [#471](https://github.com/ForgeRock/forgerock-web-login-framework/pull/471) [`e574fab`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/e574fab429b8137900350d6d74b285b7b32cf670) Thanks [@ryanbas21](https://github.com/ryanbas21)! - Upgrade `zod` from `3.22.4` to `^4.3.6` and `xss` from `1.0.14` to `^1.0.15`.
+
+  - Migrate `core/sdk.config.ts` config schema to Zod v4: replace the removed
+    `z.function().args().returns()` schema form with `z.custom<Fn>()` for the
+    `callbackFactory`, `middleware`, and `tokenStore` function validators;
+    collapse the `z.nativeEnum(CallbackType)` validator (which was part of the
+    removed `z.function().args()` chain) into `z.custom<CallbackFactoryFn>()`; collapse
+    `{ invalid_type_error, required_error }` into the unified `error`
+    callback.
+  - Migrate `core/_utilities/i18n.utilities.ts` to the two-argument
+    `z.record(keySchema, valueSchema)` form required by v4.
+  - The inferred public config surface (`z.infer<typeof partialConfigSchema>`)
+    is preserved; no behavior change at runtime.
+
+- [#549](https://github.com/ForgeRock/forgerock-web-login-framework/pull/549) [`df7c4db`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/df7c4db7ba80215c7982f671df141b644a92bfe0) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - WebAuthn: consume Ping SDK 2.1 API and honor AM-configured autocomplete values on the username input.
+
+### Patch Changes
+
+- [#542](https://github.com/ForgeRock/forgerock-web-login-framework/pull/542) [`d9c12ab`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/d9c12ab4f039e4883aa7c338141b6b6dc02874ff) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Fix Alert:Info visual regression (green background in light mode, black background in dark mode) caused by additive CSS `calc()` lightness offsets becoming active once `--tw-colors-*` custom properties were injected by the IDM theming feature. Replaced the three broken additive expressions with multiplicative `calc(var(--l) * factor)` that replicates the `color` library's relative `lighten`/`darken` math correctly for any token value.
+
+- [#446](https://github.com/ForgeRock/forgerock-web-login-framework/pull/446) [`16d48f3`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/16d48f3a93dc34733e9b6fc410ff50630890ed11) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Fix English locale copy: authenticator typo and grammar wording updates.
+
+- [#489](https://github.com/ForgeRock/forgerock-web-login-framework/pull/489) [`eef8b31`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/eef8b31b713b5f88f06375d76970ad87235bc6ac) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Add dedicated MFA enrollment and recovery codes stages for multi-factor setup journeys, including a new `mfa-enrollment.svelte` stage that handles the MFA setup text-output callback script and a `recovery-codes.svelte` stage that displays one-time recovery codes after MFA registration.
+
+- [#543](https://github.com/ForgeRock/forgerock-web-login-framework/pull/543) [`46fa2c7`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/46fa2c70ff0820b7146c29ef27eed6ec9bb01a2f) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Adopt journey-client 2.1: import types from the package instead of deriving them, include login failure type and remove resume() URL-parsing.
+
 ### Bug Fixes
 
 - **add loglevel to widget config:** widget config to support loglevel option ([db864e9](https://github.com/forgerock/forgerock-web-login-framework/commit/db864e9964018f0aa3e51cea90c126f2e8800d86))
