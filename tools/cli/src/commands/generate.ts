@@ -16,11 +16,14 @@ const CUSTOM_DIR = 'experimental/custom';
 /**
  * Converts a PascalCase name to a kebab-case slug.
  * Uses two passes to correctly handle acronyms.
- * Examples: "MyCallback" → "my-callback", "JWTLogin" → "jwt-login", "MyURLCallback" → "my-url-callback"
+ * The acronym-boundary pass requires 2+ leading capitals so a single leading capital
+ * (e.g. "OAuth") isn't mistaken for an acronym run and split off on its own.
+ * Examples: "MyCallback" → "my-callback", "JWTLogin" → "jwt-login", "MyURLCallback" → "my-url-callback",
+ * "OAuth2Login" → "oauth2-login"
  */
 function toKebabCase(name: string): string {
   return name
-    .replace(/([A-Z]+)([A-Z][a-z])/g, '$1-$2')
+    .replace(/([A-Z]{2,})([A-Z][a-z])/g, '$1-$2')
     .replace(/([a-z\d])([A-Z])/g, '$1-$2')
     .toLowerCase();
 }
@@ -28,11 +31,13 @@ function toKebabCase(name: string): string {
 /**
  * Converts an arbitrary string to a kebab-case directory slug.
  * Used for stage names which may contain spaces, hyphens, or mixed case.
- * Examples: "My Login Stage" → "my-login-stage", "DefaultLogin" → "defaultlogin", "OTP Login" → "otp-login"
+ * Delegates PascalCase/acronym word-boundary splitting to toKebabCase, then normalizes
+ * any remaining separators (spaces, underscores, hyphens) since, unlike callback names,
+ * stage names aren't constrained to alphanumeric PascalCase.
+ * Examples: "My Login Stage" → "my-login-stage", "DefaultLogin" → "default-login", "OTP Login" → "otp-login"
  */
 function toSlug(name: string): string {
-  return name
-    .toLowerCase()
+  return toKebabCase(name)
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 }

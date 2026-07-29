@@ -146,6 +146,10 @@ describe('CallbackNameSchema', () => {
       expect(decodeCallback('Login').slug).toBe('login');
     });
 
+    it('does not mistake a single leading capital for an acronym run', () => {
+      expect(decodeCallback('OAuth2Login').slug).toBe('oauth2-login');
+    });
+
     it('preserves the original PascalCase name', () => {
       expect(decodeCallback('MyCallback').name).toBe('MyCallback');
     });
@@ -178,7 +182,11 @@ describe('StageNameSchema', () => {
   describe('valid names — AM stage names are arbitrary strings', () => {
     it('accepts PascalCase (common AM convention)', () => {
       expect(decodeStage('DefaultLogin').name).toBe('DefaultLogin');
-      expect(decodeStage('DefaultLogin').slug).toBe('defaultlogin');
+      expect(decodeStage('DefaultLogin').slug).toBe('default-login');
+    });
+
+    it('hyphenates PascalCase stage names at word boundaries', () => {
+      expect(decodeStage('MyCustomStage').slug).toBe('my-custom-stage');
     });
 
     it('accepts names with spaces', () => {
@@ -192,6 +200,15 @@ describe('StageNameSchema', () => {
 
     it('accepts names with mixed separators', () => {
       expect(decodeStage('OTP Login').slug).toBe('otp-login');
+    });
+
+    it('hyphenates acronym runs in PascalCase stage names', () => {
+      expect(decodeStage('JWTLoginStage').slug).toBe('jwt-login-stage');
+    });
+
+    it('handles digit-adjacent acronym boundaries', () => {
+      expect(decodeStage('OAuth2Login').slug).toBe('oauth2-login');
+      expect(decodeStage('SAML2Stage').slug).toBe('saml2-stage');
     });
 
     it('preserves the original name', () => {
