@@ -11,6 +11,7 @@ import { type ThemeObject, themeSchema, urlRegex } from '$core/style.store';
 import { env } from '$env/dynamic/private';
 
 interface IdmThemeEntry {
+  _id?: string;
   isDefault?: boolean;
   linkedTrees?: string[];
   primaryColor?: string;
@@ -46,6 +47,7 @@ interface IdmThemeRealmResponse {
 
 export interface IdmThemeResult {
   theme: ThemeObject | undefined;
+  themeCatalog: Record<string, ThemeObject>;
   backgroundImageUrl: string | undefined;
 }
 
@@ -108,7 +110,11 @@ export async function fetchIdmTheme(
   const url = new URL('/openidm/config/ui/themerealm', idmBaseUrl).href;
   const cacheKey = `${realmPath}::${journeyName ?? ''}`;
   const cached = themeCache.get(cacheKey);
-  const emptyResult: IdmThemeResult = { theme: undefined, backgroundImageUrl: undefined };
+  const emptyResult: IdmThemeResult = {
+    theme: undefined,
+    themeCatalog: {},
+    backgroundImageUrl: undefined,
+  };
   let response: Response;
 
   try {
@@ -136,12 +142,18 @@ export async function fetchIdmTheme(
 
   const themes = body.realm?.[realmPath] ?? [];
 
+  const themeCatalog = themes.reduce<Record<string, ThemeObject>>((catalog, entry) => {
+    if (!entry._id) return catalog;
+    const mapped = toIdmTheme(entry);
+    return mapped ? { ...catalog, [entry._id]: mapped } : catalog;
+  }, {});
+
   const matched =
     (journeyName && themes.find((theme) => theme.linkedTrees?.includes(journeyName))) ??
     themes.find((theme) => theme.isDefault) ??
     themes[0];
 
-  if (!matched) return cached ?? emptyResult;
+  if (!matched) return cached ?? { ...emptyResult, themeCatalog };
 
   const backgroundImageUrl =
     matched.backgroundImage && urlRegex.test(matched.backgroundImage)
@@ -150,6 +162,7 @@ export async function fetchIdmTheme(
 
   const result: IdmThemeResult = {
     theme: toIdmTheme(matched),
+    themeCatalog,
     backgroundImageUrl,
   };
 

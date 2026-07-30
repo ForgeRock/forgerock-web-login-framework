@@ -204,7 +204,7 @@ module.exports = (config, theme) => ({
     padding: `${theme('spacing.6')} 0`,
   },
   '.dialog-logo': {
-    backgroundImage: 'var(--logo-light)',
+    backgroundImage: 'var(--logo-light, var(--fr-logo-light-fallback))',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'contain',
@@ -212,7 +212,7 @@ module.exports = (config, theme) => ({
     width: '100%',
   },
   '.dialog-logo_dark': {
-    backgroundImage: 'var(--logo-dark)',
+    backgroundImage: 'var(--logo-dark, var(--fr-logo-dark-fallback))',
   },
   '.dialog-box_medium': {
     height: 'fit-content',

@@ -302,4 +302,14 @@ describe('Test metadata builder function for step', () => {
       },
     });
   });
+
+  it('surfaces a resolved page themeId on derived metadata', () => {
+    const result = buildStepMetadata([], null, null, 'zardoz');
+    expect(result.derived.themeId).toBe('zardoz');
+  });
+
+  it('omits themeId from derived metadata when not resolved', () => {
+    const result = buildStepMetadata([], null, null);
+    expect(result.derived.themeId).toBeUndefined();
+  });
 });

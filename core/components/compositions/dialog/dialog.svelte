@@ -63,11 +63,13 @@
     <div class="tw_dialog-header dark:tw_dialog-header_dark">
       <div
         class="tw_dialog-logo dark:tw_dialog-logo_dark"
-        style={`--logo-dark: ${encodeCssUrl(
+        style={`--fr-logo-dark-fallback: ${encodeCssUrl(
           $styleStore?.logo?.dark ?? '',
-        )}; --logo-light: ${encodeCssUrl($styleStore?.logo?.light ?? '')}; ${
-          $styleStore?.logo?.height ? `height: ${$styleStore?.logo.height}px;` : ''
-        } ${$styleStore?.logo?.width ? `width: ${$styleStore?.logo.width}px;` : ''}`}
+        )}; --fr-logo-light-fallback: ${encodeCssUrl(
+          $styleStore?.logo?.light ?? '',
+        )}; height: var(--fr-logo-height, ${
+          $styleStore?.logo?.height ? `${$styleStore.logo.height}px` : 'inherit'
+        }); ${$styleStore?.logo?.width ? `width: ${$styleStore?.logo.width}px;` : ''}`}
       ></div>
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
@@ -100,9 +102,13 @@
       {#if $styleStore?.logo}
         <div
           class="tw_dialog-logo dark:tw_dialog-logo_dark"
-          style={`--logo-dark: ${encodeCssUrl(
+          style={`--fr-logo-dark-fallback: ${encodeCssUrl(
             $styleStore?.logo?.dark ?? '',
-          )}; --logo-light: ${encodeCssUrl($styleStore?.logo?.light ?? '')}`}
+          )}; --fr-logo-light-fallback: ${encodeCssUrl(
+            $styleStore?.logo?.light ?? '',
+          )}; height: var(--fr-logo-height, ${
+            $styleStore?.logo?.height ? `${$styleStore.logo.height}px` : '100%'
+          });`}
         ></div>
       {/if}
     </div>

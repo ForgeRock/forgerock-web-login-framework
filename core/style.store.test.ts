@@ -147,6 +147,46 @@ describe('styleSchema — theme field', () => {
   });
 });
 
+describe('styleSchema — themeCatalog field', () => {
+  it('accepts styleSchema with a valid themeCatalog', () => {
+    const result = styleSchema.safeParse({
+      themeCatalog: { 'idm-theme-id': { primaryColor: '#027ab8' } },
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it('accepts styleSchema without themeCatalog', () => {
+    expect(styleSchema.safeParse({}).success).toBe(true);
+  });
+
+  it('accepts a themeCatalog with multiple entries keyed by id', () => {
+    const result = styleSchema.safeParse({
+      themeCatalog: {
+        'theme-a': { primaryColor: '#027ab8' },
+        'theme-b': { primaryColor: '#5aa625' },
+      },
+    });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.themeCatalog?.['theme-a']?.primaryColor).toBe('#027ab8');
+    expect(result.success && result.data.themeCatalog?.['theme-b']?.primaryColor).toBe('#5aa625');
+  });
+
+  it('rejects a themeCatalog entry with unknown keys (strict theme entries)', () => {
+    const result = styleSchema.safeParse({
+      themeCatalog: { 'theme-a': { unknownField: '#027ab8' } },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it('drops invalid color inside a catalog entry — entry parsed with field undefined', () => {
+    const result = styleSchema.safeParse({
+      themeCatalog: { 'theme-a': { primaryColor: 'not-hex' } },
+    });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.themeCatalog?.['theme-a']?.primaryColor).toBeUndefined();
+  });
+});
+
 describe('initialize', () => {
   it('merges theme into store when provided', () => {
     const store = initialize({ theme: { primaryColor: '#027ab8' } });
@@ -169,5 +209,29 @@ describe('initialize', () => {
     store.subscribe((v) => (value = v))();
     expect(value?.checksAndRadios).toBe('standard');
     expect(value?.theme).toBeUndefined();
+  });
+
+  it('drops an invalid nested color field rather than storing it unparsed', () => {
+    const store = initialize({ theme: { primaryColor: 'not-hex' } });
+    let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
+    store.subscribe((v) => (value = v))();
+    expect(value?.theme?.primaryColor).toBeUndefined();
+  });
+
+  it('resets to fallback when passed a value that fails schema validation', () => {
+    initialize({ theme: { primaryColor: '#027ab8' } });
+    // @ts-expect-error — intentionally invalid input to exercise the safeParse failure path
+    const store = initialize({ checksAndRadios: 'not-a-valid-option' });
+    let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
+    store.subscribe((v) => (value = v))();
+    expect(value?.checksAndRadios).toBe('animated');
+    expect(value?.theme).toBeUndefined();
+  });
+
+  it('merges a valid themeCatalog into the store', () => {
+    const store = initialize({ themeCatalog: { 'theme-a': { primaryColor: '#027ab8' } } });
+    let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
+    store.subscribe((v) => (value = v))();
+    expect(value?.themeCatalog?.['theme-a']?.primaryColor).toBe('#027ab8');
   });
 });

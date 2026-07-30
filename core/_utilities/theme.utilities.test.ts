@@ -9,7 +9,12 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { buildThemeVarsEntries, encodeCssUrl, hexToHslChannels } from './theme.utilities';
+import {
+  buildThemeVarsEntries,
+  encodeCssUrl,
+  hexToHslChannels,
+  resolvePageTheme,
+} from './theme.utilities';
 
 describe('encodeCssUrl', () => {
   it('wraps a plain URL in url("…")', () => {
@@ -66,12 +71,52 @@ describe('buildThemeVarsEntries', () => {
     expect(entries).toEqual([]);
   });
 
+  it('returns --fr-logo-height from logoHeight', () => {
+    const entries = buildThemeVarsEntries({ logoHeight: 40 });
+    expect(entries).toContainEqual(['--fr-logo-height', '40px']);
+  });
+
+  it('omits --fr-logo-height when logoHeight is unset', () => {
+    const entries = buildThemeVarsEntries({});
+    const names = entries.map(([name]) => name);
+    expect(names).not.toContain('--fr-logo-height');
+  });
+
   it('returns all three secondary slot pairs from secondaryColor', () => {
     const entries = buildThemeVarsEntries({ secondaryColor: '#0000ff' });
     const names = entries.map(([name]) => name);
     expect(names).toContain('--tw-colors-secondary-dark-hs');
     expect(names).toContain('--tw-colors-secondary-default-hs');
     expect(names).toContain('--tw-colors-secondary-light-hs');
+  });
+});
+
+describe('resolvePageTheme', () => {
+  const catalog = {
+    zardoz: { primaryColor: '#111111' },
+    other: { primaryColor: '#222222' },
+  };
+
+  it('resolves a theme present in the catalog', () => {
+    expect(resolvePageTheme(catalog, 'zardoz')).toEqual({ primaryColor: '#111111' });
+  });
+
+  it('returns undefined for an id not present in the catalog', () => {
+    expect(resolvePageTheme(catalog, 'unknown')).toBeUndefined();
+  });
+
+  it('returns undefined when themeId is absent', () => {
+    expect(resolvePageTheme(catalog, undefined)).toBeUndefined();
+  });
+
+  it('returns undefined when no catalog was supplied', () => {
+    expect(resolvePageTheme(undefined, 'zardoz')).toBeUndefined();
+  });
+
+  it('does not resolve prototype-chain properties as theme ids', () => {
+    expect(resolvePageTheme(catalog, '__proto__')).toBeUndefined();
+    expect(resolvePageTheme(catalog, 'constructor')).toBeUndefined();
+    expect(resolvePageTheme(catalog, 'toString')).toBeUndefined();
   });
 });
 

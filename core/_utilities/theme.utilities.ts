@@ -7,7 +7,21 @@
  *
  **/
 
-import type { ThemeObject } from '$core/style.store';
+import type { StyleObject, ThemeObject } from '$core/style.store';
+
+/**
+ * Resolves a Page Node `themeId` against a widget-supplied theme catalog.
+ * Returns `undefined` when the id is absent, unresolved, or no catalog was supplied.
+ */
+export function resolvePageTheme(
+  themeCatalog: StyleObject['themeCatalog'] | undefined,
+  themeId: string | undefined,
+): ThemeObject | undefined {
+  if (!themeCatalog || !themeId || !Object.hasOwn(themeCatalog, themeId)) {
+    return undefined;
+  }
+  return themeCatalog[themeId];
+}
 
 /**
  * Builds a safe CSS `url("…")` value from an untrusted URL string.
@@ -202,6 +216,9 @@ export function buildThemeVarsEntries(theme: ThemeObject): [string, string][] {
     const safeLogoUrl = encodeCssUrl(theme.logo);
     cssVar('--logo-light', safeLogoUrl);
     cssVar('--logo-dark', safeLogoUrl);
+  }
+  if (theme.logoHeight !== undefined) {
+    cssVar('--fr-logo-height', `${theme.logoHeight}px`);
   }
 
   return entries;
