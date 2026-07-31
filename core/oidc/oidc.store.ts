@@ -11,8 +11,38 @@ import { oidc } from '@forgerock/oidc-client';
 import { writable } from 'svelte/store';
 import { z } from 'zod';
 
-import type { GenericError, OidcClient } from '@forgerock/oidc-client/types';
+import type {
+  CustomLogger,
+  GenericError,
+  LogLevel,
+  OidcClient,
+  RequestMiddleware,
+  StorageConfig,
+} from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
+
+/**
+ * Token-storage config forwarded to `oidc()`. Mirrors the SDK's `StorageConfig`
+ * union: browser stores validate `type`/`prefix`/`name`; the custom store also
+ * carries a `custom` sink of functions, typed via `z.custom` because functions
+ * cannot be schema-validated.
+ */
+const storageConfigSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.union([z.literal('localStorage'), z.literal('sessionStorage')]),
+    prefix: z.string().optional(),
+    name: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal('custom'),
+    prefix: z.string().optional(),
+    name: z.string().optional(),
+    // Presence-checked only; the get/set/remove functions can't be schema-validated.
+    custom: z.custom<Extract<StorageConfig, { type: 'custom' }>['custom']>(
+      (value) => typeof value === 'object' && value !== null,
+    ),
+  }),
+]);
 
 /**
  * Configure the OIDC Client.
@@ -39,10 +69,18 @@ export const oidcClientConfigSchema = z
           }),
       })
       .strict(),
+    oauthThreshold: z.number().optional(),
+    par: z.boolean().optional(),
+    signOutRedirectUri: z.string().optional(),
+    loginHint: z.string().optional(),
+    acrValues: z.string().optional(),
+    query: z.record(z.string(), z.string()).optional(),
+    storage: storageConfigSchema.optional(),
   })
   .strict();
 
 export type OidcClientConfig = z.infer<typeof oidcClientConfigSchema>;
+
 export type OidcClientStore = Readable<OidcClient | null> & {
   /**
    * Resolves with the constructed client (or a `GenericError` if construction
@@ -63,15 +101,26 @@ export type OidcClientStore = Readable<OidcClient | null> & {
  * client instance without module-level state.
  *
  * @param {OidcClientConfig} config — OIDC client configuration (validated by Zod).
+ * @param {RequestMiddleware[]} [requestMiddleware] — optional request middleware forwarded to `oidc()`.
+ * @param {{ level: LogLevel; custom?: CustomLogger }} [logger] — optional logger (level + custom sink) forwarded to `oidc()`.
  * @returns {OidcClientStore}
  */
-export function createOidcClientStore(config: OidcClientConfig): OidcClientStore {
-  const parsedConfig = oidcClientConfigSchema.parse(config);
+export function createOidcClientStore(
+  config: OidcClientConfig,
+  requestMiddleware?: RequestMiddleware[],
+  logger?: { level: LogLevel; custom?: CustomLogger },
+): OidcClientStore {
+  const { storage, ...parsedConfig } = oidcClientConfigSchema.parse(config);
   const { subscribe, set } = writable<OidcClient | null>(null);
 
   // Construct once and keep the promise. `set` runs synchronously inside the
   // `.then`, so the store is populated before `getClient()` resolves.
-  const clientPromise = oidc({ config: parsedConfig })
+  const clientPromise = oidc({
+    config: parsedConfig,
+    requestMiddleware,
+    ...(logger && { logger }),
+    ...(storage && { storage }),
+  })
     .then((client) => {
       set(client);
       return client;

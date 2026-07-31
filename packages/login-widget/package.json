@@ -15,9 +15,7 @@
   "types": "./dist/index.d.ts",
   "unpkg": "./dist/widget.iife.js",
   "jsdelivr": "./dist/widget.iife.js",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "repository": {
     "url": "https://github.com/ForgeRock/forgerock-web-login-framework.git"
   },
