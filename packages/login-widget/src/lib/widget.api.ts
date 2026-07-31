@@ -22,8 +22,9 @@ import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
+import { loggerConfigSchema, middlewareSchema, wellknownSchema } from './widget.config';
 
-import type { GetTokensOptions } from '@forgerock/oidc-client/types';
+import type { GetAuthorizationUrlOptions, GetTokensOptions } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 import type { componentApi as _componentApi } from './_utilities/component.utilities';
@@ -77,32 +78,57 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
    * @throws {Error} If `wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
    */
   async function configure(options: WidgetConfigOptions): Promise<void> {
-    const wellknown = options?.wellknown;
-    if (!wellknown) {
-      throw new Error('wellknown url is required to configure the widget');
-    }
+    const wellknown = wellknownSchema.parse(options.wellknown);
+    const logger = options.logger && loggerConfigSchema.parse(options.logger);
+    const middleware = options.middleware && middlewareSchema.parse(options.middleware);
 
     // initialize journey client
     journeyStore = initializeJourney(
       { serverConfig: { wellknown } },
       { ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }) },
+      middleware,
+      logger,
     );
     await getJourneyClient();
 
     // initialize oidc client, if present
     if (options.oidcClient) {
-      oidcClientStore = createOidcClientStore({
-        ...options.oidcClient,
-        serverConfig: { wellknown },
-      });
+      oidcClientStore = createOidcClientStore(
+        {
+          ...options.oidcClient,
+          serverConfig: { wellknown },
+        },
+        middleware,
+        logger,
+      );
       const oidcClient = await oidcClientStore.getClient();
       if ('error' in oidcClient) {
         throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
       }
     }
 
+    // loginHint, acrValues, and query are authorize-request params. The widget
+    // gets tokens only through silent renewal (token.get), and that call reads
+    // these three from authorizeOptions — it ignores the copies on the client
+    // config. So we copy them onto authorizeOptions here; otherwise they would
+    // be set but never sent.
+    const oidcClientConfig = options.oidcClient;
+    const authorizeOptions: GetAuthorizationUrlOptions | undefined =
+      oidcClientConfig &&
+      (oidcClientConfig.loginHint || oidcClientConfig.acrValues || oidcClientConfig.query)
+        ? {
+            clientId: oidcClientConfig.clientId,
+            redirectUri: oidcClientConfig.redirectUri,
+            scope: oidcClientConfig.scope ?? 'openid',
+            responseType: 'code',
+            ...(oidcClientConfig.loginHint && { loginHint: oidcClientConfig.loginHint }),
+            ...(oidcClientConfig.acrValues && { acrValues: oidcClientConfig.acrValues }),
+            ...(oidcClientConfig.query && { query: oidcClientConfig.query }),
+          }
+        : undefined;
+
     // OAuth and User stores derive from the OIDC client store (undefined when OIDC isn't configured).
-    oauthStore = initializeOauth(oidcClientStore);
+    oauthStore = initializeOauth(oidcClientStore, authorizeOptions && { authorizeOptions });
     userStore = initializeUser(oidcClientStore);
 
     initializeContent(options.content);

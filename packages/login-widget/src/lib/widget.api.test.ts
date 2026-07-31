@@ -7,10 +7,11 @@
  *
  **/
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
 const oidcMock = vi.fn();
+const journeyMock = vi.fn();
 
 vi.mock(
   '@forgerock/oidc-client',
@@ -29,13 +30,7 @@ vi.mock(
     const actual = await importOriginal();
     return {
       ...actual,
-      journey: vi.fn().mockResolvedValue({
-        start: vi.fn(),
-        next: vi.fn(),
-        resume: vi.fn(),
-        redirect: vi.fn(),
-        terminate: journeyTerminateMock,
-      }),
+      journey: journeyMock,
     };
   },
 );
@@ -83,6 +78,14 @@ describe('widgetApiFactory', () => {
     oidcMock.mockReset();
     // Default: a never-resolving promise so eager oidc() init calls don't throw.
     oidcMock.mockReturnValue(new Promise(() => {}));
+    journeyMock.mockReset();
+    journeyMock.mockResolvedValue({
+      start: vi.fn(),
+      next: vi.fn(),
+      resume: vi.fn(),
+      redirect: vi.fn(),
+      terminate: journeyTerminateMock,
+    });
   });
 
   describe('public API surface (2.0.0)', () => {
@@ -128,6 +131,161 @@ describe('widgetApiFactory', () => {
     });
   });
 
+  describe('configure() — logger and middleware fan out to both clients', () => {
+    it('forwards the top-level logger level to each client as the `logger` param', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      await api.configure({
+        wellknown: validWellknown,
+        oidcClient: validOidcClient,
+        logger: { level: 'debug' },
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'debug' } }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'debug' } }),
+      );
+    });
+
+    it('forwards a custom logger sink to both clients alongside the level', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const custom = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
+      const api = await importSubject();
+      await api.configure({
+        wellknown: validWellknown,
+        oidcClient: validOidcClient,
+        logger: { level: 'info', custom },
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'info', custom } }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'info', custom } }),
+      );
+    });
+
+    it('rejects a logger with a custom sink but no level before constructing any client', async () => {
+      const custom = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          wellknown: validWellknown,
+          oidcClient: validOidcClient,
+          logger: { custom },
+        } as unknown as { wellknown: string }),
+      ).rejects.toThrow();
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
+    });
+
+    it('forwards top-level middleware to both clients as requestMiddleware', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const middleware = [vi.fn()];
+      const api = await importSubject();
+      await api.configure({
+        wellknown: validWellknown,
+        oidcClient: validOidcClient,
+        middleware,
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requestMiddleware: middleware }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requestMiddleware: middleware }),
+      );
+    });
+
+    it('omits the `logger` param from both clients when no logger is set', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.not.objectContaining({ logger: expect.anything() }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.not.objectContaining({ logger: expect.anything() }),
+      );
+    });
+
+    // IIFE/plain-JS callers bypass the TS types, so the zod parse is the only guard.
+    it('rejects an invalid logger.level before constructing any client', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          wellknown: validWellknown,
+          oidcClient: validOidcClient,
+          logger: { level: 'verbose' },
+        } as unknown as { wellknown: string }),
+      ).rejects.toThrow();
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects middleware that is not an array of functions before constructing any client', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          wellknown: validWellknown,
+          oidcClient: validOidcClient,
+          middleware: ['not-a-fn'],
+        } as unknown as { wellknown: string }),
+      ).rejects.toThrow();
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('configure() — OIDC authorize passthrough options', () => {
+    it('bridges loginHint/acrValues/query onto the silent token.get authorizeOptions', async () => {
+      const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
+      oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
+      const api = await importSubject();
+      await api.configure({
+        wellknown: validWellknown,
+        oidcClient: {
+          ...validOidcClient,
+          loginHint: 'jane.doe',
+          acrValues: 'urn:acr:2fa',
+          query: { customParam: 'value' },
+        },
+      });
+
+      await api.user.tokens().get();
+
+      expect(tokenGet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorizeOptions: expect.objectContaining({
+            loginHint: 'jane.doe',
+            acrValues: 'urn:acr:2fa',
+            query: { customParam: 'value' },
+          }),
+        }),
+      );
+    });
+
+    it('does not set authorizeOptions when no authorize passthrough options are given', async () => {
+      const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
+      oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
+      const api = await importSubject();
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+
+      await api.user.tokens().get();
+
+      expect(tokenGet.mock.calls[0][0]).not.toHaveProperty('authorizeOptions');
+    });
+  });
+
   describe('configure() — wellknown is required', () => {
     it('rejects when wellknown is missing', async () => {
       const api = await importSubject();
@@ -136,6 +294,17 @@ describe('widgetApiFactory', () => {
         // Untyped (IIFE) callers can omit wellknown; the guard must still fire.
         api.configure({ oidcClient: validOidcClient } as unknown as { wellknown: string }),
       ).rejects.toThrow(/wellknown url is required/);
+    });
+
+    it('rejects a malformed wellknown before constructing any client', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ wellknown: 'not-a-url', oidcClient: validOidcClient }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
     });
   });
 
@@ -306,6 +475,61 @@ describe('widgetApiFactory', () => {
       await api.configure({ wellknown: validWellknown });
       const { journeyStore } = api.getStores();
       expect(() => journeyStore.reset()).not.toThrow();
+    });
+  });
+
+  /**
+   * Unlike the mocked suites above, this block runs the REAL SDK (journey-client's
+   * logger) to prove the boundary the mocks stop at: the widget's top-level
+   * `logger.level` is wired into the SDK's logger and its level gate governs the
+   * SDK's `console.*` output. `vi.doUnmock` + `resetModules` drops the file-level
+   * journey mock for these tests, then the outer `beforeEach` re-mocks for anything after.
+   *
+   * The SDK emits an *error* log at client construction when the wellknown URL is
+   * malformed — through the same level gate as debug — so we drive that path. It
+   * fires synchronously, before any network access, making the test deterministic.
+   */
+  describe('configure() — logger.level gates the real SDK logger', () => {
+    // Valid `.url()` (passes the widget's zod check) but wrong path suffix, so the
+    // real journey client's stricter `isValidWellknownUrl` rejects it and logs.
+    const invalidSuffixWellknown = 'https://example.com/not-the-wellknown-path';
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      vi.doUnmock('@forgerock/journey-client');
+      vi.resetModules();
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      errorSpy.mockRestore();
+      vi.doMock(
+        '@forgerock/journey-client',
+        async (importOriginal: () => Promise<Record<string, unknown>>) => {
+          const actual = await importOriginal();
+          return { ...actual, journey: journeyMock };
+        },
+      );
+    });
+
+    it('emits the SDK error log to console.error when logger.level permits it', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ wellknown: invalidSuffixWellknown, logger: { level: 'error' } }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid wellknown URL'));
+    });
+
+    it('suppresses the SDK error log when logger.level is "none" (still throws)', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ wellknown: invalidSuffixWellknown, logger: { level: 'none' } }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(errorSpy).not.toHaveBeenCalled();
     });
   });
 });

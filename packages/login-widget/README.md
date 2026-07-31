@@ -267,6 +267,11 @@ await configure({
     redirectUri: `${window.location.origin}/callback`,
     scope: 'openid profile email',
   },
+  // OPTIONAL — logger for both clients; `level` gates verbosity and `custom`
+  // redirects SDK log output to your own sink. See the full example below.
+  logger: { level: 'warn' },
+  // OPTIONAL — request middleware for both clients; see the full example below
+  middleware: [],
   // OPTIONAL — see dedicated sections below
   content: {},
   links: {},
@@ -278,6 +283,115 @@ await configure({
 > Endpoint discovery is now driven by a single top-level `wellknown` URL, shared by the
 > journey and OIDC clients — `baseUrl`, `realmPath`, `timeout`, and `support` are no longer
 > used. `clientId`, `redirectUri`, and `scope` are now required when configuring `oidcClient`.
+
+#### Logger
+
+The top-level `logger` option is forwarded to both the journey and OIDC clients.
+
+| Property | Type                                               | Default   | Description                                                                             |
+| -------- | -------------------------------------------------- | --------- | --------------------------------------------------------------------------------------- |
+| `level`  | `'none' \| 'error' \| 'warn' \| 'info' \| 'debug'` | `'error'` | Gates SDK log verbosity. `'none'` silences all SDK logs.                                |
+| `custom` | `{ error, warn, info, debug }`                     | —         | Sink for SDK log output. When set, the SDK calls your methods instead of the `console`. |
+
+```js
+await configure({
+  wellknown: 'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  logger: {
+    level: 'debug',
+    // OPTIONAL — route SDK logs to your own sink instead of the console.
+    custom: {
+      error: (...args) => myLogger.error(...args),
+      warn: (...args) => myLogger.warn(...args),
+      info: (...args) => myLogger.info(...args),
+      debug: (...args) => myLogger.debug(...args),
+    },
+  },
+  oidcClient: {
+    clientId: 'WebOAuthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
+  },
+});
+```
+
+#### OIDC Client Options
+
+All properties are nested inside `oidcClient`.
+
+| Property             | Type                        | Default      | Description                                                                                                                                                                                                        |
+| -------------------- | --------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `clientId`           | `string`                    | —            | **Required.** OAuth 2.0 client ID.                                                                                                                                                                                 |
+| `redirectUri`        | `string`                    | —            | **Required.** URI AM redirects to after authorization.                                                                                                                                                             |
+| `scope`              | `string`                    | `'openid'`   | OAuth 2.0 scopes.                                                                                                                                                                                                  |
+| `storage`            | `StorageConfig` (see below) | localStorage | Token storage config. See [Storage](#storage).                                                                                                                                                                     |
+| `oauthThreshold`     | `number`                    | `30000`      | Milliseconds before expiry to trigger background renewal.                                                                                                                                                          |
+| `par`                | `boolean`                   | auto         | Use Pushed Authorization Requests. When omitted, the SDK auto-detects from the authorization server's `require_pushed_authorization_requests` metadata. Setting `false` while the server requires PAR is an error. |
+| `signOutRedirectUri` | `string`                    | —            | `post_logout_redirect_uri` sent on `user.logout()`.                                                                                                                                                                |
+| `loginHint`          | `string`                    | —            | Pre-fills the login identifier; bridged onto silent token renewal.                                                                                                                                                 |
+| `acrValues`          | `string`                    | —            | Requested ACR values; bridged onto silent token renewal.                                                                                                                                                           |
+| `query`              | `Record<string, string>`    | —            | Extra authorize query params; bridged onto silent token renewal.                                                                                                                                                   |
+
+Example with all optional OIDC options:
+
+```js
+await configure({
+  wellknown: 'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  logger: { level: 'debug' },
+  middleware: [
+    (req, action, next) => {
+      console.log('[middleware]', action.type, req.url);
+      next();
+    },
+  ],
+  oidcClient: {
+    clientId: 'WebOAuthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
+    storage: { type: 'sessionStorage', prefix: 'myapp' },
+    oauthThreshold: 60000,
+    par: true,
+    signOutRedirectUri: `${window.location.origin}/logged-out`,
+    loginHint: 'user@example.com',
+    acrValues: 'urn:acr:2fa',
+    query: { ui_locales: 'en-US' },
+  },
+});
+```
+
+#### Storage
+
+`oidcClient.storage` configures where the OIDC client persists tokens. It mirrors
+the SDK's `StorageConfig` union — `type` selects a browser store or a custom sink.
+
+| Property | Type                                             | Default          | Description                                                             |
+| -------- | ------------------------------------------------ | ---------------- | ----------------------------------------------------------------------- |
+| `type`   | `'localStorage' \| 'sessionStorage' \| 'custom'` | `'localStorage'` | Storage backend. `'custom'` requires a `custom` sink.                   |
+| `prefix` | `string`                                         | `'pic'`          | Key prefix for storage entries.                                         |
+| `name`   | `string`                                         | `clientId`       | Storage key name.                                                       |
+| `custom` | `{ get, set, remove }`                           | —                | **Required when `type: 'custom'`.** Async functions for your own store. |
+
+```js
+// Browser store
+oidcClient: {
+  clientId: 'WebOAuthClient',
+  redirectUri: `${window.location.origin}/callback`,
+  storage: { type: 'sessionStorage', prefix: 'myapp' },
+}
+
+// Custom store
+oidcClient: {
+  clientId: 'WebOAuthClient',
+  redirectUri: `${window.location.origin}/callback`,
+  storage: {
+    type: 'custom',
+    custom: {
+      get: async (key) => myStore.read(key),
+      set: async (key, value) => myStore.write(key, value),
+      remove: async (key) => myStore.delete(key),
+    },
+  },
+}
+```
 
 ### Journey
 

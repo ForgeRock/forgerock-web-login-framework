@@ -10,6 +10,7 @@
 import type { SignalsInitializationOptions } from '@forgerock/protect/types';
 import type { z } from 'zod';
 
+import type { loggerConfigSchema, middlewareSchema } from './widget.config';
 import type { captchaConfigSchema } from '$core/captcha.config';
 import type { partialLinksSchema } from '$core/links.store';
 import type { partialStringsSchema } from '$core/locale.store';
@@ -57,7 +58,10 @@ export interface Protect {
 }
 
 export interface WidgetConfigOptions {
+  // wellknown, logger, and middleware are passed to both the journey and OIDC clients.
   wellknown: string;
+  logger?: z.infer<typeof loggerConfigSchema>;
+  middleware?: z.infer<typeof middlewareSchema>;
   captcha?: z.infer<typeof captchaConfigSchema>;
   oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig'>;
   content?: z.infer<typeof partialStringsSchema>;
