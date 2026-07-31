@@ -96,14 +96,95 @@ describe('oidc.store — createOidcClientStore', () => {
     expect(get(oidcClientStore)).toBeNull();
   });
 
-  it('calls oidc() with the parsed config', async () => {
+  it('calls oidc() with the parsed config, no middleware, and empty storage by default', async () => {
     const client = mockClient();
     oidcMock.mockResolvedValueOnce(client);
 
     const { createOidcClientStore } = await importSubject();
     createOidcClientStore(validConfig);
 
-    expect(oidcMock).toHaveBeenCalledWith({ config: validConfig });
+    expect(oidcMock).toHaveBeenCalledWith({
+      config: validConfig,
+      requestMiddleware: undefined,
+      storage: {},
+    });
+  });
+
+  it('forwards oauthThreshold and log on the config', async () => {
+    const client = mockClient();
+    oidcMock.mockResolvedValueOnce(client);
+
+    const { createOidcClientStore } = await importSubject();
+    createOidcClientStore({ ...validConfig, oauthThreshold: 5000, log: 'debug' });
+
+    expect(oidcMock).toHaveBeenCalledWith({
+      config: { ...validConfig, oauthThreshold: 5000, log: 'debug' },
+      requestMiddleware: undefined,
+      storage: {},
+    });
+  });
+
+  it('forwards the OIDC passthrough options (par, signOutRedirectUri, loginHint, acrValues, query) on the config', async () => {
+    const client = mockClient();
+    oidcMock.mockResolvedValueOnce(client);
+
+    const passthrough = {
+      par: true,
+      signOutRedirectUri: 'https://example.com/signed-out',
+      loginHint: 'jane.doe',
+      acrValues: 'urn:acr:2fa',
+      query: { customParam: 'value' },
+    };
+
+    const { createOidcClientStore } = await importSubject();
+    createOidcClientStore({ ...validConfig, ...passthrough });
+
+    expect(oidcMock).toHaveBeenCalledWith({
+      config: { ...validConfig, ...passthrough },
+      requestMiddleware: undefined,
+      storage: {},
+    });
+  });
+
+  it('maps tokenStore and prefix onto the storage argument, not the config', async () => {
+    const client = mockClient();
+    oidcMock.mockResolvedValueOnce(client);
+
+    const { createOidcClientStore } = await importSubject();
+    createOidcClientStore({ ...validConfig, tokenStore: 'sessionStorage', prefix: 'myApp' });
+
+    expect(oidcMock).toHaveBeenCalledWith({
+      config: validConfig,
+      requestMiddleware: undefined,
+      storage: { type: 'sessionStorage', prefix: 'myApp' },
+    });
+  });
+
+  it('rejects a custom tokenStore value', async () => {
+    const { createOidcClientStore } = await importSubject();
+
+    expect(() =>
+      createOidcClientStore({
+        ...validConfig,
+        // @ts-expect-error — custom is intentionally unsupported
+        tokenStore: 'custom',
+      }),
+    ).toThrow();
+  });
+
+  it('forwards requestMiddleware to oidc()', async () => {
+    const client = mockClient();
+    oidcMock.mockResolvedValueOnce(client);
+
+    const middleware = [vi.fn()];
+    const { createOidcClientStore } = await importSubject();
+    createOidcClientStore(validConfig, middleware);
+
+    expect(oidcMock).toHaveBeenCalledWith({
+      config: validConfig,
+      requestMiddleware: middleware,
+      storage: {},
+    });
   });
 
   it('transitions to the ready client when oidc() resolves successfully', async () => {
@@ -195,5 +276,81 @@ describe('oidc.store — createOidcClientStore', () => {
       expect(get(storeA)).toBe(client1);
       expect(get(storeB)).toBe(client2);
     });
+  });
+});
+
+describe('oidc.store — oidcClientConfigSchema', () => {
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('parses a minimal config and defaults scope to "openid"', async () => {
+    const { oidcClientConfigSchema } = await importSubject();
+
+    const parsed = oidcClientConfigSchema.parse({
+      clientId: 'WebOAuthClient',
+      redirectUri: 'https://example.com/callback',
+      serverConfig: { wellknown: 'https://example.com/.well-known/openid-configuration' },
+    });
+
+    expect(parsed.scope).toBe('openid');
+  });
+
+  it('accepts every restored/passthrough option with the correct type', async () => {
+    const { oidcClientConfigSchema } = await importSubject();
+
+    const parsed = oidcClientConfigSchema.parse({
+      ...validConfig,
+      log: 'debug',
+      oauthThreshold: 5000,
+      tokenStore: 'sessionStorage',
+      prefix: 'myApp',
+      par: true,
+      signOutRedirectUri: 'https://example.com/signed-out',
+      loginHint: 'jane.doe',
+      acrValues: 'urn:acr:2fa',
+      query: { customParam: 'value' },
+    });
+
+    expect(parsed).toMatchObject({
+      log: 'debug',
+      oauthThreshold: 5000,
+      tokenStore: 'sessionStorage',
+      prefix: 'myApp',
+      par: true,
+      signOutRedirectUri: 'https://example.com/signed-out',
+      loginHint: 'jane.doe',
+      acrValues: 'urn:acr:2fa',
+      query: { customParam: 'value' },
+    });
+  });
+
+  // Guards against silent config drift: a new SDK option that we forget to add
+  // here would be an unknown key, and `.strict()` makes that a hard parse error.
+  it('rejects an unknown top-level key (strict)', async () => {
+    const { oidcClientConfigSchema } = await importSubject();
+
+    expect(() => oidcClientConfigSchema.parse({ ...validConfig, notARealOption: true })).toThrow();
+  });
+
+  it('rejects an unknown serverConfig key', async () => {
+    const { oidcClientConfigSchema } = await importSubject();
+
+    expect(() =>
+      oidcClientConfigSchema.parse({
+        ...validConfig,
+        serverConfig: { wellknown: validConfig.serverConfig.wellknown, timeout: 3000 },
+      }),
+    ).toThrow();
+  });
+
+  it('rejects wrong types for par, oauthThreshold, and query', async () => {
+    const { oidcClientConfigSchema } = await importSubject();
+
+    expect(() => oidcClientConfigSchema.parse({ ...validConfig, par: 'yes' })).toThrow();
+    expect(() =>
+      oidcClientConfigSchema.parse({ ...validConfig, oauthThreshold: '5000' }),
+    ).toThrow();
+    expect(() => oidcClientConfigSchema.parse({ ...validConfig, query: { count: 1 } })).toThrow();
   });
 });

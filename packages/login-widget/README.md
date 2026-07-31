@@ -267,6 +267,10 @@ await configure({
     redirectUri: `${window.location.origin}/callback`,
     scope: 'openid profile email',
   },
+  // OPTIONAL — log level for both clients; see the full example below
+  logLevel: 'warn',
+  // OPTIONAL — request middleware for both clients; see the full example below
+  middleware: [],
   // OPTIONAL — see dedicated sections below
   content: {},
   links: {},
@@ -278,6 +282,52 @@ await configure({
 > Endpoint discovery is now driven by a single top-level `wellknown` URL, shared by the
 > journey and OIDC clients — `baseUrl`, `realmPath`, `timeout`, and `support` are no longer
 > used. `clientId`, `redirectUri`, and `scope` are now required when configuring `oidcClient`.
+
+#### OIDC Client Options
+
+All properties are nested inside `oidcClient`.
+
+| Property             | Type                                 | Default          | Description                                                                                                                                                                                                        |
+| -------------------- | ------------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `clientId`           | `string`                             | —                | **Required.** OAuth 2.0 client ID.                                                                                                                                                                                 |
+| `redirectUri`        | `string`                             | —                | **Required.** URI AM redirects to after authorization.                                                                                                                                                             |
+| `scope`              | `string`                             | `'openid'`       | OAuth 2.0 scopes.                                                                                                                                                                                                  |
+| `tokenStore`         | `'localStorage' \| 'sessionStorage'` | `'localStorage'` | Where tokens are persisted.                                                                                                                                                                                        |
+| `prefix`             | `string`                             | `'pic'`          | Key prefix for token storage entries.                                                                                                                                                                              |
+| `oauthThreshold`     | `number`                             | `30000`          | Milliseconds before expiry to trigger background renewal.                                                                                                                                                          |
+| `par`                | `boolean`                            | auto             | Use Pushed Authorization Requests. When omitted, the SDK auto-detects from the authorization server's `require_pushed_authorization_requests` metadata. Setting `false` while the server requires PAR is an error. |
+| `signOutRedirectUri` | `string`                             | —                | `post_logout_redirect_uri` sent on `user.logout()`.                                                                                                                                                                |
+| `loginHint`          | `string`                             | —                | Pre-fills the login identifier; bridged onto silent token renewal.                                                                                                                                                 |
+| `acrValues`          | `string`                             | —                | Requested ACR values; bridged onto silent token renewal.                                                                                                                                                           |
+| `query`              | `Record<string, string>`             | —                | Extra authorize query params; bridged onto silent token renewal.                                                                                                                                                   |
+
+Example with all optional OIDC options:
+
+```js
+await configure({
+  wellknown: 'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  logLevel: 'debug',
+  middleware: [
+    (req, action, next) => {
+      console.log('[middleware]', action.type, req.url);
+      next();
+    },
+  ],
+  oidcClient: {
+    clientId: 'WebOAuthClient',
+    redirectUri: `${window.location.origin}/callback`,
+    scope: 'openid profile email',
+    tokenStore: 'sessionStorage',
+    prefix: 'myapp',
+    oauthThreshold: 60000,
+    par: true,
+    signOutRedirectUri: `${window.location.origin}/logged-out`,
+    loginHint: 'user@example.com',
+    acrValues: 'urn:acr:2fa',
+    query: { ui_locales: 'en-US' },
+  },
+});
+```
 
 ### Journey
 

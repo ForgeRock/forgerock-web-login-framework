@@ -7,6 +7,7 @@
  *
  **/
 
+import type { LogLevel, RequestMiddleware } from '@forgerock/oidc-client/types';
 import type { SignalsInitializationOptions } from '@forgerock/protect/types';
 import type { z } from 'zod';
 
@@ -59,7 +60,11 @@ export interface Protect {
 export interface WidgetConfigOptions {
   wellknown: string;
   captcha?: z.infer<typeof captchaConfigSchema>;
-  oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig'>;
+  // Applied to both the journey and OIDC clients (maps to each client's `log`).
+  logLevel?: LogLevel;
+  // Request middleware forwarded to both the journey and OIDC clients.
+  middleware?: RequestMiddleware[];
+  oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig' | 'log'>;
   content?: z.infer<typeof partialStringsSchema>;
   journeys?: z.infer<typeof journeyConfigSchema>;
   links?: z.infer<typeof partialLinksSchema>;

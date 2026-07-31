@@ -29,6 +29,7 @@ import type {
   JourneyResult,
   JourneyStep,
   NextOptions,
+  RequestMiddleware,
   ResumeOptions,
   StartParam,
   Step,
@@ -60,10 +61,20 @@ export const journeyClientConfigSchema: z.ZodType<JourneyClientConfig> = z
         wellknown: wellknownSchema,
       })
       .strict(),
+    log: z
+      .union([
+        z.literal('none'),
+        z.literal('error'),
+        z.literal('warn'),
+        z.literal('info'),
+        z.literal('debug'),
+      ])
+      .optional(),
   })
   .strict();
 
 let journeyClientConfig: JourneyClientConfig | undefined;
+let journeyRequestMiddleware: RequestMiddleware[] | undefined;
 
 /**
  * We cache the journey client promise instead of only caching the resolved client so concurrent callers
@@ -76,19 +87,25 @@ let journeyClientPromise: Promise<JourneyClient> | undefined;
  * Calling without a config is a no-op; the config requirement is enforced lazily
  * by `getJourneyClient()` at the point the client is actually needed.
  * @param {JourneyClientConfig} [config] If omitted, leaves existing config untouched.
+ * @param {RequestMiddleware[]} [requestMiddleware] Optional request middleware forwarded to `journey()`.
  * @throws {z.ZodError} If provided config fails validation.
  * @returns {JourneyClientConfig | undefined} The active config, or undefined if none has been set.
  */
 export function setJourneyClientConfig(
   config?: JourneyClientConfig,
+  requestMiddleware?: RequestMiddleware[],
 ): JourneyClientConfig | undefined {
   if (config === undefined) {
     return journeyClientConfig;
   }
 
   const parsed = journeyClientConfigSchema.parse(config);
-  const hasChanged = parsed.serverConfig.wellknown !== journeyClientConfig?.serverConfig.wellknown;
+  const hasChanged =
+    parsed.serverConfig.wellknown !== journeyClientConfig?.serverConfig.wellknown ||
+    parsed.log !== journeyClientConfig?.log ||
+    requestMiddleware !== journeyRequestMiddleware;
   journeyClientConfig = parsed;
+  journeyRequestMiddleware = requestMiddleware;
   // Reset the cached client promise when config changes.
   if (hasChanged) {
     journeyClientPromise = undefined;
@@ -108,7 +125,10 @@ export async function getJourneyClient(): Promise<JourneyClient> {
 
   // Cache the journey client promise to reuse an existing journey client.
   if (!journeyClientPromise) {
-    journeyClientPromise = journey({ config: journeyClientConfig }).catch((err) => {
+    journeyClientPromise = journey({
+      config: journeyClientConfig,
+      requestMiddleware: journeyRequestMiddleware,
+    }).catch((err) => {
       // If creation fails, clear the cache so a later call can try again.
       journeyClientPromise = undefined;
       throw err;
@@ -190,14 +210,17 @@ export const journeyStore: Writable<JourneyStoreValue> = writable({
 /**
  * @function initialize - Initializes the journey store
  * @param {JourneyClientConfig} Optional Journey Client configuration.
+ * @param {object} [initializationOptions] Optional metadata options threaded into callback metadata.
+ * @param {RequestMiddleware[]} [requestMiddleware] Optional request middleware forwarded to `journey()`.
  * @throws {Error} If no Journey Client configuration is available.
  * @returns {JourneyStore} Journey store API.
  */
 export function initialize(
   config?: JourneyClientConfig | undefined,
   initializationOptions?: Record<string, unknown> | null,
+  requestMiddleware?: RequestMiddleware[],
 ): JourneyStore {
-  setJourneyClientConfig(config);
+  setJourneyClientConfig(config, requestMiddleware);
 
   const stack = initializeStack();
   let stepNumber = 0;

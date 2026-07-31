@@ -7,10 +7,11 @@
  *
  **/
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
 const oidcMock = vi.fn();
+const journeyMock = vi.fn();
 
 vi.mock(
   '@forgerock/oidc-client',
@@ -29,13 +30,7 @@ vi.mock(
     const actual = await importOriginal();
     return {
       ...actual,
-      journey: vi.fn().mockResolvedValue({
-        start: vi.fn(),
-        next: vi.fn(),
-        resume: vi.fn(),
-        redirect: vi.fn(),
-        terminate: journeyTerminateMock,
-      }),
+      journey: journeyMock,
     };
   },
 );
@@ -83,6 +78,14 @@ describe('widgetApiFactory', () => {
     oidcMock.mockReset();
     // Default: a never-resolving promise so eager oidc() init calls don't throw.
     oidcMock.mockReturnValue(new Promise(() => {}));
+    journeyMock.mockReset();
+    journeyMock.mockResolvedValue({
+      start: vi.fn(),
+      next: vi.fn(),
+      resume: vi.fn(),
+      redirect: vi.fn(),
+      terminate: journeyTerminateMock,
+    });
   });
 
   describe('public API surface (2.0.0)', () => {
@@ -125,6 +128,94 @@ describe('widgetApiFactory', () => {
       await expect(
         api.configure({ wellknown: validWellknown, oidcClient: validOidcClient }),
       ).rejects.toThrow(/wellknown fetch failed/);
+    });
+  });
+
+  describe('configure() — logLevel and middleware fan out to both clients', () => {
+    it('maps top-level logLevel to each client config `log` field', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      await api.configure({
+        wellknown: validWellknown,
+        oidcClient: validOidcClient,
+        logLevel: 'debug',
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ config: expect.objectContaining({ log: 'debug' }) }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ config: expect.objectContaining({ log: 'debug' }) }),
+      );
+    });
+
+    it('forwards top-level middleware to both clients as requestMiddleware', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const middleware = [vi.fn()];
+      const api = await importSubject();
+      await api.configure({
+        wellknown: validWellknown,
+        oidcClient: validOidcClient,
+        middleware,
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requestMiddleware: middleware }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requestMiddleware: middleware }),
+      );
+    });
+
+    it('omits `log` from the client config when logLevel is not set', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+
+      const journeyConfig = journeyMock.mock.calls[0][0].config;
+      const oidcConfig = oidcMock.mock.calls[0][0].config;
+      expect('log' in journeyConfig).toBe(false);
+      expect('log' in oidcConfig).toBe(false);
+    });
+  });
+
+  describe('configure() — OIDC authorize passthrough options', () => {
+    it('bridges loginHint/acrValues/query onto the silent token.get authorizeOptions', async () => {
+      const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
+      oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
+      const api = await importSubject();
+      await api.configure({
+        wellknown: validWellknown,
+        oidcClient: {
+          ...validOidcClient,
+          loginHint: 'jane.doe',
+          acrValues: 'urn:acr:2fa',
+          query: { customParam: 'value' },
+        },
+      });
+
+      await api.user.tokens().get();
+
+      expect(tokenGet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorizeOptions: expect.objectContaining({
+            loginHint: 'jane.doe',
+            acrValues: 'urn:acr:2fa',
+            query: { customParam: 'value' },
+          }),
+        }),
+      );
+    });
+
+    it('does not set authorizeOptions when no authorize passthrough options are given', async () => {
+      const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
+      oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
+      const api = await importSubject();
+      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+
+      await api.user.tokens().get();
+
+      expect(tokenGet.mock.calls[0][0]).not.toHaveProperty('authorizeOptions');
     });
   });
 
@@ -306,6 +397,61 @@ describe('widgetApiFactory', () => {
       await api.configure({ wellknown: validWellknown });
       const { journeyStore } = api.getStores();
       expect(() => journeyStore.reset()).not.toThrow();
+    });
+  });
+
+  /**
+   * Unlike the mocked suites above, this block runs the REAL SDK (journey-client's
+   * logger) to prove the boundary the mocks stop at: the widget's top-level
+   * `logLevel` is wired into the SDK's logger and its level gate governs the SDK's
+   * `console.*` output. `vi.doUnmock` + `resetModules` drops the file-level journey
+   * mock for these tests, then the outer `beforeEach` re-mocks for anything after.
+   *
+   * The SDK emits an *error* log at client construction when the wellknown URL is
+   * malformed — through the same level gate as debug — so we drive that path. It
+   * fires synchronously, before any network access, making the test deterministic.
+   */
+  describe('configure() — logLevel gates the real SDK logger', () => {
+    // Valid `.url()` (passes the widget's zod check) but wrong path suffix, so the
+    // real journey client's stricter `isValidWellknownUrl` rejects it and logs.
+    const invalidSuffixWellknown = 'https://example.com/not-the-wellknown-path';
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      vi.doUnmock('@forgerock/journey-client');
+      vi.resetModules();
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      errorSpy.mockRestore();
+      vi.doMock(
+        '@forgerock/journey-client',
+        async (importOriginal: () => Promise<Record<string, unknown>>) => {
+          const actual = await importOriginal();
+          return { ...actual, journey: journeyMock };
+        },
+      );
+    });
+
+    it('emits the SDK error log to console.error when logLevel permits it', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ wellknown: invalidSuffixWellknown, logLevel: 'error' }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid wellknown URL'));
+    });
+
+    it('suppresses the SDK error log when logLevel is "none" (still throws)', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ wellknown: invalidSuffixWellknown, logLevel: 'none' }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(errorSpy).not.toHaveBeenCalled();
     });
   });
 });

@@ -11,7 +11,12 @@ import { oidc } from '@forgerock/oidc-client';
 import { writable } from 'svelte/store';
 import { z } from 'zod';
 
-import type { GenericError, OidcClient } from '@forgerock/oidc-client/types';
+import type {
+  GenericError,
+  OidcClient,
+  RequestMiddleware,
+  StorageConfig,
+} from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 /**
@@ -39,6 +44,23 @@ export const oidcClientConfigSchema = z
           }),
       })
       .strict(),
+    log: z
+      .union([
+        z.literal('none'),
+        z.literal('error'),
+        z.literal('warn'),
+        z.literal('info'),
+        z.literal('debug'),
+      ])
+      .optional(),
+    oauthThreshold: z.number().optional(),
+    tokenStore: z.union([z.literal('localStorage'), z.literal('sessionStorage')]).optional(),
+    prefix: z.string().optional(),
+    par: z.boolean().optional(),
+    signOutRedirectUri: z.string().optional(),
+    loginHint: z.string().optional(),
+    acrValues: z.string().optional(),
+    query: z.record(z.string(), z.string()).optional(),
   })
   .strict();
 
@@ -63,15 +85,25 @@ export type OidcClientStore = Readable<OidcClient | null> & {
  * client instance without module-level state.
  *
  * @param {OidcClientConfig} config — OIDC client configuration (validated by Zod).
+ * @param {RequestMiddleware[]} [requestMiddleware] — optional request middleware forwarded to `oidc()`.
  * @returns {OidcClientStore}
  */
-export function createOidcClientStore(config: OidcClientConfig): OidcClientStore {
-  const parsedConfig = oidcClientConfigSchema.parse(config);
+export function createOidcClientStore(
+  config: OidcClientConfig,
+  requestMiddleware?: RequestMiddleware[],
+): OidcClientStore {
+  const { tokenStore, prefix, ...parsedConfig } = oidcClientConfigSchema.parse(config);
   const { subscribe, set } = writable<OidcClient | null>(null);
+
+  // Omit undefined keys — passing them explicitly would clobber SDK defaults.
+  const storage: Partial<StorageConfig> = {
+    ...(tokenStore && { type: tokenStore }),
+    ...(prefix && { prefix }),
+  };
 
   // Construct once and keep the promise. `set` runs synchronously inside the
   // `.then`, so the store is populated before `getClient()` resolves.
-  const clientPromise = oidc({ config: parsedConfig })
+  const clientPromise = oidc({ config: parsedConfig, requestMiddleware, storage })
     .then((client) => {
       set(client);
       return client;
