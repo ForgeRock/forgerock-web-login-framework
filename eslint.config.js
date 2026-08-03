@@ -121,6 +121,6 @@ export default tseslint.config(
 
   // Additional ignores not covered by .gitignore
   {
-    ignores: ['.storybook/**', 'seed.spec.ts', '**/*.cjs', '**/*.json'],
+    ignores: ['component-studio/**', '.storybook/**', 'seed.spec.ts', '**/*.cjs', '**/*.json'],
   },
 );
