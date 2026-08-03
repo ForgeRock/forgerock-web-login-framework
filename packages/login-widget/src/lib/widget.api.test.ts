@@ -41,7 +41,7 @@ async function importSubject() {
   return widgetApiFactory(componentApi());
 }
 
-const validWellknown = 'https://example.com/.well-known/openid-configuration';
+const validServerConfig = { wellknown: 'https://example.com/.well-known/openid-configuration' };
 
 const validOidcClient = {
   clientId: 'WebOAuthClient',
@@ -106,14 +106,14 @@ describe('widgetApiFactory', () => {
     it('accepts an oidcClient config and enables journey() when wellknown is also set', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
       expect(() => api.journey()).not.toThrow();
     });
 
     it('resolves only after the OIDC client is constructed', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // configure() awaited getClient(), so the client store is already populated
       // and a token fetch resolves rather than reporting "not ready".
@@ -126,7 +126,7 @@ describe('widgetApiFactory', () => {
       const api = await importSubject();
 
       await expect(
-        api.configure({ wellknown: validWellknown, oidcClient: validOidcClient }),
+        api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient }),
       ).rejects.toThrow(/wellknown fetch failed/);
     });
   });
@@ -136,7 +136,7 @@ describe('widgetApiFactory', () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
       await api.configure({
-        wellknown: validWellknown,
+        serverConfig: validServerConfig,
         oidcClient: validOidcClient,
         logger: { level: 'debug' },
       });
@@ -154,7 +154,7 @@ describe('widgetApiFactory', () => {
       const custom = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
       const api = await importSubject();
       await api.configure({
-        wellknown: validWellknown,
+        serverConfig: validServerConfig,
         oidcClient: validOidcClient,
         logger: { level: 'info', custom },
       });
@@ -173,10 +173,10 @@ describe('widgetApiFactory', () => {
 
       await expect(
         api.configure({
-          wellknown: validWellknown,
+          serverConfig: validServerConfig,
           oidcClient: validOidcClient,
           logger: { custom },
-        } as unknown as { wellknown: string }),
+        } as unknown as { serverConfig: { wellknown: string } }),
       ).rejects.toThrow();
 
       expect(journeyMock).not.toHaveBeenCalled();
@@ -188,7 +188,7 @@ describe('widgetApiFactory', () => {
       const middleware = [vi.fn()];
       const api = await importSubject();
       await api.configure({
-        wellknown: validWellknown,
+        serverConfig: validServerConfig,
         oidcClient: validOidcClient,
         middleware,
       });
@@ -204,7 +204,7 @@ describe('widgetApiFactory', () => {
     it('omits the `logger` param from both clients when no logger is set', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       expect(journeyMock).toHaveBeenCalledWith(
         expect.not.objectContaining({ logger: expect.anything() }),
@@ -220,10 +220,10 @@ describe('widgetApiFactory', () => {
 
       await expect(
         api.configure({
-          wellknown: validWellknown,
+          serverConfig: validServerConfig,
           oidcClient: validOidcClient,
           logger: { level: 'verbose' },
-        } as unknown as { wellknown: string }),
+        } as unknown as { serverConfig: { wellknown: string } }),
       ).rejects.toThrow();
 
       expect(journeyMock).not.toHaveBeenCalled();
@@ -235,10 +235,10 @@ describe('widgetApiFactory', () => {
 
       await expect(
         api.configure({
-          wellknown: validWellknown,
+          serverConfig: validServerConfig,
           oidcClient: validOidcClient,
           middleware: ['not-a-fn'],
-        } as unknown as { wellknown: string }),
+        } as unknown as { serverConfig: { wellknown: string } }),
       ).rejects.toThrow();
 
       expect(journeyMock).not.toHaveBeenCalled();
@@ -247,12 +247,12 @@ describe('widgetApiFactory', () => {
   });
 
   describe('configure() — OIDC authorize passthrough options', () => {
-    it('bridges loginHint/acrValues/query onto the silent token.get authorizeOptions', async () => {
+    it('bridges flat loginHint/acrValues/query onto the silent token.get authorizeOptions', async () => {
       const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
       oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
       const api = await importSubject();
       await api.configure({
-        wellknown: validWellknown,
+        serverConfig: validServerConfig,
         oidcClient: {
           ...validOidcClient,
           loginHint: 'jane.doe',
@@ -274,33 +274,41 @@ describe('widgetApiFactory', () => {
       );
     });
 
-    it('does not set authorizeOptions when no authorize passthrough options are given', async () => {
+    it('always sets authorizeOptions from oidcClient when oidcClient is present', async () => {
       const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
       oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       await api.user.tokens().get();
 
-      expect(tokenGet.mock.calls[0][0]).not.toHaveProperty('authorizeOptions');
+      expect(tokenGet.mock.calls[0][0]).toMatchObject({
+        authorizeOptions: {
+          clientId: validOidcClient.clientId,
+          redirectUri: validOidcClient.redirectUri,
+          scope: validOidcClient.scope,
+        },
+      });
     });
   });
 
-  describe('configure() — wellknown is required', () => {
-    it('rejects when wellknown is missing', async () => {
+  describe('configure() — serverConfig is required', () => {
+    it('rejects when serverConfig.wellknown is missing', async () => {
       const api = await importSubject();
 
       await expect(
-        // Untyped (IIFE) callers can omit wellknown; the guard must still fire.
-        api.configure({ oidcClient: validOidcClient } as unknown as { wellknown: string }),
-      ).rejects.toThrow(/wellknown url is required/);
+        // Untyped (IIFE) callers can omit serverConfig; the guard must still fire.
+        api.configure({ oidcClient: validOidcClient } as unknown as {
+          serverConfig: { wellknown: string };
+        }),
+      ).rejects.toThrow(/serverConfig|wellknown|expected object/i);
     });
 
-    it('rejects a malformed wellknown before constructing any client', async () => {
+    it('rejects a malformed serverConfig.wellknown before constructing any client', async () => {
       const api = await importSubject();
 
       await expect(
-        api.configure({ wellknown: 'not-a-url', oidcClient: validOidcClient }),
+        api.configure({ serverConfig: { wellknown: 'not-a-url' }, oidcClient: validOidcClient }),
       ).rejects.toThrow(/wellknown/i);
 
       expect(journeyMock).not.toHaveBeenCalled();
@@ -321,7 +329,7 @@ describe('widgetApiFactory', () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
       // await configure() guarantees the OIDC client is constructed before logout.
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
 
       await api.user.logout();
@@ -345,7 +353,7 @@ describe('widgetApiFactory', () => {
         }),
       );
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
 
       await expect(api.user.logout()).rejects.toThrow('terminate failed');
@@ -369,7 +377,7 @@ describe('widgetApiFactory', () => {
     it('tokens() and info() expose both get and subscribe', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       const tokensApi = api.user.tokens();
       const infoApi = api.user.info();
@@ -382,7 +390,7 @@ describe('widgetApiFactory', () => {
     it('tokens().get() and info().get() return a promise', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // Swallow settlement — this asserts the call shape, not the fetch result.
       const tokensGet = api.user.tokens().get();
@@ -399,7 +407,7 @@ describe('widgetApiFactory', () => {
     it('a repeated get() on an already-completed store settles without crashing', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // First get() drives the store to `completed`. Second get() hits the
       // already-completed latch, which returns the current (cached) store value.
@@ -424,7 +432,7 @@ describe('widgetApiFactory', () => {
         }),
       );
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // Matches main: a failed fetch rejects, and the rejection payload is the
       // store value (carrying `error`), not a bare Error.
@@ -457,7 +465,7 @@ describe('widgetApiFactory', () => {
   describe('configure() without oidcClient', () => {
     it('exposes a usable journeyStore — its initial value is observable via subscribe', async () => {
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown });
+      await api.configure({ serverConfig: validServerConfig });
       const { journeyStore } = api.getStores();
 
       const value = readStore(journeyStore);
@@ -472,7 +480,7 @@ describe('widgetApiFactory', () => {
 
     it('journeyStore.reset() does not throw — the regression that broke user.logout()', async () => {
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown });
+      await api.configure({ serverConfig: validServerConfig });
       const { journeyStore } = api.getStores();
       expect(() => journeyStore.reset()).not.toThrow();
     });
@@ -492,7 +500,7 @@ describe('widgetApiFactory', () => {
   describe('configure() — logger.level gates the real SDK logger', () => {
     // Valid `.url()` (passes the widget's zod check) but wrong path suffix, so the
     // real journey client's stricter `isValidWellknownUrl` rejects it and logs.
-    const invalidSuffixWellknown = 'https://example.com/not-the-wellknown-path';
+    const invalidSuffixServerConfig = { wellknown: 'https://example.com/not-the-wellknown-path' };
     let errorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
@@ -516,7 +524,7 @@ describe('widgetApiFactory', () => {
       const api = await importSubject();
 
       await expect(
-        api.configure({ wellknown: invalidSuffixWellknown, logger: { level: 'error' } }),
+        api.configure({ serverConfig: invalidSuffixServerConfig, logger: { level: 'error' } }),
       ).rejects.toThrow(/wellknown/i);
 
       expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid wellknown URL'));
@@ -526,7 +534,7 @@ describe('widgetApiFactory', () => {
       const api = await importSubject();
 
       await expect(
-        api.configure({ wellknown: invalidSuffixWellknown, logger: { level: 'none' } }),
+        api.configure({ serverConfig: invalidSuffixServerConfig, logger: { level: 'none' } }),
       ).rejects.toThrow(/wellknown/i);
 
       expect(errorSpy).not.toHaveBeenCalled();

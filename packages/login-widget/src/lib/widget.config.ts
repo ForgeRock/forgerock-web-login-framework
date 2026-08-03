@@ -9,21 +9,25 @@
 
 import { z } from 'zod';
 
-import type { CustomLogger, RequestMiddleware } from '@forgerock/oidc-client/types';
+import type { CustomLogger, RequestMiddleware, StorageConfig } from '@forgerock/oidc-client/types';
 
 /**
- * Runtime validation for the widget's top-level options; `wellknown`, `logger`, `middleware`
+ * Runtime validation for the widget's top-level options; `serverConfig`, `logger`, `middleware`
  * All three reach both the journey and OIDC clients
  */
 
-export const wellknownSchema = z
-  .string({
-    error: (issue) =>
-      issue.input === undefined
-        ? 'wellknown url is required to configure the widget'
-        : 'wellknown must be a URL string',
+export const serverConfigSchema = z
+  .object({
+    wellknown: z
+      .string({
+        error: (issue) =>
+          issue.input === undefined
+            ? 'serverConfig.wellknown is required to configure the widget'
+            : 'serverConfig.wellknown must be a URL string',
+      })
+      .url({ message: 'serverConfig.wellknown must be a full URL' }),
   })
-  .url({ message: 'wellknown must be a full URL' });
+  .strict();
 
 export const loggerConfigSchema = z
   .object({
@@ -43,3 +47,21 @@ export const loggerConfigSchema = z
 export const middlewareSchema = z.array(
   z.custom<RequestMiddleware>((value) => typeof value === 'function'),
 );
+
+export const storageConfigSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.union([z.literal('localStorage'), z.literal('sessionStorage')]),
+    name: z.string(),
+    prefix: z.string().optional(),
+  }),
+  z.object({
+    type: z.literal('custom'),
+    name: z.string(),
+    prefix: z.string().optional(),
+    // TODO: use CustomStorageObject directly once it's exported from @forgerock/oidc-client/types
+    // https://github.com/ForgeRock/ping-javascript-sdk/blob/%40forgerock/oidc-client%402.1.0/packages/oidc-client/src/types.ts#L21
+    custom: z.custom<Extract<StorageConfig, { type: 'custom' }>['custom']>(
+      (value) => typeof value === 'object' && value !== null,
+    ),
+  }),
+]);

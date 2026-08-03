@@ -22,7 +22,7 @@ export function logErrorAndThrow(type: string) {
       'Import `configure` and `await` it before using the journey, user, or protect APIs. Example:\n' +
         "  import { configure } from '@forgerock/login-widget';\n" +
         '  await configure({\n' +
-        "    wellknown: 'https://<tenant>/am/oauth2/<realm>/.well-known/openid-configuration',\n" +
+        "    serverConfig: { wellknown: 'https://<tenant>/am/oauth2/<realm>/.well-known/openid-configuration' },\n" +
         "    oidcClient: { clientId: '<client-id>', redirectUri: '<your-app-origin>/callback', scope: 'openid profile email' },\n" +
         '  });',
     );

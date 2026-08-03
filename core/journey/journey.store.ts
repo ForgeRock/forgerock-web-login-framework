@@ -66,6 +66,8 @@ export const journeyClientConfigSchema: z.ZodType<JourneyClientConfig> = z
   })
   .strict();
 
+// setJourneyClientConfig stores these; getJourneyClient() reads them when building the client.
+// They never call each other, so module scope is the only handoff.
 let journeyClientConfig: JourneyClientConfig | undefined;
 let journeyRequestMiddleware: RequestMiddleware[] | undefined;
 let journeyLogger: { level: LogLevel; custom?: CustomLogger } | undefined;
@@ -95,6 +97,11 @@ export function setJourneyClientConfig(
     return journeyClientConfig;
   }
 
+  /**
+   * configure() calls setJourneyClientConfig(config, middleware, logger) — which stores logger into journeyLogger.
+   * getJourneyClient() later reads journeyLogger and passes it to journey({ logger: journeyLogger }) when building the client.
+   * setJourneyClientConfig stores it. getJourneyClient consumes it.
+   */
   const parsed = journeyClientConfigSchema.parse(config);
   const hasChanged =
     parsed.serverConfig.wellknown !== journeyClientConfig?.serverConfig.wellknown ||
@@ -120,7 +127,7 @@ export async function getJourneyClient(): Promise<JourneyClient> {
     throw new Error('Journey Client is not configured. Call setJourneyClientConfig() first.');
   }
 
-  // Cache the journey client promise to reuse an existing journey client.
+  // Build on first call; return the cached promise on every call after.
   if (!journeyClientPromise) {
     journeyClientPromise = journey({
       config: journeyClientConfig,

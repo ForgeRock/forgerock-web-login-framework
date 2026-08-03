@@ -36,7 +36,6 @@
   - [Journey](#journey)
   - [Component](#component)
   - [User](#user)
-  - [Request](#request)
   - [Styling Configuration](#styling-configuration)
   - [Links Configuration](#links-configuration)
   - [Content Configuration](#content-configuration)
@@ -48,7 +47,7 @@
 
 The Login Widget is an all-inclusive UI component for handling login, registration, and related user flows in any modern JavaScript app. It works with React, Vue, Angular, Svelte, or vanilla JavaScript — it does not currently support Node.js or server-side rendering (SSR).
 
-The widget uses [Journey Client](https://developer.pingidentity.com/orchsdks/journey/usage/javascript/index.html) for journey execution, and the [ForgeRock SDK for JavaScript](https://docs.pingidentity.com/sdks/latest/sdks/tutorials/javascript/index.html) for OAuth/OIDC tokens, user info, and request utilities. It adds a UI rendering layer on top of these SDKs to eliminate the need to develop and maintain UI components for complex authentication flows. Although this rendering layer is developed with Svelte and Tailwind, both are "compiled away" and have no runtime dependencies. The resulting widget is library- and framework-agnostic.
+The widget uses [Journey Client](https://developer.pingidentity.com/orchsdks/journey/usage/javascript/index.html) for journey execution, and [OIDC Client](https://developer.pingidentity.com/orchsdks/oidc/usage/javascript-centralized-login.html) for OAuth/OIDC tokens and user info. It adds a UI rendering layer on top of these SDKs to eliminate the need to develop and maintain UI components for complex authentication flows. Although this rendering layer is developed with Svelte and Tailwind, both are "compiled away" and have no runtime dependencies. The resulting widget is library- and framework-agnostic.
 
 The widget can be rendered in two form factors:
 
@@ -139,12 +138,15 @@ import Widget, { configure, journey } from '@forgerock/login-widget';
 // 1. Configure — async; awaiting it ensures both clients are ready before use
 await configure({
   // REQUIRED — the well-known URL, shared by the journey and OIDC clients
-  wellknown: 'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  serverConfig: {
+    wellknown:
+      'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  },
   // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
   oidcClient: {
     clientId: 'YourOauthClient',
     redirectUri: `${window.location.origin}/callback`,
-    scope: 'openid profile email',
+    scope: 'openid profile email', // OPTIONAL — defaults to 'openid'
   },
 });
 
@@ -259,8 +261,10 @@ import { configure } from '@forgerock/login-widget';
 // configure() is async — await it before calling any other Widget API
 await configure({
   // REQUIRED — the well-known URL, shared by the journey and OIDC clients
-  wellknown:
-    'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
+  serverConfig: {
+    wellknown:
+      'https://your-tenant.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
+  },
   // REQUIRED if you use OAuth/OIDC tokens, user info, or logout
   oidcClient: {
     clientId: 'WebOAuthClient',
@@ -272,6 +276,8 @@ await configure({
   logger: { level: 'warn' },
   // OPTIONAL — request middleware for both clients; see the full example below
   middleware: [],
+  // OPTIONAL — token storage config; see Storage section below
+  storage: { type: 'sessionStorage', name: 'tokens' },
   // OPTIONAL — see dedicated sections below
   content: {},
   links: {},
@@ -280,9 +286,10 @@ await configure({
 ```
 
 > **Migration note (2.0.0):** The `forgerock` config object has been replaced by `oidcClient`.
-> Endpoint discovery is now driven by a single top-level `wellknown` URL, shared by the
-> journey and OIDC clients — `baseUrl`, `realmPath`, `timeout`, and `support` are no longer
-> used. `clientId`, `redirectUri`, and `scope` are now required when configuring `oidcClient`.
+> Endpoint discovery is now driven by `serverConfig.wellknown`, shared by the journey and OIDC
+> clients — `baseUrl`, `realmPath`, `timeout`, and `support` are no longer used. `clientId` and
+> `redirectUri` are required when configuring `oidcClient`; `scope` defaults to `'openid'`. `tokenStore` has
+> moved to a top-level `storage` option.
 
 #### Logger
 
@@ -295,7 +302,10 @@ The top-level `logger` option is forwarded to both the journey and OIDC clients.
 
 ```js
 await configure({
-  wellknown: 'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  serverConfig: {
+    wellknown:
+      'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  },
   logger: {
     level: 'debug',
     // OPTIONAL — route SDK logs to your own sink instead of the console.
@@ -318,24 +328,25 @@ await configure({
 
 All properties are nested inside `oidcClient`.
 
-| Property             | Type                        | Default      | Description                                                                                                                                                                                                        |
-| -------------------- | --------------------------- | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `clientId`           | `string`                    | —            | **Required.** OAuth 2.0 client ID.                                                                                                                                                                                 |
-| `redirectUri`        | `string`                    | —            | **Required.** URI AM redirects to after authorization.                                                                                                                                                             |
-| `scope`              | `string`                    | `'openid'`   | OAuth 2.0 scopes.                                                                                                                                                                                                  |
-| `storage`            | `StorageConfig` (see below) | localStorage | Token storage config. See [Storage](#storage).                                                                                                                                                                     |
-| `oauthThreshold`     | `number`                    | `30000`      | Milliseconds before expiry to trigger background renewal.                                                                                                                                                          |
-| `par`                | `boolean`                   | auto         | Use Pushed Authorization Requests. When omitted, the SDK auto-detects from the authorization server's `require_pushed_authorization_requests` metadata. Setting `false` while the server requires PAR is an error. |
-| `signOutRedirectUri` | `string`                    | —            | `post_logout_redirect_uri` sent on `user.logout()`.                                                                                                                                                                |
-| `loginHint`          | `string`                    | —            | Pre-fills the login identifier; bridged onto silent token renewal.                                                                                                                                                 |
-| `acrValues`          | `string`                    | —            | Requested ACR values; bridged onto silent token renewal.                                                                                                                                                           |
-| `query`              | `Record<string, string>`    | —            | Extra authorize query params; bridged onto silent token renewal.                                                                                                                                                   |
+| Property         | Type                     | Default    | Description                                                                                                                                                                                                        |
+| ---------------- | ------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `clientId`       | `string`                 | —          | **Required.** OAuth 2.0 client ID.                                                                                                                                                                                 |
+| `redirectUri`    | `string`                 | —          | **Required.** URI AM redirects to after authorization.                                                                                                                                                             |
+| `scope`          | `string`                 | `'openid'` | OAuth 2.0 scopes.                                                                                                                                                                                                  |
+| `oauthThreshold` | `number`                 | `30000`    | Milliseconds before expiry to trigger background renewal.                                                                                                                                                          |
+| `par`            | `boolean`                | auto       | Use Pushed Authorization Requests. When omitted, the SDK auto-detects from the authorization server's `require_pushed_authorization_requests` metadata. Setting `false` while the server requires PAR is an error. |
+| `loginHint`      | `string`                 | —          | Pre-fills the login identifier; bridged onto silent token renewal.                                                                                                                                                 |
+| `acrValues`      | `string`                 | —          | Requested ACR values; bridged onto silent token renewal.                                                                                                                                                           |
+| `query`          | `Record<string, string>` | —          | Extra authorize query params; bridged onto silent token renewal.                                                                                                                                                   |
 
 Example with all optional OIDC options:
 
 ```js
 await configure({
-  wellknown: 'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  serverConfig: {
+    wellknown:
+      'https://your-tenant.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+  },
   logger: { level: 'debug' },
   middleware: [
     (req, action, next) => {
@@ -343,14 +354,13 @@ await configure({
       next();
     },
   ],
+  storage: { type: 'sessionStorage', name: 'tokens', prefix: 'myapp' },
   oidcClient: {
     clientId: 'WebOAuthClient',
     redirectUri: `${window.location.origin}/callback`,
     scope: 'openid profile email',
-    storage: { type: 'sessionStorage', prefix: 'myapp' },
     oauthThreshold: 60000,
     par: true,
-    signOutRedirectUri: `${window.location.origin}/logged-out`,
     loginHint: 'user@example.com',
     acrValues: 'urn:acr:2fa',
     query: { ui_locales: 'en-US' },
@@ -360,37 +370,30 @@ await configure({
 
 #### Storage
 
-`oidcClient.storage` configures where the OIDC client persists tokens. It mirrors
+The top-level `storage` option configures where the OIDC client persists tokens. It mirrors
 the SDK's `StorageConfig` union — `type` selects a browser store or a custom sink.
 
 | Property | Type                                             | Default          | Description                                                             |
 | -------- | ------------------------------------------------ | ---------------- | ----------------------------------------------------------------------- |
 | `type`   | `'localStorage' \| 'sessionStorage' \| 'custom'` | `'localStorage'` | Storage backend. `'custom'` requires a `custom` sink.                   |
+| `name`   | `string`                                         | —                | **Required.** Storage key name.                                         |
 | `prefix` | `string`                                         | `'pic'`          | Key prefix for storage entries.                                         |
-| `name`   | `string`                                         | `clientId`       | Storage key name.                                                       |
 | `custom` | `{ get, set, remove }`                           | —                | **Required when `type: 'custom'`.** Async functions for your own store. |
 
 ```js
 // Browser store
-oidcClient: {
-  clientId: 'WebOAuthClient',
-  redirectUri: `${window.location.origin}/callback`,
-  storage: { type: 'sessionStorage', prefix: 'myapp' },
-}
+storage: { type: 'sessionStorage', name: 'tokens', prefix: 'myapp' },
 
 // Custom store
-oidcClient: {
-  clientId: 'WebOAuthClient',
-  redirectUri: `${window.location.origin}/callback`,
-  storage: {
-    type: 'custom',
-    custom: {
-      get: async (key) => myStore.read(key),
-      set: async (key, value) => myStore.write(key, value),
-      remove: async (key) => myStore.delete(key),
-    },
+storage: {
+  type: 'custom',
+  name: 'tokens',
+  custom: {
+    get: async (key) => myStore.read(key),
+    set: async (key, value) => myStore.write(key, value),
+    remove: async (key) => myStore.delete(key),
   },
-}
+},
 ```
 
 ### Journey

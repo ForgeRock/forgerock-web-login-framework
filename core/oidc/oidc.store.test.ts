@@ -151,36 +151,39 @@ describe('oidc.store — createOidcClientStore', () => {
     );
   });
 
-  it('forwards the OIDC passthrough options (par, signOutRedirectUri, loginHint, acrValues, query) on the config', async () => {
+  it('forwards par and authorize passthrough fields on the config', async () => {
     const client = mockClient();
     oidcMock.mockResolvedValueOnce(client);
 
-    const passthrough = {
+    const { createOidcClientStore } = await importSubject();
+    createOidcClientStore({
+      ...validConfig,
       par: true,
-      signOutRedirectUri: 'https://example.com/signed-out',
       loginHint: 'jane.doe',
       acrValues: 'urn:acr:2fa',
       query: { customParam: 'value' },
-    };
-
-    const { createOidcClientStore } = await importSubject();
-    createOidcClientStore({ ...validConfig, ...passthrough });
+    });
 
     expect(oidcMock).toHaveBeenCalledWith({
-      config: { ...validConfig, ...passthrough },
+      config: {
+        ...validConfig,
+        par: true,
+        loginHint: 'jane.doe',
+        acrValues: 'urn:acr:2fa',
+        query: { customParam: 'value' },
+      },
       requestMiddleware: undefined,
     });
   });
 
-  it('maps the storage config off the config and onto the storage argument (browser type + prefix)', async () => {
+  it('passes storage to oidc() as a separate argument (browser type)', async () => {
     const client = mockClient();
     oidcMock.mockResolvedValueOnce(client);
 
-    const storage = { type: 'sessionStorage', prefix: 'myApp' } as const;
+    const storage = { type: 'sessionStorage', name: 'tokens', prefix: 'myApp' } as const;
     const { createOidcClientStore } = await importSubject();
-    createOidcClientStore({ ...validConfig, storage });
+    createOidcClientStore(validConfig, undefined, undefined, storage);
 
-    // `storage` rides on the config in, but goes to oidc()'s `storage` param — not its config.
     expect(oidcMock).toHaveBeenCalledWith({
       config: validConfig,
       requestMiddleware: undefined,
@@ -188,14 +191,14 @@ describe('oidc.store — createOidcClientStore', () => {
     });
   });
 
-  it('maps a custom storage sink off the config and onto the storage argument', async () => {
+  it('passes a custom storage sink to oidc() as a separate argument', async () => {
     const client = mockClient();
     oidcMock.mockResolvedValueOnce(client);
 
     const custom = { get: vi.fn(), set: vi.fn(), remove: vi.fn() };
     const storage = { type: 'custom', name: 'tokens', custom } as const;
     const { createOidcClientStore } = await importSubject();
-    createOidcClientStore({ ...validConfig, storage });
+    createOidcClientStore(validConfig, undefined, undefined, storage);
 
     expect(oidcMock).toHaveBeenCalledWith({
       config: validConfig,
@@ -339,16 +342,13 @@ describe('oidc.store — oidcClientConfigSchema', () => {
     expect(parsed.scope).toBe('openid');
   });
 
-  it('accepts every restored/passthrough option with the correct type', async () => {
+  it('accepts every passthrough option with the correct type', async () => {
     const { oidcClientConfigSchema } = await importSubject();
 
-    const storage = { type: 'sessionStorage', prefix: 'myApp' } as const;
     const parsed = oidcClientConfigSchema.parse({
       ...validConfig,
       oauthThreshold: 5000,
-      storage,
       par: true,
-      signOutRedirectUri: 'https://example.com/signed-out',
       loginHint: 'jane.doe',
       acrValues: 'urn:acr:2fa',
       query: { customParam: 'value' },
@@ -356,9 +356,7 @@ describe('oidc.store — oidcClientConfigSchema', () => {
 
     expect(parsed).toMatchObject({
       oauthThreshold: 5000,
-      storage,
       par: true,
-      signOutRedirectUri: 'https://example.com/signed-out',
       loginHint: 'jane.doe',
       acrValues: 'urn:acr:2fa',
       query: { customParam: 'value' },
@@ -390,46 +388,23 @@ describe('oidc.store — oidcClientConfigSchema', () => {
     ).toThrow();
   });
 
-  it('rejects wrong types for par, oauthThreshold, and query', async () => {
+  it('rejects wrong types for par and oauthThreshold', async () => {
     const { oidcClientConfigSchema } = await importSubject();
 
     expect(() => oidcClientConfigSchema.parse({ ...validConfig, par: 'yes' })).toThrow();
     expect(() =>
       oidcClientConfigSchema.parse({ ...validConfig, oauthThreshold: '5000' }),
     ).toThrow();
-    expect(() => oidcClientConfigSchema.parse({ ...validConfig, query: { count: 1 } })).toThrow();
   });
 
-  it('validates the storage discriminated union', async () => {
+  it('rejects storage on the oidcClient config (storage is a top-level widget option)', async () => {
     const { oidcClientConfigSchema } = await importSubject();
 
-    // Browser stores parse with type/prefix/name.
-    expect(
+    expect(() =>
       oidcClientConfigSchema.parse({
         ...validConfig,
-        storage: { type: 'sessionStorage', prefix: 'myApp', name: 'tokens' },
-      }).storage,
-    ).toMatchObject({ type: 'sessionStorage', prefix: 'myApp', name: 'tokens' });
-
-    // The custom store parses with its sink intact.
-    const custom = { get: () => null, set: () => undefined, remove: () => undefined };
-    expect(
-      oidcClientConfigSchema.parse({ ...validConfig, storage: { type: 'custom', custom } }).storage,
-    ).toMatchObject({ type: 'custom', custom });
-
-    // A bad discriminant is rejected.
-    expect(() =>
-      oidcClientConfigSchema.parse({ ...validConfig, storage: { type: 'localStorag' } }),
-    ).toThrow();
-
-    // `type: 'custom'` without a sink is rejected.
-    expect(() =>
-      oidcClientConfigSchema.parse({ ...validConfig, storage: { type: 'custom' } }),
-    ).toThrow();
-
-    // A missing discriminant is rejected.
-    expect(() =>
-      oidcClientConfigSchema.parse({ ...validConfig, storage: { prefix: 'myApp' } }),
+        storage: { type: 'sessionStorage', name: 'tokens' },
+      }),
     ).toThrow();
   });
 });

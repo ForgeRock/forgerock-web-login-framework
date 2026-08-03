@@ -22,9 +22,14 @@ import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
-import { loggerConfigSchema, middlewareSchema, wellknownSchema } from './widget.config';
+import {
+  loggerConfigSchema,
+  middlewareSchema,
+  serverConfigSchema,
+  storageConfigSchema,
+} from './widget.config';
 
-import type { GetAuthorizationUrlOptions, GetTokensOptions } from '@forgerock/oidc-client/types';
+import type { GetTokensOptions } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 import type { componentApi as _componentApi } from './_utilities/component.utilities';
@@ -75,16 +80,17 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
    * @function configure - Configures the widget and constructs its clients.
    * @param {WidgetConfigOptions} options - The configuration options for the widget
    * @returns {Promise<void>} Resolves once the Journey Client (and the OIDC client, if configured) is constructed
-   * @throws {Error} If `wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
+   * @throws {Error} If `serverConfig.wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
    */
   async function configure(options: WidgetConfigOptions): Promise<void> {
-    const wellknown = wellknownSchema.parse(options.wellknown);
+    const serverConfig = serverConfigSchema.parse(options.serverConfig);
     const logger = options.logger && loggerConfigSchema.parse(options.logger);
     const middleware = options.middleware && middlewareSchema.parse(options.middleware);
+    const storage = options.storage && storageConfigSchema.parse(options.storage);
 
     // initialize journey client
     journeyStore = initializeJourney(
-      { serverConfig: { wellknown } },
+      { serverConfig },
       { ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }) },
       middleware,
       logger,
@@ -96,10 +102,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       oidcClientStore = createOidcClientStore(
         {
           ...options.oidcClient,
-          serverConfig: { wellknown },
+          serverConfig,
         },
         middleware,
         logger,
+        storage,
       );
       const oidcClient = await oidcClientStore.getClient();
       if ('error' in oidcClient) {
@@ -107,28 +114,8 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       }
     }
 
-    // loginHint, acrValues, and query are authorize-request params. The widget
-    // gets tokens only through silent renewal (token.get), and that call reads
-    // these three from authorizeOptions — it ignores the copies on the client
-    // config. So we copy them onto authorizeOptions here; otherwise they would
-    // be set but never sent.
-    const oidcClientConfig = options.oidcClient;
-    const authorizeOptions: GetAuthorizationUrlOptions | undefined =
-      oidcClientConfig &&
-      (oidcClientConfig.loginHint || oidcClientConfig.acrValues || oidcClientConfig.query)
-        ? {
-            clientId: oidcClientConfig.clientId,
-            redirectUri: oidcClientConfig.redirectUri,
-            scope: oidcClientConfig.scope ?? 'openid',
-            responseType: 'code',
-            ...(oidcClientConfig.loginHint && { loginHint: oidcClientConfig.loginHint }),
-            ...(oidcClientConfig.acrValues && { acrValues: oidcClientConfig.acrValues }),
-            ...(oidcClientConfig.query && { query: oidcClientConfig.query }),
-          }
-        : undefined;
-
     // OAuth and User stores derive from the OIDC client store (undefined when OIDC isn't configured).
-    oauthStore = initializeOauth(oidcClientStore, authorizeOptions && { authorizeOptions });
+    oauthStore = initializeOauth(oidcClientStore, options.oidcClient);
     userStore = initializeUser(oidcClientStore);
 
     initializeContent(options.content);

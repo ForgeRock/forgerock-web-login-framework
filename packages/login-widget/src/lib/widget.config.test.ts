@@ -9,7 +9,39 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
-import { loggerConfigSchema, middlewareSchema } from './widget.config';
+import {
+  loggerConfigSchema,
+  middlewareSchema,
+  serverConfigSchema,
+  storageConfigSchema,
+} from './widget.config';
+
+describe('widget.config — serverConfigSchema', () => {
+  it('parses a valid wellknown URL', () => {
+    expect(
+      serverConfigSchema.parse({
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      }),
+    ).toMatchObject({ wellknown: 'https://example.com/.well-known/openid-configuration' });
+  });
+
+  it('rejects when wellknown is missing', () => {
+    expect(() => serverConfigSchema.parse({})).toThrow(/required/i);
+  });
+
+  it('rejects a non-URL wellknown', () => {
+    expect(() => serverConfigSchema.parse({ wellknown: 'not-a-url' })).toThrow(/wellknown/i);
+  });
+
+  it('rejects an unknown key (strict)', () => {
+    expect(() =>
+      serverConfigSchema.parse({
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+        timeout: 3000,
+      }),
+    ).toThrow();
+  });
+});
 
 describe('widget.config — loggerConfigSchema', () => {
   it('parses each valid log level', () => {
@@ -65,5 +97,48 @@ describe('widget.config — middlewareSchema', () => {
 
   it('rejects an array containing a non-function', () => {
     expect(() => middlewareSchema.parse([vi.fn(), 'not-a-fn'])).toThrow();
+  });
+});
+
+describe('widget.config — storageConfigSchema', () => {
+  it('parses localStorage with name and optional prefix', () => {
+    expect(storageConfigSchema.parse({ type: 'localStorage', name: 'tokens' })).toMatchObject({
+      type: 'localStorage',
+      name: 'tokens',
+    });
+
+    expect(
+      storageConfigSchema.parse({ type: 'localStorage', name: 'tokens', prefix: 'myApp' }),
+    ).toMatchObject({ type: 'localStorage', name: 'tokens', prefix: 'myApp' });
+  });
+
+  it('parses sessionStorage with name and optional prefix', () => {
+    expect(
+      storageConfigSchema.parse({ type: 'sessionStorage', name: 'tokens', prefix: 'myApp' }),
+    ).toMatchObject({ type: 'sessionStorage', name: 'tokens', prefix: 'myApp' });
+  });
+
+  it('parses a custom storage sink', () => {
+    const custom = { get: () => null, set: () => undefined, remove: () => undefined };
+    expect(storageConfigSchema.parse({ type: 'custom', name: 'tokens', custom })).toMatchObject({
+      type: 'custom',
+      custom,
+    });
+  });
+
+  it('rejects browser storage missing name', () => {
+    expect(() => storageConfigSchema.parse({ type: 'sessionStorage' })).toThrow();
+  });
+
+  it('rejects custom storage missing sink', () => {
+    expect(() => storageConfigSchema.parse({ type: 'custom', name: 'tokens' })).toThrow();
+  });
+
+  it('rejects a bad discriminant', () => {
+    expect(() => storageConfigSchema.parse({ type: 'localStorag', name: 'tokens' })).toThrow();
+  });
+
+  it('rejects a missing type discriminant', () => {
+    expect(() => storageConfigSchema.parse({ name: 'tokens', prefix: 'myApp' })).toThrow();
   });
 });
