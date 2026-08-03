@@ -10,7 +10,6 @@
 import { derived, get } from 'svelte/store';
 
 import { logErrorAndThrow } from '$core/_utilities/errors.utilities';
-import { captchaConfigSchema } from '$core/captcha.config';
 // Import the stores for initialization
 import { componentStore } from '$core/component.store';
 import { initialize as initializeLinks } from '$core/links.store';
@@ -22,7 +21,7 @@ import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
-import { loggerConfigSchema, middlewareSchema, wellknownSchema } from './widget.config';
+import { widgetConfigOptionsSchema } from './widget.config';
 
 import type { GetAuthorizationUrlOptions, GetTokensOptions } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
@@ -33,8 +32,8 @@ import type {
   JourneyOptionsChange,
   JourneyOptionsStart,
   Protect,
-  WidgetConfigOptions,
 } from './interfaces';
+import type { WidgetConfigOptions } from './widget.config';
 import type { OAuthStore, OAuthTokenStoreValue } from '$core/oauth/oauth.store';
 import type { OidcClientStore } from '$core/oidc/oidc.store';
 import type { UserStore, UserStoreValue } from '$core/user/user.store';
@@ -78,24 +77,23 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
    * @throws {Error} If `wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
    */
   async function configure(options: WidgetConfigOptions): Promise<void> {
-    const wellknown = wellknownSchema.parse(options.wellknown);
-    const logger = options.logger && loggerConfigSchema.parse(options.logger);
-    const middleware = options.middleware && middlewareSchema.parse(options.middleware);
+    const parsed = widgetConfigOptionsSchema.parse(options);
+    const { wellknown, logger, middleware, captcha } = parsed;
 
     // initialize journey client
     journeyStore = initializeJourney(
       { serverConfig: { wellknown } },
-      { ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }) },
+      { ...(captcha && { captcha }) },
       middleware,
       logger,
     );
     await getJourneyClient();
 
     // initialize oidc client, if present
-    if (options.oidcClient) {
+    if (parsed.oidcClient) {
       oidcClientStore = createOidcClientStore(
         {
-          ...options.oidcClient,
+          ...parsed.oidcClient,
           serverConfig: { wellknown },
         },
         middleware,
@@ -112,7 +110,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     // these three from authorizeOptions — it ignores the copies on the client
     // config. So we copy them onto authorizeOptions here; otherwise they would
     // be set but never sent.
-    const oidcClientConfig = options.oidcClient;
+    const oidcClientConfig = parsed.oidcClient;
     const authorizeOptions: GetAuthorizationUrlOptions | undefined =
       oidcClientConfig &&
       (oidcClientConfig.loginHint || oidcClientConfig.acrValues || oidcClientConfig.query)
@@ -131,10 +129,10 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     oauthStore = initializeOauth(oidcClientStore, authorizeOptions && { authorizeOptions });
     userStore = initializeUser(oidcClientStore);
 
-    initializeContent(options.content);
-    initializeJourneys(options.journeys);
-    initializeLinks(options.links);
-    initializeStyle(options.style);
+    initializeContent(parsed.content);
+    initializeJourneys(parsed.journeys);
+    initializeLinks(parsed.links);
+    initializeStyle(parsed.style);
   }
   const journey = (options?: JourneyOptions) => {
     if (!journeyStore || !oauthStore || !userStore) {

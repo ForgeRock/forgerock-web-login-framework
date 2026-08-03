@@ -400,6 +400,11 @@ describe('oidc.store — oidcClientConfigSchema', () => {
     expect(() => oidcClientConfigSchema.parse({ ...validConfig, query: { count: 1 } })).toThrow();
   });
 
+  it('public key surface — fails when an option is silently added or removed', async () => {
+    const { oidcClientConfigSchema } = await importSubject();
+    expect(Object.keys(oidcClientConfigSchema.shape).sort()).toMatchSnapshot();
+  });
+
   it('validates the storage discriminated union', async () => {
     const { oidcClientConfigSchema } = await importSubject();
 

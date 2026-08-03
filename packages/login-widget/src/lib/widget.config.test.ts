@@ -8,8 +8,91 @@
  **/
 
 import { describe, expect, it, vi } from 'vitest';
+import {
+  ZodArray,
+  ZodBoolean,
+  ZodCatch,
+  ZodCustom,
+  ZodDefault,
+  ZodDiscriminatedUnion,
+  ZodLiteral,
+  ZodNumber,
+  ZodObject,
+  ZodOptional,
+  ZodRecord,
+  ZodString,
+  type ZodType,
+  ZodUnion,
+} from 'zod';
 
-import { loggerConfigSchema, middlewareSchema } from './widget.config';
+import { loggerConfigSchema, middlewareSchema, widgetConfigOptionsSchema } from './widget.config';
+
+/**
+ * Recursively extracts the shape of a Zod schema into a plain object tree.
+ * The snapshot of this tree will fail if any field is added or removed at any depth.
+ */
+function describeSchema(schema: ZodType): unknown {
+  // Unwrap wrapper types — ZodOptional/ZodDefault mark output as optional,
+  // ZodCatch is a silent fallback wrapper and is transparent (does not add '?').
+  if (schema instanceof ZodCatch) {
+    return describeSchema(schema.unwrap() as ZodType);
+  }
+  if (schema instanceof ZodOptional || schema instanceof ZodDefault) {
+    const inner = describeSchema(schema.unwrap() as ZodType);
+    if (typeof inner === 'object' && inner !== null && !Array.isArray(inner)) {
+      return { ...(inner as Record<string, unknown>), _optional: true };
+    }
+    return `${String(inner)}?`;
+  }
+
+  if (schema instanceof ZodObject) {
+    const result: Record<string, unknown> = {};
+    for (const [key, value] of Object.entries(schema.shape as Record<string, ZodType>)) {
+      result[key] = describeSchema(value);
+    }
+    return result;
+  }
+
+  if (schema instanceof ZodDiscriminatedUnion) {
+    const key = schema._zod.def.discriminator as string;
+    const values = (schema.options as ZodType[]).map((opt) => {
+      const shape = (opt as ZodObject<Record<string, ZodType>>).shape;
+      const disc = shape[key];
+      return disc instanceof ZodLiteral ? String(disc.value) : '?';
+    });
+    return `discriminatedUnion(${key}: ${values.join(' | ')})`;
+  }
+
+  if (schema instanceof ZodUnion) {
+    return `union(${(schema.options as ZodType[]).map(describeSchema).join(' | ')})`;
+  }
+
+  if (schema instanceof ZodArray) {
+    return `array(${describeSchema(schema.element as ZodType)})`;
+  }
+
+  if (schema instanceof ZodRecord) {
+    return 'record';
+  }
+
+  if (schema instanceof ZodCustom) {
+    return 'custom';
+  }
+  if (schema instanceof ZodString) {
+    return 'string';
+  }
+  if (schema instanceof ZodNumber) {
+    return 'number';
+  }
+  if (schema instanceof ZodBoolean) {
+    return 'boolean';
+  }
+  if (schema instanceof ZodLiteral) {
+    return `'${String(schema.value)}'`;
+  }
+
+  return schema.constructor.name;
+}
 
 describe('widget.config — loggerConfigSchema', () => {
   it('parses each valid log level', () => {
@@ -46,6 +129,12 @@ describe('widget.config — loggerConfigSchema', () => {
   // Guards against silent drift — a mistyped or stale key is a hard error.
   it('rejects an unknown key (strict)', () => {
     expect(() => loggerConfigSchema.parse({ level: 'error', logLevel: 'error' })).toThrow();
+  });
+});
+
+describe('widget.config — widgetConfigOptionsSchema', () => {
+  it('full configure() surface — fails when any option is silently added, removed, or retyped', () => {
+    expect(describeSchema(widgetConfigOptionsSchema)).toMatchSnapshot();
   });
 });
 

@@ -8,18 +8,10 @@
  **/
 
 import type { SignalsInitializationOptions } from '@forgerock/protect/types';
-import type { z } from 'zod';
 
-import type { loggerConfigSchema, middlewareSchema } from './widget.config';
-import type { captchaConfigSchema } from '$core/captcha.config';
-import type { partialLinksSchema } from '$core/links.store';
-import type { partialStringsSchema } from '$core/locale.store';
 import type { OAuthTokenStoreValue } from '$core/oauth/oauth.store';
-import type { oidcClientConfigSchema } from '$core/oidc/oidc.store';
 import type { ProtectConfig } from '$core/protect/protect.store';
-import type { partialStyleSchema } from '$core/style.store';
 import type { UserStoreValue } from '$core/user/user.store';
-import type { journeyConfigSchema } from '$journey/config.store';
 import type { JourneyStoreValue } from '$journey/journey.interfaces';
 
 export interface JourneyOptions {
@@ -55,17 +47,4 @@ export interface Protect {
   resumeBehavioralData: () => void | { error: string };
   pauseBehavioralData: () => void | { error: string };
   getData: () => Promise<string | { error: string }>;
-}
-
-export interface WidgetConfigOptions {
-  // wellknown, logger, and middleware are passed to both the journey and OIDC clients.
-  wellknown: string;
-  logger?: z.infer<typeof loggerConfigSchema>;
-  middleware?: z.infer<typeof middlewareSchema>;
-  captcha?: z.infer<typeof captchaConfigSchema>;
-  oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig'>;
-  content?: z.infer<typeof partialStringsSchema>;
-  journeys?: z.infer<typeof journeyConfigSchema>;
-  links?: z.infer<typeof partialLinksSchema>;
-  style?: z.infer<typeof partialStyleSchema>;
 }

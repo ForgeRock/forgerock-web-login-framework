@@ -9,6 +9,13 @@
 
 import { z } from 'zod';
 
+import { captchaConfigSchema } from '$core/captcha.config';
+import { partialLinksSchema } from '$core/links.store';
+import { partialStringsSchema } from '$core/locale.store';
+import { oidcClientConfigSchema } from '$core/oidc/oidc.store';
+import { partialStyleSchema } from '$core/style.store';
+import { journeyConfigSchema } from '$journey/config.store';
+
 import type { CustomLogger, RequestMiddleware } from '@forgerock/oidc-client/types';
 
 /**
@@ -43,3 +50,22 @@ export const loggerConfigSchema = z
 export const middlewareSchema = z.array(
   z.custom<RequestMiddleware>((value) => typeof value === 'function'),
 );
+
+/**
+ * Top-level schema for all configure() options.
+ * Snapshot-tested in widget.config.test.ts — any addition or removal of a top-level
+ * key will fail that test, forcing an explicit snapshot update and PR review.
+ */
+export const widgetConfigOptionsSchema = z.object({
+  wellknown: wellknownSchema,
+  logger: loggerConfigSchema.optional(),
+  middleware: middlewareSchema.optional(),
+  captcha: captchaConfigSchema.optional(),
+  oidcClient: oidcClientConfigSchema.omit({ serverConfig: true }).optional(),
+  content: partialStringsSchema.optional(),
+  journeys: journeyConfigSchema.optional(),
+  links: partialLinksSchema.optional(),
+  style: partialStyleSchema.optional(),
+});
+
+export type WidgetConfigOptions = z.infer<typeof widgetConfigOptionsSchema>;

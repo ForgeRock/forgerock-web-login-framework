@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./svelte-package",
+    "isolatedModules": false
+  },
+  "include": ["src/lib/widget.config.ts"],
+  "exclude": ["node_modules", "dist"]
+}

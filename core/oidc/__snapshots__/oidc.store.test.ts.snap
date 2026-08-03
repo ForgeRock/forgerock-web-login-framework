@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`oidc.store — oidcClientConfigSchema > public key surface — fails when an option is silently added or removed 1`] = `
+[
+  "acrValues",
+  "clientId",
+  "loginHint",
+  "oauthThreshold",
+  "par",
+  "query",
+  "redirectUri",
+  "scope",
+  "serverConfig",
+  "signOutRedirectUri",
+  "storage",
+]
+`;

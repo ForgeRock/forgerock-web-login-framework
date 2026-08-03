@@ -30,7 +30,9 @@
     "build:types": "svelte-package -o svelte-package",
     "build:iife": "vite build --config vite.config.iife.ts",
     "build:release": "pnpm run build && pnpm run build:iife && pnpm run build:types && node scripts/copyTypes.mjs && node scripts/processTypes.mjs",
-    "test": "vitest"
+    "test": "vitest",
+    "check:api-src": "tsc --noEmit -p tsconfig.typecheck.json",
+    "check:api-dist": "tsc --noEmit -p dist-consumer/tsconfig.json"
   },
   "dependencies": {
     "@forgerock/journey-client": "^2.1.0",

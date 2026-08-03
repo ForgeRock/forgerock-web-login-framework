@@ -17,7 +17,6 @@ import type {
   LogLevel,
   OidcClient,
   RequestMiddleware,
-  StorageConfig,
 } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
@@ -27,7 +26,7 @@ import type { Readable } from 'svelte/store';
  * carries a `custom` sink of functions, typed via `z.custom` because functions
  * cannot be schema-validated.
  */
-const storageConfigSchema = z.discriminatedUnion('type', [
+export const storageConfigSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.union([z.literal('localStorage'), z.literal('sessionStorage')]),
     prefix: z.string().optional(),
@@ -37,10 +36,8 @@ const storageConfigSchema = z.discriminatedUnion('type', [
     type: z.literal('custom'),
     prefix: z.string().optional(),
     name: z.string().optional(),
-    // Presence-checked only; the get/set/remove functions can't be schema-validated.
-    custom: z.custom<Extract<StorageConfig, { type: 'custom' }>['custom']>(
-      (value) => typeof value === 'object' && value !== null,
-    ),
+    // Presence-checked only — the get/set/remove functions can't be schema-validated.
+    custom: z.custom<object>((value) => typeof value === 'object' && value !== null),
   }),
 ]);
 
@@ -119,7 +116,9 @@ export function createOidcClientStore(
     config: parsedConfig,
     requestMiddleware,
     ...(logger && { logger }),
-    ...(storage && { storage }),
+    // Cast needed because z.custom<object> is intentionally broader than
+    // CustomStorageObject — runtime validation already ensures the shape.
+    ...(storage && { storage: storage as never }),
   })
     .then((client) => {
       set(client);

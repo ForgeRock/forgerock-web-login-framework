@@ -68,7 +68,7 @@ new Widget({ target: document.getElementById('widget-root') });
 journey().start();
 ```
 
-For the full API reference — including modal/inline form factors, component lifecycle, user management, styling, and content configuration — see the **[Widget API Documentation](packages/login-widget/README.md)**.
+For the full API reference — including modal/inline form factors, component lifecycle, user management, styling, content configuration, logging, request middleware, token storage, and OIDC client options — see the **[Widget API Documentation](packages/login-widget/README.md)**.
 
 ## Architecture
 
