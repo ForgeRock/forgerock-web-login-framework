@@ -8,3 +8,6 @@ package-lock.json
 pnpm-lock.yaml
 core/**/*.d.ts
 .opencode/
+
+# Local POC directory — not committed
+component-studio/
