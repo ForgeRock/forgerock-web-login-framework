@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -58,6 +58,36 @@ export const multipleProvidersLocalAuthFormStep = {
                 iconFontColor: 'white',
                 iconClass: 'fa-google',
                 iconBackground: '#4184f3',
+              },
+            },
+            {
+              provider: 'linkedin-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0077b5; color: white; border-color: #0077b5;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #006097; color: white; border-color: #006097;',
+                buttonDisplayName: 'LinkedIn',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0077b5',
+              },
+            },
+            {
+              provider: 'microsoft-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0072c6; color: white; border-color: #0072c6;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #005a9e; color: white; border-color: #005a9e;',
+                buttonDisplayName: 'Microsoft',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0072c6',
               },
             },
             { provider: 'localAuthentication' },
@@ -136,6 +166,36 @@ export const multipleProvidersLocalAuthNoFormStep = {
                 iconBackground: '#4184f3',
               },
             },
+            {
+              provider: 'linkedin-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0077b5; color: white; border-color: #0077b5;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #006097; color: white; border-color: #006097;',
+                buttonDisplayName: 'LinkedIn',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0077b5',
+              },
+            },
+            {
+              provider: 'microsoft-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0072c6; color: white; border-color: #0072c6;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #005a9e; color: white; border-color: #005a9e;',
+                buttonDisplayName: 'Microsoft',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0072c6',
+              },
+            },
             { provider: 'localAuthentication' },
           ],
         },
@@ -198,6 +258,36 @@ export const multipleProvidersNoLocalAuthStep = {
                 iconFontColor: 'white',
                 iconClass: 'fa-google',
                 iconBackground: '#4184f3',
+              },
+            },
+            {
+              provider: 'linkedin-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0077b5; color: white; border-color: #0077b5;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #006097; color: white; border-color: #006097;',
+                buttonDisplayName: 'LinkedIn',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0077b5',
+              },
+            },
+            {
+              provider: 'microsoft-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0072c6; color: white; border-color: #0072c6;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #005a9e; color: white; border-color: #005a9e;',
+                buttonDisplayName: 'Microsoft',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0072c6',
               },
             },
           ],
@@ -316,6 +406,74 @@ export const singleProviderNoLocalAuthStep = {
                 iconClass: 'fa-apple',
                 iconFontColor: 'white',
                 iconBackground: '#000000',
+              },
+            },
+          ],
+        },
+        { name: 'value', value: '' },
+      ],
+      input: [{ name: 'IDToken1', value: '' }],
+    },
+  ],
+};
+
+export const singleLinkedInProviderStep = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlNvY2lhbExvZ2luLXdlYiIsIm90ayI6ImFpMzZ2NHZwZ243c2JnZGo1YTN2aHZiM3V0IiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNW5hRmRCWlVweVRtOTNYekZFY1RJNU4wUkhka2gzTGxJemVsWlJiblJWVkZFMVozWmFjVVZJTkdVMWJUTlFiRUZOVjNwU1RWZzNTV0ZVYld4c1RqRlpjakZQY0U5T1EySlViVEEyTFRsVlQwbDBNbEpQY0RsV2NXWlNUM2xtYWtSWldGWnhTV0l4UVZGdlpreFFRamhPVG10ak1Xb3pMVXBhUVVkNFlrRlRXRTR5U1daaVdFSlVOVlp3Y2xCMWVHMDNOMGcwV2tKSlNYcHRVek5mWVU1clJtRkNSbkJEYzNOUWNteERWM1F3YWxVNVMxTlFRVUpFUkhkRVRFbFRiMnBET1hCQ1NGbzVTRUZxTWxsUlRVUmFialk1VWpORE0xYzBNekZCYTB4d1ZWTmpSSFZEUkdacFEzVm5hVTlDYzJaemR6Tk1OWGt3TVhoZk5rUkVTMnBwT0ZWSGRIVkZWa3B4VGxGcVVUaExWMEZGZFZWSFNVbEthVkZIWjFOa2F6bHRXR1F3ZFhJeU5GcFFNV2hZVkROWVIxWnlaMmc0U2pGU2RUVlZaWFk0WjBobk5FTTNjR2R2ZEVoUFIyVnBWMk5QUTBoSlpXSndTalJWWm5odU1XVnVkVEpaVjFaSFVWTTFiMFo1WVRGalZWSlBPVTA0TUdadVZFTTJZVGh2YkV4c09XVkhZbFE1TkUxVFJYZG5NVk5QTFc1MGJsaHliR1J6TWxvMmVXMXlhR2hxTlc4MGRucEhTV1JvWDIxMU5rVkROMUpMWTFReFlXZGtkRXRUWDBZdFFXaHBZMVpCUWtGc1JrdDZTWGxSTFRRdExUSmpRMDFXWVRoRFRVbHlVV0U1YXpjMlRrWk9Sak5IY2twaGJIZFpiVzlrUnpGc0xWRnRRVmQyZVZrelRVSnJRa1l4UmxKMmFuaDZMVkZHZUd4d1J6SlJOR1p6VkZSVkxYVjFhakl5VWpneWJqQkhhVnBVZDFkbVZVbE9WV2x0VUdWSWVrSnBZbEU1TjJ4dlYwaHZkMUoxVEV3NE5rUjZOVTFVZDB0eFNUQTJNak42V0UweVJuVkJTRUp0V1ROc1NHdHhkWEptWnpOTmRrUjRZVE5mVTNFMmRXZEdPWG8wU2xCVVp6UTRWWE5rUWtwdVduZEdlRlF4TXpoTFdGbFphMUV5Y0dvdU4wWkhRa2QwZG5STE1FRlVibWxHY1ZacVIwTlJady5xa1NtUTM1X253X0lCUU11RlRueW5NMTN1NmFoTGR2bkVYRVhSaTNFSFBjIiwiZXhwIjoxNjY5OTc3OTg1LCJpYXQiOjE2Njk5Nzc2ODV9.iV-WX2dk_8oTug-zlou7SvL29CwfaCSlzR5N0huRsxc',
+  callbacks: [
+    {
+      type: 'SelectIdPCallback',
+      output: [
+        {
+          name: 'providers',
+          value: [
+            {
+              provider: 'linkedin-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0077b5; color: white; border-color: #0077b5;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #006097; color: white; border-color: #006097;',
+                buttonDisplayName: 'LinkedIn',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0077b5',
+              },
+            },
+          ],
+        },
+        { name: 'value', value: '' },
+      ],
+      input: [{ name: 'IDToken1', value: '' }],
+    },
+  ],
+};
+
+export const singleMicrosoftProviderStep = {
+  authId:
+    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IlNvY2lhbExvZ2luLXdlYiIsIm90ayI6ImFpMzZ2NHZwZ243c2JnZGo1YTN2aHZiM3V0IiwiYXV0aEluZGV4VHlwZSI6InNlcnZpY2UiLCJyZWFsbSI6Ii9hbHBoYSIsInNlc3Npb25JZCI6IipBQUpUU1FBQ01ESUFCSFI1Y0dVQUNFcFhWRjlCVlZSSUFBSlRNUUFDTURFLipleUowZVhBaU9pSktWMVFpTENKamRIa2lPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LlpYbEtNR1ZZUVdsUGFVcExWakZSYVV4RFNteGliVTFwVDJsS1FrMVVTVFJSTUVwRVRGVm9WRTFxVlRKSmFYZHBXVmQ0YmtscWIybGFSMng1U1c0d0xpNW5hRmRCWlVweVRtOTNYekZFY1RJNU4wUkhka2gzTGxJemVsWlJiblJWVkZFMVozWmFjVVZJTkdVMWJUTlFiRUZOVjNwU1RWZzNTV0ZVYld4c1RqRlpjakZQY0U5T1EySlViVEEyTFRsVlQwbDBNbEpQY0RsV2NXWlNUM2xtYWtSWldGWnhTV0l4UVZGdlpreFFRamhPVG10ak1Xb3pMVXBhUVVkNFlrRlRXRTR5U1daaVdFSlVOVlp3Y2xCMWVHMDNOMGcwV2tKSlNYcHRVek5mWVU1clJtRkNSbkJEYzNOUWNteERWM1F3YWxVNVMxTlFRVUpFUkhkRVRFbFRiMnBET1hCQ1NGbzVTRUZxTWxsUlRVUmFialk1VWpORE0xYzBNekZCYTB4d1ZWTmpSSFZEUkdacFEzVm5hVTlDYzJaemR6Tk1OWGt3TVhoZk5rUkVTMnBwT0ZWSGRIVkZWa3B4VGxGcVVUaExWMEZGZFZWSFNVbEthVkZIWjFOa2F6bHRXR1F3ZFhJeU5GcFFNV2hZVkROWVIxWnlaMmc0U2pGU2RUVlZaWFk0WjBobk5FTTNjR2R2ZEVoUFIyVnBWMk5QUTBoSlpXSndTalJWWm5odU1XVnVkVEpaVjFaSFVWTTFiMFo1WVRGalZWSlBPVTA0TUdadVZFTTJZVGh2YkV4c09XVkhZbFE1TkUxVFJYZG5NVk5QTFc1MGJsaHliR1J6TWxvMmVXMXlhR2hxTlc4MGRucEhTV1JvWDIxMU5rVkROMUpMWTFReFlXZGtkRXRUWDBZdFFXaHBZMVpCUWtGc1JrdDZTWGxSTFRRdExUSmpRMDFXWVRoRFRVbHlVV0U1YXpjMlRrWk9Sak5IY2twaGJIZFpiVzlrUnpGc0xWRnRRVmQyZVZrelRVSnJRa1l4UmxKMmFuaDZMVkZHZUd4d1J6SlJOR1p6VkZSVkxYVjFhakl5VWpneWJqQkhhVnBVZDFkbVZVbE9WV2x0VUdWSWVrSnBZbEU1TjJ4dlYwaHZkMUoxVEV3NE5rUjZOVTFVZDB0eFNUQTJNak42V0UweVJuVkJTRUp0V1ROc1NHdHhkWEptWnpOTmRrUjRZVE5mVTNFMmRXZEdPWG8wU2xCVVp6UTRWWE5rUWtwdVduZEdlRlF4TXpoTFdGbFphMUV5Y0dvdU4wWkhRa2QwZG5STE1FRlVibWxHY1ZacVIwTlJady5xa1NtUTM1X253X0lCUU11RlRueW5NMTN1NmFoTGR2bkVYRVhSaTNFSFBjIiwiZXhwIjoxNjY5OTc3OTg1LCJpYXQiOjE2Njk5Nzc2ODV9.iV-WX2dk_8oTug-zlou7SvL29CwfaCSlzR5N0huRsxc',
+  callbacks: [
+    {
+      type: 'SelectIdPCallback',
+      output: [
+        {
+          name: 'providers',
+          value: [
+            {
+              provider: 'microsoft-web',
+              uiConfig: {
+                buttonCustomStyle:
+                  'background-color: #0072c6; color: white; border-color: #0072c6;',
+                buttonImage: '',
+                buttonClass: '',
+                buttonCustomStyleHover:
+                  'background-color: #005a9e; color: white; border-color: #005a9e;',
+                buttonDisplayName: 'Microsoft',
+                iconClass: '',
+                iconFontColor: 'white',
+                iconBackground: '#0072c6',
               },
             },
           ],

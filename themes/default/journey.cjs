@@ -71,6 +71,44 @@ module.exports = function (theme) {
         opacity: `0.1`,
       },
     },
+    '.button-linkedin': {
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
+      backgroundColor: '#0077b5',
+      color: theme('colors.white'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-linkedin_dark': {
+      '--border-color':
+        'hsl(var(--tw-colors-secondary-light-hs),var(--tw-colors-secondary-light-l))',
+      borderColor: `var(--border-color, ${theme('colors.secondary.light')})`,
+      backgroundColor: theme('colors.white'),
+      color: '#0077b5',
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-microsoft': {
+      '--border-color': '#8C8C8C',
+      borderColor: `var(--border-color, #8C8C8C)`,
+      backgroundColor: theme('colors.white'),
+      color: theme('colors.black'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
+    '.button-microsoft_dark': {
+      '--border-color': '#8C8C8C',
+      borderColor: `var(--border-color, #8C8C8C)`,
+      backgroundColor: theme('colors.white'),
+      color: theme('colors.black'),
+      '&:hover::before, &:focus::before': {
+        opacity: `0.1`,
+      },
+    },
     '.input-policies': {
       '--font-size': 'var(--tw-font-size-sm-type)',
       fontSize: `var(--font-size, ${theme('fontSize.sm')})`,
