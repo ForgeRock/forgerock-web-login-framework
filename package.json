@@ -23,7 +23,9 @@
     "commit": "cz",
     "fix:lint": "pnpm format && eslint . --fix",
     "format": "prettier --plugin prettier-plugin-svelte --ignore-path .gitignore --ignore-path .prettierignore --write .",
-    "prepare": "is-ci || husky install"
+    "prepare": "is-ci || husky install",
+    "release:version": "pnpm changeset version && pnpm format",
+    "release:publish": "pnpm publish -r --no-git-checks && changeset tag"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.1",
