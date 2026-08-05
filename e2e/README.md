@@ -8,12 +8,12 @@ Before running E2E tests:
 
 1. **Build the widget**: `pnpm build:widget` (from repo root)
 2. **Build the login-app**: `pnpm build:app` (from repo root)
-3. **Install Playwright browsers**: `pnpm exec playwright install chromium`
+3. **Install Playwright browsers**: `pnpm --filter @forgerock/login-widget-e2e exec playwright install chromium`
 
 On Linux, you also need system dependencies:
 
 ```shell
-pnpm exec playwright install-deps chromium
+pnpm --filter @forgerock/login-widget-e2e exec playwright install-deps chromium
 ```
 
 ## Running Tests

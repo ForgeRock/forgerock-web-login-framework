@@ -7,10 +7,11 @@
  *
  **/
 
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
 const oidcMock = vi.fn();
+const journeyMock = vi.fn();
 
 vi.mock(
   '@forgerock/oidc-client',
@@ -29,13 +30,7 @@ vi.mock(
     const actual = await importOriginal();
     return {
       ...actual,
-      journey: vi.fn().mockResolvedValue({
-        start: vi.fn(),
-        next: vi.fn(),
-        resume: vi.fn(),
-        redirect: vi.fn(),
-        terminate: journeyTerminateMock,
-      }),
+      journey: journeyMock,
     };
   },
 );
@@ -46,7 +41,7 @@ async function importSubject() {
   return widgetApiFactory(componentApi());
 }
 
-const validWellknown = 'https://example.com/.well-known/openid-configuration';
+const validServerConfig = { wellknown: 'https://example.com/.well-known/openid-configuration' };
 
 const validOidcClient = {
   clientId: 'WebOAuthClient',
@@ -83,6 +78,14 @@ describe('widgetApiFactory', () => {
     oidcMock.mockReset();
     // Default: a never-resolving promise so eager oidc() init calls don't throw.
     oidcMock.mockReturnValue(new Promise(() => {}));
+    journeyMock.mockReset();
+    journeyMock.mockResolvedValue({
+      start: vi.fn(),
+      next: vi.fn(),
+      resume: vi.fn(),
+      redirect: vi.fn(),
+      terminate: journeyTerminateMock,
+    });
   });
 
   describe('public API surface (2.0.0)', () => {
@@ -103,14 +106,14 @@ describe('widgetApiFactory', () => {
     it('accepts an oidcClient config and enables journey() when wellknown is also set', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
       expect(() => api.journey()).not.toThrow();
     });
 
     it('resolves only after the OIDC client is constructed', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // configure() awaited getClient(), so the client store is already populated
       // and a token fetch resolves rather than reporting "not ready".
@@ -123,19 +126,193 @@ describe('widgetApiFactory', () => {
       const api = await importSubject();
 
       await expect(
-        api.configure({ wellknown: validWellknown, oidcClient: validOidcClient }),
+        api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient }),
       ).rejects.toThrow(/wellknown fetch failed/);
     });
   });
 
-  describe('configure() — wellknown is required', () => {
-    it('rejects when wellknown is missing', async () => {
+  describe('configure() — logger and middleware fan out to both clients', () => {
+    it('forwards the top-level logger level to each client as the `logger` param', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      await api.configure({
+        serverConfig: validServerConfig,
+        oidcClient: validOidcClient,
+        logger: { level: 'debug' },
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'debug' } }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'debug' } }),
+      );
+    });
+
+    it('forwards a custom logger sink to both clients alongside the level', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const custom = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
+      const api = await importSubject();
+      await api.configure({
+        serverConfig: validServerConfig,
+        oidcClient: validOidcClient,
+        logger: { level: 'info', custom },
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'info', custom } }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ logger: { level: 'info', custom } }),
+      );
+    });
+
+    it('rejects a logger with a custom sink but no level before constructing any client', async () => {
+      const custom = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
       const api = await importSubject();
 
       await expect(
-        // Untyped (IIFE) callers can omit wellknown; the guard must still fire.
-        api.configure({ oidcClient: validOidcClient } as unknown as { wellknown: string }),
-      ).rejects.toThrow(/wellknown url is required/);
+        api.configure({
+          serverConfig: validServerConfig,
+          oidcClient: validOidcClient,
+          logger: { custom },
+        } as unknown as { serverConfig: { wellknown: string } }),
+      ).rejects.toThrow();
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
+    });
+
+    it('forwards top-level middleware to both clients as requestMiddleware', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const middleware = [vi.fn()];
+      const api = await importSubject();
+      await api.configure({
+        serverConfig: validServerConfig,
+        oidcClient: validOidcClient,
+        middleware,
+      });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requestMiddleware: middleware }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.objectContaining({ requestMiddleware: middleware }),
+      );
+    });
+
+    it('omits the `logger` param from both clients when no logger is set', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
+
+      expect(journeyMock).toHaveBeenCalledWith(
+        expect.not.objectContaining({ logger: expect.anything() }),
+      );
+      expect(oidcMock).toHaveBeenCalledWith(
+        expect.not.objectContaining({ logger: expect.anything() }),
+      );
+    });
+
+    // IIFE/plain-JS callers bypass the TS types, so the zod parse is the only guard.
+    it('rejects an invalid logger.level before constructing any client', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          serverConfig: validServerConfig,
+          oidcClient: validOidcClient,
+          logger: { level: 'verbose' },
+        } as unknown as { serverConfig: { wellknown: string } }),
+      ).rejects.toThrow();
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
+    });
+
+    it('rejects middleware that is not an array of functions before constructing any client', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          serverConfig: validServerConfig,
+          oidcClient: validOidcClient,
+          middleware: ['not-a-fn'],
+        } as unknown as { serverConfig: { wellknown: string } }),
+      ).rejects.toThrow();
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('configure() — OIDC authorize passthrough options', () => {
+    it('bridges flat loginHint/acrValues/query onto the silent token.get authorizeOptions', async () => {
+      const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
+      oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
+      const api = await importSubject();
+      await api.configure({
+        serverConfig: validServerConfig,
+        oidcClient: {
+          ...validOidcClient,
+          loginHint: 'jane.doe',
+          acrValues: 'urn:acr:2fa',
+          query: { customParam: 'value' },
+        },
+      });
+
+      await api.user.tokens().get();
+
+      expect(tokenGet).toHaveBeenCalledWith(
+        expect.objectContaining({
+          authorizeOptions: expect.objectContaining({
+            loginHint: 'jane.doe',
+            acrValues: 'urn:acr:2fa',
+            query: { customParam: 'value' },
+          }),
+        }),
+      );
+    });
+
+    it('always sets authorizeOptions from oidcClient when oidcClient is present', async () => {
+      const tokenGet = vi.fn().mockResolvedValue({ accessToken: 'fake-token' });
+      oidcMock.mockResolvedValueOnce(makeOidcClient({ tokenGet }));
+      const api = await importSubject();
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
+
+      await api.user.tokens().get();
+
+      expect(tokenGet.mock.calls[0][0]).toMatchObject({
+        authorizeOptions: {
+          clientId: validOidcClient.clientId,
+          redirectUri: validOidcClient.redirectUri,
+          scope: validOidcClient.scope,
+        },
+      });
+    });
+  });
+
+  describe('configure() — serverConfig is required', () => {
+    it('rejects when serverConfig.wellknown is missing', async () => {
+      const api = await importSubject();
+
+      await expect(
+        // Untyped (IIFE) callers can omit serverConfig; the guard must still fire.
+        api.configure({ oidcClient: validOidcClient } as unknown as {
+          serverConfig: { wellknown: string };
+        }),
+      ).rejects.toThrow(/serverConfig|wellknown|expected object/i);
+    });
+
+    it('rejects a malformed serverConfig.wellknown before constructing any client', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ serverConfig: { wellknown: 'not-a-url' }, oidcClient: validOidcClient }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(journeyMock).not.toHaveBeenCalled();
+      expect(oidcMock).not.toHaveBeenCalled();
     });
   });
 
@@ -152,7 +329,7 @@ describe('widgetApiFactory', () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
       // await configure() guarantees the OIDC client is constructed before logout.
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
 
       await api.user.logout();
@@ -176,7 +353,7 @@ describe('widgetApiFactory', () => {
         }),
       );
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
       const { oauthStore, userStore, journeyStore } = api.getStores();
 
       await expect(api.user.logout()).rejects.toThrow('terminate failed');
@@ -200,7 +377,7 @@ describe('widgetApiFactory', () => {
     it('tokens() and info() expose both get and subscribe', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       const tokensApi = api.user.tokens();
       const infoApi = api.user.info();
@@ -213,7 +390,7 @@ describe('widgetApiFactory', () => {
     it('tokens().get() and info().get() return a promise', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // Swallow settlement — this asserts the call shape, not the fetch result.
       const tokensGet = api.user.tokens().get();
@@ -230,7 +407,7 @@ describe('widgetApiFactory', () => {
     it('a repeated get() on an already-completed store settles without crashing', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // First get() drives the store to `completed`. Second get() hits the
       // already-completed latch, which returns the current (cached) store value.
@@ -255,7 +432,7 @@ describe('widgetApiFactory', () => {
         }),
       );
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown, oidcClient: validOidcClient });
+      await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // Matches main: a failed fetch rejects, and the rejection payload is the
       // store value (carrying `error`), not a bare Error.
@@ -288,7 +465,7 @@ describe('widgetApiFactory', () => {
   describe('configure() without oidcClient', () => {
     it('exposes a usable journeyStore — its initial value is observable via subscribe', async () => {
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown });
+      await api.configure({ serverConfig: validServerConfig });
       const { journeyStore } = api.getStores();
 
       const value = readStore(journeyStore);
@@ -303,9 +480,64 @@ describe('widgetApiFactory', () => {
 
     it('journeyStore.reset() does not throw — the regression that broke user.logout()', async () => {
       const api = await importSubject();
-      await api.configure({ wellknown: validWellknown });
+      await api.configure({ serverConfig: validServerConfig });
       const { journeyStore } = api.getStores();
       expect(() => journeyStore.reset()).not.toThrow();
+    });
+  });
+
+  /**
+   * Unlike the mocked suites above, this block runs the REAL SDK (journey-client's
+   * logger) to prove the boundary the mocks stop at: the widget's top-level
+   * `logger.level` is wired into the SDK's logger and its level gate governs the
+   * SDK's `console.*` output. `vi.doUnmock` + `resetModules` drops the file-level
+   * journey mock for these tests, then the outer `beforeEach` re-mocks for anything after.
+   *
+   * The SDK emits an *error* log at client construction when the wellknown URL is
+   * malformed — through the same level gate as debug — so we drive that path. It
+   * fires synchronously, before any network access, making the test deterministic.
+   */
+  describe('configure() — logger.level gates the real SDK logger', () => {
+    // Valid `.url()` (passes the widget's zod check) but wrong path suffix, so the
+    // real journey client's stricter `isValidWellknownUrl` rejects it and logs.
+    const invalidSuffixServerConfig = { wellknown: 'https://example.com/not-the-wellknown-path' };
+    let errorSpy: ReturnType<typeof vi.spyOn>;
+
+    beforeEach(() => {
+      vi.doUnmock('@forgerock/journey-client');
+      vi.resetModules();
+      errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      errorSpy.mockRestore();
+      vi.doMock(
+        '@forgerock/journey-client',
+        async (importOriginal: () => Promise<Record<string, unknown>>) => {
+          const actual = await importOriginal();
+          return { ...actual, journey: journeyMock };
+        },
+      );
+    });
+
+    it('emits the SDK error log to console.error when logger.level permits it', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ serverConfig: invalidSuffixServerConfig, logger: { level: 'error' } }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(errorSpy).toHaveBeenCalledWith(expect.stringContaining('Invalid wellknown URL'));
+    });
+
+    it('suppresses the SDK error log when logger.level is "none" (still throws)', async () => {
+      const api = await importSubject();
+
+      await expect(
+        api.configure({ serverConfig: invalidSuffixServerConfig, logger: { level: 'none' } }),
+      ).rejects.toThrow(/wellknown/i);
+
+      expect(errorSpy).not.toHaveBeenCalled();
     });
   });
 });

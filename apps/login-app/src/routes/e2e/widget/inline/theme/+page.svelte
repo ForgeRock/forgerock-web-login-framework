@@ -22,8 +22,10 @@
     const cardBorderRadiusParam = params.get('cardBorderRadius');
 
     await configure({
-      wellknown:
-        'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+      serverConfig: {
+        wellknown:
+          'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
+      },
       oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,

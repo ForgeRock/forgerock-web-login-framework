@@ -11,11 +11,20 @@ import { oidc } from '@forgerock/oidc-client';
 import { writable } from 'svelte/store';
 import { z } from 'zod';
 
-import type { GenericError, OidcClient } from '@forgerock/oidc-client/types';
+import type {
+  CustomLogger,
+  GenericError,
+  LogLevel,
+  OidcClient,
+  RequestMiddleware,
+  StorageConfig,
+} from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
 
 /**
- * Configure the OIDC Client.
+ * Validates the OIDC client config passed to the widget. Accepts the fields from
+ * OidcConfig that have a clear consumer use case. serverConfig is injected by the
+ * widget from its own wellknown; log is omitted in favour of the top-level logger option.
  */
 export const oidcClientConfigSchema = z
   .object({
@@ -39,10 +48,16 @@ export const oidcClientConfigSchema = z
           }),
       })
       .strict(),
+    par: z.boolean().optional(),
+    loginHint: z.string().optional(),
+    acrValues: z.string().optional(),
+    query: z.record(z.string(), z.string()).optional(),
+    oauthThreshold: z.number().optional(),
   })
   .strict();
 
 export type OidcClientConfig = z.infer<typeof oidcClientConfigSchema>;
+
 export type OidcClientStore = Readable<OidcClient | null> & {
   /**
    * Resolves with the constructed client (or a `GenericError` if construction
@@ -63,15 +78,28 @@ export type OidcClientStore = Readable<OidcClient | null> & {
  * client instance without module-level state.
  *
  * @param {OidcClientConfig} config — OIDC client configuration (validated by Zod).
+ * @param {RequestMiddleware[]} [requestMiddleware] — optional request middleware forwarded to `oidc()`.
+ * @param {{ level: LogLevel; custom?: CustomLogger }} [logger] — optional logger (level + custom sink) forwarded to `oidc()`.
+ * @param {StorageConfig} [storage] — optional token storage config forwarded to `oidc()`.
  * @returns {OidcClientStore}
  */
-export function createOidcClientStore(config: OidcClientConfig): OidcClientStore {
+export function createOidcClientStore(
+  config: OidcClientConfig,
+  requestMiddleware?: RequestMiddleware[],
+  logger?: { level: LogLevel; custom?: CustomLogger },
+  storage?: StorageConfig,
+): OidcClientStore {
   const parsedConfig = oidcClientConfigSchema.parse(config);
   const { subscribe, set } = writable<OidcClient | null>(null);
 
   // Construct once and keep the promise. `set` runs synchronously inside the
   // `.then`, so the store is populated before `getClient()` resolves.
-  const clientPromise = oidc({ config: parsedConfig })
+  const clientPromise = oidc({
+    config: parsedConfig,
+    requestMiddleware,
+    ...(logger && { logger }),
+    ...(storage && { storage }),
+  })
     .then((client) => {
       set(client);
       return client;

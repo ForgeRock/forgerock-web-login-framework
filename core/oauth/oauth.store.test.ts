@@ -82,14 +82,14 @@ describe('oauth.store — initialize() token retrieval', () => {
     expect(value.error?.message).toMatch(/not ready/i);
   });
 
-  it('getOptions override initOptions, which override the backgroundRenew default', async () => {
+  it('getOptions passed to store.get() override the backgroundRenew default', async () => {
     const client = mockClientReturning(tokens);
     const oidcClientStore = readable<OidcClient | null>(client);
 
     const { initialize } = await importSubject();
-    const store = initialize(oidcClientStore, { forceRenew: false, backgroundRenew: false });
+    const store = initialize(oidcClientStore);
 
-    store.get({ forceRenew: true });
+    store.get({ forceRenew: true, backgroundRenew: false });
     await vi.waitFor(() => expect(readStore(store).completed).toBe(true));
 
     expect(

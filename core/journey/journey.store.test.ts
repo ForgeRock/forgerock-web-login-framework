@@ -163,6 +163,104 @@ describe('journey.store (Journey Client configuration)', () => {
     expect(journeyMock).toHaveBeenCalledTimes(2);
   });
 
+  it('forwards the logger (level + custom sink) to journey()', async () => {
+    const client = {} as JourneyClient;
+    journeyMock.mockResolvedValueOnce(client);
+
+    const custom = { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() };
+    const logger = { level: 'debug', custom } as const;
+
+    const { getJourneyClient, setJourneyClientConfig } = await importSubject();
+    setJourneyClientConfig(
+      {
+        serverConfig: {
+          wellknown: 'https://example.com/.well-known/openid-configuration',
+        },
+      },
+      undefined,
+      logger,
+    );
+
+    await getJourneyClient();
+
+    expect(journeyMock).toHaveBeenCalledWith({
+      config: {
+        serverConfig: {
+          wellknown: 'https://example.com/.well-known/openid-configuration',
+        },
+      },
+      requestMiddleware: undefined,
+      logger,
+    });
+  });
+
+  it('forwards requestMiddleware to journey()', async () => {
+    const client = {} as JourneyClient;
+    journeyMock.mockResolvedValueOnce(client);
+
+    const middleware = [vi.fn()];
+    const { getJourneyClient, setJourneyClientConfig } = await importSubject();
+    setJourneyClientConfig(
+      {
+        serverConfig: {
+          wellknown: 'https://example.com/.well-known/openid-configuration',
+        },
+      },
+      middleware,
+    );
+
+    await getJourneyClient();
+
+    expect(journeyMock).toHaveBeenCalledWith({
+      config: {
+        serverConfig: {
+          wellknown: 'https://example.com/.well-known/openid-configuration',
+        },
+      },
+      requestMiddleware: middleware,
+    });
+  });
+
+  it('resets the cached promise when requestMiddleware changes', async () => {
+    const client1 = { client: 1 } as unknown as JourneyClient;
+    const client2 = { client: 2 } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValueOnce(client1).mockResolvedValueOnce(client2);
+
+    const config = {
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    };
+
+    const { getJourneyClient, setJourneyClientConfig } = await importSubject();
+
+    setJourneyClientConfig(config, [vi.fn()]);
+    await expect(getJourneyClient()).resolves.toBe(client1);
+
+    setJourneyClientConfig(config, [vi.fn()]);
+    await expect(getJourneyClient()).resolves.toBe(client2);
+    expect(journeyMock).toHaveBeenCalledTimes(2);
+  });
+
+  it('resets the cached promise when the logger changes', async () => {
+    const client1 = { client: 1 } as unknown as JourneyClient;
+    const client2 = { client: 2 } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValueOnce(client1).mockResolvedValueOnce(client2);
+
+    const wellknown = 'https://example.com/.well-known/openid-configuration';
+    const config = { serverConfig: { wellknown } };
+    const { getJourneyClient, setJourneyClientConfig } = await importSubject();
+
+    setJourneyClientConfig(config, undefined, { level: 'error' });
+    await expect(getJourneyClient()).resolves.toBe(client1);
+
+    setJourneyClientConfig(config, undefined, { level: 'debug' });
+    await expect(getJourneyClient()).resolves.toBe(client2);
+    expect(journeyMock).toHaveBeenCalledTimes(2);
+  });
+
   /**
    * A LoginFailure result must route through the LoginFailure branch, which is the only
    * branch that threads `failureResult` into the error state — so `error.code` reflects
@@ -316,5 +414,47 @@ describe('journey.store (Journey Client configuration)', () => {
     await store.resume(resumeUrl);
 
     expect(resumeSpy).toHaveBeenCalledWith(resumeUrl, undefined);
+  });
+});
+
+describe('journey.store — journeyClientConfigSchema', () => {
+  const wellknown = 'https://example.com/.well-known/openid-configuration';
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  it('parses a minimal config (serverConfig.wellknown only)', async () => {
+    const { journeyClientConfigSchema } = await importSubject();
+
+    const parsed = journeyClientConfigSchema.parse({ serverConfig: { wellknown } });
+
+    expect(parsed.serverConfig.wellknown).toBe(wellknown);
+  });
+
+  it('rejects the removed `log` option (strict)', async () => {
+    const { journeyClientConfigSchema } = await importSubject();
+
+    expect(() =>
+      journeyClientConfigSchema.parse({ serverConfig: { wellknown }, log: 'warn' }),
+    ).toThrow();
+  });
+
+  // Guards against silent config drift: a new option we forget to add here would
+  // be an unknown key, and `.strict()` makes that a hard parse error.
+  it('rejects an unknown top-level key (strict)', async () => {
+    const { journeyClientConfigSchema } = await importSubject();
+
+    expect(() =>
+      journeyClientConfigSchema.parse({ serverConfig: { wellknown }, notARealOption: true }),
+    ).toThrow();
+  });
+
+  it('rejects an unknown serverConfig key (e.g. timeout, which journey-client ignores)', async () => {
+    const { journeyClientConfigSchema } = await importSubject();
+
+    expect(() =>
+      journeyClientConfigSchema.parse({ serverConfig: { wellknown, timeout: 3000 } }),
+    ).toThrow();
   });
 });

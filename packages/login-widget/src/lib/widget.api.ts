@@ -22,6 +22,12 @@ import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
+import {
+  loggerConfigSchema,
+  middlewareSchema,
+  serverConfigSchema,
+  storageConfigSchema,
+} from './widget.config';
 
 import type { GetTokensOptions } from '@forgerock/oidc-client/types';
 import type { Readable } from 'svelte/store';
@@ -74,27 +80,34 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
    * @function configure - Configures the widget and constructs its clients.
    * @param {WidgetConfigOptions} options - The configuration options for the widget
    * @returns {Promise<void>} Resolves once the Journey Client (and the OIDC client, if configured) is constructed
-   * @throws {Error} If `wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
+   * @throws {Error} If `serverConfig.wellknown` is missing, if config is invalid (Zod), or if a client fails to construct
    */
   async function configure(options: WidgetConfigOptions): Promise<void> {
-    const wellknown = options?.wellknown;
-    if (!wellknown) {
-      throw new Error('wellknown url is required to configure the widget');
-    }
+    const serverConfig = serverConfigSchema.parse(options.serverConfig);
+    const logger = options.logger && loggerConfigSchema.parse(options.logger);
+    const middleware = options.middleware && middlewareSchema.parse(options.middleware);
+    const storage = options.storage && storageConfigSchema.parse(options.storage);
 
     // initialize journey client
     journeyStore = initializeJourney(
-      { serverConfig: { wellknown } },
+      { serverConfig },
       { ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }) },
+      middleware,
+      logger,
     );
     await getJourneyClient();
 
     // initialize oidc client, if present
     if (options.oidcClient) {
-      oidcClientStore = createOidcClientStore({
-        ...options.oidcClient,
-        serverConfig: { wellknown },
-      });
+      oidcClientStore = createOidcClientStore(
+        {
+          ...options.oidcClient,
+          serverConfig,
+        },
+        middleware,
+        logger,
+        storage,
+      );
       const oidcClient = await oidcClientStore.getClient();
       if ('error' in oidcClient) {
         throw new Error(`Failed to construct the OIDC client: ${String(oidcClient.error)}`);
@@ -102,7 +115,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     }
 
     // OAuth and User stores derive from the OIDC client store (undefined when OIDC isn't configured).
-    oauthStore = initializeOauth(oidcClientStore);
+    oauthStore = initializeOauth(oidcClientStore, options.oidcClient);
     userStore = initializeUser(oidcClientStore);
 
     initializeContent(options.content);

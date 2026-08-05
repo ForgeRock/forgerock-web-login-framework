@@ -13,6 +13,7 @@ import type { GetTokensOptions, OauthTokens, OidcClient } from '@forgerock/oidc-
 import type { Readable, Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
+import type { OidcClientConfig } from '$core/oidc/oidc.store';
 
 const authorizationTimedOut = 'Authorization timed out';
 const interactionNeeded = 'The request requires some interaction that is not allowed.';
@@ -59,14 +60,26 @@ const INITIAL_STATE: OAuthTokenStoreValue = {
 /**
  * @function initialize - Initializes the OAuth store with a get function and a reset function
  * @param {Readable<OidcClient | null>} oidcClientStore - The OIDC client store to read the client from
- * @param {GetTokensOptions} initOptions - Default options to pass to `token.get`
+ * @param {OidcClientConfig} oidcConfig - The OIDC client config; used to build authorizeOptions for token.get
  * @returns {OAuthStore} - The OAuth store
  */
 export function initialize(
   oidcClientStore: Readable<OidcClient | null> | undefined,
-  initOptions?: GetTokensOptions,
+  oidcConfig?: Omit<OidcClientConfig, 'serverConfig'>,
 ): OAuthStore {
   const oauthStore = writable<OAuthTokenStoreValue>(INITIAL_STATE);
+
+  const authorizeOptions = oidcConfig
+    ? {
+        clientId: oidcConfig.clientId,
+        redirectUri: oidcConfig.redirectUri,
+        scope: oidcConfig.scope ?? 'openid',
+        responseType: 'code' as const,
+        ...(oidcConfig.loginHint && { loginHint: oidcConfig.loginHint }),
+        ...(oidcConfig.acrValues && { acrValues: oidcConfig.acrValues }),
+        ...(oidcConfig.query && { query: oidcConfig.query }),
+      }
+    : undefined;
 
   async function get(getOptions?: GetTokensOptions) {
     if (!oidcClientStore) {
@@ -86,7 +99,7 @@ export function initialize(
       // backgroundRenew must be true or token.get() returns an error instead of fetching new tokens.
       // prompt=none is passed in automatically by authorize.request.micros.ts — no need to set it via authorizeOptions.
       backgroundRenew: true,
-      ...initOptions,
+      ...(authorizeOptions && { authorizeOptions }),
       ...getOptions,
     };
 
