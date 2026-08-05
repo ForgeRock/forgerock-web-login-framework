@@ -70,8 +70,8 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: pnpm changeset version && pnpm format
-          publish: pnpm publish -r --no-git-checks && changeset tag
+          version: pnpm release:version
+          publish: pnpm release:publish
           commit: 'chore(release): version packages'
           title: 'chore(release): version packages'
         env:
