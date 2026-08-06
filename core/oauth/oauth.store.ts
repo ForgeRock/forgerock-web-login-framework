@@ -94,11 +94,6 @@ export function initialize(
     }
 
     const options = {
-      // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/client.store.ts#L315-L322
-      // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/authorize.request.micros.ts#L122
-      // backgroundRenew must be true or token.get() returns an error instead of fetching new tokens.
-      // prompt=none is passed in automatically by authorize.request.micros.ts — no need to set it via authorizeOptions.
-      backgroundRenew: true,
       ...(authorizeOptions && { authorizeOptions }),
       ...getOptions,
     };
