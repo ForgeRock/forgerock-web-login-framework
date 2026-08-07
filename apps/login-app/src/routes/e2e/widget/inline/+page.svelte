@@ -66,7 +66,7 @@
     });
 
     const componentEvents = component();
-    const journeyEvents = journey({ oauth: false, user: false });
+    const journeyEvents = journey();
 
     componentEvents.subscribe((event) => {
       if (event.lastAction === 'mount') {
@@ -74,23 +74,23 @@
       }
     });
 
+    journeyEvents.subscribe((event) => {
+      if (event?.user?.successful) {
+        userEvent = event.user;
+        userResponse = event.user.response as unknown as UserResponseObj;
+      }
+      if (event.journey.error || event.oauth.error || event.user.error) {
+        console.log('Login failure event fired');
+      }
+    });
+
     new Widget({ target: formEl, props: { type: 'inline' } });
-    // Start the journey after initialization or within the form.onMount event
-    journeyEvents
-      .start({
-        journey: journeyParam || authIndexValueParam || undefined,
-        resumeUrl: suspendedIdParam ? location.href : undefined,
-        recaptchaAction: recaptchaParam ?? undefined,
-      })
-      .then(async () => {
-        await user.tokens().get({ backgroundRenew: true });
-        const userState = await user.info().get();
-        userEvent = userState;
-        userResponse = userState.response as unknown as UserResponseObj;
-      })
-      .catch((err) => {
-        console.log('Login failure event fired', err);
-      });
+    // Start the  journey after initialization or within the form.onMount event
+    journeyEvents.start({
+      journey: journeyParam || authIndexValueParam || undefined,
+      resumeUrl: suspendedIdParam ? location.href : undefined,
+      recaptchaAction: recaptchaParam ?? undefined,
+    });
   });
 </script>
 

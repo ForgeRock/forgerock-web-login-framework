@@ -117,8 +117,8 @@ describe('widgetApiFactory', () => {
 
       // configure() awaited getClient(), so the client store is already populated
       // and a token fetch resolves rather than reporting "not ready".
-      const value = await api.user.tokens().get();
-      expect(value.successful).toBe(true);
+      const event = await api.user.tokens().get();
+      expect(event.successful).toBe(true);
     });
 
     it('rejects when the OIDC client fails to construct', async () => {
@@ -410,7 +410,7 @@ describe('widgetApiFactory', () => {
       await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
       // First get() drives the store to `completed`. Second get() hits the
-      // already-completed latch, which returns the current (cached) store value.
+      // already-completed latch, which resolves immediately with the cached value.
       await api.user
         .tokens()
         .get()
@@ -421,7 +421,6 @@ describe('widgetApiFactory', () => {
         .catch((value) => value);
 
       expect(settled).not.toBeInstanceOf(ReferenceError);
-      // The latch returns the cached store value; a valid token means success.
       expect(settled).toMatchObject({ completed: true, successful: true });
     });
 
@@ -434,8 +433,8 @@ describe('widgetApiFactory', () => {
       const api = await importSubject();
       await api.configure({ serverConfig: validServerConfig, oidcClient: validOidcClient });
 
-      // Matches main: a failed fetch rejects, and the rejection payload is the
-      // store value (carrying `error`), not a bare Error.
+      // A failed fetch rejects, and the rejection payload is the store value
+      // (carrying `error`), not a bare Error.
       const rejected = await api.user
         .tokens()
         .get()

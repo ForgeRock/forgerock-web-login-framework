@@ -13,7 +13,12 @@
   import { page } from '$app/stores';
   import Widget, { component, configure, journey, protect, user } from '$package/index';
 
-  import type { ComponentEventValue } from '$package/types';
+  import type {
+    ComponentEventValue,
+    JourneyStoreValue,
+    OAuthTokenStoreValue,
+    UserStoreValue,
+  } from '$package/types';
 
   let componentEvents: ReturnType<typeof component> | undefined;
   let journeyEvents: ReturnType<typeof journey> | undefined;
@@ -127,7 +132,7 @@
     });
 
     componentEvents = component();
-    journeyEvents = journey({ oauth: false, user: false });
+    journeyEvents = journey();
 
     componentEvents.subscribe((event: ComponentEventValue) => {
       if (event.lastAction === 'mount') {
@@ -137,6 +142,22 @@
         console.log(`Modal closed due to ${event && event.reason}`);
       }
     });
+
+    journeyEvents.subscribe(
+      (event: {
+        journey: JourneyStoreValue;
+        oauth: OAuthTokenStoreValue;
+        user: UserStoreValue;
+      }) => {
+        if (event?.user?.successful) {
+          console.log(event.user);
+          userResponse = event.user.response as unknown as UserResponseObj;
+        }
+        if (event.journey.error || event.oauth.error || event.user.error) {
+          console.log('Login failure event fired');
+        }
+      },
+    );
 
     new Widget({ target: widgetEl });
     if (initializePingProtectEarly) {
@@ -165,20 +186,11 @@
   {:else if journeyEvents && componentEvents}
     <button
       on:click={() => {
-        journeyEvents
-          .start({
-            journey: journeyParam || authIndexValueParam || undefined,
-            resumeUrl: suspendedIdParam ? location.href : undefined,
-            recaptchaAction: recaptchaParam ?? undefined,
-          })
-          .then(async () => {
-            await user.tokens().get({ backgroundRenew: true });
-            const userState = await user.info().get();
-            userResponse = userState.response as unknown as UserResponseObj;
-          })
-          .catch((err) => {
-            console.log('Login failure event fired', err);
-          });
+        journeyEvents.start({
+          journey: journeyParam || authIndexValueParam || undefined,
+          resumeUrl: suspendedIdParam ? location.href : undefined,
+          recaptchaAction: recaptchaParam ?? undefined,
+        });
         componentEvents.open();
       }}
     >
