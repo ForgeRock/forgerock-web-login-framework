@@ -58,7 +58,7 @@
   />
   <Label {key} classes="tw_grid tw_grid-cols-[2.5em_1fr] tw_relative">
     <span class="tw_animated-check dark:tw_animated-check_dark"></span>
-    <slot />
+    <span><slot /></span>
   </Label>
   <!--
     NOTE: The below places the error message on the second row and in second
