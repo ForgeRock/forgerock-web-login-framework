@@ -33,9 +33,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@forgerock/journey-client": "^2.1.0",
-    "@forgerock/oidc-client": "^2.1.0",
-    "@forgerock/protect": "^2.1.0",
+    "@forgerock/journey-client": "^2.1.1",
+    "@forgerock/oidc-client": "^2.1.1",
+    "@forgerock/protect": "^2.1.1",
     "qrcode": "1.5.3",
     "xss": "^1.0.15",
     "zod": "^4.3.6"

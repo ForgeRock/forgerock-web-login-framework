@@ -157,7 +157,11 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
             }
           } else if ($journeyStore.successful) {
             if (requestsOauth && $oauthStore.loading === false && $oauthStore.completed === false) {
-              oauthStore.get();
+              if ($oauthStore.code && $oauthStore.state) {
+                oauthStore.exchange();
+              } else {
+                oauthStore.background();
+              }
             } else if (!requestsOauth) {
               formFactor === 'modal' && componentApi.close({ reason: 'auto' });
             }

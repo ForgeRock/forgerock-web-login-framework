@@ -9,7 +9,13 @@
 
 import { get as getStoreValue, writable } from 'svelte/store';
 
-import type { GetTokensOptions, OauthTokens, OidcClient } from '@forgerock/oidc-client/types';
+import type {
+  GetAuthorizationUrlOptions,
+  GetTokensOptions,
+  OauthTokens,
+  OidcClient,
+  StorageConfig,
+} from '@forgerock/oidc-client/types';
 import type { Readable, Writable } from 'svelte/store';
 
 import type { Maybe } from '$core/interfaces';
@@ -22,6 +28,8 @@ const timeoutErrorMessage =
 const sessionCookieConsentMessage = `The user either doesn't have a valid session, the cookie is not being sent due to third-party cookies being disabled, or the user is needing to provide consent as the OAuth client setting does not have "implied consent" enabled.`;
 
 export interface OAuthStore extends Pick<Writable<OAuthTokenStoreValue>, 'subscribe'> {
+  background: (options?: GetAuthorizationUrlOptions) => void;
+  exchange: (options?: Partial<StorageConfig>) => void;
   get: (getOptions?: GetTokensOptions) => Promise<OAuthTokenStoreValue>;
   reset: () => void;
 }
@@ -35,6 +43,8 @@ export interface OAuthTokenStoreValue {
   }>;
   loading: boolean;
   successful: boolean;
+  code: Maybe<string>;
+  state: Maybe<string>;
   response: Maybe<OauthTokens> | void;
 }
 
@@ -54,6 +64,8 @@ const INITIAL_STATE: OAuthTokenStoreValue = {
   error: null,
   loading: false,
   successful: false,
+  code: null,
+  state: null,
   response: null,
 };
 
@@ -81,24 +93,21 @@ export function initialize(
       }
     : undefined;
 
-  async function get(getOptions?: GetTokensOptions) {
+  async function get(getOptions?: GetTokensOptions): Promise<OAuthTokenStoreValue> {
     if (!oidcClientStore) {
       oauthStore.set({
         completed: true,
         error: { message: 'OIDC client not configured', troubleshoot: null },
         loading: false,
         successful: false,
+        code: null,
+        state: null,
         response: null,
       });
       return getStoreValue(oauthStore);
     }
 
     const options = {
-      // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/client.store.ts#L315-L322
-      // https://github.com/ForgeRock/ping-javascript-sdk/blob/@forgerock/oidc-client@2.1.0/packages/oidc-client/src/lib/authorize.request.micros.ts#L122
-      // backgroundRenew must be true or token.get() returns an error instead of fetching new tokens.
-      // prompt=none is passed in automatically by authorize.request.micros.ts — no need to set it via authorizeOptions.
-      backgroundRenew: true,
       ...(authorizeOptions && { authorizeOptions }),
       ...getOptions,
     };
@@ -111,6 +120,8 @@ export function initialize(
         error: { message: 'OIDC client not ready', troubleshoot: null },
         loading: false,
         successful: false,
+        code: null,
+        state: null,
         response: null,
       });
       return getStoreValue(oauthStore);
@@ -122,6 +133,8 @@ export function initialize(
         error: { message: String(oidcClient.error), troubleshoot: null },
         loading: false,
         successful: false,
+        code: null,
+        state: null,
         response: null,
       });
       return getStoreValue(oauthStore);
@@ -134,44 +147,133 @@ export function initialize(
 
     oauthStore.set({ ...INITIAL_STATE, loading: true });
 
-    try {
-      const tokens = await oidcClient.token.get(options);
+    const tokens = await oidcClient.token.get(options);
 
-      if ('error' in tokens) {
-        const message =
-          ('message' in tokens && tokens.message) ||
-          ('error_description' in tokens && tokens.error_description) ||
-          tokens.error;
-        const code = 'code' in tokens && typeof tokens.code === 'number' ? tokens.code : null;
-        oauthStore.set({
-          completed: true,
-          error: { code, message, troubleshoot: getTroubleshootingMessage(message) },
-          loading: false,
-          successful: false,
-          response: null,
-        });
-        return getStoreValue(oauthStore);
-      }
-
+    if ('error' in tokens) {
+      const message =
+        ('message' in tokens && tokens.message) ||
+        ('error_description' in tokens && tokens.error_description) ||
+        tokens.error;
+      const code = 'code' in tokens && typeof tokens.code === 'number' ? tokens.code : null;
       oauthStore.set({
         completed: true,
-        error: null,
-        loading: false,
-        successful: true,
-        response: tokens,
-      });
-    } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Unknown OAuth error';
-      oauthStore.set({
-        completed: true,
-        error: { message, troubleshoot: getTroubleshootingMessage(message) },
+        error: { code, message, troubleshoot: getTroubleshootingMessage(message) },
         loading: false,
         successful: false,
+        code: null,
+        state: null,
         response: null,
       });
+      return getStoreValue(oauthStore);
     }
 
+    oauthStore.set({
+      completed: true,
+      error: null,
+      loading: false,
+      successful: true,
+      code: null,
+      state: null,
+      response: tokens,
+    });
+
     return getStoreValue(oauthStore);
+  }
+
+  async function background(backgroundOptions?: GetAuthorizationUrlOptions): Promise<void> {
+    const oidcClient = oidcClientStore ? getStoreValue(oidcClientStore) : null;
+    if (!oidcClient || 'error' in oidcClient) {
+      oauthStore.set({
+        completed: true,
+        error: { message: 'OIDC client not ready', troubleshoot: null },
+        loading: false,
+        successful: false,
+        code: null,
+        state: null,
+        response: null,
+      });
+      return;
+    }
+
+    oauthStore.set({ ...INITIAL_STATE, loading: true });
+
+    const result = await oidcClient.authorize.background({
+      ...(authorizeOptions ?? {}),
+      ...backgroundOptions,
+    } as GetAuthorizationUrlOptions);
+
+    if ('error' in result) {
+      oauthStore.set({
+        completed: true,
+        error: { message: result.error_description ?? result.error, troubleshoot: null },
+        loading: false,
+        successful: false,
+        code: null,
+        state: null,
+        response: null,
+      });
+      return;
+    }
+
+    oauthStore.set({
+      completed: false,
+      error: null,
+      loading: false,
+      successful: false,
+      code: result.code,
+      state: result.state,
+      response: null,
+    });
+  }
+
+  async function exchange(options?: Partial<StorageConfig>): Promise<void> {
+    const { code, state } = getStoreValue(oauthStore);
+    if (!code || !state) {
+      return;
+    }
+
+    const oidcClient = oidcClientStore ? getStoreValue(oidcClientStore) : null;
+    if (!oidcClient || 'error' in oidcClient) {
+      oauthStore.set({
+        completed: true,
+        error: { message: 'OIDC client not ready', troubleshoot: null },
+        loading: false,
+        successful: false,
+        code: null,
+        state: null,
+        response: null,
+      });
+      return;
+    }
+
+    oauthStore.set({ ...INITIAL_STATE, loading: true });
+
+    const tokens = await oidcClient.token.exchange(code, state, options);
+    if ('error' in tokens) {
+      oauthStore.set({
+        completed: true,
+        error: {
+          message: ('message' in tokens && tokens.message) || tokens.error || 'Unknown OAuth error',
+          troubleshoot: null,
+        },
+        loading: false,
+        successful: false,
+        code: null,
+        state: null,
+        response: null,
+      });
+      return;
+    }
+
+    oauthStore.set({
+      completed: true,
+      error: null,
+      loading: false,
+      successful: true,
+      code: null,
+      state: null,
+      response: tokens,
+    });
   }
 
   function reset() {
@@ -179,6 +281,8 @@ export function initialize(
   }
 
   return {
+    background,
+    exchange,
     get,
     reset,
     subscribe: oauthStore.subscribe,
