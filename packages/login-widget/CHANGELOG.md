@@ -1,5 +1,35 @@
 # [1.3.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.1...v1.3.0) (2024-06-05)
 
+## 2.1.0
+
+### Minor Changes
+
+- [#539](https://github.com/ForgeRock/forgerock-web-login-framework/pull/539) [`70d9d4d`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/70d9d4db0f62ae466df9cf4d2ee3236ee90dccc2) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add LinkedIn and Microsoft Entra ID as OOTB identity providers in the SelectIdP callback.
+
+  - LinkedIn: matches `buttonDisplayName` containing `'LinkedIn'`, renders branded button with `#0077b5` background and the LinkedIn "in" logo.
+  - Microsoft/Entra ID: matches `buttonDisplayName` containing `'Microsoft'`, renders branded button with `#0072c6` background and the 4-color Microsoft squares logo.
+  - Dark mode variants for both providers follow the existing pattern (white background, brand-color text).
+  - Unknown providers continue to render nothing — no change to existing fallback behavior.
+
+### Patch Changes
+
+- [#569](https://github.com/ForgeRock/forgerock-web-login-framework/pull/569) [`758d6fe`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/758d6fe0ee3512618f4e6e93763261312f94c9c8) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Fix silent token renewal to use explicit PKCE authorize+exchange flow:
+
+  - Removes hardcoded `backgroundRenew: true` from `token.get()`. The widget no longer passes that option to the OIDC client.
+  - Adds `background()` and `exchange()` to the OAuth store. After a journey completes, the widget calls `authorize.background()` to obtain an auth code, stores it transiently, then calls `token.exchange()` to exchange it for tokens. Previously this was handled opaquely inside the SDK via `backgroundRenew`.
+  - `OAuthTokenStoreValue` gains `code: string | null` and `state: string | null` fields that carry the auth code between the two steps. Both are `null` in all other states.
+  - `initialize()` now receives the full `oidcClient` config (instead of `GetTokensOptions`) so `authorizeOptions` (`clientId`, `redirectUri`, `scope`, `loginHint`, `acrValues`, `query`) are forwarded correctly to both `authorize.background()` and `token.get()`.
+
+- [#563](https://github.com/ForgeRock/forgerock-web-login-framework/pull/563) [`14e6c66`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/14e6c66eab5ff0595273e88e7dc7c13f10de9edc) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Restore v1.3.0 config parity and expose OIDC passthrough options:
+
+  - `logger` — forwarded to both clients. `logger.level` gates verbosity (replaces the removed `logLevel`); `logger.custom` redirects log output to your own sink.
+  - `middleware` — request middleware forwarded to both clients (v2 `(req, action, next) => void` shape).
+  - `serverConfig` — replaces the flat `wellknown` string; now `{ wellknown: string }` to match SDK shape. Pass `serverConfig: { wellknown: '<url>' }`.
+  - `storage` — top-level token storage config; a `type` discriminated union of `'localStorage'`/`'sessionStorage'` (required `name`, optional `prefix`) or `'custom'` (required `name` and `{ get, set, remove }` sink).
+  - `oidcClient.oauthThreshold` — token refresh threshold (ms).
+  - `oidcClient.par` — use Pushed Authorization Requests.
+  - `oidcClient.loginHint`, `oidcClient.acrValues`, `oidcClient.query` — bridged onto the silent token-renewal request (`token.get`).
+
 ## 2.0.0
 
 ### Major Changes
