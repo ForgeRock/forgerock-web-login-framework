@@ -9,7 +9,7 @@
 
 import { z } from 'zod';
 
-import type { CustomLogger, RequestMiddleware, StorageConfig } from '@forgerock/oidc-client/types';
+import type { CustomLogger, GenericError, RequestMiddleware } from '@forgerock/oidc-client/types';
 
 /**
  * Runtime validation for the widget's top-level options; `serverConfig`, `logger`, `middleware`
@@ -60,8 +60,16 @@ export const storageConfigSchema = z.discriminatedUnion('type', [
     prefix: z.string().optional(),
     // TODO: use CustomStorageObject directly once it's exported from @forgerock/oidc-client/types
     // https://github.com/ForgeRock/ping-javascript-sdk/blob/%40forgerock/oidc-client%402.1.0/packages/oidc-client/src/types.ts#L21
-    custom: z.custom<Extract<StorageConfig, { type: 'custom' }>['custom']>(
-      (value) => typeof value === 'object' && value !== null,
-    ),
+    custom: z.object({
+      get: z.custom<(key: string) => Promise<string | null | GenericError>>(
+        (val) => typeof val === 'function',
+      ),
+      set: z.custom<(key: string, value: string) => Promise<void | GenericError>>(
+        (val) => typeof val === 'function',
+      ),
+      remove: z.custom<(key: string) => Promise<void | GenericError>>(
+        (val) => typeof val === 'function',
+      ),
+    }),
   }),
 ]);
