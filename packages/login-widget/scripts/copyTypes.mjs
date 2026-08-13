@@ -28,6 +28,7 @@ const filesToCopy = [
   { src: 'index.svelte.d.ts', dest: 'index.d.ts' },
   { src: 'types.d.ts', dest: 'types.d.ts' },
   { src: 'interfaces.d.ts', dest: 'interfaces.d.ts' },
+  { src: 'widget.config.d.ts', dest: 'widget.config.d.ts' },
 ];
 
 // Ensure dist directory exists
