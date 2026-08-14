@@ -34,6 +34,16 @@ test('Accept-Language: en-CA resolves to the $app-locales/ca/en catalog', async 
   expect(body.closeModal).toBe('Close Modal');
 });
 
+test('Accept-Language: es-US resolves to the $app-locales/us/es catalog', async ({ request }) => {
+  const response = await request.get('/api/locale', {
+    headers: { 'accept-language': 'es-US' },
+  });
+  const body = await response.json();
+
+  expect(body.closeModal).toBe('Ventana Emergente');
+  expect(body.alreadyHaveAnAccount).toContain('Tiene una cuenta?');
+});
+
 test('An unsupported locale falls back to $locales/us/en', async ({ request }) => {
   const response = await request.get('/api/locale', {
     headers: { 'accept-language': 'xx-XX' },
