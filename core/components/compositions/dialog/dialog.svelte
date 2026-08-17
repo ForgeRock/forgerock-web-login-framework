@@ -27,7 +27,7 @@
   }
 
   let {
-    dialogEl = $bindable(null),
+    dialogEl = $bindable(),
     dialogId,
     forceOpen = false,
     withHeader = false,

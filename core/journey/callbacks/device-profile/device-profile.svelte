@@ -31,7 +31,7 @@
 
   let {
     callback,
-    callbackMetadata = $bindable(null),
+    callbackMetadata = $bindable(),
     stepMetadata = null,
     selfSubmitFunction,
   }: Props = $props();

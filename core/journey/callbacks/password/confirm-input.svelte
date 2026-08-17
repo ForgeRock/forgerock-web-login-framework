@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import T from '$components/_utilities/locale-strings.svelte';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
@@ -22,9 +20,6 @@
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
-
-  const Input = style.labels === 'stacked' ? Stacked : Floating;
-  const showPassword = style.showPassword;
 
   interface Props {
     forceValidityFailure?: boolean;
@@ -52,6 +47,8 @@
     showMessage = undefined,
     children,
   }: Props = $props();
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
+  const showPassword = style.showPassword;
 
   let isVisible = $state(false);
   let type: 'password' | 'text' = $state('password');
@@ -71,7 +68,7 @@
     type = isVisible ? 'text' : 'password';
   }
 
-  run(() => {
+  $effect.pre(() => {
     if (resetValue) {
       value = undefined;
       onChange(value);

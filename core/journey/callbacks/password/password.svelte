@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   /**
    * TODO: Does PasswordCallback do anything that would need to be accounted for here?
    *
@@ -41,12 +39,9 @@
 
   let { callback = $bindable(), callbackMetadata, style = {} }: Props = $props();
 
-  let inputName: string | undefined = $state();
-
-  run(() => {
-    callback = callback as PasswordCallback;
-    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
-  });
+  let inputName: string | undefined = $derived(
+    callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`,
+  );
 </script>
 
 <Base {callback} {callbackMetadata} {style} key={inputName} />

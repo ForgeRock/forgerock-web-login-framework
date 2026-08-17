@@ -34,7 +34,7 @@
     message = '',
     isFirstInvalidInput,
     isRequired = false,
-    isInvalid = $bindable(false),
+    isInvalid = $bindable(),
     key,
     label,
     onChange,

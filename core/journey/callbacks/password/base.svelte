@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import T from '$components/_utilities/locale-strings.svelte';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
@@ -28,9 +26,6 @@
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
-
-  const Input = style.labels === 'stacked' ? Stacked : Floating;
-  const showPassword = style.showPassword;
 
   interface Props {
     callback: PasswordCallback | ValidatedCreatePasswordCallback;
@@ -56,6 +51,8 @@
     validationFailure = '',
     children,
   }: Props = $props();
+  const Input = style.labels === 'stacked' ? Stacked : Floating;
+  const showPassword = style.showPassword;
 
   let confirmValue: Maybe<string> | undefined = $state();
   let callbackType: string | undefined = $state();
@@ -98,7 +95,7 @@
     type = isVisible ? 'text' : 'password';
   }
 
-  run(() => {
+  $effect.pre(() => {
     callbackType = callback.getType();
     key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();

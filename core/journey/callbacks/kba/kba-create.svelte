@@ -8,7 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
   import { writable } from 'svelte/store';
 
   import T from '$components/_utilities/locale-strings.svelte';
@@ -103,7 +102,7 @@
     callback.setQuestion(inputValue);
   }
 
-  run(() => {
+  $effect.pre(() => {
     inputArr = callback?.payload?.input;
     inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata?.idx}`;
     inputNameQuestion = inputName;

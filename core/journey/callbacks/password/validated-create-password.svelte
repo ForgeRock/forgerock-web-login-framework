@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
@@ -46,7 +44,7 @@
   let prompt: string | undefined = $state();
   let validationFailures: FailedPolicy[] | undefined = $state();
 
-  run(() => {
+  $effect.pre(() => {
     /**
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`

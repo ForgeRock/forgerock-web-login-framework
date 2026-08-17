@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { preventDefault, run } from 'svelte/legacy';
+  import { preventDefault } from 'svelte/legacy';
 
   import { interpolate } from '$core/_utilities/i18n.utilities';
   import { configuredJourneysStore } from '$journey/config.store';
@@ -24,7 +24,7 @@
   let stack = $state(journey.stack);
   let string = $state('');
 
-  run(() => {
+  $effect.pre(() => {
     // The parent can pass a new `journey` object; update `stack` so `$stack` reads from the latest store.
     stack = journey.stack;
 

@@ -26,7 +26,7 @@
 
   let {
     checkValidity = null,
-    message = $bindable(''),
+    message = $bindable(),
     key,
     label,
     onChange,

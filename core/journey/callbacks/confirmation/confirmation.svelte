@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
@@ -95,7 +93,7 @@
     callback.setOptionIndex(defaultChoice);
   }
 
-  run(() => {
+  $effect.pre(() => {
     inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
     options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
     defaultChoice = callback.getDefaultOption();

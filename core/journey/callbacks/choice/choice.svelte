@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import RadioAnimated from '$components/compositions/radio/animated.svelte';
   import RadioStandard from '$components/compositions/radio/standard.svelte';
   import SelectFloating from '$components/compositions/select-floating/floating-label.svelte';
@@ -63,7 +61,7 @@
     callback.setChoiceIndex(Number((event.target as HTMLSelectElement).value));
   }
 
-  run(() => {
+  $effect.pre(() => {
     choiceOptions = callback.getChoices()?.map((text, idx) => ({
       /**
        * Since locale content keys for the choice component are built off of the

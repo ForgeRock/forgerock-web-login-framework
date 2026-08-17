@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
@@ -51,7 +49,7 @@
     callback.setInputValue((event.target as HTMLInputElement).checked);
   }
 
-  run(() => {
+  $effect.pre(() => {
     inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata?.idx}`;
     // A boolean being required doesn't make much sense, so commenting it out for now
     // isRequired = isInputRequired(callback);

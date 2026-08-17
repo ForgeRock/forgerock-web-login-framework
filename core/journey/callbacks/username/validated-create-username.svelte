@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
@@ -61,7 +59,7 @@
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
-  run(() => {
+  $effect.pre(() => {
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata?.idx}`;
     isRequired = isInputRequired(callback);

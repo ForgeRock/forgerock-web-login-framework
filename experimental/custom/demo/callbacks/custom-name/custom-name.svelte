@@ -21,8 +21,6 @@
 -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   // ─── SDK types ─────────────────────────────────────────────────────────────
   // ─── Framework imports ──────────────────────────────────────────────────────
   /**
@@ -58,7 +56,7 @@
   }
 
   // ─── Reactive block ─────────────────────────────────────────────────────────
-  run(() => {
+  $effect.pre(() => {
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();

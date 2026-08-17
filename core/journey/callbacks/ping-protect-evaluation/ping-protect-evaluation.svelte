@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { run } from 'svelte/legacy';
 
   import T from '$components/_utilities/locale-strings.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
@@ -50,7 +49,7 @@
     handleGetData();
   });
 
-  run(() => {
+  $effect.pre(() => {
     isBehavioralDataPaused = pingProtect?.behavioralDataCollection ?? false;
     if (typeof window !== 'undefined') {
       if (isBehavioralDataPaused === true) {

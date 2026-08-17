@@ -8,7 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
   import sanitize from 'xss';
 
   import Alert from '$components/primitives/alert/alert.svelte';
@@ -57,7 +56,7 @@
     }
   }
 
-  run(() => {
+  $effect.pre(() => {
     dirtyMessage = callback.getMessage();
     cleanMessage = sanitize(dirtyMessage);
     callbackMessageType = getCallbackMessage(callback.getMessageType());

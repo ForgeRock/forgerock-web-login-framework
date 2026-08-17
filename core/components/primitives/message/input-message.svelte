@@ -8,7 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
   import sanitize from 'xss';
 
   import type { Maybe } from '$core/interfaces';
@@ -29,7 +28,7 @@
     type = 'info',
   }: Props = $props();
 
-  let cleanMessage = $state(sanitize(dirtyMessage));
+  let cleanMessage = $derived(sanitize(dirtyMessage));
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -42,10 +41,6 @@
       }
     }, '');
   }
-
-  run(() => {
-    cleanMessage = sanitize(dirtyMessage);
-  });
 </script>
 
 {#if dirtyMessage}

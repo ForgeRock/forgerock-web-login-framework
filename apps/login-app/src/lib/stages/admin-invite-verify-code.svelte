@@ -10,7 +10,6 @@
 <script lang="ts">
   import { callbackType } from '@forgerock/journey-client';
   import { tick } from 'svelte';
-  import { run } from 'svelte/legacy';
 
   import T from '$components/_utilities/locale-strings.svelte';
   import Alert from '$components/primitives/alert/alert.svelte';
@@ -36,7 +35,7 @@
     step: JourneyStep;
   }
 
-  let { componentStyle, form, formEl = $bindable(null), journey, step }: Props = $props();
+  let { componentStyle, form, formEl = $bindable(), journey, step }: Props = $props();
 
   const OTP_LENGTH = 6;
   const formFailureMessageId = 'adminInviteVerifyCodeFailureMessage';
@@ -93,7 +92,7 @@
   // AM toggles the retry warning via if(false)/if(true) in the script:
   // first load: if (false) { ... p1aic-otp-retry-warning ... }
   // retry:      if (true)  { ... p1aic-otp-retry-warning ... }
-  run(() => {
+  $effect.pre(() => {
     hiddenValueCb =
       (step.getCallbacksOfType(callbackType.HiddenValueCallback) as HiddenValueCallback[]).find(
         (cb) => (cb.getOutputByName('id', '') as string) === 'p1aic-otp-answer',

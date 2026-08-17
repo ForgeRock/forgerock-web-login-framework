@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { run } from 'svelte/legacy';
 
   import { goto } from '$app/navigation';
   import Box from '$components/primitives/box/centered.svelte';
@@ -43,7 +42,7 @@
     journeyStore.start({ journey: 'Registration' });
   });
 
-  run(() => {
+  $effect.pre(() => {
     if ($journeyStore?.successful) {
       goto('/');
     }

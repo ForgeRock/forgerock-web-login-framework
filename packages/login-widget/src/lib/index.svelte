@@ -23,7 +23,6 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { run } from 'svelte/legacy';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import { applyThemeVars } from '$core/_effects/theme.effects';
@@ -47,7 +46,7 @@
   let formEl: HTMLFormElement | undefined = $state();
   let widgetRootEl: HTMLDivElement | undefined = $state();
 
-  run(() => {
+  $effect.pre(() => {
     applyThemeVars(widgetRootEl, $styleStore?.theme);
   });
 

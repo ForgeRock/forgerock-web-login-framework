@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import T from '$components/_utilities/locale-strings.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import Grid from '$components/primitives/grid/grid.svelte';
@@ -58,7 +56,7 @@
     selfSubmitFunction && selfSubmitFunction();
   }
 
-  run(() => {
+  $effect.pre(() => {
     const localAuthentication = callback
       .getProviders()
       .filter((provider) => provider.provider === 'localAuthentication');

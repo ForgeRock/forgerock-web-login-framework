@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Centered from '$components/primitives/box/centered.svelte';
   import { applyThemeVars } from '$core/_effects/theme.effects';
   import { initialize as initializeLinks } from '$core/links.store';
@@ -61,7 +59,7 @@
   // Initialize stores
   initializeLinks({ termsAndConditions: '/' });
 
-  run(() => {
+  $effect.pre(() => {
     initializeStyles(style);
     applyThemeVars(storyRootEl, style?.theme);
   });

@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import AlertIcon from '$components/icons/alert-icon.svelte';
   import InfoIcon from '$components/icons/info-icon.svelte';
   import WarningIcon from '$components/icons/warning-icon.svelte';
@@ -45,7 +43,7 @@
     }, '');
   }
 
-  run(() => {
+  $effect.pre(() => {
     if (needsFocus) {
       divEl && divEl.focus();
     }

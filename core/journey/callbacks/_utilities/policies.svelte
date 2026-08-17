@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import T from '$components/_utilities/locale-strings.svelte';
   import {
     getValidationFailures,
@@ -49,7 +47,7 @@
     }, [] as RestructuredParam[]),
   );
 
-  run(() => {
+  $effect.pre(() => {
     validationFailures = getValidationFailures(callback, label);
     validationRules = getValidationPolicies(callback.getPolicies());
     simplifiedFailures = validationFailures.reduce((prev, curr) => {

@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import { interpolate } from '$core/_utilities/i18n.utilities';
@@ -64,7 +62,7 @@
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
-  run(() => {
+  $effect.pre(() => {
     /**
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`

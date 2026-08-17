@@ -33,7 +33,7 @@
     message = '',
     isFirstInvalidInput,
     isRequired = false,
-    isInvalid = $bindable(false),
+    isInvalid = $bindable(),
     key,
     onChange,
     showMessage = undefined,

@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { onMount, tick } from 'svelte';
-  import { run } from 'svelte/legacy';
 
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -83,7 +82,7 @@
     }
   });
 
-  run(() => {
+  $effect.pre(() => {
     /**
      * hasSubmitted check prevents multiple form submissions
      * submit only when hasSubmitted is false, then set it to true

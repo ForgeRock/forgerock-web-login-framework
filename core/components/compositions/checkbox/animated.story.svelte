@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { run } from 'svelte/legacy';
 
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
@@ -27,7 +26,7 @@
 
   let {
     checkValidity = null,
-    message = $bindable(''),
+    message = $bindable(),
     key,
     label,
     onChange,
@@ -52,7 +51,7 @@
     }
   });
 
-  run(() => {
+  $effect.pre(() => {
     console.log(message);
   });
 </script>

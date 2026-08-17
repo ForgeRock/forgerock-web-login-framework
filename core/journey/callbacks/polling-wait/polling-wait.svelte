@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
 
@@ -45,8 +43,7 @@
   let message: string | undefined = $state();
   let timer: ReturnType<typeof setTimeout> = $state();
 
-  run(() => {
-    callback = callback as PollingWaitCallback;
+  $effect.pre(() => {
     message = callback.getMessage();
 
     // Clear any existing timeouts to avoid duplicates
