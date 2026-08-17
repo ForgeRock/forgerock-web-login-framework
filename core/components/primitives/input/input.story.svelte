@@ -10,12 +10,23 @@
 <script lang="ts">
   import Input from './input.svelte';
 
-  export let isRequired: boolean;
-  export let key: string;
-  export let label: string;
-  export let labelOrder: 'first' | 'last' | undefined;
-  export let onChange: (event: Event) => void;
-  export let placeholder: string;
+  interface Props {
+    isRequired: boolean;
+    key: string;
+    label: string;
+    labelOrder: 'first' | 'last' | undefined;
+    onChange: (event: Event) => void;
+    placeholder: string;
+  }
+
+  let {
+    isRequired,
+    key,
+    label,
+    labelOrder,
+    onChange,
+    placeholder
+  }: Props = $props();
 </script>
 
 <div>

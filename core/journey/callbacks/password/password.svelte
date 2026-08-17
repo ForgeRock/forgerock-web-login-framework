@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   /**
    * TODO: Does PasswordCallback do anything that would need to be accounted for here?
    *
@@ -31,16 +33,20 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: PasswordCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: PasswordCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
 
-  let inputName: string;
+  let { callback = $bindable(), callbackMetadata, style = {} }: Props = $props();
 
-  $: {
+  let inputName: string = $state();
+
+  run(() => {
     callback = callback as PasswordCallback;
     inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
-  }
+  });
 </script>
 
 <Base {callback} {callbackMetadata} {style} key={inputName} />

@@ -8,10 +8,15 @@
  -->
 
 <script lang="ts">
-  export let key: string;
-  export let classes = '';
+  interface Props {
+    key: string;
+    classes?: string;
+    children?: import('svelte').Snippet;
+  }
+
+  let { key, classes = '', children }: Props = $props();
 </script>
 
 <label for={key} class={`${classes} tw_input-label dark:tw_input-label_dark`}>
-  <slot />
+  {@render children?.()}
 </label>

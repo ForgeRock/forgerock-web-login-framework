@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
 
   import { goto } from '$app/navigation';
@@ -19,8 +21,12 @@
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
-  /** @type {import('./$types').PageData} */
-  export let data;
+  
+  interface Props {
+    data: import('./$types').PageData;
+  }
+
+  let { data }: Props = $props();
 
   const journeyStore: JourneyStore = initializeJourney({
     serverConfig: {
@@ -38,11 +44,11 @@
     journeyStore.start({ journey: 'Registration' });
   });
 
-  $: {
+  run(() => {
     if ($journeyStore?.successful) {
       goto('/');
     }
-  }
+  });
 </script>
 
 <Box>

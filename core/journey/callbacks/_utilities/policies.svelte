@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import T from '$components/_utilities/locale-strings.svelte';
   import {
     getValidationFailures,
@@ -28,27 +30,37 @@
     | ValidatedCreatePasswordCallback
     | ValidatedCreateUsernameCallback;
 
-  export let callback: ValidatedCallbacks;
-  export let key: Maybe<string> = undefined;
-  export let label: string;
-  export let messageKey: string;
-  export let showPolicies = false;
+  interface Props {
+    callback: ValidatedCallbacks;
+    key?: Maybe<string>;
+    label: string;
+    messageKey: string;
+    showPolicies?: boolean;
+  }
 
-  let validationFailures = getValidationFailures(callback, label);
-  let validationRules = getValidationPolicies(callback.getPolicies());
-  let simplifiedFailures = validationFailures.reduce((prev, curr) => {
+  let {
+    callback,
+    key = undefined,
+    label,
+    messageKey,
+    showPolicies = false
+  }: Props = $props();
+
+  let validationFailures = $state(getValidationFailures(callback, label));
+  let validationRules = $state(getValidationPolicies(callback.getPolicies()));
+  let simplifiedFailures = $state(validationFailures.reduce((prev, curr) => {
     prev = prev.concat(curr.restructured);
     return prev;
-  }, [] as RestructuredParam[]);
+  }, [] as RestructuredParam[]));
 
-  $: {
+  run(() => {
     validationFailures = getValidationFailures(callback, label);
     validationRules = getValidationPolicies(callback.getPolicies());
     simplifiedFailures = validationFailures.reduce((prev, curr) => {
       prev = prev.concat(curr.restructured);
       return prev;
     }, [] as RestructuredParam[]);
-  }
+  });
 </script>
 
 {#if simplifiedFailures.length}

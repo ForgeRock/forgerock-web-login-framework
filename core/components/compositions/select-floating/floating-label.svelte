@@ -13,19 +13,36 @@
 
   import type { Maybe } from '$core/interfaces';
 
-  export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let defaultOption: string | null = null;
-  export let message = '';
-  export let isFirstInvalidInput: boolean;
-  export let isRequired = false;
-  export let isInvalid = false;
-  export let key: string;
-  export let label: string;
-  export let onChange: (event: Event) => void;
-  export let options: { value: string; text: string }[];
 
-  // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: Maybe<boolean> = undefined;
+  
+  interface Props {
+    checkValidity?: ((event: Event) => boolean) | null;
+    defaultOption?: string | null;
+    message?: string;
+    isFirstInvalidInput: boolean;
+    isRequired?: boolean;
+    isInvalid?: boolean;
+    key: string;
+    label: string;
+    onChange: (event: Event) => void;
+    options: { value: string; text: string }[];
+    // Below needs to be `undefined` to be optional and allow default value in Message component
+    showMessage?: Maybe<boolean>;
+  }
+
+  let {
+    checkValidity = null,
+    defaultOption = null,
+    message = '',
+    isFirstInvalidInput,
+    isRequired = false,
+    isInvalid = $bindable(false),
+    key,
+    label,
+    onChange,
+    options,
+    showMessage = undefined
+  }: Props = $props();
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {

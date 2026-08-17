@@ -14,10 +14,14 @@
   import type { NameCallback } from '@forgerock/journey-client/types';
   import type { FullAutoFill } from 'svelte/elements';
 
-  export let callback: NameCallback;
-  export let autocompleteValues: FullAutoFill | undefined = undefined;
+  interface Props {
+    callback: NameCallback;
+    autocompleteValues?: FullAutoFill | undefined;
+  }
 
-  $: callbackMetadata = {
+  let { callback, autocompleteValues = undefined }: Props = $props();
+
+  let callbackMetadata = $derived({
     derived: {
       canForceUserInputOptionality: false,
       isFirstInvalidInput: false,
@@ -27,7 +31,7 @@
       autocompleteValues,
     },
     idx: 0,
-  };
+  });
   let stepMetadata = {
     derived: {
       isStepSelfSubmittable: () => false,

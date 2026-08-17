@@ -14,17 +14,30 @@
   import Form from '$components/primitives/form/form.svelte';
   import Input from './floating-label.svelte';
 
-  export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let message: string;
-  export let isRequired: boolean;
-  export let key: string;
-  export let label: string;
-  export let onChange: () => void;
-  export let withForm = false;
-  export let value: string;
+  interface Props {
+    checkValidity?: ((event: Event) => boolean) | null;
+    message: string;
+    isRequired: boolean;
+    key: string;
+    label: string;
+    onChange: () => void;
+    withForm?: boolean;
+    value: string;
+  }
 
-  let wrapperEl: HTMLDivElement;
-  let isInvalid: boolean;
+  let {
+    checkValidity = null,
+    message = $bindable(),
+    isRequired,
+    key,
+    label,
+    onChange,
+    withForm = false,
+    value
+  }: Props = $props();
+
+  let wrapperEl: HTMLDivElement = $state();
+  let isInvalid: boolean = $state();
 
   function submitForm() {
     message = 'This field must have a value';

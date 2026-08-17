@@ -19,10 +19,19 @@
   } from '$login-framework';
   import __COMPONENT_NAME_PASCAL__ from './__COMPONENT_SLUG__.svelte';
 
-  export let form: StageFormObject;
-  export let journey: StageJourneyObject;
-  export let step: JourneyStep;
-  export let style: StyleObject = {};
+  interface Props {
+    form: StageFormObject;
+    journey: StageJourneyObject;
+    step: JourneyStep;
+    style?: StyleObject;
+  }
+
+  let {
+    form,
+    journey,
+    step,
+    style = {}
+  }: Props = $props();
 
   const callbackMetadata = buildCallbackMetadata(step, initCheckValidation());
   const stepMetadata = buildStepMetadata(callbackMetadata, undefined, step.getStage());
@@ -36,8 +45,8 @@
 </script>
 
 <Centered>
-  <svelte:component
-    this={__COMPONENT_NAME_PASCAL__}
+  {@const SvelteComponent = __COMPONENT_NAME_PASCAL__}
+  <SvelteComponent
     componentStyle="modal"
     {form}
     {journey}

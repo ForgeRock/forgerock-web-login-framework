@@ -8,7 +8,12 @@
  -->
 
 <script lang="ts">
-  export let num = 2;
+  interface Props {
+    num?: number;
+    children?: import('svelte').Snippet;
+  }
+
+  let { num = 2, children }: Props = $props();
 
   function generateClassString(...args: Array<number | string>) {
     return args.reduce((prev, curr) => {
@@ -27,5 +32,5 @@
 </script>
 
 <div class={`${generateClassString(num)} tw_gap-4 tw_grid tw_grid-cols-1 tw_input-spacing`}>
-  <slot />
+  {@render children?.()}
 </div>

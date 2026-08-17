@@ -8,8 +8,13 @@
  -->
 
 <script lang="ts">
-  export let classes = '';
-  export let size = '24px';
+  interface Props {
+    classes?: string;
+    size?: string;
+    children?: import('svelte').Snippet;
+  }
+
+  let { classes = '', size = '24px', children }: Props = $props();
 </script>
 
 <svg
@@ -23,5 +28,5 @@
   <path
     d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"
   />
-  <title><slot /></title>
+  <title>{@render children?.()}</title>
 </svg>

@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import sanitize from 'xss';
 
   import Alert from '$components/primitives/alert/alert.svelte';
@@ -33,11 +35,15 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
 
-  export let callback: SuspendedTextOutputCallback | TextOutputCallback;
+  interface Props {
+    callback: SuspendedTextOutputCallback | TextOutputCallback;
+  }
 
-  let dirtyMessage = callback.getMessage();
-  let cleanMessage = sanitize(dirtyMessage);
-  let callbackMessageType: 'error' | 'info' | 'success' | 'warning' | '' = 'info';
+  let { callback }: Props = $props();
+
+  let dirtyMessage = $state(callback.getMessage());
+  let cleanMessage = $state(sanitize(dirtyMessage));
+  let callbackMessageType: 'error' | 'info' | 'success' | 'warning' | '' = $state('info');
 
   function getCallbackMessage(messageType: string) {
     switch (messageType) {
@@ -52,11 +58,11 @@
     }
   }
 
-  $: {
+  run(() => {
     dirtyMessage = callback.getMessage();
     cleanMessage = sanitize(dirtyMessage);
     callbackMessageType = getCallbackMessage(callback.getMessageType());
-  }
+  });
 </script>
 
 {#if callbackMessageType === 'info'}

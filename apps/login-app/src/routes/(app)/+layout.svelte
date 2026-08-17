@@ -12,16 +12,21 @@
 
   import type { ThemeObject } from '$core/style.store';
 
-  export let data: { idmTheme?: ThemeObject; backgroundImageUrl?: string };
+  interface Props {
+    data: { idmTheme?: ThemeObject; backgroundImageUrl?: string };
+    children?: import('svelte').Snippet;
+  }
 
-  $: themeStyle = [
+  let { data, children }: Props = $props();
+
+  let themeStyle = $derived([
     ...(data.idmTheme ? buildThemeVarsEntries(data.idmTheme) : []),
     ...(data.backgroundImageUrl
       ? [['--fr-page-bg-image', `url("${data.backgroundImageUrl}")`] as [string, string]]
       : []),
   ]
     .map(([k, v]) => `${k}:${v}`)
-    .join(';');
+    .join(';'));
 </script>
 
 <svelte:head>
@@ -105,7 +110,7 @@
 </svelte:head>
 
 <div class="theme-root" style={themeStyle}>
-  <slot />
+  {@render children?.()}
 </div>
 
 <style>

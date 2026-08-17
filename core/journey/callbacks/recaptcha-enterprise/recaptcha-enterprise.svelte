@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
 
   import Alert from '$components/primitives/alert/alert.svelte';
@@ -33,19 +35,25 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
-  export let callback: Maybe<ReCaptchaEnterpriseCallback>;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
+  interface Props {
+    callback: Maybe<ReCaptchaEnterpriseCallback>;
+    callbackMetadata: Maybe<CallbackMetadata>;
+  }
 
-  let captchaError = '';
+  let { callback, callbackMetadata }: Props = $props();
+
+  let captchaError = $state('');
   let executed = false;
-  let scriptReady = false;
+  let scriptReady = $state(false);
 
   const siteKey = callback?.getSiteKey() ?? '';
   const apiUrl = callback?.getApiUrl() || 'https://www.google.com/recaptcha/enterprise.js';
 
-  let captchaMode: CaptchaMode = 'visible';
-  $: captchaMode = callbackMetadata?.initOptions?.mode === 'invisible' ? 'invisible' : 'visible';
-  $: recaptchaAction = (callbackMetadata?.initOptions?.recaptchaAction as string | undefined) ?? '';
+  let captchaMode: CaptchaMode = $state('visible');
+  run(() => {
+    captchaMode = callbackMetadata?.initOptions?.mode === 'invisible' ? 'invisible' : 'visible';
+  });
+  let recaptchaAction = $derived((callbackMetadata?.initOptions?.recaptchaAction as string | undefined) ?? '');
 
   onMount(async () => {
     if (!callback) return;
@@ -98,9 +106,11 @@
     });
   }
 
-  $: if (recaptchaAction && scriptReady) {
-    runInvisibleExecute();
-  }
+  run(() => {
+    if (recaptchaAction && scriptReady) {
+      runInvisibleExecute();
+    }
+  });
 </script>
 
 {#if captchaMode === 'invisible'}

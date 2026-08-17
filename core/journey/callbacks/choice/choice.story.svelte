@@ -16,8 +16,12 @@
   import type { Maybe } from '$core/interfaces';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
 
-  export let callback: ChoiceCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
+  interface Props {
+    callback: ChoiceCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+  }
+
+  let { callback, callbackMetadata }: Props = $props();
 
   let mergedCallbackMetadata = {
     derived: {

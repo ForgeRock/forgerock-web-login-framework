@@ -8,17 +8,29 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import sanitize from 'xss';
 
   import type { Maybe } from '$core/interfaces';
 
-  export let classes = '';
-  export let dirtyMessage: string;
-  export let key: Maybe<string> = undefined;
-  export let showMessage: Maybe<boolean> = true;
-  export let type: 'info' | 'error' = 'info';
+  interface Props {
+    classes?: string;
+    dirtyMessage: string;
+    key?: Maybe<string>;
+    showMessage?: Maybe<boolean>;
+    type?: 'info' | 'error';
+  }
 
-  let cleanMessage = sanitize(dirtyMessage);
+  let {
+    classes = '',
+    dirtyMessage,
+    key = undefined,
+    showMessage = true,
+    type = 'info'
+  }: Props = $props();
+
+  let cleanMessage = $state(sanitize(dirtyMessage));
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -32,9 +44,9 @@
     }, '');
   }
 
-  $: {
+  run(() => {
     cleanMessage = sanitize(dirtyMessage);
-  }
+  });
 </script>
 
 {#if dirtyMessage}

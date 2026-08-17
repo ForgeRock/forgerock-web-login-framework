@@ -14,8 +14,8 @@
 
   import type { UserStoreValue } from '$package/types';
 
-  let loading: boolean | null;
-  let userInfo: Record<string, unknown> | null;
+  let loading: boolean | null = $state();
+  let userInfo: Record<string, unknown> | null = $state();
 
   async function logout() {
     await user.logout();
@@ -58,7 +58,7 @@
       </li>
       <li id="email"><strong>Email</strong>: {userInfo?.email}</li>
     </ul>
-    <button on:click={logout}>Logout</button>
+    <button onclick={logout}>Logout</button>
   {:else}
     <ul>
       <li>

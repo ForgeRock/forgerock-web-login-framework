@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import { interpolate } from '$core/_utilities/i18n.utilities';
@@ -34,21 +36,25 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: AttributeInputCallback<string>;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: AttributeInputCallback<string>;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let inputName: string;
-  let isRequired: boolean;
-  let outputName: string;
-  let policies: Record<string, unknown>;
-  let previousValue: string;
-  let prompt: string;
-  let type: 'email' | 'text';
-  let validationFailures: FailedPolicy[];
-  let isInvalid: boolean;
+  let inputName: string = $state();
+  let isRequired: boolean = $state();
+  let outputName: string = $state();
+  let policies: Record<string, unknown> = $state();
+  let previousValue: string = $state();
+  let prompt: string = $state();
+  let type: 'email' | 'text' = $state();
+  let validationFailures: FailedPolicy[] = $state();
+  let isInvalid: boolean = $state();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -58,7 +64,7 @@
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
-  $: {
+  run(() => {
     /**
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
@@ -72,7 +78,7 @@
     type = getInputTypeFromPolicies(policies);
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
-  }
+  });
 </script>
 
 {#key callback}

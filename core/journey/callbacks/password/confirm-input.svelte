@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import T from '$components/_utilities/locale-strings.svelte';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
@@ -20,25 +22,42 @@
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
 
-  export let forceValidityFailure = false;
-  export let passwordsDoNotMatch = false;
-  export let isRequired = false;
-  export let key: string;
-  export let onChange: (val: Maybe<string>) => void;
-  export let resetValue: boolean;
-  export let style: z.infer<typeof styleSchema> = {};
-  export let isFirstInvalidInput: boolean;
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
   const showPassword = style.showPassword;
 
-  // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: Maybe<boolean> = undefined;
+  
+  interface Props {
+    forceValidityFailure?: boolean;
+    passwordsDoNotMatch?: boolean;
+    isRequired?: boolean;
+    key: string;
+    onChange: (val: Maybe<string>) => void;
+    resetValue: boolean;
+    style?: z.infer<typeof styleSchema>;
+    isFirstInvalidInput: boolean;
+    // Below needs to be `undefined` to be optional and allow default value in Message component
+    showMessage?: Maybe<boolean>;
+    children?: import('svelte').Snippet;
+  }
 
-  let isVisible = false;
-  let type: 'password' | 'text' = 'password';
-  let value: Maybe<string>;
-  let message = '';
+  let {
+    forceValidityFailure = false,
+    passwordsDoNotMatch = false,
+    isRequired = false,
+    key,
+    onChange,
+    resetValue,
+    style = {},
+    isFirstInvalidInput,
+    showMessage = undefined,
+    children
+  }: Props = $props();
+
+  let isVisible = $state(false);
+  let type: 'password' | 'text' = $state('password');
+  let value: Maybe<string> = $state();
+  let message = $state('');
 
   function onChangeWrapper(event: Event) {
     value = (event.target as HTMLInputElement)?.value;
@@ -53,7 +72,7 @@
     type = isVisible ? 'text' : 'password';
   }
 
-  $: {
+  run(() => {
     if (resetValue) {
       value = undefined;
       onChange(value);
@@ -65,7 +84,7 @@
     } else {
       message = '';
     }
-  }
+  });
 </script>
 
 <Input
@@ -81,11 +100,12 @@
   {showMessage}
   {type}
   value={typeof value === 'string' ? value : ''}
-  ><svelte:fragment slot="input-button">
+  ><!-- @migration-task: migrate this slot by hand, `input-button` is an invalid identifier -->
+  <svelte:fragment slot="input-button">
     {#if showPassword === 'button'}
       <button
         class="tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark"
-        on:click={toggleVisibility}
+        onclick={toggleVisibility}
         type="button"
       >
         <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
@@ -94,7 +114,7 @@
       </button>
     {/if}
   </svelte:fragment>
-  <slot />
+  {@render children?.()}
 </Input>
 {#if showPassword === 'checkbox'}
   <div class="tw_w-full tw_input-spacing">

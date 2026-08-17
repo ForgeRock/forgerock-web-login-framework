@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
@@ -29,18 +31,22 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: ValidatedCreatePasswordCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: ValidatedCreatePasswordCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const isRequired = isInputRequired(callback);
 
-  let inputName: string;
-  let isInvalid: boolean;
-  let prompt: string;
-  let validationFailures: FailedPolicy[];
+  let inputName: string = $state();
+  let isInvalid: boolean = $state();
+  let prompt: string = $state();
+  let validationFailures: FailedPolicy[] = $state();
 
-  $: {
+  run(() => {
     /**
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
@@ -49,7 +55,7 @@
     prompt = callback.getPrompt();
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
-  }
+  });
 </script>
 
 {#key callback}

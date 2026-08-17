@@ -10,7 +10,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Widget, { component, configure, journey, user } from '$package/index';
 
   import type { UserStoreValue } from '$package/types';
@@ -21,16 +21,16 @@
     email: string;
   };
 
-  let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
-  let journeyParam = $page.url.searchParams.get('journey');
-  let recaptchaParam = $page.url.searchParams.get('recaptchaAction');
-  const captchaModeRaw = $page.url.searchParams.get('captchaMode');
+  let authIndexValueParam = page.url.searchParams.get('authIndexValue');
+  let journeyParam = page.url.searchParams.get('journey');
+  let recaptchaParam = page.url.searchParams.get('recaptchaAction');
+  const captchaModeRaw = page.url.searchParams.get('captchaMode');
   const captchaModeParam =
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
-  let suspendedIdParam = $page.url.searchParams.get('suspendedId');
-  let formEl: HTMLDivElement;
-  let userEvent: UserStoreValue | null;
-  let userResponse: UserResponseObj | null;
+  let suspendedIdParam = page.url.searchParams.get('suspendedId');
+  let formEl: HTMLDivElement = $state();
+  let userEvent: UserStoreValue | null = $state();
+  let userResponse: UserResponseObj | null = $state();
 
   async function logout() {
     await user.logout();
@@ -99,6 +99,6 @@
     </li>
     <li id="email"><strong>Email</strong>: {userResponse?.email}</li>
   </ul>
-  <button on:click={logout}>Logout</button>
+  <button onclick={logout}>Logout</button>
 {/if}
 <div bind:this={formEl} class={`${userEvent?.successful ? 'tw_hidden' : ''} tw_p-6`}></div>

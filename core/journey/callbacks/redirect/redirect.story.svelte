@@ -13,7 +13,11 @@
 
   import type { RedirectCallback } from '@forgerock/journey-client/types';
 
-  export let callback: RedirectCallback;
+  interface Props {
+    callback: RedirectCallback;
+  }
+
+  let { callback }: Props = $props();
 
   let callbackMetadata = {
     derived: {

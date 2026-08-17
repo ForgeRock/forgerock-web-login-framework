@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import Text from '$components/primitives/text/text.svelte';
 
@@ -26,15 +28,24 @@
   export const style: z.infer<typeof styleSchema> = {};
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: PollingWaitCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let options: Maybe<{ inline: boolean }> = null;
+  interface Props {
+    callback: PollingWaitCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    selfSubmitFunction?: Maybe<SelfSubmitFunction>;
+    options?: Maybe<{ inline: boolean }>;
+  }
 
-  let message: string;
-  let timer: ReturnType<typeof setTimeout>;
+  let {
+    callback = $bindable(),
+    callbackMetadata = $bindable(),
+    selfSubmitFunction = null,
+    options = null
+  }: Props = $props();
 
-  $: {
+  let message: string = $state();
+  let timer: ReturnType<typeof setTimeout> = $state();
+
+  run(() => {
     callback = callback as PollingWaitCallback;
     message = callback.getMessage();
 
@@ -48,7 +59,7 @@
       }
       selfSubmitFunction && selfSubmitFunction();
     }, callback.getWaitTime());
-  }
+  });
 </script>
 
 <div class="tw_text-center">

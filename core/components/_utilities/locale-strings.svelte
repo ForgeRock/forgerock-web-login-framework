@@ -12,19 +12,27 @@
 
   import type { Maybe } from '$core/interfaces';
 
-  export let html = false;
-  export let key: string;
-  export let values: Maybe<Record<string, string>> = undefined;
-
-  let message: string;
-
-  $: {
-    message = interpolate(key, values);
+  interface Props {
+    html?: boolean;
+    key: string;
+    values?: Maybe<Record<string, string>>;
+    children?: import('svelte').Snippet;
   }
+
+  let {
+    html = false,
+    key,
+    values = undefined,
+    children
+  }: Props = $props();
+
+  let message: string = $derived(interpolate(key, values));
+
+  
 </script>
 
 {#if html}
-  <slot>{@html message}</slot>
+  {#if children}{@render children()}{:else}{@html message}{/if}
 {:else}
-  <slot>{message}</slot>
+  {#if children}{@render children()}{:else}{message}{/if}
 {/if}

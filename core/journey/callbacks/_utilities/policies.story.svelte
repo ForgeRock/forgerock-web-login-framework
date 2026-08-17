@@ -22,9 +22,13 @@
     | ValidatedCreatePasswordCallback
     | ValidatedCreateUsernameCallback;
 
-  export let callback: ValidatedCallbacks;
-  export let label: string;
-  export let messageKey: string;
+  interface Props {
+    callback: ValidatedCallbacks;
+    label: string;
+    messageKey: string;
+  }
+
+  let { callback, label, messageKey }: Props = $props();
 </script>
 
 <Centered>

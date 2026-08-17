@@ -30,13 +30,17 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let style: z.infer<typeof styleSchema> = {};
-  export let callback: TermsAndConditionsCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
+  interface Props {
+    style?: z.infer<typeof styleSchema>;
+    callback: TermsAndConditionsCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+  }
+
+  let { style = {}, callback, callbackMetadata }: Props = $props();
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
-  let inputName: string;
+  let inputName: string = $derived(callback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`);
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -46,9 +50,7 @@
     callback.setAccepted((event.target as HTMLInputElement).checked);
   }
 
-  $: {
-    inputName = callback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`;
-  }
+  
 </script>
 
 {#if $linksStore?.termsAndConditions}

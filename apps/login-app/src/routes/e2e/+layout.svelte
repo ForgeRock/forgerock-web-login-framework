@@ -7,11 +7,16 @@
 
  -->
 
-<script>
+<script lang="ts">
   /**
    * TODO: If there's a better way to do this, change to it
    */
   import '$package/widget.css';
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
+
+  let { children }: Props = $props();
 </script>
 
 <svelte:head>
@@ -96,4 +101,4 @@
   ></script>
 </svelte:head>
 
-<slot />
+{@render children?.()}

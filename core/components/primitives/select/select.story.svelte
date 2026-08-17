@@ -10,13 +10,25 @@
 <script lang="ts">
   import Select from './select.svelte';
 
-  export let defaultOption: string;
-  export let isRequired: boolean;
-  export let key: string;
-  export let label: string;
-  export let labelOrder: 'first' | 'last' | undefined;
-  export let onChange: (event: Event) => void;
-  export let options: { text: string; value: string }[];
+  interface Props {
+    defaultOption: string;
+    isRequired: boolean;
+    key: string;
+    label: string;
+    labelOrder: 'first' | 'last' | undefined;
+    onChange: (event: Event) => void;
+    options: { text: string; value: string }[];
+  }
+
+  let {
+    defaultOption,
+    isRequired,
+    key,
+    label,
+    labelOrder,
+    onChange,
+    options
+  }: Props = $props();
 </script>
 
 <div>

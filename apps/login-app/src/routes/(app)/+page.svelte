@@ -8,10 +8,12 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { onMount, tick } from 'svelte';
 
   import { goto } from '$app/navigation';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Box from '$components/primitives/box/centered.svelte';
   import { initialize as initializeContent } from '$core/locale.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
@@ -20,17 +22,21 @@
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
-  /** @type {import('./$types').PageData} */
-  export let data;
+  
+  interface Props {
+    data: import('./$types').PageData;
+  }
 
-  const authIndexValue = $page.url.searchParams.get('authIndexValue');
-  const codeParam = $page.url.searchParams.get('code');
-  const stateParam = $page.url.searchParams.get('state');
-  const formPostEntryParam = $page.url.searchParams.get('form_post_entry');
-  const journeyParam = $page.url.searchParams.get('journey');
-  const suspendedIdParam = $page.url.searchParams.get('suspendedId');
-  const uuidParam = $page.url.searchParams.get('uuid');
-  const captchaModeRaw = $page.url.searchParams.get('captchaMode');
+  let { data }: Props = $props();
+
+  const authIndexValue = page.url.searchParams.get('authIndexValue');
+  const codeParam = page.url.searchParams.get('code');
+  const stateParam = page.url.searchParams.get('state');
+  const formPostEntryParam = page.url.searchParams.get('form_post_entry');
+  const journeyParam = page.url.searchParams.get('journey');
+  const suspendedIdParam = page.url.searchParams.get('suspendedId');
+  const uuidParam = page.url.searchParams.get('uuid');
+  const captchaModeRaw = page.url.searchParams.get('captchaMode');
   const captchaModeParam =
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
 
@@ -39,11 +45,11 @@
     captchaModeParam ? { captcha: { mode: captchaModeParam } } : null,
   );
 
-  let hasSubmitted = false;
-  let redirectForm: HTMLFormElement | null = null;
-  let loginResult: 'success' | 'failure' = 'failure';
-  let tokenId = '';
-  let journeyStepUrl = '';
+  let hasSubmitted = $state(false);
+  let redirectForm: HTMLFormElement | null = $state(null);
+  let loginResult: 'success' | 'failure' = $state('failure');
+  let tokenId = $state('');
+  let journeyStepUrl = $state('');
   /**
    * Sets up locale store with appropriate content
    */
@@ -78,7 +84,7 @@
     }
   });
 
-  $: {
+  run(() => {
     /**
      * hasSubmitted check prevents multiple form submissions
      * submit only when hasSubmitted is false, then set it to true
@@ -107,7 +113,7 @@
         }
       });
     }
-  }
+  });
 </script>
 
 <Box>

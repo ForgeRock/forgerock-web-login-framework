@@ -10,8 +10,13 @@
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
 
-  export let colorClass: string;
-  export let layoutClasses: string;
+  interface Props {
+    colorClass: string;
+    layoutClasses: string;
+    children?: import('svelte').Snippet;
+  }
+
+  let { colorClass, layoutClasses, children }: Props = $props();
 </script>
 
 <div
@@ -20,4 +25,4 @@
 >
   <span class="tw_sr-only"><T key="loading" /> </span>
 </div>
-<slot />
+{@render children?.()}

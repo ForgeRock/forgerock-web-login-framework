@@ -7,7 +7,7 @@
  
  -->
 
-<script context="module" lang="ts">
+<script module lang="ts">
   import './main.css';
   import { componentApi } from './_utilities/component.utilities';
   import { widgetApiFactory } from './widget.api';
@@ -22,6 +22,8 @@
 </script>
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
@@ -32,17 +34,23 @@
 
   import type { SvelteComponent } from 'svelte';
 
-  export let type: 'modal' | 'inline' = 'modal';
+  interface Props {
+    type?: 'modal' | 'inline';
+  }
+
+  let { type = 'modal' }: Props = $props();
 
   const { journeyStore } = api.getStores();
 
   // Variables that reference the Svelte component and the DOM elements
-  let dialogComp: SvelteComponent;
-  let dialogEl: HTMLDialogElement;
-  let formEl: HTMLFormElement;
-  let widgetRootEl: HTMLDivElement;
+  let dialogComp: SvelteComponent = $state();
+  let dialogEl: HTMLDialogElement = $state();
+  let formEl: HTMLFormElement = $state();
+  let widgetRootEl: HTMLDivElement = $state();
 
-  $: applyThemeVars(widgetRootEl, $styleStore?.theme);
+  run(() => {
+    applyThemeVars(widgetRootEl, $styleStore?.theme);
+  });
 
   onMount(() => {
     mount(dialogComp, dialogEl);

@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
 
   import Alert from '$components/primitives/alert/alert.svelte';
@@ -34,9 +36,13 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
-  export let callback: Maybe<ReCaptchaCallback>;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  let captchaError = '';
+  interface Props {
+    callback: Maybe<ReCaptchaCallback>;
+    callbackMetadata: Maybe<CallbackMetadata>;
+  }
+
+  let { callback, callbackMetadata }: Props = $props();
+  let captchaError = $state('');
 
   const siteKey = callback?.getSiteKey() ?? '';
   let isV3 = callback?.getOutputByName('reCaptchaV3', false);
@@ -66,11 +72,13 @@
   const scriptSrc = CAPTCHA_SCRIPT_URLS[scriptProvider];
   const captchaElementId = CAPTCHA_ELEMENT_IDS[captchaProvider];
 
-  let scriptReady = false;
+  let scriptReady = $state(false);
 
-  let captchaMode: CaptchaMode = 'visible';
-  $: captchaMode = callbackMetadata?.initOptions?.mode === 'invisible' ? 'invisible' : 'visible';
-  $: recaptchaAction = (callbackMetadata?.initOptions?.recaptchaAction as string | undefined) ?? '';
+  let captchaMode: CaptchaMode = $state('visible');
+  run(() => {
+    captchaMode = callbackMetadata?.initOptions?.mode === 'invisible' ? 'invisible' : 'visible';
+  });
+  let recaptchaAction = $derived((callbackMetadata?.initOptions?.recaptchaAction as string | undefined) ?? '');
 
   onMount(async () => {
     if (!callback) {
@@ -161,11 +169,11 @@
       });
     }
   }
-  $: {
+  run(() => {
     if (recaptchaAction.length && scriptReady) {
       executeV3Captcha();
     }
-  }
+  });
 </script>
 
 {#if isV3 === false}

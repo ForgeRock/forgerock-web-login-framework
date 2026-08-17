@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { writable } from 'svelte/store';
 
   import T from '$components/_utilities/locale-strings.svelte';
@@ -33,22 +35,26 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: KbaCreateCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: KbaCreateCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Input = style.labels === 'stacked' ? InputStacked : InputFloating;
   const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
-  let customQuestionIndex: string | null = null;
-  let displayCustomQuestionInput = false;
-  let inputArr: Array<{ name: string }> | undefined;
-  let inputName: string;
-  let inputNameQuestion: string;
-  let inputNameAnswer: string | false;
-  let prompt: string;
-  let questions: { text: string; value: string }[];
-  let shouldAllowCustomQuestion: boolean | undefined;
+  let customQuestionIndex: string | null = $state(null);
+  let displayCustomQuestionInput = $state(false);
+  let inputArr: Array<{ name: string }> | undefined = $state();
+  let inputName: string = $state();
+  let inputNameQuestion: string = $state();
+  let inputNameAnswer: string | false = $state();
+  let prompt: string = $state();
+  let questions: { text: string; value: string }[] = $state();
+  let shouldAllowCustomQuestion: boolean | undefined = $state();
   let value = writable('');
 
   /**
@@ -98,7 +104,7 @@
     callback.setQuestion(inputValue);
   }
 
-  $: {
+  run(() => {
     inputArr = callback?.payload?.input;
     inputName = callback?.payload?.input?.[0].name || `kba-${callbackMetadata?.idx}`;
     inputNameQuestion = inputName;
@@ -135,7 +141,7 @@
       customQuestionIndex = `${questions.length - 1}`;
       questions.push({ text: interpolate('provideCustomQuestion'), value: customQuestionIndex });
     }
-  }
+  });
 </script>
 
 <fieldset class="tw_kba-fieldset tw_input-spacing dark:tw_kba-fieldset_dark">

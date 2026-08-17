@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import Select from '$components/compositions/select-floating/floating-label.svelte';
@@ -29,18 +31,27 @@
   // Unused props. Setting to const prevents errors in console
   export const style: z.infer<typeof styleSchema> = {};
 
-  export let callback: ConfirmationCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: Maybe<StepMetadata>;
+  interface Props {
+    callback: ConfirmationCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    selfSubmitFunction?: Maybe<SelfSubmitFunction>;
+    stepMetadata: Maybe<StepMetadata>;
+  }
+
+  let {
+    callback,
+    callbackMetadata = $bindable(),
+    selfSubmitFunction = null,
+    stepMetadata
+  }: Props = $props();
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
-  let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
-  let defaultChoice: number = callback.getDefaultOption();
-  let inputName: string;
-  let label: string;
-  let options: { value: string; text: string }[];
+  let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined = $state();
+  let defaultChoice: number = $state(callback.getDefaultOption());
+  let inputName: string = $state();
+  let label: string = $state();
+  let options: { value: string; text: string }[] = $state();
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
@@ -84,7 +95,7 @@
     callback.setOptionIndex(defaultChoice);
   }
 
-  $: {
+  run(() => {
     inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
     options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
     defaultChoice = callback.getDefaultOption();
@@ -103,7 +114,7 @@
     } else {
       buttonStyle = 'secondary';
     }
-  }
+  });
 </script>
 
 {#if !stepMetadata?.derived.isStepSelfSubmittable()}

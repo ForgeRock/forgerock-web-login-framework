@@ -11,13 +11,27 @@
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
-  export let busy = false;
-  export let classes = '';
-  // export let customCss: { key: string; value: string }[] = [];
-  export let onClick: (event: Event) => void = () => {};
-  export let style: 'outline' | 'primary' | 'secondary' = 'outline';
-  export let type: 'button' | 'submit' | null = null;
-  export let width: 'auto' | 'full' = 'auto';
+  
+  interface Props {
+    busy?: boolean;
+    classes?: string;
+    // export let customCss: { key: string; value: string }[] = [];
+    onClick?: (event: Event) => void;
+    style?: 'outline' | 'primary' | 'secondary';
+    type?: 'button' | 'submit' | null;
+    width?: 'auto' | 'full';
+    children?: import('svelte').Snippet;
+  }
+
+  let {
+    busy = false,
+    classes = '',
+    onClick = () => {},
+    style = 'outline',
+    type = null,
+    width = 'auto',
+    children
+  }: Props = $props();
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -46,12 +60,12 @@
     style,
     width,
   )} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width} ${classes}`}
-  on:click={onClick}
+  onclick={onClick}
   {type}
 >
   {#if busy}
     <!-- Render a small spinner during form submission -->
     <Spinner colorClass="white" layoutClasses="tw_h-4 tw_w-4 tw_mr-2" />
   {/if}
-  <slot>Submit</slot>
+  {#if children}{@render children()}{:else}Submit{/if}
 </button>

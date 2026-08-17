@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import T from '$components/_utilities/locale-strings.svelte';
   import Button from '$components/primitives/button/button.svelte';
   import Grid from '$components/primitives/grid/grid.svelte';
@@ -28,12 +30,21 @@
 
   export const style: z.infer<typeof styleSchema> = {};
 
-  export let callback: SelectIdPCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: Maybe<StepMetadata>;
+  interface Props {
+    callback: SelectIdPCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    selfSubmitFunction?: Maybe<SelfSubmitFunction>;
+    stepMetadata: Maybe<StepMetadata>;
+  }
 
-  let idps: { value: string; text: string }[];
+  let {
+    callback,
+    callbackMetadata = $bindable(),
+    selfSubmitFunction = null,
+    stepMetadata
+  }: Props = $props();
+
+  let idps: { value: string; text: string }[] = $state();
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
@@ -47,7 +58,7 @@
     selfSubmitFunction && selfSubmitFunction();
   }
 
-  $: {
+  run(() => {
     const localAuthentication = callback
       .getProviders()
       .filter((provider) => provider.provider === 'localAuthentication');
@@ -69,7 +80,7 @@
       value: option.provider,
       text: option.uiConfig.buttonDisplayName,
     }));
-  }
+  });
 </script>
 
 {#each idps as idp}

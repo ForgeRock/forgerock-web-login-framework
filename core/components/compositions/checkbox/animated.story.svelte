@@ -8,22 +8,36 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { onMount } from 'svelte';
 
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
   import Checkbox from './animated.svelte';
 
-  export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let message = '';
-  export let key: string;
-  export let label: string;
-  export let onChange: (event: Event) => void;
-  export let value: boolean;
-  export let withForm = false;
+  interface Props {
+    checkValidity?: ((event: Event) => boolean) | null;
+    message?: string;
+    key: string;
+    label: string;
+    onChange: (event: Event) => void;
+    value: boolean;
+    withForm?: boolean;
+  }
 
-  let wrapperEl: HTMLDivElement;
-  let isInvalid: boolean;
+  let {
+    checkValidity = null,
+    message = $bindable(''),
+    key,
+    label,
+    onChange,
+    value,
+    withForm = false
+  }: Props = $props();
+
+  let wrapperEl: HTMLDivElement = $state();
+  let isInvalid: boolean = $state();
 
   function submitForm() {
     console.log('Form submitted');
@@ -39,9 +53,9 @@
     }
   });
 
-  $: {
+  run(() => {
     console.log(message);
-  }
+  });
 </script>
 
 <div bind:this={wrapperEl}>

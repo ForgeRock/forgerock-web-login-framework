@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import { callbackType } from '@forgerock/journey-client';
   import { tick } from 'svelte';
 
@@ -27,25 +29,35 @@
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
-  export let componentStyle: 'app' | 'inline' | 'modal';
-  export let form: StageFormObject;
-  export let formEl: HTMLFormElement | null = null;
-  export let journey: StageJourneyObject;
-  export let step: JourneyStep;
+  interface Props {
+    componentStyle: 'app' | 'inline' | 'modal';
+    form: StageFormObject;
+    formEl?: HTMLFormElement | null;
+    journey: StageJourneyObject;
+    step: JourneyStep;
+  }
+
+  let {
+    componentStyle,
+    form,
+    formEl = $bindable(null),
+    journey,
+    step
+  }: Props = $props();
 
   const OTP_LENGTH = 6;
   const formFailureMessageId = 'adminInviteVerifyCodeFailureMessage';
   const formHeaderId = 'adminInviteVerifyCodeHeader';
   const formElementId = 'adminInviteVerifyCodeForm';
 
-  $: formMessageKey = convertStringToKey(form?.message);
-  $: formAriaDescriptor = form?.message ? formFailureMessageId : formHeaderId;
-  $: formNeedsFocus = !form?.message;
+  let formMessageKey = $derived(convertStringToKey(form?.message));
+  let formAriaDescriptor = $derived(form?.message ? formFailureMessageId : formHeaderId);
+  let formNeedsFocus = $derived(!form?.message);
 
-  let hiddenValueCb: HiddenValueCallback | null = null;
-  let otpHasError = false;
-  let otpDigits: string[] = Array.from({ length: OTP_LENGTH }, () => '');
-  let otpInputs: HTMLInputElement[] = [];
+  let hiddenValueCb: HiddenValueCallback | null = $state(null);
+  let otpHasError = $state(false);
+  let otpDigits: string[] = $state(Array.from({ length: OTP_LENGTH }, () => ''));
+  let otpInputs: HTMLInputElement[] = $state([]);
 
   function extractDigits(clipboardData: DataTransfer | null): string[] {
     const digits = (clipboardData?.getData('text') ?? '').replace(/\D/g, '').split('');
@@ -83,12 +95,12 @@
     form?.submit();
   }
 
-  $: otpComplete = otpDigits.every((digit) => /^\d$/.test(digit));
+  let otpComplete = $derived(otpDigits.every((digit) => /^\d$/.test(digit)));
 
   // AM toggles the retry warning via if(false)/if(true) in the script:
   // first load: if (false) { ... p1aic-otp-retry-warning ... }
   // retry:      if (true)  { ... p1aic-otp-retry-warning ... }
-  $: {
+  run(() => {
     hiddenValueCb =
       (step.getCallbacksOfType(callbackType.HiddenValueCallback) as HiddenValueCallback[]).find(
         (cb) => (cb.getOutputByName('id', '') as string) === 'p1aic-otp-answer',
@@ -106,7 +118,7 @@
       otpDigits = Array.from({ length: OTP_LENGTH }, () => '');
       tick().then(() => otpInputs[0]?.focus());
     }
-  }
+  });
 </script>
 
 <Form
@@ -148,9 +160,9 @@
         maxlength="1"
         pattern="[0-9]"
         type="text"
-        on:input={() => handleOtpInput(i)}
-        on:keyup={(e) => handleOtpKeyup(e, i)}
-        on:paste={handleOtpPaste}
+        oninput={() => handleOtpInput(i)}
+        onkeyup={(e) => handleOtpKeyup(e, i)}
+        onpaste={handleOtpPaste}
       />
     {/each}
   </div>
@@ -178,7 +190,7 @@
     <button
       class="tw_text-link-dark dark:tw_text-link-light hover:tw_underline tw_ml-1"
       type="button"
-      on:click={() => submit('resend')}
+      onclick={() => submit('resend')}
     >
       <T key="adminRegOtpResend" />
     </button>

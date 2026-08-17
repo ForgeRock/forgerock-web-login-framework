@@ -8,17 +8,23 @@
  -->
 
 <script lang="ts">
+  import { run, preventDefault } from 'svelte/legacy';
+
   import { interpolate } from '$core/_utilities/i18n.utilities';
   import { configuredJourneysStore } from '$journey/config.store';
 
   import type { StageJourneyObject } from '$journey/journey.interfaces';
 
-  export let journey: StageJourneyObject;
+  interface Props {
+    journey: StageJourneyObject;
+  }
 
-  let stack = journey.stack;
-  let string = '';
+  let { journey }: Props = $props();
 
-  $: {
+  let stack = $state(journey.stack);
+  let string = $state('');
+
+  run(() => {
     // The parent can pass a new `journey` object; update `stack` so `$stack` reads from the latest store.
     stack = journey.stack;
 
@@ -30,15 +36,15 @@
     const capitalizedKey =
       typeof key === 'string' ? key.replace(/([a-z])/, (_, char) => `${char.toUpperCase()}`) : key;
     string = `backTo${capitalizedKey || 'Default'}`;
-  }
+  });
 </script>
 
 {#if $stack.length > 1}
   <p class=" tw_my-4 tw_text-base tw_text-center tw_text-link-dark dark:tw_text-link-light">
     <button
-      on:click|preventDefault={() => {
+      onclick={preventDefault(() => {
         journey?.pop();
-      }}
+      })}
     >
       {interpolate(string)}
     </button>

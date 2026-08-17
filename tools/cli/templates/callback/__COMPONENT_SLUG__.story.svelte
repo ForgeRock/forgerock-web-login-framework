@@ -15,11 +15,21 @@
   } from '$login-framework';
   import __COMPONENT_NAME_PASCAL__ from './__COMPONENT_SLUG__.svelte';
 
-  export let callback: BaseCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata> = undefined;
-  export let style: StyleObject = {};
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: Maybe<StepMetadata> = null;
+  interface Props {
+    callback: BaseCallback;
+    callbackMetadata?: Maybe<CallbackMetadata>;
+    style?: StyleObject;
+    selfSubmitFunction?: Maybe<SelfSubmitFunction>;
+    stepMetadata?: Maybe<StepMetadata>;
+  }
+
+  let {
+    callback,
+    callbackMetadata = undefined,
+    style = {},
+    selfSubmitFunction = null,
+    stepMetadata = null
+  }: Props = $props();
 
   const defaultCallbackMetadata: CallbackMetadata = {
     derived: {
@@ -43,13 +53,13 @@
     },
   };
 
-  $: mergedCallbackMetadata = { ...defaultCallbackMetadata, ...callbackMetadata };
-  $: mergedStepMetadata = stepMetadata ?? defaultStepMetadata;
+  let mergedCallbackMetadata = $derived({ ...defaultCallbackMetadata, ...callbackMetadata });
+  let mergedStepMetadata = $derived(stepMetadata ?? defaultStepMetadata);
 </script>
 
 <Centered>
-  <svelte:component
-    this={__COMPONENT_NAME_PASCAL__}
+  {@const SvelteComponent = __COMPONENT_NAME_PASCAL__}
+  <SvelteComponent
     {callback}
     callbackMetadata={mergedCallbackMetadata}
     {style}

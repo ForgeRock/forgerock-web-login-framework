@@ -13,7 +13,11 @@
 
   import type { ValidatedCreateUsernameCallback } from '@forgerock/journey-client/types';
 
-  export let callback: ValidatedCreateUsernameCallback;
+  interface Props {
+    callback: ValidatedCreateUsernameCallback;
+  }
+
+  let { callback }: Props = $props();
 
   let callbackMetadata = {
     derived: {

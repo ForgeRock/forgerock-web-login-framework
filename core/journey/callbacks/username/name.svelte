@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
@@ -27,27 +29,31 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: NameCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: NameCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType: string;
-  let inputName: string;
-  let textInputLabel: string;
-  let value: unknown;
+  let callbackType: string = $state();
+  let inputName: string = $state();
+  let textInputLabel: string = $state();
+  let value: unknown = $state();
 
   function setValue(event: Event) {
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
-  $: {
+  run(() => {
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
-  }
+  });
 </script>
 
 {#key callback}

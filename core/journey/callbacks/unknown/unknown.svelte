@@ -25,7 +25,11 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
 
-  export let callback: BaseCallback;
+  interface Props {
+    callback: BaseCallback;
+  }
+
+  let { callback }: Props = $props();
 
   const type = callback.getType();
 </script>

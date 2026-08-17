@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Centered from '$components/primitives/box/centered.svelte';
   import { applyThemeVars } from '$core/_effects/theme.effects';
   import { initialize as initializeLinks } from '$core/links.store';
@@ -22,14 +24,25 @@
   import type { partialStyleSchema } from '$core/style.store';
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
-  export let form: StageFormObject;
-  export let journey: StageJourneyObject;
-  export let stage: string;
-  export let stageJson: Record<string, unknown>;
-  export let step: JourneyStep;
-  export let style: z.infer<typeof partialStyleSchema>;
+  interface Props {
+    form: StageFormObject;
+    journey: StageJourneyObject;
+    stage: string;
+    stageJson: Record<string, unknown>;
+    step: JourneyStep;
+    style: z.infer<typeof partialStyleSchema>;
+  }
 
-  let storyRootEl: HTMLElement | null = null;
+  let {
+    form,
+    journey,
+    stage,
+    stageJson = $bindable(),
+    step,
+    style
+  }: Props = $props();
+
+  let storyRootEl: HTMLElement | null = $state(null);
   let stageName;
 
   // Mimic what happens in the `journey.store` module
@@ -55,10 +68,10 @@
   // Initialize stores
   initializeLinks({ termsAndConditions: '/' });
 
-  $: {
+  run(() => {
     initializeStyles(style);
     applyThemeVars(storyRootEl, style?.theme);
-  }
+  });
 </script>
 
 <div bind:this={storyRootEl} class="fr_widget-root">

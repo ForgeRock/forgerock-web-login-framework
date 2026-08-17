@@ -13,7 +13,11 @@
 
   import type { HiddenValueCallback } from '@forgerock/journey-client/types';
 
-  export let callback: HiddenValueCallback;
+  interface Props {
+    callback: HiddenValueCallback;
+  }
+
+  let { callback }: Props = $props();
 
   let callbackMetadata = {
     derived: {

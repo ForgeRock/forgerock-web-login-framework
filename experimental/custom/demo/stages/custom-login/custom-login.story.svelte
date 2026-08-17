@@ -15,14 +15,21 @@
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
   // ─── Props from Storybook args ────────────────────────────────────────────
-  /** form — submission helpers; varies per story (Base, WithError, Loading). */
-  export let form: StageFormObject;
+  
 
-  /** journey — navigation state and loading flag; varies per story. */
-  export let journey: StageJourneyObject;
+  
 
-  /** step — the JourneyStep instance built from the mock AM response. */
-  export let step: JourneyStep;
+  
+  interface Props {
+    /** form — submission helpers; varies per story (Base, WithError, Loading). */
+    form: StageFormObject;
+    /** journey — navigation state and loading flag; varies per story. */
+    journey: StageJourneyObject;
+    /** step — the JourneyStep instance built from the mock AM response. */
+    step: JourneyStep;
+  }
+
+  let { form, journey, step }: Props = $props();
 
   /**
    * Initialize the links store with a placeholder Terms & Conditions URL.

@@ -10,13 +10,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Widget, { configure, journey } from '$package/index';
 
-  let formEl: HTMLDivElement;
+  let formEl: HTMLDivElement = $state();
 
   onMount(async () => {
-    const params = $page.url.searchParams;
+    const params = page.url.searchParams;
     const primaryColorParam = params.get('primaryColor');
     const buttonBorderRadiusParam = params.get('buttonBorderRadius');
     const cardBorderRadiusParam = params.get('cardBorderRadius');

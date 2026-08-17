@@ -10,7 +10,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Widget, { component, configure, journey, protect, user } from '$package/index';
 
   import type {
@@ -20,29 +20,29 @@
     UserStoreValue,
   } from '$package/types';
 
-  let componentEvents: ReturnType<typeof component> | undefined;
-  let journeyEvents: ReturnType<typeof journey> | undefined;
+  let componentEvents: ReturnType<typeof component> | undefined = $state();
+  let journeyEvents: ReturnType<typeof journey> | undefined = $state();
 
-  let authIndexValueParam = $page.url.searchParams.get('authIndexValue');
-  let journeyParam = $page.url.searchParams.get('journey');
-  let recaptchaParam = $page.url.searchParams.get('recaptchaAction');
-  const captchaModeRaw = $page.url.searchParams.get('captchaMode');
+  let authIndexValueParam = page.url.searchParams.get('authIndexValue');
+  let journeyParam = page.url.searchParams.get('journey');
+  let recaptchaParam = page.url.searchParams.get('recaptchaAction');
+  const captchaModeRaw = page.url.searchParams.get('captchaMode');
   const captchaModeParam =
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
-  let suspendedIdParam = $page.url.searchParams.get('suspendedId');
-  let showPasswordParam = $page.url.searchParams.get('showPassword') as
+  let suspendedIdParam = page.url.searchParams.get('suspendedId');
+  let showPasswordParam = page.url.searchParams.get('showPassword') as
     | 'none'
     | 'button'
     | 'checkbox';
-  let initializePingProtectEarly = $page.url.searchParams.get('initializePingProtectEarly');
-  let pauseBehavioralData = $page.url.searchParams.get('pauseBehavioralData');
+  let initializePingProtectEarly = page.url.searchParams.get('initializePingProtectEarly');
+  let pauseBehavioralData = page.url.searchParams.get('pauseBehavioralData');
   type UserResponseObj = {
     family_name: string;
     given_name: string;
     email: string;
   };
-  let userResponse: UserResponseObj | null;
-  let widgetEl: HTMLDivElement;
+  let userResponse: UserResponseObj | null = $state();
+  let widgetEl: HTMLDivElement = $state();
 
   async function logout() {
     await user.logout();
@@ -180,10 +180,10 @@
       </li>
       <li id="email"><strong>Email</strong>: {userResponse?.email}</li>
     </ul>
-    <button on:click={logout}>Logout</button>
+    <button onclick={logout}>Logout</button>
   {:else if journeyEvents && componentEvents}
     <button
-      on:click={() => {
+      onclick={() => {
         journeyEvents.start({
           journey: journeyParam || authIndexValueParam || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,

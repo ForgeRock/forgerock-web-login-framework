@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Animated from '$components/compositions/checkbox/animated.svelte';
   import Standard from '$components/compositions/checkbox/standard.svelte';
   import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
@@ -27,25 +29,29 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
 
-  export let callback: AttributeInputCallback<boolean>;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: AttributeInputCallback<boolean>;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
-  let inputName: string;
+  let inputName: string = $state();
   // A boolean being required doesn't make much sense, so commenting it out for now
   // let isRequired = isInputRequired(callback);
-  let outputName: string;
-  let previousValue: boolean;
-  let prompt: string;
-  let validationFailure: string;
+  let outputName: string = $state();
+  let previousValue: boolean = $state();
+  let prompt: string = $state();
+  let validationFailure: string = $state();
 
   function setValue(event: Event) {
     callback.setInputValue((event.target as HTMLInputElement).checked);
   }
 
-  $: {
+  run(() => {
     inputName = callback?.payload?.input?.[0].name || `boolean-attr-${callbackMetadata?.idx}`;
     // A boolean being required doesn't make much sense, so commenting it out for now
     // isRequired = isInputRequired(callback);
@@ -53,7 +59,7 @@
     previousValue = callback.getInputValue() as boolean;
     prompt = callback.getPrompt();
     validationFailure = getAttributeValidationFailureText(callback);
-  }
+  });
 </script>
 
 {#key callback}

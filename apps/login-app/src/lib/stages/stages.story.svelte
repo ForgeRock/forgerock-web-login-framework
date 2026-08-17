@@ -21,10 +21,19 @@
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
-  export let form: StageFormObject;
-  export let journey: StageJourneyObject;
-  export let stage: string;
-  export let step: JourneyStep;
+  interface Props {
+    form: StageFormObject;
+    journey: StageJourneyObject;
+    stage: string;
+    step: JourneyStep;
+  }
+
+  let {
+    form,
+    journey,
+    stage,
+    step
+  }: Props = $props();
 </script>
 
 <Centered>

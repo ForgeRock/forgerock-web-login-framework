@@ -8,14 +8,27 @@
  -->
 
 <script lang="ts">
-  export let ariaDescribedBy: string;
-  export let formEl: HTMLFormElement | null = null;
-  export let id = 'formId';
-  export let needsFocus = false;
-  export let onSubmitWhenValid: ((event: SubmitEvent, isFormValid: boolean) => void) | undefined =
-    undefined;
+  import { run, preventDefault } from 'svelte/legacy';
 
-  let isFormValid = false;
+  interface Props {
+    ariaDescribedBy: string;
+    formEl?: HTMLFormElement | null;
+    id?: string;
+    needsFocus?: boolean;
+    onSubmitWhenValid?: ((event: SubmitEvent, isFormValid: boolean) => void) | undefined;
+    children?: import('svelte').Snippet;
+  }
+
+  let {
+    ariaDescribedBy,
+    formEl = $bindable(null),
+    id = 'formId',
+    needsFocus = false,
+    onSubmitWhenValid = undefined,
+    children
+  }: Props = $props();
+
+  let isFormValid = $state(false);
 
   /**
    * @function formSubmit - responsible for form validation prior to calling provided submit function
@@ -93,11 +106,11 @@
     }
   }
 
-  $: {
+  run(() => {
     if (needsFocus) {
       formEl && formEl.focus();
     }
-  }
+  });
 </script>
 
 <form
@@ -106,8 +119,8 @@
   {id}
   class={`tw_form-base ${isFormValid ? 'tw_form-valid' : 'tw_form-invalid'} tw_outline-none`}
   novalidate
-  on:submit|preventDefault={formSubmit}
+  onsubmit={preventDefault(formSubmit)}
   tabindex="-1"
 >
-  <slot />
+  {@render children?.()}
 </form>

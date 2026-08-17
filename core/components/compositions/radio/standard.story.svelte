@@ -10,12 +10,23 @@
 <script lang="ts">
   import Radio from './standard.svelte';
 
-  export let defaultOption = '0';
-  export let key: string;
-  export let label: string;
-  export let name: string;
-  export let onChange: (event: Event) => void;
-  export let options: { text: string; value: string | null }[];
+  interface Props {
+    defaultOption?: string;
+    key: string;
+    label: string;
+    name: string;
+    onChange: (event: Event) => void;
+    options: { text: string; value: string | null }[];
+  }
+
+  let {
+    defaultOption = '0',
+    key,
+    label,
+    name,
+    onChange,
+    options
+  }: Props = $props();
 </script>
 
 <div>

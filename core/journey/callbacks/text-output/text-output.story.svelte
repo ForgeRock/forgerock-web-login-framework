@@ -15,7 +15,11 @@
 
   import type { TextOutputCallback } from '@forgerock/journey-client/types';
 
-  export let callback: TextOutputCallback;
+  interface Props {
+    callback: TextOutputCallback;
+  }
+
+  let { callback }: Props = $props();
   export const recoveryCodes: string[] = [];
   export const webAuthnValue: WebAuthnStepType = WebAuthnStepType.None;
 </script>

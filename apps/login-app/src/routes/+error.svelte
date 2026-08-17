@@ -9,7 +9,7 @@
 
 <script lang="ts">
   import '../app.css';
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
 
   function getErrorMessage(err: unknown): string {
     if (typeof err === 'string') {
@@ -21,7 +21,7 @@
     return typeof message === 'string' ? message : 'An unexpected error occurred.';
   }
 
-  $: message = getErrorMessage($page.error);
+  let message = $derived(getErrorMessage(page.error));
 </script>
 
 <div
@@ -32,6 +32,6 @@
   >
     <h1 class="tw_primary-header dark:tw_primary-header_dark">Configuration error</h1>
     <p class="tw_text-secondary-dark dark:tw_text-secondary-light">{message}</p>
-    <p class="tw_text-secondary-dark dark:tw_text-secondary-light">Status: {$page.status}</p>
+    <p class="tw_text-secondary-dark dark:tw_text-secondary-light">Status: {page.status}</p>
   </div>
 </div>

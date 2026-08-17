@@ -22,9 +22,13 @@
 
   export const style: z.infer<typeof styleSchema> = {};
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export let callback: PingOneProtectInitializeCallback;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  let loaded = false;
+  interface Props {
+    callback: PingOneProtectInitializeCallback;
+    selfSubmitFunction?: Maybe<SelfSubmitFunction>;
+  }
+
+  let { callback, selfSubmitFunction = null }: Props = $props();
+  let loaded = $state(false);
 
   onMount(() => {
     async function loadingPingProtect() {

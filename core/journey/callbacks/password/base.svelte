@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import T from '$components/_utilities/locale-strings.svelte';
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
@@ -26,28 +28,44 @@
   import type { styleSchema } from '$core/style.store';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
 
-  export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let key: string;
-  export let isInvalid = false;
-  export let isRequired = false;
-  export let style: z.infer<typeof styleSchema> = {};
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
   const showPassword = style.showPassword;
-  // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: Maybe<boolean> = undefined;
-  export let validationFailure = '';
+  
+  interface Props {
+    callback: PasswordCallback | ValidatedCreatePasswordCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    key: string;
+    isInvalid?: boolean;
+    isRequired?: boolean;
+    style?: z.infer<typeof styleSchema>;
+    // Below needs to be `undefined` to be optional and allow default value in Message component
+    showMessage?: Maybe<boolean>;
+    validationFailure?: string;
+    children?: import('svelte').Snippet;
+  }
 
-  let confirmValue: Maybe<string>;
-  let callbackType: string;
-  let doPasswordsMatch: Maybe<boolean>;
-  let isVisible = false;
-  let resetValue = false;
-  let savedValue = '';
-  let textInputLabel: string;
-  let type: 'password' | 'text' = 'password';
-  let value: string;
+  let {
+    callback,
+    callbackMetadata,
+    key = $bindable(),
+    isInvalid = false,
+    isRequired = false,
+    style = {},
+    showMessage = undefined,
+    validationFailure = '',
+    children
+  }: Props = $props();
+
+  let confirmValue: Maybe<string> = $state();
+  let callbackType: string = $state();
+  let doPasswordsMatch: Maybe<boolean> = $state();
+  let isVisible = $state(false);
+  let resetValue = $state(false);
+  let savedValue = $state('');
+  let textInputLabel: string = $state();
+  let type: 'password' | 'text' = $state('password');
+  let value: string = $state();
 
   /**
    * @function confirmInput - ensures the second password input matches the first
@@ -80,7 +98,7 @@
     type = isVisible ? 'text' : 'password';
   }
 
-  $: {
+  run(() => {
     callbackType = callback.getType();
     key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
@@ -98,7 +116,7 @@
      * Only assign a boolean if the confirm input has an actual value.
      */
     doPasswordsMatch = confirmValue !== undefined ? confirmValue === value : undefined;
-  }
+  });
 </script>
 
 {#key callback}
@@ -115,11 +133,12 @@
     {type}
     value={typeof value === 'string' ? value : ''}
   >
-    <svelte:fragment slot="input-button">
+    <!-- @migration-task: migrate this slot by hand, `input-button` is an invalid identifier -->
+  <svelte:fragment slot="input-button">
       {#if showPassword === 'button'}
         <button
           class="tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark"
-          on:click={toggleVisibility}
+          onclick={toggleVisibility}
           type="button"
         >
           <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
@@ -128,7 +147,7 @@
         </button>
       {/if}
     </svelte:fragment>
-    <slot />
+    {@render children?.()}
   </Input>
 
   {#if showPassword === 'checkbox'}

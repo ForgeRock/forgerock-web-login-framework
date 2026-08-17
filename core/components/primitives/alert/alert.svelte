@@ -8,15 +8,27 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import AlertIcon from '$components/icons/alert-icon.svelte';
   import InfoIcon from '$components/icons/info-icon.svelte';
   import WarningIcon from '$components/icons/warning-icon.svelte';
 
-  export let id: string;
-  export let needsFocus = false;
-  export let type: 'error' | 'info' | 'success' | 'warning' | '' = '';
+  interface Props {
+    id: string;
+    needsFocus?: boolean;
+    type?: 'error' | 'info' | 'success' | 'warning' | '';
+    children?: import('svelte').Snippet;
+  }
 
-  let divEl: HTMLParagraphElement;
+  let {
+    id,
+    needsFocus = false,
+    type = '',
+    children
+  }: Props = $props();
+
+  let divEl: HTMLParagraphElement = $state();
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -36,11 +48,11 @@
     }, '');
   }
 
-  $: {
+  run(() => {
     if (needsFocus) {
       divEl && divEl.focus();
     }
-  }
+  });
 </script>
 
 <div
@@ -61,7 +73,7 @@
       <InfoIcon />
     {/if}
     <span>
-      <slot />
+      {@render children?.()}
     </span>
   </p>
 </div>

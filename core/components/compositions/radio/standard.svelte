@@ -13,19 +13,36 @@
 
   import type { Maybe } from '$core/interfaces';
 
-  export let defaultOption: Maybe<string> = null;
-  export let message = '';
-  export let groupLabel = '';
-  export let isFirstInvalidInput: boolean;
-  export let isRequired = false;
-  export let isInvalid = false;
-  export let key: string;
-  export let name: string;
-  export let onChange: (event: Event) => void;
-  export let options: { text: string; value: string | null }[];
 
-  // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: Maybe<boolean> = undefined;
+  
+  interface Props {
+    defaultOption?: Maybe<string>;
+    message?: string;
+    groupLabel?: string;
+    isFirstInvalidInput: boolean;
+    isRequired?: boolean;
+    isInvalid?: boolean;
+    key: string;
+    name: string;
+    onChange: (event: Event) => void;
+    options: { text: string; value: string | null }[];
+    // Below needs to be `undefined` to be optional and allow default value in Message component
+    showMessage?: Maybe<boolean>;
+  }
+
+  let {
+    defaultOption = null,
+    message = '',
+    groupLabel = '',
+    isFirstInvalidInput,
+    isRequired = false,
+    isInvalid = false,
+    key,
+    name,
+    onChange,
+    options,
+    showMessage = undefined
+  }: Props = $props();
 </script>
 
 <fieldset>

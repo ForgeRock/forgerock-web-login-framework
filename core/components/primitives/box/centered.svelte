@@ -8,12 +8,17 @@
  -->
 
 <script lang="ts">
+  interface Props {
+    children?: import('svelte').Snippet;
+  }
+
+  let { children }: Props = $props();
   // Component with slot only - no props needed
 </script>
 
 <div class="page-shell tw_flex tw_justify-center tw_min-h-full">
   <div class="tw_containing-box dark:tw_containing-box_dark md:tw_containing-box_medium">
-    <slot />
+    {@render children?.()}
   </div>
 </div>
 

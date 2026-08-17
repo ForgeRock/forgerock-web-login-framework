@@ -16,10 +16,21 @@
 
   import type { ComponentStoreValue } from '$core/component.store';
 
-  export let dialogEl: HTMLDialogElement | null = null;
-  export let dialogId: string;
-  export let forceOpen = false;
-  export let withHeader = false;
+  interface Props {
+    dialogEl?: HTMLDialogElement | null;
+    dialogId: string;
+    forceOpen?: boolean;
+    withHeader?: boolean;
+    children?: import('svelte').Snippet;
+  }
+
+  let {
+    dialogEl = $bindable(null),
+    dialogId,
+    forceOpen = false,
+    withHeader = false,
+    children
+  }: Props = $props();
 
   // TODO: Add a keyboard listener
   export function closeDialog(reason: ComponentStoreValue['reason']) {
@@ -71,7 +82,7 @@
       ></div>
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
-        on:click={() => closeDialog('user')}
+        onclick={() => closeDialog('user')}
         aria-controls={dialogId}
         aria-label="Close"
       >
@@ -89,7 +100,7 @@
     >
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
-        on:click={() => closeDialog('user')}
+        onclick={() => closeDialog('user')}
         aria-controls={dialogId}
       >
         <XIcon
@@ -108,6 +119,6 @@
     </div>
   {/if}
   <div class="tw_dialog-body">
-    <slot />
+    {@render children?.()}
   </div>
 </dialog>
