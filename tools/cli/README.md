@@ -35,10 +35,10 @@ pnpm dev
 
 **Options**
 
-| Flag             | Description                                                                                                            |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `--tag <tag>`    | Download a specific release tag (e.g. `v1.2.0`). Defaults to latest.                                                   |
-| `--local <path>` | Use a local framework directory instead of downloading from GitHub. Useful for development or air-gapped environments. |
+| Flag             | Description                                                                                                                 |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `--tag <tag>`    | Download a specific Git release tag (e.g. `@forgerock/login-widget@2.1.0`; legacy `v1.2.0` also works). Defaults to `main`. |
+| `--local <path>` | Use a local framework directory instead of downloading from GitHub. Useful for development or air-gapped environments.      |
 
 **What it does**
 
@@ -163,7 +163,7 @@ Run from the root of an initialized project.
 
 ```sh
 ping-lf update                          # update to latest
-ping-lf update --version v1.5.0         # pin to a specific version
+ping-lf update --tag @forgerock/login-widget@2.1.0  # pin to a specific release tag
 ping-lf update --local ../framework     # use a local directory
 ping-lf update --directory /path/to/project  # target a specific project root
 ```
@@ -214,7 +214,7 @@ pnpm --filter @forgerock/login-framework-cli link --global
 ```sh
 ping-lf init my-project
 ping-lf generate callback MyCallback
-ping-lf update --tag v1.5.0
+ping-lf update --tag @forgerock/login-widget@2.1.0
 ```
 
 Rebuilds (`pnpm --filter @forgerock/login-framework-cli build`) update the global binary automatically — no relink needed.

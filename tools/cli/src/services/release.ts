@@ -20,7 +20,8 @@ const API_HEADERS = {
   Accept: 'application/vnd.github.v3+json',
 };
 
-const VERSION_REGEX = /^v?\d+\.\d+\.\d+(-[\w.]+)?$/;
+const VERSION_REGEX =
+  /^(?:v?\d+\.\d+\.\d+(-[\w.]+)?|@forgerock\/login-widget@\d+\.\d+\.\d+(-[\w.]+)?)$/;
 
 const toCauseString = (cause: unknown): string =>
   cause instanceof Error ? cause.message : String(cause);

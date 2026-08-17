@@ -118,8 +118,8 @@ describe('parseReleaseTags', () => {
 describe('validateVersion', () => {
   const runV = (v: string) => Effect.runPromise(Effect.either(validateVersion(v)));
 
-  it('accepts semver with v prefix', async () => {
-    expect(Either.isRight(await runV('v1.0.0'))).toBe(true);
+  it('accepts a legacy v-prefixed tag', async () => {
+    expect(Either.isRight(await runV('v2.1.0'))).toBe(true);
   });
 
   it('accepts semver without v prefix', async () => {
@@ -130,8 +130,24 @@ describe('validateVersion', () => {
     expect(Either.isRight(await runV('v1.0.0-beta.1'))).toBe(true);
   });
 
-  it('rejects non-semver strings with InvalidVersionError', async () => {
-    for (const bad of ['latest', 'main', '1.0', 'abc', '']) {
+  it('accepts the login widget package tag', async () => {
+    expect(Either.isRight(await runV('@forgerock/login-widget@2.1.0'))).toBe(true);
+  });
+
+  it('accepts the login widget package prerelease tag', async () => {
+    expect(Either.isRight(await runV('@forgerock/login-widget@2.1.0-beta.1'))).toBe(true);
+  });
+
+  it('rejects invalid tags with InvalidVersionError', async () => {
+    for (const bad of [
+      'latest',
+      'main',
+      '1.0',
+      'abc',
+      '',
+      '@forgerock/login-widget@2.1',
+      '@forgerock/login-framework-cli@2.1.0',
+    ]) {
       const result = await runV(bad);
       expect(Either.isLeft(result), `expected "${bad}" to fail`).toBe(true);
       if (Either.isLeft(result)) {
@@ -144,12 +160,24 @@ describe('validateVersion', () => {
 // ── archiveUrl ─────────────────────────────────────────────────────────────
 
 describe('Release.archiveUrl', () => {
-  it('generates the correct GitHub archive URL', async () => {
+  it('generates the correct GitHub archive URL for a legacy tag', async () => {
     const result = await withRelease((r) => Effect.succeed(r.archiveUrl('v1.2.3')));
     expect(Either.isRight(result)).toBe(true);
     if (Either.isRight(result)) {
       expect(result.right).toBe(
         'https://github.com/ForgeRock/forgerock-web-login-framework/archive/refs/tags/v1.2.3.tar.gz',
+      );
+    }
+  });
+
+  it('generates the correct GitHub archive URL for a package tag', async () => {
+    const result = await withRelease((r) =>
+      Effect.succeed(r.archiveUrl('@forgerock/login-widget@2.1.0')),
+    );
+    expect(Either.isRight(result)).toBe(true);
+    if (Either.isRight(result)) {
+      expect(result.right).toBe(
+        'https://github.com/ForgeRock/forgerock-web-login-framework/archive/refs/tags/@forgerock/login-widget@2.1.0.tar.gz',
       );
     }
   });
@@ -210,6 +238,22 @@ describe('Release.fetch', () => {
     if (Either.isLeft(result)) {
       expect(result.left).toHaveProperty('_tag', 'InvalidVersionError');
     }
+  });
+
+  it('downloads a package tag from its GitHub archive URL', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      status: 200,
+      headers: {},
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(0)),
+    });
+    vi.stubGlobal('fetch', fetchMock);
+
+    const result = await withRelease((r) => r.fetch('@forgerock/login-widget@2.1.0', '/output'));
+
+    expect(Either.isRight(result)).toBe(true);
+    expect(fetchMock.mock.calls[0]?.[0].toString()).toBe(
+      'https://github.com/ForgeRock/forgerock-web-login-framework/archive/refs/tags/@forgerock/login-widget@2.1.0.tar.gz',
+    );
   });
 
   it('fails with ReleaseFsError when makeDirectory fails', async () => {

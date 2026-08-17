@@ -134,15 +134,15 @@ export const initCommand = Command.make(
         ),
       ),
     ),
-    version: Options.optional(
-      Options.text('version').pipe(
+    tag: Options.optional(
+      Options.text('tag').pipe(
         Options.withDescription(
-          'Framework release tag to download (e.g. v1.2.0). If omitted, the main branch is used.',
+          'Framework Git release tag to download (e.g. @forgerock/login-widget@2.1.0 or v1.2.0). If omitted, the main branch is used.',
         ),
       ),
     ),
   },
-  ({ directory, local, version }) => initProject({ directory, local, version }),
+  ({ directory, local, tag }) => initProject({ directory, local, version: tag }),
 ).pipe(
   Command.withDescription(
     'Bootstrap a new Ping Login Widget or Login App project from a GitHub release or a local framework path.',
