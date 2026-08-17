@@ -31,7 +31,7 @@ function formatError(cause: Cause.Cause<unknown>): string {
     const e = err.value as { _tag?: string; [k: string]: unknown };
     switch (e._tag) {
       case 'InvalidVersionError':
-        return `Invalid version "${e['version']}". Expected semver format like v1.0.0.`;
+        return `Invalid version "${e['version']}". Expected a Git tag like @forgerock/login-widget@2.1.0 or v1.0.0.`;
       case 'ReleaseNetworkError':
         return `Network error reaching GitHub: ${e['cause']}`;
       case 'ReleaseParseError':
@@ -87,7 +87,8 @@ const InitTool = Tool.make('init', {
       description: 'Directory to initialize the project in (e.g. "my-project" or "./")',
     }),
     version: Schema.optional(Schema.String).annotations({
-      description: 'Framework version tag to download (e.g. v1.2.0). Defaults to latest.',
+      description:
+        'Framework Git release tag to download (e.g. @forgerock/login-widget@2.1.0 or v1.2.0). Defaults to main.',
     }),
     local: Schema.optional(Schema.String).annotations({
       description: 'Path to a local framework directory instead of downloading from GitHub.',
@@ -145,7 +146,8 @@ const UpdateTool = Tool.make('update', {
   parameters: {
     directory: directoryParam,
     version: Schema.optional(Schema.String).annotations({
-      description: 'Framework version tag to update to (e.g. v1.2.0). Defaults to latest.',
+      description:
+        'Framework Git release tag to update to (e.g. @forgerock/login-widget@2.1.0 or v1.2.0). Defaults to main.',
     }),
     local: Schema.optional(Schema.String).annotations({
       description: 'Path to a local framework directory instead of downloading from GitHub.',

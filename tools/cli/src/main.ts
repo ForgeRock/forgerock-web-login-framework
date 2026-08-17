@@ -76,7 +76,7 @@ const program = isMcpLaunch
             `  ${err.cause}\n\n` +
             `  • Check your network connection and try again.\n` +
             `  • Use a local path:   ping-lf init <dir> --local <path>\n` +
-            `  • Specify a tag:      ping-lf init <dir> --tag v1.0.0\n`,
+            `  • Specify a tag:      ping-lf init <dir> --tag @forgerock/login-widget@2.1.0\n`,
         ).pipe(Effect.andThen(Effect.die(err))),
       ),
       Effect.catchTag('ReleaseParseError', (err) =>
@@ -92,7 +92,7 @@ const program = isMcpLaunch
       Effect.catchTag('InvalidVersionError', (err) =>
         Console.error(
           `\nError: "${err.version}" is not a valid version tag.\n` +
-            `  Expected semver format like v1.0.0.\n` +
+            `  Expected a Git tag like @forgerock/login-widget@2.1.0 or v1.0.0.\n` +
             `  Use "ping-lf releases" to list available versions.\n`,
         ).pipe(Effect.andThen(Effect.die(err))),
       ),

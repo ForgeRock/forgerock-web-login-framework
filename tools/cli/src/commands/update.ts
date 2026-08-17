@@ -27,7 +27,7 @@ export const updateCommand = Command.make(
     tag: Options.optional(
       Options.text('tag').pipe(
         Options.withDescription(
-          'Framework release tag to update to (e.g. v1.2.0). If omitted, the main branch is used.',
+          'Framework Git release tag to update to (e.g. @forgerock/login-widget@2.1.0 or v1.2.0). If omitted, the main branch is used.',
         ),
       ),
     ),
