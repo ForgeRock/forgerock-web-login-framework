@@ -12,11 +12,11 @@ import {
   StageNameSchema,
 } from '../src/commands/generate.js';
 
-import type { FileSystem } from '@effect/platform';
+import type { FileSystem, Path } from '@effect/platform';
 
 // ── Helpers for integration tests ──────────────────────────────────────────
 
-const runEffect = <A, E>(eff: Effect.Effect<A, E, FileSystem.FileSystem>) =>
+const runEffect = <A, E>(eff: Effect.Effect<A, E, FileSystem.FileSystem | Path.Path>) =>
   Effect.runPromise(Effect.provide(eff, NodeContext.layer) as Effect.Effect<A, E, never>);
 
 /** Creates the minimal on-disk structure that `scaffoldComponent` requires. */
@@ -57,35 +57,50 @@ describe('scaffoldComponent — template substitution', () => {
   it('replaces __COMPONENT_NAME_PASCAL__ in callback template files', async () => {
     await runEffect(scaffoldComponent('callback', 'MyCallback', tmpDir));
 
-    const storyFile = join(
+    const componentFile = join(
       tmpDir,
       'experimental',
       'custom',
       'callbacks',
       'my-callback',
-      'my-callback.story.svelte',
+      'my-callback.svelte',
     );
-    const content = await readFile(storyFile, 'utf8');
+    const content = await readFile(componentFile, 'utf8');
 
     expect(content).not.toContain('__COMPONENT_NAME_PASCAL__');
     expect(content).toContain('MyCallback');
+    expect(content).toContain('@forgerock/journey-client/types');
+    expect(content).not.toContain('@forgerock/javascript-sdk');
   });
 
   it('replaces __COMPONENT_NAME_PASCAL__ with toPascalCase(name) for stage names with spaces', async () => {
     await runEffect(scaffoldComponent('stage', 'My Login Stage', tmpDir));
 
-    const storyFile = join(
+    const componentFile = join(
       tmpDir,
       'experimental',
       'custom',
       'stages',
       'my-login-stage',
-      'my-login-stage.story.svelte',
+      'my-login-stage.svelte',
     );
-    const content = await readFile(storyFile, 'utf8');
+    const content = await readFile(componentFile, 'utf8');
+    const utilityContent = await readFile(
+      join(
+        tmpDir,
+        'experimental',
+        'custom',
+        'stages',
+        'my-login-stage',
+        'my-login-stage.utilities.ts',
+      ),
+      'utf8',
+    );
 
     expect(content).not.toContain('__COMPONENT_NAME_PASCAL__');
-    expect(content).toContain('MyLoginStage');
+    expect(utilityContent).toContain('formatMyLoginStageLabel');
+    expect(content).toContain('Name: My Login Stage');
+    expect(content).not.toContain('@forgerock/javascript-sdk');
   });
 
   it('replaces __COMPONENT_NAME_PASCAL__ in utilities.ts and utilities.test.ts', async () => {

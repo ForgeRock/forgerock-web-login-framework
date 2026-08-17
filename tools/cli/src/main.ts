@@ -76,7 +76,7 @@ const program = isMcpLaunch
             `  ${err.cause}\n\n` +
             `  • Check your network connection and try again.\n` +
             `  • Use a local path:   ping-lf init <dir> --local <path>\n` +
-            `  • Specify a version:  ping-lf init <dir> --version v1.0.0\n`,
+            `  • Specify a tag:      ping-lf init <dir> --tag v1.0.0\n`,
         ).pipe(Effect.andThen(Effect.die(err))),
       ),
       Effect.catchTag('ReleaseParseError', (err) =>

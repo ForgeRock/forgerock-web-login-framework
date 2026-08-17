@@ -24,15 +24,15 @@ export const updateCommand = Command.make(
         ),
       ),
     ),
-    version: Options.optional(
-      Options.text('version').pipe(
+    tag: Options.optional(
+      Options.text('tag').pipe(
         Options.withDescription(
-          'Framework version tag to update to (e.g. v1.2.0). If omitted, the main branch is used.',
+          'Framework release tag to update to (e.g. v1.2.0). If omitted, the main branch is used.',
         ),
       ),
     ),
   },
-  ({ local, version, directory }) =>
+  ({ local, tag, directory }) =>
     Effect.gen(function* () {
       const cwd = nodePath.resolve(expandTilde(Option.getOrElse(directory, () => process.cwd())));
 
@@ -46,7 +46,7 @@ export const updateCommand = Command.make(
       // automatic removal of the .framework-tmp directory after copying.
       const resolvedVersion = yield* Effect.scoped(
         Effect.gen(function* () {
-          const { sourceDir, resolvedVersion } = yield* resolveSource(local, version, cwd);
+          const { sourceDir, resolvedVersion } = yield* resolveSource(local, tag, cwd);
           yield* Console.log('Copying updated framework files...');
           yield* copyWithExclusions(sourceDir, cwd);
           return resolvedVersion;

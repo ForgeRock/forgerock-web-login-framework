@@ -163,7 +163,7 @@ Run from the root of an initialized project.
 
 ```sh
 ping-lf update                          # update to latest
-ping-lf update --version v1.5.0         # pin to a specific version
+ping-lf update --tag v1.5.0         # pin to a specific release tag
 ping-lf update --local ../framework     # use a local directory
 ping-lf update --directory /path/to/project  # target a specific project root
 ```
