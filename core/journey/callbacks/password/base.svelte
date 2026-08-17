@@ -133,7 +133,6 @@
     {type}
     value={typeof value === 'string' ? value : ''}
   >
-    <!-- @migration-task: migrate this slot by hand, `input-button` is an invalid identifier -->
     <svelte:fragment slot="input-button">
       {#if showPassword === 'button'}
         <button

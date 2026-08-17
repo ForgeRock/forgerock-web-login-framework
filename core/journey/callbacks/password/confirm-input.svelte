@@ -99,8 +99,7 @@
   {showMessage}
   {type}
   value={typeof value === 'string' ? value : ''}
-  ><!-- @migration-task: migrate this slot by hand, `input-button` is an invalid identifier -->
-  <svelte:fragment slot="input-button">
+  ><svelte:fragment slot="input-button">
     {#if showPassword === 'button'}
       <button
         class="tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark"
