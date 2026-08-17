@@ -28,9 +28,9 @@
   const captchaModeParam =
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
   let suspendedIdParam = page.url.searchParams.get('suspendedId');
-  let formEl: HTMLDivElement = $state();
-  let userEvent: UserStoreValue | null = $state();
-  let userResponse: UserResponseObj | null = $state();
+  let formEl: HTMLDivElement | undefined = $state();
+  let userEvent: UserStoreValue | null = $state(null);
+  let userResponse: UserResponseObj | null = $state(null);
 
   async function logout() {
     await user.logout();
@@ -82,7 +82,7 @@
       }
     });
 
-    new Widget({ target: formEl, props: { type: 'inline' } });
+    new Widget({ target: formEl!, props: { type: 'inline' } });
     // Start the  journey after initialization or within the form.onMount event
     journeyEvents.start({
       journey: journeyParam || authIndexValueParam || undefined,

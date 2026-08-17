@@ -8,19 +8,16 @@
  -->
 
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   interface Props {
     classes?: string;
     size?: string;
     visible?: boolean;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
-  let {
-    classes = '',
-    size = '24px',
-    visible = false,
-    children
-  }: Props = $props();
+  let { classes = '', size = '24px', visible = false, children }: Props = $props();
 </script>
 
 {#if !visible}

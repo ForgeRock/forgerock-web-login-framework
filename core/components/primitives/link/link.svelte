@@ -8,19 +8,16 @@
  -->
 
 <script lang="ts">
+  import type { Snippet } from 'svelte';
+
   interface Props {
     classes?: string;
     href: string;
     target?: '_blank' | '_parent' | '_self' | '_top';
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
-  let {
-    classes = '',
-    href,
-    target = '_self',
-    children
-  }: Props = $props();
+  let { classes = '', href, target = '_self', children }: Props = $props();
 </script>
 
 <a class={`${classes} tw_link dark:tw_link_dark`} {href} {target}>

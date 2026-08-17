@@ -38,7 +38,6 @@
 
   import type { CallbackMetadata, Maybe } from '$login-framework';
 
-  
   interface Props {
     // ─── Prop contract ──────────────────────────────────────────────────────────
     callback: NameCallback;

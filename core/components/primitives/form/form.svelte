@@ -8,7 +8,9 @@
  -->
 
 <script lang="ts">
-  import { run, preventDefault } from 'svelte/legacy';
+  import { preventDefault, run } from 'svelte/legacy';
+
+  import type { Snippet } from 'svelte';
 
   interface Props {
     ariaDescribedBy: string;
@@ -16,7 +18,7 @@
     id?: string;
     needsFocus?: boolean;
     onSubmitWhenValid?: ((event: SubmitEvent, isFormValid: boolean) => void) | undefined;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let {
@@ -25,7 +27,7 @@
     id = 'formId',
     needsFocus = false,
     onSubmitWhenValid = undefined,
-    children
+    children,
   }: Props = $props();
 
   let isFormValid = $state(false);

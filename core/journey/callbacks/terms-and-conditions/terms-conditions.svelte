@@ -40,7 +40,9 @@
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
-  let inputName: string = $derived(callback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`);
+  let inputName: string = $derived(
+    callback?.payload?.input?.[0].name || `terms-${callbackMetadata?.idx}`,
+  );
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -49,8 +51,6 @@
   function setValue(event: Event) {
     callback.setAccepted((event.target as HTMLInputElement).checked);
   }
-
-  
 </script>
 
 {#if $linksStore?.termsAndConditions}

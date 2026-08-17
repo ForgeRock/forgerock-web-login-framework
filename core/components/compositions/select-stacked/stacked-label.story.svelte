@@ -35,11 +35,11 @@
     label,
     onChange,
     options,
-    withForm = false
+    withForm = false,
   }: Props = $props();
 
-  let wrapperEl: HTMLDivElement = $state();
-  let isInvalid: boolean = $state();
+  let wrapperEl: HTMLDivElement | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
 
   function submitForm() {
     errorMessage = 'Please select an option';

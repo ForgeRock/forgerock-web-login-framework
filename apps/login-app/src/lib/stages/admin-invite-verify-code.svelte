@@ -8,10 +8,9 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { callbackType } from '@forgerock/journey-client';
   import { tick } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import T from '$components/_utilities/locale-strings.svelte';
   import Alert from '$components/primitives/alert/alert.svelte';
@@ -37,13 +36,7 @@
     step: JourneyStep;
   }
 
-  let {
-    componentStyle,
-    form,
-    formEl = $bindable(null),
-    journey,
-    step
-  }: Props = $props();
+  let { componentStyle, form, formEl = $bindable(null), journey, step }: Props = $props();
 
   const OTP_LENGTH = 6;
   const formFailureMessageId = 'adminInviteVerifyCodeFailureMessage';

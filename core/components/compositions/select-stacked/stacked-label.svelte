@@ -13,8 +13,6 @@
 
   import type { Maybe } from '$core/interfaces';
 
-
-  
   interface Props {
     checkValidity?: ((event: Event) => boolean) | null;
     defaultOption?: string | null;
@@ -41,7 +39,7 @@
     label,
     onChange,
     options,
-    showMessage = undefined
+    showMessage = undefined,
   }: Props = $props();
 
   function onChangeWrapper(event: Event) {

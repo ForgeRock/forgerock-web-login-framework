@@ -8,9 +8,8 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { onMount, tick } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import { goto } from '$app/navigation';
   import { page } from '$app/state';
@@ -20,11 +19,11 @@
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
 
+  import type { PageData } from './$types';
   import type { JourneyStore } from '$journey/journey.interfaces';
 
-  
   interface Props {
-    data: import('./$types').PageData;
+    data: PageData;
   }
 
   let { data }: Props = $props();

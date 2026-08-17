@@ -31,22 +31,17 @@
     step: JourneyStep;
   }
 
-  let {
-    componentStyle,
-    form,
-    formEl = $bindable(null),
-    journey,
-    step
-  }: Props = $props();
+  let { componentStyle, form, formEl = $bindable(null), journey, step }: Props = $props();
 
   const formHeaderId = 'adminInviteWelcomeHeader';
   const formFailureMessageId = 'adminInviteWelcomeFailureMessage';
   const formElementId = 'adminInviteWelcomeForm';
 
-  let msg =
-    $derived((step.getCallbacksOfType(callbackType.TextOutputCallback) as TextOutputCallback[])
+  let msg = $derived(
+    (step.getCallbacksOfType(callbackType.TextOutputCallback) as TextOutputCallback[])
       .find((cb) => cb.getMessageType() === '4')
-      ?.getMessage() ?? '');
+      ?.getMessage() ?? '',
+  );
 
   let tenantName = $derived(msg.match(/<span[^>]*p1aic-tenant-name[^>]*>([^<]+)</)?.[1] ?? '');
   let formMessageKey = $derived(convertStringToKey(form?.message));

@@ -13,7 +13,7 @@
   import { page } from '$app/state';
   import Widget, { configure, journey } from '$package/index';
 
-  let formEl: HTMLDivElement = $state();
+  let formEl: HTMLDivElement | undefined = $state();
 
   onMount(async () => {
     const params = page.url.searchParams;
@@ -44,7 +44,7 @@
 
     const journeyEvents = journey();
 
-    new Widget({ target: formEl, props: { type: 'inline' } });
+    new Widget({ target: formEl!, props: { type: 'inline' } });
     journeyEvents.start({ journey: 'TEST_Login' });
   });
 </script>

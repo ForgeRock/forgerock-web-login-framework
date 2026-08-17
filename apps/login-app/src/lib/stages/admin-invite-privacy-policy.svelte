@@ -30,13 +30,7 @@
     step: JourneyStep;
   }
 
-  let {
-    componentStyle,
-    form,
-    formEl = $bindable(null),
-    journey,
-    step
-  }: Props = $props();
+  let { componentStyle, form, formEl = $bindable(null), journey, step }: Props = $props();
 
   const jurisdictionOptions = [
     'Australia',

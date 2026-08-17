@@ -28,12 +28,7 @@
     step: JourneyStep;
   }
 
-  let {
-    form,
-    journey,
-    stage,
-    step
-  }: Props = $props();
+  let { form, journey, stage, step }: Props = $props();
 </script>
 
 <Centered>

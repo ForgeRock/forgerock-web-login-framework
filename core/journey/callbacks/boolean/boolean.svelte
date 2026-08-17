@@ -39,13 +39,13 @@
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
-  let inputName: string = $state();
+  let inputName: string | undefined = $state();
   // A boolean being required doesn't make much sense, so commenting it out for now
   // let isRequired = isInputRequired(callback);
-  let outputName: string = $state();
-  let previousValue: boolean = $state();
-  let prompt: string = $state();
-  let validationFailure: string = $state();
+  let outputName: string | undefined = $state();
+  let previousValue: boolean | undefined = $state();
+  let prompt: string | undefined = $state();
+  let validationFailure: string | undefined = $state();
 
   function setValue(event: Event) {
     callback.setInputValue((event.target as HTMLInputElement).checked);

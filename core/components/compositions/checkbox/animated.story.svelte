@@ -8,9 +8,8 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
@@ -33,11 +32,11 @@
     label,
     onChange,
     value,
-    withForm = false
+    withForm = false,
   }: Props = $props();
 
-  let wrapperEl: HTMLDivElement = $state();
-  let isInvalid: boolean = $state();
+  let wrapperEl: HTMLDivElement | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
 
   function submitForm() {
     console.log('Form submitted');

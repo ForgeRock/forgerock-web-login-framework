@@ -19,14 +19,7 @@
     options: { value: string | null; text: string }[];
   }
 
-  let {
-    defaultOption,
-    isRequired = false,
-    key,
-    name,
-    onChange,
-    options
-  }: Props = $props();
+  let { defaultOption, isRequired = false, key, name, onChange, options }: Props = $props();
 </script>
 
 <div>

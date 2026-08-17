@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { run, preventDefault } from 'svelte/legacy';
+  import { preventDefault, run } from 'svelte/legacy';
 
   import { interpolate } from '$core/_utilities/i18n.utilities';
   import { configuredJourneysStore } from '$journey/config.store';

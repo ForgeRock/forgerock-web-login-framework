@@ -8,9 +8,8 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import T from '$components/_utilities/locale-strings.svelte';
   import Spinner from '$components/primitives/spinner/spinner.svelte';
@@ -28,9 +27,13 @@
     pingProtect?: ProtectConfig;
   }
 
-  let { callback, selfSubmitFunction = null, pingProtect = {
-    envId: '',
-  } }: Props = $props();
+  let {
+    callback,
+    selfSubmitFunction = null,
+    pingProtect = {
+      envId: '',
+    },
+  }: Props = $props();
 
   let isBehavioralDataPaused = $state(false);
 

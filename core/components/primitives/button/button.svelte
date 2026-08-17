@@ -11,7 +11,8 @@
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
-  
+  import type { Snippet } from 'svelte';
+
   interface Props {
     busy?: boolean;
     classes?: string;
@@ -20,7 +21,7 @@
     style?: 'outline' | 'primary' | 'secondary';
     type?: 'button' | 'submit' | null;
     width?: 'auto' | 'full';
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let {
@@ -30,7 +31,7 @@
     style = 'outline',
     type = null,
     width = 'auto',
-    children
+    children,
   }: Props = $props();
 
   function generateClassString(...args: string[]) {

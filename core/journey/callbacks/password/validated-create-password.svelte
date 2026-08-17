@@ -41,10 +41,10 @@
 
   const isRequired = isInputRequired(callback);
 
-  let inputName: string = $state();
-  let isInvalid: boolean = $state();
-  let prompt: string = $state();
-  let validationFailures: FailedPolicy[] = $state();
+  let inputName: string | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
+  let prompt: string | undefined = $state();
+  let validationFailures: FailedPolicy[] | undefined = $state();
 
   run(() => {
     /**

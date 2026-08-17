@@ -23,12 +23,7 @@
     stepMetadata: Maybe<StepMetadata>;
   }
 
-  let {
-    callback,
-    callbackMetadata,
-    selfSubmitFunction,
-    stepMetadata
-  }: Props = $props();
+  let { callback, callbackMetadata, selfSubmitFunction, stepMetadata }: Props = $props();
 </script>
 
 <Centered>

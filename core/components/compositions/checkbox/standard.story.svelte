@@ -31,11 +31,11 @@
     label,
     onChange,
     value,
-    withForm = false
+    withForm = false,
   }: Props = $props();
 
-  let wrapperEl: HTMLDivElement = $state();
-  let isInvalid: boolean = $state();
+  let wrapperEl: HTMLDivElement | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
 
   function submitForm() {
     message = 'Please accept this';

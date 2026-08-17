@@ -22,9 +22,8 @@
 </script>
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import { applyThemeVars } from '$core/_effects/theme.effects';
@@ -43,10 +42,10 @@
   const { journeyStore } = api.getStores();
 
   // Variables that reference the Svelte component and the DOM elements
-  let dialogComp: SvelteComponent = $state();
-  let dialogEl: HTMLDialogElement = $state();
-  let formEl: HTMLFormElement = $state();
-  let widgetRootEl: HTMLDivElement = $state();
+  let dialogComp: SvelteComponent | undefined = $state();
+  let dialogEl: HTMLDialogElement | undefined = $state();
+  let formEl: HTMLFormElement | undefined = $state();
+  let widgetRootEl: HTMLDivElement | undefined = $state();
 
   run(() => {
     applyThemeVars(widgetRootEl, $styleStore?.theme);

@@ -14,6 +14,8 @@
   import { styleStore } from '$core/style.store';
   import XIcon from '../../icons/x-icon.svelte';
 
+  import type { Snippet } from 'svelte';
+
   import type { ComponentStoreValue } from '$core/component.store';
 
   interface Props {
@@ -21,7 +23,7 @@
     dialogId: string;
     forceOpen?: boolean;
     withHeader?: boolean;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let {
@@ -29,7 +31,7 @@
     dialogId,
     forceOpen = false,
     withHeader = false,
-    children
+    children,
   }: Props = $props();
 
   // TODO: Add a keyboard listener

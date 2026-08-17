@@ -11,13 +11,11 @@
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Button from './button.svelte';
 
-  
-  
   interface Props {
     // Button props
     busy?: boolean;
     // export let customCss = [];
-    onClick?: any;
+    onClick?: (event: Event) => void;
     style?: 'outline' | 'primary' | 'secondary';
     text: string;
     type?: 'button' | 'submit' | null;
@@ -30,10 +28,8 @@
     style = 'outline',
     text,
     type = null,
-    width = 'auto'
+    width = 'auto',
   }: Props = $props();
-
-  
 </script>
 
 <Button {busy} {onClick} {style} {type} {width}>

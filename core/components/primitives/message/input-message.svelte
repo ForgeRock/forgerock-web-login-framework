@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { run } from 'svelte/legacy';
-
   import sanitize from 'xss';
 
   import type { Maybe } from '$core/interfaces';
@@ -27,7 +26,7 @@
     dirtyMessage,
     key = undefined,
     showMessage = true,
-    type = 'info'
+    type = 'info',
   }: Props = $props();
 
   let cleanMessage = $state(sanitize(dirtyMessage));

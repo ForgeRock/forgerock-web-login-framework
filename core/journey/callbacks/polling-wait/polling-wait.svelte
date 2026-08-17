@@ -39,10 +39,10 @@
     callback = $bindable(),
     callbackMetadata = $bindable(),
     selfSubmitFunction = null,
-    options = null
+    options = null,
   }: Props = $props();
 
-  let message: string = $state();
+  let message: string | undefined = $state();
   let timer: ReturnType<typeof setTimeout> = $state();
 
   run(() => {

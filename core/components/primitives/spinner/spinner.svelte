@@ -10,10 +10,12 @@
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
 
+  import type { Snippet } from 'svelte';
+
   interface Props {
     colorClass: string;
     layoutClasses: string;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let { colorClass, layoutClasses, children }: Props = $props();

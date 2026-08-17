@@ -28,7 +28,7 @@
     callbackMetadata = undefined,
     style = {},
     selfSubmitFunction = null,
-    stepMetadata = null
+    stepMetadata = null,
   }: Props = $props();
 
   const defaultCallbackMetadata: CallbackMetadata = {

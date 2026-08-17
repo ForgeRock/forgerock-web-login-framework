@@ -41,7 +41,7 @@
     callback,
     callbackMetadata = $bindable(),
     selfSubmitFunction = null,
-    stepMetadata
+    stepMetadata,
   }: Props = $props();
 
   let idps: { value: string; text: string }[] = $state();

@@ -41,7 +41,7 @@
 
   let { callback = $bindable(), callbackMetadata, style = {} }: Props = $props();
 
-  let inputName: string = $state();
+  let inputName: string | undefined = $state();
 
   run(() => {
     callback = callback as PasswordCallback;

@@ -36,13 +36,7 @@
     style: z.infer<typeof partialStyleSchema>;
   }
 
-  let {
-    form,
-    journey,
-    stage,
-    step,
-    style
-  }: Props = $props();
+  let { form, journey, stage, step, style }: Props = $props();
 
   let stageName;
   let stageJson;

@@ -14,21 +14,18 @@
   import InfoIcon from '$components/icons/info-icon.svelte';
   import WarningIcon from '$components/icons/warning-icon.svelte';
 
+  import type { Snippet } from 'svelte';
+
   interface Props {
     id: string;
     needsFocus?: boolean;
     type?: 'error' | 'info' | 'success' | 'warning' | '';
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
-  let {
-    id,
-    needsFocus = false,
-    type = '',
-    children
-  }: Props = $props();
+  let { id, needsFocus = false, type = '', children }: Props = $props();
 
-  let divEl: HTMLParagraphElement = $state();
+  let divEl: HTMLParagraphElement | undefined = $state();
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {

@@ -9,12 +9,11 @@ Custom callback component. Replace this description with your own.
 <script lang="ts">
   import type { BaseCallback } from '@forgerock/journey-client/types';
 
-  
   interface Props {
     /**
-   * The callback instance for this component. Use `callback.getInputValue()`
-   * and `callback.setInputValue()` to read/write values sent back to the server.
-   */
+     * The callback instance for this component. Use `callback.getInputValue()`
+     * and `callback.setInputValue()` to read/write values sent back to the server.
+     */
     callback: BaseCallback;
   }
 

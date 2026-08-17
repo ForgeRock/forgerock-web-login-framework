@@ -35,9 +35,9 @@
 
   let { callback }: Props = $props();
 
-  let message: string = $derived(`${interpolate('redirectingTo')} ${new URL(callback.getRedirectUrl()).hostname}`);
-
-  
+  let message: string = $derived(
+    `${interpolate('redirectingTo')} ${new URL(callback.getRedirectUrl()).hostname}`,
+  );
 </script>
 
 <div class="tw_text-center" aria-live="assertive">

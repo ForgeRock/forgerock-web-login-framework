@@ -17,12 +17,7 @@
     value: boolean;
   }
 
-  let {
-    key,
-    label,
-    onChange,
-    value
-  }: Props = $props();
+  let { key, label, onChange, value }: Props = $props();
 </script>
 
 <div>

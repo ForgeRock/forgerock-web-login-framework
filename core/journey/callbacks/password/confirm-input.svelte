@@ -17,16 +17,15 @@
   import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
   import { interpolate } from '$core/_utilities/i18n.utilities';
 
+  import type { Snippet } from 'svelte';
   import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
 
-
   const Input = style.labels === 'stacked' ? Stacked : Floating;
   const showPassword = style.showPassword;
 
-  
   interface Props {
     forceValidityFailure?: boolean;
     passwordsDoNotMatch?: boolean;
@@ -38,7 +37,7 @@
     isFirstInvalidInput: boolean;
     // Below needs to be `undefined` to be optional and allow default value in Message component
     showMessage?: Maybe<boolean>;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let {
@@ -51,12 +50,12 @@
     style = {},
     isFirstInvalidInput,
     showMessage = undefined,
-    children
+    children,
   }: Props = $props();
 
   let isVisible = $state(false);
   let type: 'password' | 'text' = $state('password');
-  let value: Maybe<string> = $state();
+  let value: Maybe<string> | undefined = $state();
   let message = $state('');
 
   function onChangeWrapper(event: Event) {

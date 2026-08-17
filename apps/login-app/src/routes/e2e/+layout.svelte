@@ -12,8 +12,10 @@
    * TODO: If there's a better way to do this, change to it
    */
   import '$package/widget.css';
+
+  import type { Snippet } from 'svelte';
   interface Props {
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let { children }: Props = $props();

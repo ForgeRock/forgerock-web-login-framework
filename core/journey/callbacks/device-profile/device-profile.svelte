@@ -33,7 +33,7 @@
     callback,
     callbackMetadata = $bindable(null),
     stepMetadata = null,
-    selfSubmitFunction
+    selfSubmitFunction,
   }: Props = $props();
   const device = new Device({});
   let deviceMessage = (callback as DeviceProfileCallback).getMessage();

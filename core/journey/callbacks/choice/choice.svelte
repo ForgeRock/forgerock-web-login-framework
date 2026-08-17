@@ -43,7 +43,7 @@
   const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
   let choiceOptions: { value: string; text: string }[] = $state();
-  let inputName: string = $state();
+  let inputName: string | undefined = $state();
   /**
    * Since locale content keys for the choice component are built off of the
    * values, there will not be any existing key-value pairs in the provided
@@ -51,9 +51,9 @@
    * displayed. If you want to localize it, you'll need to add content keys
    * in the locale file for that to override the original value.
    */
-  let label: string = $state();
-  let prompt: string = $state();
-  let defaultChoice: Maybe<string> = $state();
+  let label: string | undefined = $state();
+  let prompt: string | undefined = $state();
+  let defaultChoice: Maybe<string> | undefined = $state();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)

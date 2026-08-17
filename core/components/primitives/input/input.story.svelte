@@ -19,14 +19,7 @@
     placeholder: string;
   }
 
-  let {
-    isRequired,
-    key,
-    label,
-    labelOrder,
-    onChange,
-    placeholder
-  }: Props = $props();
+  let { isRequired, key, label, labelOrder, onChange, placeholder }: Props = $props();
 </script>
 
 <div>

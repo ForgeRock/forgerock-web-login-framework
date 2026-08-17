@@ -8,9 +8,8 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { onMount } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import Alert from '$components/primitives/alert/alert.svelte';
   import { interpolate } from '$core/_utilities/i18n.utilities';
@@ -53,7 +52,9 @@
   run(() => {
     captchaMode = callbackMetadata?.initOptions?.mode === 'invisible' ? 'invisible' : 'visible';
   });
-  let recaptchaAction = $derived((callbackMetadata?.initOptions?.recaptchaAction as string | undefined) ?? '');
+  let recaptchaAction = $derived(
+    (callbackMetadata?.initOptions?.recaptchaAction as string | undefined) ?? '',
+  );
 
   onMount(async () => {
     if (!callback) return;

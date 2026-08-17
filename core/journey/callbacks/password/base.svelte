@@ -22,16 +22,16 @@
     PasswordCallback,
     ValidatedCreatePasswordCallback,
   } from '@forgerock/journey-client/types';
+  import type { Snippet } from 'svelte';
   import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
 
-
   const Input = style.labels === 'stacked' ? Stacked : Floating;
   const showPassword = style.showPassword;
-  
+
   interface Props {
     callback: PasswordCallback | ValidatedCreatePasswordCallback;
     callbackMetadata: Maybe<CallbackMetadata>;
@@ -42,7 +42,7 @@
     // Below needs to be `undefined` to be optional and allow default value in Message component
     showMessage?: Maybe<boolean>;
     validationFailure?: string;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let {
@@ -54,18 +54,18 @@
     style = {},
     showMessage = undefined,
     validationFailure = '',
-    children
+    children,
   }: Props = $props();
 
-  let confirmValue: Maybe<string> = $state();
-  let callbackType: string = $state();
-  let doPasswordsMatch: Maybe<boolean> = $state();
+  let confirmValue: Maybe<string> | undefined = $state();
+  let callbackType: string | undefined = $state();
+  let doPasswordsMatch: Maybe<boolean> | undefined = $state();
   let isVisible = $state(false);
   let resetValue = $state(false);
   let savedValue = $state('');
-  let textInputLabel: string = $state();
+  let textInputLabel: string | undefined = $state();
   let type: 'password' | 'text' = $state('password');
-  let value: string = $state();
+  let value: string | undefined = $state();
 
   /**
    * @function confirmInput - ensures the second password input matches the first
@@ -134,7 +134,7 @@
     value={typeof value === 'string' ? value : ''}
   >
     <!-- @migration-task: migrate this slot by hand, `input-button` is an invalid identifier -->
-  <svelte:fragment slot="input-button">
+    <svelte:fragment slot="input-button">
       {#if showPassword === 'button'}
         <button
           class="tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark"

@@ -19,7 +19,6 @@
 
   import type { logoSchema } from '$core/style.store';
 
-  
   interface Props {
     // TODO: Export controls for changing dialog context
     forceOpen: boolean;
@@ -29,7 +28,7 @@
 
   let { forceOpen, logo, withHeader }: Props = $props();
 
-  let dialogEl: HTMLDialogElement = $state();
+  let dialogEl: HTMLDialogElement | undefined = $state();
 
   function openDialog() {
     dialogEl.showModal();
@@ -49,7 +48,7 @@
 {:else}
   <div
     class="tw_h-full tw_w-full tw_top-0 tw_left-0 tw_fixed tw_bg-body-light dark:tw_bg-body-dark"
-></div>
+  ></div>
 {/if}
 
 <Dialog bind:dialogEl dialogId="myDialog" {forceOpen} {withHeader}>

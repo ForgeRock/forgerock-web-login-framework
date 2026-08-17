@@ -38,20 +38,16 @@
     showPolicies?: boolean;
   }
 
-  let {
-    callback,
-    key = undefined,
-    label,
-    messageKey,
-    showPolicies = false
-  }: Props = $props();
+  let { callback, key = undefined, label, messageKey, showPolicies = false }: Props = $props();
 
   let validationFailures = $state(getValidationFailures(callback, label));
   let validationRules = $state(getValidationPolicies(callback.getPolicies()));
-  let simplifiedFailures = $state(validationFailures.reduce((prev, curr) => {
-    prev = prev.concat(curr.restructured);
-    return prev;
-  }, [] as RestructuredParam[]));
+  let simplifiedFailures = $state(
+    validationFailures.reduce((prev, curr) => {
+      prev = prev.concat(curr.restructured);
+      return prev;
+    }, [] as RestructuredParam[]),
+  );
 
   run(() => {
     validationFailures = getValidationFailures(callback, label);

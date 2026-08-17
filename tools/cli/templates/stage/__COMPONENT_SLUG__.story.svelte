@@ -26,12 +26,7 @@
     style?: StyleObject;
   }
 
-  let {
-    form,
-    journey,
-    step,
-    style = {}
-  }: Props = $props();
+  let { form, journey, step, style = {} }: Props = $props();
 
   const callbackMetadata = buildCallbackMetadata(step, initCheckValidation());
   const stepMetadata = buildStepMetadata(callbackMetadata, undefined, step.getStage());
@@ -46,11 +41,5 @@
 
 <Centered>
   {@const SvelteComponent = __COMPONENT_NAME_PASCAL__}
-  <SvelteComponent
-    componentStyle="modal"
-    {form}
-    {journey}
-    {metadata}
-    {step}
-  />
+  <SvelteComponent componentStyle="modal" {form} {journey} {metadata} {step} />
 </Centered>

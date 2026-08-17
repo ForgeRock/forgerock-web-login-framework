@@ -14,8 +14,8 @@
 
   import type { UserStoreValue } from '$package/types';
 
-  let loading: boolean | null = $state();
-  let userInfo: Record<string, unknown> | null = $state();
+  let loading: boolean | null = $state(null);
+  let userInfo: Record<string, unknown> | null = $state(null);
 
   async function logout() {
     await user.logout();

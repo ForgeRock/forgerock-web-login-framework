@@ -10,23 +10,27 @@
 <script lang="ts">
   import { buildThemeVarsEntries } from '$core/_utilities/theme.utilities';
 
+  import type { Snippet } from 'svelte';
+
   import type { ThemeObject } from '$core/style.store';
 
   interface Props {
     data: { idmTheme?: ThemeObject; backgroundImageUrl?: string };
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let { data, children }: Props = $props();
 
-  let themeStyle = $derived([
-    ...(data.idmTheme ? buildThemeVarsEntries(data.idmTheme) : []),
-    ...(data.backgroundImageUrl
-      ? [['--fr-page-bg-image', `url("${data.backgroundImageUrl}")`] as [string, string]]
-      : []),
-  ]
-    .map(([k, v]) => `${k}:${v}`)
-    .join(';'));
+  let themeStyle = $derived(
+    [
+      ...(data.idmTheme ? buildThemeVarsEntries(data.idmTheme) : []),
+      ...(data.backgroundImageUrl
+        ? [['--fr-page-bg-image', `url("${data.backgroundImageUrl}")`] as [string, string]]
+        : []),
+    ]
+      .map(([k, v]) => `${k}:${v}`)
+      .join(';'),
+  );
 </script>
 
 <svelte:head>

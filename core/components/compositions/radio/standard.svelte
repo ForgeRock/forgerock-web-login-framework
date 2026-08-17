@@ -13,8 +13,6 @@
 
   import type { Maybe } from '$core/interfaces';
 
-
-  
   interface Props {
     defaultOption?: Maybe<string>;
     message?: string;
@@ -41,7 +39,7 @@
     name,
     onChange,
     options,
-    showMessage = undefined
+    showMessage = undefined,
   }: Props = $props();
 </script>
 

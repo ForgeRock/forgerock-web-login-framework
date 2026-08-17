@@ -15,7 +15,7 @@
 
   let componentEvents: ReturnType<typeof component> | undefined = $state();
   let journeyEvents: ReturnType<typeof journey> | undefined = $state();
-  let widgetEl: HTMLDivElement = $state();
+  let widgetEl: HTMLDivElement | undefined = $state();
 
   onMount(async () => {
     const params = page.url.searchParams;
@@ -47,7 +47,7 @@
     componentEvents = component();
     journeyEvents = journey();
 
-    new Widget({ target: widgetEl });
+    new Widget({ target: widgetEl! });
   });
 </script>
 

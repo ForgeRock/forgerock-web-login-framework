@@ -42,15 +42,15 @@
     callback,
     callbackMetadata = $bindable(),
     selfSubmitFunction = null,
-    stepMetadata
+    stepMetadata,
   }: Props = $props();
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
   let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined = $state();
   let defaultChoice: number = $state(callback.getDefaultOption());
-  let inputName: string = $state();
-  let label: string = $state();
+  let inputName: string | undefined = $state();
+  let label: string | undefined = $state();
   let options: { value: string; text: string }[] = $state();
 
   /**

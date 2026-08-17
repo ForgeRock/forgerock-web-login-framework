@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { run } from 'svelte/legacy';
-
   import sanitize from 'xss';
 
   import Alert from '$components/primitives/alert/alert.svelte';

@@ -11,6 +11,8 @@
   import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
 
+  import type { Snippet } from 'svelte';
+
   import type { Maybe } from '$core/interfaces';
 
   interface Props {
@@ -23,7 +25,7 @@
     onChange: (event: Event) => void;
     showMessage?: Maybe<boolean>;
     value: boolean;
-    children?: import('svelte').Snippet;
+    children?: Snippet;
   }
 
   let {
@@ -36,7 +38,7 @@
     onChange,
     showMessage = undefined,
     value,
-    children
+    children,
   }: Props = $props();
 
   function onChangeWrapper(event: Event) {

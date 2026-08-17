@@ -15,11 +15,7 @@
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
   // ─── Props from Storybook args ────────────────────────────────────────────
-  
 
-  
-
-  
   interface Props {
     /** form — submission helpers; varies per story (Base, WithError, Loading). */
     form: StageFormObject;

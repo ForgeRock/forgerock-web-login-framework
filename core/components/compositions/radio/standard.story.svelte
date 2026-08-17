@@ -19,14 +19,7 @@
     options: { text: string; value: string | null }[];
   }
 
-  let {
-    defaultOption = '0',
-    key,
-    label,
-    name,
-    onChange,
-    options
-  }: Props = $props();
+  let { defaultOption = '0', key, label, name, onChange, options }: Props = $props();
 </script>
 
 <div>

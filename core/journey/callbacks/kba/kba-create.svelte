@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { run } from 'svelte/legacy';
-
   import { writable } from 'svelte/store';
 
   import T from '$components/_utilities/locale-strings.svelte';
@@ -49,10 +48,10 @@
   let customQuestionIndex: string | null = $state(null);
   let displayCustomQuestionInput = $state(false);
   let inputArr: Array<{ name: string }> | undefined = $state();
-  let inputName: string = $state();
-  let inputNameQuestion: string = $state();
+  let inputName: string | undefined = $state();
+  let inputNameQuestion: string | undefined = $state();
   let inputNameAnswer: string | false = $state();
-  let prompt: string = $state();
+  let prompt: string | undefined = $state();
   let questions: { text: string; value: string }[] = $state();
   let shouldAllowCustomQuestion: boolean | undefined = $state();
   let value = writable('');

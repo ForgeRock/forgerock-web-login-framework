@@ -33,11 +33,11 @@
     label,
     onChange,
     withForm = false,
-    value
+    value,
   }: Props = $props();
 
-  let wrapperEl: HTMLDivElement = $state();
-  let isInvalid: boolean = $state();
+  let wrapperEl: HTMLDivElement | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
 
   function submitForm() {
     message = 'This field must have a value';

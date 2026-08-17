@@ -13,14 +13,13 @@
 
   import type { NameCallback } from '@forgerock/journey-client/types';
 
-  
   interface Props {
     /**
-   * callback — the only arg passed in from Storybook stories.
-   * Storybook controls map to exported `let` props in this wrapper.
-   * The story file uses `step.getCallbackOfType(callbackType.NameCallback)`
-   * to produce a real SDK callback instance from the mock response.
-   */
+     * callback — the only arg passed in from Storybook stories.
+     * Storybook controls map to exported `let` props in this wrapper.
+     * The story file uses `step.getCallbackOfType(callbackType.NameCallback)`
+     * to produce a real SDK callback instance from the mock response.
+     */
     callback: NameCallback;
   }
 

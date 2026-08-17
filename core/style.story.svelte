@@ -33,14 +33,7 @@
     style: z.infer<typeof partialStyleSchema>;
   }
 
-  let {
-    form,
-    journey,
-    stage,
-    stageJson = $bindable(),
-    step,
-    style
-  }: Props = $props();
+  let { form, journey, stage, stageJson = $bindable(), step, style }: Props = $props();
 
   let storyRootEl: HTMLElement | null = $state(null);
   let stageName;

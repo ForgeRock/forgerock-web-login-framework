@@ -41,8 +41,8 @@
     given_name: string;
     email: string;
   };
-  let userResponse: UserResponseObj | null = $state();
-  let widgetEl: HTMLDivElement = $state();
+  let userResponse: UserResponseObj | null = $state(null);
+  let widgetEl: HTMLDivElement | undefined = $state();
 
   async function logout() {
     await user.logout();
@@ -157,7 +157,7 @@
       },
     );
 
-    new Widget({ target: widgetEl });
+    new Widget({ target: widgetEl! });
     if (initializePingProtectEarly) {
       await protect.start({
         envId: initializePingProtectEarly,
