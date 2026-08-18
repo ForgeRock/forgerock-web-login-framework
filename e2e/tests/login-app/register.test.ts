@@ -7,7 +7,7 @@
  *
  **/
 
-import { test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { v4 as uuid } from 'uuid';
 
 /**
@@ -46,9 +46,7 @@ test('/register starts the Registration journey and redirects to / on success', 
 
   await page.getByRole('button', { name: 'Next' }).click();
 
-  // Registration success fires goto('/') — asserted at the moment of that client-side
-  // navigation. `/` immediately starts a new journey on the AM session the registration
-  // just created, which SSOs and role-redirects onward (same chain covered by
-  // redirect.test.ts), so this only proves login-app's own delta: goto('/') on success.
+  // registration is successful if user is redirected to the end user UI after registration
   await page.waitForURL((url) => url.pathname === '/', { waitUntil: 'commit' });
+  await expect(page).toHaveURL('https://openam-sdks.forgeblocks.com/enduser/?realm=/alpha#/');
 });

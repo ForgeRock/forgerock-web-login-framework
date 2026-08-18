@@ -82,7 +82,9 @@ test('Non-admin user is redirected to the end-user UI by role', async ({ page })
   await expect(page).toHaveURL('https://openam-sdks.forgeblocks.com/enduser/?realm=/alpha#/');
 });
 
-test('gotoOnFail sends a terminal login failure to /failure-redirect', async ({ page }) => {
+test('Invalid credentials restart the login journey without following gotoOnFail', async ({
+  page,
+}) => {
   await page.goto('/?gotoOnFail=' + encodeURIComponent('https://forgerock.github.io/fail'));
 
   await page.getByLabel('Username').fill(username);
