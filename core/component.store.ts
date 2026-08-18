@@ -72,16 +72,14 @@ export function closeComponent(
  * @param {object} component - actual Svelte component representing the dialog
  * @param {object} element - actual DOM element representing the dialog
  */
-export function mount(component: SvelteComponent, element: HTMLDialogElement) {
+export function mount(component?: SvelteComponent, element?: HTMLDialogElement) {
   componentStore.update((state) => {
     return {
       ...state,
       lastAction: 'mount',
-      modal: {
-        ...(component && { component, element }),
-      },
+      modal: component && element ? { component, element } : null,
       mounted: true,
-      type: component ? 'modal' : 'inline',
+      type: component && element ? 'modal' : 'inline',
       reason: null,
     };
   });
