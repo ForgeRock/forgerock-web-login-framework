@@ -22,7 +22,8 @@
 </script>
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { tick } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import { applyThemeVars } from '$core/_effects/theme.effects';
@@ -41,17 +42,21 @@
   const { journeyStore } = api.getStores();
 
   // Variables that reference the Svelte component and the DOM elements
-  let dialogComp: SvelteComponent | undefined = $state();
-  let dialogEl: HTMLDialogElement | undefined = $state();
-  let formEl: HTMLFormElement | undefined = $state();
-  let widgetRootEl: HTMLDivElement | undefined = $state();
+  let dialogComp: SvelteComponent = $state();
+  let dialogEl: HTMLDialogElement = $state();
+  let formEl: HTMLFormElement = $state();
+  let widgetRootEl: HTMLDivElement = $state();
 
-  $effect.pre(() => {
+  run(() => {
     applyThemeVars(widgetRootEl, $styleStore?.theme);
   });
 
-  onMount(() => {
-    mount(dialogComp, dialogEl);
+  $effect(() => {
+    if (type === 'modal' && dialogComp && dialogEl) {
+      tick().then(() => mount(dialogComp, dialogEl));
+    } else if (type === 'inline') {
+      tick().then(() => mount());
+    }
   });
 </script>
 
