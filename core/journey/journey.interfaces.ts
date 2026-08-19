@@ -15,7 +15,7 @@ import type {
   Step,
   StepDetail,
 } from '@forgerock/journey-client/types';
-import type { ComponentConstructorOptions, SvelteComponent } from 'svelte';
+import type { Component } from 'svelte';
 import type { FullAutoFill } from 'svelte/elements';
 import type { Writable } from 'svelte/store';
 
@@ -69,7 +69,16 @@ export interface StageJourneyObject {
 //   journey?: StageJourneyObject
 //   metadata?: JourneyStoreValue['metadata']
 //   step?: JourneyStep
-export type StageComponent = new (options: ComponentConstructorOptions<never>) => SvelteComponent;
+export interface StageProps {
+  componentStyle?: 'app' | 'inline' | 'modal';
+  form?: StageFormObject;
+  formEl?: HTMLFormElement | null;
+  journey?: StageJourneyObject;
+  metadata?: JourneyStoreValue['metadata'];
+  step?: JourneyStep;
+}
+
+export type StageComponent = Component<StageProps>;
 
 export interface StageRegistryEntry {
   component: StageComponent;

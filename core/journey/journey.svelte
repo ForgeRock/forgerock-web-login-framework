@@ -18,9 +18,9 @@
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
   import { stack } from '$journey/journey.store';
 
-  import type { SvelteComponent } from 'svelte';
+  import type { Component } from 'svelte';
 
-  import type { JourneyStore, StageRegistryEntry } from '$journey/journey.interfaces';
+  import type { JourneyStore, StageProps,StageRegistryEntry } from '$journey/journey.interfaces';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let displayIcon: boolean;
@@ -80,7 +80,7 @@
     </div>
   {:else if $journeyStore.step?.type === 'Step'}
     <svelte:component
-      this={mapStepToStage($journeyStore.step, externalStages) as typeof SvelteComponent}
+      this={mapStepToStage($journeyStore.step, externalStages) as Component<StageProps>}
       bind:formEl
       {componentStyle}
       form={{

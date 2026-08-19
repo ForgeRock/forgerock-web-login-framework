@@ -9,7 +9,7 @@
  * files into dist/core/ so published types have resolvable imports.
  */
 
-import { copyFileSync, existsSync, mkdirSync } from 'fs';
+import { copyFileSync, existsSync, mkdirSync, readdirSync, rmSync } from 'fs';
 import { dirname, join } from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,6 +21,19 @@ const repoRoot = join(rootDir, '../..');
 // Widget code is now at root of src/lib/, so svelte-package outputs to svelte-package/ directly
 const sveltePackageDir = join(rootDir, 'svelte-package');
 const distDir = join(rootDir, 'dist');
+
+function removeStaleDeclarations(directory) {
+  if (!existsSync(directory)) return;
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const entryPath = join(directory, entry.name);
+    if (entry.isDirectory()) removeStaleDeclarations(entryPath);
+    else if (entry.name.endsWith('.svelte.d.ts')) rmSync(entryPath);
+  }
+}
+
+removeStaleDeclarations(join(repoRoot, 'core'));
+removeStaleDeclarations(join(repoRoot, 'apps'));
+removeStaleDeclarations(distDir);
 
 // --- Widget type files from svelte-package ---
 
