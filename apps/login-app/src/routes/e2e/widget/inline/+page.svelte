@@ -13,7 +13,6 @@
   import { page } from '$app/state';
   import Widget, { component, configure, journey, user } from '$package/index';
 
-  import type { ComponentStoreValue } from '$core/component.store';
   import type { UserStoreValue } from '$package/types';
 
   type UserResponseObj = {
@@ -73,7 +72,7 @@
     const componentEvents = component();
     const journeyEvents = journey();
 
-    componentEvents.subscribe((event: ComponentStoreValue) => {
+    componentEvents.subscribe((event) => {
       if (event.lastAction === 'mount') {
         console.log('Form mounted');
       }
@@ -91,13 +90,13 @@
 
     if (!formEl) return;
     await new Promise<void>((resolve) => {
-      const unsubscribe = componentEvents.subscribe((event: ComponentStoreValue) => {
+      const unsubscribe = componentEvents.subscribe((event) => {
         if (event.lastAction === 'mount') {
           unsubscribe();
           resolve();
         }
       });
-      new Widget({ target: formEl, props: { type: 'inline' } });
+      new Widget({ target: formEl!, props: { type: 'inline' } });
     });
     // Start the journey after initialization or within the form.onMount event
     journeyEvents.start({

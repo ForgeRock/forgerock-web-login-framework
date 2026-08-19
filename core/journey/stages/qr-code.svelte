@@ -100,7 +100,7 @@
           qrCodeUrl,
           // Properties required for ForgeRock QR Codes
           { errorCorrectionLevel: 'L', version: 20, width: 400 },
-          function (error) {
+          function (error: Error | null) {
             if (error) {
               form.message = interpolate('qrCodeFailedToRender');
               console.error(error);

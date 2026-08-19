@@ -55,8 +55,8 @@
   {#if journeyEvents && componentEvents}
     <button
       onclick={() => {
-        journeyEvents.start({ journey: 'TEST_Login' });
-        componentEvents.open();
+        journeyEvents?.start({ journey: 'TEST_Login' });
+        componentEvents?.open();
       }}
     >
       Open Login Modal

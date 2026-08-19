@@ -70,15 +70,15 @@ export interface StageJourneyObject {
 //   metadata?: JourneyStoreValue['metadata']
 //   step?: JourneyStep
 export interface StageProps {
-  componentStyle?: 'app' | 'inline' | 'modal';
-  form?: StageFormObject;
+  componentStyle: 'app' | 'inline' | 'modal';
+  form: StageFormObject;
   formEl?: HTMLFormElement | null;
-  journey?: StageJourneyObject;
-  metadata?: JourneyStoreValue['metadata'];
-  step?: JourneyStep;
+  journey: StageJourneyObject;
+  metadata: JourneyStoreValue['metadata'];
+  step: JourneyStep;
 }
 
-export type StageComponent = Component<StageProps>;
+export type StageComponent = Component<unknown>;
 
 export interface StageRegistryEntry {
   component: StageComponent;

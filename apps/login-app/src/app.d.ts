@@ -12,6 +12,14 @@
 
 // See https://kit.svelte.dev/docs/types#the-app-namespace
 // for information about these interfaces
+declare module 'ws' {
+  export const WebSocket: { new (...args: unknown[]): unknown };
+  export interface ServerOptions<_T = unknown, _U = unknown> {
+    [key: string]: unknown;
+  }
+}
+declare module 'qrcode';
+
 declare namespace App {
   // interface Locals {}
   // interface Platform {}

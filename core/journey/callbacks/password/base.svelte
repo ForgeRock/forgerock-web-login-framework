@@ -121,7 +121,7 @@
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     hasRightIcon={style.showPassword === 'button' ? true : false}
     {key}
-    label={interpolate(textToKey(callbackType), null, textInputLabel)}
+    label={interpolate(textToKey(callbackType ?? ''), null, textInputLabel ?? '')}
     message={validationFailure || (isRequired ? interpolate('inputRequiredError') : undefined)}
     onChange={setValue}
     {isInvalid}
@@ -164,7 +164,7 @@
       forceValidityFailure={doPasswordsMatch === false}
       passwordsDoNotMatch={doPasswordsMatch === false}
       {key}
-      isRequired={value.length > 0}
+      isRequired={(value?.length ?? 0) > 0}
       onChange={confirmInput}
       {resetValue}
       showMessage={doPasswordsMatch === false}

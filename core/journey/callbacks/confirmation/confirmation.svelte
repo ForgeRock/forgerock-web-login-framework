@@ -49,7 +49,7 @@
   let defaultChoice: number = $state(callback.getDefaultOption());
   let inputName: string | undefined = $state();
   let label: string | undefined = $state();
-  let options: { value: string; text: string }[] = $state();
+  let options: { value: string; text: string }[] = $state([]);
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
@@ -120,8 +120,8 @@
     <Select
       isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
       isRequired={false}
-      key={inputName}
-      {label}
+      key={inputName ?? ''}
+      label={label ?? ''}
       onChange={setOptionValue}
       {options}
     />
@@ -129,7 +129,7 @@
     <Checkbox
       isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
       isInvalid={false}
-      key={inputName}
+      key={inputName ?? ''}
       onChange={setCheckboxValue}
       value={false}
     >

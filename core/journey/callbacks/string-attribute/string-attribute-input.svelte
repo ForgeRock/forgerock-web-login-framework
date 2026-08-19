@@ -47,10 +47,10 @@
   let inputName: string | undefined = $state();
   let isRequired: boolean | undefined = $state();
   let outputName: string | undefined = $state();
-  let policies: Record<string, unknown> = $state();
+  let policies: Record<string, unknown> = $state({});
   let previousValue: string | undefined = $state();
   let prompt: string | undefined = $state();
-  let type: 'email' | 'text' = $state();
+  let type: 'email' | 'text' = $state('text');
   let validationFailures: FailedPolicy[] | undefined = $state();
   let isInvalid: boolean | undefined = $state();
 
@@ -82,8 +82,8 @@
 {#key callback}
   <Input
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    key={inputName}
-    label={interpolate(outputName, null, prompt)}
+    key={inputName ?? ''}
+    label={interpolate(outputName ?? '', null, prompt ?? '')}
     message={isRequired ? interpolate('inputRequiredError') : undefined}
     onChange={setValue}
     {isRequired}
@@ -92,6 +92,11 @@
     showMessage={!!isInvalid}
     value={previousValue}
   >
-    <Policies {callback} key={inputName} label={prompt} messageKey="valueRequirements" />
+    <Policies
+      {callback}
+      key={inputName ?? ''}
+      label={prompt ?? ''}
+      messageKey="valueRequirements"
+    />
   </Input>
 {/key}

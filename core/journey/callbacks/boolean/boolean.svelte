@@ -64,11 +64,11 @@
   <Checkbox
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     isInvalid={!!validationFailure}
-    key={inputName}
-    message={validationFailure}
+    key={inputName ?? ''}
+    message={validationFailure ?? ''}
     onChange={setValue}
-    value={previousValue}
+    value={previousValue ?? false}
   >
-    {interpolate(textToKey(outputName), null, prompt)}
+    {interpolate(textToKey(outputName ?? ''), null, prompt ?? '')}
   </Checkbox>
 {/key}

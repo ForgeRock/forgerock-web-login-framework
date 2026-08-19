@@ -48,11 +48,11 @@
   let customQuestionIndex: string | null = $state(null);
   let displayCustomQuestionInput = $state(false);
   let inputArr: Array<{ name: string }> | undefined = $state();
-  let inputName: string = $state();
-  let inputNameQuestion: string = $state();
-  let inputNameAnswer: string | false = $state();
-  let prompt: string = $state();
-  let questions: { text: string; value: string }[] = $state();
+  let inputName: string = $state('');
+  let inputNameQuestion: string = $state('');
+  let inputNameAnswer: string | false = $state(false);
+  let prompt: string = $state('');
+  let questions: { text: string; value: string }[] = $state([]);
   let shouldAllowCustomQuestion: boolean | undefined = $state();
   let value = writable('');
 

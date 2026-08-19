@@ -42,7 +42,7 @@
     stepMetadata,
   }: Props = $props();
 
-  let idps: { value: string; text: string }[] = $state();
+  let idps: { value: string; text: string }[] = $state([]);
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click

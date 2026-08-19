@@ -37,7 +37,7 @@
    * @param {Object} event - HTML form event
    * @return {undefined}
    */
-  function formSubmit(event: SubmitEvent) {
+  function formSubmit(event: Event) {
     /**
      * Reference for validation: https://www.aleksandrhovhannisyan.com/blog/html-input-validation-without-a-form/
      */
@@ -104,7 +104,7 @@
     // If there's no invalid input, submit form.
     if (isFirstInvalidInput === null) {
       isFormValid = true;
-      onSubmitWhenValid && onSubmitWhenValid(event, isFormValid);
+      onSubmitWhenValid && onSubmitWhenValid(event as SubmitEvent, isFormValid);
     }
   }
 

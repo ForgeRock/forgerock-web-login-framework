@@ -69,8 +69,8 @@
        * to support temporarily suspended flows like email verification
        * and to help AM set journey step successUrl
        */
-      query.goto = data.redirectParams?.goto;
-      query.gotoOnFail = data.redirectParams?.gotoOnFail;
+      query.goto = data.redirectParams?.goto ?? '';
+      query.gotoOnFail = data.redirectParams?.gotoOnFail ?? '';
       if (uuidParam) {
         query.uuid = uuidParam;
       }

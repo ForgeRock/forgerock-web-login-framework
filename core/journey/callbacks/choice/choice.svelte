@@ -40,7 +40,7 @@
   const Radio = style.checksAndRadios === 'standard' ? RadioStandard : RadioAnimated;
   const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
-  let choiceOptions: { value: string; text: string }[] = $state();
+  let choiceOptions: { value: string; text: string }[] = $state([]);
   let inputName: string | undefined = $state();
   /**
    * Since locale content keys for the choice component are built off of the
@@ -85,10 +85,10 @@
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     defaultOption={defaultChoice}
     isRequired={false}
-    key={inputName}
-    groupLabel={prompt}
+    key={inputName ?? ''}
+    groupLabel={prompt ?? ''}
     onChange={setValue}
-    name={inputName}
+    name={inputName ?? ''}
     options={choiceOptions}
   />
 {:else}
@@ -96,8 +96,8 @@
     isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
     defaultOption={defaultChoice}
     isRequired={false}
-    key={inputName}
-    {label}
+    key={inputName ?? ''}
+    label={label ?? ''}
     onChange={setValue}
     options={choiceOptions}
   />

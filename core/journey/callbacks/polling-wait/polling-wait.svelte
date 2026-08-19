@@ -41,7 +41,7 @@
   }: Props = $props();
 
   let message: string | undefined = $state();
-  let timer: ReturnType<typeof setTimeout> = $state();
+  let timer: ReturnType<typeof setTimeout> | undefined = $state();
 
   $effect.pre(() => {
     message = callback.getMessage();

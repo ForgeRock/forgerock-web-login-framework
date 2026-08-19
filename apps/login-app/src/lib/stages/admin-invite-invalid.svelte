@@ -11,6 +11,14 @@
   import T from '$components/_utilities/locale-strings.svelte';
   import Text from '$components/primitives/text/text.svelte';
 
+  interface Props {
+    componentStyle?: 'app' | 'inline' | 'modal';
+    form?: unknown;
+    journey?: unknown;
+    step?: unknown;
+  }
+
+  let _props: Props = $props();
   const formHeaderId = 'adminInviteInvalidHeader';
 </script>
 
