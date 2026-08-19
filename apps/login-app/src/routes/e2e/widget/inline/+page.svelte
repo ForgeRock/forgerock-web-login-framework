@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
 
   import { page } from '$app/state';
   import Widget, { component, configure, journey, user } from '$package/index';
@@ -84,6 +84,7 @@
 
     if (!formEl) return;
     new Widget({ target: formEl, props: { type: 'inline' } });
+    await tick();
     // Start the  journey after initialization or within the form.onMount event
     journeyEvents.start({
       journey: journeyParam || authIndexValueParam || undefined,

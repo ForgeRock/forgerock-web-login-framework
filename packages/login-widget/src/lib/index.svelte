@@ -55,7 +55,7 @@
     if (type === 'modal' && dialogComp && dialogEl) {
       tick().then(() => mount(dialogComp, dialogEl));
     } else if (type === 'inline') {
-      tick().then(() => mount());
+      mount();
     }
   });
 </script>
