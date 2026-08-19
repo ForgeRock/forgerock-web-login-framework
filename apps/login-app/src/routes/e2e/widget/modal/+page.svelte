@@ -21,6 +21,7 @@
   } from '$package/types';
 
   let componentEvents: ReturnType<typeof component> | undefined = $state();
+  let componentMounted = $state(false);
   let journeyEvents: ReturnType<typeof journey> | undefined = $state();
 
   let authIndexValueParam = page.url.searchParams.get('authIndexValue');
@@ -133,6 +134,7 @@
     journeyEvents = journey();
 
     componentEvents.subscribe((event: ComponentEventValue) => {
+      componentMounted = event.mounted;
       if (event.lastAction === 'mount') {
         console.log('Modal mounted');
       }
@@ -182,7 +184,7 @@
       <li id="email"><strong>Email</strong>: {userResponse?.email}</li>
     </ul>
     <button onclick={logout}>Logout</button>
-  {:else if journeyEvents && componentEvents}
+  {:else if journeyEvents && componentEvents && componentMounted}
     <button
       onclick={() => {
         journeyEvents?.start({

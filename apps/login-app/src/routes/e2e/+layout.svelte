@@ -97,10 +97,6 @@
       }
     }
   </style>
-  <script
-    src="https://www.google.com/recaptcha/api.js?render=6Lf8jdIsAAAAAC7Ljx4e8moPX9jzzTxhleeT3K_t"
-    async
-  ></script>
 </svelte:head>
 
 {@render children?.()}
