@@ -20,7 +20,7 @@
 
   import type { Component } from 'svelte';
 
-  import type { JourneyStore, StageProps,StageRegistryEntry } from '$journey/journey.interfaces';
+  import type { JourneyStore, StageProps, StageRegistryEntry } from '$journey/journey.interfaces';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
   export let displayIcon: boolean;
