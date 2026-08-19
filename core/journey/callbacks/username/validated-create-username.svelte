@@ -43,13 +43,13 @@
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType: string | undefined = $state();
-  let inputName: string | undefined = $state();
-  let isInvalid: boolean | undefined = $state();
-  let isRequired: boolean | undefined = $state();
-  let prompt: string | undefined = $state();
-  let value: unknown | undefined = $state();
-  let validationFailures: FailedPolicy[] | undefined = $state();
+  let callbackType = $state('');
+  let inputName = $state('');
+  let isInvalid = $state(false);
+  let isRequired = $state(false);
+  let prompt = $state('');
+  let value = $state<unknown>();
+  let validationFailures = $state<FailedPolicy[]>([]);
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)

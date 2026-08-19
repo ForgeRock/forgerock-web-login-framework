@@ -39,10 +39,10 @@
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType: string = $state();
-  let inputName: string = $state();
-  let textInputLabel: string = $state();
-  let value: unknown = $state();
+  let callbackType = $state('');
+  let inputName = $state('');
+  let textInputLabel = $state('');
+  let value = $state<unknown>();
 
   function setValue(event: Event) {
     callback.setInput((event.target as HTMLInputElement).value);
