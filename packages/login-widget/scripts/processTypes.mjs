@@ -74,6 +74,15 @@ function cleanTypeFile(filePath) {
     console.log(`✓ ${filePath} - no Svelte declare module section found (OK)`);
   }
 
+  if (filePath === index) {
+    const emptyProps = 'props: Record<string, never>;';
+    if (contents.includes(emptyProps)) {
+      contents = contents.replace(emptyProps, "props: { type?: 'modal' | 'inline' };");
+      console.log(`✓ ${filePath} - restored widget component props`);
+      modified = true;
+    }
+  }
+
   // Rewrite alias paths to relative paths pointing into dist/core/
   for (const { pattern, replacement } of widgetAliasReplacements) {
     if (pattern.test(contents)) {

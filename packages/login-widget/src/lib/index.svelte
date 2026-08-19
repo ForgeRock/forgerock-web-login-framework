@@ -33,11 +33,7 @@
 
   import type { SvelteComponent } from 'svelte';
 
-  interface Props {
-    type?: 'modal' | 'inline';
-  }
-
-  let { type = 'modal' }: Props = $props();
+  let { type = 'modal' } = $props<{ type?: 'modal' | 'inline' }>();
 
   const { journeyStore } = api.getStores();
 
