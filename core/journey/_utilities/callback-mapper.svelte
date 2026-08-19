@@ -97,106 +97,102 @@
 
   let cbType = $derived(props.callback.getType());
 
-  let _BooleanAttributeInputCallback: AttributeInputCallback<boolean> = $state();
-  let _ChoiceCallback: ChoiceCallback | undefined = $state();
-  let _ConfirmationCallback: ConfirmationCallback | undefined = $state();
-  let _HiddenValueCallback: HiddenValueCallback | undefined = $state();
-  let _KbaCreateCallback: KbaCreateCallback | undefined = $state();
-  let _NameCallback: NameCallback | undefined = $state();
-  let _PasswordCallback: PasswordCallback | undefined = $state();
-  let _PollingWaitCallback: PollingWaitCallback | undefined = $state();
-  let _RedirectCallback: RedirectCallback | undefined = $state();
-  let _SelectIdPCallback: SelectIdPCallback | undefined = $state();
-  let _StringAttributeInputCallback: AttributeInputCallback<string> | undefined = $state();
-  let _ValidatedCreatePasswordCallback: ValidatedCreatePasswordCallback | undefined = $state();
-  let _ValidatedCreateUsernameCallback: ValidatedCreateUsernameCallback | undefined = $state();
-  let _TermsAndConditionsCallback: TermsAndConditionsCallback | undefined = $state();
-  let _TextInputCallback: TextInputCallback | undefined = $state();
-  let _TextOutputCallback: TextOutputCallback | undefined = $state();
-  let _SuspendedTextOutputCallback: SuspendedTextOutputCallback | undefined = $state();
-  let _MetadataCallback: MetadataCallback | undefined = $state();
-  let _DeviceProfileCallback: DeviceProfileCallback | undefined = $state();
-  let _RecaptchaCallback: ReCaptchaCallback | undefined = $state();
-  let _RecaptchaEnterpriseCallback: ReCaptchaEnterpriseCallback | undefined = $state();
-  let _PingProtectEvaluation: PingOneProtectEvaluationCallback | undefined = $state();
-  let _PingProtectInitialize: PingOneProtectInitializeCallback | undefined = $state();
-  let _BaseCallback: BaseCallback | undefined = $state();
-
-  $effect(() => {
-    switch (cbType) {
-      case callbackType.BooleanAttributeInputCallback:
-        _BooleanAttributeInputCallback = props.callback as AttributeInputCallback<boolean>;
-        break;
-      case callbackType.ChoiceCallback:
-        _ChoiceCallback = props.callback as ChoiceCallback;
-        break;
-      case callbackType.ConfirmationCallback:
-        _ConfirmationCallback = props.callback as ConfirmationCallback;
-        break;
-      case callbackType.HiddenValueCallback:
-        _HiddenValueCallback = props.callback as HiddenValueCallback;
-        break;
-      case callbackType.KbaCreateCallback:
-        _KbaCreateCallback = props.callback as KbaCreateCallback;
-        break;
-      case callbackType.NameCallback:
-        _NameCallback = props.callback as NameCallback;
-        break;
-      case callbackType.ReCaptchaCallback:
-        _RecaptchaCallback = props.callback as ReCaptchaCallback;
-        break;
-      case callbackType.ReCaptchaEnterpriseCallback:
-        _RecaptchaEnterpriseCallback = props.callback as ReCaptchaEnterpriseCallback;
-        break;
-      case callbackType.PasswordCallback:
-        _PasswordCallback = props.callback as PasswordCallback;
-        break;
-      case callbackType.PollingWaitCallback:
-        _PollingWaitCallback = props.callback as PollingWaitCallback;
-        break;
-      case callbackType.RedirectCallback:
-        _RedirectCallback = props.callback as RedirectCallback;
-        break;
-      case callbackType.SelectIdPCallback:
-        _SelectIdPCallback = props.callback as SelectIdPCallback;
-        break;
-      case callbackType.StringAttributeInputCallback:
-        _StringAttributeInputCallback = props.callback as AttributeInputCallback<string>;
-        break;
-      case callbackType.ValidatedCreatePasswordCallback:
-        _ValidatedCreatePasswordCallback = props.callback as ValidatedCreatePasswordCallback;
-        break;
-      case callbackType.ValidatedCreateUsernameCallback:
-        _ValidatedCreateUsernameCallback = props.callback as ValidatedCreateUsernameCallback;
-        break;
-      case callbackType.TermsAndConditionsCallback:
-        _TermsAndConditionsCallback = props.callback as TermsAndConditionsCallback;
-        break;
-      case callbackType.TextInputCallback:
-        _TextInputCallback = props.callback as TextInputCallback;
-        break;
-      case callbackType.TextOutputCallback:
-        _TextOutputCallback = props.callback as TextOutputCallback;
-        break;
-      case callbackType.SuspendedTextOutputCallback:
-        _SuspendedTextOutputCallback = props.callback as SuspendedTextOutputCallback;
-        break;
-      case callbackType.DeviceProfileCallback:
-        _DeviceProfileCallback = props.callback as DeviceProfileCallback;
-        break;
-      case callbackType.MetadataCallback:
-        _MetadataCallback = props.callback as MetadataCallback;
-        break;
-      case callbackType.PingOneProtectEvaluationCallback:
-        _PingProtectEvaluation = props.callback as PingOneProtectEvaluationCallback;
-        break;
-      case callbackType.PingOneProtectInitializeCallback:
-        _PingProtectInitialize = props.callback as PingOneProtectInitializeCallback;
-        break;
-      default:
-        _BaseCallback = props.callback as BaseCallback;
-    }
-  });
+  let _BooleanAttributeInputCallback = $derived(props.callback as AttributeInputCallback<boolean>);
+  let _ChoiceCallback = $derived(
+    cbType === callbackType.ChoiceCallback ? (props.callback as ChoiceCallback) : undefined,
+  );
+  let _ConfirmationCallback = $derived(
+    cbType === callbackType.ConfirmationCallback
+      ? (props.callback as ConfirmationCallback)
+      : undefined,
+  );
+  let _HiddenValueCallback = $derived(
+    cbType === callbackType.HiddenValueCallback
+      ? (props.callback as HiddenValueCallback)
+      : undefined,
+  );
+  let _KbaCreateCallback = $derived(
+    cbType === callbackType.KbaCreateCallback ? (props.callback as KbaCreateCallback) : undefined,
+  );
+  let _NameCallback = $derived(
+    cbType === callbackType.NameCallback ? (props.callback as NameCallback) : undefined,
+  );
+  let _PasswordCallback = $derived(
+    cbType === callbackType.PasswordCallback ? (props.callback as PasswordCallback) : undefined,
+  );
+  let _PollingWaitCallback = $derived(
+    cbType === callbackType.PollingWaitCallback
+      ? (props.callback as PollingWaitCallback)
+      : undefined,
+  );
+  let _RedirectCallback = $derived(
+    cbType === callbackType.RedirectCallback ? (props.callback as RedirectCallback) : undefined,
+  );
+  let _SelectIdPCallback = $derived(
+    cbType === callbackType.SelectIdPCallback ? (props.callback as SelectIdPCallback) : undefined,
+  );
+  let _StringAttributeInputCallback = $derived(
+    cbType === callbackType.StringAttributeInputCallback
+      ? (props.callback as AttributeInputCallback<string>)
+      : undefined,
+  );
+  let _ValidatedCreatePasswordCallback = $derived(
+    cbType === callbackType.ValidatedCreatePasswordCallback
+      ? (props.callback as ValidatedCreatePasswordCallback)
+      : undefined,
+  );
+  let _ValidatedCreateUsernameCallback = $derived(
+    cbType === callbackType.ValidatedCreateUsernameCallback
+      ? (props.callback as ValidatedCreateUsernameCallback)
+      : undefined,
+  );
+  let _TermsAndConditionsCallback = $derived(
+    cbType === callbackType.TermsAndConditionsCallback
+      ? (props.callback as TermsAndConditionsCallback)
+      : undefined,
+  );
+  let _TextInputCallback = $derived(
+    cbType === callbackType.TextInputCallback ? (props.callback as TextInputCallback) : undefined,
+  );
+  let _TextOutputCallback = $derived(
+    cbType === callbackType.TextOutputCallback ? (props.callback as TextOutputCallback) : undefined,
+  );
+  let _SuspendedTextOutputCallback = $derived(
+    cbType === callbackType.SuspendedTextOutputCallback
+      ? (props.callback as SuspendedTextOutputCallback)
+      : undefined,
+  );
+  let _MetadataCallback = $derived(
+    cbType === callbackType.MetadataCallback ? (props.callback as MetadataCallback) : undefined,
+  );
+  let _DeviceProfileCallback = $derived(
+    cbType === callbackType.DeviceProfileCallback
+      ? (props.callback as DeviceProfileCallback)
+      : undefined,
+  );
+  let _RecaptchaCallback = $derived(
+    cbType === callbackType.ReCaptchaCallback ? (props.callback as ReCaptchaCallback) : undefined,
+  );
+  let _RecaptchaEnterpriseCallback = $derived(
+    cbType === callbackType.ReCaptchaEnterpriseCallback
+      ? (props.callback as ReCaptchaEnterpriseCallback)
+      : undefined,
+  );
+  let _PingProtectEvaluation = $derived(
+    cbType === callbackType.PingOneProtectEvaluationCallback
+      ? (props.callback as PingOneProtectEvaluationCallback)
+      : undefined,
+  );
+  let _PingProtectInitialize = $derived(
+    cbType === callbackType.PingOneProtectInitializeCallback
+      ? (props.callback as PingOneProtectInitializeCallback)
+      : undefined,
+  );
+  let _BaseCallback = $derived(
+    !Object.values(callbackType).includes(cbType as callbackType)
+      ? (props.callback as BaseCallback)
+      : undefined,
+  );
 </script>
 
 {#if customCallbackRegistry[cbType]}
