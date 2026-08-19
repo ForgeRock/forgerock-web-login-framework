@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, tick } from 'svelte';
 
   import { page } from '$app/state';
   import Widget, { component, configure, journey, user } from '$package/index';
@@ -19,12 +19,6 @@
     family_name: string;
     given_name: string;
     email: string;
-  };
-
-  type JourneyEvent = {
-    user: UserStoreValue;
-    journey: { error: unknown };
-    oauth: { error: unknown };
   };
 
   let authIndexValueParam = page.url.searchParams.get('authIndexValue');
@@ -78,7 +72,7 @@
       }
     });
 
-    journeyEvents.subscribe((event: JourneyEvent) => {
+    journeyEvents.subscribe((event) => {
       if (event?.user?.successful) {
         userEvent = event.user;
         userResponse = event.user.response as unknown as UserResponseObj;
@@ -89,16 +83,9 @@
     });
 
     if (!formEl) return;
-    await new Promise<void>((resolve) => {
-      const unsubscribe = componentEvents.subscribe((event) => {
-        if (event.lastAction === 'mount') {
-          unsubscribe();
-          resolve();
-        }
-      });
-      new Widget({ target: formEl!, props: { type: 'inline' } });
-    });
-    // Start the journey after initialization or within the form.onMount event
+    new Widget({ target: formEl, props: { type: 'inline' } });
+    await tick();
+    // Start the  journey after initialization or within the form.onMount event
     journeyEvents.start({
       journey: journeyParam || authIndexValueParam || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
