@@ -88,41 +88,41 @@
     stepMetadata: Maybe<StepMetadata>;
     style: z.infer<typeof styleSchema>;
   };
-  export let props:
+  type CallbackProps =
     | Props
     | (Props & { recoveryCodes: Array<string> })
     | (Props & { webAuthnValue: WebAuthnStepType });
 
-  let cbType: string;
+  let { props }: { props: CallbackProps } = $props();
 
-  let _BooleanAttributeInputCallback: AttributeInputCallback<boolean>;
-  let _ChoiceCallback: ChoiceCallback;
-  let _ConfirmationCallback: ConfirmationCallback;
-  let _HiddenValueCallback: HiddenValueCallback;
-  let _KbaCreateCallback: KbaCreateCallback;
-  let _NameCallback: NameCallback;
-  let _PasswordCallback: PasswordCallback;
-  let _PollingWaitCallback: PollingWaitCallback;
-  let _RedirectCallback: RedirectCallback;
-  let _SelectIdPCallback: SelectIdPCallback;
-  let _StringAttributeInputCallback: AttributeInputCallback<string>;
-  let _ValidatedCreatePasswordCallback: ValidatedCreatePasswordCallback;
-  let _ValidatedCreateUsernameCallback: ValidatedCreateUsernameCallback;
-  let _TermsAndConditionsCallback: TermsAndConditionsCallback;
-  let _TextInputCallback: TextInputCallback;
-  let _TextOutputCallback: TextOutputCallback;
-  let _SuspendedTextOutputCallback: SuspendedTextOutputCallback;
-  let _MetadataCallback: MetadataCallback;
-  let _DeviceProfileCallback: DeviceProfileCallback;
-  let _RecaptchaCallback: ReCaptchaCallback;
-  let _RecaptchaEnterpriseCallback: ReCaptchaEnterpriseCallback;
-  let _PingProtectEvaluation: PingOneProtectEvaluationCallback;
-  let _PingProtectInitialize: PingOneProtectInitializeCallback;
-  let _BaseCallback: BaseCallback;
+  let cbType = $derived(props.callback.getType());
 
-  $: {
-    cbType = props.callback.getType();
+  let _BooleanAttributeInputCallback: AttributeInputCallback<boolean> = $state();
+  let _ChoiceCallback: ChoiceCallback | undefined = $state();
+  let _ConfirmationCallback: ConfirmationCallback | undefined = $state();
+  let _HiddenValueCallback: HiddenValueCallback | undefined = $state();
+  let _KbaCreateCallback: KbaCreateCallback | undefined = $state();
+  let _NameCallback: NameCallback | undefined = $state();
+  let _PasswordCallback: PasswordCallback | undefined = $state();
+  let _PollingWaitCallback: PollingWaitCallback | undefined = $state();
+  let _RedirectCallback: RedirectCallback | undefined = $state();
+  let _SelectIdPCallback: SelectIdPCallback | undefined = $state();
+  let _StringAttributeInputCallback: AttributeInputCallback<string> | undefined = $state();
+  let _ValidatedCreatePasswordCallback: ValidatedCreatePasswordCallback | undefined = $state();
+  let _ValidatedCreateUsernameCallback: ValidatedCreateUsernameCallback | undefined = $state();
+  let _TermsAndConditionsCallback: TermsAndConditionsCallback | undefined = $state();
+  let _TextInputCallback: TextInputCallback | undefined = $state();
+  let _TextOutputCallback: TextOutputCallback | undefined = $state();
+  let _SuspendedTextOutputCallback: SuspendedTextOutputCallback | undefined = $state();
+  let _MetadataCallback: MetadataCallback | undefined = $state();
+  let _DeviceProfileCallback: DeviceProfileCallback | undefined = $state();
+  let _RecaptchaCallback: ReCaptchaCallback | undefined = $state();
+  let _RecaptchaEnterpriseCallback: ReCaptchaEnterpriseCallback | undefined = $state();
+  let _PingProtectEvaluation: PingOneProtectEvaluationCallback | undefined = $state();
+  let _PingProtectInitialize: PingOneProtectInitializeCallback | undefined = $state();
+  let _BaseCallback: BaseCallback | undefined = $state();
 
+  $effect(() => {
     switch (cbType) {
       case callbackType.BooleanAttributeInputCallback:
         _BooleanAttributeInputCallback = props.callback as AttributeInputCallback<boolean>;
@@ -196,7 +196,7 @@
       default:
         _BaseCallback = props.callback as BaseCallback;
     }
-  }
+  });
 </script>
 
 {#if customCallbackRegistry[cbType]}
