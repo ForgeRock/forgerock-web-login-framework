@@ -8,17 +8,24 @@
  -->
 
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onMount } from 'svelte';
 
   import { page } from '$app/state';
   import Widget, { component, configure, journey, user } from '$package/index';
 
+  import type { ComponentStoreValue } from '$core/component.store';
   import type { UserStoreValue } from '$package/types';
 
   type UserResponseObj = {
     family_name: string;
     given_name: string;
     email: string;
+  };
+
+  type JourneyEvent = {
+    user: UserStoreValue;
+    journey: { error: unknown };
+    oauth: { error: unknown };
   };
 
   let authIndexValueParam = page.url.searchParams.get('authIndexValue');
@@ -66,13 +73,13 @@
     const componentEvents = component();
     const journeyEvents = journey();
 
-    componentEvents.subscribe((event) => {
+    componentEvents.subscribe((event: ComponentStoreValue) => {
       if (event.lastAction === 'mount') {
         console.log('Form mounted');
       }
     });
 
-    journeyEvents.subscribe((event) => {
+    journeyEvents.subscribe((event: JourneyEvent) => {
       if (event?.user?.successful) {
         userEvent = event.user;
         userResponse = event.user.response as unknown as UserResponseObj;
@@ -83,9 +90,16 @@
     });
 
     if (!formEl) return;
-    new Widget({ target: formEl, props: { type: 'inline' } });
-    await tick();
-    // Start the  journey after initialization or within the form.onMount event
+    await new Promise<void>((resolve) => {
+      const unsubscribe = componentEvents.subscribe((event: ComponentStoreValue) => {
+        if (event.lastAction === 'mount') {
+          unsubscribe();
+          resolve();
+        }
+      });
+      new Widget({ target: formEl, props: { type: 'inline' } });
+    });
+    // Start the journey after initialization or within the form.onMount event
     journeyEvents.start({
       journey: journeyParam || authIndexValueParam || undefined,
       resumeUrl: suspendedIdParam ? location.href : undefined,
