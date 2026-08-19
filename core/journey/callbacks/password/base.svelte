@@ -20,34 +20,49 @@
     PasswordCallback,
     ValidatedCreatePasswordCallback,
   } from '@forgerock/journey-client/types';
+  import type { Snippet } from 'svelte';
   import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
 
-  export let callback: PasswordCallback | ValidatedCreatePasswordCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let key: string;
-  export let isInvalid = false;
-  export let isRequired = false;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: PasswordCallback | ValidatedCreatePasswordCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    key: string;
+    isInvalid?: boolean;
+    isRequired?: boolean;
+    style?: z.infer<typeof styleSchema>;
+    // Below needs to be `undefined` to be optional and allow default value in Message component
+    showMessage?: Maybe<boolean>;
+    validationFailure?: string;
+    children?: Snippet;
+  }
 
+  let {
+    callback,
+    callbackMetadata,
+    key = $bindable(),
+    isInvalid = false,
+    isRequired = false,
+    style = {},
+    showMessage = undefined,
+    validationFailure = '',
+    children,
+  }: Props = $props();
   const Input = style.labels === 'stacked' ? Stacked : Floating;
   const showPassword = style.showPassword;
-  // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: Maybe<boolean> = undefined;
-  export let validationFailure = '';
 
-  let confirmValue: Maybe<string>;
-  let callbackType: string;
-  let doPasswordsMatch: Maybe<boolean>;
-  let isVisible = false;
-  let resetValue = false;
-  let savedValue = '';
-  let textInputLabel: string;
-  let type: 'password' | 'text' = 'password';
-  let value: string;
+  let confirmValue: Maybe<string> | undefined = $state();
+  let callbackType: string | undefined = $state();
+  let doPasswordsMatch: Maybe<boolean> | undefined = $state();
+  let isVisible = $state(false);
+  let resetValue = $state(false);
+  let savedValue = $state('');
+  let textInputLabel: string | undefined = $state();
+  let type: 'password' | 'text' = $state('password');
+  let value: string | undefined = $state();
 
   /**
    * @function confirmInput - ensures the second password input matches the first
@@ -80,7 +95,7 @@
     type = isVisible ? 'text' : 'password';
   }
 
-  $: {
+  $effect.pre(() => {
     callbackType = callback.getType();
     key = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
@@ -98,7 +113,7 @@
      * Only assign a boolean if the confirm input has an actual value.
      */
     doPasswordsMatch = confirmValue !== undefined ? confirmValue === value : undefined;
-  }
+  });
 </script>
 
 {#key callback}
@@ -119,7 +134,7 @@
       {#if showPassword === 'button'}
         <button
           class="tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark"
-          on:click={toggleVisibility}
+          onclick={toggleVisibility}
           type="button"
         >
           <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
@@ -128,7 +143,7 @@
         </button>
       {/if}
     </svelte:fragment>
-    <slot />
+    {@render children?.()}
   </Input>
 
   {#if showPassword === 'checkbox'}

@@ -14,18 +14,32 @@
   import Form from '$components/primitives/form/form.svelte';
   import Input from './stacked-label.svelte';
 
-  export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let message: string;
-  export let isRequired: boolean;
-  export let key: string;
-  export let label: string;
-  export let onChange: () => void;
-  export let placeholder: string;
-  export let withForm = false;
-  export let value: string;
+  interface Props {
+    checkValidity?: ((event: Event) => boolean) | null;
+    message: string;
+    isRequired: boolean;
+    key: string;
+    label: string;
+    onChange: () => void;
+    placeholder: string;
+    withForm?: boolean;
+    value: string;
+  }
 
-  let wrapperEl: HTMLDivElement;
-  let isInvalid: boolean;
+  let {
+    checkValidity = null,
+    message = $bindable(),
+    isRequired,
+    key,
+    label,
+    onChange,
+    placeholder,
+    withForm = false,
+    value,
+  }: Props = $props();
+
+  let wrapperEl: HTMLDivElement | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
 
   function submitForm() {
     message = 'This field must have a value';

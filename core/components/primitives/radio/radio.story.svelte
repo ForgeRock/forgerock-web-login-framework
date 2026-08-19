@@ -10,12 +10,16 @@
 <script lang="ts">
   import Radio from '$components/primitives/radio/radio.svelte';
 
-  export let defaultOption: string;
-  export let isRequired = false;
-  export let key: string;
-  export let name: string;
-  export let onChange: (event: Event) => void;
-  export let options: { value: string | null; text: string }[];
+  interface Props {
+    defaultOption: string;
+    isRequired?: boolean;
+    key: string;
+    name: string;
+    onChange: (event: Event) => void;
+    options: { value: string | null; text: string }[];
+  }
+
+  let { defaultOption, isRequired = false, key, name, onChange, options }: Props = $props();
 </script>
 
 <div>

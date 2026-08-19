@@ -11,17 +11,35 @@
   import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
   import Message from '$components/primitives/message/input-message.svelte';
 
+  import type { Snippet } from 'svelte';
+
   import type { Maybe } from '$core/interfaces';
 
-  export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let message = '';
-  export let isFirstInvalidInput: boolean;
-  export let isRequired = false;
-  export let isInvalid = false;
-  export let key: string;
-  export let onChange: (event: Event) => void;
-  export let showMessage: Maybe<boolean> = undefined;
-  export let value: boolean;
+  interface Props {
+    checkValidity?: ((event: Event) => boolean) | null;
+    message?: string;
+    isFirstInvalidInput: boolean;
+    isRequired?: boolean;
+    isInvalid?: boolean;
+    key: string;
+    onChange: (event: Event) => void;
+    showMessage?: Maybe<boolean>;
+    value: boolean;
+    children?: Snippet;
+  }
+
+  let {
+    checkValidity = null,
+    message = '',
+    isFirstInvalidInput,
+    isRequired = false,
+    isInvalid = $bindable(),
+    key,
+    onChange,
+    showMessage = undefined,
+    value,
+    children,
+  }: Props = $props();
 
   function onChangeWrapper(event: Event) {
     if (checkValidity) {
@@ -37,7 +55,7 @@
 -->
 <div class="tw_input-spacing tw_grid tw_grid-cols-[1.5em_1fr]">
   <Checkbox {isFirstInvalidInput} {isRequired} {isInvalid} {key} onChange={onChangeWrapper} {value}>
-    <slot />
+    {@render children?.()}
   </Checkbox>
   <!--
     NOTE: The below places the error message on the second row and in second

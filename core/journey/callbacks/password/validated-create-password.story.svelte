@@ -18,9 +18,13 @@
   import type { styleSchema } from '$core/style.store';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
 
-  export let callback: ValidatedCreatePasswordCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata> = null;
-  export let style: z.infer<typeof styleSchema>;
+  interface Props {
+    callback: ValidatedCreatePasswordCallback;
+    callbackMetadata?: Maybe<CallbackMetadata>;
+    style: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata = null, style }: Props = $props();
 
   let mergedCallbackMetadata = {
     derived: {

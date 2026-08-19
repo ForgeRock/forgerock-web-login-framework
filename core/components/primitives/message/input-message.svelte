@@ -12,13 +12,23 @@
 
   import type { Maybe } from '$core/interfaces';
 
-  export let classes = '';
-  export let dirtyMessage: string;
-  export let key: Maybe<string> = undefined;
-  export let showMessage: Maybe<boolean> = true;
-  export let type: 'info' | 'error' = 'info';
+  interface Props {
+    classes?: string;
+    dirtyMessage: string;
+    key?: Maybe<string>;
+    showMessage?: Maybe<boolean>;
+    type?: 'info' | 'error';
+  }
 
-  let cleanMessage = sanitize(dirtyMessage);
+  let {
+    classes = '',
+    dirtyMessage,
+    key = undefined,
+    showMessage = true,
+    type = 'info',
+  }: Props = $props();
+
+  let cleanMessage = $derived(sanitize(dirtyMessage));
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -30,10 +40,6 @@
           return `${prev} tw_input-info-message dark:tw_input-info-message_dark`;
       }
     }, '');
-  }
-
-  $: {
-    cleanMessage = sanitize(dirtyMessage);
   }
 </script>
 

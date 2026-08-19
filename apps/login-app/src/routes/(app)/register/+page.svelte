@@ -17,10 +17,14 @@
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
 
+  import type { PageData } from './$types';
   import type { JourneyStore } from '$journey/journey.interfaces';
 
-  /** @type {import('./$types').PageData} */
-  export let data;
+  interface Props {
+    data: PageData;
+  }
+
+  let { data }: Props = $props();
 
   const journeyStore: JourneyStore = initializeJourney({
     serverConfig: {
@@ -38,11 +42,11 @@
     journeyStore.start({ journey: 'Registration' });
   });
 
-  $: {
+  $effect.pre(() => {
     if ($journeyStore?.successful) {
       goto('/');
     }
-  }
+  });
 </script>
 
 <Box>

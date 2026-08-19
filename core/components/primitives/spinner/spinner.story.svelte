@@ -10,8 +10,12 @@
 <script lang="ts">
   import Spinner from './spinner.svelte';
 
-  export let colorClass: string;
-  export let layoutClasses: string;
+  interface Props {
+    colorClass: string;
+    layoutClasses: string;
+  }
+
+  let { colorClass, layoutClasses }: Props = $props();
 </script>
 
 <div class="tw_text-center">

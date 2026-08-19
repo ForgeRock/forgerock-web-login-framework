@@ -33,19 +33,23 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: ValidatedCreateUsernameCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: ValidatedCreateUsernameCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType: string;
-  let inputName: string;
-  let isInvalid: boolean;
-  let isRequired: boolean;
-  let prompt: string;
-  let value: unknown;
-  let validationFailures: FailedPolicy[];
+  let callbackType: string | undefined = $state();
+  let inputName: string | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
+  let isRequired: boolean | undefined = $state();
+  let prompt: string | undefined = $state();
+  let value: unknown | undefined = $state();
+  let validationFailures: FailedPolicy[] | undefined = $state();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -55,7 +59,7 @@
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
-  $: {
+  $effect.pre(() => {
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `validated-name=${callbackMetadata?.idx}`;
     isRequired = isInputRequired(callback);
@@ -63,7 +67,7 @@
     value = callback?.getInputValue();
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
-  }
+  });
 </script>
 
 {#key callback}

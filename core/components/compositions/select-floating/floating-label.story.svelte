@@ -14,18 +14,32 @@
   import Form from '$components/primitives/form/form.svelte';
   import Select from './floating-label.svelte';
 
-  export let checkValidity: ((event: Event) => boolean) | null = null;
-  export let defaultOption: string;
-  export let errorMessage: string;
-  export let isRequired: boolean;
-  export let key: string;
-  export let label: string;
-  export let onChange: () => void;
-  export let options: { value: string; text: string }[];
-  export let withForm = false;
+  interface Props {
+    checkValidity?: ((event: Event) => boolean) | null;
+    defaultOption: string;
+    errorMessage: string;
+    isRequired: boolean;
+    key: string;
+    label: string;
+    onChange: () => void;
+    options: { value: string; text: string }[];
+    withForm?: boolean;
+  }
 
-  let wrapperEl: HTMLDivElement;
-  let isInvalid: boolean;
+  let {
+    checkValidity = null,
+    defaultOption,
+    errorMessage = $bindable(),
+    isRequired,
+    key,
+    label,
+    onChange,
+    options,
+    withForm = false,
+  }: Props = $props();
+
+  let wrapperEl: HTMLDivElement | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
 
   function submitForm() {
     errorMessage = 'Please select an option';

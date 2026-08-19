@@ -42,7 +42,7 @@ export default defineConfig({
   reporter: process.env.GITHUB_ACTIONS ? 'blob' : 'dot',
   projects: [
     {
-      name: 'chromium',
+      name: 'chromium-webauthn',
       grep: /webauthn/,
       use: {
         ...devices['Desktop Chrome'],
@@ -50,7 +50,7 @@ export default defineConfig({
       },
     },
     {
-      name: 'chromium',
+      name: 'chromium-standard',
       grepInvert: /webauthn/,
       use: {
         ...devices['Desktop Chrome'],

@@ -27,27 +27,31 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: NameCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: NameCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType: string;
-  let inputName: string;
-  let textInputLabel: string;
-  let value: unknown;
+  let callbackType: string | undefined = $state();
+  let inputName: string | undefined = $state();
+  let textInputLabel: string | undefined = $state();
+  let value: unknown | undefined = $state();
 
   function setValue(event: Event) {
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
-  $: {
+  $effect.pre(() => {
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
-  }
+  });
 </script>
 
 {#key callback}

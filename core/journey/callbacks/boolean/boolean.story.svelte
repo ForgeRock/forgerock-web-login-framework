@@ -13,7 +13,11 @@
 
   import type { AttributeInputCallback } from '@forgerock/journey-client/types';
 
-  export let callback: AttributeInputCallback<boolean>;
+  interface Props {
+    callback: AttributeInputCallback<boolean>;
+  }
+
+  let { callback }: Props = $props();
 
   let callbackMetadata = {
     derived: {

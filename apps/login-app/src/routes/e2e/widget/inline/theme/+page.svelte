@@ -10,13 +10,13 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Widget, { configure, journey } from '$package/index';
 
-  let formEl: HTMLDivElement;
+  let formEl: HTMLDivElement | undefined = $state();
 
   onMount(async () => {
-    const params = $page.url.searchParams;
+    const params = page.url.searchParams;
     const primaryColorParam = params.get('primaryColor');
     const buttonBorderRadiusParam = params.get('buttonBorderRadius');
     const cardBorderRadiusParam = params.get('cardBorderRadius');
@@ -46,7 +46,7 @@
 
     const journeyEvents = journey();
 
-    new Widget({ target: formEl, props: { type: 'inline' } });
+    new Widget({ target: formEl!, props: { type: 'inline' } });
     journeyEvents.start({ journey: 'TEST_Login' });
   });
 </script>

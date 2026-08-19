@@ -7,7 +7,7 @@
  
  -->
 
-<script context="module" lang="ts">
+<script module lang="ts">
   import './main.css';
   import { componentApi } from './_utilities/component.utilities';
   import { widgetApiFactory } from './widget.api';
@@ -22,7 +22,8 @@
 </script>
 
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { tick } from 'svelte';
+  import { run } from 'svelte/legacy';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
   import { applyThemeVars } from '$core/_effects/theme.effects';
@@ -32,20 +33,30 @@
 
   import type { SvelteComponent } from 'svelte';
 
-  export let type: 'modal' | 'inline' = 'modal';
+  interface Props {
+    type?: 'modal' | 'inline';
+  }
+
+  let { type = 'modal' }: Props = $props();
 
   const { journeyStore } = api.getStores();
 
   // Variables that reference the Svelte component and the DOM elements
-  let dialogComp: SvelteComponent;
-  let dialogEl: HTMLDialogElement;
-  let formEl: HTMLFormElement;
-  let widgetRootEl: HTMLDivElement;
+  let dialogComp: SvelteComponent = $state();
+  let dialogEl: HTMLDialogElement = $state();
+  let formEl: HTMLFormElement = $state();
+  let widgetRootEl: HTMLDivElement = $state();
 
-  $: applyThemeVars(widgetRootEl, $styleStore?.theme);
+  run(() => {
+    applyThemeVars(widgetRootEl, $styleStore?.theme);
+  });
 
-  onMount(() => {
-    mount(dialogComp, dialogEl);
+  $effect(() => {
+    if (type === 'modal' && dialogComp && dialogEl) {
+      tick().then(() => mount(dialogComp, dialogEl));
+    } else if (type === 'inline') {
+      tick().then(() => mount());
+    }
   });
 </script>
 

@@ -22,10 +22,19 @@
     StepMetadata,
   } from '$journey/journey.interfaces';
 
-  export let callback: DeviceProfileCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata> = null;
-  export let stepMetadata: Maybe<StepMetadata> = null;
-  export let selfSubmitFunction: SelfSubmitFunction;
+  interface Props {
+    callback: DeviceProfileCallback;
+    callbackMetadata?: Maybe<CallbackMetadata>;
+    stepMetadata?: Maybe<StepMetadata>;
+    selfSubmitFunction: SelfSubmitFunction;
+  }
+
+  let {
+    callback,
+    callbackMetadata = $bindable(),
+    stepMetadata = null,
+    selfSubmitFunction,
+  }: Props = $props();
   const device = new Device({});
   let deviceMessage = (callback as DeviceProfileCallback).getMessage();
   async function initializeProfile() {

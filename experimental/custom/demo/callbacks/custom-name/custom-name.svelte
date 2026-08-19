@@ -36,15 +36,19 @@
 
   import type { CallbackMetadata, Maybe } from '$login-framework';
 
-  // ─── Prop contract ──────────────────────────────────────────────────────────
-  export let callback: NameCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
+  interface Props {
+    // ─── Prop contract ──────────────────────────────────────────────────────────
+    callback: NameCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+  }
+
+  let { callback, callbackMetadata }: Props = $props();
 
   // ─── Local reactive state ──────────────────────────────────────────────────
-  let callbackType: string; // AM callback type string, e.g. "NameCallback"
-  let inputName: string; // DOM id/name for the <input> element
-  let textInputLabel: string; // human-readable label shown above the input
-  let value: unknown; // current input value read from the SDK callback
+  let callbackType: string = $state(); // AM callback type string, e.g. "NameCallback"
+  let inputName: string = $state(); // DOM id/name for the <input> element
+  let textInputLabel: string = $state(); // human-readable label shown above the input
+  let value: unknown = $state(); // current input value read from the SDK callback
 
   // ─── Event handler ──────────────────────────────────────────────────────────
   function setValue(event: Event) {
@@ -52,12 +56,12 @@
   }
 
   // ─── Reactive block ─────────────────────────────────────────────────────────
-  $: {
+  $effect.pre(() => {
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `name-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();
     value = callback?.getInputValue();
-  }
+  });
 </script>
 
 {#key callback}

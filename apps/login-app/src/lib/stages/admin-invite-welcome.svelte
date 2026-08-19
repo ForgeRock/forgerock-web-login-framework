@@ -23,25 +23,30 @@
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
-  export let componentStyle: 'app' | 'inline' | 'modal';
-  export let form: StageFormObject;
-  export let formEl: HTMLFormElement | null = null;
-  export let journey: StageJourneyObject;
-  export let step: JourneyStep;
+  interface Props {
+    componentStyle: 'app' | 'inline' | 'modal';
+    form: StageFormObject;
+    formEl?: HTMLFormElement | null;
+    journey: StageJourneyObject;
+    step: JourneyStep;
+  }
+
+  let { componentStyle, form, formEl = $bindable(), journey, step }: Props = $props();
 
   const formHeaderId = 'adminInviteWelcomeHeader';
   const formFailureMessageId = 'adminInviteWelcomeFailureMessage';
   const formElementId = 'adminInviteWelcomeForm';
 
-  $: msg =
+  let msg = $derived(
     (step.getCallbacksOfType(callbackType.TextOutputCallback) as TextOutputCallback[])
       .find((cb) => cb.getMessageType() === '4')
-      ?.getMessage() ?? '';
+      ?.getMessage() ?? '',
+  );
 
-  $: tenantName = msg.match(/<span[^>]*p1aic-tenant-name[^>]*>([^<]+)</)?.[1] ?? '';
-  $: formMessageKey = convertStringToKey(form?.message);
-  $: formAriaDescriptor = form?.message ? formFailureMessageId : formHeaderId;
-  $: formNeedsFocus = !form?.message;
+  let tenantName = $derived(msg.match(/<span[^>]*p1aic-tenant-name[^>]*>([^<]+)</)?.[1] ?? '');
+  let formMessageKey = $derived(convertStringToKey(form?.message));
+  let formAriaDescriptor = $derived(form?.message ? formFailureMessageId : formHeaderId);
+  let formNeedsFocus = $derived(!form?.message);
 </script>
 
 <Form

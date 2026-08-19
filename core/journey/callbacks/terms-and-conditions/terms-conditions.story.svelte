@@ -14,7 +14,11 @@
 
   import type { TermsAndConditionsCallback } from '@forgerock/journey-client/types';
 
-  export let callback: TermsAndConditionsCallback;
+  interface Props {
+    callback: TermsAndConditionsCallback;
+  }
+
+  let { callback }: Props = $props();
 
   let callbackMetadata = {
     derived: {

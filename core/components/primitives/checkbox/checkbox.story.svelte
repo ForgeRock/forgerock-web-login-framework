@@ -10,10 +10,14 @@
 <script lang="ts">
   import Checkbox from './checkbox.svelte';
 
-  export let key: string;
-  export let label: string;
-  export let onChange: (event: Event) => void;
-  export let value: boolean;
+  interface Props {
+    key: string;
+    label: string;
+    onChange: (event: Event) => void;
+    value: boolean;
+  }
+
+  let { key, label, onChange, value }: Props = $props();
 </script>
 
 <div>

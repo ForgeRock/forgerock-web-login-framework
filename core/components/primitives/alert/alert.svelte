@@ -12,11 +12,18 @@
   import InfoIcon from '$components/icons/info-icon.svelte';
   import WarningIcon from '$components/icons/warning-icon.svelte';
 
-  export let id: string;
-  export let needsFocus = false;
-  export let type: 'error' | 'info' | 'success' | 'warning' | '' = '';
+  import type { Snippet } from 'svelte';
 
-  let divEl: HTMLParagraphElement;
+  interface Props {
+    id: string;
+    needsFocus?: boolean;
+    type?: 'error' | 'info' | 'success' | 'warning' | '';
+    children?: Snippet;
+  }
+
+  let { id, needsFocus = false, type = '', children }: Props = $props();
+
+  let divEl: HTMLParagraphElement | undefined = $state();
 
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
@@ -36,11 +43,11 @@
     }, '');
   }
 
-  $: {
+  $effect.pre(() => {
     if (needsFocus) {
       divEl && divEl.focus();
     }
-  }
+  });
 </script>
 
 <div
@@ -61,7 +68,7 @@
       <InfoIcon />
     {/if}
     <span>
-      <slot />
+      {@render children?.()}
     </span>
   </p>
 </div>

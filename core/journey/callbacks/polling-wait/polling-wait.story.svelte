@@ -15,8 +15,12 @@
 
   import type { SelfSubmitFunction } from '$journey/journey.interfaces';
 
-  export let callback: PollingWaitCallback;
-  export let selfSubmitFunction: SelfSubmitFunction;
+  interface Props {
+    callback: PollingWaitCallback;
+    selfSubmitFunction: SelfSubmitFunction;
+  }
+
+  let { callback, selfSubmitFunction }: Props = $props();
 
   let callbackMetadata = {
     derived: {

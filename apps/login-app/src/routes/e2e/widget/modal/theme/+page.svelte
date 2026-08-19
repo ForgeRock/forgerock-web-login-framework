@@ -10,15 +10,15 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  import { page } from '$app/stores';
+  import { page } from '$app/state';
   import Widget, { component, configure, journey } from '$package/index';
 
-  let componentEvents: ReturnType<typeof component> | undefined;
-  let journeyEvents: ReturnType<typeof journey> | undefined;
-  let widgetEl: HTMLDivElement;
+  let componentEvents: ReturnType<typeof component> | undefined = $state();
+  let journeyEvents: ReturnType<typeof journey> | undefined = $state();
+  let widgetEl: HTMLDivElement | undefined = $state();
 
   onMount(async () => {
-    const params = $page.url.searchParams;
+    const params = page.url.searchParams;
     const primaryColorParam = params.get('primaryColor');
     const buttonBorderRadiusParam = params.get('buttonBorderRadius');
     const cardBorderRadiusParam = params.get('cardBorderRadius');
@@ -49,14 +49,14 @@
     componentEvents = component();
     journeyEvents = journey();
 
-    new Widget({ target: widgetEl });
+    new Widget({ target: widgetEl! });
   });
 </script>
 
 <div class="tw_p-6">
   {#if journeyEvents && componentEvents}
     <button
-      on:click={() => {
+      onclick={() => {
         journeyEvents.start({ journey: 'TEST_Login' });
         componentEvents.open();
       }}

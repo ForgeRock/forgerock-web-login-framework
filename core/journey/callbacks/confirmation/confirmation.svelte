@@ -29,18 +29,27 @@
   // Unused props. Setting to const prevents errors in console
   export const style: z.infer<typeof styleSchema> = {};
 
-  export let callback: ConfirmationCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let stepMetadata: Maybe<StepMetadata>;
+  interface Props {
+    callback: ConfirmationCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    selfSubmitFunction?: Maybe<SelfSubmitFunction>;
+    stepMetadata: Maybe<StepMetadata>;
+  }
+
+  let {
+    callback,
+    callbackMetadata = $bindable(),
+    selfSubmitFunction = null,
+    stepMetadata,
+  }: Props = $props();
 
   const Checkbox = style.checksAndRadios === 'standard' ? Standard : Animated;
 
-  let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined;
-  let defaultChoice: number = callback.getDefaultOption();
-  let inputName: string;
-  let label: string;
-  let options: { value: string; text: string }[];
+  let buttonStyle: 'outline' | 'primary' | 'secondary' | undefined = $state();
+  let defaultChoice: number = $state(callback.getDefaultOption());
+  let inputName: string | undefined = $state();
+  let label: string | undefined = $state();
+  let options: { value: string; text: string }[] = $state();
 
   /**
    * @function setButtonValue - Sets the value on the callback on button click
@@ -84,7 +93,7 @@
     callback.setOptionIndex(defaultChoice);
   }
 
-  $: {
+  $effect.pre(() => {
     inputName = callback?.payload?.input?.[0].name || `confirmation-${callbackMetadata?.idx}`;
     options = callback.getOptions().map((option, index) => ({ value: `${index}`, text: option }));
     defaultChoice = callback.getDefaultOption();
@@ -103,7 +112,7 @@
     } else {
       buttonStyle = 'secondary';
     }
-  }
+  });
 </script>
 
 {#if !stepMetadata?.derived.isStepSelfSubmittable()}

@@ -34,21 +34,25 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: AttributeInputCallback<string>;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: AttributeInputCallback<string>;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let inputName: string;
-  let isRequired: boolean;
-  let outputName: string;
-  let policies: Record<string, unknown>;
-  let previousValue: string;
-  let prompt: string;
-  let type: 'email' | 'text';
-  let validationFailures: FailedPolicy[];
-  let isInvalid: boolean;
+  let inputName: string | undefined = $state();
+  let isRequired: boolean | undefined = $state();
+  let outputName: string | undefined = $state();
+  let policies: Record<string, unknown> = $state();
+  let previousValue: string | undefined = $state();
+  let prompt: string | undefined = $state();
+  let type: 'email' | 'text' = $state();
+  let validationFailures: FailedPolicy[] | undefined = $state();
+  let isInvalid: boolean | undefined = $state();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -58,7 +62,7 @@
     callback.setInputValue((event.target as HTMLInputElement).value);
   }
 
-  $: {
+  $effect.pre(() => {
     /**
      * We need to wrap this in a reactive block, so it reruns the function
      * on value changes within `callback`
@@ -72,7 +76,7 @@
     type = getInputTypeFromPolicies(policies);
     validationFailures = getValidationFailures(callback, prompt);
     isInvalid = !!validationFailures.length;
-  }
+  });
 </script>
 
 {#key callback}

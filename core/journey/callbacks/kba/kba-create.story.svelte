@@ -13,7 +13,11 @@
 
   import type { KbaCreateCallback } from '@forgerock/journey-client/types';
 
-  export let callback: KbaCreateCallback;
+  interface Props {
+    callback: KbaCreateCallback;
+  }
+
+  let { callback }: Props = $props();
 
   let callbackMetadata = {
     derived: {

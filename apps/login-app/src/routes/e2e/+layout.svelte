@@ -7,11 +7,18 @@
 
  -->
 
-<script>
+<script lang="ts">
   /**
    * TODO: If there's a better way to do this, change to it
    */
   import '$package/widget.css';
+
+  import type { Snippet } from 'svelte';
+  interface Props {
+    children?: Snippet;
+  }
+
+  let { children }: Props = $props();
 </script>
 
 <svelte:head>
@@ -90,10 +97,6 @@
       }
     }
   </style>
-  <script
-    src="https://www.google.com/recaptcha/api.js?render=6Lf8jdIsAAAAAC7Ljx4e8moPX9jzzTxhleeT3K_t"
-    async
-  ></script>
 </svelte:head>
 
-<slot />
+{@render children?.()}

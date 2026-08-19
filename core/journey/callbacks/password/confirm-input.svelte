@@ -15,30 +15,45 @@
   import Checkbox from '$components/primitives/checkbox/checkbox.svelte';
   import { interpolate } from '$core/_utilities/i18n.utilities';
 
+  import type { Snippet } from 'svelte';
   import type { z } from 'zod';
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
 
-  export let forceValidityFailure = false;
-  export let passwordsDoNotMatch = false;
-  export let isRequired = false;
-  export let key: string;
-  export let onChange: (val: Maybe<string>) => void;
-  export let resetValue: boolean;
-  export let style: z.infer<typeof styleSchema> = {};
-  export let isFirstInvalidInput: boolean;
+  interface Props {
+    forceValidityFailure?: boolean;
+    passwordsDoNotMatch?: boolean;
+    isRequired?: boolean;
+    key: string;
+    onChange: (val: Maybe<string>) => void;
+    resetValue: boolean;
+    style?: z.infer<typeof styleSchema>;
+    isFirstInvalidInput: boolean;
+    // Below needs to be `undefined` to be optional and allow default value in Message component
+    showMessage?: Maybe<boolean>;
+    children?: Snippet;
+  }
 
+  let {
+    forceValidityFailure = false,
+    passwordsDoNotMatch = false,
+    isRequired = false,
+    key,
+    onChange,
+    resetValue,
+    style = {},
+    isFirstInvalidInput,
+    showMessage = undefined,
+    children,
+  }: Props = $props();
   const Input = style.labels === 'stacked' ? Stacked : Floating;
   const showPassword = style.showPassword;
 
-  // Below needs to be `undefined` to be optional and allow default value in Message component
-  export let showMessage: Maybe<boolean> = undefined;
-
-  let isVisible = false;
-  let type: 'password' | 'text' = 'password';
-  let value: Maybe<string>;
-  let message = '';
+  let isVisible = $state(false);
+  let type: 'password' | 'text' = $state('password');
+  let value: Maybe<string> | undefined = $state();
+  let message = $state('');
 
   function onChangeWrapper(event: Event) {
     value = (event.target as HTMLInputElement)?.value;
@@ -53,7 +68,7 @@
     type = isVisible ? 'text' : 'password';
   }
 
-  $: {
+  $effect.pre(() => {
     if (resetValue) {
       value = undefined;
       onChange(value);
@@ -65,7 +80,7 @@
     } else {
       message = '';
     }
-  }
+  });
 </script>
 
 <Input
@@ -85,7 +100,7 @@
     {#if showPassword === 'button'}
       <button
         class="tw_password-button dark:tw_password-button_dark tw_focusable-element tw_input-base dark:tw_input-base_dark"
-        on:click={toggleVisibility}
+        onclick={toggleVisibility}
         type="button"
       >
         <EyeIcon classes="tw_password-icon dark:tw_password-icon_dark" visible={isVisible}>
@@ -94,7 +109,7 @@
       </button>
     {/if}
   </svelte:fragment>
-  <slot />
+  {@render children?.()}
 </Input>
 {#if showPassword === 'checkbox'}
   <div class="tw_w-full tw_input-spacing">

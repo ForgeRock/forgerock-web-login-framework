@@ -8,8 +8,15 @@
  -->
 
 <script lang="ts">
-  export let classes = '';
-  export let size = '24px';
+  import type { Snippet } from 'svelte';
+
+  interface Props {
+    classes?: string;
+    size?: string;
+    children?: Snippet;
+  }
+
+  let { classes = '', size = '24px', children }: Props = $props();
 </script>
 
 <svg class={classes} height={size} version="1.1" viewBox="0 0 64 64">
@@ -31,5 +38,5 @@
       points="431.64,345.23 511.42,345.23 443.1,224.89 363.48,224.78 "
     />
   </g>
-  <title><slot /></title>
+  <title>{@render children?.()}</title>
 </svg>

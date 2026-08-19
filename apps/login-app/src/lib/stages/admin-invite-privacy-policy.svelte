@@ -22,11 +22,15 @@
 
   import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
-  export let componentStyle: 'app' | 'inline' | 'modal';
-  export let form: StageFormObject;
-  export let formEl: HTMLFormElement | null = null;
-  export let journey: StageJourneyObject;
-  export let step: JourneyStep;
+  interface Props {
+    componentStyle: 'app' | 'inline' | 'modal';
+    form: StageFormObject;
+    formEl?: HTMLFormElement | null;
+    journey: StageJourneyObject;
+    step: JourneyStep;
+  }
+
+  let { componentStyle, form, formEl = $bindable(), journey, step }: Props = $props();
 
   const jurisdictionOptions = [
     'Australia',
@@ -47,19 +51,19 @@
   const formHeaderId = 'adminInvitePrivacyPolicyHeader';
   const formElementId = 'adminInvitePrivacyPolicyForm';
 
-  $: formMessageKey = convertStringToKey(form?.message);
-  $: formAriaDescriptor = form?.message ? formFailureMessageId : formHeaderId;
-  $: formNeedsFocus = !form?.message;
+  let formMessageKey = $derived(convertStringToKey(form?.message));
+  let formAriaDescriptor = $derived(form?.message ? formFailureMessageId : formHeaderId);
+  let formNeedsFocus = $derived(!form?.message);
 
   const hiddenValueCb =
     (step.getCallbacksOfType(callbackType.HiddenValueCallback) as HiddenValueCallback[]).find(
       (cb) => (cb.getOutputByName('id', '') as string).startsWith('jurisdiction-input-'),
     ) ?? null;
 
-  let selectedJurisdiction = '';
-  let policyChecked = false;
+  let selectedJurisdiction = $state('');
+  let policyChecked = $state(false);
 
-  $: ready = !!selectedJurisdiction && policyChecked;
+  let ready = $derived(!!selectedJurisdiction && policyChecked);
 </script>
 
 <Form
@@ -95,7 +99,7 @@
       aria-label={interpolate('adminRegPrivacyPolicySelectRegion')}
       bind:value={selectedJurisdiction}
       class="tw_w-full tw_border tw_border-secondary-dark dark:tw_border-secondary-light tw_rounded tw_p-2 tw_bg-white dark:tw_bg-gray-800 tw_text-primary-dark dark:tw_text-primary-light"
-      on:change={() => hiddenValueCb?.setInputValue(selectedJurisdiction)}
+      onchange={() => hiddenValueCb?.setInputValue(selectedJurisdiction)}
     >
       <option value=""><T key="adminRegPrivacyPolicySelectRegion" /></option>
       {#each jurisdictionOptions as opt}

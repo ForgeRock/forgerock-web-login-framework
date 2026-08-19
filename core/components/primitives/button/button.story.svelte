@@ -11,16 +11,25 @@
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Button from './button.svelte';
 
-  // Button props
-  export let busy = false;
-  // export let customCss = [];
-  export let onClick = () => {};
-  export let style: 'outline' | 'primary' | 'secondary' = 'outline';
-  export let text: string;
-  export let type: 'button' | 'submit' | null = null;
-  export let width: 'auto' | 'full' = 'auto';
+  interface Props {
+    // Button props
+    busy?: boolean;
+    // export let customCss = [];
+    onClick?: (event: Event) => void;
+    style?: 'outline' | 'primary' | 'secondary';
+    text: string;
+    type?: 'button' | 'submit' | null;
+    width?: 'auto' | 'full'; // initialize({ button: customCss });
+  }
 
-  // initialize({ button: customCss });
+  let {
+    busy = false,
+    onClick = () => {},
+    style = 'outline',
+    text,
+    type = null,
+    width = 'auto',
+  }: Props = $props();
 </script>
 
 <Button {busy} {onClick} {style} {type} {width}>

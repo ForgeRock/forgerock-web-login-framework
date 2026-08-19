@@ -13,7 +13,11 @@
 
   import type { TextInputCallback } from '@forgerock/journey-client/types';
 
-  export let callback: TextInputCallback;
+  interface Props {
+    callback: TextInputCallback;
+  }
+
+  let { callback }: Props = $props();
 
   let callbackMetadata = {
     derived: {

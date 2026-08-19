@@ -16,9 +16,13 @@
   import type { Maybe } from '$core/interfaces';
   import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
 
-  export let callback: DeviceProfileCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: () => void;
+  interface Props {
+    callback: DeviceProfileCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    selfSubmitFunction: () => void;
+  }
+
+  let { callback, callbackMetadata, selfSubmitFunction }: Props = $props();
 
   let mergedCallbackMetadata = {
     derived: {

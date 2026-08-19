@@ -20,13 +20,21 @@
   import type { ProtectConfig } from '$core/protect/protect.store';
   import type { SelfSubmitFunction } from '$journey/journey.interfaces';
 
-  export let callback: PingOneProtectEvaluationCallback;
-  export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
-  export let pingProtect: ProtectConfig = {
-    envId: '',
-  };
+  interface Props {
+    callback: PingOneProtectEvaluationCallback;
+    selfSubmitFunction?: Maybe<SelfSubmitFunction>;
+    pingProtect?: ProtectConfig;
+  }
 
-  let isBehavioralDataPaused = false;
+  let {
+    callback,
+    selfSubmitFunction = null,
+    pingProtect = {
+      envId: '',
+    },
+  }: Props = $props();
+
+  let isBehavioralDataPaused = $state(false);
 
   onMount(() => {
     async function handleGetData() {
@@ -41,7 +49,7 @@
     handleGetData();
   });
 
-  $: {
+  $effect.pre(() => {
     isBehavioralDataPaused = pingProtect?.behavioralDataCollection ?? false;
     if (typeof window !== 'undefined') {
       if (isBehavioralDataPaused === true) {
@@ -56,7 +64,7 @@
         }
       }
     }
-  }
+  });
 </script>
 
 <div class="tw_text-center tw_w-full tw_py-4">

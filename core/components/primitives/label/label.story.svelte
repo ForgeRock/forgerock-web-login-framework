@@ -10,9 +10,13 @@
 <script lang="ts">
   import Label from './label.svelte';
 
-  export let key: string;
-  export let classes: string;
-  export let inputLabel: string;
+  interface Props {
+    key: string;
+    classes: string;
+    inputLabel: string;
+  }
+
+  let { key, classes, inputLabel }: Props = $props();
 </script>
 
 <Label {key} {classes}>

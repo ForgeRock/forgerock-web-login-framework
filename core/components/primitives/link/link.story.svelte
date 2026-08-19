@@ -10,8 +10,12 @@
 <script lang="ts">
   import Link from './link.svelte';
 
-  export let classes: string;
-  export let href: string;
+  interface Props {
+    classes: string;
+    href: string;
+  }
+
+  let { classes, href }: Props = $props();
 </script>
 
 <Link {classes} {href}>Go to home page!</Link>

@@ -10,18 +10,19 @@
 <script lang="ts">
   import sanitize from 'xss';
 
-  export let html = false;
-  export let string: string;
+  import type { Snippet } from 'svelte';
 
-  let message: string;
-
-  $: {
-    message = sanitize(string);
+  interface Props {
+    html?: boolean;
+    string: string;
+    children?: Snippet;
   }
+
+  let { html = false, string, children }: Props = $props();
+
+  let message: string = $derived(sanitize(string));
 </script>
 
 {#if html}
-  <slot>{@html message}</slot>
-{:else}
-  <slot>{message}</slot>
-{/if}
+  {#if children}{@render children()}{:else}{@html message}{/if}
+{:else if children}{@render children()}{:else}{message}{/if}

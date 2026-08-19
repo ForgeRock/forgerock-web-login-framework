@@ -8,8 +8,12 @@
  -->
 
 <script lang="ts">
-  export let classes = '';
-  export let size = '24px';
+  interface Props {
+    classes?: string;
+    size?: string;
+  }
+
+  let { classes = '', size = '24px' }: Props = $props();
 </script>
 
 <svg

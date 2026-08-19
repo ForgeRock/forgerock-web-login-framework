@@ -29,15 +29,19 @@
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
 
-  export let callback: ChoiceCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let style: z.infer<typeof styleSchema> = {};
+  interface Props {
+    callback: ChoiceCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    style?: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, callbackMetadata, style = {} }: Props = $props();
 
   const Radio = style.checksAndRadios === 'standard' ? RadioStandard : RadioAnimated;
   const Select = style.labels === 'stacked' ? SelectStacked : SelectFloating;
 
-  let choiceOptions: { value: string; text: string }[];
-  let inputName: string;
+  let choiceOptions: { value: string; text: string }[] = $state();
+  let inputName: string | undefined = $state();
   /**
    * Since locale content keys for the choice component are built off of the
    * values, there will not be any existing key-value pairs in the provided
@@ -45,9 +49,9 @@
    * displayed. If you want to localize it, you'll need to add content keys
    * in the locale file for that to override the original value.
    */
-  let label: string;
-  let prompt: string;
-  let defaultChoice: Maybe<string>;
+  let label: string | undefined = $state();
+  let prompt: string | undefined = $state();
+  let defaultChoice: Maybe<string> | undefined = $state();
 
   /**
    * @function setValue - Sets the value on the callback on element blur (lose focus)
@@ -57,7 +61,7 @@
     callback.setChoiceIndex(Number((event.target as HTMLSelectElement).value));
   }
 
-  $: {
+  $effect.pre(() => {
     choiceOptions = callback.getChoices()?.map((text, idx) => ({
       /**
        * Since locale content keys for the choice component are built off of the
@@ -73,7 +77,7 @@
     inputName = callback?.payload?.input?.[0].name || `choice-${callbackMetadata?.idx}`;
     prompt = callback.getPrompt();
     label = interpolate(textToKey(prompt), null, prompt);
-  }
+  });
 </script>
 
 {#if callbackMetadata?.platform?.displayType === 'radio'}

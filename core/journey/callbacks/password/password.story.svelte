@@ -16,8 +16,12 @@
 
   import type { styleSchema } from '$core/style.store';
 
-  export let callback: PasswordCallback;
-  export let style: z.infer<typeof styleSchema>;
+  interface Props {
+    callback: PasswordCallback;
+    style: z.infer<typeof styleSchema>;
+  }
+
+  let { callback, style }: Props = $props();
 
   let callbackMetadata = {
     derived: {

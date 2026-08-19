@@ -13,7 +13,11 @@
 
   import type { SelectIdPCallback } from '@forgerock/journey-client/types';
 
-  export let socialCallback: SelectIdPCallback;
+  interface Props {
+    socialCallback: SelectIdPCallback;
+  }
+
+  let { socialCallback }: Props = $props();
 
   let socialCallbackMetadata = {
     derived: {

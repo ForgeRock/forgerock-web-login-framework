@@ -8,11 +8,18 @@
  -->
 
 <script lang="ts">
-  export let classes = '';
+  import type { Snippet } from 'svelte';
+
+  interface Props {
+    classes?: string;
+    children?: Snippet;
+  }
+
+  let { classes = '', children }: Props = $props();
 </script>
 
 <p
   class={`${classes} tw_text-base tw_text-secondary-dark dark:tw_text-secondary-light tw_input-spacing`}
 >
-  <slot />
+  {@render children?.()}
 </p>

@@ -16,10 +16,14 @@
   import type { Maybe } from '$core/interfaces';
   import type { CallbackMetadata, StepMetadata } from '$journey/journey.interfaces';
 
-  export let callback: ConfirmationCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata>;
-  export let selfSubmitFunction: () => void;
-  export let stepMetadata: Maybe<StepMetadata>;
+  interface Props {
+    callback: ConfirmationCallback;
+    callbackMetadata: Maybe<CallbackMetadata>;
+    selfSubmitFunction: () => void;
+    stepMetadata: Maybe<StepMetadata>;
+  }
+
+  let { callback, callbackMetadata, selfSubmitFunction, stepMetadata }: Props = $props();
 </script>
 
 <Centered>

@@ -29,13 +29,15 @@
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
 
-  export let callback: RedirectCallback;
-
-  let message: string;
-
-  $: {
-    message = `${interpolate('redirectingTo')} ${new URL(callback.getRedirectUrl()).hostname}`;
+  interface Props {
+    callback: RedirectCallback;
   }
+
+  let { callback }: Props = $props();
+
+  let message: string = $derived(
+    `${interpolate('redirectingTo')} ${new URL(callback.getRedirectUrl()).hostname}`,
+  );
 </script>
 
 <div class="tw_text-center" aria-live="assertive">

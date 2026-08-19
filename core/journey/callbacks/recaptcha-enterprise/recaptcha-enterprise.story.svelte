@@ -16,8 +16,12 @@
   import type { Maybe } from '$core/interfaces';
   import type { CallbackMetadata } from '$journey/journey.interfaces';
 
-  export let callback: ReCaptchaEnterpriseCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata> = null;
+  interface Props {
+    callback: ReCaptchaEnterpriseCallback;
+    callbackMetadata?: Maybe<CallbackMetadata>;
+  }
+
+  let { callback, callbackMetadata = null }: Props = $props();
 </script>
 
 <Centered>
