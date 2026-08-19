@@ -157,7 +157,8 @@
       },
     );
 
-    new Widget({ target: widgetEl! });
+    if (!widgetEl) return;
+    new Widget({ target: widgetEl });
     if (initializePingProtectEarly) {
       await protect.start({
         envId: initializePingProtectEarly,
@@ -184,12 +185,12 @@
   {:else if journeyEvents && componentEvents}
     <button
       onclick={() => {
-        journeyEvents.start({
+        journeyEvents?.start({
           journey: journeyParam || authIndexValueParam || undefined,
           resumeUrl: suspendedIdParam ? location.href : undefined,
           recaptchaAction: recaptchaParam ?? undefined,
         });
-        componentEvents.open();
+        componentEvents?.open();
       }}
     >
       Open Login Modal

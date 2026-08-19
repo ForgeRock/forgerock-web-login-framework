@@ -8,6 +8,8 @@
  -->
 
 <script lang="ts">
+  import { run } from 'svelte/legacy';
+
   import Floating from '$components/compositions/input-floating/floating-label.svelte';
   import Stacked from '$components/compositions/input-stacked/stacked-label.svelte';
   import { interpolate, textToKey } from '$core/_utilities/i18n.utilities';
@@ -37,16 +39,16 @@
 
   const Input = style.labels === 'stacked' ? Stacked : Floating;
 
-  let callbackType: string | undefined = $state();
-  let inputName: string | undefined = $state();
-  let textInputLabel: string | undefined = $state();
-  let value: unknown | undefined = $state();
+  let callbackType: string = $state();
+  let inputName: string = $state();
+  let textInputLabel: string = $state();
+  let value: unknown = $state();
 
   function setValue(event: Event) {
     callback.setInput((event.target as HTMLInputElement).value);
   }
 
-  $effect.pre(() => {
+  run(() => {
     callbackType = callback.getType();
     inputName = callback?.payload?.input?.[0].name || `text-input-${callbackMetadata?.idx}`;
     textInputLabel = callback.getPrompt();

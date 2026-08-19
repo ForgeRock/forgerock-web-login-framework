@@ -82,7 +82,8 @@
       }
     });
 
-    new Widget({ target: formEl!, props: { type: 'inline' } });
+    if (!formEl) return;
+    new Widget({ target: formEl, props: { type: 'inline' } });
     // Start the  journey after initialization or within the form.onMount event
     journeyEvents.start({
       journey: journeyParam || authIndexValueParam || undefined,

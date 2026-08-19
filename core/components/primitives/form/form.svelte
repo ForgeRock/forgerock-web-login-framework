@@ -8,7 +8,7 @@
  -->
 
 <script lang="ts">
-  import { preventDefault } from 'svelte/legacy';
+  import { preventDefault, run } from 'svelte/legacy';
 
   import type { Snippet } from 'svelte';
 
@@ -23,7 +23,7 @@
 
   let {
     ariaDescribedBy,
-    formEl = $bindable(),
+    formEl = $bindable(null),
     id = 'formId',
     needsFocus = false,
     onSubmitWhenValid = undefined,
@@ -108,7 +108,7 @@
     }
   }
 
-  $effect.pre(() => {
+  run(() => {
     if (needsFocus) {
       formEl && formEl.focus();
     }
