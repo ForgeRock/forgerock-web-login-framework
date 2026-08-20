@@ -31,7 +31,7 @@
     step: JourneyStep;
   }
 
-  let { componentStyle, form, formEl = $bindable(), journey, step }: Props = $props();
+  let { componentStyle, form, formEl = $bindable(null), journey, step }: Props = $props();
 
   const formHeaderId = 'adminInviteWelcomeHeader';
   const formFailureMessageId = 'adminInviteWelcomeFailureMessage';

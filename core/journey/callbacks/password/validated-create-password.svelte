@@ -8,8 +8,6 @@
  -->
 
 <script lang="ts">
-  import { run } from 'svelte/legacy';
-
   import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
   import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
@@ -20,7 +18,6 @@
 
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
-  import type { FailedPolicy } from '$journey/callbacks/_utilities/callback.utilities';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,
@@ -39,23 +36,13 @@
 
   let { callback, callbackMetadata, style = {} }: Props = $props();
 
-  const isRequired = isInputRequired(callback);
-
-  let inputName = $state('');
-  let isInvalid = $state(false);
-  let prompt = $state('');
-  let validationFailures = $state<FailedPolicy[]>([]);
-
-  run(() => {
-    /**
-     * We need to wrap this in a reactive block, so it reruns the function
-     * on value changes within `callback`
-     */
-    inputName = callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`;
-    prompt = callback.getPrompt();
-    validationFailures = getValidationFailures(callback, prompt);
-    isInvalid = !!validationFailures.length;
-  });
+  let inputName = $derived(
+    callback?.payload?.input?.[0].name || `password-${callbackMetadata?.idx}`,
+  );
+  let prompt = $derived(callback.getPrompt());
+  let validationFailures = $derived(getValidationFailures(callback, prompt));
+  let isInvalid = $derived(validationFailures.length > 0);
+  let isRequired = $derived(isInputRequired(callback));
 </script>
 
 {#key callback}
