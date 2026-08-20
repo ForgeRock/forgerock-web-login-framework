@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-export const AM_URL = 'https://openam-sdks.forgeblocks.com/am';
-export const AM_COOKIE_NAME = '5421aeddf91aa20';
-export const AM_REALM = 'alpha';
+export const AM_URL = process.env.FR_AM_URL || 'https://openam-sdks.forgeblocks.com/am';
+export const AM_COOKIE_NAME = process.env.FR_AM_COOKIE_NAME || '5421aeddf91aa20';
+export const AM_REALM = process.env.FR_REALM_PATH || 'alpha';
 
 const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 
@@ -18,11 +18,13 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
       env: {
         FR_AM_URL: AM_URL,
         FR_AM_COOKIE_NAME: AM_COOKIE_NAME,
-        FR_OAUTH_PUBLIC_CLIENT: 'WebOAuthClient',
+        FR_OAUTH_PUBLIC_CLIENT: process.env.FR_OAUTH_PUBLIC_CLIENT || 'WebOAuthClient',
         // Required: AM returns `invalid_scope` when no scope is requested and no default is configured.
-        FR_OAUTH_SCOPE: 'openid profile email',
+        FR_OAUTH_SCOPE: process.env.FR_OAUTH_SCOPE || 'openid profile email',
         FR_REALM_PATH: AM_REALM,
-        FR_AM_WELLKNOWN_URL: `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
+        FR_AM_WELLKNOWN_URL:
+          process.env.FR_AM_WELLKNOWN_URL ||
+          `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
       },
     };
 
