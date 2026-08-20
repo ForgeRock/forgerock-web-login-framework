@@ -1,6 +1,6 @@
 {
   "name": "@forgerock/login-framework-cli",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "CLI tool for scaffolding and managing Ping Login Widget and Login App custom component projects",
   "type": "module",
   "exports": {

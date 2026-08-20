@@ -1,5 +1,11 @@
 # @forgerock/login-framework-cli
 
+## 0.1.1
+
+### Patch Changes
+
+- [#575](https://github.com/ForgeRock/forgerock-web-login-framework/pull/575) [`50556f5`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/50556f51b4ddd8b9d14b095e1f7735d88b435bd1) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Fix CLI generation, registry parsing, and release tag handling.
+
 ## 0.1.0
 
 ### Minor Changes
