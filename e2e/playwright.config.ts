@@ -10,7 +10,7 @@ const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
   ? undefined
   : {
-      command: 'pnpm --filter @forgerock/login-app run preview -- --host=localhost',
+      command: 'pnpm --filter @forgerock/login-app run preview -- --host=localhost --port=3000',
       cwd: '..',
       url,
       ignoreHTTPSErrors: true,
