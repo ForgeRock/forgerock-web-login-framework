@@ -56,6 +56,7 @@
   "registerSuccess": "Succès de l'inscription!",
   "requiredField": "This field is required",
   "registerYourDevice": "Register your device",
+  "startOver": "Recommencer",
   "securityAnswer": "Réponse de sécurité",
   "securityQuestions": "Question(s) de sécurité",
   "securityQuestionsPrompt": "Fournissez la/les question(s) de sécurité et la/les réponse(s) ci-dessous",
