@@ -78,7 +78,7 @@ export interface StageProps {
   step: JourneyStep;
 }
 
-export type StageComponent = Component<unknown>;
+export type StageComponent = Component<StageProps>;
 
 export interface StageRegistryEntry {
   component: StageComponent;
