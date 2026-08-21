@@ -13,10 +13,17 @@ import type { ThemeObject } from '$core/style.store';
 
 /**
  * Applies IDM theme values as CSS custom properties on a root element.
- * Noop when `theme` is undefined or the element reference is null.
+ * Full replace on every call: the element's inline `style` is cleared before
+ * the new theme is applied, so switching themes (or falling through to no
+ * theme) never leaves a previous theme's vars behind. Relies on nothing else
+ * writing inline styles to this element.
+ * Noop when the element reference is null. A `theme` of `undefined` clears
+ * every themed var.
  */
 export function applyThemeVars(rootEl: HTMLElement | null, theme: ThemeObject | undefined): void {
-  if (!rootEl || !theme) return;
+  if (!rootEl) return;
+  rootEl.removeAttribute('style');
+  if (!theme) return;
   for (const [name, value] of buildThemeVarsEntries(theme)) {
     rootEl.style.setProperty(name, value);
   }

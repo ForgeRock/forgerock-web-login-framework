@@ -107,6 +107,7 @@ export interface StepMetadata {
     numOfSelfSubmittableCbs: number;
     numOfUserInputCbs: number;
     stageName?: string;
+    themeId?: string;
   };
   platform?: Record<string, unknown>;
 }

@@ -23,6 +23,7 @@ const IDM_URL = 'https://idm.example.com';
 const REALM = 'alpha';
 
 const makeThemeEntry = (overrides: Record<string, unknown> = {}) => ({
+  _id: 'theme-default',
   isDefault: true,
   linkedTrees: [] as string[],
   primaryColor: '#cc0000',
@@ -162,6 +163,46 @@ describe('fetchIdmTheme', () => {
       const result = await fetchIdmTheme(IDM_URL, REALM, null);
 
       expect(result.theme?.primaryColor).toBeUndefined();
+    });
+
+    it('maps every realm theme entry into themeCatalog, keyed by _id', async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        makeResponse({
+          realm: {
+            [REALM]: [
+              makeThemeEntry({ _id: 'theme-a', isDefault: true, primaryColor: '#111111' }),
+              makeThemeEntry({ _id: 'theme-b', isDefault: false, primaryColor: '#222222' }),
+            ],
+          },
+        }),
+      );
+
+      const result = await fetchIdmTheme(IDM_URL, REALM, null);
+
+      expect(result.themeCatalog?.['theme-a']?.primaryColor).toBe('#111111');
+      expect(result.themeCatalog?.['theme-b']?.primaryColor).toBe('#222222');
+    });
+
+    it('omits catalog entries without an _id', async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        makeResponse({
+          realm: {
+            [REALM]: [{ isDefault: true, primaryColor: '#333333' }],
+          },
+        }),
+      );
+
+      const result = await fetchIdmTheme(IDM_URL, REALM, null);
+
+      expect(Object.keys(result.themeCatalog ?? {})).toHaveLength(0);
+    });
+
+    it('returns an empty themeCatalog when no themes exist for realm', async () => {
+      vi.mocked(fetch).mockResolvedValue(makeResponse({ realm: {} }));
+
+      const result = await fetchIdmTheme(IDM_URL, 'realm-empty-catalog', null);
+
+      expect(result.themeCatalog).toEqual({});
     });
   });
 

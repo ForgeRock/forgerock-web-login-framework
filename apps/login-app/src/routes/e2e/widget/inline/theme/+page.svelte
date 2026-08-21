@@ -20,6 +20,7 @@
     const primaryColorParam = params.get('primaryColor');
     const buttonBorderRadiusParam = params.get('buttonBorderRadius');
     const cardBorderRadiusParam = params.get('cardBorderRadius');
+    const themeCatalogParam = params.get('themeCatalog');
 
     await configure({
       serverConfig: {
@@ -32,6 +33,13 @@
         scope: 'openid profile email me.read',
       },
       style: {
+        // A static logo must be configured for the `tw_dialog-logo` element to render at
+        // all in inline mode, so the E2E spec can assert the page theme's logo override
+        // (`--logo-light` / `--fr-logo-height`) takes effect over this fallback.
+        logo: {
+          light: 'https://example.com/fallback-logo.png',
+          dark: 'https://example.com/fallback-logo.png',
+        },
         theme: {
           ...(primaryColorParam !== null ? { primaryColor: primaryColorParam } : {}),
           ...(buttonBorderRadiusParam !== null
@@ -41,6 +49,7 @@
             ? { cardBorderRadius: Number(cardBorderRadiusParam) }
             : {}),
         },
+        ...(themeCatalogParam !== null ? { themeCatalog: JSON.parse(themeCatalogParam) } : {}),
       },
     });
 

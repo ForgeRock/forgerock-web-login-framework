@@ -14,6 +14,7 @@ import { z } from 'zod';
 import { interpolate } from '$core/_utilities/i18n.utilities';
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
+import { parseThemeId } from '$journey/_utilities/theme-id.utilities';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
@@ -390,11 +391,13 @@ export function initialize(
         stageName = stageAttribute;
       }
 
+      const themeId = parseThemeId(stageAttribute);
+
       const callbackMetadata = buildCallbackMetadata(stepResult, initCheckValidation(), stageJson, {
         ...initializationOptions,
         recaptchaAction: currentRecaptchaAction,
       });
-      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName, themeId);
 
       // Iterate on a successful progression
       stepNumber = stepNumber + 1;
@@ -530,13 +533,15 @@ export function initialize(
         stageName = stageAttribute;
       }
 
+      const themeId = parseThemeId(stageAttribute);
+
       const callbackMetadata = buildCallbackMetadata(
         restartedStep,
         initCheckValidation(),
         stageJson,
         { ...initializationOptions, recaptchaAction: currentRecaptchaAction },
       );
-      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName);
+      const stepMetadata = buildStepMetadata(callbackMetadata, stageJson, stageName, themeId);
 
       journeyStore.update((current) => ({
         ...current,
