@@ -28,12 +28,12 @@
   } from '$journey/journey.interfaces';
 
   // Unused props. Setting to const prevents errors in console
-  export const callbackMetadata: Maybe<CallbackMetadata> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
   export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: SuspendedTextOutputCallback | TextOutputCallback;
+  export let callbackMetadata: Maybe<CallbackMetadata> = null;
 
   let dirtyMessage = callback.getMessage();
   let cleanMessage = sanitize(dirtyMessage);
@@ -59,12 +59,15 @@
   }
 </script>
 
-{#if callbackMessageType === 'info'}
-  <Text classes={cleanMessage.length < 100 ? 'tw_font-bold tw_mt-6' : 'tw_mt-6'}>
-    {@html cleanMessage}
-  </Text>
-{:else}
-  <Alert id="" needsFocus={false} type={callbackMessageType}>
-    {cleanMessage}
-  </Alert>
+<!-- buildCallbackMetadata only sets this on scripted output the developer chose to hide -->
+{#if callbackMetadata?.initOptions?.hideScriptedTextOutput !== true}
+  {#if callbackMessageType === 'info'}
+    <Text classes={cleanMessage.length < 100 ? 'tw_font-bold tw_mt-6' : 'tw_mt-6'}>
+      {@html cleanMessage}
+    </Text>
+  {:else}
+    <Alert id="" needsFocus={false} type={callbackMessageType}>
+      {cleanMessage}
+    </Alert>
+  {/if}
 {/if}

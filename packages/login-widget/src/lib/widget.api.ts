@@ -23,6 +23,7 @@ import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
 import {
+  hideScriptedTextOutputSchema,
   loggerConfigSchema,
   middlewareSchema,
   serverConfigSchema,
@@ -87,11 +88,17 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     const logger = options.logger && loggerConfigSchema.parse(options.logger);
     const middleware = options.middleware && middlewareSchema.parse(options.middleware);
     const storage = options.storage && storageConfigSchema.parse(options.storage);
+    const hideScriptedTextOutput = hideScriptedTextOutputSchema.parse(
+      options.hideScriptedTextOutput,
+    );
 
     // initialize journey client
     journeyStore = initializeJourney(
       { serverConfig },
-      { ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }) },
+      {
+        ...(options.captcha && { captcha: captchaConfigSchema.parse(options.captcha) }),
+        hideScriptedTextOutput,
+      },
       middleware,
       logger,
     );

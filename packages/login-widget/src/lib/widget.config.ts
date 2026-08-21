@@ -48,6 +48,12 @@ export const middlewareSchema = z.array(
   z.custom<RequestMiddleware>((value) => typeof value === 'function'),
 );
 
+/**
+ * Suppresses rendering of script-type text output; `TextOutputCallback` with `messageType` 4.
+ * The widget never executes these scripts, so printing them shows raw source to the user.
+ */
+export const hideScriptedTextOutputSchema = z.boolean().default(false);
+
 export const storageConfigSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.union([z.literal('localStorage'), z.literal('sessionStorage')]),

@@ -14,9 +14,25 @@ import { within } from 'storybook/test';
 import step from './text-output.mock';
 import TextOutput from './text-output.story.svelte';
 
+function makeCallbackMetadata(initOptions) {
+  return {
+    derived: {
+      canForceUserInputOptionality: false,
+      isFirstInvalidInput: false,
+      isReadyForSubmission: false,
+      isSelfSubmitting: false,
+      isUserInputRequired: false,
+      autocompleteValues: undefined,
+    },
+    idx: 0,
+    initOptions,
+  };
+}
+
 export default {
   argTypes: {
     callback: { control: false },
+    callbackMetadata: { control: false },
     inputName: { control: false },
   },
   component: TextOutput,
@@ -41,6 +57,24 @@ export const WithHTML = {
 export const WithScript = {
   args: {
     callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[2],
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Default is unchanged: script source is still printed when the option is not set
+    await expect(canvas.getByText(/Dangerous script tag/)).toBeTruthy();
+  },
+};
+
+export const WithScriptHidden = {
+  args: {
+    callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[2],
+    callbackMetadata: makeCallbackMetadata({ hideScriptedTextOutput: true }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.queryByText(/Dangerous script tag/)).toBeNull();
   },
 };
 
