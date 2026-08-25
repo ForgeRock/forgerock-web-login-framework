@@ -36,6 +36,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     amUrl,
     backgroundImageUrl,
     idmTheme,
+    journeyName,
     realmPath,
     wellknown,
   };

@@ -14,6 +14,9 @@ packages/login-widget/svelte-package/
 # CLI build output
 tools/cli/dist/
 
+# Editor PoC build output (standalone Vite app, outside pnpm workspace globs)
+experimental/editor-poc/dist/
+
 # Environment
 .env
 .env.*

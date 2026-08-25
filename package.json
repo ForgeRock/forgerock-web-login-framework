@@ -12,6 +12,7 @@
     "build:storybook": "storybook build --webpack-stats-json",
     "build": "pnpm run build:widget && pnpm --filter @forgerock/login-app run build",
     "dev": "pnpm run build:widget && pnpm --filter @forgerock/login-app run dev",
+    "dev:editor-demo": "pnpm run build:widget && concurrently -n app,editor -c blue,magenta \"pnpm --filter @forgerock/login-app run dev\" \"npm --prefix experimental/editor-poc run dev\"",
     "test": "pnpm --filter @forgerock/login-widget run test",
     "test:storybook": "test-storybook",
     "check:lint": "prettier --plugin prettier-plugin-svelte --ignore-path .gitignore --ignore-path .prettierignore --check . && eslint .",
