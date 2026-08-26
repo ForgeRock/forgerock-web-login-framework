@@ -26,7 +26,7 @@ export const customComponents: CustomComponentEntry[] = [
     // @forgerock/journey-client/types) — kept as-is to demonstrate what an
     // actual authored callback override looks like against the standalone
     // compiler path, not a hand-picked easy case.
-    name: 'custom-name.svelte (repo, unmodified)',
+    name: 'custom-name.svelte',
     kind: 'callback',
     saveName: 'custom-name',
     source: `<!--
@@ -153,7 +153,7 @@ export const customComponents: CustomComponentEntry[] = [
     // captureLinks from $login-framework — the mock module only exports
     // Stacked/interpolate/textToKey, so live preview will fail on unresolved
     // imports until login-framework-mock.ts's export surface is extended.
-    name: 'custom-login.svelte (repo, unmodified)',
+    name: 'custom-login.svelte',
     kind: 'stage',
     saveName: 'custom-login',
     source: `<!--
@@ -187,25 +187,12 @@ export const customComponents: CustomComponentEntry[] = [
 -->
 
 <script lang="ts">
-  import { afterUpdate, onDestroy, onMount } from 'svelte';
+  import { afterUpdate, onDestroy } from 'svelte';
   import { get } from 'svelte/store';
 
-  // ─── Framework imports ──────────────────────────────────────────────────────
-  /**
-   * Import everything you need from '$login-framework' — the framework's centralized
-   * exports for custom components. No need to reach into internal aliases like
-   * $core, $components, or $journey directly.
-   *
-   * Available exports (see experimental/custom/login-framework.ts for the full list):
-   *   Components : Stacked, Button, Alert, Form, T, CallbackMapper
-   *   Utilities  : interpolate, textToKey, convertStringToKey, captureLinks, styleStore
-   *   Types      : CallbackMetadata, SelfSubmitFunction, StepMetadata,
-   *                StageFormObject, StageJourneyObject, Maybe, StyleObject
-   */
   import {
     Alert,
     CallbackMapper,
-    captureLinks,
     convertStringToKey,
     Form,
     interpolate,
@@ -224,88 +211,48 @@ export const customComponents: CustomComponentEntry[] = [
     StyleObject,
   } from '$login-framework';
 
-  // ─── Stage props ─────────────────────────────────────────────────────────────
-  export let componentStyle: 'app' | 'inline' | 'modal';
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
   export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
   export let step: JourneyStep;
 
-  // ─── Style store subscription ────────────────────────────────────────────────
   let currentStyle: StyleObject = get(styleStore);
-  const unsubStyle = styleStore.subscribe((v) => (currentStyle = v));
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
   onDestroy(unsubStyle);
 
-  // ─── Local state ─────────────────────────────────────────────────────────────
   let alertNeedsFocus = false;
   let formMessageKey = '';
-  let linkWrapper: HTMLElement;
 
-  // ─── Helper functions ────────────────────────────────────────────────────────
   function determineSubmission() {
     if (metadata?.step?.derived.isStepSelfSubmittable()) {
       form?.submit();
     }
   }
 
-  // ─── Lifecycle hooks ─────────────────────────────────────────────────────────
   afterUpdate(() => {
-    alertNeedsFocus = !!form?.message;
+    alertNeedsFocus = Boolean(form?.message);
   });
 
-  /**
-   * onMount — fires once after the component is first inserted into the DOM.
-   * captureLinks() attaches a click listener to linkWrapper that intercepts
-   * anchor hrefs matching journey routes and navigates via journey.push/pop
-   * instead of a full page reload. This is only relevant in modal mode where
-   * normal navigation would close the dialog.
-   */
-  onMount(() => {
-    if (componentStyle === 'modal') {
-      captureLinks(linkWrapper, journey);
-    }
-  });
-
-  // ─── Reactive block ──────────────────────────────────────────────────────────
   $: {
     formMessageKey = convertStringToKey(form?.message);
   }
 </script>
 
-<!--
-  Form — the framework's form wrapper.
--->
 <Form bind:formEl ariaDescribedBy="customFormFailureMessageAlert" onSubmitWhenValid={form?.submit}>
-  <!--
-    Custom branded header
-
-    Customize this section with your own logo, headline, and subtitle copy.
-  -->
-  {#if componentStyle !== 'inline'}
-    <div class="header-container">
-      <!--
-        Logo / icon placeholder.
-        Replace this <div> with your own logo, e.g.:
-          <img src="/your-logo.svg" alt="Acme Corp" class="tw_h-12" />
-        Or import and use a Svelte icon component from your design system.
-      -->
-      <div
-        class="custom-login-icon tw_w-16 tw_h-16 tw_rounded-full tw_bg-blue-600 tw_flex tw_items-center tw_justify-center"
-        aria-hidden="true"
-      >
-        <span class="custom-login-icon-symbol tw_text-white tw_text-2xl tw_font-bold select-none">✦</span>
-      </div>
-
-      <h1 class="custom-login-heading tw_primary-header dark:tw_primary-header_dark">
-        <span class="custom-login-heading-text">Sign In</span>
-      </h1>
-
-      <p class="custom-login-subtitle tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light">
-        {interpolate('customLoginSubtitle', null, 'Welcome back — please sign in to continue.')}
-      </p>
+  <div class="header-container">
+    <div class="custom-login-icon" aria-hidden="true">
+      <span class="custom-login-icon-symbol">✦</span>
     </div>
-  {/if}
+
+    <h1 class="custom-login-heading">
+      <span class="custom-login-heading-text">Sign In</span>
+    </h1>
+
+    <p class="custom-login-subtitle">
+      {interpolate('customLoginSubtitle', null, 'Welcome back, please sign in to continue.')}
+    </p>
+  </div>
 
   {#if form?.message}
     <Alert id="customFormFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
@@ -313,10 +260,6 @@ export const customComponents: CustomComponentEntry[] = [
     </Alert>
   {/if}
 
-  <!--
-    CallbackMapper loop — renders one callback component per callback in the step.
-    The #each index (idx) is used to look up per-callback metadata.
-  -->
   {#each step?.callbacks as callback, idx}
     <CallbackMapper
       props={{
@@ -329,26 +272,15 @@ export const customComponents: CustomComponentEntry[] = [
     />
   {/each}
 
-  <!--
-    Submit button — conditionally rendered.
-  -->
   {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
     <button class="signin-button" disabled={journey?.loading} type="submit">
       {journey?.loading ? 'Signing in…' : 'Sign In'}
     </button>
   {/if}
 
-  <!--
-    Journey links paragraph — rendered only outside inline mode.
-  -->
-  {#if componentStyle !== 'inline'}
-    <p
-      bind:this={linkWrapper}
-      class="custom-login-footer tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
-    >
-      <T key="dontHaveAnAccount" html={true} />
-    </p>
-  {/if}
+  <p class="custom-login-footer">
+    No account? <a href="?journey=Registration">Register here!</a>
+  </p>
 </Form>
 
 <style>
@@ -440,7 +372,6 @@ export const customComponents: CustomComponentEntry[] = [
     // JSON can't carry the submit()/isStepSelfSubmittable() methods this
     // component actually calls.
     mockProps: `{
-  componentStyle: 'app',
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
   journey: { loading: false },

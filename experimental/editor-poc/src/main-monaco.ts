@@ -46,12 +46,12 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <div id="file-tree" style="flex:1; overflow:auto; padding:6px 0;"></div>
       </div>
       <div style="${cardStyle}">
-        <div style="${cardHeaderStyle}"><span id="active-filename">Editor</span> <span style="font-weight:400; color:${brand.textMuted}; font-size:11px;">own svelte/compiler + Monaco</span></div>
+        <div style="${cardHeaderStyle}"><span id="active-filename">Editor</span></div>
         <div id="editor" style="flex:1; overflow:hidden;"></div>
       </div>
       <div style="${cardStyle}">
         <div style="padding:10px 14px; border-bottom:1px solid ${brand.border};">
-          <span style="color:${brand.textPrimary}; font-size:13px; font-weight:600;">Live preview <span style="font-weight:400; color:${brand.textMuted}; font-size:11px;">sandboxed iframe, mock data</span></span>
+          <span style="color:${brand.textPrimary}; font-size:13px; font-weight:600;">Live preview</span>
         </div>
         <iframe id="preview" sandbox="allow-scripts" style="flex:1; border:none;"></iframe>
         <pre id="error-boundary" style="margin:0; padding:8px 14px; color:${brand.danger}; background:#fef2f1; min-height:1.4em; font-size:12px; white-space:pre-wrap; border-top:1px solid ${brand.border};"></pre>
