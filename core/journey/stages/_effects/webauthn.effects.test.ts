@@ -87,6 +87,9 @@ function createMockJourneyStore() {
     reset() {
       return;
     },
+    async restartCurrent() {
+      return;
+    },
     async resume(_url) {
       return;
     },

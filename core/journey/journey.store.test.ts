@@ -261,6 +261,33 @@ describe('journey.store (Journey Client configuration)', () => {
     expect(journeyMock).toHaveBeenCalledTimes(2);
   });
 
+  it('restarts the current journey using the latest stack entry', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'User Locked Out.', detail: null },
+      getCode: () => 401,
+    };
+    const client = {
+      start: vi.fn().mockResolvedValue(loginFailure),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    const startOptions = { journey: 'GabrielOTPMFA' };
+
+    await store.start(startOptions);
+    await store.restartCurrent();
+
+    expect(client.start).toHaveBeenLastCalledWith(startOptions);
+  });
+
   /**
    * A LoginFailure result must route through the LoginFailure branch, which is the only
    * branch that threads `failureResult` into the error state — so `error.code` reflects

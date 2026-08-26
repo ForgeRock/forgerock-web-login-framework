@@ -338,6 +338,12 @@ export function initialize(
     await start(currentJourney);
   }
 
+  async function restartCurrent() {
+    reset();
+    const currentJourney = await stack.latest();
+    await start(currentJourney);
+  }
+
   async function redirect(step: JourneyStep) {
     if (!shouldRedirectFromStep(step)) {
       return;
@@ -604,6 +610,7 @@ export function initialize(
     pop,
     push,
     reset,
+    restartCurrent,
     resume,
     start,
     redirect,

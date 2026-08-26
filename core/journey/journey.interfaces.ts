@@ -41,10 +41,11 @@ export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscri
   next: (prevStep: JourneyStep, nextOptions?: NextOptions) => Promise<void>;
   pop: () => Promise<void>;
   push: (changeOptions: StartParam) => Promise<void>;
+  redirect: (step: JourneyStep) => Promise<void>;
   reset: () => void;
+  restartCurrent: () => Promise<void>;
   resume: (url: string, resumeOptions?: ResumeOptions) => Promise<void>;
   start: (startOptions?: StartParam, recaptchaAction?: string) => Promise<void>;
-  redirect: (step: JourneyStep) => Promise<void>;
 }
 export interface StageFormObject {
   icon: boolean;
@@ -57,6 +58,7 @@ export interface StageJourneyObject {
   pop: () => void;
   push: (options: StartParam) => void;
   redirect: (step: JourneyStep) => Promise<void>;
+  restartCurrent: () => Promise<void>;
   stack: StackStore;
 }
 // ComponentConstructorOptions<never> satisfies constructor contravariance for all Svelte 4

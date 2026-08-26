@@ -63,6 +63,20 @@ const MOCK_COMPONENT_SOURCES: Record<string, string> = {
   {@render children?.()}
 </form>
 `,
+  Button: `<script>
+  let { busy = false, type = 'button', children } = $props();
+</script>
+
+<button {type} disabled={busy} class="tw_button tw_button-primary tw_w-full">
+  {@render children?.()}
+</button>
+`,
+  KeyIcon: `<script>
+  let { classes = '', size = '24px' } = $props();
+</script>
+
+<span class={classes} style:font-size={size} aria-hidden="true">🔐</span>
+`,
   // interpolate() is referenced without an import: this component's compiled
   // body ends up concatenated into the same module as HELPER_EXPORTS (see
   // buildLoginFrameworkMockDataUrl), so interpolate is already in scope.
@@ -149,6 +163,10 @@ const HELPER_EXPORTS = `
 // R4 flags for the rest of this stub.
 const MOCK_TRANSLATIONS = {
   dontHaveAnAccount: "No account? <a href='?journey=Registration'>Register here!</a>",
+  loginButton: 'Sign In',
+  startOver: 'Start over',
+  twoFactorAuthentication: '2-step verification',
+  useTheAuthenticatorAppOnYourPhone: 'Use the authenticator app on your phone to verify your identity.',
 };
 
 export function interpolate(key, params, fallback) {

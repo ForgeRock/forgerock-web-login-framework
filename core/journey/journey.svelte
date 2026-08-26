@@ -54,11 +54,8 @@
     }
   }
   async function tryAgain() {
-    journeyStore?.reset();
-
     try {
-      const latest = await stack.latest();
-      await journeyStore?.start(latest);
+      await journeyStore?.restartCurrent();
     } catch (err) {
       console.error('Unable to restart journey', err);
     }
@@ -93,6 +90,7 @@
         loading: $journeyStore.loading,
         pop: journeyStore.pop,
         push: journeyStore.push,
+        restartCurrent: journeyStore.restartCurrent,
         stack,
         redirect: journeyStore.redirect,
       }}
