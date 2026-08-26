@@ -1,37 +1,49 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
  **/
 
-import { AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
-import { get as getCookie, remove as removeCookie } from '$server/sessions';
+import { AM_DOMAIN_PATH } from '$core/constants';
+import {
+  clearAmCookie,
+  getAmCookie,
+  resolveJsonRealmPath,
+  resolveUpstreamQuery,
+} from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event: RequestEvent) => {
-  const cookie = event.request.headers.get('cookie');
-  const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
-  const reqCookie = Array.isArray(reqCookieUuid) && getCookie(reqCookieUuid[1]);
-  Array.isArray(reqCookieUuid) && removeCookie(reqCookieUuid[1]);
-
-  const response = await fetch(`${AM_DOMAIN_PATH}${JSON_REALM_PATH}/sessions/${event.url.search}`, {
-    method: 'POST',
-    headers: {
-      cookie: reqCookie ? reqCookie : '',
+  const realm = event.url.searchParams.get('realm') ?? undefined;
+  const response = await fetch(
+    `${AM_DOMAIN_PATH}${resolveJsonRealmPath(realm)}/sessions${resolveUpstreamQuery(event.url)}`,
+    {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'accept-api-version': 'protocol=1.0,resource=2.0',
+        'x-requested-with': 'XMLHttpRequest',
+        cookie: getAmCookie(event.cookies),
+      },
     },
+  );
+
+  if (event.url.searchParams.get('_action') === 'logout' && response.ok) {
+    clearAmCookie(event.cookies);
+  }
+
+  const responseHeaders = new Headers();
+  const contentType = response.headers.get('content-type');
+  if (contentType) responseHeaders.set('content-type', contentType);
+
+  return new Response(await response.text(), {
+    status: response.status,
+    headers: responseHeaders,
   });
-
-  const resBody = await response.text();
-  // console.log(response);
-
-  const headers = new Headers();
-  headers.append('set-cookie', '');
-
-  return new Response(resBody, { headers });
 };
