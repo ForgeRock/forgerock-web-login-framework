@@ -382,4 +382,633 @@ export const customComponents: CustomComponentEntry[] = [
   step: { callbacks: [] },
 }`,
   },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/login-validation/login-validation.svelte
+    // Demonstrates custom client-side behavioral validation (a 6-digit
+    // confirmation code field validated on blur).
+    name: 'login-validation.svelte',
+    kind: 'stage',
+    saveName: 'login-validation',
+    source: `<!--
+  @component
+  Type: stage
+  Name: LoginValidation
+
+  DEMO COMPONENT — behavioral field validation
+  ─────────────────────────────────────────────
+  Extension stage (Name has no built-in AM equivalent). Demonstrates adding
+  custom client-side validation behavior on top of the standard login form:
+  an extra "Confirmation code" field that must be exactly 6 digits, validated
+  on blur, with an inline error message and a red border when invalid.
+-->
+
+<script lang="ts">
+  import { afterUpdate, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import {
+    Alert,
+    CallbackMapper,
+    convertStringToKey,
+    Form,
+    interpolate,
+    styleStore,
+  } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  let alertNeedsFocus = false;
+  let formMessageKey = '';
+
+  // Local-only demo field — not part of the SDK callback chain, purely to
+  // showcase custom validation behavior in the editor demo.
+  let confirmationCode = '';
+  let confirmationCodeTouched = false;
+  let confirmationCodeError = '';
+
+  function validateConfirmationCode() {
+    confirmationCodeTouched = true;
+    confirmationCodeError = /^\\d{6}$/.test(confirmationCode)
+      ? ''
+      : 'Enter exactly 6 digits.';
+  }
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+
+  afterUpdate(() => {
+    alertNeedsFocus = Boolean(form?.message);
+  });
+
+  $: {
+    formMessageKey = convertStringToKey(form?.message);
+  }
+</script>
+
+<Form bind:formEl ariaDescribedBy="validationFormFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+  <h1 class="validation-heading">Sign In</h1>
+
+  {#if form?.message}
+    <Alert id="validationFormFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+      {interpolate(formMessageKey, null, form?.message)}
+    </Alert>
+  {/if}
+
+  {#each step?.callbacks as callback, idx}
+    <CallbackMapper
+      props={{
+        callback,
+        callbackMetadata: metadata?.callbacks[idx],
+        selfSubmitFunction: determineSubmission,
+        stepMetadata: metadata?.step && { ...metadata.step },
+        style: currentStyle,
+      }}
+    />
+  {/each}
+
+  <label class="confirmation-field" class:has-error={confirmationCodeTouched && confirmationCodeError}>
+    <span>Confirmation code</span>
+    <input
+      bind:value={confirmationCode}
+      inputmode="numeric"
+      maxlength="6"
+      on:blur={validateConfirmationCode}
+      placeholder="123456"
+      type="text"
+    />
+    {#if confirmationCodeTouched && confirmationCodeError}
+      <span class="confirmation-error">{confirmationCodeError}</span>
+    {/if}
+  </label>
+
+  <button class="signin-button" disabled={journey?.loading} type="submit">
+    {journey?.loading ? 'Signing in…' : 'Sign In'}
+  </button>
+</Form>
+
+<style>
+  .validation-heading {
+    color: #334155;
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin: 0 0 1rem;
+    text-align: center;
+  }
+
+  .confirmation-field {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.875rem;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .confirmation-field input {
+    border: 1px solid #cbd5e1;
+    border-radius: 0.25rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .confirmation-field.has-error input {
+    border-color: #dc2626;
+  }
+
+  .confirmation-error {
+    color: #dc2626;
+    font-size: 0.75rem;
+  }
+
+  .signin-button {
+    background-color: #027ab8;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .signin-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { message: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+  metadata: {
+    callbacks: [],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: { callbacks: [] },
+}`,
+  },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/login-two-column/login-two-column.svelte
+    // Demonstrates rearranging the form into a CSS-grid two-column layout.
+    name: 'login-two-column.svelte',
+    kind: 'stage',
+    saveName: 'login-two-column',
+    source: `<!--
+  @component
+  Type: stage
+  Name: LoginTwoColumn
+
+  DEMO COMPONENT — two-column HTML layout
+  ─────────────────────────────────────────
+  Extension stage (Name has no built-in AM equivalent). Demonstrates
+  rearranging the form into a CSS-grid two-column layout: a left column with
+  a brand/marketing panel, a right column with the actual login fields.
+-->
+
+<script lang="ts">
+  import { afterUpdate, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import {
+    Alert,
+    CallbackMapper,
+    convertStringToKey,
+    Form,
+    interpolate,
+    styleStore,
+  } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  let alertNeedsFocus = false;
+  let formMessageKey = '';
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+
+  afterUpdate(() => {
+    alertNeedsFocus = Boolean(form?.message);
+  });
+
+  $: {
+    formMessageKey = convertStringToKey(form?.message);
+  }
+</script>
+
+<div class="two-column-layout">
+  <div class="brand-panel">
+    <h2>Welcome back</h2>
+    <p>Sign in to pick up right where you left off.</p>
+  </div>
+
+  <div class="form-panel">
+    <Form bind:formEl ariaDescribedBy="twoColumnFormFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+      <h1 class="form-heading">Sign In</h1>
+
+      {#if form?.message}
+        <Alert id="twoColumnFormFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+          {interpolate(formMessageKey, null, form?.message)}
+        </Alert>
+      {/if}
+
+      {#each step?.callbacks as callback, idx}
+        <CallbackMapper
+          props={{
+            callback,
+            callbackMetadata: metadata?.callbacks[idx],
+            selfSubmitFunction: determineSubmission,
+            stepMetadata: metadata?.step && { ...metadata.step },
+            style: currentStyle,
+          }}
+        />
+      {/each}
+
+      <button class="signin-button" disabled={journey?.loading} type="submit">
+        {journey?.loading ? 'Signing in…' : 'Sign In'}
+      </button>
+    </Form>
+  </div>
+</div>
+
+<style>
+  .two-column-layout {
+    display: grid;
+    gap: 2rem;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .brand-panel {
+    align-items: center;
+    background-color: #eff6ff;
+    border-radius: 0.5rem;
+    color: #1e3a8a;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 2rem;
+    text-align: center;
+  }
+
+  .form-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .form-heading {
+    color: #334155;
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin: 0 0 1rem;
+  }
+
+  .signin-button {
+    background-color: #027ab8;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .signin-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { message: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+  metadata: {
+    callbacks: [],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: { callbacks: [] },
+}`,
+  },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/login-continue/login-continue.svelte
+    // Demonstrates the smallest possible edit — a displayed-text change from
+    // "Sign In" to "Continue" on the submit button.
+    name: 'login-continue.svelte',
+    kind: 'stage',
+    saveName: 'login-continue',
+    source: `<!--
+  @component
+  Type: stage
+  Name: LoginContinue
+
+  DEMO COMPONENT — displayed-text change
+  ─────────────────────────────────────────
+  Extension stage (Name has no built-in AM equivalent). Identical to the
+  base custom-login stage, but with the submit button relabeled "Continue"
+  instead of "Sign In" — the smallest possible edit to show live-preview
+  text changes in the editor.
+-->
+
+<script lang="ts">
+  import { afterUpdate, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import {
+    Alert,
+    CallbackMapper,
+    convertStringToKey,
+    Form,
+    interpolate,
+    styleStore,
+  } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  let alertNeedsFocus = false;
+  let formMessageKey = '';
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+
+  afterUpdate(() => {
+    alertNeedsFocus = Boolean(form?.message);
+  });
+
+  $: {
+    formMessageKey = convertStringToKey(form?.message);
+  }
+</script>
+
+<Form bind:formEl ariaDescribedBy="continueFormFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+  <h1 class="continue-heading">Sign In</h1>
+
+  {#if form?.message}
+    <Alert id="continueFormFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+      {interpolate(formMessageKey, null, form?.message)}
+    </Alert>
+  {/if}
+
+  {#each step?.callbacks as callback, idx}
+    <CallbackMapper
+      props={{
+        callback,
+        callbackMetadata: metadata?.callbacks[idx],
+        selfSubmitFunction: determineSubmission,
+        stepMetadata: metadata?.step && { ...metadata.step },
+        style: currentStyle,
+      }}
+    />
+  {/each}
+
+  <button class="continue-button" disabled={journey?.loading} type="submit">
+    {journey?.loading ? 'Continuing…' : 'Continue'}
+  </button>
+</Form>
+
+<style>
+  .continue-heading {
+    color: #334155;
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin: 0 0 1rem;
+    text-align: center;
+  }
+
+  .continue-button {
+    background-color: #027ab8;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .continue-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { message: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+  metadata: {
+    callbacks: [],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: { callbacks: [] },
+}`,
+  },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/login-scoped-style/login-scoped-style.svelte
+    // Demonstrates a component's scoped <style> block winning over the
+    // widget's injected theme (styleStore).
+    name: 'login-scoped-style.svelte',
+    kind: 'stage',
+    saveName: 'login-scoped-style',
+    source: `<!--
+  @component
+  Type: stage
+  Name: LoginScopedStyle
+
+  DEMO COMPONENT — scoped theme-style override
+  ───────────────────────────────────────────────
+  Extension stage (Name has no built-in AM equivalent). Demonstrates that a
+  component's own <style> block wins over the widget's theme (styleStore) —
+  the submit button uses a hardcoded gradient/brand look that a tenant's
+  theme colors cannot override, since scoped styles take final precedence.
+-->
+
+<script lang="ts">
+  import { afterUpdate, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import {
+    Alert,
+    CallbackMapper,
+    convertStringToKey,
+    Form,
+    interpolate,
+    styleStore,
+  } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  let alertNeedsFocus = false;
+  let formMessageKey = '';
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+
+  afterUpdate(() => {
+    alertNeedsFocus = Boolean(form?.message);
+  });
+
+  $: {
+    formMessageKey = convertStringToKey(form?.message);
+  }
+</script>
+
+<Form bind:formEl ariaDescribedBy="scopedStyleFormFailureMessageAlert" onSubmitWhenValid={form?.submit}>
+  <h1 class="scoped-style-heading">Sign In</h1>
+
+  {#if form?.message}
+    <Alert id="scopedStyleFormFailureMessageAlert" needsFocus={alertNeedsFocus} type="error">
+      {interpolate(formMessageKey, null, form?.message)}
+    </Alert>
+  {/if}
+
+  {#each step?.callbacks as callback, idx}
+    <CallbackMapper
+      props={{
+        callback,
+        callbackMetadata: metadata?.callbacks[idx],
+        selfSubmitFunction: determineSubmission,
+        stepMetadata: metadata?.step && { ...metadata.step },
+        style: currentStyle,
+      }}
+    />
+  {/each}
+
+  <!--
+    Scoped styles below always win over the theme injected via styleStore —
+    this button ignores currentStyle entirely and uses its own gradient.
+  -->
+  <button class="brand-gradient-button" disabled={journey?.loading} type="submit">
+    {journey?.loading ? 'Signing in…' : 'Sign In'}
+  </button>
+</Form>
+
+<style>
+  .scoped-style-heading {
+    color: #334155;
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin: 0 0 1rem;
+    text-align: center;
+  }
+
+  .brand-gradient-button {
+    background: linear-gradient(90deg, #7c3aed, #db2777);
+    border: none;
+    border-radius: 0.5rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .brand-gradient-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { message: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+  metadata: {
+    callbacks: [],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: { callbacks: [] },
+}`,
+  },
 ];
