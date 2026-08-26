@@ -23,6 +23,7 @@ export type RedirectData = {
 export type RedirectParams = {
   goto?: string;
   gotoOnFail?: string;
+  realm?: string;
 };
 
 export type RedirectFormValue = {

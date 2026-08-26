@@ -10,8 +10,7 @@
 import { z } from 'zod';
 
 import { tokenIdSchema } from '$server/schemas';
-
-import type { RedirectData, RedirectFormValue, Resolver } from './redirect.types';
+import { type RedirectData, type RedirectFormValue, type Resolver } from './redirect.types';
 
 /**
  * @function resolveRedirect - Resolves a final redirect URL from the provided context.
@@ -42,6 +41,21 @@ function firstOf(redirectContext: RedirectData, ...resolvers: Resolver[]): strin
     if (url != null) return url;
   }
   return null;
+}
+
+/**
+ * @function buildRoleUrl - Builds a role-based redirect URL for a user after login.
+ * @param {string} amOrigin - The AM server origin (also serves platform-ui under /platform and /enduser).
+ * @param {string[]} roles - The user's roles.
+ * @param {string | undefined} realm - The realm name.
+ * @returns {string} The role-based redirect URL.
+ */
+export function buildRoleUrl(amOrigin: string, roles: string[], realm: string | undefined): string {
+  const isAdmin = roles.includes('ui-global-admin') || roles.includes('ui-realm-admin');
+  const realmPath = realm && realm !== 'root' ? `/${realm}` : '/';
+  return isAdmin
+    ? `${amOrigin}/platform/?realm=${realmPath}`
+    : `${amOrigin}/enduser/?realm=${realmPath}#/`;
 }
 
 /**
@@ -92,15 +106,41 @@ export function resolveAgainstOrigin(urlOrPath: string, amOrigin: string): strin
   }
 }
 
+function isLoginAppPath(url: string, amOrigin: string): boolean {
+  try {
+    const parsed = new URL(url, amOrigin);
+    return parsed.host === new URL(amOrigin).host && parsed.pathname.startsWith('/login');
+  } catch {
+    return false;
+  }
+}
+
+function isOAuthAuthorizePath(url: string): boolean {
+  try {
+    const { pathname } = new URL(url);
+    return pathname.includes('/oauth2/') && pathname.endsWith('/authorize');
+  } catch {
+    const pathname = url.split('?')[0].split('#')[0];
+    return pathname.includes('/oauth2/') && pathname.endsWith('/authorize');
+  }
+}
+
 /**
  * @function getSuccessRedirect - Returns the successUrl if it is not a default path, otherwise null.
  * @param {RedirectData} redirectContext - The redirect context.
  * @returns {string | null} The success URL or null.
  */
 function getSuccessRedirect(redirectContext: RedirectData): string | null {
-  return redirectContext.successUrl && !isDefaultPath(redirectContext.successUrl)
-    ? resolveAgainstOrigin(redirectContext.successUrl, redirectContext.amOrigin)
-    : null;
+  const { successUrl, amOrigin } = redirectContext;
+  if (
+    successUrl &&
+    !isDefaultPath(successUrl) &&
+    !isLoginAppPath(successUrl, amOrigin) &&
+    !isOAuthAuthorizePath(successUrl)
+  ) {
+    return resolveAgainstOrigin(successUrl, amOrigin);
+  }
+  return null;
 }
 
 /**
@@ -109,8 +149,15 @@ function getSuccessRedirect(redirectContext: RedirectData): string | null {
  * @returns {string | null} The resolved journey step URL or null.
  */
 function getDefaultPathRedirect(redirectContext: RedirectData): string | null {
-  if (isDefaultPath(redirectContext.successUrl) && !isDefaultPath(redirectContext.journeyStepUrl)) {
-    return resolveAgainstOrigin(redirectContext.journeyStepUrl, redirectContext.amOrigin);
+  const { successUrl, journeyStepUrl, amOrigin } = redirectContext;
+  if (
+    isDefaultPath(successUrl) &&
+    journeyStepUrl &&
+    !isDefaultPath(journeyStepUrl) &&
+    !isLoginAppPath(resolveAgainstOrigin(journeyStepUrl, amOrigin), amOrigin) &&
+    !isOAuthAuthorizePath(journeyStepUrl)
+  ) {
+    return resolveAgainstOrigin(journeyStepUrl, amOrigin);
   }
   return null;
 }
@@ -135,9 +182,16 @@ function getSamlRedirect(redirectContext: RedirectData): string | null {
  * @returns {string | null} The resolved journey step URL or null.
  */
 function getJourneyStepRedirect(redirectContext: RedirectData): string | null {
-  return redirectContext.journeyStepUrl
-    ? resolveAgainstOrigin(redirectContext.journeyStepUrl, redirectContext.amOrigin)
-    : null;
+  const { journeyStepUrl, amOrigin } = redirectContext;
+  if (
+    journeyStepUrl &&
+    !isDefaultPath(journeyStepUrl) &&
+    !isLoginAppPath(resolveAgainstOrigin(journeyStepUrl, amOrigin), amOrigin) &&
+    !isOAuthAuthorizePath(journeyStepUrl)
+  ) {
+    return resolveAgainstOrigin(journeyStepUrl, amOrigin);
+  }
+  return null;
 }
 
 /**
@@ -148,13 +202,8 @@ function getJourneyStepRedirect(redirectContext: RedirectData): string | null {
 
 function getRoleRedirect(redirectContext: RedirectData): string | null {
   if (!redirectContext.isGotoOnFail && redirectContext.tokenId) {
-    const roles = redirectContext.roles;
-    const isAdmin = roles.includes('ui-global-admin') || roles.includes('ui-realm-admin');
-    const realm = redirectContext.realm;
-    const realmPath = realm && realm !== 'root' ? `/${realm}` : '/';
-    return isAdmin
-      ? `${redirectContext.amOrigin}/platform/?realm=${realmPath}`
-      : `${redirectContext.amOrigin}/enduser/?realm=${realmPath}#/`;
+    const { roles, realm, amOrigin } = redirectContext;
+    return buildRoleUrl(amOrigin, roles, realm);
   }
   return null;
 }
@@ -168,5 +217,7 @@ function getFallbackRedirect(redirectContext: RedirectData): string {
   if (redirectContext.isGotoOnFail) {
     return '/failure-redirect';
   }
-  return '/success-redirect';
+  const { amOrigin, realm } = redirectContext;
+  const realmSuffix = realm && realm !== 'root' ? realm : '';
+  return `${amOrigin}/enduser/?realm=/${realmSuffix}#/`;
 }

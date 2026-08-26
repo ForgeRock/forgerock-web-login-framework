@@ -92,16 +92,33 @@ export function removeHttpCookie(cookies: Cookies, name: string): void {
 }
 
 /**
+ * @function resolveJsonRealmPath - builds the AM JSON realm path segment for a given realm override.
+ * @param {string} [realm] - Realm override; uses the configured JSON_REALM_PATH when omitted.
+ * @returns {string} The AM JSON realm path (e.g. '/json/realms/root/realms/alpha').
+ */
+function resolveJsonRealmPath(realm?: string): string {
+  if (realm === undefined) return JSON_REALM_PATH;
+  return realm && realm !== 'root' ? `/json/realms/root/realms/${realm}` : '/json/realms/root';
+}
+
+/**
  * @function getUserRolesFromSession - retrieves the user's roles from the AM backend using their session token
  * @param {string} tokenId - The session token ID
+ * @param {string} realm - The realm the user authenticated in (e.g. 'alpha', 'root')
  * @returns {Promise<string[]>} An array of user roles or an empty roles array
  */
-export async function getUserRolesFromSession(tokenId: TokenId): Promise<string[]> {
-  const userId = await getUserIdFromSession(tokenId);
+export async function getUserRolesFromSession(tokenId: TokenId, realm?: string): Promise<string[]> {
+  const userId = await getUserIdFromSession(tokenId, realm);
   if (!userId) {
     return [];
   }
-  const response = await amFetchRequest(tokenId, `/users/${encodeURIComponent(userId)}`, 'GET');
+  const response = await amFetchRequest(
+    tokenId,
+    `/users/${encodeURIComponent(userId)}`,
+    'GET',
+    undefined,
+    realm,
+  );
   const parsed = z.object({ roles: z.array(z.string()) }).safeParse(response);
   return parsed.success ? parsed.data.roles : [];
 }
@@ -109,12 +126,34 @@ export async function getUserRolesFromSession(tokenId: TokenId): Promise<string[
 /**
  * @function getUserIdFromSession - retrieves the user ID associated with a session token
  * @param {string} tokenId - The session token ID
+ * @param {string} realm - The realm the user authenticated in (e.g. 'alpha', 'root')
  * @returns {Promise<string|null>} The user ID or null if not found
  */
-export async function getUserIdFromSession(tokenId: TokenId): Promise<string | null> {
-  const response = await amFetchRequest(tokenId, '/users?_action=idFromSession', 'POST', {});
-  const parsed = z.object({ id: z.string() }).safeParse(response);
-  return parsed.success ? parsed.data.id : null;
+export async function getUserIdFromSession(
+  tokenId: TokenId,
+  realm?: string,
+): Promise<string | null> {
+  // AIC blocks /users?_action=idFromSession (403). Use sessions validate instead,
+  // which returns uid = the username string on AIC.
+  const realmPath = resolveJsonRealmPath(realm);
+  const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
+    method: 'POST',
+    headers: {
+      accept: 'application/json',
+      'Accept-API-Version': 'resource=2.0',
+      'Content-Type': 'application/json',
+      cookie: `${AM_COOKIE_NAME}=${tokenId}`,
+    },
+    body: JSON.stringify({ tokenId }),
+  });
+  if (!response.ok) return null;
+  try {
+    const data = await response.json();
+    const parsed = z.object({ valid: z.boolean(), uid: z.string().optional() }).safeParse(data);
+    return parsed.success && parsed.data.valid ? parsed.data.uid ?? null : null;
+  } catch {
+    return null;
+  }
 }
 
 /**
@@ -123,6 +162,7 @@ export async function getUserIdFromSession(tokenId: TokenId): Promise<string | n
  * @param {string} endpoint - The AM API endpoint path
  * @param {string} method - HTTP method to use (e.g., 'GET', 'POST').
  * @param {object} [body] - Optional request body which will be JSON-stringified when provided.
+ * @param {string} [realm] - Optional realm override; uses the configured JSON_REALM_PATH when omitted.
  * @returns {Promise<unknown|null>} Parsed JSON response on success, otherwise `null`.
  */
 export async function amFetchRequest(
@@ -130,8 +170,10 @@ export async function amFetchRequest(
   endpoint: string,
   method: string,
   body?: object,
+  realm?: string,
 ): Promise<unknown> {
-  const response = await fetch(`${AM_DOMAIN_PATH}${JSON_REALM_PATH}${endpoint}`, {
+  const realmPath = resolveJsonRealmPath(realm);
+  const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}${endpoint}`, {
     method: method,
     headers: {
       accept: 'application/json',
