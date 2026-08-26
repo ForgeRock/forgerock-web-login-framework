@@ -21,6 +21,544 @@ export interface CustomComponentEntry {
 
 export const customComponents: CustomComponentEntry[] = [
   {
+    // Real repo file, verbatim: experimental/custom/stages/hello-world/hello-world.svelte
+    // First editor example: only Hello World! renders; the rest is a progressive tutorial.
+    name: 'hello-world.svelte',
+    kind: 'stage',
+    saveName: 'hello-world',
+    source: `<!--
+@component
+Type: stage
+Name: HelloWorld
+-->
+
+<script lang="ts">
+  import { Form } from '$login-framework';
+
+  import type { StageFormObject, StageJourneyObject } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+</script>
+
+<Form bind:formEl onSubmitWhenValid={form?.submit}>
+  <span style="color: #334155"> Hello World! </span>
+  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+</Form>
+
+<style>
+  .tutorial-next {
+    background-color: #3b6073;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .tutorial-next:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+}`,
+  },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/hello-world-native/hello-world-native.svelte
+    name: 'hello-world-native.svelte',
+    kind: 'stage',
+    saveName: 'hello-world-native',
+    source: `<!--
+@component
+Type: stage
+Name: HelloWorldNative
+-->
+
+<script lang="ts">
+  import { Form } from '$login-framework';
+
+  import type { StageFormObject, StageJourneyObject } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+
+  let name = '';
+  let rememberMe = false;
+</script>
+
+<Form bind:formEl onSubmitWhenValid={form?.submit}>
+  <h1>Hello World!</h1>
+
+  <label>
+    Your name
+    <input bind:value={name} type="text" />
+  </label>
+
+  <label>
+    <input bind:checked={rememberMe} type="checkbox" />
+    Remember me
+  </label>
+
+  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+</Form>
+
+<style>
+  .tutorial-next {
+    background-color: #3b6073;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .tutorial-next:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+}`,
+  },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/hello-world-callbacks/hello-world-callbacks.svelte
+    name: 'hello-world-callbacks.svelte',
+    kind: 'stage',
+    saveName: 'hello-world-callbacks',
+    source: `<!--
+@component
+Type: stage
+Name: HelloWorldCallbacks
+
+DEMO COMPONENT — Step 3: AM callbacks
+-->
+
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import { CallbackMapper, Form, styleStore } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+</script>
+
+<Form bind:formEl onSubmitWhenValid={form?.submit}>
+  <h1 class="tutorial-heading">Hello World!</h1>
+  <p class="tutorial-description">
+    CallbackMapper renders fields supplied by your AM journey step.
+  </p>
+
+  {#each step?.callbacks as callback, index}
+    <CallbackMapper
+      props={{
+        callback,
+        callbackMetadata: metadata?.callbacks[index],
+        selfSubmitFunction: determineSubmission,
+        stepMetadata: metadata?.step && { ...metadata.step },
+        style: currentStyle,
+      }}
+    />
+  {/each}
+
+  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+</Form>
+
+<style>
+  .tutorial-heading {
+    color: #334155;
+    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .tutorial-description {
+    color: #374151;
+    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .tutorial-next {
+    background-color: #3b6073;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .tutorial-next:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+  metadata: {
+    callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: { callbacks: [{}] },
+}`,
+  },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/hello-world-styles/hello-world-styles.svelte
+    name: 'hello-world-styles.svelte',
+    kind: 'stage',
+    saveName: 'hello-world-styles',
+    source: `<!--
+@component
+Type: stage
+Name: HelloWorldStyles
+
+DEMO COMPONENT — Step 4: scoped styles
+-->
+
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import { CallbackMapper, Form, styleStore } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+</script>
+
+<Form bind:formEl onSubmitWhenValid={form?.submit}>
+  <section class="tutorial-card">
+    <p class="tutorial-step">Step 4: scoped styles</p>
+    <h1>Hello World!</h1>
+    <p>Component-scoped CSS changes this stage without styling other journey steps.</p>
+
+    {#each step?.callbacks as callback, index}
+      <CallbackMapper
+        props={{
+          callback,
+          callbackMetadata: metadata?.callbacks[index],
+          selfSubmitFunction: determineSubmission,
+          stepMetadata: metadata?.step && { ...metadata.step },
+          style: currentStyle,
+        }}
+      />
+    {/each}
+
+    <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+  </section>
+</Form>
+
+<style>
+  .tutorial-card {
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    border-radius: 0.75rem;
+    color: #1e3a8a;
+    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+    padding: 1.5rem;
+  }
+
+  .tutorial-step {
+    color: #2563eb;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    margin: 0 0 0.5rem;
+    text-transform: uppercase;
+  }
+
+  .tutorial-card h1 {
+    font-size: 2rem;
+    font-weight: 300;
+    margin: 0 0 0.75rem;
+  }
+
+  .tutorial-card :global(.tw_input-base) {
+    border-color: #60a5fa;
+  }
+
+  :global(.dark) .tutorial-card {
+    background: #172554;
+    border-color: #1d4ed8;
+    color: #dbeafe;
+  }
+
+  .tutorial-next {
+    background-color: #3b6073;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .tutorial-next:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+  metadata: {
+    callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: { callbacks: [{}] },
+}`,
+  },
+  {
+    // Real repo file, verbatim: experimental/custom/stages/hello-world-actions/hello-world-actions.svelte
+    name: 'hello-world-actions.svelte',
+    kind: 'stage',
+    saveName: 'hello-world-actions',
+    source: `<!--
+@component
+Type: stage
+Name: HelloWorldActions
+
+DEMO COMPONENT — Step 5: form and journey actions
+-->
+
+<script lang="ts">
+  import { afterUpdate, onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import {
+    Alert,
+    CallbackMapper,
+    convertStringToKey,
+    Form,
+    interpolate,
+    styleStore,
+  } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  let alertNeedsFocus = false;
+  let formMessageKey = '';
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+
+  async function restartCurrentJourney() {
+    await journey.restartCurrent();
+  }
+
+  afterUpdate(() => {
+    alertNeedsFocus = Boolean(form?.message);
+  });
+
+  $: {
+    formMessageKey = convertStringToKey(form?.message);
+  }
+</script>
+
+<Form bind:formEl ariaDescribedBy="tutorialActionsError" onSubmitWhenValid={form?.submit}>
+  <h1 class="tutorial-heading">Hello World!</h1>
+  <p class="tutorial-description">
+    Submit a form or restart the active journey without hard-coding its name.
+  </p>
+
+  {#if form?.message}
+    <Alert id="tutorialActionsError" needsFocus={alertNeedsFocus} type="error">
+      {interpolate(formMessageKey, null, form?.message)}
+    </Alert>
+  {/if}
+
+  {#each step?.callbacks as callback, index}
+    <CallbackMapper
+      props={{
+        callback,
+        callbackMetadata: metadata?.callbacks[index],
+        selfSubmitFunction: determineSubmission,
+        stepMetadata: metadata?.step && { ...metadata.step },
+        style: currentStyle,
+      }}
+    />
+  {/each}
+
+  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+  <button
+    class="tutorial-restart"
+    disabled={journey?.loading}
+    on:click={restartCurrentJourney}
+    type="button"
+  >
+    Start over
+  </button>
+</Form>
+
+<style>
+  .tutorial-heading {
+    color: #334155;
+    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .tutorial-description {
+    color: #374151;
+    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.875rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+  }
+
+  .tutorial-restart {
+    background: none;
+    border: 0;
+    color: #2563eb;
+    cursor: pointer;
+    display: block;
+    font: inherit;
+    margin: 1rem auto;
+    padding: 0;
+    text-decoration: underline;
+  }
+
+  .tutorial-restart:focus-visible {
+    outline: 2px solid #027ab8;
+    outline-offset: 2px;
+  }
+
+  .tutorial-restart:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+
+  .tutorial-next {
+    background-color: #3b6073;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .tutorial-next:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { message: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false, restartCurrent: async () => console.log('restart current journey') },
+  metadata: {
+    callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: { callbacks: [{}] },
+}`,
+  },
+  {
     // Real repo file, verbatim: experimental/custom/demo/callbacks/custom-name/custom-name.svelte
     // Svelte 4 legacy syntax + framework-internal imports ($login-framework,
     // @forgerock/journey-client/types) — kept as-is to demonstrate what an

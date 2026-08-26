@@ -79,7 +79,7 @@
       />
     </div>
     <p class="tw_text-xs tw_text-secondary-dark dark:tw_text-secondary-light tw_px-1">
-      {interpolate('customNameHint', null, 'Please enter the username for your account.')}
+      {interpolate('customNameHint', null, ' the username for your account.')}
     </p>
   </div>
 {/key}

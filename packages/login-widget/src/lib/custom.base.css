@@ -31,7 +31,10 @@
   -moz-tab-size: 4; /* 3 */
   -o-tab-size: 4;
   tab-size: 4; /* 3 */
-  color: var(--fr-body-text-color, inherit);
+  color: var(
+    --fr-body-text-color,
+    hsl(var(--tw-colors-body-dark-hs), var(--tw-colors-body-dark-l))
+  );
   font-family:
     var(--fr-font-family, 'Open Sans'),
     ui-sans-serif,
@@ -48,6 +51,13 @@
     Segoe UI Emoji,
     Segoe UI Symbol,
     Noto Color Emoji; /* 4 */
+}
+
+:where(.tw_dark) :where(.fr_widget-root) {
+  color: var(
+    --fr-body-text-color,
+    hsl(var(--tw-colors-body-light-hs), var(--tw-colors-body-light-l))
+  );
 }
 /*
 1. Add the correct height in Firefox.
