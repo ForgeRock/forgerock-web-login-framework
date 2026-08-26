@@ -15,14 +15,30 @@ import { compileComponent } from './compiler';
 // Coverage here tracks what's actually imported by components in
 // components.ts — extend as new repo components are added to the PoC.
 const MOCK_COMPONENT_SOURCES: Record<string, string> = {
+  // Reuses the same tw_* classes as the real Stacked composition
+  // ($components/compositions/input-stacked/stacked-label.svelte ->
+  // primitives/input, primitives/label) so preview inherits the actual
+  // widget.css rules (font weight/size, spacing) instead of an unstyled
+  // stand-in — this is what makes label/hint styling match login-app.
   Stacked: `<script>
   let { label = '', value = '', onChange, type = 'text', key = '' } = $props();
 </script>
 
-<label class="mock-stacked" data-key={key} style="display:flex; flex-direction:column; gap:4px; font-size:12px; color:#69788b;">
-  <span>{label}</span>
-  <input {type} {value} oninput={onChange} style="border:1px solid #e2e5ea; border-radius:4px; padding:6px 8px; font-size:13px;" />
-</label>
+<div class="tw_input-spacing tw_flex tw_flex-wrap">
+  <label
+    class="tw_input-stacked-label tw_input-label dark:tw_input-label_dark tw_w-full tw_ml-1"
+    for={key}
+  >
+    {label}
+  </label>
+  <input
+    {type}
+    {value}
+    oninput={onChange}
+    id={key}
+    class="tw_input-base dark:tw_input-base_dark tw_focusable-element dark:tw_focusable-element_dark tw_flex-1 tw_w-full"
+  />
+</div>
 `,
   Alert: `<script>
   let { id = '', needsFocus = false, type = 'info', children } = $props();
