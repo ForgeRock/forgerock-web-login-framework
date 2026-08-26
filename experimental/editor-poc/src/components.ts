@@ -528,6 +528,7 @@ export const customComponents: CustomComponentEntry[] = [
   .confirmation-field input {
     border: 1px solid #cbd5e1;
     border-radius: 0.25rem;
+    color: #334155;
     padding: 0.5rem 0.75rem;
   }
 
