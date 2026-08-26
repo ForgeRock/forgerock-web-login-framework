@@ -7,23 +7,78 @@
  *
  **/
 
-import { redirect } from '@sveltejs/kit';
+import { isRedirect, redirect, type RequestEvent } from '@sveltejs/kit';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
+import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
 import {
   createRedirectContext,
   readAndClearRedirectCookie,
   storeRedirectParams,
+  validateUrl,
 } from '$server/redirect/redirect.effects';
-import { resolveRedirect } from '$server/redirect/redirect.utilities';
+import {
+  buildRoleUrl,
+  isOAuthAuthorizePath,
+  resolveRealmFromUrl,
+  resolveRedirect,
+} from '$server/redirect/redirect.utilities';
+import { tokenIdSchema } from '$server/schemas';
+import { getHttpCookie, getUserIdFromSession, getUserRolesFromSession } from '$server/sessions';
 
-import type { RequestEvent } from '@sveltejs/kit';
 import type { z } from 'zod';
 
 import type { PageServerLoad } from './$types';
 import type { stringsSchema } from '$core/locale.store';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
+  // Pre-flight: if the user already has a valid AM session, skip the login form
+  // and send them straight to their portal. Skip this when a specific journey or
+  // authIndexValue is requested, since the user may be intentionally headed to a
+  // different flow (e.g. password reset).
+  const hasIntentionalJourney =
+    event.url.searchParams.has('journey') || event.url.searchParams.has('authIndexValue');
+  const rawTokenId = !hasIntentionalJourney
+    ? getHttpCookie(event.cookies, AM_COOKIE_NAME)
+    : undefined;
+  const parsedTokenId = rawTokenId ? tokenIdSchema.safeParse(rawTokenId) : undefined;
+  const tokenId = parsedTokenId?.success ? parsedTokenId.data : undefined;
+  if (tokenId) {
+    try {
+      const amOrigin = new URL(AM_DOMAIN_PATH).origin;
+      const realm = resolveRealmFromUrl(event.url);
+
+      // Validate the session is live before acting on it.
+      const userId = await getUserIdFromSession(tokenId, realm);
+      if (!userId) throw new Error('Session invalid or expired');
+
+      // If goto targets AM's OAuth authorize endpoint, let AM validate it
+      // (validateGoto) and only follow the successUrl AM returns, so the SPA's
+      // iframe PKCE mechanism completes without redirecting on an app-side
+      // trust decision.
+      const goto = event.url.searchParams.get('goto');
+      if (goto) {
+        const gotoUrl = new URL(goto, amOrigin);
+        if (gotoUrl.origin === amOrigin && isOAuthAuthorizePath(gotoUrl.href)) {
+          const successUrl = await validateUrl(tokenId, gotoUrl.href, realm);
+          // validateGoto echoes a trusted goto back unchanged; any other value
+          // (e.g. a substituted default success URL) means AM did not trust the
+          // goto, so fall through to the role redirect instead of sending the
+          // browser to a URL AM did not bless for this request.
+          if (successUrl === gotoUrl.href) {
+            throw redirect(303, successUrl);
+          }
+        }
+      }
+
+      const roles = await getUserRolesFromSession(tokenId, realm);
+      throw redirect(303, buildRoleUrl(amOrigin, roles, realm));
+    } catch (err) {
+      // Only re-throw SvelteKit redirects; ignore AM errors (expired/invalid session)
+      if (isRedirect(err)) throw err;
+    }
+  }
+
   const userLocale = event.request.headers.get('accept-language') || 'en-US';
   const locale = getLocale(userLocale, '/');
   const [country, lang] = locale.split('/');
