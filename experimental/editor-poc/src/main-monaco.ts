@@ -4,7 +4,7 @@ import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
 
 import { brand } from './brand';
 import { compileComponent, getMountCode, stripMountWrapper } from './compiler';
-import { customComponents } from './components';
+import { type CustomComponentKind,customComponents } from './components';
 import { buildLoginFrameworkMockDataUrl } from './login-framework-mock';
 import { buildSandboxSrcdoc } from './sandbox';
 import { definePingBrandTheme, PING_BRAND_THEME_NAME } from './theme-monaco';
@@ -87,20 +87,41 @@ const saveStatus = document.querySelector<HTMLSpanElement>('#save-status')!;
 
 let activeIndex = 0;
 
+const SECTION_LABELS: Record<CustomComponentKind, string> = {
+  callback: 'Callback',
+  stage: 'Stage',
+};
+
+const sectionHeaderStyle = `padding:8px 14px 4px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${brand.textMuted};`;
+
 function renderFileTree(): void {
-  fileTree.innerHTML = customComponents
-    .map((component, index) => {
-      const isActive = index === activeIndex;
-      return `
-        <div data-index="${index}" style="
-          padding:7px 14px;
-          font-size:13px;
-          cursor:pointer;
-          color:${isActive ? brand.primary : brand.textPrimary};
-          background:${isActive ? '#eaf3fb' : 'transparent'};
-          border-left:3px solid ${isActive ? brand.primary : 'transparent'};
-        ">${component.name}</div>
-      `;
+  fileTree.innerHTML = (Object.keys(SECTION_LABELS) as CustomComponentKind[])
+    .map((kind) => {
+      const entries = customComponents
+        .map((component, index) => ({ component, index }))
+        .filter(({ component }) => component.kind === kind);
+
+      if (entries.length === 0) {
+        return '';
+      }
+
+      const rows = entries
+        .map(({ component, index }) => {
+          const isActive = index === activeIndex;
+          return `
+            <div data-index="${index}" style="
+              padding:7px 14px;
+              font-size:13px;
+              cursor:pointer;
+              color:${isActive ? brand.primary : brand.textPrimary};
+              background:${isActive ? '#eaf3fb' : 'transparent'};
+              border-left:3px solid ${isActive ? brand.primary : 'transparent'};
+            ">${component.name}</div>
+          `;
+        })
+        .join('');
+
+      return `<div style="${sectionHeaderStyle}">${SECTION_LABELS[kind]}</div>${rows}`;
     })
     .join('');
 }
@@ -115,7 +136,7 @@ function selectComponent(index: number): void {
 }
 
 function updateSaveButton(): void {
-  const canSave = customComponents[activeIndex].canSave ?? false;
+  const canSave = customComponents[activeIndex].saveName !== undefined;
   saveButton.disabled = !canSave;
   saveButton.style.opacity = canSave ? '1' : '0.5';
   saveButton.style.cursor = canSave ? 'pointer' : 'not-allowed';
@@ -123,15 +144,20 @@ function updateSaveButton(): void {
 }
 
 async function saveActiveComponent(): Promise<void> {
-  if (!customComponents[activeIndex].canSave) {
+  const active = customComponents[activeIndex];
+  if (!active.saveName) {
     return;
   }
 
   saveStatus.textContent = 'Saving…';
   try {
-    const response = await fetch('/api/save-custom-name', {
+    const response = await fetch('/api/save-custom-component', {
       method: 'POST',
-      body: editor.getValue(),
+      body: JSON.stringify({
+        kind: active.kind,
+        name: active.saveName,
+        source: editor.getValue(),
+      }),
     });
     saveStatus.textContent = response.ok ? 'Saved ✓' : `Save failed: ${await response.text()}`;
   } catch (error) {
