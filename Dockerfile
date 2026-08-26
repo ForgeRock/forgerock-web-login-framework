@@ -1,4 +1,10 @@
-FROM node:22-slim AS builder
+# BASE_IMAGE is overridable so the image can be built behind a firewall that
+# blocks docker.io: the saas aic-login2 deploy script passes a reachable debian-slim
+# node base (e.g. mirror.gcr.io/library/node:22-slim). Default is the upstream
+# tag so CI and normal local builds are unchanged. Must remain debian-based —
+# the deploy stage uses groupadd/useradd and @swc/core+esbuild native deps.
+ARG BASE_IMAGE=node:22-slim
+FROM ${BASE_IMAGE} AS builder
 
 ARG NODE_ENV=development
 ENV NODE_ENV=$NODE_ENV
@@ -30,10 +36,14 @@ ENV PREVIEW="true"
 
 RUN ["pnpm", "run", "build"]
 
-# Run as the built-in non-root user from the node base image
+# Create forgerock user (UID 11111) to match saas Kubernetes security standards.
+# The node base image provides UID 1000, but AIC workloads must run as 11111.
+RUN groupadd --gid 11111 forgerock && \
+    useradd --uid 11111 --gid 11111 --no-create-home --shell /bin/bash forgerock
+
 # Only chown the build output — avoids duplicating the entire node_modules layer
-RUN chown -R node:node apps/login-app/build
-USER node
+RUN chown -R forgerock:forgerock apps/login-app/build
+USER forgerock
 
 EXPOSE 3000
 

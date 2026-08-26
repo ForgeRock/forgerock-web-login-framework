@@ -213,8 +213,8 @@ describe('resolveRedirect', () => {
     expect(url).toBe('/failure-redirect');
   });
 
-  it('returns a success fallback redirect when nothing matches', () => {
+  it('returns an enduser fallback redirect when nothing matches', () => {
     const url = resolveRedirect(makeContext());
-    expect(url).toBe('/success-redirect');
+    expect(url).toBe('https://openam.example.com/enduser/?realm=/#/');
   });
 });
