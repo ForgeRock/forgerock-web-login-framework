@@ -3,7 +3,7 @@ import EditorWorker from 'monaco-editor/editor/editor.worker?worker';
 import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
 
 import { brand } from './brand';
-import { compileComponent, getMountCode, stripMountWrapper } from './compiler';
+import { compileComponent, getMountCode } from './compiler';
 import { type CustomComponentKind, customComponents } from './components';
 import { buildLoginFrameworkMockDataUrl } from './login-framework-mock';
 import { buildSandboxSrcdoc } from './sandbox';
@@ -40,8 +40,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <button id="save-button" style="font-size:13px; color:#fff; background:${brand.primary}; padding:8px 18px; border-radius:20px; font-weight:600; border:none; cursor:pointer;">Save</button>
       </div>
     </div>
-    <div style="flex:1; display:grid; grid-template-columns:200px 1fr 1fr; grid-template-rows:1fr 240px; gap:12px; padding:12px;">
-      <div style="${cardStyle}; grid-row: 1 / span 2;">
+    <div style="flex:1; display:grid; grid-template-columns:200px 1fr 1fr; gap:12px; padding:12px;">
+      <div style="${cardStyle}">
         <div style="${codeHeaderStyle}">Custom components</div>
         <div id="file-tree" style="flex:1; overflow:auto; padding:6px 0;"></div>
       </div>
@@ -56,14 +56,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <iframe id="preview" sandbox="allow-scripts" style="flex:1; border:none;"></iframe>
         <pre id="error-boundary" style="margin:0; padding:8px 14px; color:${brand.danger}; background:#fef2f1; min-height:1.4em; font-size:12px; white-space:pre-wrap; border-top:1px solid ${brand.border};"></pre>
       </div>
-      <div style="${cardStyle}">
-        <div style="${codeHeaderStyle}">Compiled, before strip (mount wrapper still attached)</div>
-        <pre id="pre-strip-output" style="margin:0; padding:10px 14px; overflow:auto; flex:1; font-size:11px; background:${brand.textPrimary}; color:#f0c896;"></pre>
-      </div>
-      <div style="${cardStyle}">
-        <div style="${codeHeaderStyle}">Bundle saved to GCS (mount wrapper stripped)</div>
-        <pre id="saved-output" style="margin:0; padding:10px 14px; overflow:auto; flex:1; font-size:11px; background:${brand.textPrimary}; color:#9fdca4;"></pre>
-      </div>
     </div>
   </div>
 `;
@@ -71,8 +63,6 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
 const editorContainer = document.querySelector<HTMLDivElement>('#editor')!;
 const preview = document.querySelector<HTMLIFrameElement>('#preview')!;
 const errorBoundary = document.querySelector<HTMLPreElement>('#error-boundary')!;
-const preStripOutput = document.querySelector<HTMLPreElement>('#pre-strip-output')!;
-const savedOutput = document.querySelector<HTMLPreElement>('#saved-output')!;
 const fileTree = document.querySelector<HTMLDivElement>('#file-tree')!;
 const activeFilename = document.querySelector<HTMLSpanElement>('#active-filename')!;
 const saveButton = document.querySelector<HTMLButtonElement>('#save-button')!;
@@ -188,7 +178,7 @@ let debounceHandle: ReturnType<typeof setTimeout> | undefined;
 
 function recompile(): void {
   const source = editor.getValue();
-  const { js, css, error } = compileComponent(source);
+  const { js, error } = compileComponent(source);
 
   if (error) {
     errorBoundary.textContent = error;
@@ -197,11 +187,6 @@ function recompile(): void {
 
   const previewCode = getMountCode(js, customComponents[activeIndex].mockProps);
   preview.contentWindow?.postMessage({ type: 'render', code: previewCode }, '*');
-
-  preStripOutput.textContent = previewCode;
-
-  const bundleForGcs = stripMountWrapper(previewCode);
-  savedOutput.textContent = `${bundleForGcs}\n\n/* css */\n${css}`;
 }
 
 function scheduleRecompile(): void {
