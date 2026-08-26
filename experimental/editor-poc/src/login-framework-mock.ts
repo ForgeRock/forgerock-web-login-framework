@@ -65,10 +65,15 @@ const MOCK_COMPONENT_SOURCES: Record<string, string> = {
 `,
   CallbackMapper: `<script>
   // Stub only — real callback-mapper.svelte dispatches to a per-callback-type
-  // component. Mock props in components.ts pass an empty \`step.callbacks\`,
-  // so this is imported but never actually rendered.
+  // component. This mock renders a generic placeholder instead, so a preview
+  // shows where callback fields will land without simulating any real
+  // per-type callback UI.
   let { props = {} } = $props();
 </script>
+
+<div class="mock-callback-placeholder" style="border:1px dashed #cbd5e1; border-radius:6px; padding:10px 12px; margin-bottom:8px; color:#94a3b8; font-size:12px;">
+  Callback field
+</div>
 `,
 };
 

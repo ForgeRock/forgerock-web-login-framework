@@ -379,7 +379,7 @@ export const customComponents: CustomComponentEntry[] = [
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [] },
+  step: { callbacks: [{}] },
 }`,
   },
   {
@@ -566,7 +566,7 @@ export const customComponents: CustomComponentEntry[] = [
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [] },
+  step: { callbacks: [{}] },
 }`,
   },
   {
@@ -731,7 +731,7 @@ export const customComponents: CustomComponentEntry[] = [
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [] },
+  step: { callbacks: [{}] },
 }`,
   },
   {
@@ -867,7 +867,7 @@ export const customComponents: CustomComponentEntry[] = [
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [] },
+  step: { callbacks: [{}] },
 }`,
   },
   {
@@ -1008,7 +1008,7 @@ export const customComponents: CustomComponentEntry[] = [
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [] },
+  step: { callbacks: [{}] },
 }`,
   },
 ];
