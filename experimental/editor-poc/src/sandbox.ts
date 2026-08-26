@@ -45,6 +45,18 @@ export function buildSandboxSrcdoc(loginFrameworkMockUrl: string): string {
         --fr-button-text-color: #fff;
         --fr-button-border-radius: .25rem;
       }
+      .page-shell {
+        align-items: center;
+        background: #f1f5f9;
+        box-sizing: border-box;
+        display: flex;
+        justify-content: center;
+        min-height: 100%;
+        padding: 1rem;
+      }
+      .tw_containing-box {
+        background: #fff;
+      }
       .fr_widget-root {
         --fr-font-family: system-ui, sans-serif;
         --fr-body-text-color: ${brand.textPrimary};

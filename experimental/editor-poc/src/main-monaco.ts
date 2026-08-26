@@ -50,14 +50,8 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <div id="editor" style="flex:1; overflow:hidden;"></div>
       </div>
       <div style="${cardStyle}">
-        <div style="padding:10px 14px; border-bottom:1px solid ${brand.border}; display:flex; flex-direction:column; gap:6px;">
-          <div style="display:flex; justify-content:space-between; align-items:baseline;">
-            <span style="color:${brand.textPrimary}; font-size:13px; font-weight:600;">Live preview <span style="font-weight:400; color:${brand.textMuted}; font-size:11px;">sandboxed iframe, mock data</span></span>
-          </div>
-          <label style="font-size:12px; color:${brand.textMuted}; font-weight:400;">
-            mock props (JS object literal):
-            <textarea id="mock-props" rows="2" style="width:100%; border:1px solid ${brand.border}; border-radius:4px; padding:4px 6px; font-size:11px; font-family:monospace; resize:vertical; box-sizing:border-box;"></textarea>
-          </label>
+        <div style="padding:10px 14px; border-bottom:1px solid ${brand.border};">
+          <span style="color:${brand.textPrimary}; font-size:13px; font-weight:600;">Live preview <span style="font-weight:400; color:${brand.textMuted}; font-size:11px;">sandboxed iframe, mock data</span></span>
         </div>
         <iframe id="preview" sandbox="allow-scripts" style="flex:1; border:none;"></iframe>
         <pre id="error-boundary" style="margin:0; padding:8px 14px; color:${brand.danger}; background:#fef2f1; min-height:1.4em; font-size:12px; white-space:pre-wrap; border-top:1px solid ${brand.border};"></pre>
@@ -79,7 +73,6 @@ const preview = document.querySelector<HTMLIFrameElement>('#preview')!;
 const errorBoundary = document.querySelector<HTMLPreElement>('#error-boundary')!;
 const preStripOutput = document.querySelector<HTMLPreElement>('#pre-strip-output')!;
 const savedOutput = document.querySelector<HTMLPreElement>('#saved-output')!;
-const mockPropsInput = document.querySelector<HTMLTextAreaElement>('#mock-props')!;
 const fileTree = document.querySelector<HTMLDivElement>('#file-tree')!;
 const activeFilename = document.querySelector<HTMLSpanElement>('#active-filename')!;
 const saveButton = document.querySelector<HTMLButtonElement>('#save-button')!;
@@ -134,7 +127,6 @@ function renderFileTree(): void {
 function selectComponent(index: number): void {
   activeIndex = index;
   activeFilename.textContent = customComponents[index].name;
-  mockPropsInput.value = customComponents[index].mockProps;
   renderFileTree();
   editor.setValue(customComponents[index].source);
   updateSaveButton();
@@ -203,7 +195,7 @@ function recompile(): void {
     return;
   }
 
-  const previewCode = getMountCode(js, mockPropsInput.value);
+  const previewCode = getMountCode(js, customComponents[activeIndex].mockProps);
   preview.contentWindow?.postMessage({ type: 'render', code: previewCode }, '*');
 
   preStripOutput.textContent = previewCode;
@@ -231,9 +223,7 @@ const editor = monaco.editor.create(editorContainer, {
 editor.onDidChangeModelContent(scheduleRecompile);
 
 activeFilename.textContent = customComponents[activeIndex].name;
-mockPropsInput.value = customComponents[activeIndex].mockProps;
 renderFileTree();
 updateSaveButton();
-mockPropsInput.addEventListener('input', scheduleRecompile);
 
 preview.addEventListener('load', recompile);
