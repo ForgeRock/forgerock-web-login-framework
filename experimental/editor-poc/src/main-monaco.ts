@@ -4,7 +4,7 @@ import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
 
 import { brand } from './brand';
 import { compileComponent, getMountCode, stripMountWrapper } from './compiler';
-import { type CustomComponentKind,customComponents } from './components';
+import { type CustomComponentKind, customComponents } from './components';
 import { buildLoginFrameworkMockDataUrl } from './login-framework-mock';
 import { buildSandboxSrcdoc } from './sandbox';
 import { definePingBrandTheme, PING_BRAND_THEME_NAME } from './theme-monaco';
@@ -85,11 +85,16 @@ const activeFilename = document.querySelector<HTMLSpanElement>('#active-filename
 const saveButton = document.querySelector<HTMLButtonElement>('#save-button')!;
 const saveStatus = document.querySelector<HTMLSpanElement>('#save-status')!;
 
-let activeIndex = 0;
+const DEFAULT_COMPONENT_KIND: CustomComponentKind = 'stage';
+const defaultComponentIndex = customComponents.findIndex(
+  (component) => component.kind === DEFAULT_COMPONENT_KIND,
+);
+
+let activeIndex = defaultComponentIndex >= 0 ? defaultComponentIndex : 0;
 
 const SECTION_LABELS: Record<CustomComponentKind, string> = {
-  callback: 'Callback',
   stage: 'Stage',
+  callback: 'Callback',
 };
 
 const sectionHeaderStyle = `padding:8px 14px 4px; font-size:11px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; color:${brand.textMuted};`;

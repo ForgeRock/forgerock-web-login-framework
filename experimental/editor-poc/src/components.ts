@@ -128,7 +128,6 @@ export const customComponents: CustomComponentEntry[] = [
    * make the demo component easy to identify during development.
    */
   .name-input {
-    background-color: #027ab8;
     border-radius: 4px;
     padding: 4px;
   }
@@ -205,7 +204,6 @@ export const customComponents: CustomComponentEntry[] = [
    */
   import {
     Alert,
-    Button,
     CallbackMapper,
     captureLinks,
     convertStringToKey,
@@ -293,17 +291,17 @@ export const customComponents: CustomComponentEntry[] = [
         Or import and use a Svelte icon component from your design system.
       -->
       <div
-        class="tw_w-16 tw_h-16 tw_rounded-full tw_bg-blue-600 tw_flex tw_items-center tw_justify-center"
+        class="custom-login-icon tw_w-16 tw_h-16 tw_rounded-full tw_bg-blue-600 tw_flex tw_items-center tw_justify-center"
         aria-hidden="true"
       >
-        <span class="tw_text-white tw_text-2xl tw_font-bold select-none">✦</span>
+        <span class="custom-login-icon-symbol tw_text-white tw_text-2xl tw_font-bold select-none">✦</span>
       </div>
 
-      <h1 class="tw_primary-header dark:tw_primary-header_dark">
-        <span>Sign In</span>
+      <h1 class="custom-login-heading tw_primary-header dark:tw_primary-header_dark">
+        <span class="custom-login-heading-text">Sign In</span>
       </h1>
 
-      <p class="tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light">
+      <p class="custom-login-subtitle tw_text-sm tw_text-secondary-dark dark:tw_text-secondary-light">
         {interpolate('customLoginSubtitle', null, 'Welcome back — please sign in to continue.')}
       </p>
     </div>
@@ -335,9 +333,9 @@ export const customComponents: CustomComponentEntry[] = [
     Submit button — conditionally rendered.
   -->
   {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-    <Button busy={journey?.loading} classes="signin-button" style="primary" type="submit" width="full">
-      Sign In
-    </Button>
+    <button class="signin-button" disabled={journey?.loading} type="submit">
+      {journey?.loading ? 'Signing in…' : 'Sign In'}
+    </button>
   {/if}
 
   <!--
@@ -346,7 +344,7 @@ export const customComponents: CustomComponentEntry[] = [
   {#if componentStyle !== 'inline'}
     <p
       bind:this={linkWrapper}
-      class="tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
+      class="custom-login-footer tw_text-base tw_text-center tw_py-4 tw_text-secondary-dark dark:tw_text-secondary-light"
     >
       <T key="dontHaveAnAccount" html={true} />
     </p>
@@ -355,16 +353,86 @@ export const customComponents: CustomComponentEntry[] = [
 
 <style>
   .header-container {
+    align-items: center;
     display: flex;
     flex-direction: column;
-    align-items: center;
     gap: 0.5rem;
     margin-bottom: 1rem;
   }
 
-  .signin-button {
-    width: 100px;
+  .custom-login-icon {
+    align-items: center;
+    background-color: #2563eb;
+    border-radius: 9999px;
+    display: flex;
+    height: 4rem;
+    justify-content: center;
+    width: 4rem;
+  }
+
+  .custom-login-icon-symbol {
+    color: #fff;
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+  }
+
+  .custom-login-heading {
+    color: #334155;
+    font-size: var(--font-size, 1.5rem);
+    font-weight: 300;
+    margin: 0 0 1rem;
     text-align: center;
+  }
+
+  .custom-login-heading-text {
+    display: block;
+  }
+
+  .custom-login-subtitle {
+    color: var(--color, hsl(210 15% 44%));
+    font-size: 0.875rem;
+    margin: 0;
+    text-align: center;
+  }
+
+  .custom-login-footer {
+    color: var(--color, hsl(210 15% 44%));
+    font-size: 1rem;
+    margin: 0;
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+    text-align: center;
+  }
+
+  .signin-button {
+    background-color: #027ab8;
+    border: 1px solid #027ab8;
+    border-radius: 0.25rem;
+    color: #fff;
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1.5;
+    padding: 0.75rem 1.5rem;
+    text-align: center;
+    width: 100%;
+  }
+
+  .signin-button:hover:not(:disabled),
+  .signin-button:focus-visible:not(:disabled) {
+    background-color: #01699f;
+    border-color: #01699f;
+  }
+
+  .signin-button:focus-visible {
+    outline: 2px solid #027ab8;
+    outline-offset: 2px;
+  }
+
+  .signin-button:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
   }
 </style>
 `,

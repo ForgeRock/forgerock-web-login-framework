@@ -32,15 +32,6 @@ const MOCK_COMPONENT_SOURCES: Record<string, string> = {
   {@render children?.()}
 </div>
 `,
-  Button: `<script>
-  let { busy = false, style = 'primary', type = 'button', width, children, onclick } = $props();
-  const buttonClasses = 'tw_button-base tw_focusable-element tw_button-' + style + ' tw_w-' + (width === 'full' ? 'full' : 'auto');
-</script>
-
-<button class={buttonClasses} {type} disabled={busy} {onclick}>
-  {@render children?.()}
-</button>
-`,
   Form: `<script>
   let { formEl = $bindable(null), ariaDescribedBy = null, onSubmitWhenValid, children } = $props();
 </script>
