@@ -15,6 +15,7 @@ type CspEnvironment = {
 type CspRequestContext = {
   amUrl?: string;
   currentHost?: string | null;
+  configuredRealm?: string;
 };
 
 export const DEFAULT_CSP_ENFORCED = "frame-ancestors 'self'";
@@ -23,11 +24,11 @@ export const DEFAULT_CSP_REPORT_ONLY =
 
 const CUSTOMER_CSP_REALMS = new Set(['alpha', 'bravo']);
 
-export function getRealmFromLoginUrl(url: URL): string {
+export function getRealmFromLoginUrl(url: URL, configuredRealm = 'root'): string {
   const realm = url.searchParams.get('realm');
 
   if (!realm) {
-    return 'root';
+    return configuredRealm.replace(/^\/+/, '') || 'root';
   }
 
   return realm.replace(/^\/+/, '') || 'root';
@@ -64,7 +65,7 @@ export function buildLoginCspHeaders(
   cspEnvironment: CspEnvironment,
   context: CspRequestContext = {},
 ): Headers {
-  const realm = getRealmFromLoginUrl(url);
+  const realm = getRealmFromLoginUrl(url, context.configuredRealm);
   const headers = new Headers();
 
   if (CUSTOMER_CSP_REALMS.has(realm) || isCustomHost(context)) {
