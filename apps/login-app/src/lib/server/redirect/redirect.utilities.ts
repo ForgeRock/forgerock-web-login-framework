@@ -187,11 +187,7 @@ function getDefaultPathRedirect(redirectContext: RedirectData): string | null {
 function getSamlRedirect(redirectContext: RedirectData): string | null {
   const gotoUrl = redirectContext.gotoUrl;
   const isSamlUrl = gotoUrl.includes('/Consumer/metaAlias') || gotoUrl.includes('/saml2');
-  if (
-    isDefaultPath(redirectContext.successUrl) &&
-    isSamlUrl &&
-    isDefaultPath(redirectContext.journeyStepUrl)
-  ) {
+  if (isDefaultPath(redirectContext.successUrl) && isSamlUrl) {
     return resolveAgainstOrigin(gotoUrl, redirectContext.amOrigin);
   }
   return null;
