@@ -18,19 +18,21 @@ Name: HelloWorldNative
 </script>
 
 <Form bind:formEl onSubmitWhenValid={form?.submit}>
-  <h1>Hello World!</h1>
+  <div style="color: #334155">
+    <h1>Hello World!</h1>
 
-  <label>
-    Your name
-    <input bind:value={name} type="text" />
-  </label>
+    <label>
+      Your name
+      <input bind:value={name} type="text" />
+    </label>
 
-  <label>
-    <input bind:checked={rememberMe} type="checkbox" />
-    Remember me
-  </label>
+    <label>
+      <input bind:checked={rememberMe} type="checkbox" />
+      Remember me
+    </label>
 
-  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+    <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+  </div>
 </Form>
 
 <style>

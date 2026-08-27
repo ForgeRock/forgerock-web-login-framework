@@ -15,17 +15,13 @@ Name: HelloWorld
 </script>
 
 <Form bind:formEl onSubmitWhenValid={form?.submit}>
-  <p>Hello World!</p>
+  <span style="color: #334155"> Hello World! </span>
   <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
 </Form>
 
 <style>
-  p {
-    color: #000000;
-  }
-
   .tutorial-next {
-    background-color: #3b6073;
+    background-color: #e0540d;
     border: 1px solid #027ab8;
     border-radius: 0.25rem;
     color: #fff;

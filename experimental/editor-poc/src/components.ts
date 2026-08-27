@@ -97,19 +97,21 @@ Name: HelloWorldNative
 </script>
 
 <Form bind:formEl onSubmitWhenValid={form?.submit}>
-  <h1>Hello World!</h1>
+  <div style="color: #334155">
+    <h1>Hello World!</h1>
 
-  <label>
-    Your name
-    <input bind:value={name} type="text" />
-  </label>
+    <label>
+      Your name
+      <input bind:value={name} type="text" />
+    </label>
 
-  <label>
-    <input bind:checked={rememberMe} type="checkbox" />
-    Remember me
-  </label>
+    <label>
+      <input bind:checked={rememberMe} type="checkbox" />
+      Remember me
+    </label>
 
-  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+    <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+  </div>
 </Form>
 
 <style>
@@ -266,37 +268,13 @@ DEMO COMPONENT — Step 4: scoped styles
 -->
 
 <script lang="ts">
-  import { onDestroy } from 'svelte';
-  import { get } from 'svelte/store';
+  import { Form } from '$login-framework';
 
-  import { CallbackMapper, Form, styleStore } from '$login-framework';
-
-  import type { JourneyStep } from '@forgerock/journey-client/types';
-
-  import type {
-    CallbackMetadata,
-    Maybe,
-    StageFormObject,
-    StageJourneyObject,
-    StepMetadata,
-    StyleObject,
-  } from '$login-framework';
+  import type { StageFormObject, StageJourneyObject } from '$login-framework';
 
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
-  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
-  export let step: JourneyStep;
-
-  let currentStyle: StyleObject = get(styleStore);
-  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
-  onDestroy(unsubStyle);
-
-  function determineSubmission() {
-    if (metadata?.step?.derived.isStepSelfSubmittable()) {
-      form?.submit();
-    }
-  }
 </script>
 
 <Form bind:formEl onSubmitWhenValid={form?.submit}>
@@ -304,18 +282,6 @@ DEMO COMPONENT — Step 4: scoped styles
     <p class="tutorial-step">Step 4: scoped styles</p>
     <h1>Hello World!</h1>
     <p>Component-scoped CSS changes this stage without styling other journey steps.</p>
-
-    {#each step?.callbacks as callback, index}
-      <CallbackMapper
-        props={{
-          callback,
-          callbackMetadata: metadata?.callbacks[index],
-          selfSubmitFunction: determineSubmission,
-          stepMetadata: metadata?.step && { ...metadata.step },
-          style: currentStyle,
-        }}
-      />
-    {/each}
 
     <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
   </section>
@@ -346,10 +312,6 @@ DEMO COMPONENT — Step 4: scoped styles
     margin: 0 0 0.75rem;
   }
 
-  .tutorial-card :global(.tw_input-base) {
-    border-color: #60a5fa;
-  }
-
   :global(.dark) .tutorial-card {
     background: #172554;
     border-color: #1d4ed8;
@@ -375,14 +337,9 @@ DEMO COMPONENT — Step 4: scoped styles
 </style>
 `,
     mockProps: `{
-  form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
+  form: { submit: () => console.log('submit') },
   formEl: null,
   journey: { loading: false },
-  metadata: {
-    callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
-    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
-  },
-  step: { callbacks: [{}] },
 }`,
   },
   {
