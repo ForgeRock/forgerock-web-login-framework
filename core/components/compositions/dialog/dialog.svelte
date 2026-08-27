@@ -102,7 +102,9 @@
           class="tw_dialog-logo dark:tw_dialog-logo_dark"
           style={`--logo-dark: ${encodeCssUrl(
             $styleStore?.logo?.dark ?? '',
-          )}; --logo-light: ${encodeCssUrl($styleStore?.logo?.light ?? '')}`}
+          )}; --logo-light: ${encodeCssUrl($styleStore?.logo?.light ?? '')}; ${
+            $styleStore?.logo?.height ? `height: ${$styleStore?.logo.height}px;` : ''
+          } ${$styleStore?.logo?.width ? `width: ${$styleStore?.logo.width}px;` : ''}`}
         ></div>
       {/if}
     </div>
