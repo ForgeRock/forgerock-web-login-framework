@@ -33,6 +33,7 @@ export const handle: Handle = async ({ event, resolve }) => {
     {
       amUrl: env.FR_AM_URL,
       currentHost: event.request.headers.get('host'),
+      configuredRealm: env.FR_REALM_PATH,
     },
   );
 

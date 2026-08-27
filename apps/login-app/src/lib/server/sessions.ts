@@ -32,9 +32,12 @@ export function getAmCookie(cookies: Cookies): string {
  */
 export function setAmCookie(cookies: Cookies, setCookie: string): void {
   const prefix = `${AM_COOKIE_NAME}=`;
-  const firstPart = setCookie.split(';')[0]?.trim();
-  if (!firstPart?.startsWith(prefix)) return;
-  const value = firstPart.slice(prefix.length);
+  const cookiePart = setCookie
+    .split(/,(?=[^;=,\s]+=[^;]+)/)
+    .map((part) => part.trim().split(';')[0])
+    .find((part) => part?.startsWith(prefix));
+  if (!cookiePart) return;
+  const value = cookiePart.slice(prefix.length);
   if (!value) {
     clearAmCookie(cookies);
     return;
@@ -175,7 +178,7 @@ export async function getUserIdFromSession(
       method: 'POST',
       headers: {
         accept: 'application/json',
-        'Accept-API-Version': 'resource=2.0',
+        'Accept-API-Version': 'protocol=1.0,resource=2.0',
         'Content-Type': 'application/json',
         cookie: `${AM_COOKIE_NAME}=${tokenId}`,
       },
@@ -210,22 +213,26 @@ export async function amFetchRequest(
   realm?: string,
 ): Promise<unknown> {
   const realmPath = resolveJsonRealmPath(realm);
-  const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}${endpoint}`, {
-    method: method,
-    headers: {
-      accept: 'application/json',
-      'Accept-API-Version': 'protocol=2.1,resource=3.0',
-      'Content-Type': 'application/json',
-      cookie: `${AM_COOKIE_NAME}=${tokenId}`,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  if (!response.ok) return null;
-
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
+    const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}${endpoint}`, {
+      method,
+      headers: {
+        accept: 'application/json',
+        'Accept-API-Version': 'protocol=2.1,resource=3.0',
+        'Content-Type': 'application/json',
+        cookie: `${AM_COOKIE_NAME}=${tokenId}`,
+      },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: controller.signal,
+    });
+
+    if (!response.ok) return null;
     return await response.json();
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }

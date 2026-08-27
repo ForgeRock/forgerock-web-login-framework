@@ -25,7 +25,11 @@ function cookies(values: Record<string, string> = {}) {
     get: (name: string) => values[name],
     set: vi.fn(),
     delete: vi.fn(),
-  } as never;
+  } as unknown as {
+    get: (name: string) => string | undefined;
+    set: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
 }
 
 describe('Login2 session cookie forwarding', () => {
