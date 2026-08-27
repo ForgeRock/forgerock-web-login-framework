@@ -149,11 +149,12 @@ function getSuccessRedirect(redirectContext: RedirectData): string | null {
  * @returns {string | null} The resolved journey step URL or null.
  */
 function getDefaultPathRedirect(redirectContext: RedirectData): string | null {
-  const { successUrl, journeyStepUrl, amOrigin } = redirectContext;
+  const { successUrl, journeyStepUrl, gotoUrl, amOrigin } = redirectContext;
+  const isSamlUrl = gotoUrl.includes('/Consumer/metaAlias') || gotoUrl.includes('/saml2');
   if (
     isDefaultPath(successUrl) &&
     journeyStepUrl &&
-    !isDefaultPath(journeyStepUrl) &&
+    !isSamlUrl &&
     !isLoginAppPath(resolveAgainstOrigin(journeyStepUrl, amOrigin), amOrigin) &&
     !isOAuthAuthorizePath(journeyStepUrl)
   ) {
@@ -170,7 +171,11 @@ function getDefaultPathRedirect(redirectContext: RedirectData): string | null {
 function getSamlRedirect(redirectContext: RedirectData): string | null {
   const gotoUrl = redirectContext.gotoUrl;
   const isSamlUrl = gotoUrl.includes('/Consumer/metaAlias') || gotoUrl.includes('/saml2');
-  if (isDefaultPath(redirectContext.successUrl) && isSamlUrl) {
+  if (
+    isDefaultPath(redirectContext.successUrl) &&
+    isSamlUrl &&
+    isDefaultPath(redirectContext.journeyStepUrl)
+  ) {
     return resolveAgainstOrigin(gotoUrl, redirectContext.amOrigin);
   }
   return null;
@@ -185,7 +190,6 @@ function getJourneyStepRedirect(redirectContext: RedirectData): string | null {
   const { journeyStepUrl, amOrigin } = redirectContext;
   if (
     journeyStepUrl &&
-    !isDefaultPath(journeyStepUrl) &&
     !isLoginAppPath(resolveAgainstOrigin(journeyStepUrl, amOrigin), amOrigin) &&
     !isOAuthAuthorizePath(journeyStepUrl)
   ) {
