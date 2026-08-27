@@ -7,63 +7,41 @@
  *
  **/
 
-import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
-import { get, set } from '$server/sessions';
+import { AM_DOMAIN_PATH } from '$core/constants';
+import { getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
 import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event: RequestEvent) => {
+  const realm = event.url.searchParams.get('realm') ?? undefined;
   const body = await event.request.text();
-  let cookieUuid = '';
-
-  // console.log(body.toString());
-
-  // STATEFUL COOKIES
-  const cookie = event.request.headers.get('cookie');
-  const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
-  const reqCookie = Array.isArray(reqCookieUuid) && get(reqCookieUuid[1]);
-
-  // STATELESS COOKIES
-  // TODO: Implement stateless cookie management
-  // console.log(`Cookie sent to AM: ${reqCookie}`);
-
   const response = await fetch(
-    `${AM_DOMAIN_PATH}${JSON_REALM_PATH}/authenticate?authIndexType=service&authIndexValue=Login`,
+    `${AM_DOMAIN_PATH}${resolveJsonRealmPath(
+      realm,
+    )}/authenticate?authIndexType=service&authIndexValue=Login`,
     {
       method: 'POST',
       headers: {
         accept: 'application/json',
         'accept-api-version': 'protocol=1.0,resource=2.1',
         'content-type': 'application/json',
-        cookie: reqCookie ? reqCookie : '',
+        cookie: getAmCookie(event.cookies),
       },
       body,
     },
   );
 
-  const resBody = await response.text();
+  const responseHeaders = new Headers();
+  const contentType = response.headers.get('content-type');
+  if (contentType) responseHeaders.set('content-type', contentType);
 
-  // console.log('Body of response from authenticate call:');
-  // console.log(resBody);
+  const setCookie = response.headers.get('set-cookie');
+  if (setCookie) setAmCookie(event.cookies, setCookie);
 
-  const resCookie = response.headers.get('set-cookie');
-  // console.log(`AM response write cookie header: ${resCookie}`);
-
-  if (resCookie?.includes(AM_COOKIE_NAME)) {
-    if (resCookie !== reqCookie) {
-      cookieUuid = set(resCookie);
-    }
-  }
-
-  const headers = new Headers();
-  headers.append(
-    'set-cookie',
-    cookieUuid
-      ? `cookie=${cookieUuid}; domain=.crbrl.ngrok.io; SameSite=None; HTTPOnly; Secure;`
-      : '',
-  );
-
-  return new Response(resBody, { headers });
+  return new Response(await response.text(), {
+    status: response.status,
+    headers: responseHeaders,
+  });
 };

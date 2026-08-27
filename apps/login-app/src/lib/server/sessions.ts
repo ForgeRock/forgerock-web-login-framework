@@ -7,7 +7,6 @@
  *
  **/
 
-import { v4 as uuid } from 'uuid';
 import { z } from 'zod';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
@@ -16,41 +15,37 @@ import type { Cookies } from '@sveltejs/kit';
 
 import type { TokenId } from '$server/schemas';
 
-const amSessions: Map<string, string> = new Map();
-
 /**
- * @function set - stores a cookie value in the in-memory session map and returns a generated UUID
- * @param {string} cookie - The cookie string to store
- * @returns {string} The generated UUID for the stored cookie
+ * Builds the AM session cookie header from the browser-owned cookie.
+ * The app must not keep an in-memory copy: requests can reach any replica.
  */
-export function set(cookie: string): string {
-  const cookieUuid = uuid();
-  amSessions.set(cookieUuid, cookie);
-  return cookieUuid;
+export function getAmCookie(cookies: Cookies): string {
+  const value = cookies.get(AM_COOKIE_NAME);
+  return value ? `${AM_COOKIE_NAME}=${value}` : '';
 }
 
 /**
- * @function get - retrieves a cookie value from the in-memory session map by UUID
- * @param {string} uuid - The UUID of the stored cookie
- * @returns {string} The cookie string, or an empty string if not found
+ * Stores the AM session cookie as a host-only application cookie.
+ * Do not copy the upstream Domain attribute to a tenant's browser.
  */
-export function get(uuid: string): string {
-  const cookie = amSessions.get(uuid) || '';
-  return cookie;
-}
+export function setAmCookie(cookies: Cookies, setCookie: string): void {
+  const prefix = `${AM_COOKIE_NAME}=`;
+  const value = setCookie.split(';')[0]?.trim().startsWith(prefix)
+    ? setCookie.split(';')[0].trim().slice(prefix.length)
+    : undefined;
+  if (!value) return;
 
-/**
- * @function remove - deletes a cookie value from the in-memory session map by UUID
- * @param {string} uuid - The UUID of the stored cookie to remove
- * @returns {void}
- */
-export function remove(uuid: string): void {
-  amSessions.delete(uuid);
+  cookies.set(AM_COOKIE_NAME, value, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: true,
+    path: '/',
+  });
 }
 
 /**
  * @function setHttpCookie - stores an HTTP cookie using the provided SvelteKit Cookies API.
- * @param {Cookies} cookies - SvelteKit cookies API instance.
+ * @param {Cookies} cookies - SvelteKit Cookies API instance.
  * @param {string} name - The name of the cookie to set.
  * @param {string} value - The value to store in the cookie.
  * @returns {void}
@@ -67,7 +62,7 @@ export function setHttpCookie(cookies: Cookies, name: string, value: string): vo
 
 /**
  * @function getHttpCookie - retrieves an HTTP cookie value using the provided SvelteKit Cookies API.
- * @param {Cookies} cookies - SvelteKit cookies API instance.
+ * @param {Cookies} cookies - SvelteKit Cookies API instance.
  * @param {string} name - The name of the cookie to read.
  * @returns {string | undefined} The cookie value if present, otherwise `undefined`.
  */
@@ -77,7 +72,7 @@ export function getHttpCookie(cookies: Cookies, name: string): string | undefine
 
 /**
  * @function removeHttpCookie - deletes an HTTP cookie using the provided SvelteKit Cookies API.
- * @param {Cookies} cookies - SvelteKit cookies API instance.
+ * @param {Cookies} cookies - SvelteKit Cookies API instance.
  * @param {string} name - The name of the cookie to delete.
  * @returns {void}
  */
@@ -96,7 +91,7 @@ export function removeHttpCookie(cookies: Cookies, name: string): void {
  * @param {string} [realm] - Realm override; uses the configured JSON_REALM_PATH when omitted.
  * @returns {string} The AM JSON realm path (e.g. '/json/realms/root/realms/alpha').
  */
-function resolveJsonRealmPath(realm?: string): string {
+export function resolveJsonRealmPath(realm?: string): string {
   if (realm === undefined) return JSON_REALM_PATH;
   return realm && realm !== 'root' ? `/json/realms/root/realms/${realm}` : '/json/realms/root';
 }
