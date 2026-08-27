@@ -275,6 +275,17 @@ DEMO COMPONENT — Step 4: scoped styles
   export let form: StageFormObject;
   export let formEl: HTMLFormElement | null = null;
   export let journey: StageJourneyObject;
+
+  // Local-only demo field — not part of the SDK callback chain, purely to
+  // showcase custom validation behavior alongside the scoped-styles demo.
+  let confirmationCode = '';
+  let confirmationCodeTouched = false;
+  let confirmationCodeError = '';
+
+  function validateConfirmationCode() {
+    confirmationCodeTouched = true;
+    confirmationCodeError = /^\\d{6}$/.test(confirmationCode) ? '' : 'Enter exactly 6 digits.';
+  }
 </script>
 
 <Form bind:formEl onSubmitWhenValid={form?.submit}>
@@ -285,6 +296,26 @@ DEMO COMPONENT — Step 4: scoped styles
       This gradient border, glow, and button are defined entirely in this component's own
       &lt;style&gt; block, isolated from every other step in the journey.
     </p>
+
+    <label
+      class="tutorial-field"
+      class:has-error={confirmationCodeTouched && confirmationCodeError}
+    >
+      <span>Confirmation code</span>
+      <input
+        bind:value={confirmationCode}
+        inputmode="numeric"
+        maxlength="6"
+        on:blur={validateConfirmationCode}
+        pattern={'\\\\d{6}'}
+        placeholder="123456"
+        required
+        type="text"
+      />
+      {#if confirmationCodeTouched && confirmationCodeError}
+        <span class="tutorial-field-error">{confirmationCodeError}</span>
+      {/if}
+    </label>
 
     <button class="tutorial-next" disabled={journey?.loading} type="submit">Next →</button>
   </section>
@@ -351,6 +382,30 @@ DEMO COMPONENT — Step 4: scoped styles
       linear-gradient(#172554, #172554) padding-box,
       linear-gradient(135deg, #7c3aed, #2563eb, #db2777) border-box;
     color: #dbeafe;
+  }
+
+  .tutorial-field {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.875rem;
+    gap: 0.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .tutorial-field input {
+    border: 1px solid #c4b5fd;
+    border-radius: 0.5rem;
+    color: #1e3a8a;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .tutorial-field.has-error input {
+    border-color: #dc2626;
+  }
+
+  .tutorial-field-error {
+    color: #dc2626;
+    font-size: 0.75rem;
   }
 
   .tutorial-next {
