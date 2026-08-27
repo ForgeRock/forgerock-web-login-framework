@@ -77,8 +77,12 @@
        * Only add these when present — undefined would be serialized as the
        * literal string "undefined" by URLSearchParams and corrupt AM's successUrl.
        */
-      if (data.redirectParams?.goto) query.goto = data.redirectParams.goto;
-      if (data.redirectParams?.gotoOnFail) query.gotoOnFail = data.redirectParams.gotoOnFail;
+      if (data.redirectParams?.goto) {
+        query.goto = data.redirectParams.goto;
+      }
+      if (data.redirectParams?.gotoOnFail) {
+        query.gotoOnFail = data.redirectParams.gotoOnFail;
+      }
       if (uuidParam) {
         query.uuid = uuidParam;
       }
