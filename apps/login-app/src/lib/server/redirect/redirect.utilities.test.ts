@@ -7,7 +7,11 @@
  *
  **/
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('$env/dynamic/private', () => ({
+  env: { FR_REALM_PATH: 'alpha' },
+}));
 
 import {
   isDefaultPath,

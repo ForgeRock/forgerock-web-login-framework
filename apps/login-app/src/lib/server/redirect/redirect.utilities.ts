@@ -9,8 +9,24 @@
 
 import { z } from 'zod';
 
+import { env } from '$env/dynamic/private';
 import { tokenIdSchema } from '$server/schemas';
 import { type RedirectData, type RedirectFormValue, type Resolver } from './redirect.types';
+
+const VALID_REALM = /^[A-Za-z0-9_-]+$/;
+
+/**
+ * Resolves a realm from a `?realm=` query parameter, falling back to the configured realm.
+ */
+export function resolveRealmFromUrl(url: URL): string {
+  const realmParam = url.searchParams.get('realm');
+  if (realmParam != null) {
+    const realm = realmParam.replace(/^\/+/, '');
+    if (!realm) return 'root';
+    return VALID_REALM.test(realm) ? realm : env.FR_REALM_PATH || 'root';
+  }
+  return env.FR_REALM_PATH || 'root';
+}
 
 /**
  * @function resolveRedirect - Resolves a final redirect URL from the provided context.

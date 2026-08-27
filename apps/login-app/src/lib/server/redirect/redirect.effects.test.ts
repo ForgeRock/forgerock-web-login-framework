@@ -18,7 +18,7 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
-import { resolveRealmFromUrl } from './redirect.effects';
+import { resolveRealmFromUrl } from './redirect.utilities';
 
 describe('resolveRealmFromUrl', () => {
   it('falls back to the configured FR_REALM_PATH when no realm param is present', () => {
