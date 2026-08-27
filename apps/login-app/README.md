@@ -50,12 +50,12 @@ pnpm --filter @forgerock/login-app run preview
 
 The app requires environment variables to connect to a ForgeRock AM instance. Set these in a `.env` file at the repository root or export them in your shell.
 
-| Variable              | Required | Description                                                                                                               |
-| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `FR_AM_URL`           | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                    |
-| `FR_AM_COOKIE_NAME`   | Yes      | AM session cookie name                                                                                                    |
-| `FR_REALM_PATH`       | Yes      | AM realm path                                                                                                             |
-| `FR_AM_WELLKNOWN_URL` | Yes      | ForgeRock AM Wellknown URL (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration`) |
+| Variable              | Required | Description                                                                                                                                                                         |
+| --------------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FR_AM_URL`           | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                                                                              |
+| `FR_AM_COOKIE_NAME`   | Yes      | AM session cookie name                                                                                                                                                              |
+| `FR_REALM_PATH`       | Yes      | AM realm path                                                                                                                                                                       |
+| `FR_AM_WELLKNOWN_URL` | Yes      | ForgeRock AM Wellknown URL used to validate startup configuration (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration`) |
 
 ## Type Checking
 
