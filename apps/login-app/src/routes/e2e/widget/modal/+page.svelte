@@ -13,12 +13,17 @@
   import { page } from '$app/stores';
   import Widget, { component, configure, journey, protect, user } from '$package/index';
 
+  import type { PageData } from './$types';
   import type {
     ComponentEventValue,
     JourneyStoreValue,
     OAuthTokenStoreValue,
     UserStoreValue,
   } from '$package/types';
+
+  export let data: PageData;
+
+  $: idmTheme = data.idmTheme;
 
   let componentEvents: ReturnType<typeof component> | undefined;
   let journeyEvents: ReturnType<typeof journey> | undefined;
@@ -120,10 +125,17 @@
       style: {
         labels: 'floating',
         showPassword: showPasswordParam,
-        logo: {
-          dark: '/img/fr-logomark-white.png',
-          light: '/img/fr-logomark-black.png',
-        },
+        ...(idmTheme && { theme: idmTheme }),
+        logo: idmTheme?.logo
+          ? {
+              light: idmTheme.logo,
+              dark: idmTheme.logo,
+              height: idmTheme.logoHeight || 72,
+            }
+          : {
+              dark: '/img/fr-logomark-white.png',
+              light: '/img/fr-logomark-black.png',
+            },
         sections: {
           header: false,
         },

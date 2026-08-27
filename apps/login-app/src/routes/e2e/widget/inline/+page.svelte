@@ -13,7 +13,12 @@
   import { page } from '$app/stores';
   import Widget, { component, configure, journey, user } from '$package/index';
 
+  import type { PageData } from './$types';
   import type { UserStoreValue } from '$package/types';
+
+  export let data: PageData;
+
+  $: idmTheme = data.idmTheme;
 
   type UserResponseObj = {
     family_name: string;
@@ -62,6 +67,16 @@
       content,
       links: {
         termsAndConditions: 'https://www.forgerock.com/terms',
+      },
+      style: {
+        ...(idmTheme && { theme: idmTheme }),
+        ...(idmTheme?.logo && {
+          logo: {
+            light: idmTheme.logo,
+            dark: idmTheme.logo,
+            ...(idmTheme.logoHeight && { height: idmTheme.logoHeight }),
+          },
+        }),
       },
     });
 

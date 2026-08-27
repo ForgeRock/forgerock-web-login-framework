@@ -13,9 +13,16 @@
   import { page } from '$app/stores';
   import Widget, { component, configure, journey } from '$package/index';
 
+  import type { PageData } from './$types';
+
+  export let data: PageData;
+
+  let journeyParam = $page.url.searchParams.get('journey');
   let componentEvents: ReturnType<typeof component> | undefined;
   let journeyEvents: ReturnType<typeof journey> | undefined;
   let widgetEl: HTMLDivElement;
+
+  $: idmTheme = data.idmTheme;
 
   onMount(async () => {
     const params = $page.url.searchParams;
@@ -35,6 +42,7 @@
       },
       style: {
         theme: {
+          ...idmTheme,
           ...(primaryColorParam !== null ? { primaryColor: primaryColorParam } : {}),
           ...(buttonBorderRadiusParam !== null
             ? { buttonBorderRadius: Number(buttonBorderRadiusParam) }
@@ -43,6 +51,13 @@
             ? { cardBorderRadius: Number(cardBorderRadiusParam) }
             : {}),
         },
+        ...(idmTheme?.logo && {
+          logo: {
+            light: idmTheme.logo,
+            dark: idmTheme.logo,
+            height: idmTheme.logoHeight || 72,
+          },
+        }),
       },
     });
 
@@ -57,7 +72,7 @@
   {#if journeyEvents && componentEvents}
     <button
       on:click={() => {
-        journeyEvents.start({ journey: 'TEST_Login' });
+        journeyEvents.start({ journey: journeyParam || 'TEST_Login' });
         componentEvents.open();
       }}
     >

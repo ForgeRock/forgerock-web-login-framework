@@ -13,7 +13,13 @@
   import { page } from '$app/stores';
   import Widget, { configure, journey } from '$package/index';
 
+  import type { PageData } from './$types';
+
+  export let data: PageData;
+
   let formEl: HTMLDivElement;
+
+  $: idmTheme = data.idmTheme;
 
   onMount(async () => {
     const params = $page.url.searchParams;
@@ -33,6 +39,7 @@
       },
       style: {
         theme: {
+          ...idmTheme,
           ...(primaryColorParam !== null ? { primaryColor: primaryColorParam } : {}),
           ...(buttonBorderRadiusParam !== null
             ? { buttonBorderRadius: Number(buttonBorderRadiusParam) }
@@ -41,6 +48,13 @@
             ? { cardBorderRadius: Number(cardBorderRadiusParam) }
             : {}),
         },
+        ...(idmTheme?.logo && {
+          logo: {
+            light: idmTheme.logo,
+            dark: idmTheme.logo,
+            ...(idmTheme.logoHeight && { height: idmTheme.logoHeight }),
+          },
+        }),
       },
     });
 
