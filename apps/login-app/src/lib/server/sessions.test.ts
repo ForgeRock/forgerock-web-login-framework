@@ -18,17 +18,13 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
-import {
-  getAmCookie,
-  resolveJsonRealmPath,
-  resolveOAuthRealmPath,
-  setAmCookie,
-} from './sessions';
+import { getAmCookie, resolveJsonRealmPath, resolveOAuthRealmPath, setAmCookie } from './sessions';
 
 function cookies(values: Record<string, string> = {}) {
   return {
     get: (name: string) => values[name],
     set: vi.fn(),
+    delete: vi.fn(),
   } as never;
 }
 
@@ -54,6 +50,19 @@ describe('Login2 session cookie forwarding', () => {
       path: '/',
     });
   });
+
+  it('clears an upstream AM cookie with an empty value', () => {
+    const target = cookies();
+
+    setAmCookie(target, 'iPlanetDirectoryPro=; Path=/; Max-Age=0');
+
+    expect(target.delete).toHaveBeenCalledWith('iPlanetDirectoryPro', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: true,
+      path: '/',
+    });
+  });
 });
 
 describe('Login2 realm paths', () => {
@@ -67,8 +76,13 @@ describe('Login2 realm paths', () => {
     expect(resolveOAuthRealmPath('/bravo')).toBe('/oauth2/realms/root/realms/bravo');
   });
 
-  it('rejects path traversal and malformed realm overrides', () => {
-    expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root');
-    expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root');
+  it('uses the root realm for explicit root overrides', () => {
+    expect(resolveJsonRealmPath('/')).toBe('/json/realms/root');
+    expect(resolveJsonRealmPath('/root')).toBe('/json/realms/root');
+  });
+
+  it('rejects path traversal and falls back for malformed overrides', () => {
+    expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root/realms/alpha');
+    expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root/realms/alpha');
   });
 });

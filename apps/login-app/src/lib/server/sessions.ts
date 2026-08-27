@@ -15,6 +15,8 @@ import type { Cookies } from '@sveltejs/kit';
 
 import type { TokenId } from '$server/schemas';
 
+const AM_TIMEOUT_MS = 2000;
+
 /**
  * Builds the AM session cookie header from the browser-owned cookie.
  * The app must not keep an in-memory copy: requests can reach any replica.
@@ -30,10 +32,13 @@ export function getAmCookie(cookies: Cookies): string {
  */
 export function setAmCookie(cookies: Cookies, setCookie: string): void {
   const prefix = `${AM_COOKIE_NAME}=`;
-  const value = setCookie.split(';')[0]?.trim().startsWith(prefix)
-    ? setCookie.split(';')[0].trim().slice(prefix.length)
-    : undefined;
-  if (!value) return;
+  const firstPart = setCookie.split(';')[0]?.trim();
+  if (!firstPart?.startsWith(prefix)) return;
+  const value = firstPart.slice(prefix.length);
+  if (!value) {
+    clearAmCookie(cookies);
+    return;
+  }
 
   cookies.set(AM_COOKIE_NAME, value, {
     httpOnly: true,
@@ -41,6 +46,22 @@ export function setAmCookie(cookies: Cookies, setCookie: string): void {
     secure: true,
     path: '/',
   });
+}
+
+export function clearAmCookie(cookies: Cookies): void {
+  cookies.delete(AM_COOKIE_NAME, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: true,
+    path: '/',
+  });
+}
+
+export function resolveUpstreamQuery(url: URL): string {
+  const params = new URLSearchParams(url.searchParams);
+  params.delete('realm');
+  const query = params.toString();
+  return query ? `?${query}` : '';
 }
 
 /**
@@ -97,8 +118,11 @@ export function resolveJsonRealmPath(realm?: string): string {
   if (realm === undefined) return JSON_REALM_PATH;
 
   const normalizedRealm = realm.replace(/^\/+/, '');
-  if (!normalizedRealm || normalizedRealm === 'root' || !VALID_REALM.test(normalizedRealm)) {
+  if (!normalizedRealm || normalizedRealm === 'root') {
     return '/json/realms/root';
+  }
+  if (!VALID_REALM.test(normalizedRealm)) {
+    return JSON_REALM_PATH;
   }
 
   return `/json/realms/root/realms/${normalizedRealm}`;
@@ -144,23 +168,28 @@ export async function getUserIdFromSession(
   // AIC blocks /users?_action=idFromSession (403). Use sessions validate instead,
   // which returns uid = the username string on AIC.
   const realmPath = resolveJsonRealmPath(realm);
-  const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
-    method: 'POST',
-    headers: {
-      accept: 'application/json',
-      'Accept-API-Version': 'resource=2.0',
-      'Content-Type': 'application/json',
-      cookie: `${AM_COOKIE_NAME}=${tokenId}`,
-    },
-    body: JSON.stringify({ tokenId }),
-  });
-  if (!response.ok) return null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
+    const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'Accept-API-Version': 'resource=2.0',
+        'Content-Type': 'application/json',
+        cookie: `${AM_COOKIE_NAME}=${tokenId}`,
+      },
+      body: JSON.stringify({ tokenId }),
+      signal: controller.signal,
+    });
+    if (!response.ok) return null;
     const data = await response.json();
     const parsed = z.object({ valid: z.boolean(), uid: z.string().optional() }).safeParse(data);
     return parsed.success && parsed.data.valid ? parsed.data.uid ?? null : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timeout);
   }
 }
 

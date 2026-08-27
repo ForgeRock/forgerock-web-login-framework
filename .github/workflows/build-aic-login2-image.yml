@@ -31,9 +31,11 @@ on:
       - 'apps/login-app/**'
       - 'packages/login-widget/**'
       - 'themes/**'
+      - 'core/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
+      - '.npmrc'
       - 'Dockerfile'
       - '.dockerignore'
       - '.github/workflows/build-aic-login2-image.yml'
@@ -42,9 +44,11 @@ on:
       - 'apps/login-app/**'
       - 'packages/login-widget/**'
       - 'themes/**'
+      - 'core/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
+      - '.npmrc'
       - 'Dockerfile'
       - '.dockerignore'
       - '.github/workflows/build-aic-login2-image.yml'
@@ -106,11 +110,7 @@ jobs:
             -e FR_AM_URL=https://smoke-test.forgeblocks.com/am \
             -e FR_AM_COOKIE_NAME=5421aeddf91aa20 \
             -e FR_AM_WELLKNOWN_URL=https://smoke-test.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration \
-            -e FR_OAUTH_PUBLIC_CLIENT=endUserUIClient \
-            -e FR_OAUTH_SCOPE="openid profile me.read" \
             -e FR_REALM_PATH=alpha \
-            -e APP_DOMAIN=smoke-test.forgeblocks.com \
-            -e COOKIE_SECRET=smoke-test-cookie-secret \
             aic-login2:ci
 
           ok=0
@@ -153,11 +153,18 @@ jobs:
 
       - name: Compute image tags
         id: tags
+        env:
+          IMAGE_TAG_INPUT: ${{ inputs.image_tag }}
         run: |
           set -euo pipefail
           short_sha="${GITHUB_SHA::12}"
-          if [ -n "${{ inputs.image_tag }}" ]; then
-            primary="${{ inputs.image_tag }}"
+          requested_tag="$IMAGE_TAG_INPUT"
+          if [ -n "$requested_tag" ]; then
+            if [[ ! "$requested_tag" =~ ^[A-Za-z0-9_.-]{1,128}$ ]]; then
+              echo "::error::image_tag must contain only Docker tag characters and be at most 128 characters"
+              exit 1
+            fi
+            primary="$requested_tag"
           elif [ "${{ github.ref_type }}" = "tag" ]; then
             primary="${GITHUB_REF_NAME}"
           else

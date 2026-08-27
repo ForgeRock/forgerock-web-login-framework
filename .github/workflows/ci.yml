@@ -30,7 +30,6 @@ jobs:
     env:
       FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
       FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
-      FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
       FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
       FR_AM_WELLKNOWN_URL: ${{ secrets.FR_AM_WELLKNOWN_URL }}
     steps:
@@ -119,7 +118,6 @@ jobs:
     env:
       FR_AM_URL: ${{ secrets.VITE_FR_AM_URL }}
       FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
-      FR_OAUTH_PUBLIC_CLIENT: ${{ secrets.VITE_FR_OAUTH_PUBLIC_CLIENT }}
       FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
       FR_AM_WELLKNOWN_URL: ${{ secrets.FR_AM_WELLKNOWN_URL }}
     steps:

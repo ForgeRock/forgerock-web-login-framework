@@ -11,7 +11,7 @@ import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
-import { resolveRealmFromUrl } from '$server/redirect/redirect.effects';
+import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
 
 import type { LayoutServerLoad } from './$types';
 
@@ -30,10 +30,13 @@ export const load: LayoutServerLoad = async ({ url }) => {
   // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
   const realmPath = resolveRealmFromUrl(url);
 
-  // Build wellknown URL dynamically per realm so admin (root) and end-user (alpha) both work.
-  // The configured URL validates the deployment contract; the realm-specific URL is used by the client.
+  // Use the configured discovery endpoint for the deployment's default realm.
+  // Derive a sibling endpoint only when the request explicitly selects another realm.
+  const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
   const wellknown =
-    realmPath === 'root'
+    realmPath === configuredRealm
+      ? wellknownUrl
+      : realmPath === 'root'
       ? `${amUrl}/oauth2/realms/root/.well-known/openid-configuration`
       : `${amUrl}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`;
 

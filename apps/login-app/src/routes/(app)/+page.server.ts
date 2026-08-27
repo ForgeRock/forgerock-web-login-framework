@@ -14,9 +14,9 @@ import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
 import {
   createRedirectContext,
   readAndClearRedirectCookie,
-  resolveRealmFromUrl,
   storeRedirectParams,
 } from '$server/redirect/redirect.effects';
+import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
 import { buildRoleUrl, resolveRedirect } from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
 import { getHttpCookie, getUserIdFromSession, getUserRolesFromSession } from '$server/sessions';
@@ -52,13 +52,13 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
       const goto = event.url.searchParams.get('goto');
       if (goto) {
         try {
-          const gotoUrl = new URL(goto);
+          const gotoUrl = new URL(goto, amOrigin);
           if (
             gotoUrl.origin === amOrigin &&
             gotoUrl.pathname.includes('/oauth2/') &&
             gotoUrl.pathname.endsWith('/authorize')
           ) {
-            throw redirect(303, goto);
+            throw redirect(303, gotoUrl.href);
           }
         } catch (e) {
           if (isRedirect(e)) throw e;

@@ -14,10 +14,8 @@ import type { RequestHandler } from './$types';
 const AM_TIMEOUT_MS = 2000;
 
 function discoveryUrl(): string | null {
-  if (!env.FR_AM_URL || !env.FR_AM_COOKIE_NAME || !env.FR_REALM_PATH) return null;
-
-  const realmPath = env.FR_REALM_PATH === 'root' ? '' : `/realms/${env.FR_REALM_PATH}`;
-  return `${env.FR_AM_URL}/oauth2/realms/root${realmPath}/.well-known/openid-configuration`;
+  if (!env.FR_AM_WELLKNOWN_URL || !env.FR_AM_COOKIE_NAME || !env.FR_REALM_PATH) return null;
+  return env.FR_AM_WELLKNOWN_URL;
 }
 
 export const GET: RequestHandler = async () => {
