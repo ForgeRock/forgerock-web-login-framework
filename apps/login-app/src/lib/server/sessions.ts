@@ -91,9 +91,22 @@ export function removeHttpCookie(cookies: Cookies, name: string): void {
  * @param {string} [realm] - Realm override; uses the configured JSON_REALM_PATH when omitted.
  * @returns {string} The AM JSON realm path (e.g. '/json/realms/root/realms/alpha').
  */
+const VALID_REALM = /^[A-Za-z0-9_-]+$/;
+
 export function resolveJsonRealmPath(realm?: string): string {
   if (realm === undefined) return JSON_REALM_PATH;
-  return realm && realm !== 'root' ? `/json/realms/root/realms/${realm}` : '/json/realms/root';
+
+  const normalizedRealm = realm.replace(/^\/+/, '');
+  if (!normalizedRealm || normalizedRealm === 'root' || !VALID_REALM.test(normalizedRealm)) {
+    return '/json/realms/root';
+  }
+
+  return `/json/realms/root/realms/${normalizedRealm}`;
+}
+
+export function resolveOAuthRealmPath(realm?: string): string {
+  const jsonRealmPath = resolveJsonRealmPath(realm);
+  return jsonRealmPath.replace('/json/', '/oauth2/');
 }
 
 /**
