@@ -17,9 +17,10 @@ import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url }) => {
   const amUrl = env.FR_AM_URL;
+  const wellknownUrl = env.FR_AM_WELLKNOWN_URL;
   const idmBaseUrl = env.FR_IDM_URL ?? amUrl;
 
-  if (!amUrl) {
+  if (!amUrl || !wellknownUrl) {
     throw error(
       500,
       'Login App is not configured. Ensure the required environment variables like FR_AM_URL and FR_AM_WELLKNOWN_URL are set before starting the app.',
@@ -30,6 +31,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
   const realmPath = resolveRealmFromUrl(url);
 
   // Build wellknown URL dynamically per realm so admin (root) and end-user (alpha) both work.
+  // The configured URL validates the deployment contract; the realm-specific URL is used by the client.
   const wellknown =
     realmPath === 'root'
       ? `${amUrl}/oauth2/realms/root/.well-known/openid-configuration`
