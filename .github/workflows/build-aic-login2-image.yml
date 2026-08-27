@@ -68,8 +68,8 @@ env:
 jobs:
   # ---------------------------------------------------------------------------
   # verify — always runs (including PRs from forks, where no GCP creds exist).
-  # Builds the `deploy` target and smoke-tests the saas health contract
-  # (/api/locale -> 200 on :3000, matching the Dockerfile HEALTHCHECK). This is
+  # Builds the `deploy` target and smoke-tests the process liveness contract
+  # (/api/health/live -> 200 on :3000, matching the Dockerfile HEALTHCHECK). This is
   # the gate that proves the image is deployable before anything is published.
   # ---------------------------------------------------------------------------
   verify:
@@ -98,8 +98,8 @@ jobs:
         run: |
           set -euo pipefail
           # Run the image exactly as the AIC Deployment does: same env vars
-          # aic-login2-config supplies, no real AM behind it (only /api/locale is
-          # exercised, which doesn't call out to AM).
+          # aic-login2-config supplies, no real AM behind it (only /api/health/live is
+          # exercised, which intentionally does not call out to AM).
           docker run -d --name aic-login2-smoke \
             -p 3000:3000 \
             -e ORIGIN=https://smoke-test.forgeblocks.com \
@@ -115,14 +115,14 @@ jobs:
 
           ok=0
           for i in $(seq 1 30); do
-            if curl -fsS http://localhost:3000/api/locale >/dev/null 2>&1; then
+            if curl -fsS http://localhost:3000/api/health/live >/dev/null 2>&1; then
               ok=1; break
             fi
             sleep 1
           done
 
           if [ "$ok" -ne 1 ]; then
-            echo "::error::/api/locale did not return 200 within 30s"
+            echo "::error::/api/health/live did not return 200 within 30s"
             docker logs aic-login2-smoke || true
             docker rm -f aic-login2-smoke || true
             exit 1

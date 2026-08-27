@@ -48,7 +48,7 @@ USER forgerock
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD node -e "fetch('http://localhost:3000/api/locale').then(r => { if (!r.ok) throw 1 })"
+    CMD node -e "fetch('http://localhost:3000/api/health/live').then(r => { if (!r.ok) throw 1 })"
 
 CMD ["node", "apps/login-app/build"]
 
