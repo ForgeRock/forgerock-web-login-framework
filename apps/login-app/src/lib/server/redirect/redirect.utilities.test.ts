@@ -129,7 +129,7 @@ describe('resolveRedirect', () => {
     expect(url).toBe('https://openam.example.com/am/json/realms/root/authenticate');
   });
 
-  it('prefers journeyStepUrl over SAML gotoUrl when successUrl is default but journeyStepUrl is not', () => {
+  it('uses SAML gotoUrl when the journey step is an AM step', () => {
     const url = resolveRedirect(
       makeContext({
         successUrl: '/platform/console',
@@ -137,7 +137,7 @@ describe('resolveRedirect', () => {
         gotoUrl: '/saml2/idp/SSO',
       }),
     );
-    expect(url).toBe('https://openam.example.com/am/json/realms/root/authenticate');
+    expect(url).toBe('https://openam.example.com/saml2/idp/SSO');
   });
 
   it('uses SAML gotoUrl when successUrl is a default path and gotoUrl looks like SAML', () => {
