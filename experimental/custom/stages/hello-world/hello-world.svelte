@@ -21,7 +21,7 @@ Name: HelloWorld
 
 <style>
   .tutorial-next {
-    background-color: #e0540d;
+    background-color: #3b6073;
     border: 1px solid #027ab8;
     border-radius: 0.25rem;
     color: #fff;
