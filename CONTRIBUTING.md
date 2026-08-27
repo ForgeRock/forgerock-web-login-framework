@@ -64,12 +64,12 @@ The `core/` directory is **not** a workspace. It contains shared TypeScript modu
 
 The login-app requires environment variables for connecting to a ForgeRock AM instance. Create a `.env` file in the repository root or set them in your shell:
 
-| Variable                      | Description                                                            |
-| ----------------------------- | ---------------------------------------------------------------------- |
-| `VITE_FR_AM_URL`              | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`) |
-| `VITE_FR_AM_COOKIE_NAME`      | AM session cookie name                                                 |
-| `VITE_FR_OAUTH_PUBLIC_CLIENT` | OAuth 2.0 client ID                                                    |
-| `VITE_FR_REALM_PATH`          | AM realm path                                                          |
+| Variable              | Description                                                            |
+| --------------------- | ---------------------------------------------------------------------- |
+| `FR_AM_URL`           | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`) |
+| `FR_AM_COOKIE_NAME`   | AM session cookie name                                                 |
+| `FR_REALM_PATH`       | AM realm path                                                          |
+| `FR_AM_WELLKNOWN_URL` | AM OIDC discovery URL used to validate app configuration               |
 
 ## Making Changes
 
