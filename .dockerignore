@@ -1,4 +1,4 @@
-node_modules
+**/node_modules
 .git
 .env
 .env.*
@@ -7,6 +7,8 @@ node_modules
 *Dockerfile*
 *docker-compose*
 npm-debug.log
+# Credentials created by google-github-actions/auth must never enter Docker build context
+gha-creds-*.json
 
 # Build artifacts (rebuilt inside container)
 dist
