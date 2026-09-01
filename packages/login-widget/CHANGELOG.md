@@ -1,5 +1,20 @@
 # [1.3.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.1...v1.3.0) (2024-06-05)
 
+## 2.2.0
+
+### Minor Changes
+
+- [#565](https://github.com/ForgeRock/forgerock-web-login-framework/pull/565) [`bdc9c39`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/bdc9c39834548c7e4f845b2cce7b9fd240227ef5) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add Page Node theme support. Parses a Page Node `themeId` out of the AM `stage` attribute (both the key=value and JSON shapes), adds `themeCatalog` to `configuration({ style })` keyed by IDM theme `_id`, and applies the resolved page theme over the base theme on the widget root — falling through to the base theme when the id is absent, unresolved, or no catalog was supplied. Logo height now also flows through the theme CSS var bridge via `--fr-logo-height`.
+
+### Patch Changes
+
+- [#571](https://github.com/ForgeRock/forgerock-web-login-framework/pull/571) [`5a1bef8`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/5a1bef8c8eab7e45b35eb5e5280d940a1f981520) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Fix dark-mode styling on admin invite screens and thread `tabindex` through the checkbox composition/primitive chain:
+
+  - `Checkbox`/`Standard`/`Animated`/checkbox primitive now accept an optional `tabindex` prop.
+  - Animated checkbox label content no longer breaks inline links out of the grid layout.
+
+- [#578](https://github.com/ForgeRock/forgerock-web-login-framework/pull/578) [`095a5b2`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/095a5b28790e48b3b7c32ea45655f2ba782f395e) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Add a localized Start Over action to the default OTP stage.
+
 ## 2.1.0
 
 ### Minor Changes
