@@ -108,6 +108,7 @@ export const stringsSchema = z
     registerHeader: z.string(),
     registerSuccess: z.string(),
     registerYourDevice: z.string(),
+    startOver: z.string(),
     requiredField: z.string(),
     securityAnswer: z.string(),
     setupTwoStepVerification: z.string(),

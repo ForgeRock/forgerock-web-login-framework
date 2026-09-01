@@ -50,3 +50,5 @@ experimental/custom/callbacks/*/
 tools/cli/tmp/
 packages/login-widget/tmp/
 .playwright-mcp/
+
+.polaris/

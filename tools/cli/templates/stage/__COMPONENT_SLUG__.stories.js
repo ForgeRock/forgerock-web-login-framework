@@ -36,6 +36,7 @@ export const Base = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     step,

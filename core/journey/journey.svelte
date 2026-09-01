@@ -95,6 +95,7 @@
         push: journeyStore.push,
         stack,
         redirect: journeyStore.redirect,
+        restart: tryAgain,
       }}
       metadata={$journeyStore.metadata}
       step={$journeyStore.step}

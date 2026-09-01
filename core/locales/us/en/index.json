@@ -88,6 +88,7 @@
   "registerSuccess": "Registration successful!",
   "requiredField": "Value is required",
   "registerYourDevice": "Register {name}",
+  "startOver": "Start Over",
   "scanQrCodeWithAuthenticator": "Scan the QR code image below with the ForgeRock Authenticator app to register your device with your login.",
   "securityAnswer": "Security answer",
   "setupTwoStepVerification": "Set up 2-step verification",

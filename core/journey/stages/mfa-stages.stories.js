@@ -38,6 +38,8 @@ const frRecoveryCodesWithName = createJourneyStep(recoveryCodesWithName);
 const frSuspendEmail = createJourneyStep(emailSuspendStep);
 const frWebAuthnAuthenticationStep = createJourneyStep(webAuthnAuthenticationStep);
 const frWebAuthnRegistrationStep = createJourneyStep(webAuthnRegistrationStep);
+const otpSubmit = fn();
+const otpRestart = fn();
 
 initialize();
 
@@ -69,6 +71,7 @@ export const MfaRegistrationOptions = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: frMfaRegistrationOptions.getStage(),
@@ -82,12 +85,13 @@ export const OneTimePassword = {
       icon: true,
       message: '',
       status: '',
-      submit: fn(),
+      submit: otpSubmit,
     },
     journey: {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: otpRestart,
       stack: writable([]),
     },
     stage: frOneTimePassword.getStage(),
@@ -107,6 +111,7 @@ export const OathRegistration = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: frOathRegistration.getStage(),
@@ -126,6 +131,7 @@ export const OathRegistrationError = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: frOathRegistrationError.getStage(),
@@ -145,6 +151,7 @@ export const PushRegistration = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: frPushRegistration.getStage(),
@@ -164,6 +171,7 @@ export const RecoveryCodes = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: 'RecoveryCodes',
@@ -183,6 +191,7 @@ export const RecoveryCodesWithName = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: 'RecoveryCodes',
@@ -202,6 +211,7 @@ export const SuspendEmail = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: 'EmailSuspend',
@@ -221,6 +231,7 @@ export const WebAuthnAuthentication = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: 'WebAuthn',
@@ -240,6 +251,7 @@ export const WebAuthnRegistration = {
       loading: false,
       pop: fn(),
       push: fn(),
+      restart: fn(),
       stack: writable([]),
     },
     stage: 'WebAuthn',
@@ -397,8 +409,20 @@ export const OneTimePasswordInteraction = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.queryByRole('button', { name: 'Submit' })).toBeInTheDocument();
+    const submitButton = canvas.queryByRole('button', { name: 'Submit' });
+    const restartButton = canvas.queryByRole('button', { name: 'Start Over' });
+
+    await expect(submitButton).toBeInTheDocument();
+    await expect(restartButton).toBeInTheDocument();
     expect(canvas.queryByRole('button', { name: 'Sign in' })).not.toBeInTheDocument();
+    expect(submitButton).toHaveAttribute('type', 'submit');
+    expect(restartButton).toHaveAttribute('type', 'button');
+    expect(restartButton).toHaveClass('tw_focusable-element');
+    expect(restartButton).toHaveClass('dark:tw_focusable-element_dark');
+
+    await userEvent.click(restartButton);
+    await expect(otpRestart).toHaveBeenCalledOnce();
+    await expect(otpSubmit).not.toHaveBeenCalled();
   },
 };
 

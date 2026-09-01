@@ -57,6 +57,7 @@ export interface StageJourneyObject {
   pop: () => void;
   push: (options: StartParam) => void;
   redirect: (step: JourneyStep) => Promise<void>;
+  restart: () => Promise<void>;
   stack: StackStore;
 }
 // ComponentConstructorOptions<never> satisfies constructor contravariance for all Svelte 4
