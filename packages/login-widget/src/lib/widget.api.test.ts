@@ -9,8 +9,6 @@
 
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { JourneyStoreValue } from '$journey/journey.interfaces';
-
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
 const oidcMock = vi.fn();
 const journeyMock = vi.fn();
@@ -133,77 +131,33 @@ describe('widgetApiFactory', () => {
     });
   });
 
-  describe('configure() — hideScriptedTextOutput reaches callback metadata', () => {
-    /**
-     * step.mock imports @forgerock/journey-client, so it has to be pulled in lazily —
-     * a top-level import would run the hoisted vi.mock factory before journeyMock exists.
-     */
-    async function mockClientReturningScriptedStep() {
-      const { createJourneyStep } = await import('$journey/_utilities/step.mock');
-      journeyMock.mockResolvedValue({
-        start: vi.fn().mockResolvedValue(
-          createJourneyStep({
-            authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
-            callbacks: [
-              {
-                type: 'TextOutputCallback',
-                output: [
-                  { name: 'message', value: 'console.log("tracking")' },
-                  { name: 'messageType', value: '4' },
-                ],
-              },
-            ],
-            status: 200,
-          }),
-        ),
-        next: vi.fn(),
-        resume: vi.fn(),
-        redirect: vi.fn(),
-        terminate: journeyTerminateMock,
-      });
-    }
-
-    it('forwards the flag through to the text output callback metadata', async () => {
-      await mockClientReturningScriptedStep();
-      const api = await importSubject();
-      await api.configure({ serverConfig: validServerConfig, hideScriptedTextOutput: true });
-
-      const { journeyStore } = api.getStores();
-      await journeyStore.start();
-
-      const state = readStore<JourneyStoreValue>(journeyStore);
-      expect(state.metadata?.callbacks[0].initOptions).toStrictEqual({
-        hideScriptedTextOutput: true,
-      });
-    });
-
-    it('leaves callback metadata untouched when the option is omitted', async () => {
-      await mockClientReturningScriptedStep();
-      const api = await importSubject();
-      await api.configure({ serverConfig: validServerConfig });
-
-      const { journeyStore } = api.getStores();
-      await journeyStore.start();
-
-      const state = readStore<JourneyStoreValue>(journeyStore);
-      expect(state.metadata?.callbacks[0].initOptions).toBeUndefined();
-    });
-
-    it.each<[string, unknown]>([
-      ['a truthy string', 'true'],
-      ['zero', 0],
-      ['an empty string', ''],
-      ['null', null],
-    ])('rejects %s as a non-boolean value', async (_description, invalidValue) => {
+  describe('configure() — style is validated', () => {
+    // style.store's initialize() safeParses near the end of configure() — after client
+    // construction — and on failure resets the store to fallbacks rather than throwing.
+    it('ignores an invalid style config and keeps the rest of configure() working', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
 
       await expect(
         api.configure({
           serverConfig: validServerConfig,
-          // Deliberately wrong type — configure() must not coerce it
-          hideScriptedTextOutput: invalidValue as boolean,
+          oidcClient: validOidcClient,
+          style: { callbacks: { textOutput: { script: 'visible' } } },
+        } as unknown as { serverConfig: { wellknown: string } }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('accepts a valid textOutput script hide directive', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          serverConfig: validServerConfig,
+          oidcClient: validOidcClient,
+          style: { callbacks: { textOutput: { script: 'hidden' } } },
         }),
-      ).rejects.toThrow();
+      ).resolves.toBeUndefined();
     });
   });
 

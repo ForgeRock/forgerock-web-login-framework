@@ -36,15 +36,10 @@
   const captchaModeRaw = $page.url.searchParams.get('captchaMode');
   const captchaModeParam =
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
-  const hideScriptedTextOutputParam =
-    $page.url.searchParams.get('hideScriptedTextOutput') === 'true';
 
   const journeyStore: JourneyStore = initializeJourney(
     { serverConfig: { wellknown: data.wellknown } },
-    {
-      ...(captchaModeParam && { captcha: { mode: captchaModeParam } }),
-      ...(hideScriptedTextOutputParam && { hideScriptedTextOutput: true }),
-    },
+    { ...(captchaModeParam && { captcha: { mode: captchaModeParam } }) },
   );
 
   let hasSubmitted = false;

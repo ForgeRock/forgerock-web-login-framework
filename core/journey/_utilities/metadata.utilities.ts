@@ -17,18 +17,12 @@ import {
   requiresUserInput,
 } from './data-analysis.utilities';
 
-import type {
-  BaseCallback,
-  JourneyStep,
-  TextOutputCallback,
-} from '@forgerock/journey-client/types';
+import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
 import type { FullAutoFill } from 'svelte/elements';
 
 import type { CallbackMetadata } from '$journey/journey.interfaces';
 
 const captchaCallbackTypes = new Set(['ReCaptchaCallback', 'ReCaptchaEnterpriseCallback']);
-const textOutputCallbackTypes = new Set(['TextOutputCallback', 'SuspendedTextOutputCallback']);
-const scriptedMessageType = '4';
 
 /**
  * @function buildCallbackMetadata - Constructs an array of callback metadata that matches to original callback array
@@ -72,12 +66,6 @@ export function buildCallbackMetadata(
       if (captchaConfig || recaptchaAction) {
         initOptions = { ...captchaConfig, ...(recaptchaAction && { recaptchaAction }) };
       }
-    } else if (
-      textOutputCallbackTypes.has(callbackType) &&
-      initializationOptions?.hideScriptedTextOutput &&
-      (callback as TextOutputCallback).getMessageType() === scriptedMessageType
-    ) {
-      initOptions = { hideScriptedTextOutput: true };
     }
 
     return {

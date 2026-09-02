@@ -10,7 +10,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  hideScriptedTextOutputSchema,
   loggerConfigSchema,
   middlewareSchema,
   serverConfigSchema,
@@ -141,22 +140,5 @@ describe('widget.config — storageConfigSchema', () => {
 
   it('rejects a missing type discriminant', () => {
     expect(() => storageConfigSchema.parse({ name: 'tokens', prefix: 'myApp' })).toThrow();
-  });
-});
-
-describe('widget.config — hideScriptedTextOutputSchema', () => {
-  it('parses both boolean values', () => {
-    expect(hideScriptedTextOutputSchema.parse(true)).toBe(true);
-    expect(hideScriptedTextOutputSchema.parse(false)).toBe(false);
-  });
-
-  it('defaults to false when omitted', () => {
-    expect(hideScriptedTextOutputSchema.parse(undefined)).toBe(false);
-  });
-
-  // A truthy string would otherwise silently enable the option
-  it('rejects a non-boolean', () => {
-    expect(() => hideScriptedTextOutputSchema.parse('true')).toThrow();
-    expect(() => hideScriptedTextOutputSchema.parse(1)).toThrow();
   });
 });

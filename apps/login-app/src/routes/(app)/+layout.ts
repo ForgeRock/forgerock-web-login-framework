@@ -14,14 +14,18 @@ import { initialize as initializeJourneys } from '$journey/config.store';
 
 import type { LayoutLoad } from './$types';
 
-export const load: LayoutLoad = ({ data }) => {
+export const load: LayoutLoad = ({ data, url }) => {
   initializeJourneys();
 
   initializeLinks({
     termsAndConditions: 'https://www.forgerock.com/terms',
   });
 
-  if (data.idmTheme || data.themeCatalog) {
+  // E2E/dev toggle, mirroring the captchaMode URL param on the login page:
+  // suppress script-type text output (TextOutputCallback messageType 4)
+  const hideScriptedTextOutput = url.searchParams.get('hideScriptedTextOutput') === 'true';
+
+  if (data.idmTheme || data.themeCatalog || hideScriptedTextOutput) {
     initializeStyles({
       ...(data.idmTheme && { theme: data.idmTheme }),
       ...(data.themeCatalog && { themeCatalog: data.themeCatalog }),
@@ -32,6 +36,7 @@ export const load: LayoutLoad = ({ data }) => {
           ...(data.idmTheme.logoHeight && { height: data.idmTheme.logoHeight }),
         },
       }),
+      ...(hideScriptedTextOutput && { callbacks: { textOutput: { script: 'hidden' } } }),
     });
   }
 
