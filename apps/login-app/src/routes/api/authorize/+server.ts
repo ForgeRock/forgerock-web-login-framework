@@ -7,40 +7,32 @@
  *
  **/
 
-import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$core/constants';
-import { get as getCookie } from '$server/sessions';
+import { AM_DOMAIN_PATH } from '$core/constants';
+import { getAmCookie, resolveOAuthRealmPath, resolveUpstreamQuery } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
-  // console.log('Start authorization call');
-  const cookie = event.request.headers.get('cookie');
-  const reqCookieUuid = cookie && cookie.match(/=(\S{1,})/);
-  const reqCookie = Array.isArray(reqCookieUuid) && getCookie(reqCookieUuid[1]);
-
-  // console.log('Authorize request: AM cookie sent');
-  // console.log(reqCookie);
-
+  const realm = event.url.searchParams.get('realm') ?? undefined;
   const response = await fetch(
-    `${AM_DOMAIN_PATH}${OAUTH_REALM_PATH}/authorize${event.url.search}`,
+    `${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/authorize${resolveUpstreamQuery(event.url)}`,
     {
       method: 'GET',
       headers: {
-        cookie: reqCookie ? reqCookie : '',
+        cookie: getAmCookie(event.cookies),
       },
+      redirect: 'manual',
     },
   );
 
-  // console.log(response.url);
-  // console.log(await response.text());
-
   const headers = new Headers();
-  headers.append('location', response.url);
+  const location = response.headers.get('location');
+  if (location) headers.set('location', location);
 
   return new Response(undefined, {
-    status: 302,
+    status: response.status,
     headers,
   });
 };

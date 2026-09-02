@@ -18,7 +18,7 @@ import {
   removeHttpCookie,
   setHttpCookie,
 } from '$server/sessions';
-import { parseRedirectForm } from './redirect.utilities';
+import { parseRedirectForm, resolveRealmFromUrl } from './redirect.utilities';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -35,19 +35,23 @@ const REDIRECT_QUERY_PARAMS = 'redirect_query_params';
 export function storeRedirectParams(event: RequestEvent): RedirectParams {
   const goto = event.url.searchParams.get('goto') || undefined;
   const gotoOnFail = event.url.searchParams.get('gotoOnFail') || undefined;
+  const realm = resolveRealmFromUrl(event.url);
 
-  if (goto || gotoOnFail) {
-    setHttpCookie(
-      event.cookies,
-      REDIRECT_QUERY_PARAMS,
-      JSON.stringify({
-        ...(goto ? { goto } : {}),
-        ...(gotoOnFail ? { gotoOnFail } : {}),
-      }),
-    );
+  if (!goto && !gotoOnFail) {
+    return { goto, gotoOnFail, realm };
   }
 
-  return { goto, gotoOnFail };
+  setHttpCookie(
+    event.cookies,
+    REDIRECT_QUERY_PARAMS,
+    JSON.stringify({
+      ...(goto ? { goto } : {}),
+      ...(gotoOnFail ? { gotoOnFail } : {}),
+      realm,
+    }),
+  );
+
+  return { goto, gotoOnFail, realm };
 }
 
 /**
@@ -64,9 +68,9 @@ export async function createRedirectContext(
 
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
-  const successUrl = tokenId && gotoUrl ? await validateUrl(tokenId, gotoUrl) : null;
-  const roles = tokenId ? await getUserRolesFromSession(tokenId) : [];
-  const realm = env.FR_REALM_PATH;
+  const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'root';
+  const successUrl = tokenId && gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
+  const roles = tokenId ? await getUserRolesFromSession(tokenId, realm) : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
 
   return {
@@ -93,6 +97,7 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
   const cookieSchema = z.object({
     goto: z.string().optional(),
     gotoOnFail: z.string().optional(),
+    realm: z.string().optional(),
   });
 
   if (!cookieValue) {
@@ -113,10 +118,20 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
  * @param {string} gotoUrl - The URL to validate
  * @returns {Promise<string|null>} The validated URL or null if invalid
  */
-export async function validateUrl(tokenId: TokenId, gotoUrl: string): Promise<string | null> {
-  const response = await amFetchRequest(tokenId, '/users?_action=validateGoto', 'POST', {
-    goto: gotoUrl,
-  });
+export async function validateUrl(
+  tokenId: TokenId,
+  gotoUrl: string,
+  realm?: string,
+): Promise<string | null> {
+  const response = await amFetchRequest(
+    tokenId,
+    '/users?_action=validateGoto',
+    'POST',
+    {
+      goto: gotoUrl,
+    },
+    realm,
+  );
   const parsed = z.object({ successUrl: z.string().optional() }).safeParse(response);
   if (
     !parsed.success ||

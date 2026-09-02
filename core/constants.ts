@@ -30,6 +30,5 @@ export const AM_DOMAIN_PATH = env.FR_AM_URL ?? '';
 export const AM_COOKIE_NAME = env.FR_AM_COOKIE_NAME ?? '';
 /** Extracted hostname from AM URL (e.g. host.example.com) */
 export const AM_DOMAIN = env.FR_AM_URL ? extractDomainFromUrl(env.FR_AM_URL) : '';
-export const APP_DOMAIN = env.APP_DOMAIN ?? 'localhost';
 export const JSON_REALM_PATH = `/json/realms/root/${realmPath}`;
 export const OAUTH_REALM_PATH = `/oauth2/realms/root/${realmPath}`;

@@ -7,7 +7,11 @@
  *
  **/
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('$env/dynamic/private', () => ({
+  env: { FR_REALM_PATH: 'alpha' },
+}));
 
 import {
   isDefaultPath,
@@ -125,7 +129,7 @@ describe('resolveRedirect', () => {
     expect(url).toBe('https://openam.example.com/am/json/realms/root/authenticate');
   });
 
-  it('prefers journeyStepUrl over SAML gotoUrl when successUrl is default but journeyStepUrl is not', () => {
+  it('uses SAML gotoUrl when the journey step is an AM step', () => {
     const url = resolveRedirect(
       makeContext({
         successUrl: '/platform/console',
@@ -133,7 +137,7 @@ describe('resolveRedirect', () => {
         gotoUrl: '/saml2/idp/SSO',
       }),
     );
-    expect(url).toBe('https://openam.example.com/am/json/realms/root/authenticate');
+    expect(url).toBe('https://openam.example.com/saml2/idp/SSO');
   });
 
   it('uses SAML gotoUrl when successUrl is a default path and gotoUrl looks like SAML', () => {
@@ -213,8 +217,8 @@ describe('resolveRedirect', () => {
     expect(url).toBe('/failure-redirect');
   });
 
-  it('returns a success fallback redirect when nothing matches', () => {
+  it('returns an enduser fallback redirect when nothing matches', () => {
     const url = resolveRedirect(makeContext());
-    expect(url).toBe('/success-redirect');
+    expect(url).toBe('https://openam.example.com/enduser/?realm=/#/');
   });
 });

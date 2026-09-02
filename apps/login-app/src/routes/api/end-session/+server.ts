@@ -7,22 +7,34 @@
  *
  **/
 
-import { AM_DOMAIN_PATH, OAUTH_REALM_PATH } from '$core/constants';
+import { AM_DOMAIN_PATH } from '$core/constants';
+import {
+  clearAmCookie,
+  getAmCookie,
+  resolveOAuthRealmPath,
+  resolveUpstreamQuery,
+} from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
 import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
+  const realm = event.url.searchParams.get('realm') ?? undefined;
   const response = await fetch(
-    `${AM_DOMAIN_PATH}${OAUTH_REALM_PATH}/connect/endSession${event.url.search}`,
+    `${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/connect/endSession${resolveUpstreamQuery(
+      event.url,
+    )}`,
     {
       method: 'GET',
       headers: {
         authorization: event.request.headers.get('authorization') || '',
+        cookie: getAmCookie(event.cookies),
       },
     },
   );
+
+  if (response.ok) clearAmCookie(event.cookies);
 
   const resBody = await response.text();
   // console.log(response);
