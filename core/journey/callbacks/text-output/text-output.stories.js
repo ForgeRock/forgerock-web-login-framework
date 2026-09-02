@@ -42,6 +42,28 @@ export const WithScript = {
   args: {
     callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[2],
   },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // Default is unchanged: script source is still printed when no hide rule is set
+    await expect(canvas.getByText(/Dangerous script tag/)).toBeTruthy();
+  },
+};
+
+export const WithScriptHidden = {
+  args: {
+    callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[2],
+    style: {
+      callbacks: {
+        textOutput: { script: 'hidden' },
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.queryByText(/Dangerous script tag/)).toBeNull();
+  },
 };
 
 export const Warning = {

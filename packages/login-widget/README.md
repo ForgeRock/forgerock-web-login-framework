@@ -39,6 +39,8 @@
   - [Styling Configuration](#styling-configuration)
   - [Links Configuration](#links-configuration)
   - [Content Configuration](#content-configuration)
+  - [CAPTCHA Configuration](#captcha-configuration)
+  - [Scripted Text Output](#scripted-text-output)
 - [Supported Callbacks](#supported-callbacks)
 - [Disclaimer](#disclaimer)
 - [License](#license)
@@ -571,6 +573,12 @@ await configure({
     stage: {
       icon: true, // OPTIONAL; display generic stage icons
     },
+    callbacks: {
+      textOutput: {
+        // OPTIONAL; hide text output by message type — see "Scripted Text Output"
+        script: 'hidden',
+      },
+    },
   },
 });
 ```
@@ -614,6 +622,24 @@ await configure({
 ```
 
 **Script loading:** The widget automatically injects the required CAPTCHA script at mount time — no manual `<script>` tag is needed. If the provider API (`window.grecaptcha` / `window.hcaptcha`) is already present on the page when the widget mounts, injection is skipped.
+
+### Scripted Text Output
+
+A journey can return client-side JavaScript as a `TextOutputCallback` with `messageType` `4` — for example a tracking or device-fingerprinting snippet. The widget does not execute these scripts, so by default it prints the script source to the screen as text.
+
+Hide them with the `textOutput` style directive:
+
+```js
+await configure({
+  style: {
+    callbacks: {
+      textOutput: { script: 'hidden' }, // omit for default: prints the script source
+    },
+  },
+});
+```
+
+`script` targets `messageType` `4`. Informational (`0`), warning (`1`), and error (`2`) messages render as usual. The scripts are still not executed either way — the option only controls whether their source is displayed.
 
 ## Supported Callbacks
 

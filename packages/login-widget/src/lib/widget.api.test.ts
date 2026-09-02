@@ -131,6 +131,36 @@ describe('widgetApiFactory', () => {
     });
   });
 
+  describe('configure() — style is validated', () => {
+    // style.store's initialize() safeParses near the end of configure() — after client
+    // construction — and on failure resets the store to fallbacks rather than throwing.
+    it('ignores an invalid style config and keeps the rest of configure() working', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          serverConfig: validServerConfig,
+          oidcClient: validOidcClient,
+          style: { callbacks: { textOutput: { script: 'visible' } } },
+        } as unknown as { serverConfig: { wellknown: string } }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('accepts a valid textOutput script hide directive', async () => {
+      oidcMock.mockResolvedValueOnce(makeOidcClient());
+      const api = await importSubject();
+
+      await expect(
+        api.configure({
+          serverConfig: validServerConfig,
+          oidcClient: validOidcClient,
+          style: { callbacks: { textOutput: { script: 'hidden' } } },
+        }),
+      ).resolves.toBeUndefined();
+    });
+  });
+
   describe('configure() — logger and middleware fan out to both clients', () => {
     it('forwards the top-level logger level to each client as the `logger` param', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());

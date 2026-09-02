@@ -39,7 +39,7 @@
 
   const journeyStore: JourneyStore = initializeJourney(
     { serverConfig: { wellknown: data.wellknown } },
-    captchaModeParam ? { captcha: { mode: captchaModeParam } } : null,
+    { ...(captchaModeParam && { captcha: { mode: captchaModeParam } }) },
   );
 
   let hasSubmitted = false;
