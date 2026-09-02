@@ -38,6 +38,7 @@
   let pauseBehavioralData = $page.url.searchParams.get('pauseBehavioralData');
   const hideScriptedTextOutputParam =
     $page.url.searchParams.get('hideScriptedTextOutput') === 'true';
+  const textOutputStyle = hideScriptedTextOutputParam ? { script: 'hidden' } : undefined;
   type UserResponseObj = {
     family_name: string;
     given_name: string;
@@ -121,7 +122,9 @@
       },
       style: {
         labels: 'floating',
-        showPassword: showPasswordParam,
+        // showPasswordParam is null when the URL param is absent; zod's `.optional()`
+        // accepts undefined but not null, so only include it when set
+        ...(showPasswordParam && { showPassword: showPasswordParam }),
         logo: {
           dark: '/img/fr-logomark-white.png',
           light: '/img/fr-logomark-black.png',
@@ -129,9 +132,11 @@
         sections: {
           header: false,
         },
+        callbacks: {
+          textOutput: textOutputStyle,
+        },
       },
       captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
-      hideScriptedTextOutput: hideScriptedTextOutputParam,
     });
 
     componentEvents = component();

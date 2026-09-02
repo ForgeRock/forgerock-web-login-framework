@@ -2,4 +2,4 @@
 '@forgerock/login-widget': minor
 ---
 
-Add a `hideScriptedTextOutput` option to `configure()` that suppresses rendering of script-type text output (`TextOutputCallback` with `messageType` 4). The widget never executes these scripts, so it previously printed their source to the screen. Defaults to `false`, leaving existing behavior unchanged.
+Add a `style.callbacks.textOutput` option to `configure()` that suppresses rendering of text output by message type — `{ script: 'hidden' }` hides script-type output (`TextOutputCallback` with `messageType` 4), whose source the widget prints to the screen because it never executes it. Informational, warning, and error messages are unaffected.

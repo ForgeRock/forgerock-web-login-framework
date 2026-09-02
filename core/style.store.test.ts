@@ -234,4 +234,20 @@ describe('initialize', () => {
     store.subscribe((v) => (value = v))();
     expect(value?.themeCatalog?.['theme-a']?.primaryColor).toBe('#027ab8');
   });
+
+  it('merges a valid textOutput script hide directive into the store', () => {
+    const store = initialize({ callbacks: { textOutput: { script: 'hidden' } } });
+    let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
+    store.subscribe((v) => (value = v))();
+    expect(value?.callbacks?.textOutput).toStrictEqual({ script: 'hidden' });
+  });
+
+  it('drops an invalid textOutput directive rather than storing it unparsed', () => {
+    initialize({ callbacks: { textOutput: { script: 'hidden' } } });
+    // @ts-expect-error — intentionally invalid input to exercise the safeParse failure path
+    const store = initialize({ callbacks: { textOutput: { script: 'visible' } } });
+    let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
+    store.subscribe((v) => (value = v))();
+    expect(value?.callbacks).toBeUndefined();
+  });
 });

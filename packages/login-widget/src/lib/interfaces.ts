@@ -11,7 +11,6 @@ import type { SignalsInitializationOptions } from '@forgerock/protect/types';
 import type { z } from 'zod';
 
 import type {
-  hideScriptedTextOutputSchema,
   loggerConfigSchema,
   middlewareSchema,
   serverConfigSchema,
@@ -70,7 +69,6 @@ export interface WidgetConfigOptions {
   middleware?: z.infer<typeof middlewareSchema>;
   storage?: z.infer<typeof storageConfigSchema>;
   captcha?: z.infer<typeof captchaConfigSchema>;
-  hideScriptedTextOutput?: z.infer<typeof hideScriptedTextOutputSchema>;
   oidcClient?: Omit<z.infer<typeof oidcClientConfigSchema>, 'serverConfig'>;
   content?: z.infer<typeof partialStringsSchema>;
   journeys?: z.infer<typeof journeyConfigSchema>;

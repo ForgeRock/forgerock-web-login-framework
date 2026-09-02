@@ -29,6 +29,7 @@
     captchaModeRaw === 'visible' || captchaModeRaw === 'invisible' ? captchaModeRaw : null;
   const hideScriptedTextOutputParam =
     $page.url.searchParams.get('hideScriptedTextOutput') === 'true';
+  const textOutputStyle = hideScriptedTextOutputParam ? { script: 'hidden' } : undefined;
   let suspendedIdParam = $page.url.searchParams.get('suspendedId');
   let formEl: HTMLDivElement;
   let userEvent: UserStoreValue | null;
@@ -56,7 +57,11 @@
           'https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration',
       },
       captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
-      hideScriptedTextOutput: hideScriptedTextOutputParam,
+      style: {
+        callbacks: {
+          textOutput: textOutputStyle,
+        },
+      },
       oidcClient: {
         clientId: 'WebOAuthClient',
         redirectUri: `${window.location.origin}/callback`,

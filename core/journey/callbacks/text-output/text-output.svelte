@@ -28,16 +28,17 @@
   } from '$journey/journey.interfaces';
 
   // Unused props. Setting to const prevents errors in console
+  export const callbackMetadata: Maybe<CallbackMetadata> = null;
   export const selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   export const stepMetadata: Maybe<StepMetadata> = null;
-  export const style: z.infer<typeof styleSchema> = {};
 
   export let callback: SuspendedTextOutputCallback | TextOutputCallback;
-  export let callbackMetadata: Maybe<CallbackMetadata> = null;
+  export let style: z.infer<typeof styleSchema> = {};
 
   let dirtyMessage = callback.getMessage();
   let cleanMessage = sanitize(dirtyMessage);
   let callbackMessageType: 'error' | 'info' | 'success' | 'warning' | '' = 'info';
+  let hideMessage = false;
 
   function getCallbackMessage(messageType: string) {
     switch (messageType) {
@@ -53,14 +54,15 @@
   }
 
   $: {
+    const messageType = callback.getMessageType();
     dirtyMessage = callback.getMessage();
     cleanMessage = sanitize(dirtyMessage);
-    callbackMessageType = getCallbackMessage(callback.getMessageType());
+    callbackMessageType = getCallbackMessage(messageType);
+    hideMessage = messageType === '4' && style.callbacks?.textOutput?.script === 'hidden';
   }
 </script>
 
-<!-- buildCallbackMetadata only sets this on scripted output the developer chose to hide -->
-{#if callbackMetadata?.initOptions?.hideScriptedTextOutput !== true}
+{#if !hideMessage}
   {#if callbackMessageType === 'info'}
     <Text classes={cleanMessage.length < 100 ? 'tw_font-bold tw_mt-6' : 'tw_mt-6'}>
       {@html cleanMessage}

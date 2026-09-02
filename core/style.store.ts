@@ -61,8 +61,20 @@ export const logoSchema = z
   })
   .strict();
 
+export const textOutputStyleSchema = z
+  .object({
+    script: z.literal('hidden').optional(),
+  })
+  .strict();
+
 export const styleSchema = z
   .object({
+    callbacks: z
+      .object({
+        textOutput: textOutputStyleSchema.optional(),
+      })
+      .strict()
+      .optional(),
     checksAndRadios: z.union([z.literal('animated'), z.literal('standard')]).optional(),
     labels: z.union([z.literal('floating').optional(), z.literal('stacked')]).optional(),
     showPassword: z
@@ -92,6 +104,7 @@ export const partialStyleSchema = styleSchema.partial();
 export type StyleObject = z.infer<typeof partialStyleSchema>;
 
 const fallbackStyles = {
+  callbacks: undefined,
   checksAndRadios: 'animated',
   labels: 'floating',
   showPassword: 'button',
