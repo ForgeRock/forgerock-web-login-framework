@@ -1,6 +1,6 @@
 <!--
  
- Copyright © 2025 Ping Identity Corporation. All right reserved.
+ Copyright © 2025 - 2026 Ping Identity Corporation. All right reserved.
  
  This software may be modified and distributed under the terms
  of the MIT license. See the LICENSE file for details.
@@ -12,6 +12,7 @@
   /* eslint @typescript-eslint/no-empty-function: "off" */
   import Button from '$components/primitives/button/button.svelte';
   import Form from '$components/primitives/form/form.svelte';
+  import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
   import { initialize } from '$core/style.store';
   import Dialog from './dialog.svelte';
 
@@ -25,6 +26,7 @@
   export let withHeader: boolean;
 
   let dialogEl: HTMLDialogElement;
+  let storyRootEl: HTMLDivElement;
 
   function openDialog() {
     dialogEl.showModal();
@@ -37,6 +39,13 @@
   }
 
   initialize({ logo });
+  // applyThemeVars full-replaces the element style, so it must run before the
+  // additive applyLogoVars (pairing contract in the effects' JSDoc) — otherwise
+  // Storybook control transitions would leave stale --fr-logo-* vars behind.
+  $: {
+    applyThemeVars(storyRootEl, undefined);
+    applyLogoVars(storyRootEl, logo);
+  }
 </script>
 
 {#if !forceOpen}
@@ -47,22 +56,24 @@
   />
 {/if}
 
-<Dialog bind:dialogEl dialogId="myDialog" {forceOpen} {withHeader}>
-  <h2
-    class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray dark:tw_text-white"
-  >
-    Sign In
-  </h2>
-  <Form ariaDescribedBy="dialogStory" onSubmitWhenValid={submitForm}>
-    <Input
-      message="Please provide a value"
-      isRequired={true}
-      isFirstInvalidInput={false}
-      key="username"
-      label="Username"
-      onChange={() => {}}
-      type="text"
-    />
-    <Button onClick={() => {}} width="full" style="primary" type="submit">Submit</Button>
-  </Form>
-</Dialog>
+<div bind:this={storyRootEl} class="tw_h-full">
+  <Dialog bind:dialogEl dialogId="myDialog" {forceOpen} {withHeader}>
+    <h2
+      class="tw_flex tw_font-light tw_justify-center tw_mb-4 tw_text-4xl tw_text-gray dark:tw_text-white"
+    >
+      Sign In
+    </h2>
+    <Form ariaDescribedBy="dialogStory" onSubmitWhenValid={submitForm}>
+      <Input
+        message="Please provide a value"
+        isRequired={true}
+        isFirstInvalidInput={false}
+        key="username"
+        label="Username"
+        onChange={() => {}}
+        type="text"
+      />
+      <Button onClick={() => {}} width="full" style="primary" type="submit">Submit</Button>
+    </Form>
+  </Dialog>
+</div>

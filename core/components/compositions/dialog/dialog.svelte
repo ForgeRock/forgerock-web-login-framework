@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
-  import { encodeCssUrl } from '$core/_utilities/theme.utilities';
   import { closeComponent } from '$core/component.store';
   import { styleStore } from '$core/style.store';
   import XIcon from '../../icons/x-icon.svelte';
@@ -61,16 +60,7 @@
 >
   {#if withHeader}
     <div class="tw_dialog-header dark:tw_dialog-header_dark">
-      <div
-        class="tw_dialog-logo dark:tw_dialog-logo_dark"
-        style={`--fr-logo-dark-fallback: ${encodeCssUrl(
-          $styleStore?.logo?.dark ?? '',
-        )}; --fr-logo-light-fallback: ${encodeCssUrl(
-          $styleStore?.logo?.light ?? '',
-        )}; height: var(--fr-logo-height, ${
-          $styleStore?.logo?.height ? `${$styleStore.logo.height}px` : 'inherit'
-        }); ${$styleStore?.logo?.width ? `width: ${$styleStore?.logo.width}px;` : ''}`}
-      ></div>
+      <div class="tw_dialog-logo dark:tw_dialog-logo_dark"></div>
       <button
         class="tw_dialog-x md:tw_dialog-x_medium tw_focusable-element dark:tw_focusable-element_dark"
         on:click={() => closeDialog('user')}
@@ -100,16 +90,7 @@
         >
       </button>
       {#if $styleStore?.logo}
-        <div
-          class="tw_dialog-logo dark:tw_dialog-logo_dark"
-          style={`--fr-logo-dark-fallback: ${encodeCssUrl(
-            $styleStore?.logo?.dark ?? '',
-          )}; --fr-logo-light-fallback: ${encodeCssUrl(
-            $styleStore?.logo?.light ?? '',
-          )}; height: var(--fr-logo-height, ${
-            $styleStore?.logo?.height ? `${$styleStore.logo.height}px` : '100%'
-          });`}
-        ></div>
+        <div class="tw_dialog-logo tw_dialog-logo_no-header dark:tw_dialog-logo_dark"></div>
       {/if}
     </div>
   {/if}
