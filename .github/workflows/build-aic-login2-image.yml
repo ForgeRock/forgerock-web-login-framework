@@ -1,25 +1,5 @@
-# Builds the aic-login2 (forgerock-web-login-framework) container image and
-# publishes it to the ForgeRock PRODUCT registry (gcr.io/forgerock-io) under
-# the `aic-login2/docker-build` name — the same idiomatic AIC product-image flow
-# used by aic-mcp and platform-ui:
-#
-#   1. The product's OWN CI (this workflow) publishes the built image to the
-#      product registry gcr.io/forgerock-io/aic-login2/docker-build.
-#   2. The saas monorepo records the published tag in
-#      go/common/pkg/buildplan/services.go (AIC_LOGIN2_TAG) and pins it via a
-#      thin Dockerfile `FROM gcr.io/forgerock-io/aic-login2/docker-build:<tag>`
-#      (mirrors services/aic-mcp/Dockerfile).
-#   3. The saas Codefresh pipeline (deploy/codefresh/aic-login2.ce.steps.yml)
-#      re-pushes that image into the three regional PRE-PROD registries and
-#      cosign-signs it. deploy-orchestration then promotes pre-prod -> prod.
-#
-# So this workflow does NOT push to the per-region pre-prod/prod registries
-# and does NOT cosign — that is the saas side's job.
-#
-# Requires the `GCP_CREDENTIALS` repo secret: a GCP service account JSON key
-# with Storage Object Creator on gs://artifacts.forgerock-io.appspot.com (the
-# GCS bucket backing the legacy GCR — same permission the platform-ui Jenkins
-# SA and aic-remote-mcp-server's publish job hold).
+# Build and publish the AIC Login2 image to the ForgeRock product registry.
+# SaaS handles regional promotion, signing, and production deployment.
 
 name: Build and Push aic-login2 Image
 
@@ -32,6 +12,9 @@ on:
       - 'packages/login-widget/**'
       - 'themes/**'
       - 'core/**'
+      - 'experimental/**'
+      - 'e2e/package.json'
+      - 'tools/cli/package.json'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -45,6 +28,9 @@ on:
       - 'packages/login-widget/**'
       - 'themes/**'
       - 'core/**'
+      - 'experimental/**'
+      - 'e2e/package.json'
+      - 'tools/cli/package.json'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -55,7 +41,7 @@ on:
   workflow_dispatch:
     inputs:
       image_tag:
-        description: 'Explicit image tag to publish (default: <branch>-<short-sha>)'
+        description: 'Explicit image tag; branch builds also publish a floating branch tag'
         required: false
         type: string
 
@@ -63,19 +49,9 @@ permissions:
   contents: read
 
 env:
-  # ForgeRock PRODUCT registry — the same gcr.io/forgerock-io host aic-mcp and
-  # the platform-ui Jenkins pipeline publish to. saas pins a tag from here in
-  # go/common/pkg/buildplan/services.go and re-pushes into the regional
-  # pre-prod/prod registries itself.
   IMAGE_REPO: gcr.io/forgerock-io/aic-login2/docker-build
 
 jobs:
-  # ---------------------------------------------------------------------------
-  # verify — always runs (including PRs from forks, where no GCP creds exist).
-  # Builds the `deploy` target and smoke-tests the process liveness contract
-  # (/api/health/live -> 200 on :3000, matching the Dockerfile HEALTHCHECK). This is
-  # the gate that proves the image is deployable before anything is published.
-  # ---------------------------------------------------------------------------
   verify:
     runs-on: ubuntu-latest
     steps:
@@ -101,9 +77,6 @@ jobs:
       - name: Smoke-test the saas health/probe contract
         run: |
           set -euo pipefail
-          # Run the image exactly as the AIC Deployment does: same env vars
-          # aic-login2-config supplies, no real AM behind it (only /api/health/live is
-          # exercised, which intentionally does not call out to AM).
           docker run -d --name aic-login2-smoke \
             -p 3000:3000 \
             -e ORIGIN=https://smoke-test.forgeblocks.com \
@@ -124,28 +97,15 @@ jobs:
           if [ "$ok" -ne 1 ]; then
             echo "::error::/api/health/live did not return 200 within 30s"
             docker logs aic-login2-smoke || true
-            docker rm -f aic-login2-smoke || true
             exit 1
           fi
 
-          echo "Smoke test passed."
-          docker rm -f aic-login2-smoke || true
+          docker rm -f aic-login2-smoke
 
-  # ---------------------------------------------------------------------------
-  # publish — only on default-branch/new-login-2 pushes, version tags, or
-  # manual dispatch. Authenticates to GCP via the GCP_CREDENTIALS
-  # service-account key and pushes a single image to the product registry
-  # gcr.io/forgerock-io/aic-login2/docker-build (gcr.io is globally replicated, so
-  # there is one repo, not three). Re-pushing to the regional pre-prod/prod
-  # registries and cosign signing are handled on the saas side. Skipped
-  # entirely on pull_request events.
-  # ---------------------------------------------------------------------------
   publish:
     needs: verify
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -159,22 +119,50 @@ jobs:
           set -euo pipefail
           short_sha="${GITHUB_SHA::12}"
           requested_tag="$IMAGE_TAG_INPUT"
-          if [ -n "$requested_tag" ]; then
-            if [[ ! "$requested_tag" =~ ^[A-Za-z0-9_.-]{1,128}$ ]]; then
-              echo "::error::image_tag must contain only Docker tag characters and be at most 128 characters"
+          validate_tag() {
+            if [[ ! "$1" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]]; then
+              echo "::error::computed image tag must start with a letter, number, or underscore and contain only Docker tag characters (max 128 characters)"
               exit 1
             fi
+          }
+
+          sanitize_ref() {
+            printf '%s' "$1" | sed -E 's/[^A-Za-z0-9_.-]+/-/g; s/^[.-]+//'
+          }
+
+          branch_tag=""
+          safe_branch=""
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            safe_branch="$(sanitize_ref "${GITHUB_REF_NAME}")"
+            branch_tag="${safe_branch:0:128}"
+            validate_tag "$branch_tag"
+          fi
+
+          if [ -n "$requested_tag" ]; then
+            validate_tag "$requested_tag"
             primary="$requested_tag"
           elif [ "${{ github.ref_type }}" = "tag" ]; then
-            primary="${GITHUB_REF_NAME}"
+            primary="$(sanitize_ref "${GITHUB_REF_NAME}")"
+            primary="${primary:0:128}"
+            validate_tag "$primary"
           else
-            # Branch push: sanitize any "/" in the ref name for a valid Docker tag.
-            safe_branch="$(printf '%s' "${GITHUB_REF_NAME}" | tr '/' '-')"
-            primary="${safe_branch}-${short_sha}"
+            primary="${safe_branch:0:115}-${short_sha}"
+            validate_tag "$primary"
           fi
-          echo "primary=${primary}" >> "$GITHUB_OUTPUT"
-          echo "sha_tag=sha-${short_sha}" >> "$GITHUB_OUTPUT"
-          echo "Primary tag: ${primary}; SHA tag: sha-${short_sha}"
+
+          {
+            echo "primary=${primary}"
+            echo "sha_tag=sha-${short_sha}"
+            echo "branch_tag=${branch_tag}"
+            echo 'tags<<IMAGE_TAGS'
+            echo "${IMAGE_REPO}:${primary}"
+            echo "${IMAGE_REPO}:sha-${short_sha}"
+            if [ -n "$branch_tag" ]; then
+              echo "${IMAGE_REPO}:${branch_tag}"
+            fi
+            echo 'IMAGE_TAGS'
+          } >> "$GITHUB_OUTPUT"
+          echo "Primary tag: ${primary}; SHA tag: sha-${short_sha}; branch tag: ${branch_tag:-none}"
 
       - name: Authenticate to GCP
         id: auth
@@ -203,25 +191,20 @@ jobs:
           platforms: linux/amd64
           build-args: |
             NODE_ENV=production
-          tags: |
-            ${{ env.IMAGE_REPO }}:${{ steps.tags.outputs.primary }}
-            ${{ env.IMAGE_REPO }}:${{ steps.tags.outputs.sha_tag }}
+          tags: ${{ steps.tags.outputs.tags }}
 
-      - name: Summary — how to consume from saas
+      - name: Write image summary
         run: |
           {
-            echo "## aic-login2 image published to the product registry"
+            echo "## aic-login2 image published"
             echo ""
-            echo "**Image:** \`${IMAGE_REPO}\`"
+            echo "Image: ${IMAGE_REPO}"
             echo ""
-            echo "**Digest:** \`${{ steps.build.outputs.digest }}\`"
+            echo "Digest: ${{ steps.build.outputs.digest }}"
             echo ""
-            echo "**Tags:** \`${{ steps.tags.outputs.primary }}\`, \`${{ steps.tags.outputs.sha_tag }}\`"
+            echo "Tags: ${{ steps.tags.outputs.primary }}, ${{ steps.tags.outputs.sha_tag }}"
+            if [ -n "${{ steps.tags.outputs.branch_tag }}" ]; then
+              echo "Branch tag: ${{ steps.tags.outputs.branch_tag }}"
+            fi
             echo ""
-            echo "### Wire it into AIC (idiomatic, same as aic-mcp / platform-ui)"
-            echo "1. In saas, bump \`services/aic-login2/Dockerfile\` to"
-            echo "   \`FROM ${IMAGE_REPO}:${{ steps.tags.outputs.primary }}\`."
-            echo "2. The saas Codefresh pipeline (deploy/codefresh/aic-login2.ce.steps.yml)"
-            echo "   rebuilds that pin, re-pushes into the regional pre-prod registries,"
-            echo "   and cosign-signs; deploy-orchestration promotes to prod."
           } >> "$GITHUB_STEP_SUMMARY"
