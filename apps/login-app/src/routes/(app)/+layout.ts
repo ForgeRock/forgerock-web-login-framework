@@ -29,7 +29,6 @@ export const load: LayoutLoad = ({ data }) => {
         logo: {
           light: data.idmTheme.logo,
           dark: data.idmTheme.logo,
-          ...(data.idmTheme.logoHeight && { height: data.idmTheme.logoHeight }),
         },
       }),
     });
