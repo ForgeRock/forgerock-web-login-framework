@@ -13,7 +13,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import Box from '$components/primitives/box/centered.svelte';
-  import { applyThemeVars } from '$core/_effects/theme.effects';
+  import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
@@ -53,7 +53,10 @@
     $styleStore?.themeCatalog,
     $journeyStore?.metadata?.step?.derived?.themeId,
   );
-  $: applyThemeVars(journeyRootEl, pageTheme ?? $styleStore?.theme);
+  $: {
+    applyThemeVars(journeyRootEl, pageTheme ?? $styleStore?.theme);
+    applyLogoVars(journeyRootEl, $styleStore?.logo);
+  }
   /**
    * Sets up locale store with appropriate content
    */
