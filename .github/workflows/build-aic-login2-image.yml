@@ -13,8 +13,6 @@ on:
       - 'themes/**'
       - 'core/**'
       - 'experimental/**'
-      - 'e2e/package.json'
-      - 'tools/cli/package.json'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -29,8 +27,6 @@ on:
       - 'themes/**'
       - 'core/**'
       - 'experimental/**'
-      - 'e2e/package.json'
-      - 'tools/cli/package.json'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -71,20 +67,13 @@ jobs:
           load: true
           provenance: false
           tags: aic-login2:ci
-          build-args: |
-            NODE_ENV=production
 
-      - name: Smoke-test the saas health/probe contract
+      - name: Smoke-test the image runtime
         run: |
           set -euo pipefail
-          docker run -d --name aic-login2-smoke \
-            -p 3000:3000 \
-            -e ORIGIN=https://smoke-test.forgeblocks.com \
-            -e FR_AM_URL=https://smoke-test.forgeblocks.com/am \
-            -e FR_AM_COOKIE_NAME=5421aeddf91aa20 \
-            -e FR_AM_WELLKNOWN_URL=https://smoke-test.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration \
-            -e FR_REALM_PATH=alpha \
-            aic-login2:ci
+          # Env vars are read lazily per request, so an unconfigured boot
+          # exercises the same /api/health/live endpoint the k8s probe uses.
+          docker run -d --name aic-login2-smoke -p 3000:3000 aic-login2:ci
 
           ok=0
           for i in $(seq 1 30); do
@@ -97,6 +86,7 @@ jobs:
           if [ "$ok" -ne 1 ]; then
             echo "::error::/api/health/live did not return 200 within 30s"
             docker logs aic-login2-smoke || true
+            docker rm -f aic-login2-smoke || true
             exit 1
           fi
 
@@ -189,8 +179,6 @@ jobs:
           provenance: false
           # Single-arch: GKE tenant nodes are linux/amd64.
           platforms: linux/amd64
-          build-args: |
-            NODE_ENV=production
           tags: ${{ steps.tags.outputs.tags }}
 
       - name: Write image summary
