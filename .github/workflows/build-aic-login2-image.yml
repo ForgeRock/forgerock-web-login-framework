@@ -1,0 +1,198 @@
+# Build and publish the AIC Login2 image to the ForgeRock product registry.
+# SaaS handles regional promotion, signing, and production deployment.
+
+name: Build and Push aic-login2 Image
+
+on:
+  push:
+    branches: [new-login-2, main]
+    tags: ['v*']
+    paths:
+      - 'apps/login-app/**'
+      - 'packages/login-widget/**'
+      - 'themes/**'
+      - 'core/**'
+      - 'experimental/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.npmrc'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - '.github/workflows/build-aic-login2-image.yml'
+  pull_request:
+    paths:
+      - 'apps/login-app/**'
+      - 'packages/login-widget/**'
+      - 'themes/**'
+      - 'core/**'
+      - 'experimental/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.npmrc'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - '.github/workflows/build-aic-login2-image.yml'
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: 'Explicit image tag; branch builds also publish a floating branch tag'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_REPO: gcr.io/forgerock-io/aic-login2/docker-build
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image (deploy target, no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: deploy
+          push: false
+          load: true
+          provenance: false
+          tags: aic-login2:ci
+
+      - name: Smoke-test the image runtime
+        run: |
+          set -euo pipefail
+          # Env vars are read lazily per request, so an unconfigured boot
+          # exercises the same /api/health/live endpoint the k8s probe uses.
+          docker run -d --name aic-login2-smoke -p 3000:3000 aic-login2:ci
+
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:3000/api/health/live >/dev/null 2>&1; then
+              ok=1; break
+            fi
+            sleep 1
+          done
+
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::/api/health/live did not return 200 within 30s"
+            docker logs aic-login2-smoke || true
+            docker rm -f aic-login2-smoke || true
+            exit 1
+          fi
+
+          docker rm -f aic-login2-smoke
+
+  publish:
+    needs: verify
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Compute image tags
+        id: tags
+        env:
+          IMAGE_TAG_INPUT: ${{ inputs.image_tag }}
+        run: |
+          set -euo pipefail
+          short_sha="${GITHUB_SHA::12}"
+          requested_tag="$IMAGE_TAG_INPUT"
+          validate_tag() {
+            if [[ ! "$1" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]]; then
+              echo "::error::computed image tag must start with a letter, number, or underscore and contain only Docker tag characters (max 128 characters)"
+              exit 1
+            fi
+          }
+
+          sanitize_ref() {
+            printf '%s' "$1" | sed -E 's/[^A-Za-z0-9_.-]+/-/g; s/^[.-]+//'
+          }
+
+          branch_tag=""
+          safe_branch=""
+          if [ "${{ github.ref_type }}" != "tag" ]; then
+            safe_branch="$(sanitize_ref "${GITHUB_REF_NAME}")"
+            branch_tag="${safe_branch:0:128}"
+            validate_tag "$branch_tag"
+          fi
+
+          if [ -n "$requested_tag" ]; then
+            validate_tag "$requested_tag"
+            primary="$requested_tag"
+          elif [ "${{ github.ref_type }}" = "tag" ]; then
+            primary="$(sanitize_ref "${GITHUB_REF_NAME}")"
+            primary="${primary:0:128}"
+            validate_tag "$primary"
+          else
+            primary="${safe_branch:0:115}-${short_sha}"
+            validate_tag "$primary"
+          fi
+
+          {
+            echo "primary=${primary}"
+            echo "sha_tag=sha-${short_sha}"
+            echo "branch_tag=${branch_tag}"
+            echo 'tags<<IMAGE_TAGS'
+            echo "${IMAGE_REPO}:${primary}"
+            echo "${IMAGE_REPO}:sha-${short_sha}"
+            if [ -n "$branch_tag" ]; then
+              echo "${IMAGE_REPO}:${branch_tag}"
+            fi
+            echo 'IMAGE_TAGS'
+          } >> "$GITHUB_OUTPUT"
+          echo "Primary tag: ${primary}; SHA tag: sha-${short_sha}; branch tag: ${branch_tag:-none}"
+
+      - name: Authenticate to GCP
+        id: auth
+        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+        with:
+          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+
+      - name: Configure Docker for the product registry
+        run: gcloud auth configure-docker gcr.io --quiet
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push to the product registry
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: deploy
+          push: true
+          provenance: false
+          # Single-arch: GKE tenant nodes are linux/amd64.
+          platforms: linux/amd64
+          tags: ${{ steps.tags.outputs.tags }}
+
+      - name: Write image summary
+        run: |
+          {
+            echo "## aic-login2 image published"
+            echo ""
+            echo "Image: ${IMAGE_REPO}"
+            echo ""
+            echo "Digest: ${{ steps.build.outputs.digest }}"
+            echo ""
+            echo "Tags: ${{ steps.tags.outputs.primary }}, ${{ steps.tags.outputs.sha_tag }}"
+            if [ -n "${{ steps.tags.outputs.branch_tag }}" ]; then
+              echo "Branch tag: ${{ steps.tags.outputs.branch_tag }}"
+            fi
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
