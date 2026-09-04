@@ -19,7 +19,6 @@
   import Form from '$components/primitives/form/form.svelte';
   // i18n
   import { interpolate } from '$core/_utilities/i18n.utilities';
-  import { encodeCssUrl } from '$core/_utilities/theme.utilities';
   import { styleStore } from '$core/style.store';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
   import {
@@ -109,16 +108,7 @@
 >
   {#if $styleStore?.logo && componentStyle !== 'modal'}
     <div class="tw_flex tw_justify-center tw_pb-4">
-      <div
-        class="tw_dialog-logo dark:tw_dialog-logo_dark"
-        style={`--fr-logo-light-fallback: ${encodeCssUrl(
-          $styleStore.logo.light ?? '',
-        )}; --fr-logo-dark-fallback: ${encodeCssUrl(
-          $styleStore.logo.dark ?? '',
-        )}; height: var(--fr-logo-height, ${
-          $styleStore.logo.height ? `${$styleStore.logo.height}px` : '72px'
-        }); width: ${$styleStore.logo.width ? `${$styleStore.logo.width}px` : '200px'};`}
-      ></div>
+      <div class="tw_dialog-logo tw_stage-logo dark:tw_dialog-logo_dark"></div>
     </div>
   {:else if form?.icon && componentStyle !== 'inline'}
     <div class="tw_flex tw_justify-center">

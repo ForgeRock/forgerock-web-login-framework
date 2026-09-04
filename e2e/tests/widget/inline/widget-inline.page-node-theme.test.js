@@ -119,6 +119,15 @@ test('Page Node theme override applies per step, without a full page reload', as
     expect(logoLight).toContain(LOGO_URL);
     expect(logoHeight).toBe('48px');
 
+    // Precedence: the page-node theme's primary --logo-* slot wins over the
+    // static configure() fallback; the fallback var must remain on the root
+    // untouched, feeding the CSS fallback chain.
+    const fallbackLight = await page.evaluate(() => {
+      const root = document.querySelector('.fr_widget-root');
+      return root?.style.getPropertyValue('--fr-logo-light-fallback') ?? '';
+    });
+    expect(fallbackLight).toContain('fallback-logo.png');
+
     const computedLogo = await page
       .locator('.tw_dialog-logo')
       .first()
@@ -143,6 +152,14 @@ test('Page Node theme override applies per step, without a full page reload', as
       return root?.style.getPropertyValue('--fr-logo-height') ?? '';
     });
     expect(logoHeight).toBe('');
+
+    // The static config fallbacks survive the full-replace because the logo
+    // effect re-applies them after the theme effect in the same cycle.
+    const fallbackLight = await page.evaluate(() => {
+      const root = document.querySelector('.fr_widget-root');
+      return root?.style.getPropertyValue('--fr-logo-light-fallback') ?? '';
+    });
+    expect(fallbackLight).toContain('fallback-logo.png');
   });
 
   await test.step('third step has no themeId — falls through and clears the previous page theme entirely', async () => {
@@ -163,9 +180,57 @@ test('Page Node theme override applies per step, without a full page reload', as
       'background-color',
       'rgb(51, 65, 85)',
     );
+
+    // With no theme, the static config fallback chain is what renders the logo.
+    const computedBackgroundImage = await page
+      .locator('.tw_dialog-logo')
+      .first()
+      .evaluate((el) => window.getComputedStyle(el).backgroundImage);
+    expect(computedBackgroundImage).toContain('fallback-logo.png');
   });
 
   await test.step('no full page navigation occurred across the theme switches', () => {
     expect(navigations).toEqual([]);
+  });
+});
+
+test('Static configure({ style: { logo } }) alone drives the logo through fallback vars', async ({
+  page,
+}) => {
+  // Mock the authenticate round-trip like the sibling tests so this spec never
+  // depends on live TEST_Login tenant state.
+  await routeAuthenticate(page);
+
+  await page.goto('widget/inline/theme');
+  await page.waitForSelector('.fr_widget-root', { state: 'attached' });
+  await page.getByLabel('Username').waitFor();
+
+  await test.step('root carries only the fallback logo vars, no theme vars', async () => {
+    const rootVars = await page.evaluate(() => {
+      const root = document.querySelector('.fr_widget-root');
+      return {
+        lightFallback: root?.style.getPropertyValue('--fr-logo-light-fallback') ?? '',
+        darkFallback: root?.style.getPropertyValue('--fr-logo-dark-fallback') ?? '',
+        logoLight: root?.style.getPropertyValue('--logo-light') ?? '',
+        logoDark: root?.style.getPropertyValue('--logo-dark') ?? '',
+        logoHeight: root?.style.getPropertyValue('--fr-logo-height') ?? '',
+        logoWidth: root?.style.getPropertyValue('--fr-logo-width') ?? '',
+      };
+    });
+    expect(rootVars.lightFallback).toBe('url("https://example.com/fallback-logo.png")');
+    expect(rootVars.darkFallback).toBe('url("https://example.com/fallback-logo.png")');
+    expect(rootVars.logoLight).toBe('');
+    expect(rootVars.logoDark).toBe('');
+    expect(rootVars.logoHeight).toBe('');
+    expect(rootVars.logoWidth).toBe('');
+  });
+
+  await test.step('logo element renders via the fallback chain at the 4.5rem default', async () => {
+    const logo = page.locator('.tw_dialog-logo').first();
+    await expect(logo).toHaveCSS('height', '72px');
+    const backgroundImage = await logo.evaluate(
+      (el) => window.getComputedStyle(el).backgroundImage,
+    );
+    expect(backgroundImage).toContain('fallback-logo.png');
   });
 });

@@ -558,7 +558,6 @@ await configure({
     checksAndRadios: 'animated', // OPTIONAL; 'animated' or 'standard'
     labels: 'floating', // OPTIONAL; 'floating' or 'stacked'
     logo: {
-      // OPTIONAL; modal only
       dark: 'https://example.com/img/white-logo.png',
       light: 'https://example.com/img/black-logo.png', // REQUIRED if logo provided
       height: 300,
@@ -575,7 +574,24 @@ await configure({
 });
 ```
 
-> **Note**: The `logo` and `sections` properties only apply to the modal form factor.
+> **Note**: The `sections.header` property only applies to the modal form factor. The `logo`
+> property applies to all form factors.
+
+#### Logo CSS custom properties
+
+The logo configuration is applied as root-level CSS custom properties on the widget root
+element, re-applied after every theme pass. These are the _fallback_ slots; an IDM page-node
+theme sets the primary `--logo-light` / `--logo-dark` slots and takes precedence over them.
+
+| Property | CSS custom property        | Notes                                                                                                                   |
+| -------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| `light`  | `--fr-logo-light-fallback` | Consumed via `var(--logo-light, var(--fr-logo-light-fallback))`                                                         |
+| `dark`   | `--fr-logo-dark-fallback`  | Consumed via `var(--logo-dark, var(--fr-logo-dark-fallback))`                                                           |
+| `height` | `--fr-logo-height`         | Falls back to `4.5rem` when unset                                                                                       |
+| `width`  | `--fr-logo-width`          | Falls back to `200px` on stages, `100%` in the dialog; the dialog header logo stretches to the header height when unset |
+
+Valid `light` / `dark` values are `https://` URLs, `data:image/` URIs, or root-relative paths
+(leading `/`). Invalid values are dropped by config validation.
 
 ### Links Configuration
 

@@ -9,6 +9,7 @@
 
 <script lang="ts">
   import Centered from '$components/primitives/box/centered.svelte';
+  import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
   import { initialize as initializeLinks } from '$core/links.store';
   import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
@@ -36,6 +37,7 @@
 
   let stageName;
   let stageJson;
+  let storyRootEl: HTMLElement | null = null;
 
   // Mimic what happens in the `journey.store` module
   // Check if stage attribute is serialized JSON
@@ -59,25 +61,32 @@
 
   // Initialize stores
   initializeLinks({ termsAndConditions: '/' });
-  initializeStyles(style);
+
+  $: {
+    initializeStyles(style);
+    applyThemeVars(storyRootEl, style?.theme);
+    applyLogoVars(storyRootEl, style?.logo);
+  }
 </script>
 
-<Centered>
-  {#if stage === 'EmailSuspend'}
-    <EmailSuspend componentStyle="modal" {form} {journey} {metadata} {step} />
-  {:else if stage === 'OneTimePassword'}
-    <OneTimePassword componentStyle="modal" {form} {journey} {metadata} {step} />
-  {:else if stage === 'DefaultLogin'}
-    <Login componentStyle="modal" {form} {journey} {metadata} {step} />
-  {:else if stage === 'DefaultRegistration'}
-    <Registration componentStyle="modal" {form} {journey} {metadata} {step} />
-  {:else if stage === 'RecoveryCodes'}
-    <RecoveryCodes componentStyle="modal" {form} {journey} {step} />
-  {:else if stage === 'WebAuthn'}
-    <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {step} />
-  {:else if stage === 'QRCode'}
-    <QrCode componentStyle="modal" {form} {journey} {metadata} {step} />
-  {:else}
-    <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
-  {/if}
-</Centered>
+<div bind:this={storyRootEl} class="fr_widget-root">
+  <Centered>
+    {#if stage === 'EmailSuspend'}
+      <EmailSuspend componentStyle="modal" {form} {journey} {metadata} {step} />
+    {:else if stage === 'OneTimePassword'}
+      <OneTimePassword componentStyle="modal" {form} {journey} {metadata} {step} />
+    {:else if stage === 'DefaultLogin'}
+      <Login componentStyle="modal" {form} {journey} {metadata} {step} />
+    {:else if stage === 'DefaultRegistration'}
+      <Registration componentStyle="modal" {form} {journey} {metadata} {step} />
+    {:else if stage === 'RecoveryCodes'}
+      <RecoveryCodes componentStyle="modal" {form} {journey} {step} />
+    {:else if stage === 'WebAuthn'}
+      <WebAuthn componentStyle="modal" allowWebAuthn={false} {form} {step} />
+    {:else if stage === 'QRCode'}
+      <QrCode componentStyle="modal" {form} {journey} {metadata} {step} />
+    {:else}
+      <Generic componentStyle="modal" {form} {journey} {metadata} {step} />
+    {/if}
+  </Centered>
+</div>

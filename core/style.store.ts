@@ -15,11 +15,31 @@ import type { Writable } from 'svelte/store';
 const hexColorRegex = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
 
 export const urlRegex =
-  /^(https?:\/\/[^\s"'<>{}\\]+|data:image\/[a-zA-Z+]+;base64,[a-zA-Z0-9+/=]+)$/;
+  /^(https?:\/\/[^\s"'<>{}\\]+|data:image\/[a-zA-Z+]+;base64,[a-zA-Z0-9+/=]+|\/[^\s"'<>{}\\]*)$/;
 
 const fontFamilyRegex = /^[a-zA-Z0-9\s,'\-."]+$/;
 
 const hexField = z.string().regex(hexColorRegex).optional().catch(undefined);
+
+/**
+ * Validates a consumer-supplied logo URL and drops invalid values, but warns
+ * instead of failing silently — a dropped logo is invisible to the consumer,
+ * so the warning is the only diagnostic that config validation rejected it.
+ */
+const logoUrlField = (configPath: string) =>
+  z
+    .string()
+    .regex(urlRegex)
+    .optional()
+    .catch((ctx) => {
+      const dropped = ctx.input;
+      console.warn(
+        `[forgerock/login-widget] ${configPath} value ${JSON.stringify(
+          dropped,
+        )} was dropped: expected an https:// URL, a data:image/ base64 URI, or a root-relative path (leading /).`,
+      );
+      return undefined;
+    });
 
 export const themeSchema = z
   .object({
@@ -54,12 +74,15 @@ export type ThemeObject = z.infer<typeof themeSchema>;
 
 export const logoSchema = z
   .object({
-    dark: z.string().optional(),
+    dark: logoUrlField('style.logo.dark'),
     height: z.number().optional(),
-    light: z.string().optional(),
+    light: logoUrlField('style.logo.light'),
     width: z.number().optional(),
   })
   .strict();
+
+/** Convenience type alias for the consumer-supplied logo config object. */
+export type LogoObject = z.infer<typeof logoSchema>;
 
 export const styleSchema = z
   .object({

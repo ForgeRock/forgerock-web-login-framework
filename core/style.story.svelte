@@ -9,7 +9,7 @@
 
 <script lang="ts">
   import Centered from '$components/primitives/box/centered.svelte';
-  import { applyThemeVars } from '$core/_effects/theme.effects';
+  import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
   import { initialize as initializeLinks } from '$core/links.store';
   import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
@@ -58,6 +58,7 @@
   $: {
     initializeStyles(style);
     applyThemeVars(storyRootEl, style?.theme);
+    applyLogoVars(storyRootEl, style?.logo);
   }
 </script>
 
