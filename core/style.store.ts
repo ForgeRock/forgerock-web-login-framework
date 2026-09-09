@@ -61,17 +61,15 @@ export const logoSchema = z
   })
   .strict();
 
-export const textOutputStyleSchema = z
-  .object({
-    script: z.literal('hidden').optional(),
-  })
-  .strict();
+export const textOutputStyleRuleSchema = z.record(z.string(), z.string());
+
+export type TextOutputStyleRule = z.infer<typeof textOutputStyleRuleSchema>;
 
 export const styleSchema = z
   .object({
     callbacks: z
       .object({
-        textOutput: textOutputStyleSchema.optional(),
+        textOutput: z.array(textOutputStyleRuleSchema).optional(),
       })
       .strict()
       .optional(),

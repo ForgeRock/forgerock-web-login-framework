@@ -55,7 +55,7 @@ export const WithScriptHidden = {
     callback: step.getCallbacksOfType(callbackType.TextOutputCallback)[2],
     style: {
       callbacks: {
-        textOutput: { script: 'hidden' },
+        textOutput: [{ type: '4', display: 'hidden' }],
       },
     },
   },

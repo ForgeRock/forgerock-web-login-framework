@@ -574,10 +574,9 @@ await configure({
       icon: true, // OPTIONAL; display generic stage icons
     },
     callbacks: {
-      textOutput: {
-        // OPTIONAL; hide script-type (messageType 4) text output — see "Scripted Text Output"
-        script: 'hidden',
-      },
+      // OPTIONAL; hide text output by message type — see "Scripted Text Output"
+      // rules are plain string dictionaries passed through to the callback renderer
+      textOutput: [{ type: '4', display: 'hidden' }],
     },
   },
 });
@@ -627,19 +626,20 @@ await configure({
 
 A journey can return client-side JavaScript as a `TextOutputCallback` with `messageType` `4` — for example a tracking or device-fingerprinting snippet. The widget does not execute these scripts, so by default it prints the script source to the screen as text.
 
-Hide them with the `textOutput` style directive:
+Hide them with the `textOutput` rule list:
 
 ```js
 await configure({
   style: {
     callbacks: {
-      textOutput: { script: 'hidden' }, // omit for default: prints the script source
+      // omit for default: prints the script source
+      textOutput: [{ type: '4', display: 'hidden' }],
     },
   },
 });
 ```
 
-`script` targets `messageType` `4`. Informational (`0`), warning (`1`), and error (`2`) messages render as usual. The scripts are still not executed either way — the option only controls whether their source is displayed.
+Each rule is a plain string dictionary passed through to the text output renderer. `type` selects a `TextOutputCallback` message type and `display: 'hidden'` suppresses it. Informational (`0`), warning (`1`), and error (`2`) messages render as usual. The scripts are still not executed either way — the option only controls whether their source is displayed.
 
 ## Supported Callbacks
 

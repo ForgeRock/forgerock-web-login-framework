@@ -142,12 +142,12 @@ describe('widgetApiFactory', () => {
         api.configure({
           serverConfig: validServerConfig,
           oidcClient: validOidcClient,
-          style: { callbacks: { textOutput: { script: 'visible' } } },
+          style: { callbacks: { textOutput: [{ type: 4, display: 'visible' }] } },
         } as unknown as { serverConfig: { wellknown: string } }),
       ).resolves.toBeUndefined();
     });
 
-    it('accepts a valid textOutput script hide directive', async () => {
+    it('accepts a valid textOutput hide rule', async () => {
       oidcMock.mockResolvedValueOnce(makeOidcClient());
       const api = await importSubject();
 
@@ -155,7 +155,7 @@ describe('widgetApiFactory', () => {
         api.configure({
           serverConfig: validServerConfig,
           oidcClient: validOidcClient,
-          style: { callbacks: { textOutput: { script: 'hidden' } } },
+          style: { callbacks: { textOutput: [{ type: '4', display: 'hidden' }] } },
         }),
       ).resolves.toBeUndefined();
     });

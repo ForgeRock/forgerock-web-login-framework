@@ -36,9 +36,6 @@
     | 'checkbox';
   let initializePingProtectEarly = $page.url.searchParams.get('initializePingProtectEarly');
   let pauseBehavioralData = $page.url.searchParams.get('pauseBehavioralData');
-  const hideScriptedTextOutputParam =
-    $page.url.searchParams.get('hideScriptedTextOutput') === 'true';
-  const textOutputStyle = hideScriptedTextOutputParam ? { script: 'hidden' } : undefined;
   type UserResponseObj = {
     family_name: string;
     given_name: string;
@@ -131,9 +128,6 @@
         },
         sections: {
           header: false,
-        },
-        callbacks: {
-          textOutput: textOutputStyle,
         },
       },
       captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
