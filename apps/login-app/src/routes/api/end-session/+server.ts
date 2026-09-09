@@ -1,6 +1,6 @@
 /**
  *
- * Copyright © 2025 Ping Identity Corporation. All right reserved.
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
@@ -37,7 +37,6 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   if (response.ok) clearAmCookie(event.cookies);
 
   const resBody = await response.text();
-  // console.log(response);
 
   return new Response(resBody);
 };

@@ -19,7 +19,7 @@ const AM_TIMEOUT_MS = 2000;
 
 /**
  * Builds the AM session cookie header from the browser-owned cookie.
- * The app must not keep an in-memory copy: requests can reach any replica.
+ * Kept stateless, since requests can land on any replica.
  */
 export function getAmCookie(cookies: Cookies): string {
   const value = cookies.get(AM_COOKIE_NAME);
@@ -27,8 +27,8 @@ export function getAmCookie(cookies: Cookies): string {
 }
 
 /**
- * Stores the AM session cookie as a host-only application cookie.
- * Do not copy the upstream Domain attribute to a tenant's browser.
+ * Stores the AM session cookie as a host-only cookie, leaving out the upstream
+ * Domain attribute so it stays scoped to the tenant's browser.
  */
 export function setAmCookie(cookies: Cookies, setCookie: string): void {
   const prefix = `${AM_COOKIE_NAME}=`;
@@ -110,13 +110,13 @@ export function removeHttpCookie(cookies: Cookies, name: string): void {
   });
 }
 
+const VALID_REALM = /^[A-Za-z0-9_-]+$/;
+
 /**
  * @function resolveJsonRealmPath - builds the AM JSON realm path segment for a given realm override.
  * @param {string} [realm] - Realm override; uses the configured JSON_REALM_PATH when omitted.
  * @returns {string} The AM JSON realm path (e.g. '/json/realms/root/realms/alpha').
  */
-const VALID_REALM = /^[A-Za-z0-9_-]+$/;
-
 export function resolveJsonRealmPath(realm?: string): string {
   if (realm === undefined) return JSON_REALM_PATH;
 

@@ -116,6 +116,7 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
  * @function validateUrl - validates a redirect URL with the AM backend and returns a success URL if valid
  * @param {string} tokenId - The session token ID
  * @param {string} gotoUrl - The URL to validate
+ * @param {string} [realm] - The realm to validate against; uses the configured realm when omitted.
  * @returns {Promise<string|null>} The validated URL or null if invalid
  */
 export async function validateUrl(

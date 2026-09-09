@@ -16,8 +16,11 @@ import {
   readAndClearRedirectCookie,
   storeRedirectParams,
 } from '$server/redirect/redirect.effects';
-import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
-import { buildRoleUrl, resolveRedirect } from '$server/redirect/redirect.utilities';
+import {
+  buildRoleUrl,
+  resolveRealmFromUrl,
+  resolveRedirect,
+} from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
 import { getHttpCookie, getUserIdFromSession, getUserRolesFromSession } from '$server/sessions';
 
@@ -28,8 +31,8 @@ import type { stringsSchema } from '$core/locale.store';
 
 export const load: PageServerLoad = async (event: RequestEvent) => {
   // Pre-flight: if the user already has a valid AM session, skip the login form
-  // and redirect them directly to their portal. Skip when a specific journey or
-  // authIndexValue is requested — the user may be intentionally navigating to a
+  // and send them straight to their portal. Skip this when a specific journey or
+  // authIndexValue is requested, since the user may be intentionally headed to a
   // different flow (e.g. password reset).
   const hasIntentionalJourney =
     event.url.searchParams.has('journey') || event.url.searchParams.has('authIndexValue');

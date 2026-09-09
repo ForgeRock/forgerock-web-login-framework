@@ -74,8 +74,8 @@
        * goto and gotoOnFail are sent at the beginning of journey
        * to support temporarily suspended flows like email verification
        * and to help AM set journey step successUrl.
-       * Only add these when present — undefined would be serialized as the
-       * literal string "undefined" by URLSearchParams and corrupt AM's successUrl.
+       * Only add these when present, since undefined would otherwise be serialized
+       * as the literal string "undefined" by URLSearchParams and corrupt AM's successUrl.
        */
       if (data.redirectParams?.goto) {
         query.goto = data.redirectParams.goto;
