@@ -58,11 +58,13 @@
     dirtyMessage = callback.getMessage();
     cleanMessage = sanitize(dirtyMessage);
     callbackMessageType = getCallbackMessage(messageType);
+    const callbackTypeName = callback.getType();
     hideMessage =
       messageType === '4' &&
-      style.callbacks?.textOutput?.some(
-        (rule) => rule.type === '4' && rule.display === 'hidden',
-      ) === true;
+      (style.callbacks?.[callbackTypeName]?.some(
+        (rule) => rule.type === messageType && rule.display === 'hidden',
+      ) ??
+        false);
   }
 </script>
 

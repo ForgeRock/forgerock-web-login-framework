@@ -142,7 +142,7 @@ describe('widgetApiFactory', () => {
         api.configure({
           serverConfig: validServerConfig,
           oidcClient: validOidcClient,
-          style: { callbacks: { textOutput: [{ type: 4, display: 'visible' }] } },
+          style: { callbacks: { TextOutputCallback: [{ type: 4, display: 'visible' }] } },
         } as unknown as { serverConfig: { wellknown: string } }),
       ).resolves.toBeUndefined();
     });
@@ -155,7 +155,7 @@ describe('widgetApiFactory', () => {
         api.configure({
           serverConfig: validServerConfig,
           oidcClient: validOidcClient,
-          style: { callbacks: { textOutput: [{ type: '4', display: 'hidden' }] } },
+          style: { callbacks: { TextOutputCallback: [{ type: '4', display: 'hidden' }] } },
         }),
       ).resolves.toBeUndefined();
     });

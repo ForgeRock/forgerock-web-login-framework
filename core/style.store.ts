@@ -7,9 +7,11 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
 import { writable } from 'svelte/store';
 import { z } from 'zod';
 
+import type { CallbackType } from '@forgerock/journey-client';
 import type { Writable } from 'svelte/store';
 
 const hexColorRegex = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
@@ -61,18 +63,18 @@ export const logoSchema = z
   })
   .strict();
 
-export const textOutputStyleRuleSchema = z.record(z.string(), z.string());
+export const callbackStyleRuleSchema = z.record(z.string(), z.string());
 
-export type TextOutputStyleRule = z.infer<typeof textOutputStyleRuleSchema>;
+const knownCallbackNames = Object.values(callbackType);
+
+export const callbackStylesSchema = z.partialRecord(
+  z.enum(knownCallbackNames as [CallbackType, ...CallbackType[]]),
+  z.array(callbackStyleRuleSchema),
+);
 
 export const styleSchema = z
   .object({
-    callbacks: z
-      .object({
-        textOutput: z.array(textOutputStyleRuleSchema).optional(),
-      })
-      .strict()
-      .optional(),
+    callbacks: callbackStylesSchema.optional(),
     checksAndRadios: z.union([z.literal('animated'), z.literal('standard')]).optional(),
     labels: z.union([z.literal('floating').optional(), z.literal('stacked')]).optional(),
     showPassword: z

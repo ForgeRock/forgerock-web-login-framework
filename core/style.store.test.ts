@@ -236,16 +236,20 @@ describe('initialize', () => {
   });
 
   it('merges a valid textOutput hide rule into the store', () => {
-    const store = initialize({ callbacks: { textOutput: [{ type: '4', display: 'hidden' }] } });
+    const store = initialize({
+      callbacks: { TextOutputCallback: [{ type: '4', display: 'hidden' }] },
+    });
     let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
     store.subscribe((v) => (value = v))();
-    expect(value?.callbacks?.textOutput).toStrictEqual([{ type: '4', display: 'hidden' }]);
+    expect(value?.callbacks?.TextOutputCallback).toStrictEqual([{ type: '4', display: 'hidden' }]);
   });
 
   it('drops an invalid textOutput rule rather than storing it unparsed', () => {
-    initialize({ callbacks: { textOutput: [{ type: '4', display: 'hidden' }] } });
+    initialize({ callbacks: { TextOutputCallback: [{ type: '4', display: 'hidden' }] } });
     // @ts-expect-error — intentionally invalid input to exercise the safeParse failure path
-    const store = initialize({ callbacks: { textOutput: [{ type: 4, display: 'hidden' }] } });
+    const store = initialize({
+      callbacks: { TextOutputCallback: [{ type: 4, display: 'hidden' }] },
+    });
     let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
     store.subscribe((v) => (value = v))();
     expect(value?.callbacks).toBeUndefined();
