@@ -14,7 +14,10 @@ vi.mock('$env/dynamic/private', () => ({
   env: {
     FR_AM_URL: 'https://openam.example.com/am',
     FR_AM_COOKIE_NAME: 'am-cookie',
-    FR_REALM_PATH: 'alpha',
+    // Leading slash on purpose: resolveRealmFromUrl must normalize this the
+    // same way it normalizes a `?realm=` param, or callers see "/alpha" instead
+    // of "alpha" whenever they fall back to the configured realm.
+    FR_REALM_PATH: '/alpha',
   },
 }));
 

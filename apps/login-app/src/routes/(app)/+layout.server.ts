@@ -23,7 +23,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
   if (!amUrl || !wellknownUrl) {
     throw error(
       500,
-      'Login App is not configured. Ensure the required environment variables like FR_AM_URL and FR_AM_WELLKNOWN_URL are set before starting the app.',
+      'Login App is not configured. Ensure the required environment variables FR_AM_URL, FR_AM_COOKIE_NAME, FR_REALM_PATH, and FR_AM_WELLKNOWN_URL are set before starting the app.',
     );
   }
 

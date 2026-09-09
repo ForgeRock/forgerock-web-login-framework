@@ -19,13 +19,14 @@ const VALID_REALM = /^[A-Za-z0-9_-]+$/;
  * Resolves a realm from a `?realm=` query parameter, falling back to the configured realm.
  */
 export function resolveRealmFromUrl(url: URL): string {
+  const configuredRealm = (env.FR_REALM_PATH || 'root').replace(/^\/+/, '') || 'root';
   const realmParam = url.searchParams.get('realm');
   if (realmParam != null) {
     const realm = realmParam.replace(/^\/+/, '');
     if (!realm) return 'root';
-    return VALID_REALM.test(realm) ? realm : env.FR_REALM_PATH || 'root';
+    return VALID_REALM.test(realm) ? realm : configuredRealm;
   }
-  return env.FR_REALM_PATH || 'root';
+  return configuredRealm;
 }
 
 /**
