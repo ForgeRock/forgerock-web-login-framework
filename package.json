@@ -100,6 +100,8 @@
   "pnpm": {
     "onlyBuiltDependencies": ["@swc/core", "esbuild", "svelte-preprocess", "unrs-resolver"],
     "overrides": {
+      "@forgerock/journey-client": "https://pkg.pr.new/@forgerock/journey-client@762",
+      "@forgerock/oidc-client": "https://pkg.pr.new/@forgerock/oidc-client@762",
       "picomatch@2": "2.3.2",
       "picomatch@4": "4.0.4",
       "uuid": "^14.0.0",
