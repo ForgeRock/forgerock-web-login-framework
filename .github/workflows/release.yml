@@ -175,8 +175,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      IMAGE: gcr.io/forgerock-io/aic-login2/docker-build
     steps:
       - uses: actions/checkout@v4
         with:
@@ -193,43 +191,13 @@ jobs:
         env:
           PUBLISHED: ${{ needs.release.outputs.published }}
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+      - uses: ./.github/actions/publish-aic-login2-image
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
-
-      - name: Configure Docker for the product registry
-        run: gcloud auth configure-docker gcr.io --quiet
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE }}
+          gcp_credentials: ${{ secrets.GCP_CREDENTIALS }}
           tags: |
             type=raw,value=${{ steps.docker-tag.outputs.tag }}
             type=raw,value=${{ needs.release.outputs.version }}
             type=sha,prefix=
-
-      - name: Build and push to the product registry
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          target: deploy
-          push: true
-          provenance: false
-          # Single-arch: GKE tenant nodes are linux/amd64.
-          platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
   # ─── Docker branch image (manual via workflow_dispatch) ────────────────
   # Publishes a branch-named image for testing a feature branch under review
@@ -239,8 +207,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      IMAGE: gcr.io/forgerock-io/aic-login2/docker-build
     steps:
       - uses: actions/checkout@v4
         with:
@@ -255,39 +221,9 @@ jobs:
           TAG=$(echo "$BRANCH_REF" | sed -e 's#[^a-zA-Z0-9_.-]#-#g')
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Authenticate to GCP
-        uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+      - uses: ./.github/actions/publish-aic-login2-image
         with:
-          credentials_json: ${{ secrets.GCP_CREDENTIALS }}
-
-      - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
-
-      - name: Configure Docker for the product registry
-        run: gcloud auth configure-docker gcr.io --quiet
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE }}
+          gcp_credentials: ${{ secrets.GCP_CREDENTIALS }}
           tags: |
             type=raw,value=${{ steps.branch-tag.outputs.tag }}
             type=sha,prefix=
-
-      - name: Build and push to the product registry
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          target: deploy
-          push: true
-          provenance: false
-          # Single-arch: GKE tenant nodes are linux/amd64.
-          platforms: linux/amd64
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
