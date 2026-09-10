@@ -129,6 +129,11 @@
         sections: {
           header: false,
         },
+        // Hardcoded e2e config for the scripted-output hide feature — see
+        // "Scripted Text Output" in the widget README
+        callbacks: {
+          TextOutputCallback: [{ type: '4', display: 'hidden' }],
+        },
       },
       captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,
     });
