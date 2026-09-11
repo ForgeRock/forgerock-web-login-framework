@@ -152,8 +152,8 @@ export const ThemeOverride = {
     style: {
       theme: {
         primaryColor: '#cc0000',
-        buttonRounded: 20,
-        journeyCardBorderRadius: 16,
+        buttonBorderRadius: 20,
+        cardBorderRadius: 16,
       },
     },
   },

@@ -39,6 +39,8 @@
   - [Styling Configuration](#styling-configuration)
   - [Links Configuration](#links-configuration)
   - [Content Configuration](#content-configuration)
+  - [CAPTCHA Configuration](#captcha-configuration)
+  - [Scripted Text Output](#scripted-text-output)
 - [Supported Callbacks](#supported-callbacks)
 - [Disclaimer](#disclaimer)
 - [License](#license)
@@ -571,6 +573,11 @@ await configure({
     stage: {
       icon: true, // OPTIONAL; display generic stage icons
     },
+    callbacks: {
+      // OPTIONAL; per-callback style rules, keyed by AM callback type name
+      // — see "Scripted Text Output"; rules are plain string dictionaries
+      TextOutputCallback: [{ type: '4', display: 'hidden' }],
+    },
   },
 });
 ```
@@ -614,6 +621,25 @@ await configure({
 ```
 
 **Script loading:** The widget automatically injects the required CAPTCHA script at mount time — no manual `<script>` tag is needed. If the provider API (`window.grecaptcha` / `window.hcaptcha`) is already present on the page when the widget mounts, injection is skipped.
+
+### Scripted Text Output
+
+A journey can return client-side JavaScript as a `TextOutputCallback` with `messageType` `4` — for example a tracking or device-fingerprinting snippet. The widget does not execute these scripts, so by default it prints the script source to the screen as text.
+
+Hide them with a per-callback rule list under `callbacks`:
+
+```js
+await configure({
+  style: {
+    callbacks: {
+      // omit for default: prints the script source
+      TextOutputCallback: [{ type: '4', display: 'hidden' }],
+    },
+  },
+});
+```
+
+Each rule is a plain string dictionary passed through to that callback's renderer. `type` selects a `TextOutputCallback` message type and `display: 'hidden'` suppresses it. Informational (`0`), warning (`1`), and error (`2`) messages render as usual. The scripts are still not executed either way — the option only controls whether their source is displayed.
 
 ## Supported Callbacks
 

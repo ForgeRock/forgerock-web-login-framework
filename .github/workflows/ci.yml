@@ -1,7 +1,21 @@
 name: 'CI Pipeline'
 on:
   push:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
 jobs:
+  block-merge-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for "do not merge" label
+        env:
+          LABELS_JSON: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+        run: |
+          if echo "$LABELS_JSON" | tr '[:upper:]' '[:lower:]' | grep -q '"do not merge"'; then
+            echo "::error::Merge blocked: PR is labeled 'do not merge'."
+            exit 1
+          fi
+
   build:
     runs-on: ubuntu-latest
     steps:
