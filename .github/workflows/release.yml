@@ -68,7 +68,7 @@ jobs:
       # Provenance attestation is automatic via publishConfig.provenance in package.json.
       - name: Create Release PR or Publish Stable
         id: changesets
-        uses: changesets/action@v1
+        uses: changesets/action@v2
         with:
           version: pnpm release:version
           publish: pnpm release:publish
