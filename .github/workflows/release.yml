@@ -30,7 +30,6 @@ permissions:
   contents: write
   pull-requests: write
   id-token: write # Required for npm OIDC trusted publishing & provenance attestation
-  packages: write # Required for pushing Docker images to GHCR
 
 jobs:
   # ─── Stable / Beta (automatic on push to main) ─────────────────────────
@@ -39,7 +38,6 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       published: ${{ steps.changesets.outputs.published }}
-      hasChangesets: ${{ steps.changesets.outputs.hasChangesets }}
       version: ${{ steps.version.outputs.version }}
     steps:
       - uses: actions/checkout@v4
@@ -105,9 +103,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ORIGINAL_SHA: ${{ github.sha }}
 
-      # Capture version after the beta snapshot step (if it ran) so the docker job gets the correct value.
-      # For stable: package.json already has the correct version (bumped by the merged "Version Packages" PR).
-      # For beta: the "Publish Beta Snapshot" step just rewrote package.json via `changeset version --snapshot`.
       - name: Read widget version
         id: version
         run: |
@@ -171,20 +166,19 @@ jobs:
       - name: Publish snapshot
         run: pnpm publish -r --tag ${{ inputs.dist_tag }} --no-git-checks --access ${{ inputs.access }}
 
-  # ─── Docker (publish to GHCR after npm release) ──────────────────────
-  # Tags the image as "latest" when changesets publishes a stable npm release,
-  # or "beta" when a beta snapshot is published (pending changesets exist).
-  # Skips entirely when there's nothing to publish (no changesets, no release).
+  # ─── Docker (publish to the product registry) ──────────────────────────
+  # Tags the image "latest" on a stable release, "beta" otherwise.
+  # Runs on every push to main once the release job completes.
   docker:
     needs: release
-    if: >-
-      github.event_name == 'push' &&
-      (needs.release.outputs.published == 'true' || needs.release.outputs.hasChangesets == 'true')
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
-    env:
-      IMAGE: ghcr.io/${{ github.repository }}
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Determine Docker tag
         id: docker-tag
@@ -197,35 +191,39 @@ jobs:
         env:
           PUBLISHED: ${{ needs.release.outputs.published }}
 
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
+      - uses: ./.github/actions/publish-aic-login2-image
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE }}
+          gcp_credentials: ${{ secrets.GCP_CREDENTIALS }}
           tags: |
             type=raw,value=${{ steps.docker-tag.outputs.tag }}
             type=raw,value=${{ needs.release.outputs.version }}
             type=sha,prefix=
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
+  # ─── Docker branch image (manual via workflow_dispatch) ────────────────
+  # Publishes a branch-named image for testing a feature branch under review
+  # without touching the latest/beta/version tags produced on main.
+  docker-branch:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
         with:
-          context: .
-          target: deploy
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          build-args: |
-            NODE_ENV=production
+          persist-credentials: false
+          ref: ${{ inputs.branch }}
+
+      - name: Compute branch image tag
+        id: branch-tag
+        env:
+          BRANCH_REF: ${{ inputs.branch }}
+        run: |
+          TAG=$(echo "$BRANCH_REF" | sed -e 's#[^a-zA-Z0-9_.-]#-#g')
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - uses: ./.github/actions/publish-aic-login2-image
+        with:
+          gcp_credentials: ${{ secrets.GCP_CREDENTIALS }}
+          tags: |
+            type=raw,value=${{ steps.branch-tag.outputs.tag }}
+            type=sha,prefix=

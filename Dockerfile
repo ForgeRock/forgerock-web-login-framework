@@ -1,4 +1,7 @@
-FROM node:22-slim AS builder
+# Overridable so builds work behind a firewall (saas passes a mirrored node base).
+# Needs to stay debian-based, since the deploy stage uses groupadd/useradd and native deps.
+ARG BASE_IMAGE=node:22-slim
+FROM ${BASE_IMAGE} AS builder
 
 ARG NODE_ENV=development
 ENV NODE_ENV=$NODE_ENV
@@ -30,15 +33,18 @@ ENV PREVIEW="true"
 
 RUN ["pnpm", "run", "build"]
 
-# Run as the built-in non-root user from the node base image
+# UID 11111 matches saas's Kubernetes security standard (base image default is 1000).
+RUN groupadd --gid 11111 forgerock && \
+    useradd --uid 11111 --gid 11111 --no-create-home --shell /bin/bash forgerock
+
 # Only chown the build output — avoids duplicating the entire node_modules layer
-RUN chown -R node:node apps/login-app/build
-USER node
+RUN chown -R forgerock:forgerock apps/login-app/build
+USER forgerock
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD node -e "fetch('http://localhost:3000/api/locale').then(r => { if (!r.ok) throw 1 })"
+    CMD node -e "fetch('http://localhost:3000/api/health/live').then(r => { if (!r.ok) throw 1 })"
 
 CMD ["node", "apps/login-app/build"]
 
