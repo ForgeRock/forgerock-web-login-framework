@@ -1,5 +1,11 @@
 # @forgerock/login-framework-cli
 
+## 0.1.2
+
+### Patch Changes
+
+- [#560](https://github.com/ForgeRock/forgerock-web-login-framework/pull/560) [`75c0a0a`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/75c0a0abeafa37f1126717cd487422a382f0d0d2) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Fix `generate stage <Name>` producing incorrect slugs for PascalCase stage names (e.g. `MyCustomStage` → `mycustomstage` instead of `my-custom-stage`). Stage slugs now hyphenate at word and acronym boundaries the same way callback slugs do.
+
 ## 0.1.1
 
 ### Patch Changes
