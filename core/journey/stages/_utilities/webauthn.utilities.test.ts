@@ -7,7 +7,7 @@
  *
  **/
 
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
 import {
@@ -90,22 +90,49 @@ describe('isMixedLoginWebAuthnStep', () => {
   });
 });
 
-// AM-eligibility check — has AM enabled passkey autofill (autocomplete values + conditional mediation)?
+// AM-eligibility check — has AM enabled passkey autofill (autocomplete values + conditional mediation),
+// and does the browser support conditional mediation (delegated to WebAuthn.isConditionalMediationSupported)?
 describe('isPasskeyAutofillStep', () => {
-  it('returns false for an undefined step', () => {
-    expect(isPasskeyAutofillStep(undefined)).toBe(false);
+  const originalPublicKeyCredential = globalThis.PublicKeyCredential;
+
+  // jsdom has no PublicKeyCredential; install a minimal stub so the browser-support half of the
+  // check (delegated to WebAuthn.isConditionalMediationSupported) resolves true.
+  beforeEach(() => {
+    Object.defineProperty(globalThis, 'PublicKeyCredential', {
+      value: {
+        isConditionalMediationAvailable: () => Promise.resolve(true),
+      },
+      configurable: true,
+      writable: true,
+    });
   });
 
-  it('returns true when both autocomplete values and conditional mediation are enabled', () => {
-    expect(isPasskeyAutofillStep(createPasskeyAutofillStep())).toBe(true);
-    expect(isPasskeyAutofillStep(createJourneyStep(livePasskeyAutofillStep))).toBe(true);
+  afterEach(() => {
+    Object.defineProperty(globalThis, 'PublicKeyCredential', {
+      value: originalPublicKeyCredential,
+      configurable: true,
+      writable: true,
+    });
   });
 
-  it('returns false for a standard login step (no autocomplete values)', () => {
-    expect(isPasskeyAutofillStep(createJourneyStep(usernamePasswordStep))).toBe(false);
+  it('returns false for an undefined step', async () => {
+    await expect(isPasskeyAutofillStep(undefined)).resolves.toBe(false);
   });
 
-  it('returns false when autocomplete values are set but conditional mediation is not', () => {
+  it('returns true when both autocomplete values and conditional mediation are enabled', async () => {
+    await expect(isPasskeyAutofillStep(createPasskeyAutofillStep())).resolves.toBe(true);
+    await expect(isPasskeyAutofillStep(createJourneyStep(livePasskeyAutofillStep))).resolves.toBe(
+      true,
+    );
+  });
+
+  it('returns false for a standard login step (no autocomplete values)', async () => {
+    await expect(isPasskeyAutofillStep(createJourneyStep(usernamePasswordStep))).resolves.toBe(
+      false,
+    );
+  });
+
+  it('returns false when autocomplete values are set but conditional mediation is not', async () => {
     const callbacks = livePasskeyAutofillStep.callbacks;
 
     if (!callbacks) {
@@ -128,13 +155,13 @@ describe('isPasskeyAutofillStep', () => {
       };
     });
 
-    expect(
+    await expect(
       isPasskeyAutofillStep(
         createJourneyStep({
           ...livePasskeyAutofillStep,
           callbacks: withoutMediation,
         } as Step),
       ),
-    ).toBe(false);
+    ).resolves.toBe(false);
   });
 });
