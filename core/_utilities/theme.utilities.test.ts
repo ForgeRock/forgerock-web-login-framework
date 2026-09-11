@@ -10,6 +10,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  buildLogoVarsEntries,
   buildThemeVarsEntries,
   encodeCssUrl,
   hexToHslChannels,
@@ -88,6 +89,55 @@ describe('buildThemeVarsEntries', () => {
     expect(names).toContain('--tw-colors-secondary-dark-hs');
     expect(names).toContain('--tw-colors-secondary-default-hs');
     expect(names).toContain('--tw-colors-secondary-light-hs');
+  });
+});
+
+describe('buildLogoVarsEntries', () => {
+  it('returns all four entries from a full logo object', () => {
+    const entries = buildLogoVarsEntries({
+      light: 'https://example.com/light.png',
+      dark: 'https://example.com/dark.png',
+      height: 48,
+      width: 200,
+    });
+    expect(entries).toContainEqual([
+      '--fr-logo-light-fallback',
+      'url("https://example.com/light.png")',
+    ]);
+    expect(entries).toContainEqual([
+      '--fr-logo-dark-fallback',
+      'url("https://example.com/dark.png")',
+    ]);
+    expect(entries).toContainEqual(['--fr-logo-height', '48px']);
+    expect(entries).toContainEqual(['--fr-logo-width', '200px']);
+  });
+
+  it('returns empty url() fallbacks for light/dark when unset', () => {
+    const entries = buildLogoVarsEntries({});
+    expect(entries).toContainEqual(['--fr-logo-light-fallback', 'url("")']);
+    expect(entries).toContainEqual(['--fr-logo-dark-fallback', 'url("")']);
+  });
+
+  it('omits height/width entries when unset', () => {
+    const entries = buildLogoVarsEntries({});
+    const names = entries.map(([name]) => name);
+    expect(names).not.toContain('--fr-logo-height');
+    expect(names).not.toContain('--fr-logo-width');
+  });
+
+  it('percent-encodes double-quotes in URLs (injection safety)', () => {
+    const entries = buildLogoVarsEntries({
+      light: 'https://x.test/a.png");background:url("https://evil.test/x.png',
+    });
+    const light = entries.find(([name]) => name === '--fr-logo-light-fallback');
+    expect(light?.[1]).not.toContain('");background');
+    expect(light?.[1]).toContain('%22');
+  });
+
+  it('emits --fr-logo-height: 0px for height: 0, mirroring the IDM !== undefined convention', () => {
+    const entries = buildLogoVarsEntries({ height: 0, width: 0 });
+    expect(entries).toContainEqual(['--fr-logo-height', '0px']);
+    expect(entries).toContainEqual(['--fr-logo-width', '0px']);
   });
 });
 

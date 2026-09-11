@@ -189,7 +189,12 @@ module.exports = (config, theme) => ({
 
     '.dialog-logo': {
       display: 'inline-flex',
-      height: 'inherit',
+      // Header logos stretch to the dialog header's height (min-height
+      // spacing.40) when no `--fr-logo-height` is configured, restoring the
+      // pre-var behavior. The intermediate `--fr-logo-header-stretch` var lets
+      // a configured `--fr-logo-height` on the root take precedence while the
+      // header keeps its own default.
+      height: 'var(--fr-logo-height, var(--fr-logo-header-stretch, inherit))',
     },
   },
   '.dialog-header_dark': {
@@ -208,11 +213,23 @@ module.exports = (config, theme) => ({
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
     backgroundSize: 'contain',
-    height: '100%',
-    width: '100%',
+    height: 'var(--fr-logo-height, 4.5rem)',
+    width: 'var(--fr-logo-width, 100%)',
+  },
+  // Stage-rendered logos (non-modal form factors) keep the 200px inline-width
+  // default the stages carried before the var refactor; only the dialog owns
+  // the 100% default. Height comes from the base `.dialog-logo` class.
+  '.stage-logo': {
+    width: 'var(--fr-logo-width, 200px)',
   },
   '.dialog-logo_dark': {
     backgroundImage: 'var(--logo-dark, var(--fr-logo-dark-fallback))',
+  },
+  // Modal dialogs rendered without a header previously fell back to
+  // `height: 100%` of their `tw_h-32` container via the removed inline style;
+  // preserve that container-filling default rather than the 4.5rem base one.
+  '.dialog-logo_no-header': {
+    height: 'var(--fr-logo-height, 100%)',
   },
   '.dialog-box_medium': {
     height: 'fit-content',

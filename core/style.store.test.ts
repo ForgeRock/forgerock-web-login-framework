@@ -7,9 +7,9 @@
  *
  **/
 
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { initialize, styleSchema, themeSchema } from './style.store';
+import { initialize, logoSchema, styleSchema, themeSchema } from './style.store';
 
 import type { partialStyleSchema } from './style.store';
 
@@ -125,6 +125,101 @@ describe('themeSchema', () => {
       buttonTextColor: '#ffffff',
     });
     expect(result.success).toBe(true);
+  });
+});
+
+describe('logoSchema', () => {
+  it('accepts https logo URL', () => {
+    const result = logoSchema.safeParse({ light: 'https://example.com/logo.png' });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.light).toBe('https://example.com/logo.png');
+  });
+
+  it('accepts data:image logo URL', () => {
+    const result = logoSchema.safeParse({ light: 'data:image/png;base64,abc123==' });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.light).toBe('data:image/png;base64,abc123==');
+  });
+
+  it('accepts root-relative logo path — stories serve assets from /img', () => {
+    const result = logoSchema.safeParse({ light: '/img/fr-logomark-black.png' });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.light).toBe('/img/fr-logomark-black.png');
+  });
+
+  it('drops logo with embedded double-quote — parses but field is undefined', () => {
+    const result = logoSchema.safeParse({ light: 'https://example.com/logo.png"onload=alert(1)' });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.light).toBeUndefined();
+  });
+
+  it('drops javascript: logo URL — parses but field is undefined', () => {
+    const result = logoSchema.safeParse({ dark: 'javascript:alert(1)' });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.dark).toBeUndefined();
+  });
+
+  it('drops relative path without leading slash — parses but field is undefined', () => {
+    const result = logoSchema.safeParse({ light: 'img/logo.png' });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.light).toBeUndefined();
+  });
+
+  it('keeps height and width as unvalidated numbers', () => {
+    const result = logoSchema.safeParse({ height: 72, width: 200 });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.height).toBe(72);
+    expect(result.success && result.data.width).toBe(200);
+  });
+});
+
+describe('initialize — logo field validation', () => {
+  it('drops an invalid logo URL rather than storing it unparsed', () => {
+    const store = initialize({ logo: { light: 'javascript:alert(1)' } });
+    let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
+    store.subscribe((v) => (value = v))();
+    expect(value?.logo?.light).toBeUndefined();
+  });
+
+  it('warns in dev when a consumer logo.light value is dropped', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      initialize({ logo: { light: 'img/logo.png' } });
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain('style.logo.light');
+      expect(warnSpy.mock.calls[0][0]).toContain('img/logo.png');
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('warns in dev when a consumer logo.dark value is dropped', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      initialize({ logo: { dark: 'not-a-url' } });
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      expect(warnSpy.mock.calls[0][0]).toContain('style.logo.dark');
+      expect(warnSpy.mock.calls[0][0]).toContain('not-a-url');
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('does not warn when a consumer logo.light value is valid', async () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      initialize({ logo: { light: 'https://example.com/logo.png' } });
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('stores a root-relative logo path', () => {
+    const store = initialize({ logo: { light: '/img/fr-logomark-black.png' } });
+    let value: ReturnType<typeof partialStyleSchema.parse> | undefined;
+    store.subscribe((v) => (value = v))();
+    expect(value?.logo?.light).toBe('/img/fr-logomark-black.png');
   });
 });
 
