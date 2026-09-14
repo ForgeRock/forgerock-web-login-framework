@@ -53,16 +53,6 @@
       journeyStore?.next(step);
     }
   }
-  async function tryAgain() {
-    journeyStore?.reset();
-
-    try {
-      const latest = await stack.latest();
-      await journeyStore?.start(latest);
-    } catch (err) {
-      console.error('Unable to restart journey', err);
-    }
-  }
 
   afterUpdate(() => {
     alertNeedsFocus = $journeyStore && !$journeyStore.successful;
@@ -95,7 +85,7 @@
         push: journeyStore.push,
         stack,
         redirect: journeyStore.redirect,
-        restart: tryAgain,
+        restart: journeyStore.restart,
       }}
       metadata={$journeyStore.metadata}
       step={$journeyStore.step}
@@ -109,7 +99,7 @@
   <Alert id="unrecoverableStepError" needsFocus={alertNeedsFocus} type="error">
     <T html={true} key="unrecoverableError" />
   </Alert>
-  <Button style="secondary" onClick={tryAgain}>
+  <Button style="secondary" onClick={() => journeyStore?.restart()}>
     <T key="tryAgain" />
   </Button>
 {/if}

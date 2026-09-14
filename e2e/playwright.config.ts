@@ -7,6 +7,7 @@ export const AM_REALM = 'alpha';
 const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 const configErrorUrl = 'http://localhost:3100';
 const idmThemeUrl = 'http://localhost:3300';
+const defaultJourneyUrl = 'http://localhost:5829';
 // This forgeblocks tenant serves IDM at the tenant root, not under /am — FR_IDM_URL defaults
 // to FR_AM_URL, which 404s against /openidm/config/ui/themerealm, so it must be overridden.
 const IDM_URL = 'https://openam-sdks.forgeblocks.com';
@@ -78,6 +79,28 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_AM_JOURNEY_LOGIN: 'TEST_ThemeE2E',
         },
       },
+      // Dedicated server with FR_AM_JOURNEY_LOGIN pinned to a NON-default journey
+      // (TEST_ThemeE2E), so the default-journey restart test can prove the restart
+      // targeted the configured tree rather than the realm default (which happens to
+      // be Login — indistinguishable from start(undefined) by rendered output).
+      // Port 5829 (not 3400): the AM tenant's CORS policy allowlists specific localhost
+      // ports, and 3400 isn't among them — the well-known fetch would be blocked.
+      {
+        command: 'pnpm --filter @forgerock/login-app run preview --host=localhost --port=5829',
+        cwd: '..',
+        url: defaultJourneyUrl,
+        ignoreHTTPSErrors: true,
+        reuseExistingServer: true,
+        env: {
+          FR_AM_URL: AM_URL,
+          FR_AM_COOKIE_NAME: AM_COOKIE_NAME,
+          FR_REALM_PATH: AM_REALM,
+          FR_OAUTH_PUBLIC_CLIENT: 'WebOAuthClient',
+          FR_OAUTH_SCOPE: 'openid profile email',
+          FR_AM_WELLKNOWN_URL: `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
+          FR_AM_JOURNEY_LOGIN: 'TEST_ThemeE2E',
+        },
+      },
     ];
 
 export default defineConfig({
@@ -106,7 +129,7 @@ export default defineConfig({
     {
       name: 'chromium',
       grepInvert: /webauthn/,
-      testIgnore: /config-error|idm-theme/,
+      testIgnore: /config-error|idm-theme|default-journey/,
       use: {
         ...devices['Desktop Chrome'],
         // ...devices['Desktop Edge'],
@@ -126,6 +149,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: `${idmThemeUrl}/e2e/`,
+      },
+    },
+    {
+      name: 'default-journey',
+      testMatch: /default-journey/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `${defaultJourneyUrl}/e2e/`,
       },
     },
     // {
