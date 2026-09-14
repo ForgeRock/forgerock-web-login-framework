@@ -118,10 +118,10 @@ pnpm --filter @forgerock/login-widget-e2e exec playwright install chromium
 
 E2E tests and the login-app require AM connection details via `.env` or shell:
 
-- `FR_AM_URL` — ForgeRock AM base URL
-- `FR_AM_COOKIE_NAME` — AM session cookie name
-- `FR_REALM_PATH` — AM realm path
-- `FR_AM_WELLKNOWN_URL` — AM OIDC discovery URL used to validate app configuration
+- `FR_AM_URL`: ForgeRock AM base URL
+- `FR_AM_COOKIE_NAME`: AM session cookie name
+- `FR_REALM_PATH`: AM realm path
+- `FR_AM_WELLKNOWN_URL`: AM OIDC discovery URL used to validate app configuration
 
 ## Tests and Stories
 
