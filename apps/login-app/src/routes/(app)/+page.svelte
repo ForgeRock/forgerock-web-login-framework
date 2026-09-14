@@ -13,7 +13,10 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import Box from '$components/primitives/box/centered.svelte';
+  import { applyThemeVars } from '$core/_effects/theme.effects';
+  import { resolvePageTheme } from '$core/_utilities/theme.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
+  import { styleStore } from '$core/style.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
@@ -44,6 +47,13 @@
   let loginResult: 'success' | 'failure' = 'failure';
   let tokenId = '';
   let journeyStepUrl = '';
+  let journeyRootEl: HTMLDivElement;
+
+  $: pageTheme = resolvePageTheme(
+    $styleStore?.themeCatalog,
+    $journeyStore?.metadata?.step?.derived?.themeId,
+  );
+  $: applyThemeVars(journeyRootEl, pageTheme ?? $styleStore?.theme);
   /**
    * Sets up locale store with appropriate content
    */
@@ -110,21 +120,23 @@
   }
 </script>
 
-<Box>
-  <form method="POST" bind:this={redirectForm} hidden>
-    <input type="hidden" name="loginResult" value={loginResult} />
-    <input type="hidden" name="tokenId" value={tokenId} />
-    <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
-  </form>
+<div bind:this={journeyRootEl} class="tw_h-full">
+  <Box>
+    <form method="POST" bind:this={redirectForm} hidden>
+      <input type="hidden" name="loginResult" value={loginResult} />
+      <input type="hidden" name="tokenId" value={tokenId} />
+      <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
+    </form>
 
-  {#if hasSubmitted}
-    <p class="tw_mb-6">You are being redirected...</p>
-  {:else}
-    <Journey
-      componentStyle="app"
-      displayIcon={true}
-      {journeyStore}
-      externalStages={loginAppStages}
-    />
-  {/if}
-</Box>
+    {#if hasSubmitted}
+      <p class="tw_mb-6">You are being redirected...</p>
+    {:else}
+      <Journey
+        componentStyle="app"
+        displayIcon={true}
+        {journeyStore}
+        externalStages={loginAppStages}
+      />
+    {/if}
+  </Box>
+</div>

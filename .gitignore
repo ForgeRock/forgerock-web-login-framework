@@ -49,3 +49,5 @@ core/journey/_utilities/registry/custom-registry.ts
 tools/cli/tmp/
 packages/login-widget/tmp/
 .playwright-mcp/
+
+.polaris/

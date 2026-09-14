@@ -7,9 +7,11 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
 import { writable } from 'svelte/store';
 import { z } from 'zod';
 
+import type { CallbackType } from '@forgerock/journey-client';
 import type { Writable } from 'svelte/store';
 
 const hexColorRegex = /^#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?$/;
@@ -61,8 +63,18 @@ export const logoSchema = z
   })
   .strict();
 
+export const callbackStyleRuleSchema = z.record(z.string(), z.string());
+
+const knownCallbackNames = Object.values(callbackType);
+
+export const callbackStylesSchema = z.partialRecord(
+  z.enum(knownCallbackNames as [CallbackType, ...CallbackType[]]),
+  z.array(callbackStyleRuleSchema),
+);
+
 export const styleSchema = z
   .object({
+    callbacks: callbackStylesSchema.optional(),
     checksAndRadios: z.union([z.literal('animated'), z.literal('standard')]).optional(),
     labels: z.union([z.literal('floating').optional(), z.literal('stacked')]).optional(),
     showPassword: z
@@ -82,6 +94,7 @@ export const styleSchema = z
       .strict()
       .optional(),
     theme: themeSchema.optional(),
+    themeCatalog: z.record(z.string(), themeSchema).optional(),
   })
   .strict();
 
@@ -91,6 +104,7 @@ export const partialStyleSchema = styleSchema.partial();
 export type StyleObject = z.infer<typeof partialStyleSchema>;
 
 const fallbackStyles = {
+  callbacks: undefined,
   checksAndRadios: 'animated',
   labels: 'floating',
   showPassword: 'button',
@@ -109,21 +123,22 @@ export const styleStore: Writable<z.infer<typeof partialStyleSchema>> = writable
  * @example initialize({ checksAndRadios: 'standard' });
  */
 export function initialize(customStyle?: z.infer<typeof partialStyleSchema>) {
-  if (customStyle) {
+  const parsed = customStyle ? partialStyleSchema.safeParse(customStyle) : undefined;
+  if (parsed?.success) {
     /*
       Helper function to safely assign keys to strict object
      */
-    const accessStrictType = (str: keyof typeof customStyle) => {
-      return customStyle[str];
+    const accessStrictType = (str: keyof typeof parsed.data) => {
+      return parsed.data[str];
     };
-    const newStyleConfig = Object.keys(customStyle).reduce((acc, key) => {
+    const newStyleConfig = Object.keys(parsed.data).reduce((acc, key) => {
       if (
-        accessStrictType(key as keyof typeof customStyle) === undefined ||
-        accessStrictType(key as keyof typeof customStyle) === null
+        accessStrictType(key as keyof typeof parsed.data) === undefined ||
+        accessStrictType(key as keyof typeof parsed.data) === null
       ) {
         return acc;
       }
-      return { ...acc, [key]: accessStrictType(key as keyof typeof customStyle) };
+      return { ...acc, [key]: accessStrictType(key as keyof typeof parsed.data) };
     }, fallbackStyles);
     styleStore.set(newStyleConfig);
   } else {

@@ -53,7 +53,7 @@ export default {
 export const Welcome = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteWelcome',
     step: frAdminInviteWelcome,
   },
@@ -62,7 +62,7 @@ export const Welcome = {
 export const WelcomeWithError = {
   args: {
     form: { icon: true, message: 'Something went wrong', status: 'error', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteWelcome',
     step: frAdminInviteWelcome,
   },
@@ -77,7 +77,7 @@ export const WelcomeWithError = {
 export const VerifyCode = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteVerifyCode',
     step: frAdminInviteVerifyCode,
   },
@@ -86,7 +86,7 @@ export const VerifyCode = {
 export const VerifyCodeError = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteVerifyCode',
     step: createJourneyStep(adminRegOtpErrorStep),
   },
@@ -95,7 +95,7 @@ export const VerifyCodeError = {
 export const VerifyCodeResend = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteVerifyCode',
     step: createJourneyStep(adminRegOtpStep),
   },
@@ -114,7 +114,7 @@ export const VerifyCodeResend = {
 export const VerifyCodeWithError = {
   args: {
     form: { icon: true, message: 'Something went wrong', status: 'error', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteVerifyCode',
     step: frAdminInviteVerifyCode,
   },
@@ -129,7 +129,7 @@ export const VerifyCodeWithError = {
 export const PrivacyPolicy = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInvitePrivacyPolicy',
     step: frAdminInvitePrivacyPolicy,
   },
@@ -138,7 +138,7 @@ export const PrivacyPolicy = {
 export const PrivacyPolicyReady = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInvitePrivacyPolicy',
     step: frAdminInvitePrivacyPolicy,
   },
@@ -159,7 +159,7 @@ export const PrivacyPolicyReady = {
 export const PrivacyPolicyWithError = {
   args: {
     form: { icon: true, message: 'Something went wrong', status: 'error', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInvitePrivacyPolicy',
     step: frAdminInvitePrivacyPolicy,
   },
@@ -174,7 +174,7 @@ export const PrivacyPolicyWithError = {
 export const InvalidInvite = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteInvalid',
     step: frAdminInviteInvalid,
   },
@@ -185,7 +185,7 @@ export const InvalidInvite = {
 export const SetupPrompt = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'MfaSetupPrompt',
     step: frMfaSetupPrompt,
   },
@@ -204,7 +204,7 @@ export const SetupPromptInteraction = {
 export const SetupPromptWithError = {
   args: {
     form: { icon: true, message: 'Something went wrong', status: 'error', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'MfaSetupPrompt',
     step: frMfaSetupPrompt,
   },
@@ -219,7 +219,7 @@ export const SetupPromptWithError = {
 export const DownloadApp = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'MfaDownloadApp',
     step: frMfaDownloadApp,
   },
@@ -238,7 +238,7 @@ export const DownloadAppInteraction = {
 export const DownloadAppWithError = {
   args: {
     form: { icon: true, message: 'Something went wrong', status: 'error', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'MfaDownloadApp',
     step: frMfaDownloadApp,
   },
@@ -253,7 +253,7 @@ export const DownloadAppWithError = {
 export const AppStoreLinks = {
   args: {
     form: { icon: true, message: '', status: '', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'MfaAppStoreLinks',
     step: frMfaAppStoreLinks,
   },
@@ -272,7 +272,7 @@ export const AppStoreLinksInteraction = {
 export const AppStoreLinksWithError = {
   args: {
     form: { icon: true, message: 'Something went wrong', status: 'error', submit: fn() },
-    journey: { loading: false, pop: fn(), push: fn(), stack: writable([]) },
+    journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'MfaAppStoreLinks',
     step: frMfaAppStoreLinks,
   },

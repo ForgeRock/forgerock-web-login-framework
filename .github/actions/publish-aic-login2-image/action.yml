@@ -1,0 +1,52 @@
+name: Publish aic-login2 image
+description: >-
+  Builds the deploy target and pushes the aic-login2 image to the GCP product
+  registry. The repository must already be checked out at the desired ref.
+  Tags are caller-defined.
+
+inputs:
+  gcp_credentials:
+    description: 'GCP service-account key JSON'
+    required: true
+  tags:
+    description: 'Multi-line docker/metadata-action tags list'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Authenticate to GCP
+      uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
+      with:
+        credentials_json: ${{ inputs.gcp_credentials }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3
+
+    - name: Configure Docker for the product registry
+      run: gcloud auth configure-docker gcr.io --quiet
+      shell: bash
+
+    - name: Docker metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: gcr.io/forgerock-io/aic-login2/docker-build
+        tags: ${{ inputs.tags }}
+
+    - name: Build and push to the product registry
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        target: deploy
+        push: true
+        provenance: false
+        # Single-arch: GKE tenant nodes are linux/amd64.
+        platforms: linux/amd64
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max

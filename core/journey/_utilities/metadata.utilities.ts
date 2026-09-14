@@ -92,12 +92,16 @@ export function buildCallbackMetadata(
 /**
  * @function buildStepMetadata - Constructs a metadata object that summarizes the step from AM
  * @param {array} callbackMetadataArray - The array returned from buildCallbackMetadata
+ * @param {object} stageJson - Optional stage JSON from AM
+ * @param {string} stageName - Optional stage name from AM
+ * @param {string} themeId - Optional Page Node theme id resolved from the step's `stage` attribute
  * @returns {object}
  */
 export function buildStepMetadata<T = unknown>(
   callbackMetadataArray: CallbackMetadata[],
   stageJson?: Record<string, T> | null,
   stageName?: string | null,
+  themeId?: string,
 ) {
   const numOfUserInputCbs = callbackMetadataArray.filter(
     (cb) => !!cb.derived.isUserInputRequired,
@@ -124,6 +128,7 @@ export function buildStepMetadata<T = unknown>(
       numOfSelfSubmittableCbs: callbackMetadataArray.filter((cb) => !!cb.derived.isSelfSubmitting)
         .length,
       numOfUserInputCbs: numOfUserInputCbs,
+      ...(themeId && { themeId }),
     },
     // Only use the `platform` prop if there's metadata to add
     ...(stageMetadata && {

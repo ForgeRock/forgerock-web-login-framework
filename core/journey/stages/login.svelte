@@ -79,11 +79,13 @@
     <div class="tw_flex tw_justify-center tw_pb-4">
       <div
         class="tw_dialog-logo dark:tw_dialog-logo_dark"
-        style={`--logo-light: ${encodeCssUrl(
+        style={`--fr-logo-light-fallback: ${encodeCssUrl(
           $styleStore.logo.light ?? '',
-        )}; --logo-dark: ${encodeCssUrl($styleStore.logo.dark ?? '')}; height: ${
+        )}; --fr-logo-dark-fallback: ${encodeCssUrl(
+          $styleStore.logo.dark ?? '',
+        )}; height: var(--fr-logo-height, ${
           $styleStore.logo.height ? `${$styleStore.logo.height}px` : '72px'
-        }; width: ${$styleStore.logo.width ? `${$styleStore.logo.width}px` : '200px'};`}
+        }); width: ${$styleStore.logo.width ? `${$styleStore.logo.width}px` : '200px'};`}
       ></div>
     </div>
   {:else if componentStyle !== 'inline' && form?.icon}

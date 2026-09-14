@@ -21,10 +21,11 @@ export const load: LayoutLoad = ({ data }) => {
     termsAndConditions: 'https://www.forgerock.com/terms',
   });
 
-  if (data.idmTheme) {
+  if (data.idmTheme || data.themeCatalog) {
     initializeStyles({
-      theme: data.idmTheme,
-      ...(data.idmTheme.logo && {
+      ...(data.idmTheme && { theme: data.idmTheme }),
+      ...(data.themeCatalog && { themeCatalog: data.themeCatalog }),
+      ...(data.idmTheme?.logo && {
         logo: {
           light: data.idmTheme.logo,
           dark: data.idmTheme.logo,

@@ -124,7 +124,9 @@
       },
       style: {
         labels: 'floating',
-        showPassword: showPasswordParam,
+        // showPasswordParam is null when the URL param is absent; zod's `.optional()`
+        // accepts undefined but not null, so only include it when set
+        ...(showPasswordParam && { showPassword: showPasswordParam }),
         ...(idmTheme && { theme: idmTheme }),
         logo: idmTheme?.logo
           ? {
@@ -138,6 +140,11 @@
             },
         sections: {
           header: false,
+        },
+        // Hardcoded e2e config for the scripted-output hide feature — see
+        // "Scripted Text Output" in the widget README
+        callbacks: {
+          TextOutputCallback: [{ type: '4', display: 'hidden' }],
         },
       },
       captcha: captchaModeParam ? { mode: captchaModeParam } : undefined,

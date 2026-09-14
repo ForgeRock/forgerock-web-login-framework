@@ -13,8 +13,11 @@ import { applyThemeVars } from '$core/_effects/theme.effects';
 
 describe('applyThemeVars', () => {
   const makeEl = (): HTMLElement => {
-    const props: Record<string, string> = {};
+    let props: Record<string, string> = {};
     return {
+      removeAttribute: (name: string) => {
+        if (name === 'style') props = {};
+      },
       style: {
         setProperty: (name: string, value: string) => {
           props[name] = value;
@@ -31,10 +34,39 @@ describe('applyThemeVars', () => {
     expect(() => applyThemeVars(null, { primaryColor: '#334155' })).not.toThrow();
   });
 
-  it('is a noop when theme is undefined', () => {
+  it('sets no vars when theme is undefined and nothing was previously applied', () => {
     const el = makeEl();
     applyThemeVars(el, undefined);
     expect(el.style.length).toBe(0);
+  });
+
+  it('clears all previously applied vars when theme transitions to undefined', () => {
+    const el = makeEl();
+    applyThemeVars(el, { primaryColor: '#334155', cardBgColor: '#111217' });
+    expect(el.style.length).toBeGreaterThan(0);
+    applyThemeVars(el, undefined);
+    expect(el.style.length).toBe(0);
+  });
+
+  it('clears vars set by the previous theme but absent from the new theme', () => {
+    const el = makeEl();
+    applyThemeVars(el, { cardBgColor: '#111217', fontFamily: 'Inter' });
+    expect(el.style.getPropertyValue('--fr-card-bg-color')).toBe('#111217');
+    expect(el.style.getPropertyValue('--fr-font-family')).toBe('Inter');
+
+    applyThemeVars(el, { primaryColor: '#ff0000' });
+    expect(el.style.getPropertyValue('--fr-card-bg-color')).toBe('');
+    expect(el.style.getPropertyValue('--fr-font-family')).toBe('');
+    expect(el.style.getPropertyValue('--tw-colors-primary-dark-hs')).toBeTruthy();
+  });
+
+  it('clears --fr-logo-height when advancing from a themed step to an unthemed one', () => {
+    const el = makeEl();
+    applyThemeVars(el, { logoHeight: 40 });
+    expect(el.style.getPropertyValue('--fr-logo-height')).toBe('40px');
+
+    applyThemeVars(el, undefined);
+    expect(el.style.getPropertyValue('--fr-logo-height')).toBe('');
   });
 
   it('sets primary color HSL slots on both light and dark vars', () => {

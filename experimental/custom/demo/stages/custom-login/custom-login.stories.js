@@ -78,6 +78,7 @@ const baseArgs = {
     loading: false,
     pop: fn(),
     push: fn(),
+    restart: fn(),
     stack: writable([]),
   },
   step,

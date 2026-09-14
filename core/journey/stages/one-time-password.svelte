@@ -134,4 +134,14 @@
       <T key="loginButton" />
     </Button>
   {/if}
+
+  <p class="tw_my-4 tw_text-base tw_text-center">
+    <button
+      class="tw_text-link-dark dark:tw_text-link-light tw_focusable-element dark:tw_focusable-element_dark"
+      on:click={() => journey?.restart()}
+      type="button"
+    >
+      <T key="startOver" />
+    </button>
+  </p>
 </Form>

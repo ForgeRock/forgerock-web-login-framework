@@ -58,6 +58,7 @@ export interface StageJourneyObject {
   pop: () => void;
   push: (options: StartParam) => void;
   redirect: (step: JourneyStep) => Promise<void>;
+  restart: () => Promise<void>;
   restartCurrent: () => Promise<void>;
   stack: StackStore;
 }
@@ -109,6 +110,7 @@ export interface StepMetadata {
     numOfSelfSubmittableCbs: number;
     numOfUserInputCbs: number;
     stageName?: string;
+    themeId?: string;
   };
   platform?: Record<string, unknown>;
 }

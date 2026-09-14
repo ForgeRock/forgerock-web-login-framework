@@ -28,15 +28,20 @@ export const load: LayoutServerLoad = async ({ url }) => {
   }
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
-  const { theme: idmTheme, backgroundImageUrl } = idmBaseUrl
+  const {
+    theme: idmTheme,
+    themeCatalog,
+    backgroundImageUrl,
+  } = idmBaseUrl
     ? await fetchIdmTheme(idmBaseUrl, realmPath, journeyName)
-    : { theme: undefined, backgroundImageUrl: undefined };
+    : { theme: undefined, themeCatalog: {}, backgroundImageUrl: undefined };
 
   return {
     amUrl,
     backgroundImageUrl,
     idmTheme,
     journeyName,
+    themeCatalog,
     realmPath,
     wellknown,
   };
