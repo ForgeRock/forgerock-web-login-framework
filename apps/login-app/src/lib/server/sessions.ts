@@ -33,7 +33,7 @@ export function getAmCookie(cookies: Cookies): string {
 export function setAmCookie(cookies: Cookies, setCookie: string): void {
   const prefix = `${AM_COOKIE_NAME}=`;
   const cookiePart = setCookie
-    .split(/,(?=[^;=,\s]+=[^;]+)/)
+    .split(/,(?=\s*[^;=,\s]+=[^;]+)/)
     .map((part) => part.trim().split(';')[0])
     .find((part) => part?.startsWith(prefix));
   if (!cookiePart) return;

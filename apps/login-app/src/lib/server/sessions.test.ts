@@ -67,6 +67,22 @@ describe('Login2 session cookie forwarding', () => {
       path: '/',
     });
   });
+
+  it('reads the AM cookie out of a multi-cookie header with Expires dates', () => {
+    const target = cookies();
+
+    setAmCookie(
+      target,
+      'other=abc; Expires=Wed, 21 Oct 2026 07:28:00 GMT, iPlanetDirectoryPro=session-token; Path=/; Expires=Thu, 22 Oct 2026 07:28:00 GMT',
+    );
+
+    expect(target.set).toHaveBeenCalledWith('iPlanetDirectoryPro', 'session-token', {
+      httpOnly: true,
+      sameSite: 'lax',
+      secure: true,
+      path: '/',
+    });
+  });
 });
 
 describe('Login2 realm paths', () => {
