@@ -86,14 +86,13 @@ pnpm ci:e2e -- --shard=1/4
 
 Tests connect to a ForgeRock AM instance. The Playwright config provides defaults, but CI uses secrets:
 
-| Variable                      | Description                                             |
-| ----------------------------- | ------------------------------------------------------- |
-| `VITE_FR_AM_URL`              | ForgeRock AM base URL                                   |
-| `VITE_FR_AM_COOKIE_NAME`      | AM session cookie name                                  |
-| `VITE_FR_OAUTH_PUBLIC_CLIENT` | OAuth 2.0 client ID                                     |
-| `VITE_FR_REALM_PATH`          | AM realm path                                           |
-| `PLAYWRIGHT_TEST_BASE_URL`    | Override the app URL (default: `http://localhost:3000`) |
-| `FR_AM_WELLKNOWN_URL`         | ForgeRock AM Wellknown URL                              |
+| Variable                   | Description                                              |
+| -------------------------- | -------------------------------------------------------- |
+| `FR_AM_URL`                | ForgeRock AM base URL                                    |
+| `FR_AM_COOKIE_NAME`        | AM session cookie name                                   |
+| `FR_REALM_PATH`            | AM realm path                                            |
+| `FR_AM_WELLKNOWN_URL`      | AM OIDC discovery URL used to validate app configuration |
+| `PLAYWRIGHT_TEST_BASE_URL` | Override the app URL (default: `http://localhost:3000`)  |
 
 ## Debugging
 
