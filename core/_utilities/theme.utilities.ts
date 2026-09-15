@@ -7,7 +7,7 @@
  *
  **/
 
-import type { StyleObject, ThemeObject } from '$core/style.store';
+import type { LogoObject, StyleObject, ThemeObject } from '$core/style.store';
 
 /**
  * Resolves a Page Node `themeId` against a widget-supplied theme catalog.
@@ -26,12 +26,15 @@ export function resolvePageTheme(
 /**
  * Builds a safe CSS `url("…")` value from an untrusted URL string.
  *
- * The widget injects consumer- and IDM-supplied logo URLs into inline `style`
- * attributes as `url("<value>")`. A raw `"` in the value would close the quoted
- * string early and let an attacker append arbitrary CSS declarations. We
- * percent-encode the only character that can break out of the quoted form (`"`),
- * which a URL never needs literally. Returns the full `url("…")` token ready to
- * drop into a declaration.
+ * Consumer- and IDM-supplied logo URLs are written as the values of
+ * root-level CSS custom properties (the `--fr-logo-*-fallback` and
+ * `--logo-light` / `--logo-dark` slots, applied via
+ * `element.style.setProperty` in `core/_effects/theme.effects.ts`). A raw `"`
+ * in the value would close the quoted `url("…")` string early and let an
+ * attacker append arbitrary CSS declarations. We percent-encode the only
+ * character that can break out of the quoted form (`"`), which a URL never
+ * needs literally. Returns the full `url("…")` token ready to use as a var
+ * value.
  */
 export function encodeCssUrl(url: string): string {
   return `url("${url.replace(/"/g, '%22')}")`;
@@ -89,6 +92,36 @@ export function hexToHslChannels(hex: string): { hs: string; l: string } {
     hs: `${hue}, ${saturation}%`,
     l: `${lightnessPercent}%`,
   };
+}
+
+/**
+ * Maps a consumer-supplied logo config (`configure({ style: { logo } })`) to a
+ * flat list of fallback CSS custom property name/value pairs.
+ *
+ * These are *fallback* slots (`--fr-logo-*-fallback`), not the primary
+ * `--logo-light` / `--logo-dark` slots owned by the IDM/page-node theme. The
+ * fallback chaining lives in `themes/default/compositions.cjs`
+ * (`var(--logo-light, var(--fr-logo-light-fallback))`).
+ *
+ * Unlike `buildThemeVarsEntries`, light/dark fallbacks are always emitted
+ * (empty `url("")` when unset) so a transition from a configured logo to none
+ * can clear them explicitly.
+ */
+export function buildLogoVarsEntries(logo: LogoObject | undefined): [string, string][] {
+  if (!logo) return [];
+  const entries: [string, string][] = [
+    ['--fr-logo-light-fallback', encodeCssUrl(logo.light ?? '')],
+    ['--fr-logo-dark-fallback', encodeCssUrl(logo.dark ?? '')],
+  ];
+
+  if (logo.height !== undefined) {
+    entries.push(['--fr-logo-height', `${logo.height}px`]);
+  }
+  if (logo.width !== undefined) {
+    entries.push(['--fr-logo-width', `${logo.width}px`]);
+  }
+
+  return entries;
 }
 
 /**
