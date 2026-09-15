@@ -62,7 +62,19 @@ export interface IdmThemeResult {
  * lower it via `FR_IDM_THEME_TIMEOUT_MS`.
  */
 const DEFAULT_IDM_FETCH_TIMEOUT_MS = 1500;
+// Keys embed the ?journey= query value, which a client controls, so the cache
+// is bounded (FIFO: oldest insert evicted) to keep a flood of unique journeys
+// from growing memory.
+const THEME_CACHE_LIMIT = 100;
 const themeCache = new Map<string, IdmThemeResult>();
+
+function cacheTheme(key: string, result: IdmThemeResult): void {
+  themeCache.set(key, result);
+  if (themeCache.size > THEME_CACHE_LIMIT) {
+    const oldest = themeCache.keys().next().value;
+    if (oldest !== undefined) themeCache.delete(oldest);
+  }
+}
 
 function resolveTimeoutMs(): number {
   const parsed = Number(env.FR_IDM_THEME_TIMEOUT_MS);
@@ -166,6 +178,6 @@ export async function fetchIdmTheme(
     backgroundImageUrl,
   };
 
-  themeCache.set(cacheKey, result);
+  cacheTheme(cacheKey, result);
   return result;
 }
