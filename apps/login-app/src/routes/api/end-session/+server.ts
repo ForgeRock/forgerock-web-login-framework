@@ -41,15 +41,12 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   // The AM endSession endpoint responds 302 with a Location for RP-initiated
   // logout; a 200 means a plain JSON body. Either way, the AM session cookie
   // must be cleared once the session is gone upstream.
-  if (response.ok || (response.status >= 300 && response.status < 400)) {
+  if (response.status >= 200 && response.status < 400) {
     clearAmCookie(event.cookies);
   }
 
-  const responseHeaders = new Headers();
-  const location = response.headers.get('location');
-  if (location) responseHeaders.set('location', location);
-
   const proxied = amProxyResponse(response, await response.text());
-  for (const [name, value] of responseHeaders) proxied.headers.set(name, value);
+  const location = response.headers.get('location');
+  if (location) proxied.headers.set('location', location);
   return proxied;
 };
