@@ -8,7 +8,12 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
+import {
+  amProxyResponse,
+  getAmCookie,
+  resolveJsonRealmPath,
+  setAmCookie,
+} from '$server/am-session';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -33,15 +38,8 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
     },
   );
 
-  const responseHeaders = new Headers();
-  const contentType = response.headers.get('content-type');
-  if (contentType) responseHeaders.set('content-type', contentType);
-
   const setCookie = response.headers.get('set-cookie');
   if (setCookie) setAmCookie(event.cookies, setCookie);
 
-  return new Response(await response.text(), {
-    status: response.status,
-    headers: responseHeaders,
-  });
+  return amProxyResponse(response, await response.text());
 };
