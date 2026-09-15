@@ -26,7 +26,7 @@ afterEach(() => {
   vi.resetModules();
 });
 
-describe('realm path derivation from FR_REALM_PATH', () => {
+describe('AM endpoint derivation from environment', () => {
   it('derives the configured realm path without a leading slash', async () => {
     const constants = await importConstants({ FR_REALM_PATH: 'alpha' });
     expect(constants.JSON_REALM_PATH).toBe('/json/realms/root/realms/alpha');
