@@ -9,6 +9,7 @@
 
 import { AM_DOMAIN_PATH } from '$core/constants';
 import {
+  amProxyResponse,
   clearAmCookie,
   getAmCookie,
   resolveOAuthRealmPath,
@@ -21,12 +22,15 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
+  // redirect: 'manual' keeps AM's RP-initiated-logout 302 Location intact;
+  // a followed redirect would surface the post-logout page instead.
   const response = await fetch(
     `${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/connect/endSession${resolveUpstreamQuery(
       event.url,
     )}`,
     {
       method: 'GET',
+      redirect: 'manual',
       headers: {
         authorization: event.request.headers.get('authorization') || '',
         cookie: getAmCookie(event.cookies),
@@ -44,12 +48,8 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   const responseHeaders = new Headers();
   const location = response.headers.get('location');
   if (location) responseHeaders.set('location', location);
-  const contentType = response.headers.get('content-type');
-  if (contentType) responseHeaders.set('content-type', contentType);
-  responseHeaders.set('cache-control', 'no-store');
 
-  return new Response(await response.text(), {
-    status: response.status,
-    headers: responseHeaders,
-  });
+  const proxied = amProxyResponse(response, await response.text());
+  for (const [name, value] of responseHeaders) proxied.headers.set(name, value);
+  return proxied;
 };

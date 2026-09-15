@@ -63,7 +63,8 @@ export interface IdmThemeResult {
  */
 const DEFAULT_IDM_FETCH_TIMEOUT_MS = 1500;
 // Keys embed the ?journey= query value, which a client controls, so the cache
-// is bounded (LRU) to keep a flood of unique journeys from growing memory.
+// is bounded (FIFO: oldest insert evicted) to keep a flood of unique journeys
+// from growing memory.
 const THEME_CACHE_LIMIT = 100;
 const themeCache = new Map<string, IdmThemeResult>();
 

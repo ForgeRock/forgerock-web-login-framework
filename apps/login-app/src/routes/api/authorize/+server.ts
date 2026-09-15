@@ -30,6 +30,9 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   const headers = new Headers();
   const location = response.headers.get('location');
   if (location) headers.set('location', location);
+  // The global no-store hook only covers text/html; the redirect response has
+  // no body, so it must carry its own cache-control.
+  headers.set('cache-control', 'no-store');
 
   return new Response(undefined, {
     status: response.status,
