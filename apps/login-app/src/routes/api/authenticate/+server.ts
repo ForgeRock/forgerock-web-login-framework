@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
+import { getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/am-session';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -36,6 +36,7 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
   const responseHeaders = new Headers();
   const contentType = response.headers.get('content-type');
   if (contentType) responseHeaders.set('content-type', contentType);
+  responseHeaders.set('cache-control', 'no-store');
 
   const setCookie = response.headers.get('set-cookie');
   if (setCookie) setAmCookie(event.cookies, setCookie);

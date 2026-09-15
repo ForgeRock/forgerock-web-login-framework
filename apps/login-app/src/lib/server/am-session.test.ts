@@ -18,7 +18,12 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
-import { getAmCookie, resolveJsonRealmPath, resolveOAuthRealmPath, setAmCookie } from './sessions';
+import {
+  getAmCookie,
+  resolveJsonRealmPath,
+  resolveOAuthRealmPath,
+  setAmCookie,
+} from './am-session';
 
 function cookies(values: Record<string, string> = {}) {
   return {

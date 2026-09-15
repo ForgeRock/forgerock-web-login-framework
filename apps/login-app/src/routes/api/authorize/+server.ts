@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { getAmCookie, resolveOAuthRealmPath, resolveUpstreamQuery } from '$server/sessions';
+import { getAmCookie, resolveOAuthRealmPath, resolveUpstreamQuery } from '$server/am-session';
 
 import type { RequestEvent } from '@sveltejs/kit';
 

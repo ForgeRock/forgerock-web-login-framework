@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { resolveOAuthRealmPath } from '$server/sessions';
+import { resolveOAuthRealmPath } from '$server/am-session';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -23,7 +23,13 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
     },
   });
 
-  const resBody = await response.text();
+  const responseHeaders = new Headers();
+  const contentType = response.headers.get('content-type');
+  if (contentType) responseHeaders.set('content-type', contentType);
+  responseHeaders.set('cache-control', 'no-store');
 
-  return new Response(resBody);
+  return new Response(await response.text(), {
+    status: response.status,
+    headers: responseHeaders,
+  });
 };
