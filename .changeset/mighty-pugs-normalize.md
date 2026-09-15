@@ -2,4 +2,4 @@
 '@forgerock/login-widget': patch
 ---
 
-Normalize a leading slash in `FR_REALM_PATH` when `core/constants.ts` derives `JSON_REALM_PATH` and `OAUTH_REALM_PATH`, matching the `?realm=` override handling: a configured value of `/alpha` no longer produces `/json/realms/root/realms//alpha`.
+Normalize `FR_REALM_PATH` and `FR_AM_URL` when `core/constants.ts` derives the AM endpoint constants: a leading slash in the realm (`/alpha` no longer produces `/json/realms/root/realms//alpha`) and a trailing slash on the AM URL (which made every proxied AM call fail with "Resource path contains empty path elements") are both stripped, matching the `?realm=` override handling.

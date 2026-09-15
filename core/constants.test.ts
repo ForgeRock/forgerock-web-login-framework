@@ -38,4 +38,12 @@ describe('realm path derivation from FR_REALM_PATH', () => {
     expect(constants.JSON_REALM_PATH).toBe('/json/realms/root/realms/alpha');
     expect(constants.OAUTH_REALM_PATH).toBe('/oauth2/realms/root/realms/alpha');
   });
+
+  it('strips a trailing slash from FR_AM_URL', async () => {
+    const constants = await importConstants({
+      FR_AM_URL: 'https://am.example.com/am/',
+      FR_REALM_PATH: 'alpha',
+    });
+    expect(constants.AM_DOMAIN_PATH).toBe('https://am.example.com/am');
+  });
 });
