@@ -46,4 +46,9 @@ describe('realm path derivation from FR_REALM_PATH', () => {
     });
     expect(constants.AM_DOMAIN_PATH).toBe('https://am.example.com/am');
   });
+
+  it('falls back to the bare root paths when FR_REALM_PATH is unset', async () => {
+    const constants = await importConstants({});
+    expect(constants.JSON_REALM_PATH).toBe('/json/realms/root/');
+  });
 });
