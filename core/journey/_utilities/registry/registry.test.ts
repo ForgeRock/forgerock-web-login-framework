@@ -1,13 +1,17 @@
 import { Path } from '@effect/platform';
 import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
-import { describe, expect, it } from 'vitest';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   buildRegistryContent,
   parseAcceptedProps,
   parseComponentHeader,
   RegistryCollisionError,
+  runRegistryScript,
   toPascalCase,
 } from './registry.js';
 
@@ -409,5 +413,88 @@ describe('buildRegistryContent', () => {
     const output = distinct();
     expect(output).toContain('CustomHeaderBrand');
     expect(output).toContain('CustomFooterBrand');
+  });
+});
+
+describe('runRegistryScript', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    tmpDir = await mkdtemp(join(tmpdir(), 'core-registry-test-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  const writeComponent = async (
+    kind: 'stages' | 'callbacks' | 'headers' | 'footers',
+    dirName: string,
+    fileName: string,
+    name: string,
+    type: string,
+  ) => {
+    const dir = join(tmpDir, 'experimental', 'custom', kind, dirName);
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      join(dir, fileName),
+      `<!--\n   @component\n   Type: ${type}\n   Name: ${name}\n   -->\n<div></div>`,
+      'utf8',
+    );
+  };
+
+  const readRegistry = async () =>
+    readFile(
+      join(tmpDir, 'core', 'journey', '_utilities', 'registry', 'custom-registry.ts'),
+      'utf8',
+    );
+
+  const run = () =>
+    runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+
+  it('scans stages, callbacks, headers, and footers and emits all four registries', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await writeComponent('callbacks', 'name', 'name.svelte', 'Name', 'callback');
+    await writeComponent('headers', 'brand', 'brand.svelte', 'Brand', 'header');
+    await writeComponent('footers', 'legal', 'legal.svelte', 'Legal', 'footer');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('customStageRegistry');
+    expect(output).toContain('customCallbackRegistry');
+    expect(output).toContain('customHeaderRegistry: CustomRegistryEntry | null = {');
+    expect(output).toContain('customFooterRegistry: CustomRegistryEntry | null = {');
+    expect(output).toContain('CustomHeaderBrand');
+    expect(output).toContain('CustomFooterLegal');
+  });
+
+  it('emits null header/footer registries when those directories are empty', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('customHeaderRegistry: CustomRegistryEntry | null = null;');
+    expect(output).toContain('customFooterRegistry: CustomRegistryEntry | null = null;');
+  });
+
+  it('fails with a clear error when two header components exist', async () => {
+    await writeComponent('headers', 'a', 'one.svelte', 'One', 'header');
+    await writeComponent('headers', 'b', 'two.svelte', 'Two', 'header');
+
+    const result = await Effect.runPromise(
+      Effect.either(runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer))),
+    );
+    if (result._tag !== 'Left') {
+      throw new Error('Expected runRegistryScript to fail');
+    }
+    const error = result.left;
+    if (!(error instanceof RegistryCollisionError)) {
+      throw new Error(`Expected RegistryCollisionError, got: ${String(error)}`);
+    }
+    expect(error.kind).toBe('singleton-occupancy');
+    expect(error.type).toBe('header');
+    expect(error.message).toContain('one.svelte');
+    expect(error.message).toContain('two.svelte');
   });
 });

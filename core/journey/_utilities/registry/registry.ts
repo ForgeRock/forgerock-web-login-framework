@@ -191,15 +191,27 @@ const scanDirectory = (
 // Registry content builder (pure, exported for testing)
 // --------------------------------------------------------------------------
 
-/** Thrown by `buildRegistryContent` when components collide on a generated identifier or registry key. */
-export class RegistryCollisionError extends Error {
-  constructor(type: string, name: string, filePaths: string[]) {
-    super(
-      `Duplicate component name "${name}" in type "${type}". Colliding files:\n` +
-        filePaths.map((filePath) => `  - ${filePath}`).join('\n') +
-        `\nRename one component's "Name:" field so every ${type} has a unique generated identifier.`,
+/** Raised when components collide on a generated identifier, registry key, or singleton slot. */
+export class RegistryCollisionError extends Data.TaggedError('RegistryCollisionError')<{
+  readonly kind: 'name-collision' | 'singleton-occupancy';
+  readonly type: string;
+  readonly name: string;
+  readonly filePaths: string[];
+}> {
+  get message(): string {
+    const collidingFiles = this.filePaths.map((filePath) => `  - ${filePath}`).join('\n');
+    if (this.kind === 'singleton-occupancy') {
+      return (
+        `Only one ${this.type} component is allowed. Found ${this.filePaths.length}:\n` +
+        collidingFiles +
+        `\nKeep the one to use and delete or move the rest out of /experimental/custom/${this.type}s/.`
+      );
+    }
+    return (
+      `Duplicate component name "${this.name}" in type "${this.type}". Colliding files:\n` +
+      collidingFiles +
+      `\nRename one component's "Name:" field so every ${this.type} has a unique generated identifier.`
     );
-    this.name = 'RegistryCollisionError';
   }
 }
 
@@ -208,13 +220,6 @@ interface RegistryVarEntry {
   importPath: string;
   name: string;
   acceptedProps: string[];
-}
-
-/** Error detail for components that share a page-level singleton slot (multiple headers or multiple footers). */
-class SingletonOccupancyError extends RegistryCollisionError {
-  constructor(type: string, filePaths: string[]) {
-    super(type, `${type} components`, filePaths);
-  }
 }
 
 export function buildRegistryContent(
@@ -237,7 +242,6 @@ export function buildRegistryContent(
   const callbackEntries = callbackComponents.map(toEntry('Callback'));
   const headerEntries = headerComponents.map(toEntry('CustomHeader'));
   const footerEntries = footerComponents.map(toEntry('CustomFooter'));
-
   // Page-level singletons: at most one header and one footer. More than one is ambiguous
   // even when names differ — hard error listing the candidates.
   for (const [type, entries] of [
@@ -245,10 +249,12 @@ export function buildRegistryContent(
     ['footer', footerEntries],
   ] as const) {
     if (entries.length > 1) {
-      throw new SingletonOccupancyError(
+      throw new RegistryCollisionError({
+        kind: 'singleton-occupancy',
         type,
-        entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
-      );
+        name: `${type} components`,
+        filePaths: entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
+      });
     }
   }
 
@@ -270,11 +276,12 @@ export function buildRegistryContent(
 
   for (const [varName, collisions] of byVarName) {
     if (collisions.filePaths.length > 1) {
-      throw new RegistryCollisionError(
-        [...collisions.types].join(', '),
-        varName,
-        collisions.filePaths,
-      );
+      throw new RegistryCollisionError({
+        kind: 'name-collision',
+        type: [...collisions.types].join(', '),
+        name: varName,
+        filePaths: collisions.filePaths,
+      });
     }
   }
 
@@ -360,13 +367,15 @@ export function buildRegistryContent(
 // --------------------------------------------------------------------------
 
 /**
- * Scans `experimental/custom/stages/` and `experimental/custom/callbacks/` for
+ * Scans `experimental/custom/{stages,callbacks,headers,footers}/` for
  * `@component`-annotated Svelte files and writes
  * `core/journey/_utilities/registry/custom-registry.ts`.
  *
  * All I/O runs in-process via the platform `FileSystem` service — no subprocess
  * spawning. Validation errors across multiple components are collected and
- * reported together.
+ * reported together. Ambiguous output (duplicate names across any type, or more
+ * than one header / more than one footer) fails with `RegistryCollisionError`
+ * rather than silently picking a winner.
  */
 export const runRegistryScript = (projectDir: string) =>
   Effect.gen(function* () {
@@ -374,18 +383,34 @@ export const runRegistryScript = (projectDir: string) =>
     const path = yield* Path.Path;
     const stageDir = path.join(projectDir, 'experimental', 'custom', 'stages');
     const callbackDir = path.join(projectDir, 'experimental', 'custom', 'callbacks');
+    const headerDir = path.join(projectDir, 'experimental', 'custom', 'headers');
+    const footerDir = path.join(projectDir, 'experimental', 'custom', 'footers');
     const registryDir = path.join(projectDir, 'core', 'journey', '_utilities', 'registry');
     const registryPath = path.join(registryDir, 'custom-registry.ts');
 
-    const [stageComponents, callbackComponents] = yield* Effect.all(
-      [
-        scanDirectory(fs, path, stageDir, 'stage'),
-        scanDirectory(fs, path, callbackDir, 'callback'),
-      ],
-      { concurrency: 'unbounded' },
-    );
+    const [stageComponents, callbackComponents, headerComponents, footerComponents] =
+      yield* Effect.all(
+        [
+          scanDirectory(fs, path, stageDir, 'stage'),
+          scanDirectory(fs, path, callbackDir, 'callback'),
+          scanDirectory(fs, path, headerDir, 'header'),
+          scanDirectory(fs, path, footerDir, 'footer'),
+        ],
+        { concurrency: 'unbounded' },
+      );
 
-    const content = buildRegistryContent(path, registryDir, stageComponents, callbackComponents);
+    const content = yield* Effect.try({
+      try: () =>
+        buildRegistryContent(
+          path,
+          registryDir,
+          stageComponents,
+          callbackComponents,
+          headerComponents,
+          footerComponents,
+        ),
+      catch: (cause) => cause,
+    });
 
     yield* fs
       .makeDirectory(registryDir, { recursive: true })
@@ -394,26 +419,34 @@ export const runRegistryScript = (projectDir: string) =>
       .writeFileString(registryPath, content)
       .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: registryPath, cause })));
 
-    const total = stageComponents.length + callbackComponents.length;
+    const lines = [
+      stageComponents.length > 0 &&
+        `  Stages    (${stageComponents.length}): ${stageComponents
+          .map((stageComponent) => stageComponent.name)
+          .join(', ')}`,
+      callbackComponents.length > 0 &&
+        `  Callbacks (${callbackComponents.length}): ${callbackComponents
+          .map((callbackComponent) => callbackComponent.name)
+          .join(', ')}`,
+      headerComponents.length > 0 &&
+        `  Headers   (${headerComponents.length}): ${headerComponents
+          .map((headerComponent) => headerComponent.name)
+          .join(', ')}`,
+      footerComponents.length > 0 &&
+        `  Footers   (${footerComponents.length}): ${footerComponents
+          .map((footerComponent) => footerComponent.name)
+          .join(', ')}`,
+    ].filter((line): line is string => line !== false);
+
+    const total = lines.length;
     if (total === 0) {
       yield* Console.log(
         `custom-registry.ts generated (no custom components found — registries are empty)`,
       );
     } else {
       yield* Console.log(`custom-registry.ts generated:`);
-      if (stageComponents.length > 0) {
-        yield* Console.log(
-          `  Stages    (${stageComponents.length}): ${stageComponents
-            .map((stageComponent) => stageComponent.name)
-            .join(', ')}`,
-        );
-      }
-      if (callbackComponents.length > 0) {
-        yield* Console.log(
-          `  Callbacks (${callbackComponents.length}): ${callbackComponents
-            .map((callbackComponent) => callbackComponent.name)
-            .join(', ')}`,
-        );
+      for (const line of lines) {
+        yield* Console.log(line);
       }
     }
   });
