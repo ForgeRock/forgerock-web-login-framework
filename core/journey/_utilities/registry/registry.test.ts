@@ -47,6 +47,16 @@ describe('parseComponentHeader', () => {
       expect(decode('test.svelte', content)).toEqual({ type: 'callback', name: 'MyCallback' });
     });
 
+    it('parses a header component header', () => {
+      const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   -->\n<div>branding</div>`;
+      expect(decode('test.svelte', content)).toEqual({ type: 'header', name: 'MyHeader' });
+    });
+
+    it('parses a footer component header', () => {
+      const content = `<!--\n   @component\n   Type: footer\n   Name: MyFooter\n   -->\n<div>legal</div>`;
+      expect(decode('test.svelte', content)).toEqual({ type: 'footer', name: 'MyFooter' });
+    });
+
     it('normalizes Type to lowercase', () => {
       const content = `<!--\n   @component\n   Type: Stage\n   Name: Foo\n   -->\n`;
       expect(decode('test.svelte', content).type).toBe('stage');
@@ -71,6 +81,14 @@ describe('parseComponentHeader', () => {
 
     it('fails when Type value is not stage or callback', () => {
       const err = decodeError('test.svelte', `<!-- @component\n   Type: widget\n   Name: Foo -->`);
+      expect(String(err.cause)).toContain('Invalid Type value');
+    });
+
+    it('fails when Type value is an unknown custom component type', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!-- @component\n   Type: container\n   Name: Foo -->`,
+      );
       expect(String(err.cause)).toContain('Invalid Type value');
     });
 

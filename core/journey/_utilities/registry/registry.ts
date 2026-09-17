@@ -6,7 +6,17 @@ import { parse } from 'svelte/compiler';
 // Types
 // --------------------------------------------------------------------------
 
-type ComponentType = 'stage' | 'callback';
+type ComponentType = 'stage' | 'callback' | 'header' | 'footer';
+
+const COMPONENT_TYPES = [
+  'stage',
+  'callback',
+  'header',
+  'footer',
+] as const satisfies readonly ComponentType[];
+
+const isComponentType = (value: string): value is ComponentType =>
+  COMPONENT_TYPES.some((componentType) => componentType === value);
 
 interface ComponentEntry {
   filePath: string;
@@ -61,7 +71,7 @@ export const parseComponentHeader = (
   if (!commentMatch) {
     return fail(
       'Missing @component header. Every custom component must begin with:\n' +
-        '<!--\n   @component\n   Type: stage|callback\n   Name: <ComponentName>\n   -->',
+        '<!--\n   @component\n   Type: stage|callback|header|footer\n   Name: <ComponentName>\n   -->',
     );
   }
 
@@ -73,13 +83,15 @@ export const parseComponentHeader = (
   const typeMatch = block.match(/Type:\s*(\S+)/);
   if (!typeMatch) {
     return fail(
-      'Missing "Type:" field in @component header. Expected: Type: stage or Type: callback',
+      'Missing "Type:" field in @component header. Expected: Type: stage, callback, header, or footer',
     );
   }
 
   const rawType = typeMatch[1].toLowerCase();
-  if (rawType !== 'stage' && rawType !== 'callback') {
-    return fail(`Invalid Type value "${typeMatch[1]}". Must be "stage" or "callback".`);
+  if (!isComponentType(rawType)) {
+    return fail(
+      `Invalid Type value "${typeMatch[1]}". Must be "stage", "callback", "header", or "footer".`,
+    );
   }
 
   const nameMatch = block.match(/Name:\s*(.+)/);
