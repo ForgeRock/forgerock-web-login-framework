@@ -191,11 +191,39 @@ const scanDirectory = (
 // Registry content builder (pure, exported for testing)
 // --------------------------------------------------------------------------
 
+/** Thrown by `buildRegistryContent` when components collide on a generated identifier or registry key. */
+export class RegistryCollisionError extends Error {
+  constructor(type: string, name: string, filePaths: string[]) {
+    super(
+      `Duplicate component name "${name}" in type "${type}". Colliding files:\n` +
+        filePaths.map((filePath) => `  - ${filePath}`).join('\n') +
+        `\nRename one component's "Name:" field so every ${type} has a unique generated identifier.`,
+    );
+    this.name = 'RegistryCollisionError';
+  }
+}
+
+interface RegistryVarEntry {
+  varName: string;
+  importPath: string;
+  name: string;
+  acceptedProps: string[];
+}
+
+/** Error detail for components that share a page-level singleton slot (multiple headers or multiple footers). */
+class SingletonOccupancyError extends RegistryCollisionError {
+  constructor(type: string, filePaths: string[]) {
+    super(type, `${type} components`, filePaths);
+  }
+}
+
 export function buildRegistryContent(
   path: Path.Path,
   registryDir: string,
   stageComponents: ComponentEntry[],
   callbackComponents: ComponentEntry[],
+  headerComponents: ComponentEntry[] = [],
+  footerComponents: ComponentEntry[] = [],
 ): string {
   const toEntry =
     (prefix: string) =>
@@ -207,6 +235,48 @@ export function buildRegistryContent(
 
   const stageEntries = stageComponents.map(toEntry('Stage'));
   const callbackEntries = callbackComponents.map(toEntry('Callback'));
+  const headerEntries = headerComponents.map(toEntry('CustomHeader'));
+  const footerEntries = footerComponents.map(toEntry('CustomFooter'));
+
+  // Page-level singletons: at most one header and one footer. More than one is ambiguous
+  // even when names differ — hard error listing the candidates.
+  for (const [type, entries] of [
+    ['header', headerEntries],
+    ['footer', footerEntries],
+  ] as const) {
+    if (entries.length > 1) {
+      throw new SingletonOccupancyError(
+        type,
+        entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
+      );
+    }
+  }
+
+  // Name collisions: any two components sharing a generated identifier would emit a
+  // duplicate TS identifier (broken build) or a shadowed registry key (silent last-wins).
+  const byVarName = new Map<string, { types: Set<string>; filePaths: string[] }>();
+  const collect = (type: string, entries: RegistryVarEntry[]) => {
+    for (const { varName, importPath, name } of entries) {
+      const existing = byVarName.get(varName) ?? { types: new Set<string>(), filePaths: [] };
+      existing.types.add(type);
+      existing.filePaths.push(`${importPath} (Name: ${name})`);
+      byVarName.set(varName, existing);
+    }
+  };
+  collect('stage', stageEntries);
+  collect('callback', callbackEntries);
+  collect('header', headerEntries);
+  collect('footer', footerEntries);
+
+  for (const [varName, collisions] of byVarName) {
+    if (collisions.filePaths.length > 1) {
+      throw new RegistryCollisionError(
+        [...collisions.types].join(', '),
+        varName,
+        collisions.filePaths,
+      );
+    }
+  }
 
   const lines: string[] = [
     `/**`,
@@ -226,47 +296,61 @@ export function buildRegistryContent(
     ``,
   ];
 
-  if (stageEntries.length > 0) {
-    lines.push(`// Stage overrides / extensions`);
-    for (const { varName, importPath } of stageEntries) {
+  const collectImportBlock = (
+    comment: string,
+    entries: { varName: string; importPath: string }[],
+  ) => {
+    if (entries.length === 0) {
+      return;
+    }
+    lines.push(comment);
+    for (const { varName, importPath } of entries) {
       lines.push(`import ${varName} from '${importPath}';`);
     }
     lines.push(``);
-  }
+  };
 
-  if (callbackEntries.length > 0) {
-    lines.push(`// Callback overrides / extensions`);
-    for (const { varName, importPath } of callbackEntries) {
-      lines.push(`import ${varName} from '${importPath}';`);
+  collectImportBlock(`// Stage overrides / extensions`, stageEntries);
+  collectImportBlock(`// Callback overrides / extensions`, callbackEntries);
+  collectImportBlock(`// Custom header (page-level singleton)`, headerEntries);
+  collectImportBlock(`// Custom footer (page-level singleton)`, footerEntries);
+
+  const pushRecordRegistry = (
+    exportName: string,
+    entries: { varName: string; name: string; acceptedProps: string[] }[],
+  ) => {
+    lines.push(`export const ${exportName}: Record<string, CustomRegistryEntry> = {`);
+    for (const { varName, name, acceptedProps } of entries) {
+      lines.push(
+        `  ${JSON.stringify(
+          name,
+        )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
+          acceptedProps,
+        )} },`,
+      );
     }
+    lines.push(`};`);
     lines.push(``);
-  }
+  };
 
-  lines.push(`export const customStageRegistry: Record<string, CustomRegistryEntry> = {`);
-  for (const { varName, name, acceptedProps } of stageEntries) {
+  const pushSingletonRegistry = (
+    exportName: string,
+    entry: (typeof headerEntries)[number] | undefined,
+  ) => {
     lines.push(
-      `  ${JSON.stringify(
-        name,
-      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
-        acceptedProps,
-      )} },`,
+      entry
+        ? `export const ${exportName}: CustomRegistryEntry | null = { get component() { return ${
+            entry.varName
+          }; }, acceptedProps: ${JSON.stringify(entry.acceptedProps)} };`
+        : `export const ${exportName}: CustomRegistryEntry | null = null;`,
     );
-  }
-  lines.push(`};`);
-  lines.push(``);
+    lines.push(``);
+  };
 
-  lines.push(`export const customCallbackRegistry: Record<string, CustomRegistryEntry> = {`);
-  for (const { varName, name, acceptedProps } of callbackEntries) {
-    lines.push(
-      `  ${JSON.stringify(
-        name,
-      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
-        acceptedProps,
-      )} },`,
-    );
-  }
-  lines.push(`};`);
-  lines.push(``);
+  pushRecordRegistry('customStageRegistry', stageEntries);
+  pushRecordRegistry('customCallbackRegistry', callbackEntries);
+  pushSingletonRegistry('customHeaderRegistry', headerEntries[0]);
+  pushSingletonRegistry('customFooterRegistry', footerEntries[0]);
 
   return lines.join('\n');
 }

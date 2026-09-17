@@ -7,6 +7,7 @@ import {
   buildRegistryContent,
   parseAcceptedProps,
   parseComponentHeader,
+  RegistryCollisionError,
   toPascalCase,
 } from './registry.js';
 
@@ -205,5 +206,208 @@ describe('buildRegistryContent', () => {
       [],
     );
     expect(output).toContain('StageMyLoginStage');
+  });
+
+  it('emits a singleton header registry for a single header component', () => {
+    const output = buildRegistryContent(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [
+        {
+          filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
+          name: 'Brand',
+          type: 'header',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(output).toContain(
+      `import CustomHeaderBrand from '../../../../experimental/custom/headers/brand/brand.svelte';`,
+    );
+    expect(output).toContain(
+      'export const customHeaderRegistry: CustomRegistryEntry | null = { get component() { return CustomHeaderBrand; }, acceptedProps: [] };',
+    );
+  });
+
+  it('emits null when no header component exists', () => {
+    const output = buildRegistryContent(nodePath, registryDir, [], [], [], []);
+    expect(output).toContain(
+      'export const customHeaderRegistry: CustomRegistryEntry | null = null;',
+    );
+  });
+
+  it('emits a singleton footer registry for a single footer component', () => {
+    const output = buildRegistryContent(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [],
+      [
+        {
+          filePath: '/repo/experimental/custom/footers/legal/legal.svelte',
+          name: 'Legal',
+          type: 'footer',
+          acceptedProps: [],
+        },
+      ],
+    );
+    expect(output).toContain(
+      `import CustomFooterLegal from '../../../../experimental/custom/footers/legal/legal.svelte';`,
+    );
+    expect(output).toContain(
+      'export const customFooterRegistry: CustomRegistryEntry | null = { get component() { return CustomFooterLegal; }, acceptedProps: [] };',
+    );
+  });
+
+  it('emits null when no footer component exists', () => {
+    const output = buildRegistryContent(nodePath, registryDir, [], [], [], []);
+    expect(output).toContain(
+      'export const customFooterRegistry: CustomRegistryEntry | null = null;',
+    );
+  });
+
+  it('throws when two header components exist, even with distinct names (page-level singleton)', () => {
+    const twoHeaders = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/headers/a/one.svelte',
+            name: 'One',
+            type: 'header',
+            acceptedProps: [],
+          },
+          {
+            filePath: '/repo/experimental/custom/headers/b/two.svelte',
+            name: 'Two',
+            type: 'header',
+            acceptedProps: [],
+          },
+        ],
+        [],
+      );
+    expect(twoHeaders).toThrow(RegistryCollisionError);
+    expect(twoHeaders).toThrow(/a\/one\.svelte/);
+    expect(twoHeaders).toThrow(/b\/two\.svelte/);
+  });
+
+  it('throws when two components share a registry key (exact duplicate name)', () => {
+    const duplicate = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [
+          {
+            filePath: '/repo/experimental/custom/stages/a/login.svelte',
+            name: 'Login',
+            type: 'stage',
+            acceptedProps: [],
+          },
+          {
+            filePath: '/repo/experimental/custom/stages/b/login.svelte',
+            name: 'Login',
+            type: 'stage',
+            acceptedProps: [],
+          },
+        ],
+        [],
+      );
+    expect(duplicate).toThrow(/Duplicate component name "StageLogin" in type "stage"/);
+    expect(duplicate).toThrow(/a\/login\.svelte/);
+    expect(duplicate).toThrow(/b\/login\.svelte/);
+  });
+
+  it('throws when distinct names collide in the generated identifier ("My Login" vs "MyLogin")', () => {
+    const colliding = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [
+          {
+            filePath: '/repo/experimental/custom/stages/my-login/login.svelte',
+            name: 'My Login',
+            type: 'stage',
+            acceptedProps: [],
+          },
+          {
+            filePath: '/repo/experimental/custom/stages/mylogin/login.svelte',
+            name: 'MyLogin',
+            type: 'stage',
+            acceptedProps: [],
+          },
+        ],
+        [],
+      );
+    expect(colliding).toThrow(/Duplicate component name "StageMyLogin" in type "stage"/);
+    expect(colliding).toThrow(/my-login\/login\.svelte/);
+    expect(colliding).toThrow(/mylogin\/login\.svelte/);
+  });
+
+  it('throws when a stage and a callback produce the same identifier across registries', () => {
+    const colliding = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [
+          {
+            filePath: '/repo/experimental/custom/stages/foo/foo.svelte',
+            name: 'Foo',
+            type: 'stage',
+            acceptedProps: [],
+          },
+        ],
+        [
+          {
+            filePath: '/repo/experimental/custom/callbacks/foo/foo.svelte',
+            name: 'StageFoo',
+            type: 'callback',
+            acceptedProps: [],
+          },
+        ],
+      );
+    // Stage prefix + "Foo" → StageFoo; callback prefix + "StageFoo" → CallbackStageFoo.
+    // Distinct identifiers, so this is NOT a collision — verify both registries emit.
+    expect(colliding).not.toThrow();
+    const output = colliding();
+    expect(output).toContain('StageFoo');
+    expect(output).toContain('CallbackStageFoo');
+  });
+
+  it('allows a header and footer with identifiers that remain distinct', () => {
+    const distinct = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
+            name: 'Brand',
+            type: 'header',
+            acceptedProps: [],
+          },
+        ],
+        [
+          {
+            filePath: '/repo/experimental/custom/footers/brand/brand.svelte',
+            name: 'Brand',
+            type: 'footer',
+            acceptedProps: [],
+          },
+        ],
+      );
+    // CustomHeaderBrand vs CustomFooterBrand — distinct identifiers, both singletons emit.
+    expect(distinct).not.toThrow();
+    const output = distinct();
+    expect(output).toContain('CustomHeaderBrand');
+    expect(output).toContain('CustomFooterBrand');
   });
 });
