@@ -39,7 +39,9 @@ export function parseAcceptedProps(content: string): string[] {
     }
     if (node.declaration?.type === 'VariableDeclaration' && node.declaration.kind === 'let') {
       for (const declarator of node.declaration.declarations) {
-        props.push(declarator.id.name);
+        if (declarator.id.type === 'Identifier') {
+          props.push(declarator.id.name);
+        }
       }
     }
   }

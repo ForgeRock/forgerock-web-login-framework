@@ -128,6 +128,16 @@ describe('parseAcceptedProps', () => {
     const content = `<script>\nexport let callback;\nexport const style = {};\nexport const stepMetadata = null;\n</script>`;
     expect(parseAcceptedProps(content)).toEqual(['callback']);
   });
+
+  it('skips destructured export let declarations instead of pushing undefined', () => {
+    const content = `<script>\nexport let { a, b } = props;\nexport let plain;\n</script>`;
+    expect(parseAcceptedProps(content)).toEqual(['plain']);
+  });
+
+  it('skips array-pattern export let declarations', () => {
+    const content = `<script>\nexport let [first, second] = pair;\n</script>`;
+    expect(parseAcceptedProps(content)).toEqual([]);
+  });
 });
 
 describe('toPascalCase', () => {
