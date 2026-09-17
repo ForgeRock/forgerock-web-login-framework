@@ -15,8 +15,14 @@ experimental/custom/
 │       ├── <utility>.test.ts        # optional
 │       ├── <component>.stories.js   # optional (Storybook)
 │       └── <component>.story.svelte # optional (Storybook)
-└── callbacks/
-    └── <your-callback-name>/
+├── callbacks/
+│   └── <your-callback-name>/
+│       └── (same structure as above)
+├── headers/
+│   └── <your-header-name>/
+│       └── (same structure as above)
+└── footers/
+    └── <your-footer-name>/
         └── (same structure as above)
 ```
 
@@ -51,10 +57,14 @@ The `@component` comment is required. The framework's Vite plugin reads it to re
 
 ## Types
 
-| Type       | What it replaces                         | Scope                     |
-| ---------- | ---------------------------------------- | ------------------------- |
-| `stage`    | The entire form layout for a named stage | One stage only            |
-| `callback` | A specific callback type renderer        | Every occurrence globally |
+| Type       | What it replaces                                  | Scope                          |
+| ---------- | ------------------------------------------------- | ------------------------------ |
+| `stage`    | The entire form layout for a named stage          | One stage only                 |
+| `callback` | A specific callback type renderer                 | Every occurrence globally      |
+| `header`   | The page-level header slot (branding, nav links)  | One per page (a single winner) |
+| `footer`   | The page-level footer slot (legal, links, markup) | One per page (a single winner) |
+
+Header and footer components take no props — they are static branding slots rendered above and below the journey in the login app. Declaring more than one `Type: header` (or `Type: footer`) component fails the build.
 
 ## Component props
 
@@ -127,7 +137,7 @@ import type { NameCallback, JourneyStep } from '@forgerock/journey-client/types'
 
 ## Hot module reloading note
 
-The framework's Vite plugin watches `experimental/custom/{stages,callbacks}/` during `pnpm dev` and regenerates `custom-registry.ts` automatically when you add, remove, or rename a component file. Editing an existing registered component reloads normally via Vite HMR.
+The framework's Vite plugin watches `experimental/custom/{stages,callbacks,headers,footers}/` during `pnpm dev` and regenerates `custom-registry.ts` automatically when you add, remove, or rename a component file. Editing an existing registered component reloads normally via Vite HMR.
 
 If you generate a component while only Storybook is running (Storybook uses its own Vite config and doesn't load this plugin), trigger a regeneration with:
 
