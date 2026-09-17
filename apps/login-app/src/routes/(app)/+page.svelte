@@ -15,6 +15,10 @@
   import Box from '$components/primitives/box/centered.svelte';
   import { applyThemeVars } from '$core/_effects/theme.effects';
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
+  import {
+    customFooterRegistry,
+    customHeaderRegistry,
+  } from '$core/journey/_utilities/registry/custom-registry';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
@@ -121,6 +125,11 @@
 </script>
 
 <div bind:this={journeyRootEl} class="tw_h-full">
+  {#if customHeaderRegistry}
+    {@const CustomHeader = customHeaderRegistry.component}
+    <CustomHeader />
+  {/if}
+
   <Box>
     <form method="POST" bind:this={redirectForm} hidden>
       <input type="hidden" name="loginResult" value={loginResult} />
@@ -139,4 +148,9 @@
       />
     {/if}
   </Box>
+
+  {#if customFooterRegistry}
+    {@const CustomFooter = customFooterRegistry.component}
+    <CustomFooter />
+  {/if}
 </div>
