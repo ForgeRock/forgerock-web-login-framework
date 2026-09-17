@@ -23,8 +23,8 @@ interface ViteDevServer {
 
 /**
  * Regenerates `core/journey/_utilities/registry/custom-registry.ts` by scanning
- * `experimental/custom/{stages,callbacks}/` for `@component`-annotated Svelte
- * files. Runs once at `buildStart` and, in dev, watches for adds/removals so
+ * `experimental/custom/{stages,callbacks,headers,footers}/` for `@component`-annotated
+ * Svelte files. Runs once at `buildStart` and, in dev, watches for adds/removals so
  * scaffolding a new component via `ping-lf generate` is picked up without a
  * server restart.
  */
@@ -32,6 +32,8 @@ export function customRegistry({ projectRoot }: CustomRegistryPluginOptions) {
   const watchedDirs = [
     path.join(projectRoot, 'experimental', 'custom', 'callbacks'),
     path.join(projectRoot, 'experimental', 'custom', 'stages'),
+    path.join(projectRoot, 'experimental', 'custom', 'headers'),
+    path.join(projectRoot, 'experimental', 'custom', 'footers'),
   ];
 
   const regenerate = () =>

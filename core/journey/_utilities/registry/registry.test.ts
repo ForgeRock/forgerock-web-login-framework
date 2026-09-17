@@ -1,10 +1,10 @@
 import { Path } from '@effect/platform';
 import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildRegistryContent,
@@ -496,5 +496,91 @@ describe('runRegistryScript', () => {
     expect(error.type).toBe('header');
     expect(error.message).toContain('one.svelte');
     expect(error.message).toContain('two.svelte');
+  });
+});
+
+describe('customRegistry vite plugin', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'core-registry-plugin-test-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  const makeServer = () => {
+    const listeners: ((event: string, filePath: string) => void)[] = [];
+    return {
+      server: {
+        watcher: {
+          on: vi.fn((_event: string, listener: (event: string, filePath: string) => void) => {
+            listeners.push(listener);
+          }),
+        },
+        config: { logger: { error: vi.fn() } },
+      },
+      listeners,
+    };
+  };
+
+  const registryPath = () =>
+    join(tmpDir, 'core', 'journey', '_utilities', 'registry', 'custom-registry.ts');
+
+  it('watched dirs include headers and footers: a header add event regenerates the registry', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+    expect(server.watcher.on).toHaveBeenCalledWith('all', expect.any(Function));
+
+    // Add a header component and fire the add event through the watcher listener.
+    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'brand');
+    await mkdir(headerDir, { recursive: true });
+    await writeFile(
+      join(headerDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+    expect(listeners.length).toBeGreaterThan(0);
+    for (const listener of listeners) {
+      listener('add', join(headerDir, 'brand.svelte'));
+    }
+
+    await vi.waitFor(async () => {
+      const output = await readFile(registryPath(), 'utf8');
+      expect(output).toContain('customHeaderRegistry: CustomRegistryEntry | null = {');
+      expect(output).toContain('CustomHeaderBrand');
+    });
+  });
+
+  it('ignores changes outside the watched directories', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    // Seed a baseline registry file, then record its content.
+    await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+    const baseline = await readFile(registryPath(), 'utf8');
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+
+    // Add a header file OUTSIDE the watched dirs and fire the event.
+    const outsideDir = join(tmpDir, 'experimental', 'elsewhere');
+    await mkdir(outsideDir, { recursive: true });
+    await writeFile(
+      join(outsideDir, 'stray.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Stray\n   -->\n<div></div>',
+      'utf8',
+    );
+    for (const listener of listeners) {
+      listener('add', join(outsideDir, 'stray.svelte'));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const after = await readFile(registryPath(), 'utf8');
+    expect(after).toBe(baseline);
+    expect(after).not.toContain('CustomHeaderStray');
   });
 });
