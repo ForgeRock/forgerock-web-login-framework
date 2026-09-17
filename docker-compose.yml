@@ -1,15 +1,140 @@
+x-preview: &preview
+  build:
+    context: .
+    dockerfile: Dockerfile
+    target: deploy
+  env_file:
+    - .env
+  environment:
+    ORIGIN: http://localhost:3000
+  ports:
+    - 3000:3000
+
 services:
   preview:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: deploy
-    env_file:
-      - .env
+    <<: *preview
+    # Config topology: docker compose --profile config up
+    # POST /api/save writes into the shared repository; config-saver commits it
+    # within 10 seconds. Verify with: docker compose exec config-saver git -C /config log
+    profiles:
+      - config
     environment:
-      - ORIGIN=http://localhost:3000
+      ORIGIN: http://localhost:3000
+      CONFIG_REPO_DIR: /config
+    volumes:
+      - config-repo:/config
+    depends_on:
+      config-repo-init:
+        condition: service_completed_successfully
+
+  config-repo-init:
+    image: alpine/git:v2.47.1
+    profiles:
+      - config
+    environment:
+      CONFIG_REPO_URL: ${CONFIG_REPO_URL:-}
+    volumes:
+      - config-repo:/config
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        if [ -n "$${CONFIG_REPO_URL}" ]; then
+          git clone --branch master "$${CONFIG_REPO_URL}" /config
+        else
+          git init -b master /config
+        fi
+        chown -R 11111:11111 /config
+    restart: "no"
+
+  # Built locally from the sibling saas checkout; this image is not used by CI.
+  config-saver:
+    build:
+      context: ../saas
+      dockerfile_inline: |
+        FROM golang:1.26-bookworm AS build
+        # git2go/v31 supports libgit2 through v1.3 only; bookworm packages v1.5.
+        RUN apt-get update && apt-get install --no-install-recommends -y \
+          build-essential ca-certificates cmake git libpcre2-dev pkg-config zlib1g-dev \
+          && rm -rf /var/lib/apt/lists/*
+        # config-saver commits locally, so libgit2 does not need an HTTPS backend.
+        RUN git clone --depth 1 --branch v1.3.2 https://github.com/libgit2/libgit2.git /tmp/libgit2 \
+          && cmake -S /tmp/libgit2 -B /tmp/libgit2/build -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DUSE_HTTPS=OFF -DREGEX_BACKEND=pcre2 \
+          && cmake --build /tmp/libgit2/build --parallel \
+          && cmake --install /tmp/libgit2/build \
+          && rm -rf /tmp/libgit2
+        ENV PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+        WORKDIR /src
+        COPY go.mod go.sum ./
+        RUN go mod download
+        COPY . .
+        RUN CGO_ENABLED=1 CGO_LDFLAGS="$(pkg-config --static --libs libgit2)" go build -o /config-saver ./services/config-saver/cmd/save
+
+        FROM debian:bookworm-slim
+        RUN apt-get update && apt-get install --no-install-recommends -y ca-certificates git \
+          && rm -rf /var/lib/apt/lists/* \
+          && git config --system --add safe.directory /config \
+          && git config --system user.name config-saver \
+          && git config --system user.email config-saver@localhost
+        COPY --from=build /config-saver /usr/local/bin/config-saver
+        ENTRYPOINT ["config-saver"]
+    profiles:
+      - config
+    environment:
+      MUTATED_REPO_LOCATION: /config
+      APP_ID: login-app2-dev
+      ADD_PATHS: config
+      PUBSUB_EMULATOR_HOST: pubsub:8085
+      GCE_METADATA_HOST: metadata:8080
+      # Required production setting: detected from GCE metadata here via `metadata`.
+      # EnableDoneListener: "false" # Optional; defaults to false.
+      # DoneListenerSubscription: customer-config-done-subscription # Required only when listener is enabled.
+      # PROMETHEUS_PORT: "8080" # Optional metrics endpoint; use a different port if enabled.
+    volumes:
+      - config-repo:/config
+    depends_on:
+      config-repo-init:
+        condition: service_completed_successfully
+      pubsub-init:
+        condition: service_completed_successfully
+      metadata:
+        condition: service_started
+
+  # The saver always constructs a Pub/Sub client, so an emulator is required locally.
+  pubsub:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+    profiles:
+      - config
+    command: gcloud beta emulators pubsub start --project=login-app2-dev --host-port=0.0.0.0:8085
     ports:
-      - 3000:3000
+      - 8085:8085
+
+  # Create the topic up front: the saver requires it before it can publish.
+  pubsub-init:
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+    profiles:
+      - config
+    environment:
+      PUBSUB_EMULATOR_HOST: pubsub:8085
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        until gcloud pubsub topics create customer-config-topic --project=login-app2-dev; do sleep 1; done
+    depends_on:
+      pubsub:
+        condition: service_started
+    restart: "no"
+
+  # config-saver gets its Google project ID exclusively from the metadata API.
+  metadata:
+    image: nginx:1.27-alpine
+    profiles:
+      - config
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        printf '%s\n' 'server {' '  listen 8080;' '  location = /computeMetadata/v1/project/project-id {' '    add_header Metadata-Flavor Google;' '    return 200 "login-app2-dev";' '  }' '}' > /etc/nginx/conf.d/default.conf
+        exec nginx -g 'daemon off;'
 
   e2e:
     build:
@@ -29,3 +154,6 @@ services:
     tty: false
     profiles:
       - test
+
+volumes:
+  config-repo:
