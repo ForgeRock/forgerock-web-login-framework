@@ -10,3 +10,4 @@
 export const username = 'JSAmLoginFrameworkE2E@user.com';
 export const password = 'Demo_12345!';
 export const displayName = 'Demo User';
+export const userInfoEmail = 'JSAmLoginFrameworkE2E@user.com';

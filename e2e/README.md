@@ -45,7 +45,8 @@ pnpm ci:e2e -- --headed
 e2e/
 ├── tests/
 │   ├── utilities/          # Shared test utilities
-│   │   └── async-events.js
+│   │   ├── async-events.js
+│   │   └── demo-user.js
 │   └── widget/
 │       ├── inline/         # Inline form factor tests
 │       │   ├── widget-inline.test.js

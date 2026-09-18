@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 const LOGO_URL = 'https://example.com/theme-red-logo.png';
 
@@ -127,9 +128,9 @@ test('Page Node theme override applies per step, without a full page reload', as
   });
 
   await test.step('second step resolves themeId=theme-blue from JSON stage and clears the first theme’s logo vars', async () => {
-    await page.getByLabel('Username').fill('demouser');
+    await page.getByLabel('Username').fill(username);
     await clickButton('Next', '/authenticate');
-    await page.getByLabel('Password', { exact: true }).fill('j56eKtae*1');
+    await page.getByLabel('Password', { exact: true }).fill(password);
 
     const primaryDarkHs = await page.evaluate(() => {
       const root = document.querySelector('.fr_widget-root');
