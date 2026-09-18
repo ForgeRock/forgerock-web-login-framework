@@ -16,7 +16,10 @@ import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url }) => {
-  const amUrl = env.FR_AM_URL;
+  // Strip a trailing slash: derived wellknown URLs append /oauth2/..., and AM
+  // rejects paths with empty elements (core/constants.ts does the same for the
+  // API routes' AM_DOMAIN_PATH).
+  const amUrl = env.FR_AM_URL?.replace(/\/+$/, '') ?? '';
   const wellknownUrl = env.FR_AM_WELLKNOWN_URL;
   const idmBaseUrl = env.FR_IDM_URL ?? amUrl;
 
