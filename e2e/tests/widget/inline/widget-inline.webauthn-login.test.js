@@ -14,6 +14,7 @@ import {
   cleanUpRegisteredDevice,
   getSessionToken,
 } from '../../utilities/delete-webauthn-device.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test.describe('inline widget with webauthn login', () => {
   let cdpSession;
@@ -22,7 +23,7 @@ test.describe('inline widget with webauthn login', () => {
   let sessionToken;
 
   test.beforeEach(async ({ page, request }) => {
-    sessionToken = await getSessionToken(request, 'demouser', 'j56eKtae*1');
+    sessionToken = await getSessionToken(request, username, password);
     cdpSession = await page.context().newCDPSession(page);
     await cdpSession.send('WebAuthn.enable');
     ({ authenticatorId } = await cdpSession.send('WebAuthn.addVirtualAuthenticator', {
@@ -53,8 +54,8 @@ test.describe('inline widget with webauthn login', () => {
 
     await navigate('widget/inline?journey=TEST_WebAuthn-Registration');
 
-    await page.getByLabel('Username').fill('demouser');
-    await page.getByLabel('Password').fill('j56eKtae*1');
+    await page.getByLabel('Username').fill(username);
+    await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: 'Next' }).click();
     await expect(page.getByText('Name your device', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Optionally name your device')).toBeVisible();
