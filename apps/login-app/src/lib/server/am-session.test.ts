@@ -131,7 +131,7 @@ describe('amProxyResponse', () => {
     expect(result.headers.get('cache-control')).toBe('no-store');
   });
 
-  it('uses a null body for no-body statuses (204/205/304) — required by the Response constructor', () => {
+  it('uses a null body for no-body statuses (204/205/304), required by the Response constructor', () => {
     for (const status of [204, 205, 304]) {
       const result = amProxyResponse(makeUpstream(status, null), '');
       expect(result.status).toBe(status);
