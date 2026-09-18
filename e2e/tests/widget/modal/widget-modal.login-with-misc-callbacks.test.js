@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
@@ -20,11 +21,11 @@ test('Modal widget with simple login and misc callbacks', async ({ page }) => {
   await clickButton('Open Login Modal', '/authenticate');
 
   // Username
-  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Username').fill(username);
   await clickButton('Next', '/authenticate');
 
   // Password
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.getByLabel('Password').fill(password);
   await clickButton('Next', '/authenticate');
 
   // Confirmation

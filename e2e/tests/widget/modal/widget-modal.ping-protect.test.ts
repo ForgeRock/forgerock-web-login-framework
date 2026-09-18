@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test('Widget calls PingProtect via callback', async ({ page }) => {
   const { navigate } = asyncEvents(page);
@@ -25,8 +26,8 @@ test('Widget calls PingProtect via callback', async ({ page }) => {
   const usernameField = page.getByLabel('User Name').or(page.getByLabel('Username'));
   await expect(usernameField).toBeVisible();
 
-  await usernameField.fill('demouser');
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  await usernameField.fill(username);
+  await page.getByLabel('Password').fill(password);
 
   // Must be set up before clicking Next so it catches the request when evaluate auto-submits.
   const evaluateRequestPromise = page.waitForRequest(
