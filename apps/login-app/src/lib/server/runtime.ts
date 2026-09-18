@@ -10,26 +10,29 @@
 import { NodeFileSystem } from '@effect/platform-node';
 import { Layer } from 'effect';
 
-import {
-  ComponentPublisher,
-  ComponentPublisherLive,
-  type ComponentPublisherService,
-} from './component-publisher';
-import { FileSyncLive, makeComponentRepoLive } from './component-repo';
+import { ComponentPublisher, type ComponentPublisherService } from './component-publisher';
+import { ComponentRepo, FileSync } from './component-repo';
 
-// These environment variable names are an infrastructure contract with config-saver.
-const componentRepoLive = makeComponentRepoLive({
+/**
+ * Repository layer configured by the `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH`
+ * infrastructure contract with config-saver.
+ */
+const componentRepoLayer = ComponentRepo.layer({
   repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
   trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
 });
 
 const componentRepoRuntime = Layer.provide(
-  componentRepoLive,
-  Layer.merge(NodeFileSystem.layer, FileSyncLive),
+  componentRepoLayer,
+  Layer.merge(NodeFileSystem.layer, FileSync.layer),
 );
 
+/**
+ * Fully provisioned layer for component publishing. It supplies the publisher with repository,
+ * Node filesystem, and durable file-sync implementations, so consumers require no services.
+ */
 export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, never, never> = Layer.provide(
-  ComponentPublisherLive,
+  ComponentPublisher.layer,
   componentRepoRuntime,
 );
 

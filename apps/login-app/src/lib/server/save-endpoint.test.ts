@@ -10,14 +10,14 @@
 import { describe, expect, it } from '@effect/vitest';
 import { Effect, Layer } from 'effect';
 
-import { ComponentPublisherLive } from '$lib/server/component-publisher';
+import { ComponentPublisher } from '$lib/server/component-publisher';
 import { type ComponentArtifact,ComponentRepo, ComponentRepoError } from '$lib/server/component-repo';
 import { publishComponentBundle } from './save-endpoint';
 
 const publishedArtifacts: ComponentArtifact[][] = [];
 
 const testRuntime = Layer.provide(
-  ComponentPublisherLive,
+  ComponentPublisher.layer,
   Layer.succeed(ComponentRepo, {
     saveComponent: () => Effect.void,
     saveArtifacts: (artifacts) =>
@@ -52,7 +52,7 @@ describe('POST /api/save', () => {
   it.effect('returns a server error when persistence fails', () =>
     Effect.gen(function* () {
       const failingRuntime = Layer.provide(
-        ComponentPublisherLive,
+        ComponentPublisher.layer,
         Layer.succeed(ComponentRepo, {
           saveComponent: () => Effect.void,
           saveArtifacts: () => Effect.fail(new ComponentRepoError({ message: 'Unable to save bundle' })),

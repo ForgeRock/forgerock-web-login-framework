@@ -17,17 +17,11 @@ import { join } from 'node:path';
 import {
   ComponentPublisher,
   ComponentPublisherError,
-  ComponentPublisherLive,
   parseBundle,
 } from './component-publisher';
-import { FileSync, makeComponentRepoLive } from './component-repo';
+import { ComponentRepo, FileSync } from './component-repo';
 
 const temporaryDirectories: string[] = [];
-
-const FileSyncTest = Layer.succeed(FileSync, {
-  syncFile: () => Effect.void,
-  syncDirectory: () => Effect.void,
-});
 
 const makeTemporaryDirectory = () =>
   Effect.tryPromise({
@@ -45,10 +39,10 @@ const publish = (repoDir: string, bundle: string) =>
   Effect.provide(
     Effect.flatMap(ComponentPublisher, (publisher) => publisher.publishComponent(bundle)),
     Layer.provide(
-      ComponentPublisherLive,
+      ComponentPublisher.layer,
       Layer.provide(
-        makeComponentRepoLive({ repoDir, trackedSubpath: 'config' }),
-        Layer.merge(NodeFileSystem.layer, FileSyncTest),
+        ComponentRepo.layer({ repoDir, trackedSubpath: 'config' }),
+        Layer.merge(NodeFileSystem.layer, FileSync.layerNoop),
       ),
     ),
   );

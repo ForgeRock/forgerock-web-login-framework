@@ -21,9 +21,24 @@ import type {
   ComponentPublisherError} from './component-publisher';
 import type { ComponentRepoError } from './component-repo';
 
+/**
+ * Creates the JSON error response returned when bundle validation or persistence fails.
+ *
+ * @param message - Safe error message to expose to the caller.
+ * @param status - HTTP status representing the failure category.
+ * @returns A JSON response containing the error message.
+ */
 const errorResponse = (message: string, status: number): Response =>
   Response.json({ error: message }, { status });
 
+/**
+ * Publishes a component bundle and maps service failures to HTTP responses.
+ * Invalid JSON, schema violations, and unsafe paths return 400; repository failures return 500.
+ *
+ * @param bundle - Serialized component bundle received by the endpoint.
+ * @param runtime - Publisher layer used to execute the service; defaults to the production runtime.
+ * @returns An effect that resolves to 204 on success or an error response after providing the runtime.
+ */
 export const publishComponentBundle = (
   bundle: string,
   runtime: Layer.Layer<ComponentPublisherService, never, never> = ComponentPublisherRuntime,

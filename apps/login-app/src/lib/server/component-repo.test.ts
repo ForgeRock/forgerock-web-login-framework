@@ -14,14 +14,10 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { ComponentRepo, ComponentRepoError, FileSync, makeComponentRepoLive } from './component-repo';
+import { ComponentRepo, ComponentRepoError, FileSync } from './component-repo';
 
 const temporaryDirectories: string[] = [];
 
-const FileSyncTest = Layer.succeed(FileSync, {
-  syncFile: () => Effect.void,
-  syncDirectory: () => Effect.void,
-});
 
 const makeTemporaryDirectory = () =>
   Effect.tryPromise({
@@ -37,8 +33,8 @@ const makeTemporaryDirectory = () =>
 
 const repoLayer = (repoDir: string) =>
   Layer.provide(
-    makeComponentRepoLive({ repoDir, trackedSubpath: 'config' }),
-    Layer.merge(NodeFileSystem.layer, FileSyncTest),
+    ComponentRepo.layer({ repoDir, trackedSubpath: 'config' }),
+    Layer.merge(NodeFileSystem.layer, FileSync.layerNoop),
   );
 
 const save = (repoDir: string, relPath: string, content: string) =>
