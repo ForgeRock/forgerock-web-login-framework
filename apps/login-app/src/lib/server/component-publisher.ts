@@ -69,7 +69,7 @@ const BundleFileSchema = Schema.Struct({
   content: Schema.String,
 });
 
-const BundleSchema = Schema.Struct({
+export const BundleSchema = Schema.Struct({
   files: Schema.Array(BundleFileSchema),
 });
 
@@ -94,7 +94,10 @@ export const parseBundle = (
         Effect.filterOrFail(
           Effect.succeed(file),
           ({ path }) => isSafeRelativePath(path),
-          () => new ComponentPublisherError({ message: `Bundle file at index ${index} has an unsafe path` }),
+          () =>
+            new ComponentPublisherError({
+              message: `Bundle file at index ${index} has an unsafe path`,
+            }),
         ).pipe(Effect.map(({ path, content }) => ({ relPath: path, content }))),
       ),
     ),
