@@ -8,7 +8,12 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { getAmCookie, resolveOAuthRealmPath, resolveUpstreamQuery } from '$server/am-session';
+import {
+  amProxyResponse,
+  getAmCookie,
+  resolveOAuthRealmPath,
+  resolveUpstreamQuery,
+} from '$server/am-session';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -27,15 +32,11 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
     },
   );
 
-  const headers = new Headers();
+  // AM answers a valid authorize with a redirect; amProxyResponse relays the
+  // status with a null body and no-store, and the Location is overlaid here
+  // since it carries the RP-initiated continuation, not an upstream body.
+  const proxied = amProxyResponse(response, await response.text());
   const location = response.headers.get('location');
-  if (location) headers.set('location', location);
-  // The global no-store hook only covers text/html; the redirect response has
-  // no body, so it must carry its own cache-control.
-  headers.set('cache-control', 'no-store');
-
-  return new Response(undefined, {
-    status: response.status,
-    headers,
-  });
+  if (location) proxied.headers.set('location', location);
+  return proxied;
 };
