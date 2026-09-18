@@ -43,5 +43,6 @@ export const load: LayoutServerLoad = async ({ url }) => {
     themeCatalog,
     realmPath,
     wellknown,
+    fallbackJourney: env.FR_AM_JOURNEY_LOGIN ?? null,
   };
 };

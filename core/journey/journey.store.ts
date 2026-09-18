@@ -8,13 +8,14 @@
  **/
 
 import { journey } from '@forgerock/journey-client';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { z } from 'zod';
 
 import { interpolate } from '$core/_utilities/i18n.utilities';
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import { parseThemeId } from '$journey/_utilities/theme-id.utilities';
+import { readStoredJourney, writeStoredJourney } from '$journey/journey.effects';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
@@ -72,6 +73,8 @@ export const journeyClientConfigSchema: z.ZodType<JourneyClientConfig> = z
 let journeyClientConfig: JourneyClientConfig | undefined;
 let journeyRequestMiddleware: RequestMiddleware[] | undefined;
 let journeyLogger: { level: LogLevel; custom?: CustomLogger } | undefined;
+
+export const fallbackJourneyStore = writable<string | undefined>(undefined);
 
 /**
  * We cache the journey client promise instead of only caching the resolved client so concurrent callers
@@ -150,7 +153,15 @@ export async function getJourneyClient(): Promise<JourneyClient> {
  * @returns {object} - The journey stack store with stack methods
  */
 function initializeStack() {
-  const { update, set, subscribe }: Writable<StartParam[]> = writable([]);
+  const storedJourney = readStoredJourney();
+  const initialStack: StartParam[] = storedJourney ? [{ journey: storedJourney }] : [];
+  const { update, set, subscribe }: Writable<StartParam[]> = writable(initialStack);
+
+  // Persist the most recent NAMED journey; a journey-less entry (pushed so a
+  // restart can replay the visit's query) must not erase the remembered journey.
+  subscribe((current) => {
+    writeStoredJourney(current.findLast((entry) => entry.journey)?.journey);
+  });
 
   // Assign to exported variable (see bottom of file)
   stack = {
@@ -234,6 +245,14 @@ export function initialize(
   let stepNumber = 0;
   let currentRecaptchaAction: string | null = null;
 
+  async function restart() {
+    reset();
+    const configuredFallback = get(fallbackJourneyStore);
+    await start(
+      (await stack.latest()) ?? (configuredFallback ? { journey: configuredFallback } : undefined),
+    );
+  }
+
   async function start(startOptions?: StartParam, recaptchaAction?: string) {
     // Falls back to journey name (e.g. "Login") when no explicit recaptchaAction is given —
     // matches original behavior where the journey tree name was used as the Enterprise CAPTCHA action.
@@ -248,6 +267,9 @@ export function initialize(
       response: null,
     }));
 
+    // Push even a journey-less start (e.g. a plain visit to "/" — its entry carries
+    // the query params a restart must replay). The persistence subscription skips
+    // falsy journeys, so this cannot erase the remembered journey.
     if (startOptions) {
       await stack.push(startOptions);
     }
@@ -313,10 +335,22 @@ export function initialize(
        * redirect params code/state/form_post_entry/responsekey). The one thing it does not
        * read is a `journey` query param, so forward that through when present.
        */
-      const journeyParam = new URL(url).searchParams.get('journey');
+      const urlParams = new URL(url).searchParams;
+      const journeyParam = urlParams.get('journey');
       const updatedResumeOptions = journeyParam
         ? { ...resumeOptions, journey: journeyParam }
         : resumeOptions;
+
+      /**
+       * Mirror journey-client's own resume resolution (journey option ?? authIndexValue)
+       * so the stack records the same identity the resume call carries. Old-style
+       * suspended links carry authIndexValue and no journey param; without this
+       * fallback their failed resumes restart into the realm default.
+       */
+      const resolvedJourney = updatedResumeOptions?.journey ?? urlParams.get('authIndexValue');
+      if (resolvedJourney) {
+        await stack.push({ journey: resolvedJourney });
+      }
 
       result = await journeyClient.resume(url, updatedResumeOptions);
     } catch (err) {
@@ -459,10 +493,10 @@ export function initialize(
     let restartedResult: JourneyResult | null = null;
 
     try {
-      /**
-       * Restart journey to get fresh step
-       */
-      const restartOptions = await stack.latest();
+      const configuredFallback = get(fallbackJourneyStore);
+      const restartOptions =
+        (await stack.latest()) ??
+        (configuredFallback ? { journey: configuredFallback } : undefined);
       const journeyClient = await getJourneyClient();
       restartedResult = await journeyClient.start(restartOptions);
 
@@ -564,6 +598,8 @@ export function initialize(
       }));
       return;
     } else if (restartedResult.type === 'LoginSuccess') {
+      stack.reset();
+
       journeyStore.update((current) => ({
         ...current,
         completed: true,
@@ -609,6 +645,7 @@ export function initialize(
     pop,
     push,
     reset,
+    restart,
     resume,
     start,
     redirect,
