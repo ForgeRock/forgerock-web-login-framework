@@ -13,6 +13,8 @@ x-preview: &preview
 services:
   preview:
     <<: *preview
+    # Rebuild the config-profile preview so its image includes newly added routes.
+    pull_policy: build
     # Config topology: docker compose --profile config up
     # POST /api/save writes into the shared repository; config-saver commits it
     # within 10 seconds. Verify with: docker compose exec config-saver git -C /config log
@@ -38,11 +40,14 @@ services:
     entrypoint: ["/bin/sh", "-ec"]
     command:
       - |
+        git config --global --add safe.directory /config
         if [ -n "$${CONFIG_REPO_URL}" ]; then
           git clone --branch master "$${CONFIG_REPO_URL}" /config
         else
           git init -b master /config
         fi
+        git -C /config symbolic-ref HEAD refs/heads/master
+        git -C /config -c user.email=init@localhost -c user.name=init commit --allow-empty -m "init" 2>/dev/null || true
         chown -R 11111:11111 /config
     restart: "no"
 
@@ -85,10 +90,12 @@ services:
       ADD_PATHS: config
       PUBSUB_EMULATOR_HOST: pubsub:8085
       GCE_METADATA_HOST: metadata:8080
+      # Metrics configuration is mandatory and read using these env-style keys.
+      PORT: "9090"
+      METRIC_WORKLOAD_NAME: config-saver
       # Required production setting: detected from GCE metadata here via `metadata`.
       # EnableDoneListener: "false" # Optional; defaults to false.
       # DoneListenerSubscription: customer-config-done-subscription # Required only when listener is enabled.
-      # PROMETHEUS_PORT: "8080" # Optional metrics endpoint; use a different port if enabled.
     volumes:
       - config-repo:/config
     depends_on:
@@ -101,7 +108,7 @@ services:
 
   # The saver always constructs a Pub/Sub client, so an emulator is required locally.
   pubsub:
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:emulators
     profiles:
       - config
     command: gcloud beta emulators pubsub start --project=login-app2-dev --host-port=0.0.0.0:8085
@@ -109,16 +116,16 @@ services:
       - 8085:8085
 
   # Create the topic up front: the saver requires it before it can publish.
+  # Use curl because recent gcloud versions ignore PUBSUB_EMULATOR_HOST for CLI commands;
+  # the emulator REST endpoint is deterministic.
   pubsub-init:
-    image: gcr.io/google.com/cloudsdktool/google-cloud-cli:slim
+    image: curlimages/curl:latest
     profiles:
       - config
-    environment:
-      PUBSUB_EMULATOR_HOST: pubsub:8085
     entrypoint: ["/bin/sh", "-ec"]
     command:
       - |
-        until gcloud pubsub topics create customer-config-topic --project=login-app2-dev; do sleep 1; done
+        until curl -s -X PUT "http://pubsub:8085/v1/projects/login-app2-dev/topics/customer-config-topic"; do sleep 1; done
     depends_on:
       pubsub:
         condition: service_started
