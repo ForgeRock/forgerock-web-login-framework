@@ -33,7 +33,7 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   );
 
   // AM answers a valid authorize with a redirect; amProxyResponse relays the
-  // status with a null body and no-store, and the Location is overlaid here
+  // status with an empty body and no-store, and the Location is overlaid here
   // since it carries the RP-initiated continuation, not an upstream body.
   const proxied = amProxyResponse(response, await response.text());
   const location = response.headers.get('location');
