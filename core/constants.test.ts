@@ -50,5 +50,6 @@ describe('AM endpoint derivation from environment', () => {
   it('falls back to the bare root paths when FR_REALM_PATH is unset', async () => {
     const constants = await importSubject({});
     expect(constants.JSON_REALM_PATH).toBe('/json/realms/root/');
+    expect(constants.OAUTH_REALM_PATH).toBe('/oauth2/realms/root/');
   });
 });
