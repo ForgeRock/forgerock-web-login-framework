@@ -22,11 +22,12 @@ if (!building) {
   }
 }
 
-const realmPath =
-  env.FR_REALM_PATH && env.FR_REALM_PATH !== 'root' ? `realms/${env.FR_REALM_PATH}` : '';
+const configuredRealm = env.FR_REALM_PATH?.replace(/^\/+/, '') ?? '';
+const realmPath = configuredRealm && configuredRealm !== 'root' ? `realms/${configuredRealm}` : '';
 
-/** Full AM base URL (e.g. https://host.example.com/am) */
-export const AM_DOMAIN_PATH = env.FR_AM_URL ?? '';
+/** Full AM base URL with any trailing slash stripped, so route templates that
+ * append `/json/...` never produce an empty path element (AM rejects those). */
+export const AM_DOMAIN_PATH = env.FR_AM_URL?.replace(/\/+$/, '') ?? '';
 export const AM_COOKIE_NAME = env.FR_AM_COOKIE_NAME ?? '';
 /** Extracted hostname from AM URL (e.g. host.example.com) */
 export const AM_DOMAIN = env.FR_AM_URL ? extractDomainFromUrl(env.FR_AM_URL) : '';
