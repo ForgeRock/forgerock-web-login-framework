@@ -9,6 +9,8 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+import type { Cookies } from '@sveltejs/kit';
+
 vi.mock('$app/environment', () => ({ building: false }));
 vi.mock('$env/dynamic/private', () => ({
   env: {
@@ -31,11 +33,7 @@ function cookies(values: Record<string, string> = {}) {
     get: (name: string) => values[name],
     set: vi.fn(),
     delete: vi.fn(),
-  } as unknown as {
-    get: (name: string) => string | undefined;
-    set: ReturnType<typeof vi.fn>;
-    delete: ReturnType<typeof vi.fn>;
-  };
+  } as unknown as Cookies;
 }
 
 describe('Login2 session cookie forwarding', () => {
