@@ -25,7 +25,9 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
   try {
     localeContent = await import(`$app-locales/${country}/${lang}/index.json`);
   } catch (err) {
-    console.error(`User locale content for ${userLocale} was not found.`);
+    // Unknown locales are routine browser variance (any Accept-Language
+    // header), so fall back to US English without error-level logging.
+    console.info(`User locale content for ${userLocale} was not found.`);
 
     // Fallback to default US English locale from core
     // eslint-disable-next-line

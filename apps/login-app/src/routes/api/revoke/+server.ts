@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { resolveOAuthRealmPath } from '$server/sessions';
+import { amProxyResponse, resolveOAuthRealmPath } from '$server/am-session';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -26,7 +26,5 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
     body,
   });
 
-  const resBody = await response.text();
-
-  return new Response(resBody);
+  return amProxyResponse(response, await response.text());
 };
