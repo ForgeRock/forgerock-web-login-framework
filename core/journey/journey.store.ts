@@ -15,7 +15,7 @@ import { interpolate } from '$core/_utilities/i18n.utilities';
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import { parseThemeId } from '$journey/_utilities/theme-id.utilities';
-import { readStoredJourney, writeStoredJourney } from '$journey/journey.effects';
+import { readStoredStack, writeStoredStack } from '$journey/journey.effects';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
@@ -153,15 +153,7 @@ export async function getJourneyClient(): Promise<JourneyClient> {
  * @returns {object} - The journey stack store with stack methods
  */
 function initializeStack() {
-  const storedJourney = readStoredJourney();
-  const initialStack: StartParam[] = storedJourney ? [{ journey: storedJourney }] : [];
-  const { update, set, subscribe }: Writable<StartParam[]> = writable(initialStack);
-
-  // Persist the most recent NAMED journey; a journey-less entry (pushed so a
-  // restart can replay the visit's query) must not erase the remembered journey.
-  subscribe((current) => {
-    writeStoredJourney(current.findLast((entry) => entry.journey)?.journey);
-  });
+  const { set, subscribe }: Writable<StartParam[]> = writable([]);
 
   // Assign to exported variable (see bottom of file)
   stack = {
@@ -175,38 +167,36 @@ function initializeStack() {
       });
     },
     pop: async (): Promise<StartParam[]> => {
-      return new Promise((resolve) => {
-        update((current) => {
-          let state;
-          if (current.length) {
-            state = current.slice(0, -1);
-          } else {
-            state = current;
-          }
-          resolve([...state]);
-          return state;
-        });
-      });
+      // slice(0, -1) on an empty stack is [] — no guard needed.
+      const current = get({ subscribe });
+      const state = current.slice(0, -1);
+      set(state);
+      void writeStoredStack(state);
+      return [...state];
     },
     push: async (options?: StartParam): Promise<StartParam[]> => {
-      return new Promise((resolve) => {
-        update((current) => {
-          let state;
+      // Fresh page load: seed from storage so visits accumulate instead of
+      // replacing the remembered stack.
+      // get({ subscribe }) = svelte's sync read of the stack store.
+      const existingStack = get({ subscribe });
+      const current = existingStack.length ? existingStack : await readStoredStack();
 
-          if (!current.length) {
-            state = options ? [options] : current;
-          } else if (options && options?.journey !== current[current.length - 1]?.journey) {
-            state = [...current, options];
-          } else {
-            state = current;
-          }
-          resolve([...state]);
-          return state;
-        });
-      });
+      let state;
+
+      if (!current.length) {
+        state = options ? [options] : current;
+      } else if (options && options?.journey !== current[current.length - 1]?.journey) {
+        state = [...current, options];
+      } else {
+        state = current;
+      }
+      set(state);
+      void writeStoredStack(state);
+      return [...state];
     },
     reset: () => {
       set([]);
+      void writeStoredStack([]);
     },
     subscribe,
   };
@@ -244,14 +234,6 @@ export function initialize(
   const stack = initializeStack();
   let stepNumber = 0;
   let currentRecaptchaAction: string | null = null;
-
-  async function restart() {
-    reset();
-    const configuredFallback = get(fallbackJourneyStore);
-    await start(
-      (await stack.latest()) ?? (configuredFallback ? { journey: configuredFallback } : undefined),
-    );
-  }
 
   async function start(startOptions?: StartParam, recaptchaAction?: string) {
     // Falls back to journey name (e.g. "Login") when no explicit recaptchaAction is given —
@@ -386,6 +368,11 @@ export function initialize(
     }
   }
 
+  async function restart() {
+    reset();
+    await start(await resolveRestartTarget());
+  }
+
   function reset() {
     journeyStore.set({
       completed: false,
@@ -396,6 +383,16 @@ export function initialize(
       successful: false,
       response: null,
     });
+  }
+
+  async function resolveRestartTarget(): Promise<StartParam | undefined> {
+    const sessionLatest = await stack.latest();
+    if (sessionLatest) {
+      return sessionLatest;
+    }
+    const storedLatest = (await readStoredStack()).findLast((entry) => entry.journey);
+    const configuredFallback = get(fallbackJourneyStore);
+    return storedLatest ?? (configuredFallback ? { journey: configuredFallback } : undefined);
   }
 
   async function handleJourneyResult(
@@ -493,10 +490,7 @@ export function initialize(
     let restartedResult: JourneyResult | null = null;
 
     try {
-      const configuredFallback = get(fallbackJourneyStore);
-      const restartOptions =
-        (await stack.latest()) ??
-        (configuredFallback ? { journey: configuredFallback } : undefined);
+      const restartOptions = await resolveRestartTarget();
       const journeyClient = await getJourneyClient();
       restartedResult = await journeyClient.start(restartOptions);
 
