@@ -9,7 +9,7 @@
 
 import { FileSystem } from '@effect/platform';
 import { Context, Data, Effect, Layer, Predicate } from 'effect';
-import { type FileHandle,open } from 'node:fs/promises';
+import { type FileHandle, lstat, open } from 'node:fs/promises';
 
 /**
  * Error emitted when component persistence cannot safely complete.
@@ -69,7 +69,7 @@ const withFileHandle = <A>(
       catch: (cause) => new ComponentRepoError({ message: `Unable to open ${path}`, cause }),
     }),
     use,
-    (handle) => Effect.promise(() => handle.close()).pipe(Effect.catchAll(() => Effect.void)),
+    (handle) => Effect.tryPromise(() => handle.close()).pipe(Effect.catchAll(() => Effect.void)),
   );
 
 const syncPath = (
@@ -132,7 +132,9 @@ const ComponentRepoTag = Context.GenericTag<ComponentRepoService>('@login-app/Co
  * Service tag and layer factory for repository-backed component persistence.
  */
 export const ComponentRepo = Object.assign(ComponentRepoTag, {
-  layer: (config: ComponentRepoConfig): Layer.Layer<ComponentRepoService, never, FileSystem.FileSystem | FileSyncService> =>
+  layer: (
+    config: ComponentRepoConfig,
+  ): Layer.Layer<ComponentRepoService, never, FileSystem.FileSystem | FileSyncService> =>
     makeComponentRepoLayer(config),
 });
 
@@ -147,7 +149,9 @@ export const isSafeRelativePath = (path: string): boolean =>
   Predicate.isString(path) &&
   path.length > 0 &&
   !path.startsWith('/') &&
+  !path.includes('\u0000') &&
   !path.includes('\\') &&
+  !/^[a-zA-Z]:/.test(path) &&
   path.split('/').every((segment) => segment !== '..' && segment !== '.git' && segment !== '');
 
 const joinPath = (...segments: ReadonlyArray<string>): string =>
@@ -156,6 +160,56 @@ const joinPath = (...segments: ReadonlyArray<string>): string =>
       index === 0 ? segment.replace(/\/+$/, '') : segment.replace(/^\/+|\/+$/g, ''),
     )
     .join('/');
+
+const componentRepoError = (message: string, cause: unknown) =>
+  new ComponentRepoError({ message, cause });
+
+const ensureNoSymlink = (trackedRoot: string, relPath: string) =>
+  Effect.forEach(
+    relPath
+      .split('/')
+      .reduce<ReadonlyArray<string>>(
+        (paths, segment) => [...paths, joinPath(paths.at(-1) ?? trackedRoot, segment)],
+        [trackedRoot],
+      ),
+    (path) =>
+      Effect.tryPromise({
+        try: () => lstat(path),
+        catch: (cause) => cause,
+      }).pipe(
+        Effect.matchEffect({
+          onFailure: (cause) =>
+            typeof cause === 'object' &&
+            cause !== null &&
+            'code' in cause &&
+            cause.code === 'ENOENT'
+              ? Effect.void
+              : Effect.fail(componentRepoError(`Unable to inspect component path ${path}`, cause)),
+          onSuccess: (stats) =>
+            stats.isSymbolicLink()
+              ? Effect.fail(
+                  new ComponentRepoError({
+                    message: `Component path must not traverse symlinks: ${path}`,
+                  }),
+                )
+              : Effect.void,
+        }),
+      ),
+  );
+
+const directoryChain = (trackedRoot: string, directory: string): ReadonlyArray<string> => {
+  const relativeDirectory = directory.slice(trackedRoot.length).replace(/^\/+/, '');
+  const directories = relativeDirectory
+    ? relativeDirectory
+        .split('/')
+        .reduce<ReadonlyArray<string>>(
+          (paths, segment) => [...paths, joinPath(paths.at(-1) ?? trackedRoot, segment)],
+          [trackedRoot],
+        )
+    : [trackedRoot];
+
+  return [...directories].reverse();
+};
 
 /**
  * Builds a component repository layer for a configured repository subtree.
@@ -176,17 +230,18 @@ const makeComponentRepoLayer = (
 
       const saveArtifacts = (artifacts: ReadonlyArray<ComponentArtifact>) =>
         Effect.gen(function* () {
-          const prepared = yield* Effect.forEach(artifacts, (artifact) =>
+          const trackedRoot = joinPath(config.repoDir, config.trackedSubpath);
+          const prepared = yield* Effect.forEach(artifacts, (artifact, index) =>
             Effect.filterOrFail(
               Effect.succeed(artifact.relPath),
               isSafeRelativePath,
               () =>
                 new ComponentRepoError({
-                  message: 'Component paths must be non-empty relative paths without traversal or .git segments',
+                  message: `Artifact ${index} has an unsafe component path: ${artifact.relPath}`,
                 }),
             ).pipe(
               Effect.map((normalizedPath) => {
-                const finalPath = joinPath(config.repoDir, config.trackedSubpath, normalizedPath);
+                const finalPath = joinPath(trackedRoot, normalizedPath);
                 const directory = finalPath.slice(0, finalPath.lastIndexOf('/'));
                 const basename = normalizedPath.slice(normalizedPath.lastIndexOf('/') + 1);
 
@@ -194,6 +249,7 @@ const makeComponentRepoLayer = (
                   content: artifact.content,
                   directory,
                   finalPath,
+                  normalizedPath,
                   tempPath: joinPath(
                     directory,
                     `.${basename}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`,
@@ -202,31 +258,75 @@ const makeComponentRepoLayer = (
               }),
             ),
           );
+          const paths = new Set<string>();
+          for (const artifact of prepared) {
+            if (paths.has(artifact.normalizedPath)) {
+              return yield* Effect.fail(
+                new ComponentRepoError({
+                  message: `Duplicate component path at artifact ${artifact.normalizedPath}`,
+                }),
+              );
+            }
+            paths.add(artifact.normalizedPath);
+          }
+          yield* Effect.forEach(prepared, ({ normalizedPath }) =>
+            ensureNoSymlink(trackedRoot, normalizedPath),
+          );
 
           yield* Effect.forEach(prepared, ({ content, directory, tempPath }) =>
             Effect.gen(function* () {
-              yield* fileSystem.makeDirectory(directory, { recursive: true }).pipe(
-                Effect.catchAll((cause) =>
-                  Effect.fail(new ComponentRepoError({ message: 'Unable to create component directory', cause })),
-                ),
-              );
-              yield* fileSystem.writeFileString(tempPath, content).pipe(
-                Effect.catchAll((cause) =>
-                  Effect.fail(new ComponentRepoError({ message: 'Unable to write temporary component file', cause })),
-                ),
-              );
+              yield* fileSystem
+                .makeDirectory(directory, { recursive: true })
+                .pipe(
+                  Effect.catchAll((cause) =>
+                    Effect.fail(
+                      new ComponentRepoError({
+                        message: 'Unable to create component directory',
+                        cause,
+                      }),
+                    ),
+                  ),
+                );
+              yield* fileSystem
+                .writeFileString(tempPath, content)
+                .pipe(
+                  Effect.catchAll((cause) =>
+                    Effect.fail(
+                      new ComponentRepoError({
+                        message: 'Unable to write temporary component file',
+                        cause,
+                      }),
+                    ),
+                  ),
+                );
               yield* fileSync.syncFile(tempPath);
             }),
           );
+          /**
+           * Files are staged before any rename, then renamed in artifact order. Each individual
+           * replacement is atomic, but this is not a directory-swap transaction: a later rename
+           * failure can leave earlier files replaced. Callers receive one bundle-level error.
+           */
           yield* Effect.forEach(prepared, ({ finalPath, tempPath }) =>
-            fileSystem.rename(tempPath, finalPath).pipe(
-              Effect.catchAll((cause) =>
-                Effect.fail(new ComponentRepoError({ message: 'Unable to atomically replace component file', cause })),
+            fileSystem
+              .rename(tempPath, finalPath)
+              .pipe(
+                Effect.catchAll((cause) =>
+                  Effect.fail(
+                    new ComponentRepoError({
+                      message: 'Unable to atomically replace component file',
+                      cause,
+                    }),
+                  ),
+                ),
               ),
-            ),
           );
           yield* Effect.forEach(
-            [...new Set(prepared.map(({ directory }) => directory))],
+            [
+              ...new Set(
+                prepared.flatMap(({ directory }) => directoryChain(trackedRoot, directory)),
+              ),
+            ],
             (directory) => fileSync.syncDirectory(directory),
           );
         });

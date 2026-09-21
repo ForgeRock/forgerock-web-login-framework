@@ -18,7 +18,6 @@ import { ComponentRepo, ComponentRepoError, FileSync } from './component-repo';
 
 const temporaryDirectories: string[] = [];
 
-
 const makeTemporaryDirectory = () =>
   Effect.tryPromise({
     try: () => mkdtemp(join(tmpdir(), 'component-repo-')),
@@ -43,7 +42,10 @@ const save = (repoDir: string, relPath: string, content: string) =>
     repoLayer(repoDir),
   );
 
-const saveArtifacts = (repoDir: string, artifacts: ReadonlyArray<{ relPath: string; content: string }>) =>
+const saveArtifacts = (
+  repoDir: string,
+  artifacts: ReadonlyArray<{ relPath: string; content: string }>,
+) =>
   Effect.provide(
     Effect.flatMap(ComponentRepo, (repo) => repo.saveArtifacts(artifacts)),
     repoLayer(repoDir),
@@ -63,7 +65,10 @@ const readDirectory = (path: string) =>
 
 afterEach(() =>
   Effect.tryPromise({
-    try: () => Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true }))),
+    try: () =>
+      Promise.all(
+        temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
+      ),
     catch: (cause) => cause,
   }),
 );
@@ -75,11 +80,20 @@ describe('ComponentRepo', () => {
 
       yield* save(repoDir, 'journeys/login.json', '{"journey":"login"}');
 
-      expect(yield* readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe('{"journey":"login"}');
+      expect(yield* readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe(
+        '{"journey":"login"}',
+      );
     }),
   );
 
-  for (const relPath of ['../outside.json', '/outside.json', '.git/config', 'journeys/.git/config', '\\outside.json', '']) {
+  for (const relPath of [
+    '../outside.json',
+    '/outside.json',
+    '.git/config',
+    'journeys/.git/config',
+    '\\outside.json',
+    '',
+  ]) {
     it.effect(`rejects unsafe relative path ${relPath}`, () =>
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();

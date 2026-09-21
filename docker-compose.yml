@@ -41,7 +41,12 @@ services:
     command:
       - |
         git config --global --add safe.directory /config
-        if [ -n "$${CONFIG_REPO_URL}" ]; then
+        if git -C /config rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+          : # Reuse the persistent repository volume.
+        elif [ -n "$(ls -A /config)" ]; then
+          echo "ERROR: /config is non-empty but is not a Git repository" >&2
+          exit 1
+        elif [ -n "$${CONFIG_REPO_URL}" ]; then
           git clone --branch master "$${CONFIG_REPO_URL}" /config
         else
           git init -b master /config
@@ -104,7 +109,8 @@ services:
       pubsub-init:
         condition: service_completed_successfully
       metadata:
-        condition: service_started
+        condition: service_healthy
+    restart: "on-failure:5"
 
   # The saver always constructs a Pub/Sub client, so an emulator is required locally.
   pubsub:
@@ -119,7 +125,7 @@ services:
   # Use curl because recent gcloud versions ignore PUBSUB_EMULATOR_HOST for CLI commands;
   # the emulator REST endpoint is deterministic.
   pubsub-init:
-    image: curlimages/curl:latest
+    image: curlimages/curl:8.10.1
     profiles:
       - config
     entrypoint: ["/bin/sh", "-ec"]
@@ -139,12 +145,19 @@ services:
     command:
       - /bin/sh
       - -ec
-      - |
-        printf '%s\n' 'server {' '  listen 8080;' '  location = /computeMetadata/v1/project/project-id {' '    add_header Metadata-Flavor Google;' '    return 200 "login-app2-dev";' '  }' '}' > /etc/nginx/conf.d/default.conf
-        exec nginx -g 'daemon off;'
+       - |
+         printf '%s\n' 'server {' '  listen 8080;' '  location = /computeMetadata/v1/project/project-id {' '    add_header Metadata-Flavor Google;' '    return 200 "login-app2-dev";' '  }' '}' > /etc/nginx/conf.d/default.conf
+         exec nginx -g 'daemon off;'
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/computeMetadata/v1/project/project-id | grep -qx login-app2-dev"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+      start_period: 2s
 
   e2e:
     build:
+
       context: .
       dockerfile: Dockerfile
       target: e2e
