@@ -132,6 +132,12 @@ const ComponentRepoTag = Context.GenericTag<ComponentRepoService>('@login-app/Co
  * Service tag and layer factory for repository-backed component persistence.
  */
 export const ComponentRepo = Object.assign(ComponentRepoTag, {
+  /**
+   * Creates a layer that persists component artifacts beneath the configured repository subtree.
+   *
+   * @param config - Repository root and tracked subtree used for component artifacts.
+   * @returns A layer requiring filesystem and durable-sync services.
+   */
   layer: (
     config: ComponentRepoConfig,
   ): Layer.Layer<ComponentRepoService, never, FileSystem.FileSystem | FileSyncService> =>
@@ -275,30 +281,26 @@ const makeComponentRepoLayer = (
 
           yield* Effect.forEach(prepared, ({ content, directory, tempPath }) =>
             Effect.gen(function* () {
-              yield* fileSystem
-                .makeDirectory(directory, { recursive: true })
-                .pipe(
-                  Effect.catchAll((cause) =>
-                    Effect.fail(
-                      new ComponentRepoError({
-                        message: 'Unable to create component directory',
-                        cause,
-                      }),
-                    ),
+              yield* fileSystem.makeDirectory(directory, { recursive: true }).pipe(
+                Effect.catchAll((cause) =>
+                  Effect.fail(
+                    new ComponentRepoError({
+                      message: 'Unable to create component directory',
+                      cause,
+                    }),
                   ),
-                );
-              yield* fileSystem
-                .writeFileString(tempPath, content)
-                .pipe(
-                  Effect.catchAll((cause) =>
-                    Effect.fail(
-                      new ComponentRepoError({
-                        message: 'Unable to write temporary component file',
-                        cause,
-                      }),
-                    ),
+                ),
+              );
+              yield* fileSystem.writeFileString(tempPath, content).pipe(
+                Effect.catchAll((cause) =>
+                  Effect.fail(
+                    new ComponentRepoError({
+                      message: 'Unable to write temporary component file',
+                      cause,
+                    }),
                   ),
-                );
+                ),
+              );
               yield* fileSync.syncFile(tempPath);
             }),
           );
@@ -308,18 +310,16 @@ const makeComponentRepoLayer = (
            * failure can leave earlier files replaced. Callers receive one bundle-level error.
            */
           yield* Effect.forEach(prepared, ({ finalPath, tempPath }) =>
-            fileSystem
-              .rename(tempPath, finalPath)
-              .pipe(
-                Effect.catchAll((cause) =>
-                  Effect.fail(
-                    new ComponentRepoError({
-                      message: 'Unable to atomically replace component file',
-                      cause,
-                    }),
-                  ),
+            fileSystem.rename(tempPath, finalPath).pipe(
+              Effect.catchAll((cause) =>
+                Effect.fail(
+                  new ComponentRepoError({
+                    message: 'Unable to atomically replace component file',
+                    cause,
+                  }),
                 ),
               ),
+            ),
           );
           yield* Effect.forEach(
             [

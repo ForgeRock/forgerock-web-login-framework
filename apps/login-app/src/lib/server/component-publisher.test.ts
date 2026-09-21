@@ -14,11 +14,7 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import {
-  ComponentPublisher,
-  ComponentPublisherError,
-  parseBundle,
-} from './component-publisher';
+import { ComponentPublisher, ComponentPublisherError, parseBundle } from './component-publisher';
 import { ComponentRepo, FileSync } from './component-repo';
 
 const temporaryDirectories: string[] = [];
@@ -61,7 +57,10 @@ const readDirectory = (path: string) =>
 
 afterEach(() =>
   Effect.tryPromise({
-    try: () => Promise.all(temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true }))),
+    try: () =>
+      Promise.all(
+        temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
+      ),
     catch: (cause) => cause,
   }),
 );
@@ -108,7 +107,9 @@ describe('ComponentPublisher', () => {
         '{"files":[{"path":"journeys/login.json","content":"{\\"journey\\":\\"login\\"}"},{"path":"themes/main.json","content":"{}"}]}',
       );
 
-      expect(yield* readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe('{"journey":"login"}');
+      expect(yield* readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe(
+        '{"journey":"login"}',
+      );
       expect(yield* readUtf8(join(repoDir, 'config', 'themes', 'main.json'))).toBe('{}');
     }),
   );

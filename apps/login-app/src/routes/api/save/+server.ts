@@ -13,6 +13,14 @@ import { publishComponentBundle } from '$lib/server/save-endpoint';
 
 import type { RequestHandler } from './$types';
 
+/**
+ * Publishes a component bundle supplied as `{"files":[{"path","content"}]}`.
+ *
+ * @param event - SvelteKit request event containing the component bundle request.
+ * @returns `204` on success; `400`, `401`, `413`, `415`, or `500` with an error body on failure.
+ *
+ * `Effect.runPromise` is the sole system edge that executes the endpoint program.
+ */
 export const POST: RequestHandler = async ({ request }) =>
   Effect.runPromise(
     publishComponentBundle(request, {

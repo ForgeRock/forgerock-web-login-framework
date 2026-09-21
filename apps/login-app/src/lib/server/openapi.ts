@@ -35,6 +35,28 @@ export const openApiSpec = {
     description: 'Development-only API for publishing custom component bundles.',
   },
   paths: {
+    '/api/health/live': {
+      get: {
+        summary: 'Check application liveness',
+        responses: {
+          '200': {
+            description: 'The application is live.',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'object',
+                  required: ['status'],
+                  properties: {
+                    status: { const: 'ok' },
+                  },
+                  additionalProperties: false,
+                },
+              },
+            },
+          },
+        },
+      },
+    },
     '/api/save': {
       post: {
         summary: 'Publish a component bundle',
@@ -52,6 +74,30 @@ export const openApiSpec = {
           },
           '400': {
             description: 'The component bundle is invalid.',
+            content: {
+              'application/json': {
+                schema: errorSchema,
+              },
+            },
+          },
+          '401': {
+            description: 'The component bundle request is not authorized.',
+            content: {
+              'application/json': {
+                schema: errorSchema,
+              },
+            },
+          },
+          '413': {
+            description: 'The component bundle exceeds the accepted size limit.',
+            content: {
+              'application/json': {
+                schema: errorSchema,
+              },
+            },
+          },
+          '415': {
+            description: 'The request content type must be application/json.',
             content: {
               'application/json': {
                 schema: errorSchema,

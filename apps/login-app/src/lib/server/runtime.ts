@@ -31,9 +31,7 @@ const componentRepoRuntime = Layer.provide(
  * Fully provisioned layer for component publishing. It supplies the publisher with repository,
  * Node filesystem, and durable file-sync implementations, so consumers require no services.
  */
-export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, never, never> = Layer.provide(
-  ComponentPublisher.layer,
-  componentRepoRuntime,
-);
+export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, never, never> =
+  Layer.provide(ComponentPublisher.layer, componentRepoRuntime);
 
 export { ComponentPublisher };

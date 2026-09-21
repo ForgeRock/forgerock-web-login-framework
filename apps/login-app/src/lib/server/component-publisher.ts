@@ -69,6 +69,9 @@ const BundleFileSchema = Schema.Struct({
   content: Schema.String,
 });
 
+/**
+ * Schema for the JSON component-bundle payload exposed by the save endpoint and OpenAPI document.
+ */
 export const BundleSchema = Schema.Struct({
   files: Schema.Array(BundleFileSchema),
 });

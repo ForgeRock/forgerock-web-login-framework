@@ -37,7 +37,7 @@ services:
       CONFIG_REPO_URL: ${CONFIG_REPO_URL:-}
     volumes:
       - config-repo:/config
-    entrypoint: ["/bin/sh", "-ec"]
+    entrypoint: ['/bin/sh', '-ec']
     command:
       - |
         git config --global --add safe.directory /config
@@ -54,7 +54,7 @@ services:
         git -C /config symbolic-ref HEAD refs/heads/master
         git -C /config -c user.email=init@localhost -c user.name=init commit --allow-empty -m "init" 2>/dev/null || true
         chown -R 11111:11111 /config
-    restart: "no"
+    restart: 'no'
 
   # Built locally from the sibling saas checkout; this image is not used by CI.
   config-saver:
@@ -96,7 +96,7 @@ services:
       PUBSUB_EMULATOR_HOST: pubsub:8085
       GCE_METADATA_HOST: metadata:8080
       # Metrics configuration is mandatory and read using these env-style keys.
-      PORT: "9090"
+      PORT: '9090'
       METRIC_WORKLOAD_NAME: config-saver
       # Required production setting: detected from GCE metadata here via `metadata`.
       # EnableDoneListener: "false" # Optional; defaults to false.
@@ -110,7 +110,7 @@ services:
         condition: service_completed_successfully
       metadata:
         condition: service_healthy
-    restart: "on-failure:5"
+    restart: 'on-failure:5'
 
   # The saver always constructs a Pub/Sub client, so an emulator is required locally.
   pubsub:
@@ -128,14 +128,14 @@ services:
     image: curlimages/curl:8.10.1
     profiles:
       - config
-    entrypoint: ["/bin/sh", "-ec"]
+    entrypoint: ['/bin/sh', '-ec']
     command:
       - |
         until curl -s -X PUT "http://pubsub:8085/v1/projects/login-app2-dev/topics/customer-config-topic"; do sleep 1; done
     depends_on:
       pubsub:
         condition: service_started
-    restart: "no"
+    restart: 'no'
 
   # config-saver gets its Google project ID exclusively from the metadata API.
   metadata:
@@ -145,11 +145,15 @@ services:
     command:
       - /bin/sh
       - -ec
-       - |
-         printf '%s\n' 'server {' '  listen 8080;' '  location = /computeMetadata/v1/project/project-id {' '    add_header Metadata-Flavor Google;' '    return 200 "login-app2-dev";' '  }' '}' > /etc/nginx/conf.d/default.conf
-         exec nginx -g 'daemon off;'
+        - |
+        printf '%s\n' 'server {' '  listen 8080;' '  location = /computeMetadata/v1/project/project-id {' '    add_header Metadata-Flavor Google;' '    return 200 "login-app2-dev";' '  }' '}' > /etc/nginx/conf.d/default.conf
+        exec nginx -g 'daemon off;'
     healthcheck:
-      test: ["CMD-SHELL", "wget -q -O - http://localhost:8080/computeMetadata/v1/project/project-id | grep -qx login-app2-dev"]
+      test:
+        [
+          'CMD-SHELL',
+          'wget -q -O - http://localhost:8080/computeMetadata/v1/project/project-id | grep -qx login-app2-dev',
+        ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -157,7 +161,6 @@ services:
 
   e2e:
     build:
-
       context: .
       dockerfile: Dockerfile
       target: e2e
