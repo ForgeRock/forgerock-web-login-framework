@@ -12,6 +12,7 @@ import { Layer } from 'effect';
 
 import { ComponentPublisher, type ComponentPublisherService } from './component-publisher';
 import { ComponentRepo, FileSync } from './component-repo';
+import { ComponentStore, type ComponentStoreService } from './component-store';
 
 /**
  * Repository layer configured by the `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH`
@@ -33,5 +34,21 @@ const componentRepoRuntime = Layer.provide(
  */
 export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, never, never> =
   Layer.provide(ComponentPublisher.layer, componentRepoRuntime);
+
+/** Fully provisioned layer for component storage and publishing API handlers. */
+export const ComponentApiRuntime: Layer.Layer<
+  ComponentStoreService | ComponentPublisherService,
+  never,
+  never
+> = Layer.merge(
+  ComponentPublisherRuntime,
+  Layer.provide(
+    ComponentStore.layer({
+      repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
+      trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
+    }),
+    Layer.merge(componentRepoRuntime, Layer.merge(NodeFileSystem.layer, FileSync.layer)),
+  ),
+);
 
 export { ComponentPublisher };
