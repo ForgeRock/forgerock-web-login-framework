@@ -17,6 +17,7 @@ import {
   ComponentRepoError,
 } from '$lib/server/component-repo';
 import {
+  encodeSaveEndpointResponse,
   isJsonContentType,
   MAX_COMPONENT_BUNDLE_SIZE,
   publishComponentBundle,
@@ -166,6 +167,20 @@ describe('POST /api/save', () => {
       );
 
       expect(response.status).toBe(204);
+    }),
+  );
+
+  it.effect('encodes tagged response variants through the shared response union', () =>
+    Effect.gen(function* () {
+      const response = encodeSaveEndpointResponse({
+        status: 415,
+        body: { error: 'Content-Type must be application/json' },
+      });
+
+      expect(response.status).toBe(415);
+      expect(yield* Effect.tryPromise(() => response.json())).toEqual({
+        error: 'Content-Type must be application/json',
+      });
     }),
   );
 
