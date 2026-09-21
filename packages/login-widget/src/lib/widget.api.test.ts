@@ -415,6 +415,53 @@ describe('widgetApiFactory', () => {
     });
   });
 
+  describe('configure() — autoRestart', () => {
+    /**
+     * Same module-instance caveat as fallbackJourneyStore: resolve through the
+     * dynamic import so the test reads the store instance configure() wrote to.
+     */
+    async function importAutoRestartStore() {
+      return (await import('$journey/journey.store')).autoRestartStore;
+    }
+
+    it('stores the configured flag for the restart gate', async () => {
+      const api = await importSubject();
+      const autoRestartStore = await importAutoRestartStore();
+
+      await api.configure({
+        serverConfig: validServerConfig,
+        journeys: { autoRestart: false },
+      });
+
+      const { get } = await import('svelte/store');
+      expect(get(autoRestartStore)).toBe(false);
+    });
+
+    it('defaults to true when autoRestart is not configured', async () => {
+      const api = await importSubject();
+      const autoRestartStore = await importAutoRestartStore();
+
+      await api.configure({ serverConfig: validServerConfig });
+
+      const { get } = await import('svelte/store');
+      expect(get(autoRestartStore)).toBe(true);
+    });
+
+    it('resets to the default on reconfigure without one', async () => {
+      const api = await importSubject();
+      const autoRestartStore = await importAutoRestartStore();
+
+      await api.configure({
+        serverConfig: validServerConfig,
+        journeys: { autoRestart: false },
+      });
+      await api.configure({ serverConfig: validServerConfig });
+
+      const { get } = await import('svelte/store');
+      expect(get(autoRestartStore)).toBe(true);
+    });
+  });
+
   describe('user.logout()', () => {
     const initialStoreState = {
       completed: false,

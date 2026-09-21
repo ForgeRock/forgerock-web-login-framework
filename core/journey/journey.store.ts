@@ -76,6 +76,12 @@ let journeyLogger: { level: LogLevel; custom?: CustomLogger } | undefined;
 
 export const fallbackJourneyStore = writable<string | undefined>(undefined);
 
+// Default true: existing hosts keep today's auto-restart behavior. When false,
+// flow-level failures (start/resume) surface as error state without the widget
+// restarting — the host observes journeyStore.error and decides what happens.
+// In-journey step failures (next()) always auto-restart to salvage the form.
+export const autoRestartStore = writable<boolean>(true);
+
 /**
  * We cache the journey client promise instead of only caching the resolved client so concurrent callers
  * share the same initialization work and we don't create multiple Journey Client instances in parallel.
@@ -466,14 +472,59 @@ export function initialize(
       const failureResult = result;
       const failureMessageStr = htmlDecode(failureResult.payload?.message || 'Unknown login error');
 
-      await restartJourney(failureMessageStr, context, failureResult);
+      // Flow-level failure (start/resume): with autoRestart off, publish the
+      // error and let the host decide. Step failures (context present) always
+      // restart to salvage the in-flight form.
+      const autoRestart = get(autoRestartStore);
+      if (autoRestart || context) {
+        await restartJourney(failureMessageStr, context, failureResult);
+        return;
+      }
+
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: {
+          code: failureResult.getCode() ?? null,
+          message: failureMessageStr,
+          stage: null,
+          troubleshoot: null,
+          detail: failureResult.payload?.detail ?? null,
+        },
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: false,
+        response: failureResult.payload,
+      }));
     } else {
       // Handle GenericError case
       const genericError = result;
       const errorMessage =
         genericError.message ?? genericError.error ?? interpolate('unknownNetworkError');
 
-      await restartJourney(errorMessage, context);
+      const autoRestart = get(autoRestartStore);
+      if (autoRestart || context) {
+        await restartJourney(errorMessage, context);
+        return;
+      }
+
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: {
+          code: null,
+          message: errorMessage,
+          stage: null,
+          troubleshoot: null,
+          detail: null,
+        },
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: false,
+        response: null,
+      }));
     }
   }
 

@@ -29,6 +29,7 @@ export const journeyConfigSchema = z.object({
   login: journeyConfigItemSchema,
   register: journeyConfigItemSchema,
   fallbackJourney: z.string().optional(),
+  autoRestart: z.boolean().optional(),
 });
 
 type ConfigItem = z.infer<typeof journeyConfigItemSchema>;
