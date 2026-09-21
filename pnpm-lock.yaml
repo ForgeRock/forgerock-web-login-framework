@@ -227,6 +227,9 @@ importers:
       swagger-ui:
         specifier: ^5.33.0
         version: 5.33.0(@types/react@19.2.14)
+      swagger-ui-dist:
+        specifier: ^5.33.0
+        version: 5.33.0
       tailwindcss:
         specifier: ^3.3.3
         version: 3.4.19(yaml@2.8.3)
@@ -6275,6 +6278,9 @@ packages:
   swagger-client@3.38.2:
     resolution: {integrity: sha512-MrMYADBRg7nY5Y+CY9E76/Zm2LSghhln4wNNU6jGn3bNZ76BRQ3hQRyCHCyJK9tVgTDUmYCcYgYWrwGruL1mIw==}
     engines: {node: '>=22'}
+
+  swagger-ui-dist@5.33.0:
+    resolution: {integrity: sha512-wpdK+m6BU5yj6pmUdMskZVTSWYG4DLglAx3sIhylloY37i8O37IrH+YEpqdXNfpaTGxILRBFzUqLF2jKqbfI7A==}
 
   swagger-ui@5.33.0:
     resolution: {integrity: sha512-E93oVGnUfNuxtBKhhJdglYc6nfPqihQ1kgwh8I707pU+hOfR4DA+twpJJdkqSQ42asVqIaklYvej3M23HScLfg==}
@@ -13908,6 +13914,10 @@ snapshots:
     transitivePeerDependencies:
       - debug
       - supports-color
+
+  swagger-ui-dist@5.33.0:
+    dependencies:
+      '@scarf/scarf': 1.4.0
 
   swagger-ui@5.33.0(@types/react@19.2.14):
     dependencies:

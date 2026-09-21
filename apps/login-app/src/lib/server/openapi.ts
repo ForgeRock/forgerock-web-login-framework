@@ -48,9 +48,20 @@ export const openApiSpec = {
     version: '1.0.0',
     description: 'Development-only API for managing and publishing custom components.',
   },
+  tags: [
+    {
+      name: 'Components',
+      description: 'Manage custom UI component bundles.',
+    },
+    {
+      name: 'Health',
+      description: 'Application liveness probe.',
+    },
+  ],
   paths: {
     '/api/health/live': {
       get: {
+        tags: ['Health'],
         summary: 'Check application liveness',
         responses: {
           '200': jsonResponse('The application is live.', {
@@ -64,6 +75,7 @@ export const openApiSpec = {
     },
     '/api/components/{type}': {
       get: {
+        tags: ['Components'],
         summary: 'List component records',
         parameters: [
           { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
@@ -80,6 +92,7 @@ export const openApiSpec = {
         },
       },
       post: {
+        tags: ['Components'],
         summary: 'Create a component record',
         parameters: [{ name: 'type', in: 'path', required: true, schema: { type: 'string' } }],
         requestBody: {
@@ -98,6 +111,7 @@ export const openApiSpec = {
     },
     '/api/components/{type}/{id}': {
       get: {
+        tags: ['Components'],
         summary: 'Retrieve a component record',
         parameters: [
           { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
@@ -109,6 +123,7 @@ export const openApiSpec = {
         },
       },
       put: {
+        tags: ['Components'],
         summary: 'Update a component record',
         parameters: [
           { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
@@ -129,6 +144,7 @@ export const openApiSpec = {
         },
       },
       delete: {
+        tags: ['Components'],
         summary: 'Delete a component record',
         parameters: [
           { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
@@ -144,6 +160,7 @@ export const openApiSpec = {
     },
     '/api/components/publish': {
       post: {
+        tags: ['Components'],
         summary: 'Publish component source code',
         requestBody: {
           required: true,
