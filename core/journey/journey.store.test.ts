@@ -1101,6 +1101,128 @@ describe('journey.store (Journey Client configuration)', () => {
   });
 
   /**
+   * autoRestart: false defers flow-level failures (start/resume) to the host —
+   * the widget publishes the error state without restarting, and the host
+   * observes journeyStore.error and decides what happens next.
+   */
+  it('does not restart on failed resume when autoRestart is false', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn(),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { autoRestartStore, fallbackJourneyStore, initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    autoRestartStore.set(false);
+    fallbackJourneyStore.set('DefaultTree');
+
+    const { get } = await import('svelte/store');
+    await store.resume('https://example.com/callback?suspendedId=abc123');
+
+    // No restart attempt — start() is never called, the error is published.
+    expect(client.start).not.toHaveBeenCalled();
+    const value = get((await importSubject()).journeyStore);
+    expect(value.completed).toBe(true);
+    // htmlDecode needs `document`; in this environment it returns null, so the
+    // message is null — assert the failure surface the host actually keys on.
+    expect(value.error?.code).toBe(401);
+    expect(value.successful).toBe(false);
+  });
+
+  /**
+   * autoRestart defaults to on: a host that never configures it keeps today's
+   * behavior — failed resume restarts through the fallback chain.
+   */
+  it('restarts on failed resume by default (autoRestart defaults to true)', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+    const restartedStep = {
+      type: 'Step' as const,
+      payload: { authId: 'fresh-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn().mockResolvedValueOnce(restartedStep),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.resume('https://example.com/callback?suspendedId=abc123');
+
+    expect(client.start).toHaveBeenCalled();
+  });
+
+  /**
+   * autoRestart: false governs FLOW-level failures only. A step failure
+   * (next(), which passes context) always auto-restarts — the authId-timeout
+   * salvage needs the widget's closure state, so deferring it to the host
+   * would lose the user's in-flight form data.
+   */
+  it('still restarts on a step failure when autoRestart is false', async () => {
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Authentication failed', detail: null },
+      getCode: () => 401,
+    };
+
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn().mockResolvedValueOnce(loginFailure),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { autoRestartStore, initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    autoRestartStore.set(false);
+
+    await store.start({ journey: 'Login' });
+    await store.next(step as never);
+
+    // The step failure restarts even though autoRestart is off.
+    expect(client.start).toHaveBeenCalledTimes(2);
+  });
+
+  /**
    * Without a configured fallback, an empty-stack restart keeps the pre-existing
    * behavior (start(undefined)) — the fallback layer must not change unconfigured
    * hosts' behavior.
