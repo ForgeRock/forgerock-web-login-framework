@@ -468,6 +468,35 @@ export function initialize(
       const failureResult = result;
       const failureMessageStr = htmlDecode(failureResult.payload?.message || 'Unknown login error');
 
+      const failureUrl = failureResult.payload?.detail?.failureUrl;
+
+      /**
+       * AM returns `detail.failureUrl` only when the failure outcome has a
+       * destination (resolved from the journey's `gotoOnFail` param). That is a
+       * terminal failure — restart would throw the destination away, so the
+       * journey completes as failed instead. Bare failures stay retryable and
+       * restart as before.
+       */
+      if (failureUrl) {
+        journeyStore.update((current) => ({
+          ...current,
+          completed: true,
+          error: {
+            code: failureResult.getCode() ?? null,
+            message: failureMessageStr,
+            stage: context?.prevStep?.payload?.stage ?? null,
+            troubleshoot: null,
+            detail: failureResult.payload?.detail ?? null,
+          },
+          loading: false,
+          metadata: null,
+          step: null,
+          successful: false,
+          response: failureResult.payload,
+        }));
+        return;
+      }
+
       // Flow-level failure (start/resume): with autoRestart off, publish the
       // error and let the host decide. Step failures (context present) always
       // restart to salvage the in-flight form.

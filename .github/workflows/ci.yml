@@ -147,6 +147,7 @@ jobs:
       - run: pnpm run check:lint
       - run: pnpm run test
       - run: pnpm --filter @forgerock/login-framework-cli run test
+      - run: pnpm --filter @forgerock/login-app run test
       - name: Install Playwright for Storybook tests
         run: pnpm --filter @forgerock/login-widget exec playwright install --with-deps chromium
       - name: Build Storybook

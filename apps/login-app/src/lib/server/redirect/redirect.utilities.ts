@@ -198,7 +198,12 @@ function getValidatedOAuthRedirect(context: RedirectData): string | null {
  * @returns {string | null} The success URL or null.
  */
 function getSuccessRedirect(redirectContext: RedirectData): string | null {
-  const { successUrl, amOrigin } = redirectContext;
+  const { successUrl, amOrigin, isGotoOnFail, gotoUrl } = redirectContext;
+
+  if (isGotoOnFail && successUrl !== resolveAgainstOrigin(gotoUrl, amOrigin)) {
+    return null;
+  }
+
   if (
     successUrl &&
     !isDefaultPath(successUrl) &&
