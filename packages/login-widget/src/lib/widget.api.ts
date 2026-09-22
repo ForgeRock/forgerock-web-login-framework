@@ -21,7 +21,12 @@ import { protectStore } from '$core/protect/protect.store';
 import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
-import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
+import {
+  autoRestartStore,
+  fallbackJourneyStore,
+  getJourneyClient,
+  initialize as initializeJourney,
+} from '$journey/journey.store';
 import {
   loggerConfigSchema,
   middlewareSchema,
@@ -95,6 +100,9 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       middleware,
       logger,
     );
+    const fallbackJourney = options.journeys?.fallbackJourney;
+    fallbackJourneyStore.set(fallbackJourney);
+    autoRestartStore.set(options.journeys?.autoRestart ?? true);
     await getJourneyClient();
 
     // initialize oidc client, if present
