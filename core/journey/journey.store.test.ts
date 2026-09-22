@@ -303,6 +303,95 @@ describe('journey.store (Journey Client configuration)', () => {
   });
 
   /**
+   * `detail.failureUrl` is AM's terminal-failure signal: AM only sends it when the
+   * failure outcome has a resolved destination. The journey must complete (with the
+   * failure payload in `response`) so the host app can submit its redirect form —
+   * restarting would discard the destination and loop back to a fresh step.
+   */
+  it('completes as a failed journey when LoginFailure carries detail.failureUrl', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: {
+        message: 'Login failure',
+        detail: { failureUrl: 'https://forgerock.github.io/fail' },
+      },
+      getCode: () => 401,
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(loginFailure),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize, journeyStore } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.start({ journey: 'TEST_FailureUrlNode' });
+
+    const { get } = await import('svelte/store');
+    const state = get(journeyStore);
+
+    expect(state.completed).toBe(true);
+    expect(state.successful).toBe(false);
+    expect(state.step).toBeNull();
+    expect(state.error?.code).toBe(401);
+    expect(state.error?.detail?.failureUrl).toBe('https://forgerock.github.io/fail');
+    expect(state.response).toEqual({
+      message: 'Login failure',
+      detail: { failureUrl: 'https://forgerock.github.io/fail' },
+    });
+    // The restart path must not run: the mock has no second start to serve.
+    expect(client.start).toHaveBeenCalledTimes(1);
+  });
+
+  /**
+   * A bare LoginFailure (no `detail.failureUrl`) is retryable — wrong-password UX —
+   * so the journey restarts and lands on a fresh step, as before this change.
+   */
+  it('restarts the journey when LoginFailure has no detail.failureUrl', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Login failure', detail: null },
+      getCode: () => 401,
+    };
+    const restartedStep = {
+      type: 'Step' as const,
+      payload: { authId: 'fresh-auth-id', stage: null },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(loginFailure).mockResolvedValueOnce(restartedStep),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize, journeyStore } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.start({ journey: 'Login' });
+
+    const { get } = await import('svelte/store');
+    const state = get(journeyStore);
+
+    expect(state.completed).toBe(false);
+    expect(state.error?.code).toBe(401);
+    expect(state.step?.type).toBe('Step');
+    expect(client.start).toHaveBeenCalledTimes(2);
+  });
+
+  /**
    * A GenericError result (genuine transport failure) should fall through to the
    * network-error message — the path the removed no_response_data hack used to shortcut.
    */
