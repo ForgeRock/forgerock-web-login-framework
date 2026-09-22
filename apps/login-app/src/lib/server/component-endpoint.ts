@@ -39,11 +39,13 @@ import type { ComponentRepoError } from './component-repo';
 
 /** Dependencies that may be overridden when testing Component API handlers. */
 export interface ComponentApiDependencies {
+  /** Runtime providing component storage and publishing services; defaults to the production composition. */
   readonly runtime?: Layer.Layer<ComponentStoreService | ComponentPublisherService, never, never>;
   /** Production deployments must set this token before exposing component mutation routes. */
   readonly token?: string;
 }
 
+/** Encodes a Component API error with its corresponding HTTP status. */
 const errorResponse = (status: 400 | 401 | 404 | 413 | 415 | 500, error: string): Response => {
   const encoded = Schema.encodeSync(ComponentErrorResponseSchema)({ status, body: { error } });
   return Response.json(encoded.body, { status: encoded.status });
@@ -69,6 +71,7 @@ const requestHeaders = (request: Request) => ({
   contentType: request.headers.get('content-type'),
 });
 
+/** Enforces optional Bearer-token authentication and JSON body constraints for a request. */
 const guardRequest = (
   request: Request,
   token: string | undefined,
@@ -90,6 +93,7 @@ const guardRequest = (
     return undefined;
   });
 
+/** Reads, size-limits, and decodes a JSON request body or returns its client-error response. */
 const readBody = <A>(request: Request, schema: Schema.Schema<A>): Effect.Effect<A | Response> =>
   Effect.tryPromise({
     try: () => request.text(),
@@ -139,6 +143,7 @@ const providePublisher = <A, E>(
   dependencies: ComponentApiDependencies,
 ): Effect.Effect<A, E> => effect.pipe(Effect.provide(dependencies.runtime ?? ComponentApiRuntime));
 
+/** Validates a route component type or returns a 404 response. */
 const validateType = (type: string): Effect.Effect<string | Response> =>
   Schema.decodeUnknown(ComponentTypeSchema)(type).pipe(
     Effect.match({
@@ -147,6 +152,7 @@ const validateType = (type: string): Effect.Effect<string | Response> =>
     }),
   );
 
+/** Validates a route component id or returns a 400 response. */
 const validateId = (id: string): Effect.Effect<string | Response> =>
   Schema.decodeUnknown(ComponentIdSchema)(id).pipe(
     Effect.match({
@@ -155,7 +161,16 @@ const validateId = (id: string): Effect.Effect<string | Response> =>
     }),
   );
 
-/** Lists component records, optionally selecting fields from each record. */
+/**
+ * Lists component records for a route type, optionally projecting requested fields.
+ *
+ * @param request - Incoming request, whose `fields` query parameter selects record properties.
+ * @param type - Component category from the route path.
+ * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @returns An effect resolving to 200 records, 400 for invalid fields, 401 for an invalid Bearer token,
+ * or 404 for an invalid type; storage failures produce 409 or 500.
+ * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ */
 export const listComponents = (
   request: Request,
   type: string,
@@ -182,7 +197,17 @@ export const listComponents = (
     );
   });
 
-/** Retrieves a component record by type and id. */
+/**
+ * Retrieves a component record by its route type and id.
+ *
+ * @param request - Incoming request used for optional Bearer-token validation.
+ * @param type - Component category from the route path.
+ * @param id - Component UUID from the route path.
+ * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @returns An effect resolving to 200 with the record, 400 for an invalid id, 401 for an invalid Bearer
+ * token, 404 for an invalid type or missing record, or 409/500 for storage failures.
+ * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ */
 export const getComponent = (
   request: Request,
   type: string,
@@ -193,6 +218,7 @@ export const getComponent = (
     store.get(validType, validId).pipe(Effect.map((record) => recordResponse(200, record))),
   );
 
+/** Runs a record operation after enforcing request, type, and id policies. */
 const withRecord = (
   request: Request,
   type: string,
@@ -219,7 +245,17 @@ const withRecord = (
     );
   });
 
-/** Creates a component record. */
+/**
+ * Creates a component record in the requested route type.
+ *
+ * @param request - JSON request containing the client-editable component fields.
+ * @param type - Component category from the route path.
+ * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @returns An effect resolving to 201 with the created record; 400 for malformed input, 401 for an
+ * invalid Bearer token, 404 for an invalid type, 413 for an oversized body, 415 for non-JSON,
+ * or 409/500 for storage failures.
+ * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ */
 export const createComponent = (
   request: Request,
   type: string,
@@ -241,7 +277,18 @@ export const createComponent = (
     );
   });
 
-/** Updates an existing component record without creating a missing record. */
+/**
+ * Updates an existing component record without creating a missing record.
+ *
+ * @param request - JSON request containing the replacement client-editable component fields.
+ * @param type - Component category from the route path.
+ * @param id - Component UUID from the route path and optional body-id consistency check.
+ * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @returns An effect resolving to 200 with the updated record; 400 for malformed input or mismatched id,
+ * 401 for an invalid Bearer token, 404 for an invalid type or missing record, 413 for an oversized
+ * body, 415 for non-JSON, or 409/500 for storage failures.
+ * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ */
 export const updateComponent = (
   request: Request,
   type: string,
@@ -270,7 +317,17 @@ export const updateComponent = (
     );
   });
 
-/** Deletes a component record. */
+/**
+ * Deletes an existing component record.
+ *
+ * @param request - Incoming request used for `COMPONENT_SAVE_TOKEN` Bearer-token validation.
+ * @param type - Component category from the route path.
+ * @param id - Component UUID from the route path.
+ * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @returns An effect resolving to 204 with no body, 400 for an invalid id, 401 for an invalid Bearer
+ * token, 404 for an invalid type or missing record, or 409/500 for storage failures.
+ * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ */
 export const deleteComponent = (
   request: Request,
   type: string,
@@ -281,7 +338,17 @@ export const deleteComponent = (
     store.delete(validType, validId).pipe(Effect.as(new Response(null, { status: 204 }))),
   );
 
-/** Publishes component source code and optional files as a repository bundle. */
+/**
+ * Publishes component source code and optional files as a repository bundle.
+ *
+ * @param request - JSON request containing bundle code and optional additional files.
+ * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @returns An effect resolving to 200 with the published bundle reference; 400 for malformed input or
+ * publisher rejection, 401 for an invalid Bearer token, 413 for an oversized body, 415 for non-JSON,
+ * or 500 when repository persistence fails.
+ * @throws {ComponentPublisherError} Is caught and encoded as a 400 response.
+ * @throws {ComponentRepoError} Is caught and encoded as a 500 response.
+ */
 export const publishComponentSource = (
   request: Request,
   dependencies: ComponentApiDependencies = {},

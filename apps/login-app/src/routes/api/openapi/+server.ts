@@ -12,6 +12,8 @@ import { openApiSpec } from '$lib/server/openapi';
 
 /**
  * Serves the development-only OpenAPI document.
+ *
+ * @returns The OpenAPI specification with 200 in development, or 404 in other environments.
  */
 export const GET = () => {
   if (!dev) {

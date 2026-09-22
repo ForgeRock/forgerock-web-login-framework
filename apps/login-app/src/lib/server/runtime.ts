@@ -23,6 +23,7 @@ const componentRepoLayer = ComponentRepo.layer({
   trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
 });
 
+/** Shared repository runtime supplying filesystem and durable-sync services to component layers. */
 const componentRepoRuntime = Layer.provide(
   componentRepoLayer,
   Layer.merge(NodeFileSystem.layer, FileSync.layer),
@@ -51,4 +52,5 @@ export const ComponentApiRuntime: Layer.Layer<
   ),
 );
 
+/** Re-exported as the single composition point so tests can override the publisher service. */
 export { ComponentPublisher };

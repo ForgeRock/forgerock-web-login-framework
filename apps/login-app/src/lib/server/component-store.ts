@@ -88,6 +88,7 @@ const isNotFound = (cause: unknown): boolean =>
   (('code' in cause && cause.code === 'ENOENT') ||
     ('reason' in cause && cause.reason === 'NotFound'));
 
+/** Decodes a supported component type or fails with a tagged invalid-type error. */
 const validateType = (type: string) =>
   Schema.decodeUnknown(ComponentTypeSchema)(type).pipe(
     Effect.catchAll((cause) =>
@@ -101,6 +102,7 @@ const validateType = (type: string) =>
     ),
   );
 
+/** Decodes a component UUID or fails with a tagged invalid-id error. */
 const validateId = (id: string) =>
   Schema.decodeUnknown(ComponentIdSchema)(id).pipe(
     Effect.catchAll((cause) =>
@@ -114,6 +116,7 @@ const validateId = (id: string) =>
     ),
   );
 
+/** Builds a safe repository path for a validated component record. */
 const recordPath = (trackedRoot: string, type: ComponentType, id: string) => {
   const relPath = `${type}/${id}.json`;
   return isSafeRelativePath(relPath)

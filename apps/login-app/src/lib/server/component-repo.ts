@@ -170,6 +170,7 @@ const joinPath = (...segments: ReadonlyArray<string>): string =>
 const componentRepoError = (message: string, cause: unknown) =>
   new ComponentRepoError({ message, cause });
 
+/** Rejects symlink path segments to prevent cloned repositories from escaping the tracked subtree. */
 const ensureNoSymlink = (trackedRoot: string, relPath: string) =>
   Effect.forEach(
     relPath
