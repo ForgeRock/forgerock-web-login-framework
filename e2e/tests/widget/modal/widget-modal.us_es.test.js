@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test.use({ locale: 'es-US' });
 test('Modal widget with login in US Spanish', async ({ page }) => {
@@ -19,8 +20,8 @@ test('Modal widget with login in US Spanish', async ({ page }) => {
 
   await clickButton('Open Login Modal', '/authenticate');
 
-  await page.getByLabel('Nombre de usuario').fill('demouser');
-  await page.getByLabel('Contraseña').fill('j56eKtae*1');
+  await page.getByLabel('Nombre de usuario').fill(username);
+  await page.getByLabel('Contraseña').fill(password);
 
   await clickButton('Iniciar sesion', '/authenticate');
 

@@ -10,8 +10,8 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
-//Use create and delete users and use the data in replace of 'demouser'
 test('Modal widget with login', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
 
@@ -46,8 +46,8 @@ test('Modal widget with login', async ({ page }) => {
   await expect(page.getByText('Sign in failed')).toBeVisible();
 
   // Try successful login
-  await page.getByLabel('Username').fill('demouser');
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.getByLabel('Username').fill(username);
+  await page.getByLabel('Password').fill(password);
 
   await clickButton('Sign In', '/authenticate');
 
@@ -72,8 +72,8 @@ test('user.logout() clears session and returns to login state', async ({ page })
   await navigate('widget/modal?journey=TEST_Login');
 
   await clickButton('Open Login Modal', '/authenticate');
-  await page.getByLabel('Username').fill('demouser');
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.getByLabel('Username').fill(username);
+  await page.getByLabel('Password').fill(password);
   await clickButton('Sign In', '/authenticate');
 
   await verifyUserInfo(page, expect);
