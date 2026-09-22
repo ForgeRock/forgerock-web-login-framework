@@ -39,24 +39,59 @@ export class ComponentStoreError extends Data.TaggedError('ComponentStoreError')
 
 /** Component storage operations backed by the configured component repository. */
 export interface ComponentStoreService {
-  /** Lists valid persisted records for a component type, silently skipping malformed files. */
+  /**
+   * Lists valid persisted records for a component type, silently skipping malformed files.
+   *
+   * @param type - Component type whose records should be listed.
+   * @returns An effect with the valid persisted records.
+   * @throws {ComponentStoreError} When the type is invalid or the directory cannot be read.
+   */
   readonly list: (
     type: string,
   ) => Effect.Effect<ReadonlyArray<ComponentRecord>, ComponentStoreError>;
-  /** Retrieves one persisted component record. */
+  /**
+   * Retrieves one persisted component record.
+   *
+   * @param type - Component type containing the record.
+   * @param id - Component UUID identifying the record.
+   * @returns An effect with the persisted record.
+   * @throws {ComponentStoreError} When validation, reading, or decoding fails.
+   */
   readonly get: (type: string, id: string) => Effect.Effect<ComponentRecord, ComponentStoreError>;
-  /** Creates and durably stores a new component record. */
+  /**
+   * Creates and durably stores a new component record.
+   *
+   * @param type - Component type that will contain the new record.
+   * @param request - Client-editable component fields to persist.
+   * @returns An effect with the created record.
+   * @throws {ComponentStoreError} When the type is invalid or persistence fails.
+   */
   readonly create: (
     type: string,
     request: Schema.Schema.Type<typeof CreateComponentRequestSchema>,
   ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
-  /** Replaces an existing component record while preserving its creation date. */
+  /**
+   * Replaces an existing component record while preserving its creation date.
+   *
+   * @param type - Component type containing the record.
+   * @param id - Component UUID identifying the record.
+   * @param request - Client-editable replacement fields to persist.
+   * @returns An effect with the updated record.
+   * @throws {ComponentStoreError} When validation, retrieval, or persistence fails.
+   */
   readonly update: (
     type: string,
     id: string,
     request: Schema.Schema.Type<typeof UpdateComponentRequestSchema>,
   ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
-  /** Removes an existing component record and synchronizes its containing directory. */
+  /**
+   * Removes an existing component record and synchronizes its containing directory.
+   *
+   * @param type - Component type containing the record.
+   * @param id - Component UUID identifying the record.
+   * @returns An effect that completes after deletion and directory synchronization.
+   * @throws {ComponentStoreError} When validation, retrieval, deletion, or synchronization fails.
+   */
   readonly delete: (type: string, id: string) => Effect.Effect<void, ComponentStoreError>;
 }
 
@@ -65,7 +100,12 @@ const ComponentStoreTag = Context.GenericTag<ComponentStoreService>('@login-app/
 
 /** Component record storage service. */
 export const ComponentStore = Object.assign(ComponentStoreTag, {
-  /** Creates a component store over a configured ComponentRepo tracked subtree. */
+  /**
+   * Creates a component store over a configured ComponentRepo tracked subtree.
+   *
+   * @param config - Repository root and tracked subtree for component records.
+   * @returns A component store layer requiring filesystem, sync, and repository services.
+   */
   layer: (
     config: ComponentRepoConfig,
   ): Layer.Layer<
@@ -75,6 +115,12 @@ export const ComponentStore = Object.assign(ComponentStoreTag, {
   > => makeComponentStoreLayer(config),
 });
 
+/**
+ * Joins path segments with one slash between normalized boundaries.
+ *
+ * @param segments - Path segments to join.
+ * @returns The normalized slash-delimited path.
+ */
 const joinPath = (...segments: ReadonlyArray<string>): string =>
   segments
     .map((segment, index) =>
@@ -82,13 +128,25 @@ const joinPath = (...segments: ReadonlyArray<string>): string =>
     )
     .join('/');
 
+/**
+ * Identifies filesystem and repository failures that represent missing records.
+ *
+ * @param cause - Failure cause to inspect.
+ * @returns Whether the cause represents a missing file or record.
+ */
 const isNotFound = (cause: unknown): boolean =>
   typeof cause === 'object' &&
   cause !== null &&
   (('code' in cause && cause.code === 'ENOENT') ||
     ('reason' in cause && cause.reason === 'NotFound'));
 
-/** Decodes a supported component type or fails with a tagged invalid-type error. */
+/**
+ * Decodes a supported component type or fails with a tagged invalid-type error.
+ *
+ * @param type - Untrusted component type to validate.
+ * @returns An effect with the validated component type.
+ * @throws {ComponentStoreError} When the type is unsupported.
+ */
 const validateType = (type: string) =>
   Schema.decodeUnknown(ComponentTypeSchema)(type).pipe(
     Effect.catchAll((cause) =>
@@ -102,7 +160,13 @@ const validateType = (type: string) =>
     ),
   );
 
-/** Decodes a component UUID or fails with a tagged invalid-id error. */
+/**
+ * Decodes a component UUID or fails with a tagged invalid-id error.
+ *
+ * @param id - Untrusted component id to validate.
+ * @returns An effect with the validated component id.
+ * @throws {ComponentStoreError} When the id is not a supported component UUID.
+ */
 const validateId = (id: string) =>
   Schema.decodeUnknown(ComponentIdSchema)(id).pipe(
     Effect.catchAll((cause) =>
@@ -116,7 +180,15 @@ const validateId = (id: string) =>
     ),
   );
 
-/** Builds a safe repository path for a validated component record. */
+/**
+ * Builds a safe repository path for a validated component record.
+ *
+ * @param trackedRoot - Root of the configured tracked component subtree.
+ * @param type - Validated component type containing the record.
+ * @param id - Validated component UUID identifying the record.
+ * @returns An effect with the artifact's relative path, final path, and containing directory.
+ * @throws {ComponentStoreError} When the generated storage path is unsafe.
+ */
 const recordPath = (trackedRoot: string, type: ComponentType, id: string) => {
   const relPath = `${type}/${id}.json`;
   return isSafeRelativePath(relPath)
@@ -133,6 +205,14 @@ const recordPath = (trackedRoot: string, type: ComponentType, id: string) => {
       );
 };
 
+/**
+ * Parses and validates serialized component-record JSON.
+ *
+ * @param content - Serialized component record to decode.
+ * @param message - Human-readable failure message for an invalid record.
+ * @returns An effect with the decoded component record.
+ * @throws {ComponentStoreError} When the content is not a valid component record.
+ */
 const decodeRecord = (content: string, message: string) =>
   Schema.decodeUnknown(Schema.parseJson(ComponentRecordSchema))(content).pipe(
     Effect.catchAll((cause) =>
@@ -140,7 +220,12 @@ const decodeRecord = (content: string, message: string) =>
     ),
   );
 
-/** Builds the ComponentStore layer. List deliberately skips malformed JSON artifacts without logging. */
+/**
+ * Builds the ComponentStore layer. List deliberately skips malformed JSON artifacts without logging.
+ *
+ * @param config - Repository root and tracked subtree for component records.
+ * @returns A layer requiring filesystem, sync, and repository services.
+ */
 const makeComponentStoreLayer = (
   config: ComponentRepoConfig,
 ): Layer.Layer<

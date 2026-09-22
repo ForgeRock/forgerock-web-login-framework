@@ -36,7 +36,12 @@ const componentRepoRuntime = Layer.provide(
 export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, never, never> =
   Layer.provide(ComponentPublisher.layer, componentRepoRuntime);
 
-/** Fully provisioned layer for component storage and publishing API handlers. */
+/**
+ * Fully provisioned layer for component storage and publishing API handlers.
+ *
+ * Composes both production services once so handlers remain focused on request policy rather than
+ * infrastructure wiring; tests can replace this single runtime with deterministic service layers.
+ */
 export const ComponentApiRuntime: Layer.Layer<
   ComponentStoreService | ComponentPublisherService,
   never,
@@ -52,5 +57,10 @@ export const ComponentApiRuntime: Layer.Layer<
   ),
 );
 
-/** Re-exported as the single composition point so tests can override the publisher service. */
+/**
+ * Re-exports the publisher tag as the server runtime's single composition point.
+ *
+ * Keeping this export adjacent to the production runtime gives tests one stable seam for replacing
+ * publisher behavior without coupling handlers to their concrete infrastructure.
+ */
 export { ComponentPublisher };

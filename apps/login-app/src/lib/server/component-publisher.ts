@@ -16,7 +16,7 @@ import type { ComponentRepoError } from './component-repo';
 /**
  * Error emitted when a submitted component bundle cannot be decoded or contains an unsafe path.
  *
- * @throws {ComponentPublisherError} When the bundle is not valid JSON matching the expected file schema.
+ * This error represents invalid bundle input rather than a thrown exception.
  */
 export class ComponentPublisherError extends Data.TaggedError('ComponentPublisherError')<{
   message: string;
@@ -52,6 +52,11 @@ const ComponentPublisherTag = Context.GenericTag<ComponentPublisherService>(
  * Service tag and layer for publishing validated component bundles.
  */
 export const ComponentPublisher = Object.assign(ComponentPublisherTag, {
+  /**
+   * Creates a publisher layer backed by the repository service.
+   *
+   * @returns A layer requiring {@link ComponentRepoService}.
+   */
   layer: Layer.effect(
     ComponentPublisherTag,
     Effect.gen(function* () {
@@ -64,6 +69,7 @@ export const ComponentPublisher = Object.assign(ComponentPublisherTag, {
   ),
 });
 
+/** Schema for an individual path and content entry in a serialized component bundle. */
 const BundleFileSchema = Schema.Struct({
   path: Schema.String,
   content: Schema.String,

@@ -18,22 +18,30 @@ import {
   UpdateComponentRequestSchema,
 } from './component-api';
 
+/** OpenAPI JSON Schema for persisted component records. */
 const componentRecordSchema = OpenApiJsonSchema.makeWithDefs(ComponentRecordSchema, { defs: {} });
+/** OpenAPI JSON Schema for component-creation requests. */
 const createComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(CreateComponentRequestSchema, {
   defs: {},
 });
+/** OpenAPI JSON Schema for component-update requests. */
 const updateComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(UpdateComponentRequestSchema, {
   defs: {},
 });
+/** OpenAPI JSON Schema for component-publication requests. */
 const publishRequestSchema = OpenApiJsonSchema.makeWithDefs(PublishRequestSchema, { defs: {} });
+/** OpenAPI JSON Schema for successful component-publication responses. */
 const publishResponseSchema = OpenApiJsonSchema.makeWithDefs(PublishResponseSchema, { defs: {} });
+/** OpenAPI JSON Schema for standardized API error bodies. */
 const errorSchema = OpenApiJsonSchema.makeWithDefs(ApiErrorBodySchema, { defs: {} });
 
+/** Creates an OpenAPI JSON response definition with a description and body schema. */
 const jsonResponse = (description: string, schema: object) => ({
   description,
   content: { 'application/json': { schema } },
 });
 
+/** Creates an OpenAPI error response definition using the shared API error schema. */
 const errorResponse = (description: string) => jsonResponse(description, errorSchema);
 
 /**

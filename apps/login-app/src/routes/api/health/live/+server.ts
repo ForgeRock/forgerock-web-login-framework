@@ -9,5 +9,9 @@
 
 import { json } from '@sveltejs/kit';
 
-/** Returns a successful liveness status for load balancer health checks. */
+/**
+ * Returns a successful liveness status for load balancer health checks.
+ *
+ * @returns A JSON response whose status is `ok`.
+ */
 export const GET = () => json({ status: 'ok' });

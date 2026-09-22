@@ -186,7 +186,13 @@ export const PublishResponseSchema = Schema.Struct({
 /** Standard error payload for Component API responses. */
 export const ApiErrorBodySchema = Schema.Struct({ error: Schema.String });
 
-/** Creates a tagged Component API response schema for a status and response body. */
+/**
+ * Creates a tagged Component API response schema for a status and response body.
+ *
+ * @param status - HTTP status represented by the response schema.
+ * @param bodySchema - Schema for the response body at that status.
+ * @returns A schema pairing the literal status with its body.
+ */
 export const statusResponseSchema = <const Status extends number, Body>(
   status: Status,
   bodySchema: Schema.Schema<Body>,

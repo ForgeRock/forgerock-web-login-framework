@@ -14,7 +14,7 @@ import { type FileHandle, lstat, open } from 'node:fs/promises';
 /**
  * Error emitted when component persistence cannot safely complete.
  *
- * @throws {ComponentRepoError} When a filesystem operation, including durability syncing, fails.
+ * This error represents filesystem or durability-sync failures in the repository effect channel.
  */
 export class ComponentRepoError extends Data.TaggedError('ComponentRepoError')<{
   message: string;
@@ -58,6 +58,15 @@ export const FileSync = Object.assign(FileSyncTag, {
   }),
 });
 
+/**
+ * Opens a file, passes its handle to an Effect, and always attempts to close it afterward.
+ *
+ * @param path - Filesystem path to open.
+ * @param flags - Node.js flags controlling how the file is opened.
+ * @param use - Effect that uses the opened file handle.
+ * @returns An effect with the value returned by `use`.
+ * @throws {ComponentRepoError} When opening the file fails.
+ */
 const withFileHandle = <A>(
   path: string,
   flags: string,
@@ -72,6 +81,15 @@ const withFileHandle = <A>(
     (handle) => Effect.tryPromise(() => handle.close()).pipe(Effect.catchAll(() => Effect.void)),
   );
 
+/**
+ * Opens and synchronizes a file or directory path for durable persistence.
+ *
+ * @param path - Filesystem path to synchronize.
+ * @param flags - Node.js flags appropriate for opening the target.
+ * @param target - Human-readable target name used in failure messages.
+ * @returns An effect that completes once synchronization succeeds.
+ * @throws {ComponentRepoError} When opening or synchronizing the path fails.
+ */
 const syncPath = (
   path: string,
   flags: string,
@@ -160,6 +178,12 @@ export const isSafeRelativePath = (path: string): boolean =>
   !/^[a-zA-Z]:/.test(path) &&
   path.split('/').every((segment) => segment !== '..' && segment !== '.git' && segment !== '');
 
+/**
+ * Joins path segments with one slash between normalized boundaries.
+ *
+ * @param segments - Path segments to join.
+ * @returns The normalized slash-delimited path.
+ */
 const joinPath = (...segments: ReadonlyArray<string>): string =>
   segments
     .map((segment, index) =>
@@ -167,6 +191,13 @@ const joinPath = (...segments: ReadonlyArray<string>): string =>
     )
     .join('/');
 
+/**
+ * Creates a repository error that preserves the originating failure as its cause.
+ *
+ * @param message - Human-readable description of the failed repository operation.
+ * @param cause - Underlying failure that caused the operation to fail.
+ * @returns A tagged repository error.
+ */
 const componentRepoError = (message: string, cause: unknown) =>
   new ComponentRepoError({ message, cause });
 
@@ -204,6 +235,13 @@ const ensureNoSymlink = (trackedRoot: string, relPath: string) =>
       ),
   );
 
+/**
+ * Lists a directory and each ancestor through the tracked root in synchronization order.
+ *
+ * @param trackedRoot - Root of the tracked component subtree.
+ * @param directory - Descendant directory containing a persisted artifact.
+ * @returns Directories ordered from the deepest path through the tracked root.
+ */
 const directoryChain = (trackedRoot: string, directory: string): ReadonlyArray<string> => {
   const relativeDirectory = directory.slice(trackedRoot.length).replace(/^\/+/, '');
   const directories = relativeDirectory
