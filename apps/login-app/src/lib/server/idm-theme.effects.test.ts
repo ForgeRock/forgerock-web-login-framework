@@ -151,6 +151,59 @@ describe('fetchIdmTheme', () => {
       );
     });
 
+    it('drops logo and logoHeight when logoEnabled is false', async () => {
+      vi.mocked(fetch).mockResolvedValue(
+        makeResponse({
+          realm: {
+            [REALM]: [
+              makeThemeEntry({
+                logo: 'https://example.com/logo.svg',
+                logoHeight: 100,
+                logoEnabled: false,
+              }),
+            ],
+          },
+        }),
+      );
+
+      const result = await fetchIdmTheme(IDM_URL, REALM, null);
+
+      expect(result.theme?.logo).toBeUndefined();
+      expect(result.theme?.logoHeight).toBeUndefined();
+    });
+
+    it('keeps logo when logoEnabled is true or absent', async () => {
+      const body = {
+        realm: {
+          [REALM]: [
+            makeThemeEntry({
+              logo: 'https://example.com/logo.svg',
+              logoHeight: 100,
+              logoEnabled: true,
+            }),
+            makeThemeEntry({
+              _id: 'theme-no-flag',
+              isDefault: false,
+              linkedTrees: ['Login'],
+              logo: 'https://example.com/other.svg',
+              logoHeight: 72,
+            }),
+          ],
+        },
+      };
+      // A Response body can only be read once, so each call needs its own.
+      vi.mocked(fetch)
+        .mockResolvedValueOnce(makeResponse(body))
+        .mockResolvedValueOnce(makeResponse(body));
+
+      const defaultResult = await fetchIdmTheme(IDM_URL, REALM, null);
+      const loginResult = await fetchIdmTheme(IDM_URL, REALM, 'Login');
+
+      expect(defaultResult.theme?.logo).toBe('https://example.com/logo.svg');
+      expect(defaultResult.theme?.logoHeight).toBe(100);
+      expect(loginResult.theme?.logo).toBe('https://example.com/other.svg');
+    });
+
     it('drops invalid hex colors gracefully via themeSchema', async () => {
       vi.mocked(fetch).mockResolvedValue(
         makeResponse({
