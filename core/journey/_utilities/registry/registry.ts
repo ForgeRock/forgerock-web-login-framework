@@ -23,6 +23,8 @@ interface ComponentEntry {
   name: string;
   type: ComponentType;
   acceptedProps: string[];
+  /** Optional named default (`Default: <Name>`) — header/footer components only. */
+  default?: string;
 }
 
 // --------------------------------------------------------------------------
@@ -65,7 +67,7 @@ export function toPascalCase(str: string): string {
 export const parseComponentHeader = (
   filePath: string,
   content: string,
-): Effect.Effect<{ type: ComponentType; name: string }, RegistryScanError> => {
+): Effect.Effect<{ type: ComponentType; name: string; default?: string }, RegistryScanError> => {
   const fail = (cause: string) =>
     Effect.fail(new RegistryScanError({ directory: filePath, cause }));
 
@@ -101,7 +103,30 @@ export const parseComponentHeader = (
     return fail('Missing "Name:" field in @component header. Expected: Name: <ComponentName>');
   }
 
-  return Effect.succeed({ type: rawType as ComponentType, name: nameMatch[1].trim() });
+  const defaultMatch = block.match(/Default:\s*(.*)/);
+  if (defaultMatch) {
+    if (rawType !== 'header' && rawType !== 'footer') {
+      return fail(
+        `"Default:" is only supported on header and footer components, not on ${rawType}. ` +
+          `Remove the "Default:" line from ${filePath}.`,
+      );
+    }
+    const defaultName = defaultMatch[1].trim();
+    if (
+      defaultName === '' ||
+      defaultName.toLowerCase() === 'true' ||
+      defaultName.toLowerCase() === 'false'
+    ) {
+      return fail(
+        `"Default:" must be a named default pointing at another component's "Name:" value ` +
+          `(e.g. "Default: BrandHeader"), not "${defaultMatch[1].trim() || '(empty)'}". ` +
+          `Consistent with the default-journey-name pattern.`,
+      );
+    }
+    return Effect.succeed({ type: rawType, name: nameMatch[1].trim(), default: defaultName });
+  }
+
+  return Effect.succeed({ type: rawType, name: nameMatch[1].trim() });
 };
 
 // --------------------------------------------------------------------------
@@ -159,7 +184,7 @@ const scanDirectory = (
           Effect.mapError((cause) => new RegistryScanError({ directory: filePath, cause })),
           Effect.flatMap((content) =>
             parseComponentHeader(filePath, content).pipe(
-              Effect.flatMap(({ type, name }) =>
+              Effect.flatMap(({ type, name, default: defaultName }) =>
                 type !== expectedType
                   ? Effect.fail(
                       new RegistryScanError({
@@ -172,6 +197,7 @@ const scanDirectory = (
                       name,
                       type,
                       acceptedProps: parseAcceptedProps(content),
+                      ...(defaultName === undefined ? {} : { default: defaultName }),
                     }),
               ),
             ),
@@ -193,20 +219,20 @@ const scanDirectory = (
 // Registry content builder (pure, exported for testing)
 // --------------------------------------------------------------------------
 
-/** Raised when components collide on a generated identifier, registry key, or singleton slot. */
+/** Raised when components collide on a generated identifier, registry key, or Default: usage. */
 export class RegistryCollisionError extends Data.TaggedError('RegistryCollisionError')<{
-  readonly kind: 'name-collision' | 'singleton-occupancy';
+  readonly kind: 'name-collision' | 'default-usage';
   readonly type: string;
   readonly name: string;
   readonly filePaths: string[];
 }> {
   get message(): string {
     const collidingFiles = this.filePaths.map((filePath) => `  - ${filePath}`).join('\n');
-    if (this.kind === 'singleton-occupancy') {
+    if (this.kind === 'default-usage') {
       return (
-        `Only one ${this.type} component is allowed. Found ${this.filePaths.length}:\n` +
+        `Exactly one ${this.type} component must declare a valid "Default:" pointer. Found:\n` +
         collidingFiles +
-        `\nKeep the one to use and delete or move the rest out of /experimental/custom/${this.type}s/.`
+        `\nFix the "Default:" fields in /experimental/custom/${this.type}s/ so exactly one component names an existing ${this.type}.`
       );
     }
     return (
@@ -222,6 +248,7 @@ interface RegistryVarEntry {
   importPath: string;
   name: string;
   acceptedProps: string[];
+  default?: string;
 }
 
 export function buildRegistryContent(
@@ -234,31 +261,22 @@ export function buildRegistryContent(
 ): string {
   const toEntry =
     (prefix: string) =>
-    ({ filePath, name, acceptedProps }: ComponentEntry) => {
+    ({ filePath, name, acceptedProps, default: defaultName }: ComponentEntry) => {
       const relPath = path.relative(registryDir, filePath).replace(/\\/g, '/');
       const importPath = relPath.startsWith('.') ? relPath : `./${relPath}`;
-      return { varName: `${prefix}${toPascalCase(name)}`, importPath, name, acceptedProps };
+      return {
+        varName: `${prefix}${toPascalCase(name)}`,
+        importPath,
+        name,
+        acceptedProps,
+        default: defaultName,
+      };
     };
 
   const stageEntries = stageComponents.map(toEntry('Stage'));
   const callbackEntries = callbackComponents.map(toEntry('Callback'));
   const headerEntries = headerComponents.map(toEntry('CustomHeader'));
   const footerEntries = footerComponents.map(toEntry('CustomFooter'));
-  // Page-level singletons: at most one header and one footer. More than one is ambiguous
-  // even when names differ — hard error listing the candidates.
-  for (const [type, entries] of [
-    ['header', headerEntries],
-    ['footer', footerEntries],
-  ] as const) {
-    if (entries.length > 1) {
-      throw new RegistryCollisionError({
-        kind: 'singleton-occupancy',
-        type,
-        name: `${type} components`,
-        filePaths: entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
-      });
-    }
-  }
 
   // Name collisions: any two components sharing a generated identifier would emit a
   // duplicate TS identifier (broken build) or a shadowed registry key (silent last-wins).
@@ -286,6 +304,42 @@ export function buildRegistryContent(
       });
     }
   }
+
+  // Exactly one Default: pointer per non-empty header/footer type (0 or 2+ is
+  // ambiguous), and the pointed-at name must exist in that type's registry. Empty type
+  // registries skip the check entirely — nothing to select from.
+  const resolveDefault = (type: string, entries: RegistryVarEntry[]): string | null => {
+    const withDefaults = entries.filter((entry) => entry.default !== undefined);
+    if (entries.length === 0) {
+      return null;
+    }
+    if (withDefaults.length === 0 || withDefaults.length > 1) {
+      throw new RegistryCollisionError({
+        kind: 'default-usage',
+        type,
+        name: `${type} default`,
+        filePaths:
+          withDefaults.length === 0
+            ? entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`)
+            : withDefaults.map((entry) => `${entry.importPath} (Default: ${entry.default})`),
+      });
+    }
+    const pointer = withDefaults[0];
+    if (!entries.some((entry) => entry.name === pointer.default)) {
+      throw new RegistryCollisionError({
+        kind: 'default-usage',
+        type,
+        name: `${type} default`,
+        filePaths: [
+          `${pointer.importPath} (Default: ${pointer.default}) — no matching ${type} component Name:`,
+        ],
+      });
+    }
+    return pointer.default;
+  };
+
+  const headerDefault = resolveDefault('header', headerEntries);
+  const footerDefault = resolveDefault('footer', footerEntries);
 
   const lines: string[] = [
     `/**`,
@@ -321,8 +375,8 @@ export function buildRegistryContent(
 
   collectImportBlock(`// Stage overrides / extensions`, stageEntries);
   collectImportBlock(`// Callback overrides / extensions`, callbackEntries);
-  collectImportBlock(`// Custom header (page-level singleton)`, headerEntries);
-  collectImportBlock(`// Custom footer (page-level singleton)`, footerEntries);
+  collectImportBlock(`// Custom headers (multiple allowed, one Default:)`, headerEntries);
+  collectImportBlock(`// Custom footers (multiple allowed, one Default:)`, footerEntries);
 
   const pushRecordRegistry = (
     exportName: string,
@@ -342,24 +396,21 @@ export function buildRegistryContent(
     lines.push(``);
   };
 
-  const pushSingletonRegistry = (
-    exportName: string,
-    entry: (typeof headerEntries)[number] | undefined,
-  ) => {
-    lines.push(
-      entry
-        ? `export const ${exportName}: CustomRegistryEntry | null = { get component() { return ${
-            entry.varName
-          }; }, acceptedProps: ${JSON.stringify(entry.acceptedProps)} };`
-        : `export const ${exportName}: CustomRegistryEntry | null = null;`,
-    );
-    lines.push(``);
-  };
-
   pushRecordRegistry('customStageRegistry', stageEntries);
   pushRecordRegistry('customCallbackRegistry', callbackEntries);
-  pushSingletonRegistry('customHeaderRegistry', headerEntries[0]);
-  pushSingletonRegistry('customFooterRegistry', footerEntries[0]);
+  pushRecordRegistry('customHeaderRegistry', headerEntries);
+  pushRecordRegistry('customFooterRegistry', footerEntries);
+
+  lines.push(
+    `/** Name of the header component selected at build time via "Default:" (or null). */`,
+  );
+  lines.push(`export const customHeaderDefault: string | null = ${JSON.stringify(headerDefault)};`);
+  lines.push(``);
+  lines.push(
+    `/** Name of the footer component selected at build time via "Default:" (or null). */`,
+  );
+  lines.push(`export const customFooterDefault: string | null = ${JSON.stringify(footerDefault)};`);
+  lines.push(``);
 
   return lines.join('\n');
 }
@@ -375,8 +426,9 @@ export function buildRegistryContent(
  *
  * All I/O runs in-process via the platform `FileSystem` service — no subprocess
  * spawning. Validation errors across multiple components are collected and
- * reported together. Ambiguous output (duplicate names across any type, or more
- * than one header / more than one footer) fails with `RegistryCollisionError`
+ * reported together. Ambiguous output (duplicate names across any type, or an
+ * invalid "Default:" usage — 0 or 2+ defaults per header/footer type, or a
+ * pointer naming a nonexistent component) fails with `RegistryCollisionError`
  * rather than silently picking a winner.
  */
 export const runRegistryScript = (projectDir: string) =>

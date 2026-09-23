@@ -102,6 +102,78 @@ describe('parseComponentHeader', () => {
       expect(String(err.cause)).toContain('Missing "Name:" field');
     });
   });
+
+  describe('Default: field', () => {
+    it('parses a named default on a header component', () => {
+      const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Default: OtherHeader\n   -->`;
+      expect(decode('test.svelte', content)).toEqual({
+        type: 'header',
+        name: 'MyHeader',
+        default: 'OtherHeader',
+      });
+    });
+
+    it('parses a named default on a footer component', () => {
+      const content = `<!--\n   @component\n   Type: footer\n   Name: MyFooter\n   Default: Legal Footer\n   -->`;
+      expect(decode('test.svelte', content)).toEqual({
+        type: 'footer',
+        name: 'MyFooter',
+        default: 'Legal Footer',
+      });
+    });
+
+    it('omits the default field when absent', () => {
+      const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   -->`;
+      expect(decode('test.svelte', content).default).toBeUndefined();
+    });
+
+    it('parses a Default value containing spaces', () => {
+      const content = `<!--\n@component\nType: header\nName: A\nDefault: Brand Header\n-->`;
+      expect(decode('test.svelte', content).default).toBe('Brand Header');
+    });
+
+    it('hard-errors when a stage declares Default:', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!--\n@component\nType: stage\nName: Foo\nDefault: Bar\n-->`,
+      );
+      expect(String(err.cause)).toContain('"Default:"');
+      expect(String(err.cause)).toContain('stage');
+    });
+
+    it('hard-errors when a callback declares Default:', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!--\n@component\nType: callback\nName: Foo\nDefault: Bar\n-->`,
+      );
+      expect(String(err.cause)).toContain('"Default:"');
+      expect(String(err.cause)).toContain('callback');
+    });
+
+    it('rejects a boolean Default: value on a header', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!--\n@component\nType: header\nName: Foo\nDefault: true\n-->`,
+      );
+      expect(String(err.cause)).toContain('named default');
+    });
+
+    it('rejects a boolean Default: value on a footer', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!--\n@component\nType: footer\nName: Foo\nDefault: false\n-->`,
+      );
+      expect(String(err.cause)).toContain('named default');
+    });
+
+    it('rejects an empty Default: value', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!--\n@component\nType: header\nName: Foo\nDefault:\n-->`,
+      );
+      expect(String(err.cause)).toContain('named default');
+    });
+  });
 });
 
 describe('parseAcceptedProps', () => {
@@ -222,7 +294,58 @@ describe('buildRegistryContent', () => {
     expect(output).toContain('StageMyLoginStage');
   });
 
-  it('emits a singleton header registry for a single header component', () => {
+  it('emits a full Record and a default pointer for a header with Default:', () => {
+    const output = buildRegistryContent(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [
+        {
+          filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
+          name: 'Brand',
+          type: 'header',
+          acceptedProps: [],
+          default: 'Brand',
+        },
+      ],
+      [],
+    );
+    expect(output).toContain(
+      `import CustomHeaderBrand from '../../../../experimental/custom/headers/brand/brand.svelte';`,
+    );
+    expect(output).toContain(
+      'export const customHeaderRegistry: Record<string, CustomRegistryEntry> = {',
+    );
+    expect(output).toContain(
+      `"Brand": { get component() { return CustomHeaderBrand; }, acceptedProps: [] },`,
+    );
+    expect(output).toContain('export const customHeaderDefault: string | null = "Brand";');
+    expect(output).toContain('export const customFooterDefault: string | null = null;');
+  });
+
+  it('hard-errors when a header has no Default: (entries present)', () => {
+    const noDefault = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
+            name: 'Brand',
+            type: 'header',
+            acceptedProps: [],
+          },
+        ],
+        [],
+      );
+    expect(noDefault).toThrow(RegistryCollisionError);
+    expect(noDefault).toThrow(/exactly one/);
+  });
+
+  it('emits a default pointer pointing at another component of the same type', () => {
     const output = buildRegistryContent(
       nodePath,
       registryDir,
@@ -235,25 +358,24 @@ describe('buildRegistryContent', () => {
           type: 'header',
           acceptedProps: [],
         },
+        {
+          filePath: '/repo/experimental/custom/headers/alt/alt.svelte',
+          name: 'Alternate',
+          type: 'header',
+          acceptedProps: [],
+          default: 'Brand',
+        },
       ],
       [],
     );
-    expect(output).toContain(
-      `import CustomHeaderBrand from '../../../../experimental/custom/headers/brand/brand.svelte';`,
-    );
-    expect(output).toContain(
-      'export const customHeaderRegistry: CustomRegistryEntry | null = { get component() { return CustomHeaderBrand; }, acceptedProps: [] };',
-    );
+    expect(output).toContain('CustomHeaderBrand');
+    expect(output).toContain('CustomHeaderAlt');
+    expect(output).toContain('"Brand": {');
+    expect(output).toContain('"Alternate": {');
+    expect(output).toContain('export const customHeaderDefault: string | null = "Brand";');
   });
 
-  it('emits null when no header component exists', () => {
-    const output = buildRegistryContent(nodePath, registryDir, [], [], [], []);
-    expect(output).toContain(
-      'export const customHeaderRegistry: CustomRegistryEntry | null = null;',
-    );
-  });
-
-  it('emits a singleton footer registry for a single footer component', () => {
+  it('emits a full Record and a default pointer for a footer with Default:', () => {
     const output = buildRegistryContent(
       nodePath,
       registryDir,
@@ -266,6 +388,7 @@ describe('buildRegistryContent', () => {
           name: 'Legal',
           type: 'footer',
           acceptedProps: [],
+          default: 'Legal',
         },
       ],
     );
@@ -273,19 +396,67 @@ describe('buildRegistryContent', () => {
       `import CustomFooterLegal from '../../../../experimental/custom/footers/legal/legal.svelte';`,
     );
     expect(output).toContain(
-      'export const customFooterRegistry: CustomRegistryEntry | null = { get component() { return CustomFooterLegal; }, acceptedProps: [] };',
+      'export const customFooterRegistry: Record<string, CustomRegistryEntry> = {',
     );
+    expect(output).toContain('export const customFooterDefault: string | null = "Legal";');
+    expect(output).toContain('export const customHeaderDefault: string | null = null;');
   });
 
-  it('emits null when no footer component exists', () => {
+  it('emits null default pointers when no header/footer components exist', () => {
     const output = buildRegistryContent(nodePath, registryDir, [], [], [], []);
     expect(output).toContain(
-      'export const customFooterRegistry: CustomRegistryEntry | null = null;',
+      'export const customHeaderRegistry: Record<string, CustomRegistryEntry> = {',
     );
+    expect(output).toContain('export const customHeaderDefault: string | null = null;');
+    expect(output).toContain(
+      'export const customFooterRegistry: Record<string, CustomRegistryEntry> = {',
+    );
+    expect(output).toContain('export const customFooterDefault: string | null = null;');
   });
 
-  it('throws when two header components exist, even with distinct names (page-level singleton)', () => {
+  it('emits empty Record braces for an empty header registry', () => {
+    const output = buildRegistryContent(nodePath, registryDir, [], [], [], []);
+    const headerBlock = output.slice(
+      output.indexOf('customHeaderRegistry'),
+      output.indexOf('customHeaderDefault'),
+    );
+    expect(headerBlock).toContain('};');
+  });
+
+  it('allows multiple header components with distinct names (multi-entry design)', () => {
     const twoHeaders = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/headers/a/one.svelte',
+            name: 'One',
+            type: 'header',
+            acceptedProps: [],
+          },
+          {
+            filePath: '/repo/experimental/custom/headers/b/two.svelte',
+            name: 'Two',
+            type: 'header',
+            acceptedProps: [],
+            default: 'Two',
+          },
+        ],
+        [],
+      );
+    expect(twoHeaders).not.toThrow();
+    const output = twoHeaders();
+    expect(output).toContain('"One": {');
+    expect(output).toContain('"Two": {');
+    expect(output).toContain('CustomHeaderOne');
+    expect(output).toContain('CustomHeaderTwo');
+  });
+
+  it('hard-errors when zero header components declare Default:', () => {
+    const noDefault = () =>
       buildRegistryContent(
         nodePath,
         registryDir,
@@ -307,9 +478,114 @@ describe('buildRegistryContent', () => {
         ],
         [],
       );
-    expect(twoHeaders).toThrow(RegistryCollisionError);
-    expect(twoHeaders).toThrow(/a\/one\.svelte/);
-    expect(twoHeaders).toThrow(/b\/two\.svelte/);
+    expect(noDefault).toThrow(RegistryCollisionError);
+    expect(noDefault).toThrow(/exactly one/);
+    expect(noDefault).toThrow(/a\/one\.svelte/);
+    expect(noDefault).toThrow(/b\/two\.svelte/);
+  });
+
+  it('hard-errors when two header components declare Default:', () => {
+    const twoDefaults = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/headers/a/one.svelte',
+            name: 'One',
+            type: 'header',
+            acceptedProps: [],
+            default: 'One',
+          },
+          {
+            filePath: '/repo/experimental/custom/headers/b/two.svelte',
+            name: 'Two',
+            type: 'header',
+            acceptedProps: [],
+            default: 'Two',
+          },
+        ],
+        [],
+      );
+    expect(twoDefaults).toThrow(RegistryCollisionError);
+    expect(twoDefaults).toThrow(/exactly one/);
+    expect(twoDefaults).toThrow(/Default: One/);
+    expect(twoDefaults).toThrow(/Default: Two/);
+  });
+
+  it('hard-errors when zero footer components declare Default: (with entries present)', () => {
+    const noDefault = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/footers/a/one.svelte',
+            name: 'One',
+            type: 'footer',
+            acceptedProps: [],
+          },
+        ],
+      );
+    expect(noDefault).toThrow(RegistryCollisionError);
+    expect(noDefault).toThrow(/footer/);
+  });
+
+  it('hard-errors when a Default: names a nonexistent component', () => {
+    const missingTarget = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/headers/a/one.svelte',
+            name: 'One',
+            type: 'header',
+            acceptedProps: [],
+            default: 'Ghost',
+          },
+        ],
+        [],
+      );
+    expect(missingTarget).toThrow(RegistryCollisionError);
+    expect(missingTarget).toThrow(/Default: Ghost/);
+    expect(missingTarget).toThrow(/no matching/);
+  });
+
+  it('hard-errors when a Default: target exists in the wrong type registry', () => {
+    const wrongType = () =>
+      buildRegistryContent(
+        nodePath,
+        registryDir,
+        [],
+        [],
+        [
+          {
+            filePath: '/repo/experimental/custom/headers/a/one.svelte',
+            name: 'One',
+            type: 'header',
+            acceptedProps: [],
+            default: 'Legal',
+          },
+        ],
+        [
+          {
+            filePath: '/repo/experimental/custom/footers/b/legal.svelte',
+            name: 'Legal',
+            type: 'footer',
+            acceptedProps: [],
+          },
+        ],
+      );
+    expect(wrongType).toThrow(RegistryCollisionError);
+    expect(wrongType).toThrow(/Default: Legal/);
   });
 
   it('throws when two components share a registry key (exact duplicate name)', () => {
@@ -407,6 +683,7 @@ describe('buildRegistryContent', () => {
             name: 'Brand',
             type: 'header',
             acceptedProps: [],
+            default: 'Brand',
           },
         ],
         [
@@ -415,6 +692,7 @@ describe('buildRegistryContent', () => {
             name: 'Brand',
             type: 'footer',
             acceptedProps: [],
+            default: 'Brand',
           },
         ],
       );
@@ -444,12 +722,14 @@ describe('runRegistryScript', () => {
     fileName: string,
     name: string,
     type: string,
+    defaultName?: string,
   ) => {
     const dir = join(tmpDir, 'experimental', 'custom', kind, dirName);
     await mkdir(dir, { recursive: true });
+    const defaultLine = defaultName ? `\n   Default: ${defaultName}` : '';
     await writeFile(
       join(dir, fileName),
-      `<!--\n   @component\n   Type: ${type}\n   Name: ${name}\n   -->\n<div></div>`,
+      `<!--\n   @component\n   Type: ${type}\n   Name: ${name}${defaultLine}\n   -->\n<div></div>`,
       'utf8',
     );
   };
@@ -463,34 +743,48 @@ describe('runRegistryScript', () => {
   const run = () =>
     runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
 
-  it('scans stages, callbacks, headers, and footers and emits all four registries', async () => {
+  it('scans stages, callbacks, headers, and footers and emits all four registries with default pointers', async () => {
     await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
     await writeComponent('callbacks', 'name', 'name.svelte', 'Name', 'callback');
-    await writeComponent('headers', 'brand', 'brand.svelte', 'Brand', 'header');
-    await writeComponent('footers', 'legal', 'legal.svelte', 'Legal', 'footer');
+    await writeComponent('headers', 'brand', 'brand.svelte', 'Brand', 'header', 'Brand');
+    await writeComponent('footers', 'legal', 'legal.svelte', 'Legal', 'footer', 'Legal');
     await run();
 
     const output = await readRegistry();
     expect(output).toContain('customStageRegistry');
     expect(output).toContain('customCallbackRegistry');
-    expect(output).toContain('customHeaderRegistry: CustomRegistryEntry | null = {');
-    expect(output).toContain('customFooterRegistry: CustomRegistryEntry | null = {');
+    expect(output).toContain('customHeaderRegistry: Record<string, CustomRegistryEntry> = {');
+    expect(output).toContain('customFooterRegistry: Record<string, CustomRegistryEntry> = {');
     expect(output).toContain('CustomHeaderBrand');
     expect(output).toContain('CustomFooterLegal');
+    expect(output).toContain('export const customHeaderDefault: string | null = "Brand";');
+    expect(output).toContain('export const customFooterDefault: string | null = "Legal";');
   });
 
-  it('emits null header/footer registries when those directories are empty', async () => {
+  it('emits empty Records and null defaults when header/footer directories are empty', async () => {
     await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
     await run();
 
     const output = await readRegistry();
-    expect(output).toContain('customHeaderRegistry: CustomRegistryEntry | null = null;');
-    expect(output).toContain('customFooterRegistry: CustomRegistryEntry | null = null;');
+    expect(output).toContain('customHeaderRegistry: Record<string, CustomRegistryEntry> = {');
+    expect(output).toContain('customHeaderDefault: string | null = null;');
+    expect(output).toContain('customFooterRegistry: Record<string, CustomRegistryEntry> = {');
+    expect(output).toContain('customFooterDefault: string | null = null;');
   });
 
-  it('fails with a clear error when two header components exist', async () => {
+  it('emits multiple header entries and the named default', async () => {
     await writeComponent('headers', 'a', 'one.svelte', 'One', 'header');
-    await writeComponent('headers', 'b', 'two.svelte', 'Two', 'header');
+    await writeComponent('headers', 'b', 'two.svelte', 'Two', 'header', 'Two');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('"One": {');
+    expect(output).toContain('"Two": {');
+    expect(output).toContain('export const customHeaderDefault: string | null = "Two";');
+  });
+
+  it('fails when no header component declares Default: (with entries present)', async () => {
+    await writeComponent('headers', 'a', 'one.svelte', 'One', 'header');
 
     const result = await Effect.runPromise(
       Effect.either(runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer))),
@@ -502,10 +796,9 @@ describe('runRegistryScript', () => {
     if (!(error instanceof RegistryCollisionError)) {
       throw new Error(`Expected RegistryCollisionError, got: ${String(error)}`);
     }
-    expect(error.kind).toBe('singleton-occupancy');
+    expect(error.kind).toBe('default-usage');
     expect(error.type).toBe('header');
     expect(error.message).toContain('one.svelte');
-    expect(error.message).toContain('two.svelte');
   });
 });
 
@@ -550,7 +843,7 @@ describe('customRegistry vite plugin', () => {
     await mkdir(headerDir, { recursive: true });
     await writeFile(
       join(headerDir, 'brand.svelte'),
-      '<!--\n   @component\n   Type: header\n   Name: Brand\n   -->\n<div></div>',
+      '<!--\n   @component\n   Type: header\n   Name: Brand\n   Default: Brand\n   -->\n<div></div>',
       'utf8',
     );
     expect(listeners.length).toBeGreaterThan(0);
@@ -560,7 +853,7 @@ describe('customRegistry vite plugin', () => {
 
     await vi.waitFor(async () => {
       const output = await readFile(registryPath(), 'utf8');
-      expect(output).toContain('customHeaderRegistry: CustomRegistryEntry | null = {');
+      expect(output).toContain('customHeaderRegistry: Record<string, CustomRegistryEntry> = {');
       expect(output).toContain('CustomHeaderBrand');
     });
   });
