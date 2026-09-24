@@ -19,8 +19,10 @@
     customFooterRegistry,
     customHeaderRegistry,
   } from '$core/journey/_utilities/registry/custom-registry';
+  import { selectRegistryEntry } from '$core/journey/_utilities/registry/select-registry-entry.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
+  import { env } from '$env/dynamic/public';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
@@ -29,6 +31,19 @@
 
   /** @type {import('./$types').PageData} */
   export let data;
+
+  const headerEntry = selectRegistryEntry(
+    env.PUBLIC_CUSTOM_HEADER_NAME,
+    customHeaderRegistry,
+    'header',
+    'PUBLIC_CUSTOM_HEADER_NAME',
+  );
+  const footerEntry = selectRegistryEntry(
+    env.PUBLIC_CUSTOM_FOOTER_NAME,
+    customFooterRegistry,
+    'footer',
+    'PUBLIC_CUSTOM_FOOTER_NAME',
+  );
 
   const authIndexValue = $page.url.searchParams.get('authIndexValue');
   const codeParam = $page.url.searchParams.get('code');
@@ -125,9 +140,9 @@
 </script>
 
 <div bind:this={journeyRootEl} class="tw_h-full">
-  {#if customHeaderRegistry}
-    {@const CustomHeader = customHeaderRegistry.component}
-    <CustomHeader />
+  {#if headerEntry}
+    {@const CustomHeader = headerEntry.component}
+    <svelte:component this={CustomHeader} />
   {/if}
 
   <Box>
@@ -149,8 +164,8 @@
     {/if}
   </Box>
 
-  {#if customFooterRegistry}
-    {@const CustomFooter = customFooterRegistry.component}
-    <CustomFooter />
+  {#if footerEntry}
+    {@const CustomFooter = footerEntry.component}
+    <svelte:component this={CustomFooter} />
   {/if}
 </div>
