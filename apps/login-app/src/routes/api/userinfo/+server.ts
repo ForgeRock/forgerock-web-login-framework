@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { resolveOAuthRealmPath } from '$server/sessions';
+import { amFetch, resolveOAuthRealmPath } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -16,7 +16,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
-  const response = await fetch(`${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/userinfo`, {
+  const response = await amFetch(`${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/userinfo`, {
     method: 'POST',
     headers: {
       authorization: event.request.headers.get('authorization') || '',

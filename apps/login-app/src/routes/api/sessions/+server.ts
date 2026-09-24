@@ -9,6 +9,7 @@
 
 import { AM_DOMAIN_PATH } from '$core/constants';
 import {
+  amFetch,
   clearAmCookie,
   getAmCookie,
   resolveJsonRealmPath,
@@ -21,7 +22,7 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
-  const response = await fetch(
+  const response = await amFetch(
     `${AM_DOMAIN_PATH}${resolveJsonRealmPath(realm)}/sessions${resolveUpstreamQuery(event.url)}`,
     {
       method: 'POST',

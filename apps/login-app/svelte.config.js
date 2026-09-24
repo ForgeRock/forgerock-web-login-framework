@@ -17,6 +17,13 @@ const config = {
   },
   kit: {
     adapter: process.env.PREVIEW ? node() : auto(),
+    experimental: {
+      // Starts src/instrumentation.server.ts before app code loads, so the
+      // dedicated Prometheus metrics listener is up with the server.
+      instrumentation: {
+        server: true,
+      },
+    },
     // $lib now defaults to SvelteKit's standard src/lib/ — the app's own code
     alias: {
       $core: path.resolve('../../core'),
