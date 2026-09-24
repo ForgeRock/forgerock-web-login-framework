@@ -194,22 +194,15 @@ const scanDirectory = (
 // Registry content builder (pure)
 // --------------------------------------------------------------------------
 
-/** Raised when components collide on a generated identifier, registry key, or singleton slot. */
+/** Raised when components collide on a generated identifier or registry key. */
 export class RegistryCollisionError extends Data.TaggedError('RegistryCollisionError')<{
-  readonly kind: 'name-collision' | 'singleton-occupancy';
+  readonly kind: 'name-collision';
   readonly type: string;
   readonly name: string;
   readonly filePaths: string[];
 }> {
   get message(): string {
     const collidingFiles = this.filePaths.map((filePath) => `  - ${filePath}`).join('\n');
-    if (this.kind === 'singleton-occupancy') {
-      return (
-        `Only one ${this.type} component is allowed. Found ${this.filePaths.length}:\n` +
-        collidingFiles +
-        `\nKeep the one to use and delete or move the rest out of /experimental/custom/${this.type}s/.`
-      );
-    }
     return (
       `Duplicate component name "${this.name}" in type "${this.type}". Colliding files:\n` +
       collidingFiles +
@@ -245,22 +238,6 @@ export function buildRegistryContent(
   const callbackEntries = callbackComponents.map(toEntry('Callback'));
   const headerEntries = headerComponents.map(toEntry('CustomHeader'));
   const footerEntries = footerComponents.map(toEntry('CustomFooter'));
-
-  // Page-level singletons: at most one header and one footer. More than one is ambiguous
-  // even when names differ — hard error listing the candidates.
-  for (const [type, entries] of [
-    ['header', headerEntries],
-    ['footer', footerEntries],
-  ] as const) {
-    if (entries.length > 1) {
-      throw new RegistryCollisionError({
-        kind: 'singleton-occupancy',
-        type,
-        name: `${type} components`,
-        filePaths: entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
-      });
-    }
-  }
 
   // Name collisions: any two components sharing a generated identifier would emit a
   // duplicate TS identifier (broken build) or a shadowed registry key (silent last-wins).
@@ -323,8 +300,8 @@ export function buildRegistryContent(
 
   collectImportBlock(`// Stage overrides / extensions`, stageEntries);
   collectImportBlock(`// Callback overrides / extensions`, callbackEntries);
-  collectImportBlock(`// Custom header (page-level singleton)`, headerEntries);
-  collectImportBlock(`// Custom footer (page-level singleton)`, footerEntries);
+  collectImportBlock(`// Custom headers (multiple allowed)`, headerEntries);
+  collectImportBlock(`// Custom footers (multiple allowed)`, footerEntries);
 
   const pushRecordRegistry = (
     exportName: string,
@@ -344,24 +321,10 @@ export function buildRegistryContent(
     lines.push(``);
   };
 
-  const pushSingletonRegistry = (
-    exportName: string,
-    entry: (typeof headerEntries)[number] | undefined,
-  ) => {
-    lines.push(
-      entry
-        ? `export const ${exportName}: CustomRegistryEntry | null = { get component() { return ${
-            entry.varName
-          }; }, acceptedProps: ${JSON.stringify(entry.acceptedProps)} };`
-        : `export const ${exportName}: CustomRegistryEntry | null = null;`,
-    );
-    lines.push(``);
-  };
-
   pushRecordRegistry('customStageRegistry', stageEntries);
   pushRecordRegistry('customCallbackRegistry', callbackEntries);
-  pushSingletonRegistry('customHeaderRegistry', headerEntries[0]);
-  pushSingletonRegistry('customFooterRegistry', footerEntries[0]);
+  pushRecordRegistry('customHeaderRegistry', headerEntries);
+  pushRecordRegistry('customFooterRegistry', footerEntries);
 
   return lines.join('\n');
 }
