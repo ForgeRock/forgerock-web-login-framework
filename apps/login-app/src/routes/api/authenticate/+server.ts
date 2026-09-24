@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
+import { amFetch, getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -17,7 +17,7 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
   const body = await event.request.text();
-  const response = await fetch(
+  const response = await amFetch(
     `${AM_DOMAIN_PATH}${resolveJsonRealmPath(
       realm,
     )}/authenticate?authIndexType=service&authIndexValue=Login`,

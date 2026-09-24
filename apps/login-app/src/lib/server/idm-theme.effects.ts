@@ -9,6 +9,7 @@
 
 import { type ThemeObject, themeSchema, urlRegex } from '$core/style.store';
 import { env } from '$env/dynamic/private';
+import { recordThemeFetch } from '$server/metrics';
 
 interface IdmThemeEntry {
   _id?: string;
@@ -119,6 +120,7 @@ export async function fetchIdmTheme(
     backgroundImageUrl: undefined,
   };
   let response: Response;
+  const start = performance.now();
 
   try {
     response = await fetch(url, {
@@ -126,11 +128,13 @@ export async function fetchIdmTheme(
       signal: AbortSignal.timeout(resolveTimeoutMs()),
     });
   } catch {
+    recordThemeFetch(cached ? 'cache' : 'error', (performance.now() - start) / 1000);
     console.warn(`[theming] IDM fetch failed: ${url}`);
     return cached ?? emptyResult;
   }
 
   if (!response.ok) {
+    recordThemeFetch(cached ? 'cache' : 'error', (performance.now() - start) / 1000);
     console.warn(`[theming] IDM returned ${response.status} for ${url}`);
     return cached ?? emptyResult;
   }
@@ -139,6 +143,7 @@ export async function fetchIdmTheme(
   try {
     body = (await response.json()) as IdmThemeRealmResponse;
   } catch {
+    recordThemeFetch(cached ? 'cache' : 'invalid_json', (performance.now() - start) / 1000);
     console.warn('[theming] IDM response was not valid JSON');
     return cached ?? emptyResult;
   }
@@ -156,7 +161,10 @@ export async function fetchIdmTheme(
     themes.find((theme) => theme.isDefault) ??
     themes[0];
 
-  if (!matched) return cached ?? { ...emptyResult, themeCatalog };
+  if (!matched) {
+    recordThemeFetch('success', (performance.now() - start) / 1000);
+    return cached ?? { ...emptyResult, themeCatalog };
+  }
 
   const backgroundImageUrl =
     matched.backgroundImage && urlRegex.test(matched.backgroundImage)
@@ -170,5 +178,6 @@ export async function fetchIdmTheme(
   };
 
   themeCache.set(cacheKey, result);
+  recordThemeFetch('success', (performance.now() - start) / 1000);
   return result;
 }
