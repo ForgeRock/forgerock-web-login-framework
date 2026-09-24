@@ -12,15 +12,22 @@ import { createMetricsServer, getMetricsPort } from '$server/metricsServer';
 /**
  * SvelteKit server instrumentation: starts the dedicated Prometheus metrics
  * listener before application code loads (kit.experimental.instrumentation).
+ *
+ * The listener only starts when METRICS_PORT is set, which is the AIC
+ * deployment's contract (deployment.tmpl.yaml); local dev, `vite preview`,
+ * and e2e runs leave it unset and start no listener, so they are unaffected.
+ *
  * The listener is intentionally not awaited so server startup never blocks on
  * it; a bind failure is logged, never fatal to the app.
  */
-const metricsServer = createMetricsServer();
+if (process.env.METRICS_PORT) {
+  const metricsServer = createMetricsServer();
 
-metricsServer.listen(getMetricsPort(), () => {
-  console.error(`Login app metrics server listening on port ${getMetricsPort()} (path /metrics)`);
-});
+  metricsServer.listen(getMetricsPort(), () => {
+    console.error(`Login app metrics server listening on port ${getMetricsPort()} (path /metrics)`);
+  });
 
-metricsServer.on('error', (error) => {
-  console.error('Login app metrics server failed to start:', error);
-});
+  metricsServer.on('error', (error) => {
+    console.error('Login app metrics server failed to start:', error);
+  });
+}
