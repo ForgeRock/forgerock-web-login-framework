@@ -213,6 +213,35 @@ describe('resolveRedirect', () => {
     expect(url).toBe('/failure-redirect');
   });
 
+  it('on a failure, a validated-but-default successUrl loses to the journey failure URL', () => {
+    // Invalid gotoOnFail (not in the Validation Service): validateGoto falls
+    // back to AM's default success URL, which is not a real destination — the
+    // payload's node URL wins. (Platform Login intends the same via
+    // verifyGotoUrlAndRedirect check 2, but its console-only isDefaultPath
+    // never matches AM's actual /enduser/ default.)
+    const url = resolveRedirect(
+      makeContext({
+        isGotoOnFail: true,
+        gotoUrl: 'https://www.forgerock.com/',
+        successUrl: '/enduser/?realm=/alpha',
+        journeyStepUrl: 'https://forgerock.github.io/openam-community-edition/',
+      }),
+    );
+    expect(url).toBe('https://forgerock.github.io/openam-community-edition/');
+  });
+
+  it('on a failure, a genuinely validated param still beats the journey failure URL', () => {
+    const url = resolveRedirect(
+      makeContext({
+        isGotoOnFail: true,
+        gotoUrl: 'https://www.pingidentity.com/en.html',
+        successUrl: 'https://www.pingidentity.com/en.html',
+        journeyStepUrl: 'https://forgerock.github.io/openam-community-edition/',
+      }),
+    );
+    expect(url).toBe('https://www.pingidentity.com/en.html');
+  });
+
   it('returns a success fallback redirect when nothing matches', () => {
     const url = resolveRedirect(makeContext());
     expect(url).toBe('/success-redirect');

@@ -98,6 +98,13 @@ export function resolveAgainstOrigin(urlOrPath: string, amOrigin: string): strin
  * @returns {string | null} The success URL or null.
  */
 function getSuccessRedirect(redirectContext: RedirectData): string | null {
+  if (
+    redirectContext.isGotoOnFail &&
+    redirectContext.successUrl !==
+      resolveAgainstOrigin(redirectContext.gotoUrl, redirectContext.amOrigin)
+  ) {
+    return null;
+  }
   return redirectContext.successUrl && !isDefaultPath(redirectContext.successUrl)
     ? resolveAgainstOrigin(redirectContext.successUrl, redirectContext.amOrigin)
     : null;

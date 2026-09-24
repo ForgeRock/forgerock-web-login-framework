@@ -54,6 +54,29 @@ Redirect URLs can come from multiple places:
   - `/failure-redirect` for failure cases
 - These files provide a guaranteed fallback destination for both success and failure scenarios.
 
+## Failure-URL precedence
+
+On a terminal login failure the redirect destination is chosen in this order:
+
+1. **`gotoOnFail` query param** — validated via AM's `validateGoto`; used only when AM echoes
+   the param back unchanged, which means it is listed in the Validation Service. This runs
+   even on failures, where there is no session token: `validateGoto` accepts an empty
+   session cookie in app realms. If AM answers with anything else (its default success URL),
+   the param is invalid and is skipped.
+2. **AM's resolved failure URL** — the `detail.failureUrl` the widget received in the
+   `LoginFailure` payload and forwards as the form's `journeyStepUrl`. AM populates it when
+   the failure outcome has a resolved destination (journey Failure URL node, accepted
+   `gotoOnFail`, user profile, or realm default — see the
+   [failure-URL precedence docs](https://docs.pingidentity.com/pingoneaic/am-authentication/redirection-url-precedence.html)).
+3. **Fallback** — `/failure-redirect`.
+
+Note this intentionally deviates from AM's own precedence in one configuration: when a
+journey Failure URL node and a valid `gotoOnFail` param both exist, AM resolves the
+node URL first, but this app sends the user to the param — the same order Platform Login
+uses. (Platform Login's fallback for an invalid param — let the payload URL win — is
+dead code there because its default-path check only matches `console`; this app implements
+the fallback properly by comparing the validated URL against the param.)
+
 ## Other flows
 
 ### Default path

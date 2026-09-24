@@ -64,7 +64,7 @@ export async function createRedirectContext(
 
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
-  const successUrl = tokenId && gotoUrl ? await validateUrl(tokenId, gotoUrl) : null;
+  const successUrl = gotoUrl ? await validateUrl(tokenId, gotoUrl) : null;
   const roles = tokenId ? await getUserRolesFromSession(tokenId) : [];
   const realm = env.FR_REALM_PATH;
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
@@ -109,6 +109,10 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
 
 /**
  * @function validateUrl - validates a redirect URL with the AM backend and returns a success URL if valid
+ *
+ * AM returns the key as `successURL` (capital URL) — verified against the
+ * tenant; parsing lowercase was why this always returned null.
+ *
  * @param {string} tokenId - The session token ID
  * @param {string} gotoUrl - The URL to validate
  * @returns {Promise<string|null>} The validated URL or null if invalid
@@ -117,14 +121,14 @@ export async function validateUrl(tokenId: TokenId, gotoUrl: string): Promise<st
   const response = await amFetchRequest(tokenId, '/users?_action=validateGoto', 'POST', {
     goto: gotoUrl,
   });
-  const parsed = z.object({ successUrl: z.string().optional() }).safeParse(response);
+  const parsed = z.object({ successURL: z.string().optional() }).safeParse(response);
   if (
     !parsed.success ||
-    !parsed.data.successUrl ||
-    parsed.data.successUrl === 'undefined' ||
-    parsed.data.successUrl === 'null'
+    !parsed.data.successURL ||
+    parsed.data.successURL === 'undefined' ||
+    parsed.data.successURL === 'null'
   ) {
     return null;
   }
-  return parsed.data.successUrl;
+  return parsed.data.successURL;
 }
