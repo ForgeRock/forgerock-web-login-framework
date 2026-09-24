@@ -68,7 +68,9 @@ export async function createRedirectContext(
 
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
-  const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'root';
+  // Normalize like the other configured-realm consumers: a leading slash here
+  // would leak into the role redirect as ?realm=//alpha.
+  const realm = cookie.realm ?? env.FR_REALM_PATH?.replace(/^\/+/, '') ?? 'root';
   const successUrl = tokenId && gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
   const roles = tokenId ? await getUserRolesFromSession(tokenId, realm) : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
