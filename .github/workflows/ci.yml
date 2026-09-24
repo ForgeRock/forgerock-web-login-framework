@@ -76,10 +76,7 @@ jobs:
         with:
           name: widget-dist
           path: packages/login-widget/dist
-      # PREVIEW selects adapter-node in svelte.config.js, matching the
-      # production Docker build (Dockerfile sets PREVIEW="true") and enabling
-      # the instrumentation.server.ts metrics listener.
-      - run: env PREVIEW=true pnpm --filter @forgerock/login-app run build
+      - run: pnpm --filter @forgerock/login-app run build
       - name: e2e
         run: pnpm --filter @forgerock/login-widget-e2e exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       - name: Upload blob report to GitHub Actions Artifacts
