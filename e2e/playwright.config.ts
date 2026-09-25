@@ -7,6 +7,7 @@ export const AM_REALM = 'alpha';
 const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 const configErrorUrl = 'http://localhost:3100';
 const idmThemeUrl = 'http://localhost:3300';
+const customComponentErrorUrl = 'http://localhost:3400';
 // This forgeblocks tenant serves IDM at the tenant root, not under /am — FR_IDM_URL defaults
 // to FR_AM_URL, which 404s against /openidm/config/ui/themerealm, so it must be overridden.
 const IDM_URL = 'https://openam-sdks.forgeblocks.com';
@@ -78,6 +79,31 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_AM_JOURNEY_LOGIN: 'TEST_ThemeE2E',
         },
       },
+      // Dedicated server with PUBLIC_CUSTOM_HEADER_NAME pointed at an unregistered name, so
+      // the custom-component-error test hits the module-init throw in +page.svelte without
+      // destabilizing the shared webServer's env used by every other test in the suite.
+      // FR_* must stay set (core/constants.ts throws at module-import time without them,
+      // which would crash before the custom-component throw can render +error.svelte).
+      // PUBLIC_CUSTOM_HEADER_NAME is explicitly set rather than omitted for the same
+      // backfill reason as FR_AM_WELLKNOWN_URL above. The registry has entries (the
+      // git-tracked demo components), so the unknown name is what triggers the throw.
+      {
+        command: 'pnpm --filter @forgerock/login-app run preview --host=localhost --port=3400',
+        cwd: '..',
+        port: 3400,
+        ignoreHTTPSErrors: true,
+        reuseExistingServer: true,
+        env: {
+          FR_AM_URL: AM_URL,
+          FR_AM_COOKIE_NAME: AM_COOKIE_NAME,
+          FR_REALM_PATH: AM_REALM,
+          FR_OAUTH_PUBLIC_CLIENT: 'WebOAuthClient',
+          FR_OAUTH_SCOPE: 'openid profile email',
+          FR_AM_WELLKNOWN_URL: `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
+          PUBLIC_CUSTOM_HEADER_NAME: 'GhostName',
+          PUBLIC_CUSTOM_FOOTER_NAME: '',
+        },
+      },
     ];
 
 export default defineConfig({
@@ -106,7 +132,7 @@ export default defineConfig({
     {
       name: 'chromium',
       grepInvert: /webauthn/,
-      testIgnore: /config-error|idm-theme/,
+      testIgnore: /config-error|idm-theme|custom-component-error/,
       use: {
         ...devices['Desktop Chrome'],
         // ...devices['Desktop Edge'],
@@ -126,6 +152,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: `${idmThemeUrl}/e2e/`,
+      },
+    },
+    {
+      name: 'custom-component-error',
+      testMatch: /custom-component-error/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `${customComponentErrorUrl}/e2e/`,
       },
     },
     // {
