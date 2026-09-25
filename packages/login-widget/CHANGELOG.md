@@ -1,5 +1,34 @@
 # [1.3.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.1...v1.3.0) (2024-06-05)
 
+## 2.2.0
+
+### Minor Changes
+
+- [#565](https://github.com/ForgeRock/forgerock-web-login-framework/pull/565) [`bdc9c39`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/bdc9c39834548c7e4f845b2cce7b9fd240227ef5) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Add Page Node theme support. Parses a Page Node `themeId` out of the AM `stage` attribute (both the key=value and JSON shapes), adds `themeCatalog` to `configuration({ style })` keyed by IDM theme `_id`, and applies the resolved page theme over the base theme on the widget root — falling through to the base theme when the id is absent, unresolved, or no catalog was supplied. Logo height now also flows through the theme CSS var bridge via `--fr-logo-height`.
+
+- [#580](https://github.com/ForgeRock/forgerock-web-login-framework/pull/580) [`bccd6db`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/bccd6dbf50faceb54ab1d2416694c35f8314830c) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Add a `style.callbacks` option to `configure()` that carries per-callback style rules, keyed by AM callback type name — a rule list of plain string dictionaries like `{ TextOutputCallback: [{ type: '4', display: 'hidden' }] }` hides script-type output (`TextOutputCallback` with `messageType` 4), whose source the widget prints to the screen because it never executes it. Rules are passed through to the callback renderer rather than strongly typed, so new callback types can adopt the map without schema changes. Informational, warning, and error messages are unaffected.
+
+### Patch Changes
+
+- [#571](https://github.com/ForgeRock/forgerock-web-login-framework/pull/571) [`5a1bef8`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/5a1bef8c8eab7e45b35eb5e5280d940a1f981520) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Fix dark-mode styling on admin invite screens and thread `tabindex` through the checkbox composition/primitive chain:
+
+  - `Checkbox`/`Standard`/`Animated`/checkbox primitive now accept an optional `tabindex` prop.
+  - Animated checkbox label content no longer breaks inline links out of the grid layout.
+
+- [#582](https://github.com/ForgeRock/forgerock-web-login-framework/pull/582) [`0a3b7ad`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/0a3b7adb8b3ce1f172eb80f84dcd0ea31c1fe2b0) Thanks [@SteinGabriel](https://github.com/SteinGabriel)! - Move logo theming from inline `style` attributes to root-level CSS custom properties, so every themed value flows through one mechanism:
+
+  - New `applyLogoVars` effect writes consumer logo config (`configure({ style: { logo } })`) as `--fr-logo-light-fallback`, `--fr-logo-dark-fallback`, `--fr-logo-height`, and `--fr-logo-width` on the widget root, re-applied after every theme pass.
+  - `.dialog-logo` / `.dialog-logo_dark` consume the fallback chain from the default theme CSS; the light/dark primary slots (`--logo-light` / `--logo-dark`) stay owned by the IDM/page-node theme, which now wins over static config.
+  - Inline logo `style` blocks (and `encodeCssUrl` usage) removed from the dialog composition, the login/generic stages, and the login-app admin-invite stages.
+  - Logo width can now be configured via `style.logo.width` (new `--fr-logo-width` var); the default height fallback is `72px`.
+  - Invalid logo URLs (`style.logo.light` / `style.logo.dark`) are now dropped by config validation the same way as IDM theme logo URLs; valid values are `https://` URLs, `data:image/` URIs, or root-relative paths (leading `/`). A dropped value now also logs a console warning naming the config path and the rejected value, so consumers get a diagnostic when a previously-accepted logo URL form is rejected.
+  - Height and width of `0` are honored as configured (`0px`) rather than falling back to the default, matching the IDM theme `logoHeight` convention.
+  - Stage-rendered logos keep the pre-var inline defaults: 200px width when no width is configured, and the dialog header logo keeps stretching to the header height. Modal dialogs rendered without a header keep filling their container: the no-header logo falls back to `100%` of its `tw_h-32` container when no height is configured.
+
+- [#578](https://github.com/ForgeRock/forgerock-web-login-framework/pull/578) [`095a5b2`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/095a5b28790e48b3b7c32ea45655f2ba782f395e) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Add a localized Start Over action to the default OTP stage.
+
+- [#502](https://github.com/ForgeRock/forgerock-web-login-framework/pull/502) [`4200def`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/4200def82506c07fd7a3f1cd66ba29828b3be778) Thanks [@livstowe](https://github.com/livstowe)! - Remove the unused `APP_DOMAIN` export from `core/constants.ts`. It had no importers in the widget, the dev app, or the E2E suites; `AM_DOMAIN` (extracted from `FR_AM_URL`) remains the supported way to derive the AM host. No runtime behavior changes.
+
 ## 2.1.0
 
 ### Minor Changes
