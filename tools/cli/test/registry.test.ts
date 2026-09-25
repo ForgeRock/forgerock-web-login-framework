@@ -320,6 +320,22 @@ describe('parseComponentHeader', () => {
     const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Default: OtherHeader\n   -->`;
     expect(decode('test.svelte', content)).toEqual({ type: 'header', name: 'MyHeader' });
   });
+
+  it('fails when Name is "__proto__" (reserved object-literal key)', () => {
+    const err = decodeError(
+      'test.svelte',
+      `<!-- @component\n   Type: header\n   Name: __proto__ -->`,
+    );
+    expect(String(err.cause)).toContain('Reserved key "__proto__"');
+  });
+
+  it('fails when Name is "constructor" (reserved object-literal key)', () => {
+    const err = decodeError(
+      'test.svelte',
+      `<!-- @component\n   Type: footer\n   Name: constructor -->`,
+    );
+    expect(String(err.cause)).toContain('Reserved key "constructor"');
+  });
 });
 
 describe('runRegistryScript', () => {

@@ -101,6 +101,22 @@ describe('parseComponentHeader', () => {
       const err = decodeError('test.svelte', `<!-- @component\n   Type: stage -->`);
       expect(String(err.cause)).toContain('Missing "Name:" field');
     });
+
+    it('fails when Name is "__proto__" (would corrupt the generated Record literal)', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!-- @component\n   Type: header\n   Name: __proto__ -->`,
+      );
+      expect(String(err.cause)).toContain('Reserved key "__proto__"');
+    });
+
+    it('fails when Name is "constructor" (reserved object-literal key)', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!-- @component\n   Type: footer\n   Name: constructor -->`,
+      );
+      expect(String(err.cause)).toContain('Reserved key "constructor"');
+    });
   });
 
   describe('legacy Default: line', () => {

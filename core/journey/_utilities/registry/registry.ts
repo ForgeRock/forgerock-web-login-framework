@@ -101,7 +101,18 @@ export const parseComponentHeader = (
     return fail('Missing "Name:" field in @component header. Expected: Name: <ComponentName>');
   }
 
-  return Effect.succeed({ type: rawType, name: nameMatch[1].trim() });
+  const name = nameMatch[1].trim();
+  // "__proto__" as an object-literal key sets the prototype instead of defining
+  // an own property, so the generated Record would silently lose the entry;
+  // "constructor" is inherited-but-shadowable and kept reserved for symmetry.
+  if (name === '__proto__' || name === 'constructor') {
+    return fail(
+      `Reserved key "${name}" cannot be used as a Name. The generated registry is an ` +
+        `object literal, and this key would corrupt the Record instead of registering the component.`,
+    );
+  }
+
+  return Effect.succeed({ type: rawType, name });
 };
 
 // --------------------------------------------------------------------------
