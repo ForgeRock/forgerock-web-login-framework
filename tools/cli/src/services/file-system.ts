@@ -31,7 +31,12 @@ export const isFrameworkDirectory = Effect.fnUntraced(function* (dir: string) {
   return hasPkgJson && (hasExperimental || hasPnpmWorkspace);
 });
 
-const PROTECTED_DIRS = ['experimental/custom/callbacks/', 'experimental/custom/stages/'] as const;
+const PROTECTED_DIRS = [
+  'experimental/custom/callbacks/',
+  'experimental/custom/stages/',
+  'experimental/custom/headers/',
+  'experimental/custom/footers/',
+] as const;
 
 /** Expand a leading `~` to the user's home directory. */
 export function expandTilde(p: string): string {

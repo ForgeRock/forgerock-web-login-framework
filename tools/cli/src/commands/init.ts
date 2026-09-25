@@ -19,6 +19,12 @@ const PNPM_WORKSPACE = `packages:
   - 'e2e'
 `;
 
+/**
+ * Custom component directories scaffolded (with .gitkeep) at project init.
+ * Protected during `ping-lf update` — see PROTECTED_DIRS in services/file-system.
+ */
+export const CUSTOM_COMPONENT_DIRS = ['callbacks', 'stages', 'headers', 'footers'] as const;
+
 const nextStepsMessage = (dir: string) => `
 Done. Project initialized successfully.
 
@@ -31,6 +37,8 @@ Next steps:
 To scaffold your first custom component:
   ping-lf generate callback MyCallback
   ping-lf generate stage MyStage
+  ping-lf generate header MyHeader
+  ping-lf generate footer MyFooter
 
 Read the authoring guide: experimental/custom/README.md
 `;
@@ -87,12 +95,12 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     // ── 4. Scaffold experimental/custom/ ──────────────────────────────────
     // copyWithExclusions already copies experimental/custom/demo/,
     // login-framework.ts, README.md, and tsconfig.json from the source.
-    // Only callbacks/ and stages/ are protected (they hold user components).
+    // Only the custom component dirs are protected (they hold user components).
     // Create them as empty dirs with .gitkeep — components come via `ping-lf generate`.
     yield* Console.log('Scaffolding custom component directories...');
 
     yield* Effect.forEach(
-      ['callbacks', 'stages'] as const,
+      CUSTOM_COMPONENT_DIRS,
       (dir) =>
         Effect.gen(function* () {
           const customDir = path.join(resolvedDir, 'experimental', 'custom', dir);

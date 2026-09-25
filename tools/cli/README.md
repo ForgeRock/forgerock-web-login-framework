@@ -45,7 +45,7 @@ pnpm dev
 1. Downloads the framework archive from GitHub Releases (or copies from `--local`)
 2. Copies framework files, excluding build artifacts, secrets, and `tools/`
 3. Writes a minimal `pnpm-workspace.yaml`
-4. Creates `experimental/custom/callbacks/` and `experimental/custom/stages/` with `.gitkeep` placeholders
+4. Creates `experimental/custom/callbacks/`, `experimental/custom/stages/`, `experimental/custom/headers/`, and `experimental/custom/footers/` with `.gitkeep` placeholders
 5. Copies the component authoring guide to `experimental/custom/README.md`
 6. Writes `.generator-version` to track the framework version in use
 
@@ -210,7 +210,9 @@ my-login-project/
 │   └── custom/
 │       ├── README.md             # Component authoring guide
 │       ├── callbacks/            # Your custom callback components
-│       └── stages/               # Your custom stage components
+│       ├── stages/               # Your custom stage components
+│       ├── headers/              # Your custom header components
+│       └── footers/              # Your custom footer components
 ├── .generator-version            # Tracks the framework version in use
 └── pnpm-workspace.yaml
 ```
