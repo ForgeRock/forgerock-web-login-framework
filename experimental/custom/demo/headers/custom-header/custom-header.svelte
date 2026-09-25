@@ -19,12 +19,12 @@
   rendered outside the journey flow. They have no access to the journey, form,
   or step state.
 
-  NOTE (singleton rule)
-  ─────────────────────
-  The current build enforces at most one Type: header component across
-  experimental/custom/headers/ — a second file fails the build. This rule is
-  being reworked to allow multiple headers with one default (see the ticket's
-  multi-entry design revision).
+  NOTE (selection)
+  ────────────────
+  Multiple Type: header components may be registered, each under its own Name:.
+  The login app selects one via the PUBLIC_CUSTOM_HEADER_NAME environment
+  variable (Name: of the component to render). An unset variable renders no
+  header; a variable naming an unregistered component fails loudly.
 -->
 
 <script lang="ts">

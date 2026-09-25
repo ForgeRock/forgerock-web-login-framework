@@ -19,12 +19,12 @@
   outside the journey flow. They have no access to the journey, form, or step
   state.
 
-  NOTE (singleton rule)
-  ─────────────────────
-  The current build enforces at most one Type: footer component across
-  experimental/custom/footers/ — a second file fails the build. This rule is
-  being reworked to allow multiple footers with one default (see the ticket's
-  multi-entry design revision).
+  NOTE (selection)
+  ────────────────
+  Multiple Type: footer components may be registered, each under its own Name:.
+  The login app selects one via the PUBLIC_CUSTOM_FOOTER_NAME environment
+  variable (Name: of the component to render). An unset variable renders no
+  footer; a variable naming an unregistered component fails loudly.
 -->
 
 <script lang="ts">

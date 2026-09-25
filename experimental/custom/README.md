@@ -61,10 +61,10 @@ The `@component` comment is required. The framework's Vite plugin reads it to re
 | ---------- | ------------------------------------------------- | ------------------------------ |
 | `stage`    | The entire form layout for a named stage          | One stage only                 |
 | `callback` | A specific callback type renderer                 | Every occurrence globally      |
-| `header`   | The page-level header slot (branding, nav links)  | One per page (a single winner) |
-| `footer`   | The page-level footer slot (legal, links, markup) | One per page (a single winner) |
+| `header`   | The page-level header slot (branding, nav links)  | Multiple allowed, one rendered |
+| `footer`   | The page-level footer slot (legal, links, markup) | Multiple allowed, one rendered |
 
-Header and footer components take no props — they are static branding slots rendered above and below the journey in the login app. Declaring more than one `Type: header` (or `Type: footer`) component fails the build.
+Header and footer components take no props — they are static branding slots rendered above and below the journey in the login app. Multiple header (or footer) components may be registered, each under its own `Name:`; the login-app selects one via the `PUBLIC_CUSTOM_HEADER_NAME` / `PUBLIC_CUSTOM_FOOTER_NAME` environment variables. An unset variable renders none, and a variable naming an unregistered component fails loudly.
 
 ## Component props
 
