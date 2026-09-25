@@ -675,4 +675,47 @@ describe('customRegistry vite plugin', () => {
     expect(after).toBe(baseline);
     expect(after).not.toContain('CustomHeaderStray');
   });
+
+  it('logs a stale-registry action sentence when a watcher regeneration collides on a name', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    // Seed a valid registry with one header.
+    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'brand');
+    await mkdir(headerDir, { recursive: true });
+    await writeFile(
+      join(headerDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+    await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+    const baseline = await readFile(registryPath(), 'utf8');
+
+    // Introduce a second header with the SAME Name: — the regeneration collides.
+    const collidingDir = join(tmpDir, 'experimental', 'custom', 'headers', 'other');
+    await mkdir(collidingDir, { recursive: true });
+    await writeFile(
+      join(collidingDir, 'other.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+    for (const listener of listeners) {
+      listener('add', join(collidingDir, 'other.svelte'));
+    }
+
+    await vi.waitFor(() => {
+      expect(server.config.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('custom-registry.ts is stale'),
+      );
+      expect(server.config.logger.error).toHaveBeenCalledWith(expect.stringContaining('Brand'));
+    });
+
+    // The stale file is left on disk (a collision is a fix-on-disk situation, not an
+    // auto-deletion): the previously generated content still reads the old set.
+    const after = await readFile(registryPath(), 'utf8');
+    expect(after).toBe(baseline);
+  });
 });
