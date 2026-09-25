@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   CallbackNameSchema,
+  HeaderFooterNameSchema,
   scaffoldComponent,
   StageNameSchema,
 } from '../src/commands/generate.js';
@@ -30,6 +31,8 @@ async function createMinimalProject(dir: string): Promise<void> {
   // empty custom component dirs (runRegistryScript scans these)
   await mkdir(join(dir, 'experimental', 'custom', 'callbacks'), { recursive: true });
   await mkdir(join(dir, 'experimental', 'custom', 'stages'), { recursive: true });
+  await mkdir(join(dir, 'experimental', 'custom', 'headers'), { recursive: true });
+  await mkdir(join(dir, 'experimental', 'custom', 'footers'), { recursive: true });
   // registry output dir (runRegistryScript writes here)
   await mkdir(join(dir, 'core', 'journey', '_utilities', 'registry'), { recursive: true });
 }
@@ -242,5 +245,110 @@ describe('StageNameSchema', () => {
     });
     it('rejects newlines', () => reject('My\nStage'));
     it('rejects null bytes', () => reject('My\x00Stage'));
+  });
+});
+
+// ── Header/footer scaffold tests ─────────────────────────────────────────────
+
+describe('HeaderFooterNameSchema', () => {
+  const decodeHeaderFooter = Schema.decodeSync(HeaderFooterNameSchema);
+
+  describe('valid names — header/footer names are arbitrary branding strings', () => {
+    it('accepts PascalCase', () => {
+      expect(decodeHeaderFooter('MyHeader').name).toBe('MyHeader');
+      expect(decodeHeaderFooter('MyHeader').slug).toBe('my-header');
+    });
+
+    it('accepts names with spaces', () => {
+      expect(decodeHeaderFooter('Corporate Header').slug).toBe('corporate-header');
+      expect(decodeHeaderFooter('Corporate Header').name).toBe('Corporate Header');
+    });
+
+    it('hyphenates acronym runs in PascalCase names', () => {
+      expect(decodeHeaderFooter('JWTHeader').slug).toBe('jwt-header');
+    });
+
+    it('rejects path traversal, newlines, and null bytes', () => {
+      expect(() => decodeHeaderFooter('../evil')).toThrow();
+      expect(() => decodeHeaderFooter('My\nHeader')).toThrow();
+      expect(() => decodeHeaderFooter('My\x00Header')).toThrow();
+    });
+  });
+});
+
+describe('scaffoldComponent — header/footer templates', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    tmpDir = await mkdtemp(join(tmpdir(), 'ping-lf-gen-hf-test-'));
+    await createMinimalProject(tmpDir);
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('scaffolds a header with component, stories, and story wrapper under headers/', async () => {
+    await runEffect(scaffoldComponent('header', 'My Header', tmpDir));
+
+    const componentFile = join(
+      tmpDir,
+      'experimental',
+      'custom',
+      'headers',
+      'my-header',
+      'my-header.svelte',
+    );
+    const componentContent = await readFile(componentFile, 'utf8');
+
+    expect(componentContent).not.toContain('__COMPONENT_NAME_PASCAL__');
+    expect(componentContent).toContain('Type: header');
+    expect(componentContent).toContain('Name: My Header');
+
+    const storiesContent = await readFile(
+      join(tmpDir, 'experimental', 'custom', 'headers', 'my-header', 'my-header.stories.js'),
+      'utf8',
+    );
+    expect(storiesContent).toContain("title: 'Custom/Header/My Header'");
+
+    const storyWrapperContent = await readFile(
+      join(tmpDir, 'experimental', 'custom', 'headers', 'my-header', 'my-header.story.svelte'),
+      'utf8',
+    );
+    expect(storyWrapperContent).toContain('MyHeader');
+    expect(storyWrapperContent).not.toContain('__COMPONENT_NAME_PASCAL__');
+  });
+
+  it('scaffolds a footer under footers/ with PascalCase name substitution', async () => {
+    await runEffect(scaffoldComponent('footer', 'My Footer', tmpDir));
+
+    const componentContent = await readFile(
+      join(tmpDir, 'experimental', 'custom', 'footers', 'my-footer', 'my-footer.svelte'),
+      'utf8',
+    );
+
+    expect(componentContent).toContain('Type: footer');
+    expect(componentContent).toContain('Name: My Footer');
+    expect(componentContent).not.toContain('__COMPONENT_NAME__');
+
+    const storyWrapperContent = await readFile(
+      join(tmpDir, 'experimental', 'custom', 'footers', 'my-footer', 'my-footer.story.svelte'),
+      'utf8',
+    );
+    expect(storyWrapperContent).toContain('MyFooter');
+  });
+
+  it('rejects an invalid header name', async () => {
+    const result = await runEffect(
+      scaffoldComponent('header', '../evil', tmpDir).pipe(Effect.either) as Effect.Effect<
+        unknown,
+        unknown,
+        FileSystem.FileSystem | Path.Path
+      >,
+    );
+    expect((result as { _tag?: string; left?: { _tag?: string } }).left?._tag).toBe(
+      'InvalidComponentNameError',
+    );
   });
 });

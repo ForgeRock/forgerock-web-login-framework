@@ -77,6 +77,28 @@ export const StageNameSchema = Schema.String.pipe(
 );
 
 /**
+ * Validates a header/footer component name: accepts any string that is safe for a
+ * directory name and HTML comment embedding — same rules as stage names. Header and
+ * footer names are branding strings (e.g. "Corporate Header"), not AM-driven
+ * identifiers, so there is no naming-convention constraint.
+ */
+export const HeaderFooterNameSchema = Schema.String.pipe(
+  Schema.filter(
+    (s) =>
+      s.length >= 2 &&
+      /[A-Za-z]/.test(s) &&
+      !s.includes('\0') &&
+      !/[\n\r]/.test(s) &&
+      !/^\.\.?[/\\]/.test(s),
+  ),
+  Schema.transform(Schema.Struct({ name: Schema.String, slug: Schema.String }), {
+    strict: true,
+    decode: (name) => ({ name, slug: toSlug(name) }),
+    encode: ({ name }) => name,
+  }),
+);
+
+/**
  * Resolves the templates directory relative to this file.
  * In the compiled output (dist/src/commands/) the templates live one level up
  * at dist/src/templates/. In Vitest (src/commands/) they live two levels up at
@@ -88,15 +110,24 @@ function getTemplatesDir(): string {
   return existsSync(compiledPath) ? compiledPath : nodePath.join(__dirname, '../../templates');
 }
 
-export function scaffoldComponent(type: 'callback' | 'stage', name: string, directory?: string) {
+/** Supported custom component types for scaffolding. */
+type ScaffoldType = 'callback' | 'stage' | 'header' | 'footer';
+
+export function scaffoldComponent(type: ScaffoldType, name: string, directory?: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const p = yield* Path.Path;
 
     // ── Guard: validate component name format ─────────────────────────────
     // Callbacks must be valid  name (PascalCase, alphanumeric only).
-    // Stages are arbitrary AM strings with no naming convention constraint.
-    const nameSchema = type === 'callback' ? CallbackNameSchema : StageNameSchema;
+    // Stages, headers, and footers are arbitrary strings with no naming
+    // convention constraint.
+    const nameSchema =
+      type === 'callback'
+        ? CallbackNameSchema
+        : type === 'stage'
+        ? StageNameSchema
+        : HeaderFooterNameSchema;
     const { slug } = yield* Schema.decode(nameSchema)(name).pipe(
       Effect.mapError(() => new InvalidComponentNameError({ name })),
     );
@@ -106,8 +137,13 @@ export function scaffoldComponent(type: 'callback' | 'stage', name: string, dire
     // ── Guard: must be run from an initialized project root ───────────────
     yield* assertValidProject(cwd);
 
-    const subDir = type === 'callback' ? 'callbacks' : 'stages';
-    const componentDir = p.join(cwd, CUSTOM_DIR, subDir, slug);
+    const subDirs: Record<ScaffoldType, string> = {
+      callback: 'callbacks',
+      footer: 'footers',
+      header: 'headers',
+      stage: 'stages',
+    };
+    const componentDir = p.join(cwd, CUSTOM_DIR, subDirs[type], slug);
     const templatesDir = p.join(getTemplatesDir(), type);
 
     // ── Guard: prevent overwriting an existing component ──────────────────
@@ -189,6 +225,38 @@ const generateStageCommand = Command.make(
   ),
 );
 
+const generateHeaderCommand = Command.make(
+  'header',
+  {
+    name: Args.text({ name: 'Name' }).pipe(
+      Args.withDescription(
+        'Display name for the header (e.g. "Corporate Header"). Rendered in the registry under this name — set PUBLIC_CUSTOM_HEADER_NAME in the login-app to select it.',
+      ),
+    ),
+  },
+  ({ name }) => scaffoldComponent('header', name),
+).pipe(
+  Command.withDescription(
+    'Scaffold a new custom header component under experimental/custom/headers/.',
+  ),
+);
+
+const generateFooterCommand = Command.make(
+  'footer',
+  {
+    name: Args.text({ name: 'Name' }).pipe(
+      Args.withDescription(
+        'Name for the footer (e.g. "Corporate Footer"). Registered under this name — set PUBLIC_CUSTOM_FOOTER_NAME in the login-app to select it.',
+      ),
+    ),
+  },
+  ({ name }) => scaffoldComponent('footer', name),
+).pipe(
+  Command.withDescription(
+    'Scaffold a new custom footer component under experimental/custom/footers/.',
+  ),
+);
+
 export const generateCommand = Command.make('generate', {}, () =>
   Effect.gen(function* () {
     const type = yield* Prompt.select({
@@ -200,17 +268,30 @@ export const generateCommand = Command.make('generate', {}, () =>
           description: 'Custom AM callback renderer',
         },
         { title: 'stage', value: 'stage' as const, description: 'Custom journey stage layout' },
+        { title: 'header', value: 'header' as const, description: 'Custom page header slot' },
+        { title: 'footer', value: 'footer' as const, description: 'Custom page footer slot' },
       ],
     });
     const name = yield* Prompt.text({
       message:
         type === 'callback'
           ? 'Callback name (PascalCase name, e.g. MyCallback)'
-          : 'Stage name (as set on your AM Page Node, e.g. DefaultLogin or My Login Stage)',
+          : type === 'stage'
+          ? 'Stage name (as set on your AM Page Node, e.g. DefaultLogin or My Login Stage)'
+          : `Name (branding name for the ${type}, e.g. Corporate ${
+              type === 'header' ? 'Header' : 'Footer'
+            })`,
     });
     yield* scaffoldComponent(type, name);
   }),
 ).pipe(
-  Command.withDescription('Scaffold a new custom callback or stage component from a template.'),
-  Command.withSubcommands([generateCallbackCommand, generateStageCommand]),
+  Command.withDescription(
+    'Scaffold a new custom callback, stage, header, or footer component from a template.',
+  ),
+  Command.withSubcommands([
+    generateCallbackCommand,
+    generateFooterCommand,
+    generateHeaderCommand,
+    generateStageCommand,
+  ]),
 );

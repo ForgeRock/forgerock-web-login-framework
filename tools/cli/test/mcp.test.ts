@@ -105,11 +105,19 @@ describe('initProject (exported)', () => {
 });
 
 describe('MCP tools', () => {
-  it('defines five tools with correct names', async () => {
+  it('defines seven tools with correct names', async () => {
     const { mcpToolkit } = await import('../src/mcp.js');
     const toolNames = Object.keys((mcpToolkit as { tools: Record<string, unknown> })['tools']);
     expect(toolNames.sort()).toEqual(
-      ['generate_callback', 'generate_stage', 'init', 'list_releases', 'update'].sort(),
+      [
+        'generate_callback',
+        'generate_footer',
+        'generate_header',
+        'generate_stage',
+        'init',
+        'list_releases',
+        'update',
+      ].sort(),
     );
   });
 

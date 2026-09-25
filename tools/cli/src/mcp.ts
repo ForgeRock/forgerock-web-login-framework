@@ -140,6 +140,40 @@ const GenerateStageTool = Tool.make('generate_stage', {
   .annotate(Tool.OpenWorld, false)
   .annotate(Tool.Idempotent, false);
 
+const GenerateHeaderTool = Tool.make('generate_header', {
+  description:
+    'Scaffold a new custom header component under experimental/custom/headers/. Run from an initialized project root.',
+  parameters: {
+    name: Schema.String.annotations({
+      description:
+        'Name for the header (e.g. "Corporate Header"). Registered under this name — set PUBLIC_CUSTOM_HEADER_NAME in the login-app to select it.',
+    }),
+    directory: directoryParam,
+  },
+  success: Schema.String,
+  failure: Schema.String,
+})
+  .annotate(Tool.Destructive, true)
+  .annotate(Tool.OpenWorld, false)
+  .annotate(Tool.Idempotent, false);
+
+const GenerateFooterTool = Tool.make('generate_footer', {
+  description:
+    'Scaffold a new custom footer component under experimental/custom/footers/. Run from an initialized project root.',
+  parameters: {
+    name: Schema.String.annotations({
+      description:
+        'Name for the footer (e.g. "Corporate Footer"). Registered under this name — set PUBLIC_CUSTOM_FOOTER_NAME in the login-app to select it.',
+    }),
+    directory: directoryParam,
+  },
+  success: Schema.String,
+  failure: Schema.String,
+})
+  .annotate(Tool.Destructive, true)
+  .annotate(Tool.OpenWorld, false)
+  .annotate(Tool.Idempotent, false);
+
 const UpdateTool = Tool.make('update', {
   description:
     'Fetch the latest (or specified) framework version and overwrite core files while preserving experimental/custom/. Run from an initialized project root.',
@@ -177,6 +211,8 @@ export const mcpToolkit = Toolkit.make(
   InitTool,
   GenerateCallbackTool,
   GenerateStageTool,
+  GenerateHeaderTool,
+  GenerateFooterTool,
   UpdateTool,
   ListReleasesTool,
 );
@@ -204,6 +240,20 @@ const handlerLayer = mcpToolkit.toLayer({
     catchToolErrors(
       scaffoldComponent('stage', name, directory).pipe(
         Effect.map(() => `Stage component "${name}" scaffolded successfully.`),
+      ),
+    ),
+
+  generate_header: ({ name, directory }) =>
+    catchToolErrors(
+      scaffoldComponent('header', name, directory).pipe(
+        Effect.map(() => `Header component "${name}" scaffolded successfully.`),
+      ),
+    ),
+
+  generate_footer: ({ name, directory }) =>
+    catchToolErrors(
+      scaffoldComponent('footer', name, directory).pipe(
+        Effect.map(() => `Footer component "${name}" scaffolded successfully.`),
       ),
     ),
 
