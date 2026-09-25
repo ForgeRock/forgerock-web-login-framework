@@ -8,6 +8,7 @@
  -->
 
 <script lang="ts">
+  import { error } from '@sveltejs/kit';
   import { onMount, tick } from 'svelte';
 
   import { goto } from '$app/navigation';
@@ -18,6 +19,7 @@
   import {
     customFooterRegistry,
     customHeaderRegistry,
+    type CustomRegistryEntry,
   } from '$core/journey/_utilities/registry/custom-registry';
   import { selectRegistryEntry } from '$core/journey/_utilities/registry/select-registry-entry.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
@@ -32,13 +34,31 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  const headerEntry = selectRegistryEntry(
+  // selectRegistryEntry throws a plain Error because core/ cannot depend on
+  // @sveltejs/kit. SvelteKit's default prod handleError replaces a plain
+  // Error's message with "Internal Error" on the rendered page, so re-throw
+  // here through error() to preserve the full diagnostic for the error page.
+  function resolveRegistryEntry(
+    name: string | undefined,
+    registry: Record<string, CustomRegistryEntry>,
+    type: 'header' | 'footer',
+    envVarName: string,
+  ) {
+    try {
+      return selectRegistryEntry(name, registry, type, envVarName);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      throw error(500, message);
+    }
+  }
+
+  const headerEntry = resolveRegistryEntry(
     env.PUBLIC_CUSTOM_HEADER_NAME,
     customHeaderRegistry,
     'header',
     'PUBLIC_CUSTOM_HEADER_NAME',
   );
-  const footerEntry = selectRegistryEntry(
+  const footerEntry = resolveRegistryEntry(
     env.PUBLIC_CUSTOM_FOOTER_NAME,
     customFooterRegistry,
     'footer',
