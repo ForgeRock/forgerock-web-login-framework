@@ -335,5 +335,33 @@ describe('fetchIdmTheme', () => {
       expect(loginResult.theme?.primaryColor).toBe('#111111');
       expect(defaultResult.theme?.primaryColor).toBe('#222222');
     });
+
+    // vi.resetModules gives this test its own module-level cache: the bound
+    // assertion must not depend on entries left by the tests above. The cache
+    // is a failure fallback, so eviction is observed through what an IDM
+    // outage can still serve: evicted journeys fall back to nothing.
+    it('evicts the oldest entries once the journey-keyed cache reaches its bound', async () => {
+      vi.resetModules();
+      const { fetchIdmTheme: freshFetchIdmTheme } = await import('./idm-theme.effects');
+      const realm = 'realm-cache-bound';
+      const body = { realm: { [realm]: [makeThemeEntry()] } };
+      // More distinct journeys than the 100-entry bound.
+      const totalJourneys = 130;
+
+      // A fresh Response per call: a Response body can only be read once.
+      vi.mocked(fetch).mockImplementation(() => Promise.resolve(makeResponse(body)));
+
+      for (let i = 0; i < totalJourneys; i++) {
+        await freshFetchIdmTheme(IDM_URL, realm, `journey-${i}`);
+      }
+
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('IDM down'));
+      const evicted = await freshFetchIdmTheme(IDM_URL, realm, 'journey-0');
+      expect(evicted.theme).toBeUndefined();
+
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('IDM down'));
+      const retained = await freshFetchIdmTheme(IDM_URL, realm, `journey-${totalJourneys - 1}`);
+      expect(retained.theme?.primaryColor).toBe('#cc0000');
+    });
   });
 });
