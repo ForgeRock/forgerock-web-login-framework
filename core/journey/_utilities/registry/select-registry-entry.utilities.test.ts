@@ -134,6 +134,35 @@ describe('selectRegistryEntry', () => {
       ).toThrowError(/is set to " Brand "/);
     });
 
+    it('does not resolve inherited Object.prototype members like "__proto__" or "constructor"', () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      expect(() =>
+        selectRegistryEntry(
+          '__proto__',
+          { Brand: headerEntry },
+          'header',
+          'PUBLIC_CUSTOM_HEADER_NAME',
+        ),
+      ).toThrowError(/is set to "__proto__"/);
+      expect(() =>
+        selectRegistryEntry(
+          'constructor',
+          { Brand: headerEntry },
+          'header',
+          'PUBLIC_CUSTOM_HEADER_NAME',
+        ),
+      ).toThrowError(/is set to "constructor"/);
+      expect(() =>
+        selectRegistryEntry(
+          'toString',
+          { Brand: headerEntry },
+          'header',
+          'PUBLIC_CUSTOM_HEADER_NAME',
+        ),
+      ).toThrowError(/is set to "toString"/);
+      expect(warn).not.toHaveBeenCalled();
+    });
+
     it('resolves header and footer registries independently', () => {
       const headerResult = selectRegistryEntry(
         'Brand',

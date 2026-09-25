@@ -40,7 +40,10 @@ export function selectRegistryEntry(
     return undefined;
   }
 
-  const entry = registry[name];
+  // hasOwn guard: inherited Object.prototype members (e.g. "constructor",
+  // "toString") resolve truthy through plain property access and would bypass
+  // the loud unknown-name throw below, silently rendering nothing.
+  const entry = Object.hasOwn(registry, name) ? registry[name] : undefined;
   if (!entry) {
     const available = Object.keys(registry).join(', ') || '(none)';
     throw new Error(
