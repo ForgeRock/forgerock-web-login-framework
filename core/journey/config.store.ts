@@ -28,14 +28,11 @@ export const journeyConfigSchema = z.object({
   forgotUsername: journeyConfigItemSchema,
   login: journeyConfigItemSchema,
   register: journeyConfigItemSchema,
-  fallbackJourney: z.string().optional(),
-  autoRestart: z.boolean().optional(),
 });
 
+type JourneyKeys = keyof z.infer<typeof journeyConfigSchema>;
 type ConfigItem = z.infer<typeof journeyConfigItemSchema>;
 export type StoreItem = { key: string } & ConfigItem;
-
-const linkKeys = ['forgotPassword', 'forgotUsername', 'login', 'register'] as const;
 
 const defaultJourneys = {
   forgotPassword: {
@@ -54,12 +51,12 @@ const defaultJourneys = {
     journey: 'Registration',
     match: ['#/service/Registration', '?journey=Registration'],
   },
-} satisfies Record<(typeof linkKeys)[number], ConfigItem>;
+} satisfies Record<JourneyKeys, ConfigItem>;
 
 // Ensure default follows schema
 journeyConfigSchema.parse(defaultJourneys);
 
-const fallbackJourneyConfig = linkKeys.map((key) => ({
+const fallbackJourneyConfig = (Object.keys(defaultJourneys) as JourneyKeys[]).map((key) => ({
   ...defaultJourneys[key],
   key,
 }));
@@ -82,9 +79,10 @@ export function initialize(customJourneys?: z.infer<typeof journeyConfigSchema> 
       ...defaultJourneys,
       ...customJourneys,
     };
+    const customJourneyKeys = Object.keys(mergedJourneyObjects) as JourneyKeys[];
 
     configuredJourneysStore.set(
-      linkKeys.map((key) => ({
+      customJourneyKeys.map((key) => ({
         ...mergedJourneyObjects[key],
         key,
       })),

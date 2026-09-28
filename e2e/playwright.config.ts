@@ -95,8 +95,6 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_AM_URL: AM_URL,
           FR_AM_COOKIE_NAME: AM_COOKIE_NAME,
           FR_REALM_PATH: AM_REALM,
-          FR_OAUTH_PUBLIC_CLIENT: 'WebOAuthClient',
-          FR_OAUTH_SCOPE: 'openid profile email',
           FR_AM_WELLKNOWN_URL: `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
           FR_AM_JOURNEY_LOGIN: 'TEST_ThemeE2E',
         },
