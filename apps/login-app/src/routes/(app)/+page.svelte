@@ -131,33 +131,39 @@
   }
 </script>
 
-<div bind:this={journeyRootEl} class="tw_h-full">
+<div bind:this={journeyRootEl} class="tw_h-full tw_flex tw_flex-col">
   {#if headerEntry}
     {@const CustomHeader = headerEntry.component}
-    <svelte:component this={CustomHeader} />
+    <div class="tw_shrink-0">
+      <svelte:component this={CustomHeader} />
+    </div>
   {/if}
 
-  <Box>
-    <form method="POST" bind:this={redirectForm} hidden>
-      <input type="hidden" name="loginResult" value={loginResult} />
-      <input type="hidden" name="tokenId" value={tokenId} />
-      <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
-    </form>
+  <div class="tw_flex-1 tw_min-h-0">
+    <Box>
+      <form method="POST" bind:this={redirectForm} hidden>
+        <input type="hidden" name="loginResult" value={loginResult} />
+        <input type="hidden" name="tokenId" value={tokenId} />
+        <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
+      </form>
 
-    {#if hasSubmitted}
-      <p class="tw_mb-6">You are being redirected...</p>
-    {:else}
-      <Journey
-        componentStyle="app"
-        displayIcon={true}
-        {journeyStore}
-        externalStages={loginAppStages}
-      />
-    {/if}
-  </Box>
+      {#if hasSubmitted}
+        <p class="tw_mb-6">You are being redirected...</p>
+      {:else}
+        <Journey
+          componentStyle="app"
+          displayIcon={true}
+          {journeyStore}
+          externalStages={loginAppStages}
+        />
+      {/if}
+    </Box>
+  </div>
 
   {#if footerEntry}
     {@const CustomFooter = footerEntry.component}
-    <svelte:component this={CustomFooter} />
+    <div class="tw_shrink-0">
+      <svelte:component this={CustomFooter} />
+    </div>
   {/if}
 </div>
