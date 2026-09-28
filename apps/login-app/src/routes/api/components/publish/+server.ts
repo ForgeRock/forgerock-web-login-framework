@@ -10,6 +10,7 @@
 import { Effect } from 'effect';
 
 import { publishComponentSource } from '$lib/server/component-endpoint';
+import { ComponentApiRuntime } from '$lib/server/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -24,4 +25,9 @@ import type { RequestHandler } from './$types';
  * repository failure.
  */
 export const POST: RequestHandler = ({ request }) =>
-  Effect.runPromise(publishComponentSource(request, { token: process.env.COMPONENT_SAVE_TOKEN }));
+  Effect.runPromise(
+    Effect.provide(
+      publishComponentSource(request, process.env.COMPONENT_SAVE_TOKEN),
+      ComponentApiRuntime,
+    ),
+  );

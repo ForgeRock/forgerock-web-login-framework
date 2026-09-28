@@ -10,6 +10,11 @@
 import { Data, Effect, Schema } from 'effect';
 
 import {
+  publishBundle,
+  publishResponse,
+} from '../../routes/api/components/publish/helpers/bundle.helpers';
+import {
+  COMPONENT_BUNDLE_SIZE_MESSAGE,
   ComponentErrorResponseSchema,
   ComponentIdSchema,
   ComponentRecordSchema,
@@ -20,8 +25,6 @@ import {
   parseFields,
   projectRecord,
   PublishRequestSchema,
-  PublishResponseSchema,
-  SaveEndpointErrorMessage,
   UpdateComponentRequestSchema,
 } from './component-api';
 import { type ComponentPublisherService, publishComponent } from './component-publisher';
@@ -30,20 +33,9 @@ import {
   type ComponentStoreError,
   type ComponentStoreService,
 } from './component-store';
-import { ComponentApiRuntime } from './runtime';
-
-import type { Layer } from 'effect';
 
 import type { ComponentPublisherError } from './component-publisher';
 import type { ComponentRepoError } from './component-repo';
-
-/** Dependencies that may be overridden when testing Component API handlers. */
-export interface ComponentApiDependencies {
-  /** Runtime providing component storage and publishing services; defaults to the production composition. */
-  readonly runtime?: Layer.Layer<ComponentStoreService | ComponentPublisherService, never, never>;
-  /** Production deployments must set this token before exposing component mutation routes. */
-  readonly token?: string;
-}
 
 /** Encodes a Component API error with its corresponding HTTP status. */
 const errorResponse = (
@@ -55,7 +47,7 @@ const errorResponse = (
 };
 
 /** A client-facing HTTP failure raised while validating a component API request. */
-class HttpError extends Data.TaggedError('HttpError')<{
+export class HttpError extends Data.TaggedError('HttpError')<{
   status: 400 | 401 | 404 | 409 | 413 | 415 | 500;
   message: string;
 }> {}
@@ -67,7 +59,7 @@ class HttpError extends Data.TaggedError('HttpError')<{
  * @param record - Validated component record to encode.
  * @returns The encoded JSON response.
  */
-const recordResponse = (
+export const recordResponse = (
   status: 200 | 201,
   record: Schema.Schema.Type<typeof ComponentRecordSchema>,
 ): Response => Response.json(Schema.encodeSync(ComponentRecordSchema)(record), { status });
@@ -81,7 +73,7 @@ const recordResponse = (
  * @returns An effect with the decoded value.
  * @throws {HttpError} When the input does not satisfy the schema.
  */
-const decodeOrResponse = <A>(
+export const decodeOrResponse = <A>(
   schema: Schema.Schema<A>,
   input: unknown,
   message: string,
@@ -111,7 +103,7 @@ const requestHeaders = (request: Request) => ({
  * @returns An effect that completes when the request satisfies all guard policies.
  * @throws {HttpError} When authentication, content type, or body size validation fails.
  */
-const guardRequest = (
+export const guardRequest = (
   request: Request,
   token: string | undefined,
   hasBody: boolean,
@@ -119,13 +111,13 @@ const guardRequest = (
   Effect.sync(() => requestHeaders(request)).pipe(
     Effect.filterOrFail(
       (headers) => token === undefined || headers.authorization === `Bearer ${token}`,
-      () => new HttpError({ status: 401, message: SaveEndpointErrorMessage.unauthorized }),
+      () => new HttpError({ status: 401, message: 'Unauthorized' }),
     ),
     Effect.filterOrFail(
       (headers) =>
         !hasBody ||
         headers.contentType?.split(';', 1)[0]?.trim().toLowerCase() === 'application/json',
-      () => new HttpError({ status: 415, message: SaveEndpointErrorMessage.invalidContentType }),
+      () => new HttpError({ status: 415, message: 'Content-Type must be application/json' }),
     ),
     Effect.filterOrFail(
       (headers) => {
@@ -134,7 +126,7 @@ const guardRequest = (
           length === undefined || !Number.isFinite(length) || length <= MAX_COMPONENT_BUNDLE_SIZE
         );
       },
-      () => new HttpError({ status: 413, message: SaveEndpointErrorMessage.bundleTooLarge }),
+      () => new HttpError({ status: 413, message: COMPONENT_BUNDLE_SIZE_MESSAGE }),
     ),
     Effect.asVoid,
   );
@@ -154,7 +146,7 @@ const readBody = <A>(request: Request, schema: Schema.Schema<A>): Effect.Effect<
   }).pipe(
     Effect.filterOrFail(
       (body) => body.length <= MAX_COMPONENT_BUNDLE_SIZE,
-      () => new HttpError({ status: 413, message: SaveEndpointErrorMessage.bundleTooLarge }),
+      () => new HttpError({ status: 413, message: COMPONENT_BUNDLE_SIZE_MESSAGE }),
     ),
     Effect.flatMap((body) =>
       Schema.decodeUnknown(Schema.parseJson(schema))(body).pipe(
@@ -171,7 +163,7 @@ const readBody = <A>(request: Request, schema: Schema.Schema<A>): Effect.Effect<
  * @param error - Tagged component store failure to translate.
  * @returns The corresponding HTTP error.
  */
-const storeHttpError = (error: ComponentStoreError): HttpError =>
+export const storeHttpError = (error: ComponentStoreError): HttpError =>
   new HttpError({
     status:
       error.reason === 'NotFound'
@@ -185,42 +177,16 @@ const storeHttpError = (error: ComponentStoreError): HttpError =>
   });
 
 /**
- * Supplies a component store effect with the production or test runtime.
- *
- * @param effect - Effect requiring the component store service.
- * @param dependencies - Optional handler dependency overrides.
- * @returns The effect with its store requirement satisfied.
- */
-const provideStore = <A, E>(
-  effect: Effect.Effect<A, E, ComponentStoreService>,
-  dependencies: ComponentApiDependencies,
-): Effect.Effect<A, E> => effect.pipe(Effect.provide(dependencies.runtime ?? ComponentApiRuntime));
-
-/**
- * Supplies a component publisher effect with the production or test runtime.
- *
- * @param effect - Effect requiring the component publisher service.
- * @param dependencies - Optional handler dependency overrides.
- * @returns The effect with its publisher requirement satisfied.
- */
-const providePublisher = <A, E>(
-  effect: Effect.Effect<A, E, ComponentPublisherService>,
-  dependencies: ComponentApiDependencies,
-): Effect.Effect<A, E> => effect.pipe(Effect.provide(dependencies.runtime ?? ComponentApiRuntime));
-
-/**
  * Validates a route component type.
  *
  * @param type - Untrusted component type from the route path.
  * @returns An effect with the validated component type.
  * @throws {HttpError} When the type is not supported.
  */
-const validateType = (type: string): Effect.Effect<string, HttpError> =>
+export const validateType = (type: string): Effect.Effect<string, HttpError> =>
   Schema.decodeUnknown(ComponentTypeSchema)(type).pipe(
     Effect.catchAll(() =>
-      Effect.fail(
-        new HttpError({ status: 404, message: SaveEndpointErrorMessage.invalidComponentType }),
-      ),
+      Effect.fail(new HttpError({ status: 404, message: 'Invalid component type' })),
     ),
   );
 
@@ -231,12 +197,10 @@ const validateType = (type: string): Effect.Effect<string, HttpError> =>
  * @returns An effect with the validated component id.
  * @throws {HttpError} When the id is not a supported component UUID.
  */
-const validateId = (id: string): Effect.Effect<string, HttpError> =>
+export const validateId = (id: string): Effect.Effect<string, HttpError> =>
   Schema.decodeUnknown(ComponentIdSchema)(id).pipe(
     Effect.catchAll(() =>
-      Effect.fail(
-        new HttpError({ status: 400, message: SaveEndpointErrorMessage.invalidComponentId }),
-      ),
+      Effect.fail(new HttpError({ status: 400, message: 'Invalid component id' })),
     ),
   );
 
@@ -247,7 +211,7 @@ const validateId = (id: string): Effect.Effect<string, HttpError> =>
  * @param effect - Response-producing effect that may fail with an HTTP error.
  * @returns The same response effect with its HTTP error channel handled.
  */
-const toResponse = <R>(
+export const toResponse = <R>(
   effect: Effect.Effect<Response, HttpError, R>,
 ): Effect.Effect<Response, never, R> =>
   effect.pipe(
@@ -257,11 +221,78 @@ const toResponse = <R>(
   );
 
 /**
+ * Decodes a list fields query and parses it into a record projection.
+ *
+ * @param request - Incoming request whose `fields` query parameter selects record properties.
+ * @returns An effect with the parsed fields projection, or a 400 failure.
+ * @throws {HttpError} When the fields parameter is invalid.
+ */
+const listFieldsProjection = (
+  request: Request,
+): Effect.Effect<ReadonlyArray<ReadonlyArray<string>>, HttpError> =>
+  decodeOrResponse(
+    FieldsSchema,
+    new URL(request.url).searchParams.get('fields') ?? '',
+    'Invalid fields projection',
+  ).pipe(
+    Effect.flatMap(parseFields),
+    Effect.catchTag('InvalidFieldsError', (error) =>
+      Effect.fail(new HttpError({ status: 400, message: error.message })),
+    ),
+  );
+
+/**
+ * Encodes list records after applying the requested field projection.
+ *
+ * @param records - Validated component records to encode.
+ * @param fields - Requested field projection.
+ * @returns The JSON response with projected records.
+ */
+const listResponse = (
+  records: ReadonlyArray<Schema.Schema.Type<typeof ComponentRecordSchema>>,
+  fields: ReadonlyArray<ReadonlyArray<string>>,
+): Response => Response.json(records.map((record) => projectRecord(record, fields)));
+
+/**
+ * Runs a record operation after enforcing request, type, and id policies.
+ *
+ * @param request - Incoming request to validate.
+ * @param type - Component category from the route path.
+ * @param id - Component UUID from the route path.
+ * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
+ * @param operation - Store operation to run after validation.
+ * @returns An effect resolving to the operation response, or HTTP error.
+ */
+const withRecord = (
+  request: Request,
+  type: string,
+  id: string,
+  token: string | undefined,
+  operation: (
+    store: ComponentStoreService,
+    validType: string,
+    validId: string,
+  ) => Effect.Effect<Response, ComponentStoreError>,
+): Effect.Effect<Response, never, ComponentStoreService> =>
+  toResponse(
+    Effect.gen(function* () {
+      const hasBody = request.method === 'POST' || request.method === 'PUT';
+      yield* guardRequest(request, token, hasBody);
+      const validType = yield* validateType(type);
+      const validId = yield* validateId(id);
+      return yield* ComponentStore.pipe(
+        Effect.flatMap((store) => operation(store, validType, validId)),
+        Effect.catchTag('ComponentStoreError', (error) => Effect.fail(storeHttpError(error))),
+      );
+    }),
+  );
+
+/**
  * Lists component records for a route type, optionally projecting requested fields.
  *
  * @param request - Incoming request, whose `fields` query parameter selects record properties.
  * @param type - Component category from the route path.
- * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
  * @returns An effect resolving to 200 records, 400 for invalid fields, 401 for an invalid Bearer token,
  * or 404 for an invalid type; storage failures produce 409 or 500.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
@@ -269,24 +300,17 @@ const toResponse = <R>(
 export const listComponents = (
   request: Request,
   type: string,
-  dependencies: ComponentApiDependencies = {},
-): Effect.Effect<Response> =>
+  token?: string,
+): Effect.Effect<Response, never, ComponentStoreService> =>
   toResponse(
     Effect.gen(function* () {
-      yield* guardRequest(request, dependencies.token, false);
+      yield* guardRequest(request, token, false);
       const validType = yield* validateType(type);
-      const fields = yield* decodeOrResponse(
-        FieldsSchema,
-        new URL(request.url).searchParams.get('fields') ?? '',
-        SaveEndpointErrorMessage.invalidFields,
-      );
+      const parsedFields = yield* listFieldsProjection(request);
       return yield* ComponentStore.pipe(
         Effect.flatMap((store) => store.list(validType)),
-        Effect.map((records) =>
-          Response.json(records.map((record) => projectRecord(record, parseFields(fields)))),
-        ),
+        Effect.map((records) => listResponse(records, parsedFields)),
         Effect.catchTag('ComponentStoreError', (error) => Effect.fail(storeHttpError(error))),
-        (effect) => provideStore(effect, dependencies),
       );
     }),
   );
@@ -297,7 +321,7 @@ export const listComponents = (
  * @param request - Incoming request used for optional Bearer-token validation.
  * @param type - Component category from the route path.
  * @param id - Component UUID from the route path.
- * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
  * @returns An effect resolving to 200 with the record, 400 for an invalid id, 401 for an invalid Bearer
  * token, 404 for an invalid type or missing record, or 409/500 for storage failures.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
@@ -306,45 +330,10 @@ export const getComponent = (
   request: Request,
   type: string,
   id: string,
-  dependencies: ComponentApiDependencies = {},
-): Effect.Effect<Response> =>
-  withRecord(request, type, id, dependencies, (store, validType, validId) =>
+  token?: string,
+): Effect.Effect<Response, never, ComponentStoreService> =>
+  withRecord(request, type, id, token, (store, validType, validId) =>
     store.get(validType, validId).pipe(Effect.map((record) => recordResponse(200, record))),
-  );
-
-/**
- * Runs a record operation after enforcing request, type, and id policies.
- *
- * @param request - Incoming request to guard.
- * @param type - Untrusted component type from the route path.
- * @param id - Untrusted component id from the route path.
- * @param dependencies - Optional handler dependency overrides.
- * @param operation - Store operation to run with validated route values.
- * @returns A response effect that encodes all HTTP failures at the handler boundary.
- */
-const withRecord = (
-  request: Request,
-  type: string,
-  id: string,
-  dependencies: ComponentApiDependencies,
-  operation: (
-    store: ComponentStoreService,
-    type: string,
-    id: string,
-  ) => Effect.Effect<Response, ComponentStoreError>,
-): Effect.Effect<Response> =>
-  toResponse(
-    Effect.gen(function* () {
-      const hasBody = request.method === 'POST' || request.method === 'PUT';
-      yield* guardRequest(request, dependencies.token, hasBody);
-      const validType = yield* validateType(type);
-      const validId = yield* validateId(id);
-      return yield* ComponentStore.pipe(
-        Effect.flatMap((store) => operation(store, validType, validId)),
-        Effect.catchTag('ComponentStoreError', (error) => Effect.fail(storeHttpError(error))),
-        (effect) => provideStore(effect, dependencies),
-      );
-    }),
   );
 
 /**
@@ -352,7 +341,7 @@ const withRecord = (
  *
  * @param request - JSON request containing the client-editable component fields.
  * @param type - Component category from the route path.
- * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
  * @returns An effect resolving to 201 with the created record; 400 for malformed input, 401 for an
  * invalid Bearer token, 404 for an invalid type, 413 for an oversized body, 415 for non-JSON,
  * or 409/500 for storage failures.
@@ -361,11 +350,11 @@ const withRecord = (
 export const createComponent = (
   request: Request,
   type: string,
-  dependencies: ComponentApiDependencies = {},
-): Effect.Effect<Response> =>
+  token?: string,
+): Effect.Effect<Response, never, ComponentStoreService> =>
   toResponse(
     Effect.gen(function* () {
-      yield* guardRequest(request, dependencies.token, true);
+      yield* guardRequest(request, token, true);
       const validType = yield* validateType(type);
       const body = yield* readBody(request, CreateComponentRequestSchema);
       return yield* ComponentStore.pipe(
@@ -373,7 +362,6 @@ export const createComponent = (
           store.create(validType, body).pipe(Effect.map((record) => recordResponse(201, record))),
         ),
         Effect.catchTag('ComponentStoreError', (error) => Effect.fail(storeHttpError(error))),
-        (effect) => provideStore(effect, dependencies),
       );
     }),
   );
@@ -384,7 +372,7 @@ export const createComponent = (
  * @param request - JSON request containing the replacement client-editable component fields.
  * @param type - Component category from the route path.
  * @param id - Component UUID from the route path and optional body-id consistency check.
- * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
  * @returns An effect resolving to 200 with the updated record; 400 for malformed input or mismatched id,
  * 401 for an invalid Bearer token, 404 for an invalid type or missing record, 413 for an oversized
  * body, 415 for non-JSON, or 409/500 for storage failures.
@@ -394,18 +382,16 @@ export const updateComponent = (
   request: Request,
   type: string,
   id: string,
-  dependencies: ComponentApiDependencies = {},
-): Effect.Effect<Response> =>
+  token?: string,
+): Effect.Effect<Response, never, ComponentStoreService> =>
   toResponse(
     Effect.gen(function* () {
-      yield* guardRequest(request, dependencies.token, true);
+      yield* guardRequest(request, token, true);
       const validType = yield* validateType(type);
       const validId = yield* validateId(id);
       const body = yield* readBody(request, UpdateComponentRequestSchema);
       if (body.id !== undefined && body.id !== validId) {
-        return yield* Effect.fail(
-          new HttpError({ status: 400, message: SaveEndpointErrorMessage.invalidComponentId }),
-        );
+        return yield* Effect.fail(new HttpError({ status: 400, message: 'Invalid component id' }));
       }
       return yield* ComponentStore.pipe(
         Effect.flatMap((store) =>
@@ -414,7 +400,6 @@ export const updateComponent = (
             .pipe(Effect.map((record) => recordResponse(200, record))),
         ),
         Effect.catchTag('ComponentStoreError', (error) => Effect.fail(storeHttpError(error))),
-        (effect) => provideStore(effect, dependencies),
       );
     }),
   );
@@ -425,7 +410,7 @@ export const updateComponent = (
  * @param request - Incoming request used for `COMPONENT_SAVE_TOKEN` Bearer-token validation.
  * @param type - Component category from the route path.
  * @param id - Component UUID from the route path.
- * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
  * @returns An effect resolving to 204 with no body, 400 for an invalid id, 401 for an invalid Bearer
  * token, 404 for an invalid type or missing record, or 409/500 for storage failures.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
@@ -434,9 +419,9 @@ export const deleteComponent = (
   request: Request,
   type: string,
   id: string,
-  dependencies: ComponentApiDependencies = {},
-): Effect.Effect<Response> =>
-  withRecord(request, type, id, dependencies, (store, validType, validId) =>
+  token?: string,
+): Effect.Effect<Response, never, ComponentStoreService> =>
+  withRecord(request, type, id, token, (store, validType, validId) =>
     store.delete(validType, validId).pipe(Effect.as(new Response(null, { status: 204 }))),
   );
 
@@ -444,7 +429,7 @@ export const deleteComponent = (
  * Publishes component source code and optional files as a repository bundle.
  *
  * @param request - JSON request containing bundle code and optional additional files.
- * @param dependencies - Optional runtime override and `COMPONENT_SAVE_TOKEN` equivalent for tests.
+ * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
  * @returns An effect resolving to 200 with the published bundle reference; 400 for malformed input or
  * publisher rejection, 401 for an invalid Bearer token, 413 for an oversized body, 415 for non-JSON,
  * or 500 when repository persistence fails.
@@ -453,28 +438,21 @@ export const deleteComponent = (
  */
 export const publishComponentSource = (
   request: Request,
-  dependencies: ComponentApiDependencies = {},
-): Effect.Effect<Response> =>
+  token?: string,
+): Effect.Effect<Response, never, ComponentPublisherService> =>
   toResponse(
     Effect.gen(function* () {
-      yield* guardRequest(request, dependencies.token, true);
+      yield* guardRequest(request, token, true);
       const body = yield* readBody(request, PublishRequestSchema);
-      const bundle = JSON.stringify({
-        files: [...(body.files ?? []), { path: 'bundle.js', content: body.code }],
-      });
+      const bundle = publishBundle(body);
       return yield* publishComponent(bundle).pipe(
-        Effect.as(
-          Response.json(
-            Schema.encodeSync(PublishResponseSchema)({ id: crypto.randomUUID(), url: '' }),
-          ),
-        ),
+        Effect.as(publishResponse()),
         Effect.catchTag('ComponentPublisherError', (error: ComponentPublisherError) =>
           Effect.fail(new HttpError({ status: 400, message: error.message })),
         ),
         Effect.catchTag('ComponentRepoError', (error: ComponentRepoError) =>
           Effect.fail(new HttpError({ status: 500, message: error.message })),
         ),
-        (effect) => providePublisher(effect, dependencies),
       );
     }),
   );

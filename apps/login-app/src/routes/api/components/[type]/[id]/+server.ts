@@ -10,6 +10,7 @@
 import { Effect } from 'effect';
 
 import { deleteComponent, getComponent, updateComponent } from '$lib/server/component-endpoint';
+import { ComponentApiRuntime } from '$lib/server/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -22,7 +23,10 @@ import type { RequestHandler } from './$types';
  */
 export const GET: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    getComponent(request, params.type, params.id, { token: process.env.COMPONENT_SAVE_TOKEN }),
+    Effect.provide(
+      getComponent(request, params.type, params.id, process.env.COMPONENT_SAVE_TOKEN),
+      ComponentApiRuntime,
+    ),
   );
 
 /**
@@ -37,7 +41,10 @@ export const GET: RequestHandler = ({ request, params }) =>
  */
 export const PUT: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    updateComponent(request, params.type, params.id, { token: process.env.COMPONENT_SAVE_TOKEN }),
+    Effect.provide(
+      updateComponent(request, params.type, params.id, process.env.COMPONENT_SAVE_TOKEN),
+      ComponentApiRuntime,
+    ),
   );
 
 /**
@@ -51,5 +58,8 @@ export const PUT: RequestHandler = ({ request, params }) =>
  */
 export const DELETE: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    deleteComponent(request, params.type, params.id, { token: process.env.COMPONENT_SAVE_TOKEN }),
+    Effect.provide(
+      deleteComponent(request, params.type, params.id, process.env.COMPONENT_SAVE_TOKEN),
+      ComponentApiRuntime,
+    ),
   );

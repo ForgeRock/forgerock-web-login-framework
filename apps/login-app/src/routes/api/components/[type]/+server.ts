@@ -10,6 +10,7 @@
 import { Effect } from 'effect';
 
 import { createComponent, listComponents } from '$lib/server/component-endpoint';
+import { ComponentApiRuntime } from '$lib/server/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -22,7 +23,10 @@ import type { RequestHandler } from './$types';
  */
 export const GET: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    listComponents(request, params.type, { token: process.env.COMPONENT_SAVE_TOKEN }),
+    Effect.provide(
+      listComponents(request, params.type, process.env.COMPONENT_SAVE_TOKEN),
+      ComponentApiRuntime,
+    ),
   );
 
 /**
@@ -36,5 +40,8 @@ export const GET: RequestHandler = ({ request, params }) =>
  */
 export const POST: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    createComponent(request, params.type, { token: process.env.COMPONENT_SAVE_TOKEN }),
+    Effect.provide(
+      createComponent(request, params.type, process.env.COMPONENT_SAVE_TOKEN),
+      ComponentApiRuntime,
+    ),
   );

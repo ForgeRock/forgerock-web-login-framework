@@ -15,14 +15,14 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import {
-  createComponent,
-  deleteComponent,
-  getComponent,
-  listComponents,
-  publishComponentSource,
-  updateComponent,
+  createComponent as createComponentProgram,
+  deleteComponent as deleteComponentProgram,
+  getComponent as getComponentProgram,
+  listComponents as listComponentsProgram,
+  publishComponentSource as publishComponentSourceProgram,
+  updateComponent as updateComponentProgram,
 } from './component-endpoint';
-import { ComponentPublisher } from './component-publisher';
+import { ComponentPublisher, type ComponentPublisherService } from './component-publisher';
 import { ComponentRepo, FileSync } from './component-repo';
 import { ComponentStore } from './component-store';
 
@@ -53,6 +53,42 @@ const testStoreLayer = (repoDir: string) => {
   return store;
 };
 
+const listComponents = (request: Request, type: string, layer: ReturnType<typeof testStoreLayer>) =>
+  Effect.provide(listComponentsProgram(request, type), layer);
+
+const getComponent = (
+  request: Request,
+  type: string,
+  id: string,
+  layer: ReturnType<typeof testStoreLayer>,
+) => Effect.provide(getComponentProgram(request, type, id), layer);
+
+const createComponent = (
+  request: Request,
+  type: string,
+  layer: ReturnType<typeof testStoreLayer>,
+  token?: string,
+) => Effect.provide(createComponentProgram(request, type, token), layer);
+
+const updateComponent = (
+  request: Request,
+  type: string,
+  id: string,
+  layer: ReturnType<typeof testStoreLayer>,
+) => Effect.provide(updateComponentProgram(request, type, id), layer);
+
+const deleteComponent = (
+  request: Request,
+  type: string,
+  id: string,
+  layer: ReturnType<typeof testStoreLayer>,
+) => Effect.provide(deleteComponentProgram(request, type, id), layer);
+
+const publishComponentSource = (
+  request: Request,
+  layer: Layer.Layer<ComponentPublisherService, never, never>,
+) => Effect.provide(publishComponentSourceProgram(request), layer);
+
 afterEach(() =>
   Effect.tryPromise({
     try: () =>
@@ -71,7 +107,7 @@ describe('Component Endpoint Handlers', () => {
         const response = yield* listComponents(
           new Request('http://localhost/api/components/callbacks', { method: 'GET' }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(response.status).toBe(200);
         const body = yield* Effect.tryPromise({
@@ -103,16 +139,14 @@ describe('Component Endpoint Handlers', () => {
             }),
           }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
 
         const request = new Request(
           'http://localhost/api/components/callbacks?fields=id,meta.name',
           { method: 'GET' },
         );
-        const response = yield* listComponents(request, 'callbacks', {
-          runtime: testStoreLayer(repoDir),
-        });
+        const response = yield* listComponents(request, 'callbacks', testStoreLayer(repoDir));
 
         expect(response.status).toBe(200);
         const body = yield* Effect.tryPromise({
@@ -137,9 +171,7 @@ describe('Component Endpoint Handlers', () => {
         const request = new Request('http://localhost/api/components/callbacks?fields=..invalid', {
           method: 'GET',
         });
-        const response = yield* listComponents(request, 'callbacks', {
-          runtime: testStoreLayer(repoDir),
-        });
+        const response = yield* listComponents(request, 'callbacks', testStoreLayer(repoDir));
         expect(response.status).toBe(400);
       }),
     );
@@ -150,7 +182,7 @@ describe('Component Endpoint Handlers', () => {
         const response = yield* listComponents(
           new Request('http://localhost/api/components/invalid-type', { method: 'GET' }),
           'invalid-type',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(response.status).toBe(404);
       }),
@@ -179,7 +211,7 @@ describe('Component Endpoint Handlers', () => {
             }),
           }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
 
         const createData = yield* Effect.tryPromise({
@@ -194,7 +226,7 @@ describe('Component Endpoint Handlers', () => {
           }),
           'callbacks',
           id,
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(getResponse.status).toBe(200);
       }),
@@ -210,7 +242,7 @@ describe('Component Endpoint Handlers', () => {
           ),
           'callbacks',
           'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(response.status).toBe(404);
       }),
@@ -237,7 +269,7 @@ describe('Component Endpoint Handlers', () => {
             }),
           }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(response.status).toBe(201);
       }),
@@ -262,7 +294,8 @@ describe('Component Endpoint Handlers', () => {
             }),
           }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir), token: 'secret-token' },
+          testStoreLayer(repoDir),
+          'secret-token',
         );
         expect(response.status).toBe(401);
       }),
@@ -278,7 +311,7 @@ describe('Component Endpoint Handlers', () => {
             body: 'test',
           }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(response.status).toBe(415);
       }),
@@ -306,7 +339,7 @@ describe('Component Endpoint Handlers', () => {
             }),
           }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
 
         const createData = yield* Effect.tryPromise({
@@ -335,7 +368,7 @@ describe('Component Endpoint Handlers', () => {
           }),
           'callbacks',
           createData.id,
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
 
         expect(updateResponse.status).toBe(200);
@@ -373,7 +406,7 @@ describe('Component Endpoint Handlers', () => {
           }),
           'callbacks',
           'different-uuid',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(response.status).toBe(400);
       }),
@@ -401,7 +434,7 @@ describe('Component Endpoint Handlers', () => {
             }),
           }),
           'callbacks',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
 
         const createData = yield* Effect.tryPromise({
@@ -415,7 +448,7 @@ describe('Component Endpoint Handlers', () => {
           }),
           'callbacks',
           createData.id,
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(deleteResponse.status).toBe(204);
       }),
@@ -431,7 +464,7 @@ describe('Component Endpoint Handlers', () => {
           ),
           'callbacks',
           'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
-          { runtime: testStoreLayer(repoDir) },
+          testStoreLayer(repoDir),
         );
         expect(response.status).toBe(404);
       }),
@@ -458,7 +491,7 @@ describe('Component Endpoint Handlers', () => {
               files: [{ path: 'test.js', content: 'test' }],
             }),
           }),
-          { runtime: Layer.merge(testStoreLayer(repoDir), fakePublisher) },
+          Layer.merge(testStoreLayer(repoDir), fakePublisher),
         );
         expect(response.status).toBe(200);
         const result = yield* Effect.tryPromise({

@@ -84,22 +84,34 @@ describe('Component API schemas', () => {
     }),
   );
 
-  it('parses valid fields paths and rejects empty segments', () => {
-    expect(parseFields('callback.id,callback.meta')).toEqual([
-      ['callback', 'id'],
-      ['callback', 'meta'],
-    ]);
-    expect(() => parseFields('callback..id')).toThrow('Invalid fields projection');
-  });
+  it.effect('parses valid fields paths and rejects empty segments', () =>
+    Effect.gen(function* () {
+      const valid = yield* parseFields('callback.id,callback.meta');
+      expect(valid).toEqual([
+        ['callback', 'id'],
+        ['callback', 'meta'],
+      ]);
 
-  it('projects only requested nested fields', () => {
-    expect(
-      projectRecord(
-        { callback: { id: 'id', meta: { name: 'Password' } }, src: 'ignored' },
-        parseFields('callback.meta.name'),
-      ),
-    ).toEqual({ callback: { meta: { name: 'Password' } } });
-  });
+      const result = yield* Effect.either(parseFields('callback..id'));
+      expect(result._tag).toBe('Left');
+      if (result._tag === 'Left') {
+        expect(result.left._tag).toBe('InvalidFieldsError');
+        expect(result.left.message).toBe('Invalid fields projection');
+      }
+    }),
+  );
+
+  it.effect('projects only requested nested fields', () =>
+    Effect.gen(function* () {
+      const fields = yield* parseFields('callback.meta.name');
+      expect(
+        projectRecord(
+          { callback: { id: 'id', meta: { name: 'Password' } }, src: 'ignored' },
+          fields,
+        ),
+      ).toEqual({ callback: { meta: { name: 'Password' } } });
+    }),
+  );
 
   it.effect('encodes 201 and 404 component responses', () =>
     Effect.gen(function* () {

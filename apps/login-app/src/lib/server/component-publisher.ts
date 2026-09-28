@@ -9,6 +9,7 @@
 
 import { Context, Data, Effect, Layer, Schema } from 'effect';
 
+import { type Bundle, BundleSchema } from './component-api.schemas';
 import { type ComponentArtifact, ComponentRepo, isSafeRelativePath } from './component-repo';
 
 import type { ComponentRepoError } from './component-repo';
@@ -69,21 +70,6 @@ export const ComponentPublisher = Object.assign(ComponentPublisherTag, {
   ),
 });
 
-/** Schema for an individual path and content entry in a serialized component bundle. */
-const BundleFileSchema = Schema.Struct({
-  path: Schema.String,
-  content: Schema.String,
-});
-
-/**
- * Schema for the JSON component-bundle payload exposed by the save endpoint and OpenAPI document.
- */
-export const BundleSchema = Schema.Struct({
-  files: Schema.Array(BundleFileSchema),
-});
-
-type Bundle = Schema.Schema.Type<typeof BundleSchema>;
-
 /**
  * Decodes a JSON bundle into repository artifacts and rejects every unsafe file path before persistence.
  *
@@ -119,4 +105,4 @@ export const parseBundle = (
  * @returns An effect requiring {@link ComponentPublisherService}, which may fail with publisher or repository errors.
  */
 export const publishComponent = (bundle: string) =>
-  Effect.flatMap(ComponentPublisher, (publisher) => publisher.publishComponent(bundle));
+  ComponentPublisher.pipe(Effect.flatMap((publisher) => publisher.publishComponent(bundle)));
