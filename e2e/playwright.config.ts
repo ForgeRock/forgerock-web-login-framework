@@ -78,12 +78,6 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_AM_JOURNEY_LOGIN: 'TEST_ThemeE2E',
         },
       },
-      // CUSTOM HEADER/FOOTER NOTE: header/footer selection is build-time via the
-      // "Enabled: true" @component property (at most one per type; a second
-      // enabled component of the same type fails the registry build). No per-server
-      // env var is needed: the shared webServer serves whatever the registry
-      // generated, and the login-app render test asserts the enabled demo
-      // header/footer markup directly.
     ];
 
 export default defineConfig({
