@@ -17,7 +17,7 @@
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
-  import { initialize as initializeJourney } from '$journey/journey.store';
+  import { fallbackJourneyStore, initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
 
@@ -41,6 +41,8 @@
     { serverConfig: { wellknown: data.wellknown } },
     captchaModeParam ? { captcha: { mode: captchaModeParam } } : null,
   );
+
+  fallbackJourneyStore.set(data.fallbackJourney ?? undefined);
 
   let hasSubmitted = false;
   let redirectForm: HTMLFormElement | null = null;

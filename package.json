@@ -37,6 +37,7 @@
     "@forgerock/journey-client": "^2.1.1",
     "@forgerock/oidc-client": "^2.1.1",
     "@forgerock/protect": "^2.1.1",
+    "@forgerock/storage": "^2.1.1",
     "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-links": "^10.1.11",

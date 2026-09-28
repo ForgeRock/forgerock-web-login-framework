@@ -8,13 +8,14 @@
  **/
 
 import { journey } from '@forgerock/journey-client';
-import { writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import { z } from 'zod';
 
 import { interpolate } from '$core/_utilities/i18n.utilities';
 import { htmlDecode } from '$journey/_utilities/decode.utilities';
 import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
 import { parseThemeId } from '$journey/_utilities/theme-id.utilities';
+import { readStoredStack, writeStoredStack } from '$journey/journey.effects';
 import {
   authIdTimeoutErrorCode,
   initCheckValidation,
@@ -72,6 +73,14 @@ export const journeyClientConfigSchema: z.ZodType<JourneyClientConfig> = z
 let journeyClientConfig: JourneyClientConfig | undefined;
 let journeyRequestMiddleware: RequestMiddleware[] | undefined;
 let journeyLogger: { level: LogLevel; custom?: CustomLogger } | undefined;
+
+export const fallbackJourneyStore = writable<string | undefined>(undefined);
+
+// Default true: existing hosts keep today's auto-restart behavior. When false,
+// flow-level failures (start/resume) surface as error state without the widget
+// restarting — the host observes journeyStore.error and decides what happens.
+// In-journey step failures (next()) always auto-restart to salvage the form.
+export const autoRestartStore = writable<boolean>(true);
 
 /**
  * We cache the journey client promise instead of only caching the resolved client so concurrent callers
@@ -150,7 +159,7 @@ export async function getJourneyClient(): Promise<JourneyClient> {
  * @returns {object} - The journey stack store with stack methods
  */
 function initializeStack() {
-  const { update, set, subscribe }: Writable<StartParam[]> = writable([]);
+  const { set, subscribe }: Writable<StartParam[]> = writable([]);
 
   // Assign to exported variable (see bottom of file)
   stack = {
@@ -164,38 +173,36 @@ function initializeStack() {
       });
     },
     pop: async (): Promise<StartParam[]> => {
-      return new Promise((resolve) => {
-        update((current) => {
-          let state;
-          if (current.length) {
-            state = current.slice(0, -1);
-          } else {
-            state = current;
-          }
-          resolve([...state]);
-          return state;
-        });
-      });
+      // slice(0, -1) on an empty stack is [] — no guard needed.
+      const current = get({ subscribe });
+      const state = current.slice(0, -1);
+      set(state);
+      void writeStoredStack(state);
+      return [...state];
     },
     push: async (options?: StartParam): Promise<StartParam[]> => {
-      return new Promise((resolve) => {
-        update((current) => {
-          let state;
+      // Fresh page load: seed from storage so visits accumulate instead of
+      // replacing the remembered stack.
+      // get({ subscribe }) = svelte's sync read of the stack store.
+      const existingStack = get({ subscribe });
+      const current = existingStack.length ? existingStack : await readStoredStack();
 
-          if (!current.length) {
-            state = options ? [options] : current;
-          } else if (options && options?.journey !== current[current.length - 1]?.journey) {
-            state = [...current, options];
-          } else {
-            state = current;
-          }
-          resolve([...state]);
-          return state;
-        });
-      });
+      let state;
+
+      if (!current.length) {
+        state = options ? [options] : current;
+      } else if (options && options?.journey !== current[current.length - 1]?.journey) {
+        state = [...current, options];
+      } else {
+        state = current;
+      }
+      set(state);
+      void writeStoredStack(state);
+      return [...state];
     },
     reset: () => {
       set([]);
+      void writeStoredStack([]);
     },
     subscribe,
   };
@@ -248,6 +255,9 @@ export function initialize(
       response: null,
     }));
 
+    // Push even a journey-less start (e.g. a plain visit to "/" — its entry carries
+    // the query params a restart must replay). The persistence subscription skips
+    // falsy journeys, so this cannot erase the remembered journey.
     if (startOptions) {
       await stack.push(startOptions);
     }
@@ -313,10 +323,22 @@ export function initialize(
        * redirect params code/state/form_post_entry/responsekey). The one thing it does not
        * read is a `journey` query param, so forward that through when present.
        */
-      const journeyParam = new URL(url).searchParams.get('journey');
+      const urlParams = new URL(url).searchParams;
+      const journeyParam = urlParams.get('journey');
       const updatedResumeOptions = journeyParam
         ? { ...resumeOptions, journey: journeyParam }
         : resumeOptions;
+
+      /**
+       * Mirror journey-client's own resume resolution (journey option ?? authIndexValue)
+       * so the stack records the same identity the resume call carries. Old-style
+       * suspended links carry authIndexValue and no journey param; without this
+       * fallback their failed resumes restart into the realm default.
+       */
+      const resolvedJourney = updatedResumeOptions?.journey ?? urlParams.get('authIndexValue');
+      if (resolvedJourney) {
+        await stack.push({ journey: resolvedJourney });
+      }
 
       result = await journeyClient.resume(url, updatedResumeOptions);
     } catch (err) {
@@ -352,6 +374,11 @@ export function initialize(
     }
   }
 
+  async function restart() {
+    reset();
+    await start(await resolveRestartTarget());
+  }
+
   function reset() {
     journeyStore.set({
       completed: false,
@@ -362,6 +389,16 @@ export function initialize(
       successful: false,
       response: null,
     });
+  }
+
+  async function resolveRestartTarget(): Promise<StartParam | undefined> {
+    const sessionLatest = await stack.latest();
+    if (sessionLatest) {
+      return sessionLatest;
+    }
+    const storedLatest = (await readStoredStack()).findLast((entry) => entry.journey);
+    const configuredFallback = get(fallbackJourneyStore);
+    return storedLatest ?? (configuredFallback ? { journey: configuredFallback } : undefined);
   }
 
   async function handleJourneyResult(
@@ -435,14 +472,59 @@ export function initialize(
       const failureResult = result;
       const failureMessageStr = htmlDecode(failureResult.payload?.message || 'Unknown login error');
 
-      await restartJourney(failureMessageStr, context, failureResult);
+      // Flow-level failure (start/resume): with autoRestart off, publish the
+      // error and let the host decide. Step failures (context present) always
+      // restart to salvage the in-flight form.
+      const autoRestart = get(autoRestartStore);
+      if (autoRestart || context) {
+        await restartJourney(failureMessageStr, context, failureResult);
+        return;
+      }
+
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: {
+          code: failureResult.getCode() ?? null,
+          message: failureMessageStr,
+          stage: null,
+          troubleshoot: null,
+          detail: failureResult.payload?.detail ?? null,
+        },
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: false,
+        response: failureResult.payload,
+      }));
     } else {
       // Handle GenericError case
       const genericError = result;
       const errorMessage =
         genericError.message ?? genericError.error ?? interpolate('unknownNetworkError');
 
-      await restartJourney(errorMessage, context);
+      const autoRestart = get(autoRestartStore);
+      if (autoRestart || context) {
+        await restartJourney(errorMessage, context);
+        return;
+      }
+
+      journeyStore.update((current) => ({
+        ...current,
+        completed: true,
+        error: {
+          code: null,
+          message: errorMessage,
+          stage: null,
+          troubleshoot: null,
+          detail: null,
+        },
+        loading: false,
+        metadata: null,
+        step: null,
+        successful: false,
+        response: null,
+      }));
     }
   }
 
@@ -459,10 +541,7 @@ export function initialize(
     let restartedResult: JourneyResult | null = null;
 
     try {
-      /**
-       * Restart journey to get fresh step
-       */
-      const restartOptions = await stack.latest();
+      const restartOptions = await resolveRestartTarget();
       const journeyClient = await getJourneyClient();
       restartedResult = await journeyClient.start(restartOptions);
 
@@ -564,6 +643,8 @@ export function initialize(
       }));
       return;
     } else if (restartedResult.type === 'LoginSuccess') {
+      stack.reset();
+
       journeyStore.update((current) => ({
         ...current,
         completed: true,
@@ -609,6 +690,7 @@ export function initialize(
     pop,
     push,
     reset,
+    restart,
     resume,
     start,
     redirect,
