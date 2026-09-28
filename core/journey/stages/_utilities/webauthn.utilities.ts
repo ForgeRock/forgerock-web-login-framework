@@ -11,7 +11,6 @@ import { callbackType } from '@forgerock/journey-client';
 import { WebAuthn, WebAuthnStepType } from '@forgerock/journey-client/webauthn';
 
 import type { JourneyStep } from '@forgerock/journey-client/types';
-import type { WebAuthnAuthenticationMetadata } from '@forgerock/journey-client/webauthn';
 
 /**
  * @function isMixedLoginWebAuthnStep - determines if a step is a mixed-login WebAuthn authentication step
@@ -49,17 +48,18 @@ export function getAutocompleteValues(step?: JourneyStep | null): string[] {
 }
 
 /**
- * @function isPasskeyAutofillStep - determines whether AM has enabled passkey autofill for a step.
- * This is purely an AM-eligibility check — separate from {@link isMixedLoginWebAuthnStep} (which
- * decides stage routing). Requires BOTH the `username`/`webauthn` autocomplete values AND
- * AM-driven conditional mediation (`meta.mediation === 'conditional'`): autofill is only meaningful
- * when the field is marked autofillable and a conditional request is issued to populate it.
+ * @function isPasskeyAutofillStep - determines whether AM has enabled passkey autofill for a step,
+ * and whether the browser supports it. Separate from {@link isMixedLoginWebAuthnStep} (which decides
+ * stage routing). Requires BOTH the `username`/`webauthn` autocomplete values AND AM-driven
+ * conditional mediation (`meta.mediation === 'conditional'`, checked via
+ * {@link WebAuthn.isConditionalMediationSupported}): autofill is only meaningful when the field is
+ * marked autofillable and a conditional request is issued to populate it.
  *
- * TODO: promote this to journey-client (e.g. WebAuthn.isConditionalMediationRequested) once the SDK exposes it.
  * @param {JourneyStep | null | undefined} step - The current journey step
- * @returns {boolean} True if both autocomplete values and AM conditional mediation are enabled
+ * @returns {Promise<boolean>} True if autocomplete values are enabled and conditional mediation is
+ * both requested by AM and supported by the browser
  */
-export function isPasskeyAutofillStep(step?: JourneyStep | null): boolean {
+export async function isPasskeyAutofillStep(step?: JourneyStep | null): Promise<boolean> {
   if (!step) {
     return false;
   }
@@ -69,12 +69,5 @@ export function isPasskeyAutofillStep(step?: JourneyStep | null): boolean {
     return false;
   }
 
-  // TODO: extend WebAuthn.isConditionalMediationSupported in the Ping SDK to also accept a step
-  // and check whether AM requested conditional mediation (meta.mediation === 'conditional'),
-  // so this manual metadata extraction can be removed.
-  const metadata = WebAuthn.getMetadataCallback(step)?.getOutputByName<
-    Partial<WebAuthnAuthenticationMetadata>
-  >('data', {});
-
-  return metadata?.mediation === 'conditional';
+  return await WebAuthn.isConditionalMediationSupported(step);
 }
