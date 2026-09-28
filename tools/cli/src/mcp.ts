@@ -146,7 +146,7 @@ const GenerateHeaderTool = Tool.make('generate_header', {
   parameters: {
     name: Schema.String.annotations({
       description:
-        'Name for the header (e.g. "Corporate Header"). Registered under this name — set PUBLIC_CUSTOM_HEADER_NAME in the login-app to select it.',
+        'Name for the header (e.g. "Corporate Header"). Registered under this name — the scaffolded component ships with Enabled: true (at most one header may be enabled).',
     }),
     directory: directoryParam,
   },
@@ -163,7 +163,7 @@ const GenerateFooterTool = Tool.make('generate_footer', {
   parameters: {
     name: Schema.String.annotations({
       description:
-        'Name for the footer (e.g. "Corporate Footer"). Registered under this name — set PUBLIC_CUSTOM_FOOTER_NAME in the login-app to select it.',
+        'Name for the footer (e.g. "Corporate Footer"). Registered under this name — the scaffolded component ships with Enabled: true (at most one footer may be enabled).',
     }),
     directory: directoryParam,
   },

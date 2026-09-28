@@ -57,14 +57,20 @@ The `@component` comment is required. The framework's Vite plugin reads it to re
 
 ## Types
 
-| Type       | What it replaces                                  | Scope                          |
-| ---------- | ------------------------------------------------- | ------------------------------ |
-| `stage`    | The entire form layout for a named stage          | One stage only                 |
-| `callback` | A specific callback type renderer                 | Every occurrence globally      |
-| `header`   | The page-level header slot (branding, nav links)  | Multiple allowed, one rendered |
-| `footer`   | The page-level footer slot (legal, links, markup) | Multiple allowed, one rendered |
+| Type       | What it replaces                                  | Scope                                     |
+| ---------- | ------------------------------------------------- | ----------------------------------------- |
+| `stage`    | The entire form layout for a named stage          | One stage only                            |
+| `callback` | A specific callback type renderer                 | Every occurrence globally                 |
+| `header`   | The page-level header slot (branding, nav links)  | At most one `Enabled: true`, rest dormant |
+| `footer`   | The page-level footer slot (legal, links, markup) | At most one `Enabled: true`, rest dormant |
 
-Header and footer components take no props — they are static branding slots rendered above and below the journey in the login app. Multiple header (or footer) components may be registered, each under its own `Name:`; the login-app selects one via the `PUBLIC_CUSTOM_HEADER_NAME` / `PUBLIC_CUSTOM_FOOTER_NAME` environment variables. An unset variable renders none, and a variable naming an unregistered component fails loudly.
+Header and footer components take no props — they are static branding slots rendered above and below the journey in the login app. They are opt-in via an `Enabled:` property in the `@component` comment block:
+
+- `Enabled: true` bundles the component with the login app and renders it above (header) or below (footer) the journey. At most one header and one footer may declare it — a second enabled component of the same type fails the build.
+- Absent, or `Enabled: false`, keeps the component dormant on disk: not bundled, not validated. Remove the `Enabled` line (or set it to `false`) to disable a component without deleting it.
+- Any other value fails the build, so a typo cannot silently disable a component meant to ship. The property name is case-sensitive (`Enabled`, matching `Name` and `Type`).
+
+Stages and callbacks are always bundled and never use `Enabled`; a stray `Enabled:` line there is silently ignored.
 
 ## Component props
 

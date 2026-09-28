@@ -8,7 +8,6 @@
  -->
 
 <script lang="ts">
-  import { error } from '@sveltejs/kit';
   import { onMount, tick } from 'svelte';
 
   import { goto } from '$app/navigation';
@@ -19,12 +18,9 @@
   import {
     customFooterRegistry,
     customHeaderRegistry,
-    type CustomRegistryEntry,
   } from '$core/journey/_utilities/registry/custom-registry';
-  import { selectRegistryEntry } from '$core/journey/_utilities/registry/select-registry-entry.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
-  import { env } from '$env/dynamic/public';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
@@ -34,36 +30,12 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  // selectRegistryEntry throws a plain Error because core/ cannot depend on
-  // @sveltejs/kit. SvelteKit's default prod handleError replaces a plain
-  // Error's message with "Internal Error" on the rendered page, so re-throw
-  // here through error() to preserve the full diagnostic for the error page.
-  function resolveRegistryEntry(
-    name: string | undefined,
-    registry: Record<string, CustomRegistryEntry>,
-    type: 'header' | 'footer',
-    envVarName: string,
-  ) {
-    try {
-      return selectRegistryEntry(name, registry, type, envVarName);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      throw error(500, message);
-    }
-  }
-
-  const headerEntry = resolveRegistryEntry(
-    env.PUBLIC_CUSTOM_HEADER_NAME,
-    customHeaderRegistry,
-    'header',
-    'PUBLIC_CUSTOM_HEADER_NAME',
-  );
-  const footerEntry = resolveRegistryEntry(
-    env.PUBLIC_CUSTOM_FOOTER_NAME,
-    customFooterRegistry,
-    'footer',
-    'PUBLIC_CUSTOM_FOOTER_NAME',
-  );
+  // Custom header/footer registries hold 0 or 1 entries each: the registry
+  // build fails when more than one header or footer declares Enabled: true,
+  // and dormant (non-enabled) components never reach the Record. The single
+  // enabled entry, when present, renders above/below the journey container.
+  const headerEntry = Object.values(customHeaderRegistry)[0];
+  const footerEntry = Object.values(customFooterRegistry)[0];
 
   const authIndexValue = $page.url.searchParams.get('authIndexValue');
   const codeParam = $page.url.searchParams.get('code');

@@ -108,7 +108,7 @@ Name: NameCallback
 -->
 ```
 
-Setting `Name` to an existing default (e.g. `NameCallback`, `DefaultLogin`) **overrides** that component. Setting it to a new name **extends** the framework with a custom type. Header and footer components are registered under their `Name` and selected in the login-app via the `PUBLIC_CUSTOM_HEADER_NAME` / `PUBLIC_CUSTOM_FOOTER_NAME` environment variables.
+Setting `Name` to an existing default (e.g. `NameCallback`, `DefaultLogin`) **overrides** that component. Setting it to a new name **extends** the framework with a custom type. Header and footer components are scaffolded with `Enabled: true`; at most one header and one footer may declare it (a second enabled component of the same type fails the build). Remove the `Enabled` line to keep a scaffolded component dormant on disk.
 
 See `experimental/custom/README.md` for the full prop contract.
 

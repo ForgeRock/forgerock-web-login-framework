@@ -230,7 +230,7 @@ const generateHeaderCommand = Command.make(
   {
     name: Args.text({ name: 'Name' }).pipe(
       Args.withDescription(
-        'Display name for the header (e.g. "Corporate Header"). Rendered in the registry under this name — set PUBLIC_CUSTOM_HEADER_NAME in the login-app to select it.',
+        'Display name for the header (e.g. "Corporate Header"). Rendered in the registry under this name — the scaffolded component ships with Enabled: true (at most one header may be enabled).',
       ),
     ),
   },
@@ -246,7 +246,7 @@ const generateFooterCommand = Command.make(
   {
     name: Args.text({ name: 'Name' }).pipe(
       Args.withDescription(
-        'Name for the footer (e.g. "Corporate Footer"). Registered under this name — set PUBLIC_CUSTOM_FOOTER_NAME in the login-app to select it.',
+        'Name for the footer (e.g. "Corporate Footer"). Registered under this name — the scaffolded component ships with Enabled: true (at most one footer may be enabled).',
       ),
     ),
   },

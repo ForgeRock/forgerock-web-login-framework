@@ -62,6 +62,61 @@ export function toPascalCase(str: string): string {
     .replace(/^(.)/, (_, chr: string) => chr.toUpperCase());
 }
 
+/**
+ * Parses the optional `Enabled:` property from a Svelte file's leading
+ * `<!-- @component -->` comment block, from the raw content.
+ *
+ * Intentionally duplicated from core/journey/_utilities/registry/registry.ts — tools/cli
+ * cannot depend on core/ (build-time vs. runtime boundary), so each package owns its own copy.
+ *
+ * Returns one of three outcomes:
+ * - `{ state: 'enabled' }` — an `Enabled: true` line is present.
+ * - `{ state: 'dormant' }` — the line is absent, or says `Enabled: false`. The
+ *   component is not bundled; header/footer files in this state are skipped
+ *   before any further validation (skip-entirely).
+ * - `{ error }` — the line is present with any other value. Invalid values
+ *   fail loudly even though the file would be dormant, so a typo cannot
+ *   silently disable a component the developer meant to ship.
+ *
+ * `Enabled` is a header/footer-only property. Stage/callback files never
+ * reach this parser (they are always bundled), so a stray `Enabled:` line
+ * there is silently ignored — the same tolerance the legacy `Default:` line
+ * gets from `parseComponentHeader`.
+ */
+export type EnabledParseResult = { state: 'enabled' } | { state: 'dormant' } | { error: string };
+
+export function parseEnabledState(content: string): EnabledParseResult {
+  const commentMatch = content.match(/^<!--([\s\S]*?)-->/);
+  if (!commentMatch) {
+    return { state: 'dormant' };
+  }
+
+  // Per-line anchored: only a line whose own content is the property counts.
+  // A plain /Enabled:\s*(.*)/ over the block would match the first occurrence
+  // of the text anywhere, letting prose (e.g. '"Enabled: true" opts this
+  // component into the bundle') shadow or replace the real property line —
+  // which breaks exactly the documented "remove the line to disable" path.
+  // Mirrors core/journey/_utilities/registry/registry.ts.
+  const enabledLine = commentMatch[1].split('\n').find((line) => /^\s*Enabled:/.test(line));
+  if (!enabledLine) {
+    return { state: 'dormant' };
+  }
+
+  const value = (enabledLine.match(/^\s*Enabled:\s*(.*)$/) ?? [])[1]?.trim() ?? '';
+  if (value === 'true') {
+    return { state: 'enabled' };
+  }
+  if (value === 'false') {
+    return { state: 'dormant' };
+  }
+
+  return {
+    error:
+      `Invalid Enabled value "${value}". Expected "Enabled: true" or "Enabled: false" ` +
+      `(or omit the property entirely). Enabled is a header/footer-only property.`,
+  };
+}
+
 /** Parses and validates the leading `<!-- @component -->` block from a Svelte file. */
 export const parseComponentHeader = (
   filePath: string,
@@ -166,8 +221,17 @@ const scanDirectory = (
   expectedType: ComponentType,
 ): Effect.Effect<ComponentEntry[], RegistryScanError> =>
   findSvelteFiles(fs, path, dir).pipe(
+    // Dormant header/footer files (no "Enabled: true") are skipped entirely:
+    // not validated, not bundled. Stages and callbacks are always bundled, so
+    // every file there is a scan candidate. An invalid Enabled value still
+    // fails loudly so a typo can't silently disable a meant-to-ship component.
     Effect.flatMap((files) =>
-      Effect.validateAll(files, (filePath) =>
+      expectedType === 'header' || expectedType === 'footer'
+        ? partitionByEnabledState(fs, files)
+        : Effect.succeed(files),
+    ),
+    Effect.flatMap((enabledFiles) =>
+      Effect.validateAll(enabledFiles, (filePath) =>
         fs.readFileString(filePath).pipe(
           Effect.mapError((cause) => new RegistryScanError({ directory: filePath, cause })),
           Effect.flatMap((content) =>
@@ -202,6 +266,34 @@ const scanDirectory = (
     ),
   );
 
+/**
+ * Reads each candidate header/footer file and keeps only the enabled ones
+ * ("Enabled: true"); dormant files are dropped before validation
+ * (skip-entirely). An invalid Enabled value propagates as a scan failure.
+ */
+const partitionByEnabledState = (
+  fs: FileSystem.FileSystem,
+  files: string[],
+): Effect.Effect<string[], RegistryScanError> =>
+  Effect.forEach(
+    files,
+    (filePath) =>
+      fs.readFileString(filePath).pipe(
+        Effect.mapError((cause) => new RegistryScanError({ directory: filePath, cause })),
+        Effect.map((content) => ({ filePath, parsed: parseEnabledState(content) })),
+        Effect.flatMap(({ filePath, parsed }) =>
+          'error' in parsed
+            ? Effect.fail(new RegistryScanError({ directory: filePath, cause: parsed.error }))
+            : Effect.succeed({ filePath, state: parsed.state }),
+        ),
+      ),
+    { concurrency: 'unbounded' },
+  ).pipe(
+    Effect.map((tagged) =>
+      tagged.filter(({ state }) => state === 'enabled').map(({ filePath }) => filePath),
+    ),
+  );
+
 // --------------------------------------------------------------------------
 // Registry content builder (pure)
 // --------------------------------------------------------------------------
@@ -219,6 +311,26 @@ export class RegistryCollisionError extends Data.TaggedError('RegistryCollisionE
       `Duplicate component name "${this.name}" in type "${this.type}". Colliding files:\n` +
       collidingFiles +
       `\nRename one component's "Name:" field so every ${this.type} has a unique generated identifier.`
+    );
+  }
+}
+
+/**
+ * Raised when more than one header or footer component declares
+ * `Enabled: true` in its `@component` header. Exactly one component of each
+ * type is bundled with the login app; the rest stay dormant on disk.
+ */
+export class RegistryEnabledLimitError extends Data.TaggedError('RegistryEnabledLimitError')<{
+  readonly type: 'header' | 'footer';
+  readonly filePaths: string[];
+}> {
+  get message(): string {
+    const enabledFiles = this.filePaths.map((filePath) => `  - ${filePath}`).join('\n');
+    return (
+      `More than one ${this.type} component is enabled. Enabled files:\n` +
+      enabledFiles +
+      `\nExactly one ${this.type} may declare "Enabled: true" in its @component header. ` +
+      `Remove the "Enabled: true" line (or set "Enabled: false") from all but one file.`
     );
   }
 }
@@ -250,6 +362,22 @@ export function buildRegistryContent(
   const callbackEntries = callbackComponents.map(toEntry('Callback'));
   const headerEntries = headerComponents.map(toEntry('CustomHeader'));
   const footerEntries = footerComponents.map(toEntry('CustomFooter'));
+
+  // Enabled limit: header/footer components are opt-in via "Enabled: true", and
+  // at most one of each type is bundled with the login app. Checked before name
+  // collisions so the actionable message wins when both problems exist. Mirrors
+  // core/journey/_utilities/registry/registry.ts.
+  const checkEnabledLimit = (type: 'header' | 'footer', entries: RegistryVarEntry[]) => {
+    if (entries.length > 1) {
+      throw new RegistryEnabledLimitError({
+        type,
+        filePaths: entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
+      });
+    }
+  };
+
+  checkEnabledLimit('header', headerEntries);
+  checkEnabledLimit('footer', footerEntries);
 
   // Name collisions: any two components sharing a generated identifier would emit a
   // duplicate TS identifier (broken build) or a shadowed registry key (silent last-wins).
@@ -312,8 +440,8 @@ export function buildRegistryContent(
 
   collectImportBlock(`// Stage overrides / extensions`, stageEntries);
   collectImportBlock(`// Callback overrides / extensions`, callbackEntries);
-  collectImportBlock(`// Custom headers (multiple allowed)`, headerEntries);
-  collectImportBlock(`// Custom footers (multiple allowed)`, footerEntries);
+  collectImportBlock(`// Custom headers (at most one enabled)`, headerEntries);
+  collectImportBlock(`// Custom footers (at most one enabled)`, footerEntries);
 
   const pushRecordRegistry = (
     exportName: string,

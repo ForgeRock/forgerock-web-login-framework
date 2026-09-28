@@ -50,14 +50,14 @@ pnpm --filter @forgerock/login-app run preview
 
 The app requires environment variables to connect to a ForgeRock AM instance. Set these in a `.env` file at the repository root or in `apps/login-app/.env` (SvelteKit loads the app's own `.env`; Vite's `envDir` points at the repository root), or export them in your shell.
 
-| Variable                    | Required | Description                                                                                                                                                                                             |
-| --------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FR_AM_URL`                 | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                                                                                                  |
-| `FR_AM_COOKIE_NAME`         | Yes      | AM session cookie name                                                                                                                                                                                  |
-| `FR_REALM_PATH`             | Yes      | AM realm path                                                                                                                                                                                           |
-| `FR_AM_WELLKNOWN_URL`       | Yes      | ForgeRock AM Wellknown URL (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration`)                                                                               |
-| `PUBLIC_CUSTOM_HEADER_NAME` | No       | `Name:` of a registered custom header component to render above the journey. Unset renders none; unknown name fails loudly at page start. See [custom components](../../experimental/custom/README.md). |
-| `PUBLIC_CUSTOM_FOOTER_NAME` | No       | `Name:` of a registered custom footer component to render below the journey. Same selection rules as the header variable.                                                                               |
+| Variable              | Required | Description                                                                                                               |
+| --------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `FR_AM_URL`           | Yes      | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                    |
+| `FR_AM_COOKIE_NAME`   | Yes      | AM session cookie name                                                                                                    |
+| `FR_REALM_PATH`       | Yes      | AM realm path                                                                                                             |
+| `FR_AM_WELLKNOWN_URL` | Yes      | ForgeRock AM Wellknown URL (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/alpha/.well-known/openid-configuration`) |
+
+Custom header/footer components are selected at build time via the `Enabled: true` `@component` property in the component file (see [custom components](../../experimental/custom/README.md)), not via environment variables.
 
 ## Type Checking
 

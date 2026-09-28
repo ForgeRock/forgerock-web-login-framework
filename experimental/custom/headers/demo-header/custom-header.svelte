@@ -2,6 +2,7 @@
   @component
   Type: header
   Name: DemoHeader
+  Enabled: true
 
   DEMO COMPONENT
   ──────────────
@@ -19,12 +20,11 @@
   rendered outside the journey flow. They have no access to the journey, form,
   or step state.
 
-  NOTE (Enabled)
-  ──────────────
-  A header bundles with the login app only when its @component block declares
-  "Enabled: true" — at most one header per build may declare it (a second
-  enabled header fails the build). Headers without the line stay dormant on
-  disk: not bundled, not validated.
+  NOTE (Enabled rule)
+  ───────────────────
+  At most one header per build may declare "Enabled: true" — the enabled
+  component is bundled with the login app; headers without it stay dormant on
+  disk (not bundled, not validated). A second enabled header fails the build.
 -->
 
 <script lang="ts">

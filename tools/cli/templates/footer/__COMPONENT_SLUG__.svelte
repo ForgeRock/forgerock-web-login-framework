@@ -2,12 +2,17 @@
 @component
 Type: footer
 Name: __COMPONENT_NAME__
+Enabled: true
 
 Custom page footer component.
 
 A footer is a static page-level slot rendered below the journey container
 by the login app (apps/login-app/src/routes/(app)/+page.svelte). It takes
 NO props and has no access to the journey, form, or step state.
+
+"Enabled: true" opts this component into the bundle: exactly one header and
+one footer may declare it (a second enabled component of the same type fails
+the build). Remove this line to keep the component dormant on disk.
 
 Replace the markup below with your own copyright, legal links, and locale
 switch.

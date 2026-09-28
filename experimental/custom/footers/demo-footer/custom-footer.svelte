@@ -2,6 +2,7 @@
   @component
   Type: footer
   Name: DemoFooter
+  Enabled: true
 
   DEMO COMPONENT
   ──────────────
@@ -19,12 +20,11 @@
   outside the journey flow. They have no access to the journey, form, or step
   state.
 
-  NOTE (Enabled)
-  ──────────────
-  A footer bundles with the login app only when its @component block declares
-  "Enabled: true" — at most one footer per build may declare it (a second
-  enabled footer fails the build). Footers without the line stay dormant on
-  disk: not bundled, not validated.
+  NOTE (Enabled rule)
+  ───────────────────
+  At most one footer per build may declare "Enabled: true" — the enabled
+  component is bundled with the login app; footers without it stay dormant on
+  disk (not bundled, not validated). A second enabled footer fails the build.
 -->
 
 <script lang="ts">
