@@ -9,7 +9,11 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { JourneyClient, JourneyClientConfig } from '@forgerock/journey-client/types';
+import type {
+  JourneyClient,
+  JourneyClientConfig,
+  StartParam,
+} from '@forgerock/journey-client/types';
 
 const journeyMock = vi.fn();
 
@@ -555,8 +559,9 @@ describe('journey.store (Journey Client configuration)', () => {
   });
 
   /**
-   * IAM-12006 storage layer: start() with a journey name persists it to localStorage
-   * so a later bare-suspendedId page load (suspend email link) can restart into it.
+   * IAM-12006 storage layer: start() persists the whole stack (journey + query)
+   * to localStorage so a later bare-suspendedId page load (suspend email link)
+   * can restart into the last visit's journey with the same query.
    */
   it('persists the started journey to localStorage on start', async () => {
     const storage = new Map<string, string>();
@@ -564,6 +569,11 @@ describe('journey.store (Journey Client configuration)', () => {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
     });
 
     const step = {
@@ -587,9 +597,10 @@ describe('journey.store (Journey Client configuration)', () => {
       },
     });
 
-    await store.start({ journey: 'ResetPassword' });
+    await store.start({ journey: 'ResetPassword', query: { noSession: 'false' } });
 
-    expect(storage.get('resume-journey')).toBe('ResetPassword');
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored).toEqual([{ journey: 'ResetPassword', query: { noSession: 'false' } }]);
   });
 
   /**
@@ -603,6 +614,11 @@ describe('journey.store (Journey Client configuration)', () => {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
     });
 
     const step = {
@@ -629,7 +645,8 @@ describe('journey.store (Journey Client configuration)', () => {
 
     await store.resume('https://example.com/callback?suspendedId=abc123&journey=ResetPassword');
 
-    expect(storage.get('resume-journey')).toBe('ResetPassword');
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored[stored.length - 1]).toEqual({ journey: 'ResetPassword' });
   });
 
   /**
@@ -643,6 +660,11 @@ describe('journey.store (Journey Client configuration)', () => {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
     });
 
     const step = {
@@ -670,46 +692,165 @@ describe('journey.store (Journey Client configuration)', () => {
     await store.push({ journey: 'ResetPassword' });
     await store.pop();
 
-    expect(storage.get('resume-journey')).toBe('Login');
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored[stored.length - 1]).toEqual({ journey: 'Login' });
     expect(await (await importSubject()).stack.latest()).toEqual({ journey: 'Login' });
   });
 
   /**
-   * A fresh page load seeds the empty stack from localStorage, so restart paths
-   * resolve the remembered journey when no start() has run in this page.
+   * A fresh page load does NOT hydrate the stack (async storage read, no hydration
+   * race) — instead the restart paths read the remembered stack from storage after
+   * the session stack misses.
    */
-  it('seeds the journey stack from localStorage on initialize', async () => {
-    const storage = new Map<string, string>([['resume-journey', 'ResetPassword']]);
+  it('restart paths read the remembered stack from storage when the session stack is empty', async () => {
+    const storage = new Map<string, string>();
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
     });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set('pic-journey-stack', JSON.stringify([{ journey: 'ResetPassword' }]));
 
-    const client = { start: vi.fn(), next: vi.fn() } as unknown as JourneyClient;
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
     journeyMock.mockResolvedValue(client);
 
     const mod = await importSubject();
-    mod.initialize({
+    const store = mod.initialize({
       serverConfig: {
         wellknown: 'https://example.com/.well-known/openid-configuration',
       },
     });
 
-    expect(await mod.stack.latest()).toEqual({ journey: 'ResetPassword' });
+    await store.restart();
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'ResetPassword' });
   });
 
   /**
-   * URL-derived identity (resume push) must sit on top of the seeded entry so the
-   * restart uses the URL's journey, not the remembered one.
+   * The remembered stack carries query params too — a bare-suspendedId restart
+   * replays the last visit's query (e.g. goto/gotoOnFail), which is the point of
+   * persisting the whole stack.
    */
-  it('prefers the resume URL journey over the localStorage-seeded one', async () => {
-    const storage = new Map<string, string>([['resume-journey', 'Login']]);
+  it('restart replays the remembered journey with its query params', async () => {
+    const storage = new Map<string, string>();
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
     });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set(
+      'pic-journey-stack',
+      JSON.stringify([{ journey: 'Login', query: { goto: '/home' } }]),
+    );
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.restart();
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'Login', query: { goto: '/home' } });
+  });
+
+  /**
+   * The session stack wins over the remembered one: within a live session,
+   * restart() keeps using the in-memory stack; storage is only the fresh-page
+   * fallback.
+   */
+  it('prefers the live session stack over the localStorage-seeded one', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set('pic-journey-stack', JSON.stringify([{ journey: 'OldTree' }]));
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+      resume: vi.fn().mockResolvedValueOnce(step),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.resume('https://example.com/callback?suspendedId=abc&journey=NewTree');
+    await store.restart();
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'NewTree' });
+  });
+
+  /**
+   * URL-derived identity (resume push) must sit on top of the remembered entry so the
+   * restart uses the URL's journey, not the remembered one.
+   */
+  it('prefers the resume URL journey over the localStorage-seeded one', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set('pic-journey-stack', JSON.stringify([{ journey: 'Login' }]));
 
     const step = {
       type: 'Step' as const,
@@ -742,11 +883,18 @@ describe('journey.store (Journey Client configuration)', () => {
    * the stored value on LoginSuccess, alongside stack.reset().
    */
   it('clears the stored journey on LoginSuccess', async () => {
-    const storage = new Map<string, string>([['resume-journey', 'ResetPassword']]);
+    const storage = new Map<string, string>([
+      ['pic-journey-stack', JSON.stringify([{ journey: 'ResetPassword' }])],
+    ]);
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
     });
 
     const loginSuccess = { type: 'LoginSuccess' as const, payload: { tokenId: 'abc' } };
@@ -765,7 +913,7 @@ describe('journey.store (Journey Client configuration)', () => {
 
     await store.start({ journey: 'ResetPassword' });
 
-    expect(storage.has('resume-journey')).toBe(false);
+    expect(storage.has('pic-journey-stack')).toBe(false);
     expect(await mod.stack.latest()).toBeUndefined();
   });
 
@@ -776,11 +924,18 @@ describe('journey.store (Journey Client configuration)', () => {
    * restart target.
    */
   it('clears the stored journey when the restarted flow succeeds', async () => {
-    const storage = new Map<string, string>([['resume-journey', 'ResetPassword']]);
+    const storage = new Map<string, string>([
+      ['pic-journey-stack', JSON.stringify([{ journey: 'ResetPassword' }])],
+    ]);
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
     });
 
     const loginSuccess = { type: 'LoginSuccess' as const, payload: { tokenId: 'abc' } };
@@ -809,7 +964,7 @@ describe('journey.store (Journey Client configuration)', () => {
 
     await store.resume('https://example.com/callback?suspendedId=abc123&journey=ResetPassword');
 
-    expect(storage.has('resume-journey')).toBe(false);
+    expect(storage.has('pic-journey-stack')).toBe(false);
     expect(await mod.stack.latest()).toBeUndefined();
     const { get } = await import('svelte/store');
     expect(get(journeyStore).successful).toBe(true);
@@ -817,15 +972,20 @@ describe('journey.store (Journey Client configuration)', () => {
 
   /**
    * A start with an empty journey name (plain visit to "/" with no ?journey= param)
-   * still pushes its entry — the restart must replay the same visit, query included —
-   * but the persistence layer skips falsy journeys, so the remembered journey survives.
+   * still persists its entry with its query — a later bare-suspendedId restart
+   * replays the same visit (realm default journey, same query).
    */
-  it('keeps the stored journey when start is called with an empty journey', async () => {
-    const storage = new Map<string, string>([['resume-journey', 'ResetPassword']]);
+  it('persists the query of a journey-less start', async () => {
+    const storage = new Map<string, string>();
     vi.stubGlobal('localStorage', {
       getItem: (key: string) => storage.get(key) ?? null,
       setItem: (key: string, value: string) => storage.set(key, value),
       removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
     });
 
     const step = {
@@ -850,9 +1010,8 @@ describe('journey.store (Journey Client configuration)', () => {
 
     await store.start({ journey: '', query: { noSession: 'false' } });
 
-    // The remembered journey is not erased by the journey-less start.
-    expect(storage.get('resume-journey')).toBe('ResetPassword');
-    // The visit entry sits on top of the seed so a restart replays it.
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored[stored.length - 1]).toEqual({ journey: '', query: { noSession: 'false' } });
     expect(await mod.stack.latest()).toEqual({ journey: '', query: { noSession: 'false' } });
   });
 
@@ -871,6 +1030,11 @@ describe('journey.store (Journey Client configuration)', () => {
       removeItem: () => {
         throw new Error('blocked');
       },
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
     });
 
     const step = {

@@ -8,38 +8,36 @@
  **/
 
 /**
- * Journey persistence effects (IAM-12006).
- *
- * Remembers the last started journey so a later bare-suspendedId page load (suspend
- * email link) can restart into the right tree. localStorage (not sessionStorage): the
- * email link opens a new tab/context, and sessionStorage is tab-scoped. All access is
- * guarded — SSR and blocked-storage environments must not crash.
+ * Journey persistence remembers the journey stack so a
+ * bare-suspendedId page load (new tab) can restart into the last visit's
+ * journey with the same query.
  */
 
-const JOURNEY_STORAGE_KEY = 'resume-journey';
+import { createStorage } from '@forgerock/storage';
 
-export function readStoredJourney(): string | undefined {
-  try {
-    if (typeof localStorage === 'undefined') {
-      return undefined;
-    }
-    return localStorage.getItem(JOURNEY_STORAGE_KEY) || undefined;
-  } catch {
-    return undefined;
-  }
+import type { StartParam } from '@forgerock/journey-client/types';
+import type { StorageClient } from '@forgerock/storage';
+
+let journeyStorage: StorageClient<StartParam[]> | undefined;
+
+try {
+  journeyStorage = createStorage<StartParam[]>({
+    type: 'localStorage',
+    name: 'journey-stack',
+  });
+} catch {
+  // Storage unavailable — persistence is best-effort.
 }
 
-export function writeStoredJourney(journey?: string): void {
-  try {
-    if (typeof localStorage === 'undefined') {
-      return;
-    }
-    if (journey) {
-      localStorage.setItem(JOURNEY_STORAGE_KEY, journey);
-    } else {
-      localStorage.removeItem(JOURNEY_STORAGE_KEY);
-    }
-  } catch {
-    // Storage unavailable (SSR, private mode, blocked) — persistence is best-effort.
+export async function readStoredStack(): Promise<StartParam[]> {
+  const value = await journeyStorage?.get();
+  return Array.isArray(value) ? value : [];
+}
+
+export async function writeStoredStack(stack: StartParam[]): Promise<void> {
+  if (!stack.length) {
+    await journeyStorage?.remove();
+    return;
   }
+  await journeyStorage?.set(stack);
 }
