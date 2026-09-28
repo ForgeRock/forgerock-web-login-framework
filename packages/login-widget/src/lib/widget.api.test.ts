@@ -346,6 +346,75 @@ describe('widgetApiFactory', () => {
     });
   });
 
+  describe('configure() — fallbackJourney', () => {
+    /**
+     * `configure()` writes to the internal `fallbackJourneyStore`. The test subject
+     * and the assertions must resolve the same module instance, so resolve the store
+     * through the same dynamic import path rather than a static import (whose instance
+     * is decoupled by `vi.resetModules()`).
+     */
+    async function importFallbackJourneyStore() {
+      return (await import('$journey/journey.store')).fallbackJourneyStore;
+    }
+
+    it('stores the configured journey for the restart fallback', async () => {
+      const api = await importSubject();
+      const fallbackJourneyStore = await importFallbackJourneyStore();
+
+      await api.configure({
+        serverConfig: validServerConfig,
+        journeys: { fallbackJourney: 'Login' },
+      });
+
+      const { get } = await import('svelte/store');
+      expect(get(fallbackJourneyStore)).toBe('Login');
+    });
+
+    it('clears a previously configured default on reconfigure without one', async () => {
+      const api = await importSubject();
+      const fallbackJourneyStore = await importFallbackJourneyStore();
+
+      await api.configure({
+        serverConfig: validServerConfig,
+        journeys: { fallbackJourney: 'Login' },
+      });
+      await api.configure({ serverConfig: validServerConfig });
+
+      const { get } = await import('svelte/store');
+      expect(get(fallbackJourneyStore)).toBeUndefined();
+    });
+
+    it('leaves the store undefined when fallbackJourney is not configured', async () => {
+      const api = await importSubject();
+      const fallbackJourneyStore = await importFallbackJourneyStore();
+
+      await api.configure({ serverConfig: validServerConfig });
+
+      const { get } = await import('svelte/store');
+      expect(get(fallbackJourneyStore)).toBeUndefined();
+    });
+
+    it('does not pass fallbackJourney through to the journeys config store', async () => {
+      const api = await importSubject();
+
+      await api.configure({
+        serverConfig: validServerConfig,
+        journeys: { fallbackJourney: 'Login' },
+      });
+
+      const { configuredJourneysStore } = await import('$journey/config.store');
+      const { get: getStore } = await import('svelte/store');
+      // fallbackJourney is a restart target, not a link mapping; the config store
+      // keeps only the four link keys.
+      expect(getStore(configuredJourneysStore).map((item) => item.key)).toEqual([
+        'forgotPassword',
+        'forgotUsername',
+        'login',
+        'register',
+      ]);
+    });
+  });
+
   describe('user.logout()', () => {
     const initialStoreState = {
       completed: false,
