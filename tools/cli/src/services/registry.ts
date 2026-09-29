@@ -80,8 +80,7 @@ export function toPascalCase(str: string): string {
  *
  * `Enabled` is a header/footer-only property. Stage/callback files never
  * reach this parser (they are always bundled), so a stray `Enabled:` line
- * there is silently ignored — the same tolerance the legacy `Default:` line
- * gets from `parseComponentHeader`.
+ * there is silently ignored by `parseComponentHeader`.
  */
 export type EnabledParseResult = { state: 'enabled' } | { state: 'dormant' } | { error: string };
 

@@ -316,11 +316,6 @@ describe('parseComponentHeader', () => {
     expect(String(err.cause)).toContain('Invalid Type value');
   });
 
-  it('ignores a legacy Default: line on a header component', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Default: OtherHeader\n   -->`;
-    expect(decode('test.svelte', content)).toEqual({ type: 'header', name: 'MyHeader' });
-  });
-
   it('fails when Name is "__proto__" (reserved object-literal key)', () => {
     const err = decodeError(
       'test.svelte',

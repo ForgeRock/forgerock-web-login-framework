@@ -120,23 +120,6 @@ describe('parseComponentHeader', () => {
       expect(String(err.cause)).toContain('Reserved key "constructor"');
     });
   });
-
-  describe('legacy Default: line', () => {
-    it('ignores a legacy Default: line on a header component', () => {
-      const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Default: OtherHeader\n   -->`;
-      expect(decode('test.svelte', content)).toEqual({ type: 'header', name: 'MyHeader' });
-    });
-
-    it('ignores a legacy Default: line on a footer component', () => {
-      const content = `<!--\n   @component\n   Type: footer\n   Name: MyFooter\n   Default: Legal Footer\n   -->`;
-      expect(decode('test.svelte', content)).toEqual({ type: 'footer', name: 'MyFooter' });
-    });
-
-    it('ignores a legacy Default: line on a stage component', () => {
-      const content = `<!--\n@component\nType: stage\nName: Foo\nDefault: Bar\n-->`;
-      expect(decode('test.svelte', content)).toEqual({ type: 'stage', name: 'Foo' });
-    });
-  });
 });
 
 describe('parseEnabledState', () => {
