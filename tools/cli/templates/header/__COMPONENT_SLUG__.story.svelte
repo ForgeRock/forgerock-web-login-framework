@@ -26,7 +26,7 @@
   export let journeyPlaceholder = 'Journey renders here (below the custom header)';
 </script>
 
-<div class="tw_min-h-screen tw_flex tw_flex-col">
+<div class="tw_h-screen tw_flex tw_flex-col">
   <svelte:component this={__COMPONENT_NAME_PASCAL__} />
 
   <div class="tw_flex-1">

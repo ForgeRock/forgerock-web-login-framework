@@ -26,7 +26,7 @@
   export let journeyPlaceholder = 'Journey renders here (above the custom footer)';
 </script>
 
-<div class="tw_min-h-screen tw_flex tw_flex-col">
+<div class="tw_h-screen tw_flex tw_flex-col">
   <div class="tw_flex-1">
     <Centered>
       <p class="tw_p-8">{journeyPlaceholder}</p>
