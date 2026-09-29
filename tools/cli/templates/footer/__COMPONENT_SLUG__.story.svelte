@@ -5,7 +5,7 @@
 -->
 
 <script lang="ts">
-  import { Centered, initializeStyles } from '$login-framework';
+  import { Centered, initializeStyles } from '$login-framework-exports';
   import __COMPONENT_NAME_PASCAL__ from './__COMPONENT_SLUG__.svelte';
 
   /**

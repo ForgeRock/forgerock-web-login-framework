@@ -11,7 +11,7 @@
     "allowJs": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
-      "$login-framework": ["../../../experimental/custom/login-framework.ts"]
+      "$login-framework-exports": ["../../../experimental/custom/login-framework.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.svelte"]

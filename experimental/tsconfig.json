@@ -22,7 +22,7 @@
       "$journey/*": ["../core/journey/*"],
       "$locales": ["../core/locales"],
       "$locales/*": ["../core/locales/*"],
-      "$login-framework": ["./custom/login-framework.ts"]
+      "$login-framework-exports": ["./custom/login-framework.ts"]
     }
   },
   "include": ["**/*.ts", "**/*.svelte"],

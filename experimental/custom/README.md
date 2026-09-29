@@ -105,7 +105,7 @@ Stages and callbacks are always bundled and never use `Enabled`; a stray `Enable
 
 ## Module imports available
 
-Inside your custom component, import everything you need from the **`$login-framework`** alias — a centralized set of exports from the login framework for custom components:
+Inside your custom component, import everything you need from the **`$login-framework-exports`** alias — a centralized set of exports from the login framework for custom components:
 
 ```ts
 import {
@@ -130,10 +130,10 @@ import {
   type StageJourneyObject,
   type Maybe,
   type StyleObject,
-} from '$login-framework';
+} from '$login-framework-exports';
 ```
 
-`$login-framework` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`experimental/custom/login-framework.ts`](./login-framework.ts).
+`$login-framework-exports` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`experimental/custom/login-framework.ts`](./login-framework.ts).
 
 Journey Client types (callback classes, `JourneyStep`, etc.) are imported directly from `@forgerock/journey-client/types`:
 

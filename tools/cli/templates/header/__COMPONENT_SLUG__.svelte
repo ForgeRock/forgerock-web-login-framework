@@ -20,13 +20,13 @@ Replace the markup below with your own logo, product name, and nav links.
 <script lang="ts">
   // ─── Framework imports ──────────────────────────────────────────────────────
   /**
-   * Import everything you need from '$login-framework' — the framework's
+   * Import everything you need from '$login-framework-exports' — the framework's
    * centralized exports for custom components. No need to reach into internal
    * aliases like $core, $components, or $journey directly.
    *
    * Available exports (see experimental/custom/login-framework.ts for the full list).
    */
-  import { interpolate } from '$login-framework';
+  import { interpolate } from '$login-framework-exports';
 </script>
 
 <!--
