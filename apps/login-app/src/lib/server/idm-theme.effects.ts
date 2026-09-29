@@ -24,6 +24,7 @@ interface IdmThemeEntry {
   buttonRounded?: number | string;
   favicon?: string;
   logo?: string;
+  logoEnabled?: boolean;
   logoHeight?: number | string;
   fontFamily?: string;
   journeyCardBorderRadius?: number | string;
@@ -70,6 +71,7 @@ function resolveTimeoutMs(): number {
 }
 
 function toIdmTheme(entry: IdmThemeEntry): ThemeObject | undefined {
+  const logoEnabled = entry.logoEnabled !== false;
   const raw = {
     primaryColor: entry.primaryColor,
     primaryOffColor: entry.primaryOffColor,
@@ -78,8 +80,9 @@ function toIdmTheme(entry: IdmThemeEntry): ThemeObject | undefined {
     linkColor: entry.linkColor,
     linkActiveColor: entry.linkActiveColor,
     favicon: urlRegex.test(entry.favicon ?? '') ? entry.favicon : undefined,
-    logo: entry.logo,
-    logoHeight: entry.logoHeight !== undefined ? Number(entry.logoHeight) : undefined,
+    logo: logoEnabled ? entry.logo : undefined,
+    logoHeight:
+      logoEnabled && entry.logoHeight !== undefined ? Number(entry.logoHeight) : undefined,
     fontFamily: entry.fontFamily,
     buttonBorderRadius: entry.buttonRounded !== undefined ? Number(entry.buttonRounded) : undefined,
     cardBorderRadius:

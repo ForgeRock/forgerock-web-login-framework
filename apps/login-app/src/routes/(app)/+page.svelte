@@ -13,7 +13,7 @@
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import Box from '$components/primitives/box/centered.svelte';
-  import { applyThemeVars } from '$core/_effects/theme.effects';
+  import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
   import {
     customFooterRegistry,
@@ -21,7 +21,7 @@
   } from '$core/journey/_utilities/registry/custom-registry';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
-  import { initialize as initializeJourney } from '$journey/journey.store';
+  import { fallbackJourneyStore, initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
 
@@ -53,6 +53,8 @@
     captchaModeParam ? { captcha: { mode: captchaModeParam } } : null,
   );
 
+  fallbackJourneyStore.set(data.fallbackJourney ?? undefined);
+
   let hasSubmitted = false;
   let redirectForm: HTMLFormElement | null = null;
   let loginResult: 'success' | 'failure' = 'failure';
@@ -64,7 +66,10 @@
     $styleStore?.themeCatalog,
     $journeyStore?.metadata?.step?.derived?.themeId,
   );
-  $: applyThemeVars(journeyRootEl, pageTheme ?? $styleStore?.theme);
+  $: {
+    applyThemeVars(journeyRootEl, pageTheme ?? $styleStore?.theme);
+    applyLogoVars(journeyRootEl, $styleStore?.logo);
+  }
   /**
    * Sets up locale store with appropriate content
    */
@@ -84,10 +89,16 @@
       /**
        * goto and gotoOnFail are sent at the beginning of journey
        * to support temporarily suspended flows like email verification
-       * and to help AM set journey step successUrl
+       * and to help AM set journey step successUrl.
+       * Only add these when present, since undefined would otherwise be serialized
+       * as the literal string "undefined" by URLSearchParams and corrupt AM's successUrl.
        */
-      query.goto = data.redirectParams?.goto;
-      query.gotoOnFail = data.redirectParams?.gotoOnFail;
+      if (data.redirectParams?.goto) {
+        query.goto = data.redirectParams.goto;
+      }
+      if (data.redirectParams?.gotoOnFail) {
+        query.gotoOnFail = data.redirectParams.gotoOnFail;
+      }
       if (uuidParam) {
         query.uuid = uuidParam;
       }

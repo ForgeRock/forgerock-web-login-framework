@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test('Modal widget with failed and successful login, keyboard only', async ({ page }) => {
   const { navigate, pressEnter, pressSpacebar } = asyncEvents(page);
@@ -46,11 +47,11 @@ test('Modal widget with failed and successful login, keyboard only', async ({ pa
 
   await page.keyboard.press('Tab');
   await expect(username2).toBeFocused();
-  await username2.fill('demouser');
+  await username2.fill(username);
 
   await page.keyboard.press('Tab');
   await expect(password2).toBeFocused();
-  await password2.fill('j56eKtae*1');
+  await password2.fill(password);
 
   await page.keyboard.press('Tab'); // focuses on reveal password button
   await page.keyboard.press('Tab'); // focuses submission button

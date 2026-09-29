@@ -42,6 +42,7 @@ export interface JourneyStore extends Pick<Writable<JourneyStoreValue>, 'subscri
   pop: () => Promise<void>;
   push: (changeOptions: StartParam) => Promise<void>;
   reset: () => void;
+  restart: () => Promise<void>;
   resume: (url: string, resumeOptions?: ResumeOptions) => Promise<void>;
   start: (startOptions?: StartParam, recaptchaAction?: string) => Promise<void>;
   redirect: (step: JourneyStep) => Promise<void>;

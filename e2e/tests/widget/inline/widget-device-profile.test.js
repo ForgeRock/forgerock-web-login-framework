@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test('Modal widget with collecting a device profile after login', async ({ page, context }) => {
   const { navigate } = asyncEvents(page);
@@ -17,8 +18,8 @@ test('Modal widget with collecting a device profile after login', async ({ page,
   await context.grantPermissions(['geolocation']);
   await navigate('widget/inline?journey=TEST_DeviceProfileNode');
 
-  await page.getByRole('textbox', { name: 'Username' }).type('demouser');
-  await page.getByRole('textbox', { name: 'Password' }).type('j56eKtae*1');
+  await page.getByRole('textbox', { name: 'Username' }).type(username);
+  await page.getByRole('textbox', { name: 'Password' }).type(password);
 
   await page.getByRole('button', { name: 'Next' }).click();
   await page.route('**/authenticate**', (request) => {

@@ -67,13 +67,12 @@ pnpm ci:e2e -- --headed
 
 E2E tests require ForgeRock AM connection details. Set these in your environment or a `.env` file:
 
-| Variable                      | Description            |
-| ----------------------------- | ---------------------- |
-| `VITE_FR_AM_URL`              | ForgeRock AM base URL  |
-| `VITE_FR_AM_COOKIE_NAME`      | AM session cookie name |
-| `VITE_FR_OAUTH_PUBLIC_CLIENT` | OAuth 2.0 client ID    |
-| `VITE_FR_REALM_PATH`          | AM realm path          |
-| `FR_AM_WELLKNOWN_URL`         | AM wellknown URL       |
+| Variable              | Description                                              |
+| --------------------- | -------------------------------------------------------- |
+| `FR_AM_URL`           | ForgeRock AM base URL                                    |
+| `FR_AM_COOKIE_NAME`   | AM session cookie name                                   |
+| `FR_REALM_PATH`       | AM realm path                                            |
+| `FR_AM_WELLKNOWN_URL` | AM OIDC discovery URL used to validate app configuration |
 
 ## Linting
 

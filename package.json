@@ -12,7 +12,7 @@
     "build:storybook": "storybook build --webpack-stats-json",
     "build": "pnpm run build:widget && pnpm --filter @forgerock/login-app run build",
     "dev": "pnpm run build:widget && pnpm --filter @forgerock/login-app run dev",
-    "test": "pnpm --filter @forgerock/login-widget run test",
+    "test": "pnpm --filter @forgerock/login-widget run test && pnpm --filter @forgerock/login-app run test",
     "test:storybook": "test-storybook",
     "check:lint": "prettier --plugin prettier-plugin-svelte --ignore-path .gitignore --ignore-path .prettierignore --check . && eslint .",
     "check:svelte": "pnpm --filter @forgerock/login-app run check:svelte",
@@ -37,6 +37,7 @@
     "@forgerock/journey-client": "^2.1.1",
     "@forgerock/oidc-client": "^2.1.1",
     "@forgerock/protect": "^2.1.1",
+    "@forgerock/storage": "^2.1.1",
     "@storybook/addon-a11y": "^10.1.11",
     "@storybook/addon-docs": "^10.1.11",
     "@storybook/addon-links": "^10.1.11",
@@ -106,9 +107,10 @@
       "postcss-selector-parser": ">=7.1.2",
       "nanoid@3": ">=3.3.17",
       "undici": ">=8.10.2",
-      "toml": ">=4.1.2",
       "ws": ">=8.21.1",
-      "yaml": ">=2.8.3"
+      "yaml": ">=2.8.3",
+      "toml": ">=4.1.2",
+      "devalue@5": ">=5.9.3"
     }
   }
 }

@@ -10,7 +10,6 @@
 <script lang="ts">
   import T from '$components/_utilities/locale-strings.svelte';
   import Text from '$components/primitives/text/text.svelte';
-  import { encodeCssUrl } from '$core/_utilities/theme.utilities';
   import { styleStore } from '$core/style.store';
 
   export let componentStyle: 'app' | 'inline' | 'modal';
@@ -20,14 +19,7 @@
 
 {#if $styleStore?.logo && componentStyle !== 'inline'}
   <div class="tw_flex tw_justify-center tw_mb-6">
-    <div
-      class="tw_dialog-logo dark:tw_dialog-logo_dark"
-      style={`--logo-light: ${encodeCssUrl(
-        $styleStore.logo.light ?? '',
-      )}; --logo-dark: ${encodeCssUrl($styleStore.logo.dark ?? '')}; height: ${
-        $styleStore.logo.height ? `${$styleStore.logo.height}px` : '72px'
-      }; width: ${$styleStore.logo.width ? `${$styleStore.logo.width}px` : '200px'};`}
-    ></div>
+    <div class="tw_dialog-logo tw_stage-logo dark:tw_dialog-logo_dark"></div>
   </div>
 {/if}
 

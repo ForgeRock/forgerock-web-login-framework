@@ -10,17 +10,18 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test('Inline widget with 2step login, keyboard only', async ({ page }) => {
   const { navigate, pressSpacebar } = asyncEvents(page);
 
   await navigate('widget/inline?journey=TEST_LoginWithConfirmation');
 
-  await page.getByLabel('Username').fill('demouser');
+  await page.getByLabel('Username').fill(username);
   await page.keyboard.press('Tab'); // focuses submission button
   await pressSpacebar('/authenticate');
 
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.getByLabel('Password').fill(password);
   await page.keyboard.press('Tab'); // focuses view password button
 
   await page.keyboard.press('Tab'); // focuses submission button

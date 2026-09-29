@@ -9,7 +9,11 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import type { JourneyClient, JourneyClientConfig } from '@forgerock/journey-client/types';
+import type {
+  JourneyClient,
+  JourneyClientConfig,
+  StartParam,
+} from '@forgerock/journey-client/types';
 
 const journeyMock = vi.fn();
 
@@ -414,6 +418,943 @@ describe('journey.store (Journey Client configuration)', () => {
     await store.resume(resumeUrl);
 
     expect(resumeSpy).toHaveBeenCalledWith(resumeUrl, undefined);
+  });
+
+  /**
+   * IAM-12006: resume() must record the resolved journey on the stack so that a failed
+   * resume (expired suspendedId -> LoginFailure) restarts into the suspended journey
+   * instead of start(undefined). Mirrors what start() does with its options.
+   */
+  it('pushes the resolved journey from the resume URL onto the journey stack', async () => {
+    // A Step result keeps handleJourneyResult from touching the stack (LoginSuccess
+    // would call stack.reset() and erase the push we're asserting on).
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const resumeSpy = vi.fn().mockResolvedValueOnce(step);
+    const client = { start: vi.fn(), next: vi.fn(), resume: resumeSpy } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    // Read `stack` through the module namespace: it's an exported `let` that
+    // initializeStack() assigns during initialize(), so a destructured copy would
+    // capture the pre-initialize undefined.
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    const resumeUrl = 'https://example.com/callback?suspendedId=abc123&journey=ResetPassword';
+    await store.resume(resumeUrl);
+
+    expect(await mod.stack.latest()).toEqual({ journey: 'ResetPassword' });
+  });
+
+  /**
+   * No journey in the URL means nothing to record — the stack stays empty and restart
+   * falls back to whatever the restart chain resolves (default-journey fallback), rather
+   * than pushing a garbage entry.
+   */
+  it('leaves the stack empty when the resume URL has no journey param', async () => {
+    // A Step result keeps handleJourneyResult from touching the stack — otherwise
+    // stack.reset() (LoginSuccess) would make this test pass for the wrong reason.
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const resumeSpy = vi.fn().mockResolvedValueOnce(step);
+    const client = { start: vi.fn(), next: vi.fn(), resume: resumeSpy } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    // Same namespace-read pattern as the push test above: `stack` is assigned
+    // inside initialize().
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    const resumeUrl = 'https://example.com/callback?suspendedId=abc123';
+    await store.resume(resumeUrl);
+
+    expect(await mod.stack.latest()).toBeUndefined();
+  });
+
+  /**
+   * Old-style suspended links (IAM-11783 QA shape) carry authIndexValue and no journey
+   * param. journey-client resolves authIndexValue as the journey fallback for the resume
+   * call itself, so the store's stack push must resolve identically — otherwise the
+   * failed resume still restarts into the realm default.
+   */
+  it('pushes the URL authIndexValue onto the stack when no journey param is present', async () => {
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const resumeSpy = vi.fn().mockResolvedValueOnce(step);
+    const client = { start: vi.fn(), next: vi.fn(), resume: resumeSpy } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    const resumeUrl =
+      'https://example.com/callback?suspendedId=abc123&authIndexValue=ResetPassword';
+    await store.resume(resumeUrl);
+
+    expect(await mod.stack.latest()).toEqual({ journey: 'ResetPassword' });
+  });
+
+  /**
+   * Precedence must mirror journey-client's resume resolution: journey option ?? authIndexValue.
+   */
+  it('prefers the journey param over authIndexValue when both are in the resume URL', async () => {
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const resumeSpy = vi.fn().mockResolvedValueOnce(step);
+    const client = { start: vi.fn(), next: vi.fn(), resume: resumeSpy } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    const resumeUrl =
+      'https://example.com/callback?suspendedId=abc123&authIndexValue=OldTree&journey=NewTree';
+    await store.resume(resumeUrl);
+
+    expect(await mod.stack.latest()).toEqual({ journey: 'NewTree' });
+  });
+
+  /**
+   * IAM-12006 storage layer: start() persists the whole stack (journey + query)
+   * to localStorage so a later bare-suspendedId page load (suspend email link)
+   * can restart into the last visit's journey with the same query.
+   */
+  it('persists the started journey to localStorage on start', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.start({ journey: 'ResetPassword', query: { noSession: 'false' } });
+
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored).toEqual([{ journey: 'ResetPassword', query: { noSession: 'false' } }]);
+  });
+
+  /**
+   * The stack subscription persists every mutation, including the resume push —
+   * an email-link tab with empty storage remembers the suspended journey for any
+   * later bare-suspendedId reload.
+   */
+  it('persists the resumed journey to localStorage on resume', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValue(step),
+      next: vi.fn(),
+      resume: vi.fn().mockResolvedValueOnce(step),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.resume('https://example.com/callback?suspendedId=abc123&journey=ResetPassword');
+
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored[stored.length - 1]).toEqual({ journey: 'ResetPassword' });
+  });
+
+  /**
+   * pop() restores the previous journey as the stack top, and the subscription
+   * mirrors that into localStorage — the remembered journey follows the stack,
+   * not whatever start() last saw.
+   */
+  it('restores the previous journey in localStorage after pop', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValue(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.push({ journey: 'Login' });
+    await store.push({ journey: 'ResetPassword' });
+    await store.pop();
+
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored[stored.length - 1]).toEqual({ journey: 'Login' });
+    expect(await (await importSubject()).stack.latest()).toEqual({ journey: 'Login' });
+  });
+
+  /**
+   * A fresh page load does NOT hydrate the stack (async storage read, no hydration
+   * race) — instead the restart paths read the remembered stack from storage after
+   * the session stack misses.
+   */
+  it('restart paths read the remembered stack from storage when the session stack is empty', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set('pic-journey-stack', JSON.stringify([{ journey: 'ResetPassword' }]));
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.restart();
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'ResetPassword' });
+  });
+
+  /**
+   * The remembered stack carries query params too — a bare-suspendedId restart
+   * replays the last visit's query (e.g. goto/gotoOnFail), which is the point of
+   * persisting the whole stack.
+   */
+  it('restart replays the remembered journey with its query params', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set(
+      'pic-journey-stack',
+      JSON.stringify([{ journey: 'Login', query: { goto: '/home' } }]),
+    );
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.restart();
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'Login', query: { goto: '/home' } });
+  });
+
+  /**
+   * The session stack wins over the remembered one: within a live session,
+   * restart() keeps using the in-memory stack; storage is only the fresh-page
+   * fallback.
+   */
+  it('prefers the live session stack over the localStorage-seeded one', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set('pic-journey-stack', JSON.stringify([{ journey: 'OldTree' }]));
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+      resume: vi.fn().mockResolvedValueOnce(step),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.resume('https://example.com/callback?suspendedId=abc&journey=NewTree');
+    await store.restart();
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'NewTree' });
+  });
+
+  /**
+   * URL-derived identity (resume push) must sit on top of the remembered entry so the
+   * restart uses the URL's journey, not the remembered one.
+   */
+  it('prefers the resume URL journey over the localStorage-seeded one', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+    storage.set('pic-journey-stack', JSON.stringify([{ journey: 'Login' }]));
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn(),
+      next: vi.fn(),
+      resume: vi.fn().mockResolvedValueOnce(step),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.resume('https://example.com/callback?suspendedId=abc&journey=ResetPassword');
+
+    expect(await mod.stack.latest()).toEqual({ journey: 'ResetPassword' });
+  });
+
+  /**
+   * A completed journey must not linger as a restart target (stale state) — clear
+   * the stored value on LoginSuccess, alongside stack.reset().
+   */
+  it('clears the stored journey on LoginSuccess', async () => {
+    const storage = new Map<string, string>([
+      ['pic-journey-stack', JSON.stringify([{ journey: 'ResetPassword' }])],
+    ]);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const loginSuccess = { type: 'LoginSuccess' as const, payload: { tokenId: 'abc' } };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(loginSuccess),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.start({ journey: 'ResetPassword' });
+
+    expect(storage.has('pic-journey-stack')).toBe(false);
+    expect(await mod.stack.latest()).toBeUndefined();
+  });
+
+  /**
+   * The restart path can itself succeed — a failed resume whose restart lands
+   * LoginSuccess. That success must clear the stack and stored journey like a
+   * normal LoginSuccess, otherwise the completed journey lingers as a later
+   * restart target.
+   */
+  it('clears the stored journey when the restarted flow succeeds', async () => {
+    const storage = new Map<string, string>([
+      ['pic-journey-stack', JSON.stringify([{ journey: 'ResetPassword' }])],
+    ]);
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const loginSuccess = { type: 'LoginSuccess' as const, payload: { tokenId: 'abc' } };
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn().mockResolvedValueOnce(loginSuccess),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    // initializeStack() assigns the module stack during initialize(), so read it
+    // off the module object after that call.
+    const mod = await importSubject();
+    const { journeyStore, initialize } = mod;
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.resume('https://example.com/callback?suspendedId=abc123&journey=ResetPassword');
+
+    expect(storage.has('pic-journey-stack')).toBe(false);
+    expect(await mod.stack.latest()).toBeUndefined();
+    const { get } = await import('svelte/store');
+    expect(get(journeyStore).successful).toBe(true);
+  });
+
+  /**
+   * A start with an empty journey name (plain visit to "/" with no ?journey= param)
+   * still persists its entry with its query — a later bare-suspendedId restart
+   * replays the same visit (realm default journey, same query).
+   */
+  it('persists the query of a journey-less start', async () => {
+    const storage = new Map<string, string>();
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const mod = await importSubject();
+    const store = mod.initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.start({ journey: '', query: { noSession: 'false' } });
+
+    const stored = JSON.parse(storage.get('pic-journey-stack') ?? 'null') as StartParam[];
+    expect(stored[stored.length - 1]).toEqual({ journey: '', query: { noSession: 'false' } });
+    expect(await mod.stack.latest()).toEqual({ journey: '', query: { noSession: 'false' } });
+  });
+
+  /**
+   * Storage failures (SSR, private mode, blocked storage) must never crash the
+   * journey flow — persistence is best-effort.
+   */
+  it('does not throw when localStorage access fails', async () => {
+    vi.stubGlobal('localStorage', {
+      getItem: () => {
+        throw new Error('blocked');
+      },
+      setItem: () => {
+        throw new Error('blocked');
+      },
+      removeItem: () => {
+        throw new Error('blocked');
+      },
+    });
+    vi.stubGlobal('sessionStorage', {
+      getItem: () => null,
+      setItem: () => {},
+      removeItem: () => {},
+    });
+
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await expect(store.start({ journey: 'ResetPassword' })).resolves.not.toThrow();
+  });
+
+  /**
+   * IAM-12006 default-journey fallback: with an empty stack and a configured fallback,
+   * the restart after a failed resume targets the configured journey — the last-resort
+   * layer for fresh-device bare-suspendedId links. start(undefined) is never called.
+   */
+  it('restarts into the configured fallback journey when the stack is empty', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+    const restartedStep = {
+      type: 'Step' as const,
+      payload: { authId: 'fresh-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn().mockResolvedValueOnce(restartedStep),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { fallbackJourneyStore, initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    fallbackJourneyStore.set('DefaultTree');
+
+    await store.resume('https://example.com/callback?suspendedId=abc123');
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'DefaultTree' });
+  });
+
+  /**
+   * autoRestart: false defers flow-level failures (start/resume) to the host —
+   * the widget publishes the error state without restarting, and the host
+   * observes journeyStore.error and decides what happens next.
+   */
+  it('does not restart on failed resume when autoRestart is false', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn(),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { autoRestartStore, fallbackJourneyStore, initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    autoRestartStore.set(false);
+    fallbackJourneyStore.set('DefaultTree');
+
+    const { get } = await import('svelte/store');
+    await store.resume('https://example.com/callback?suspendedId=abc123');
+
+    // No restart attempt — start() is never called, the error is published.
+    expect(client.start).not.toHaveBeenCalled();
+    const value = get((await importSubject()).journeyStore);
+    expect(value.completed).toBe(true);
+    // htmlDecode needs `document`; in this environment it returns null, so the
+    // message is null — assert the failure surface the host actually keys on.
+    expect(value.error?.code).toBe(401);
+    expect(value.successful).toBe(false);
+  });
+
+  /**
+   * autoRestart defaults to on: a host that never configures it keeps today's
+   * behavior — failed resume restarts through the fallback chain.
+   */
+  it('restarts on failed resume by default (autoRestart defaults to true)', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+    const restartedStep = {
+      type: 'Step' as const,
+      payload: { authId: 'fresh-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn().mockResolvedValueOnce(restartedStep),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    await store.resume('https://example.com/callback?suspendedId=abc123');
+
+    expect(client.start).toHaveBeenCalled();
+  });
+
+  /**
+   * autoRestart: false governs FLOW-level failures only. A step failure
+   * (next(), which passes context) always auto-restarts — the authId-timeout
+   * salvage needs the widget's closure state, so deferring it to the host
+   * would lose the user's in-flight form data.
+   */
+  it('still restarts on a step failure when autoRestart is false', async () => {
+    const step = {
+      type: 'Step' as const,
+      payload: { authId: 'step-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Authentication failed', detail: null },
+      getCode: () => 401,
+    };
+
+    const client = {
+      start: vi.fn().mockResolvedValueOnce(step),
+      next: vi.fn().mockResolvedValueOnce(loginFailure),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { autoRestartStore, initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    autoRestartStore.set(false);
+
+    await store.start({ journey: 'Login' });
+    await store.next(step as never);
+
+    // The step failure restarts even though autoRestart is off.
+    expect(client.start).toHaveBeenCalledTimes(2);
+  });
+
+  /**
+   * Without a configured fallback, an empty-stack restart keeps the pre-existing
+   * behavior (start(undefined)) — the fallback layer must not change unconfigured
+   * hosts' behavior.
+   */
+  it('restarts with undefined when the stack is empty and no fallback is configured', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+    const restartedStep = {
+      type: 'Step' as const,
+      payload: { authId: 'fresh-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn().mockResolvedValueOnce(restartedStep),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { fallbackJourneyStore, initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    fallbackJourneyStore.set(undefined);
+
+    await store.resume('https://example.com/callback?suspendedId=abc123');
+
+    expect(client.start).toHaveBeenCalledWith(undefined);
+  });
+
+  /**
+   * The default is a LAST resort: a populated stack (URL push or WebStorage seed)
+   * must win over the configured fallback.
+   */
+  it('prefers the stack entry over the configured fallback', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+    const restartedStep = {
+      type: 'Step' as const,
+      payload: { authId: 'fresh-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn().mockResolvedValueOnce(restartedStep),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { fallbackJourneyStore, initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+    fallbackJourneyStore.set('DefaultTree');
+
+    await store.resume('https://example.com/callback?suspendedId=abc123&journey=UrlTree');
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'UrlTree' });
+  });
+
+  /**
+   * fallbackJourneyStore holds the host-configured last-resort restart target. The UI's
+   * start-over action (journey.svelte) combines it with stack.latest() to apply the
+   * fallback chain: stack -> configured fallback -> undefined.
+   */
+  it('fallbackJourneyStore round-trips the configured value', async () => {
+    const { fallbackJourneyStore } = await importSubject();
+
+    const { get } = await import('svelte/store');
+    expect(get(fallbackJourneyStore)).toBeUndefined();
+    fallbackJourneyStore.set('SomeTree');
+    expect(get(fallbackJourneyStore)).toBe('SomeTree');
+    fallbackJourneyStore.set(undefined);
+    expect(get(fallbackJourneyStore)).toBeUndefined();
+  });
+
+  /**
+   * A failed resume (LoginFailure from an expired suspendedId) must restart into the
+   * journey the URL carried — not start(undefined). Proves the stack push feeds the
+   * automatic restart path, which is the user-visible bug from IAM-12006.
+   */
+  it('restarts into the URL journey after a failed resume instead of start(undefined)', async () => {
+    const loginFailure = {
+      type: 'LoginFailure' as const,
+      payload: { message: 'Unable to resume session. It may have expired.', detail: null },
+      getCode: () => 401,
+    };
+    const restartedStep = {
+      type: 'Step' as const,
+      payload: { authId: 'fresh-auth-id' },
+      callbacks: [],
+      getStage: () => null,
+      getCallbacksOfType: () => [],
+    };
+
+    const client = {
+      resume: vi.fn().mockResolvedValueOnce(loginFailure),
+      start: vi.fn().mockResolvedValueOnce(restartedStep),
+      next: vi.fn(),
+    } as unknown as JourneyClient;
+
+    journeyMock.mockResolvedValue(client);
+
+    const { initialize } = await importSubject();
+    const store = initialize({
+      serverConfig: {
+        wellknown: 'https://example.com/.well-known/openid-configuration',
+      },
+    });
+
+    const resumeUrl = 'https://example.com/callback?suspendedId=abc123&journey=ResetPassword';
+    await store.resume(resumeUrl);
+
+    expect(client.start).toHaveBeenCalledWith({ journey: 'ResetPassword' });
   });
 });
 

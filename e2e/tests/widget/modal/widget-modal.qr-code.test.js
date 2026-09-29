@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents, verifyUserInfo } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test('Modal widget with login', async ({ context, page }) => {
   // Only Chromium browsers need granted permission to clipboard
@@ -30,8 +31,8 @@ test('Modal widget with login', async ({ context, page }) => {
 
   await clickButton('Open Login Modal', '/authenticate');
 
-  await page.getByLabel('Username').fill('demouser');
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.getByLabel('Username').fill(username);
+  await page.getByLabel('Password').fill(password);
 
   await clickButton('Next', '/authenticate');
 

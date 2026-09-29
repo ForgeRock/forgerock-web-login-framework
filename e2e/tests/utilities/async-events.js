@@ -7,6 +7,8 @@
  *
  **/
 
+import { userInfoEmail } from './demo-user.js';
+
 export function asyncEvents(page) {
   return {
     async clickButton(text, endpoint) {
@@ -48,7 +50,7 @@ export function asyncEvents(page) {
 }
 
 export async function verifyUserInfo(page, expect, type) {
-  const emailString = type === 'register' ? 'Email: test@auto.com' : 'Email: demo@user.com';
+  const emailString = type === 'register' ? 'Email: test@auto.com' : `Email: ${userInfoEmail}`;
   const nameString = 'Full name: Demo User';
 
   const name = page.getByText(nameString);

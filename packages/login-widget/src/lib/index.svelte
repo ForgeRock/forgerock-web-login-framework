@@ -25,7 +25,7 @@
   import { onMount } from 'svelte';
 
   import Dialog from '$components/compositions/dialog/dialog.svelte';
-  import { applyThemeVars } from '$core/_effects/theme.effects';
+  import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
   import { styleStore } from '$core/style.store';
   import Journey from '$journey/journey.svelte';
@@ -47,7 +47,10 @@
     $styleStore?.themeCatalog,
     $journeyStore?.metadata?.step?.derived?.themeId,
   );
-  $: applyThemeVars(widgetRootEl, pageTheme ?? $styleStore?.theme);
+  $: {
+    applyThemeVars(widgetRootEl, pageTheme ?? $styleStore?.theme);
+    applyLogoVars(widgetRootEl, $styleStore?.logo);
+  }
 
   onMount(() => {
     mount(dialogComp, dialogEl);

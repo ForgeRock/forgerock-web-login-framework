@@ -10,6 +10,7 @@
 import { expect, test } from '@playwright/test';
 
 import { asyncEvents } from '../../utilities/async-events.js';
+import { password, username } from '../../utilities/demo-user.js';
 
 test('Modal widget with email suspend', async ({ page }) => {
   const { clickButton, navigate } = asyncEvents(page);
@@ -20,8 +21,8 @@ test('Modal widget with email suspend', async ({ page }) => {
 
   await expect(page.getByRole('dialog')).toBeVisible();
 
-  await page.getByLabel('Username').fill('demouser');
-  await page.getByLabel('Password').fill('j56eKtae*1');
+  await page.getByLabel('Username').fill(username);
+  await page.getByLabel('Password').fill(password);
 
   // TODO: This route was flakey for some reason mocking it so we test the next page has the text
   // Come back to understand why this is flakey?
