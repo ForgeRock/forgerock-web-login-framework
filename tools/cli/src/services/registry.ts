@@ -341,6 +341,18 @@ interface RegistryVarEntry {
   acceptedProps: string[];
 }
 
+/**
+ * Narrows an `Effect.try` catch handler's `unknown` cause to the two typed
+ * errors `buildRegistryContent` throws. Without this, `catch: (cause) => cause`
+ * infers as `unknown`, which widens every consumer's error channel (including
+ * `Command.run` in main.ts) to `unknown` and breaks all its `Effect.catchTag`
+ * handlers.
+ */
+const isRegistryBuildError = (
+  cause: unknown,
+): cause is RegistryCollisionError | RegistryEnabledLimitError =>
+  cause instanceof RegistryCollisionError || cause instanceof RegistryEnabledLimitError;
+
 export function buildRegistryContent(
   path: Path.Path,
   registryDir: string,
@@ -513,7 +525,10 @@ export const runRegistryScript = (projectDir: string) =>
           headerComponents,
           footerComponents,
         ),
-      catch: (cause) => cause,
+      catch: (cause) =>
+        isRegistryBuildError(cause)
+          ? cause
+          : new RegistryScanError({ directory: registryDir, cause }),
     });
 
     yield* fs
