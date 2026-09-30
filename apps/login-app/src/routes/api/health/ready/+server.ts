@@ -15,7 +15,9 @@ const AM_TIMEOUT_MS = 2000;
 
 function discoveryUrl(): string | null {
   if (!env.FR_AM_WELLKNOWN_URL || !env.FR_AM_COOKIE_NAME || !env.FR_REALM_PATH) return null;
-  return env.FR_AM_WELLKNOWN_URL;
+  // A relative FR_AM_WELLKNOWN_URL resolves against FR_AM_URL — the pod talks
+  // to AM directly, so the browser-facing request origin doesn't apply here.
+  return env.FR_AM_URL ? new URL(env.FR_AM_WELLKNOWN_URL, env.FR_AM_URL).toString() : null;
 }
 
 export const GET: RequestHandler = async () => {
