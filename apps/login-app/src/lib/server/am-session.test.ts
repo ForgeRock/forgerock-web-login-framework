@@ -9,6 +9,8 @@
 
 import { describe, expect, it, vi } from 'vitest';
 
+import type { Cookies } from '@sveltejs/kit';
+
 vi.mock('$app/environment', () => ({ building: false }));
 vi.mock('$env/dynamic/private', () => ({
   env: {
@@ -18,18 +20,20 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
-import { getAmCookie, resolveJsonRealmPath, resolveOAuthRealmPath, setAmCookie } from './sessions';
+import {
+  amProxyResponse,
+  getAmCookie,
+  resolveJsonRealmPath,
+  resolveOAuthRealmPath,
+  setAmCookie,
+} from './am-session';
 
 function cookies(values: Record<string, string> = {}) {
   return {
     get: (name: string) => values[name],
     set: vi.fn(),
     delete: vi.fn(),
-  } as unknown as {
-    get: (name: string) => string | undefined;
-    set: ReturnType<typeof vi.fn>;
-    delete: ReturnType<typeof vi.fn>;
-  };
+  } as unknown as Cookies;
 }
 
 describe('Login2 session cookie forwarding', () => {
@@ -104,5 +108,39 @@ describe('Login2 realm paths', () => {
   it('rejects path traversal and falls back for malformed overrides', () => {
     expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root/realms/alpha');
     expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root/realms/alpha');
+  });
+});
+
+describe('amProxyResponse', () => {
+  const makeUpstream = (status: number, body: string | null, contentType?: string) =>
+    new Response(body, {
+      status,
+      headers: contentType ? { 'Content-Type': contentType } : {},
+    });
+
+  it('relays status, content-type, and no-store for a normal response', () => {
+    const result = amProxyResponse(
+      makeUpstream(401, '{"error":"x"}', 'application/json'),
+      '{"error":"x"}',
+    );
+
+    expect(result.status).toBe(401);
+    expect(result.headers.get('content-type')).toBe('application/json');
+    expect(result.headers.get('cache-control')).toBe('no-store');
+  });
+
+  it('uses a null body for no-body statuses (204/205/304), required by the Response constructor', () => {
+    for (const status of [204, 205, 304]) {
+      const result = amProxyResponse(makeUpstream(status, null), '');
+      expect(result.status).toBe(status);
+    }
+  });
+
+  it('keeps the body for statuses that allow one', () => {
+    const result = amProxyResponse(
+      makeUpstream(200, '{"ok":true}', 'application/json'),
+      '{"ok":true}',
+    );
+    expect(result.status).toBe(200);
   });
 });

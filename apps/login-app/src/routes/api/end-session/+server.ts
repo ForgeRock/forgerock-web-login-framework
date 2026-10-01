@@ -9,11 +9,12 @@
 
 import { AM_DOMAIN_PATH } from '$core/constants';
 import {
+  amProxyResponse,
   clearAmCookie,
   getAmCookie,
   resolveOAuthRealmPath,
   resolveUpstreamQuery,
-} from '$server/sessions';
+} from '$server/am-session';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -21,12 +22,15 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
+  // redirect: 'manual' keeps AM's RP-initiated-logout 302 Location intact;
+  // a followed redirect would surface the post-logout page instead.
   const response = await fetch(
     `${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/connect/endSession${resolveUpstreamQuery(
       event.url,
     )}`,
     {
       method: 'GET',
+      redirect: 'manual',
       headers: {
         authorization: event.request.headers.get('authorization') || '',
         cookie: getAmCookie(event.cookies),
@@ -34,9 +38,15 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
     },
   );
 
-  if (response.ok) clearAmCookie(event.cookies);
+  // The AM endSession endpoint responds 302 with a Location for RP-initiated
+  // logout; a 200 means a plain JSON body. Either way, the AM session cookie
+  // must be cleared once the session is gone upstream.
+  if (response.status >= 200 && response.status < 400) {
+    clearAmCookie(event.cookies);
+  }
 
-  const resBody = await response.text();
-
-  return new Response(resBody);
+  const proxied = amProxyResponse(response, await response.text());
+  const location = response.headers.get('location');
+  if (location) proxied.headers.set('location', location);
+  return proxied;
 };

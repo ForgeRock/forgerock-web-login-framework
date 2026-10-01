@@ -17,7 +17,7 @@ import {
   getUserRolesFromSession,
   removeHttpCookie,
   setHttpCookie,
-} from '$server/sessions';
+} from '$server/am-session';
 import { parseRedirectForm, resolveRealmFromUrl } from './redirect.utilities';
 
 import type { RequestEvent } from '@sveltejs/kit';
