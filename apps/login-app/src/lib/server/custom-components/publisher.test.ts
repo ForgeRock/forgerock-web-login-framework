@@ -14,14 +14,15 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { ComponentPublisher, ComponentPublisherError, parseBundle } from './component-publisher';
-import { ComponentRepo, FileSync } from './component-repo';
+import { FileSync } from './file-sync';
+import { ComponentPublisher, ComponentPublisherError, parseBundle } from './publisher';
+import { ComponentRepo } from './repo';
 
 const temporaryDirectories: string[] = [];
 
 const makeTemporaryDirectory = () =>
   Effect.tryPromise({
-    try: () => mkdtemp(join(tmpdir(), 'component-publisher-')),
+    try: () => mkdtemp(join(tmpdir(), 'publisher-')),
     catch: (cause) => cause,
   }).pipe(
     Effect.tap((directory) =>

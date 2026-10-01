@@ -10,9 +10,11 @@
 import { NodeFileSystem } from '@effect/platform-node';
 import { Layer } from 'effect';
 
-import { ComponentPublisher, type ComponentPublisherService } from './component-publisher';
-import { ComponentRepo, FileSync } from './component-repo';
-import { ComponentStore, type ComponentStoreService } from './component-store';
+import { ComponentAuth, type ComponentAuthService } from './auth';
+import { FileSync } from './file-sync';
+import { ComponentPublisher, type ComponentPublisherService } from './publisher';
+import { ComponentStore, type ComponentStoreService } from './records';
+import { ComponentRepo } from './repo';
 
 /**
  * Repository layer configured by the `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH`
@@ -37,30 +39,26 @@ export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, n
   Layer.provide(ComponentPublisher.layer, componentRepoRuntime);
 
 /**
- * Fully provisioned layer for component storage and publishing API handlers.
+ * Fully provisioned layer for component storage and publishing API handlers, including
+ * AM-session admin authentication.
  *
- * Composes both production services once so handlers remain focused on request policy rather than
+ * Composes production services once so handlers remain focused on request policy rather than
  * infrastructure wiring; tests can replace this single runtime with deterministic service layers.
  */
 export const ComponentApiRuntime: Layer.Layer<
-  ComponentStoreService | ComponentPublisherService,
+  ComponentStoreService | ComponentPublisherService | ComponentAuthService,
   never,
   never
 > = Layer.merge(
   ComponentPublisherRuntime,
-  Layer.provide(
-    ComponentStore.layer({
-      repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
-      trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
-    }),
-    Layer.merge(componentRepoRuntime, Layer.merge(NodeFileSystem.layer, FileSync.layer)),
+  Layer.merge(
+    ComponentAuth.layer(),
+    Layer.provide(
+      ComponentStore.layer({
+        repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
+        trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
+      }),
+      Layer.merge(componentRepoRuntime, Layer.merge(NodeFileSystem.layer, FileSync.layer)),
+    ),
   ),
 );
-
-/**
- * Re-exports the publisher tag as the server runtime's single composition point.
- *
- * Keeping this export adjacent to the production runtime gives tests one stable seam for replacing
- * publisher behavior without coupling handlers to their concrete infrastructure.
- */
-export { ComponentPublisher };

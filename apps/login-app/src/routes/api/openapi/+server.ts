@@ -8,7 +8,7 @@
  * */
 
 import { dev } from '$app/environment';
-import { openApiSpec } from '$lib/server/openapi';
+import { openApiSpec } from '$lib/server/custom-components/openapi';
 
 /**
  * Serves the development-only OpenAPI document.

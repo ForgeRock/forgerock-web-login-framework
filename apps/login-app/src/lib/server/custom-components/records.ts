@@ -12,21 +12,18 @@ import { Context, Data, Effect, Layer, Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 
 import {
-  ComponentIdSchema,
   ComponentRecordSchema,
   type ComponentType,
-  ComponentTypeSchema,
   type CreateComponentRequestSchema,
   type UpdateComponentRequestSchema,
-} from './component-api';
+} from './fields.utils';
+import { FileSync, type FileSyncService } from './file-sync';
 import {
   ComponentRepo,
   type ComponentRepoConfig,
   type ComponentRepoService,
-  FileSync,
-  type FileSyncService,
   isSafeRelativePath,
-} from './component-repo';
+} from './repo';
 
 type ComponentRecord = Schema.Schema.Type<typeof ComponentRecordSchema>;
 
@@ -34,7 +31,7 @@ type ComponentRecord = Schema.Schema.Type<typeof ComponentRecordSchema>;
 export class ComponentStoreError extends Data.TaggedError('ComponentStoreError')<{
   message: string;
   cause?: unknown;
-  reason: 'NotFound' | 'InvalidType' | 'InvalidId' | 'Conflict' | 'Storage';
+  reason: 'InvalidType' | 'InvalidId' | 'NotFound' | 'Storage';
 }> {}
 
 /** Component storage operations backed by the configured component repository. */
@@ -47,7 +44,7 @@ export interface ComponentStoreService {
    * @throws {ComponentStoreError} When the type is invalid or the directory cannot be read.
    */
   readonly list: (
-    type: string,
+    type: ComponentType,
   ) => Effect.Effect<ReadonlyArray<ComponentRecord>, ComponentStoreError>;
   /**
    * Retrieves one persisted component record.
@@ -57,7 +54,10 @@ export interface ComponentStoreService {
    * @returns An effect with the persisted record.
    * @throws {ComponentStoreError} When validation, reading, or decoding fails.
    */
-  readonly get: (type: string, id: string) => Effect.Effect<ComponentRecord, ComponentStoreError>;
+  readonly get: (
+    type: ComponentType,
+    id: string,
+  ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
   /**
    * Creates and durably stores a new component record.
    *
@@ -67,7 +67,7 @@ export interface ComponentStoreService {
    * @throws {ComponentStoreError} When the type is invalid or persistence fails.
    */
   readonly create: (
-    type: string,
+    type: ComponentType,
     request: Schema.Schema.Type<typeof CreateComponentRequestSchema>,
   ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
   /**
@@ -80,7 +80,7 @@ export interface ComponentStoreService {
    * @throws {ComponentStoreError} When validation, retrieval, or persistence fails.
    */
   readonly update: (
-    type: string,
+    type: ComponentType,
     id: string,
     request: Schema.Schema.Type<typeof UpdateComponentRequestSchema>,
   ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
@@ -92,7 +92,7 @@ export interface ComponentStoreService {
    * @returns An effect that completes after deletion and directory synchronization.
    * @throws {ComponentStoreError} When validation, retrieval, deletion, or synchronization fails.
    */
-  readonly delete: (type: string, id: string) => Effect.Effect<void, ComponentStoreError>;
+  readonly delete: (type: ComponentType, id: string) => Effect.Effect<void, ComponentStoreError>;
 }
 
 /** Service tag and layer factory for repository-backed component record storage. */
@@ -139,46 +139,6 @@ const isNotFound = (cause: unknown): boolean =>
   cause !== null &&
   (('code' in cause && cause.code === 'ENOENT') ||
     ('reason' in cause && cause.reason === 'NotFound'));
-
-/**
- * Decodes a supported component type or fails with a tagged invalid-type error.
- *
- * @param type - Untrusted component type to validate.
- * @returns An effect with the validated component type.
- * @throws {ComponentStoreError} When the type is unsupported.
- */
-const validateType = (type: string) =>
-  Schema.decodeUnknown(ComponentTypeSchema)(type).pipe(
-    Effect.catchAll((cause) =>
-      Effect.fail(
-        new ComponentStoreError({
-          reason: 'InvalidType',
-          message: `Invalid component type: ${type}`,
-          cause,
-        }),
-      ),
-    ),
-  );
-
-/**
- * Decodes a component UUID or fails with a tagged invalid-id error.
- *
- * @param id - Untrusted component id to validate.
- * @returns An effect with the validated component id.
- * @throws {ComponentStoreError} When the id is not a supported component UUID.
- */
-const validateId = (id: string) =>
-  Schema.decodeUnknown(ComponentIdSchema)(id).pipe(
-    Effect.catchAll((cause) =>
-      Effect.fail(
-        new ComponentStoreError({
-          reason: 'InvalidId',
-          message: `Invalid component id: ${id}`,
-          cause,
-        }),
-      ),
-    ),
-  );
 
 /**
  * Builds a safe repository path for a validated component record.
@@ -243,8 +203,8 @@ const makeComponentStoreLayer = (
 
       const get = (inputType: string, inputId: string) =>
         Effect.gen(function* () {
-          const type = yield* validateType(inputType);
-          const id = yield* validateId(inputId);
+          const type = inputType as ComponentType;
+          const id = inputId;
           const { finalPath } = yield* recordPath(trackedRoot, type, id);
           const content = yield* fileSystem.readFileString(finalPath).pipe(
             Effect.catchAll((cause) =>
@@ -293,7 +253,7 @@ const makeComponentStoreLayer = (
       return {
         list: (inputType) =>
           Effect.gen(function* () {
-            const type = yield* validateType(inputType);
+            const type = inputType as ComponentType;
             const directory = joinPath(trackedRoot, type);
             const entries = yield* fileSystem.readDirectory(directory).pipe(
               Effect.catchAll((cause) =>
@@ -323,7 +283,7 @@ const makeComponentStoreLayer = (
         get,
         create: (inputType, request) =>
           Effect.gen(function* () {
-            const type = yield* validateType(inputType);
+            const type = inputType as ComponentType;
             const id = yield* Effect.sync(randomUUID);
             const now = new Date().toISOString();
             return yield* write(type, id, {
@@ -335,8 +295,8 @@ const makeComponentStoreLayer = (
           }),
         update: (inputType, inputId, request) =>
           Effect.gen(function* () {
-            const type = yield* validateType(inputType);
-            const id = yield* validateId(inputId);
+            const type = inputType as ComponentType;
+            const id = inputId;
             const existing = yield* get(type, id);
             return yield* write(type, id, {
               id,
@@ -351,8 +311,8 @@ const makeComponentStoreLayer = (
           }),
         delete: (inputType, inputId) =>
           Effect.gen(function* () {
-            const type = yield* validateType(inputType);
-            const id = yield* validateId(inputId);
+            const type = inputType as ComponentType;
+            const id = inputId;
             yield* get(type, id);
             const { directory, finalPath } = yield* recordPath(trackedRoot, type, id);
             yield* fileSystem.remove(finalPath).pipe(
@@ -381,6 +341,3 @@ const makeComponentStoreLayer = (
       };
     }),
   );
-
-/** Retrieves the ComponentStore service from the current Effect environment. */
-export const componentStore = ComponentStore;

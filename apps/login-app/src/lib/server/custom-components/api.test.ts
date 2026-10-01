@@ -13,6 +13,16 @@ import { Effect, Layer } from 'effect';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { vi } from 'vitest';
+
+vi.mock('$app/environment', () => ({ building: false }));
+vi.mock('$env/dynamic/private', () => ({
+  env: {
+    FR_AM_URL: 'https://am.example.com/am',
+    FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
+    FR_REALM_PATH: 'root',
+  },
+}));
 
 import {
   createComponent as createComponentProgram,
@@ -21,16 +31,41 @@ import {
   listComponents as listComponentsProgram,
   publishComponentSource as publishComponentSourceProgram,
   updateComponent as updateComponentProgram,
-} from './component-endpoint';
-import { ComponentPublisher, type ComponentPublisherService } from './component-publisher';
-import { ComponentRepo, FileSync } from './component-repo';
-import { ComponentStore } from './component-store';
+} from './api';
+import { type AmSessionDependencies, ComponentAuth, type ComponentAuthService } from './auth';
+import { FileSync } from './file-sync';
+import { ComponentPublisher, type ComponentPublisherService } from './publisher';
+import { ComponentStore } from './records';
+import { ComponentRepo } from './repo';
 
 const temporaryDirectories: string[] = [];
 
+process.env.COMPONENT_API_ENABLED = 'true';
+
+/** AM readers accepting every session as an admin, standing in for a valid AM admin session. */
+const adminDependencies: AmSessionDependencies = {
+  getUserId: () => Promise.resolve('test-admin'),
+  getRoles: () => Promise.resolve(['ui-realm-admin']),
+};
+
+/** AM readers rejecting every session, standing in for an invalid session. */
+const unauthenticatedDependencies: AmSessionDependencies = {
+  getUserId: () => Promise.resolve(null),
+  getRoles: () => Promise.resolve([]),
+};
+
+const adminAuthLayer = ComponentAuth.layer(adminDependencies);
+const unauthenticatedLayer = ComponentAuth.layer(unauthenticatedDependencies);
+
+const authorizedRequest = (url: string, init?: RequestInit): Request =>
+  new Request(url, {
+    ...init,
+    headers: { ...(init?.headers ?? {}), authorization: 'Bearer am-session-token' },
+  });
+
 const makeTemporaryDirectory = () =>
   Effect.tryPromise({
-    try: () => mkdtemp(join(tmpdir(), 'component-endpoint-')),
+    try: () => mkdtemp(join(tmpdir(), 'api-')),
     catch: (cause) => cause,
   }).pipe(
     Effect.tap((directory) =>
@@ -54,48 +89,51 @@ const testStoreLayer = (repoDir: string) => {
 };
 
 const listComponents = (request: Request, type: string, layer: ReturnType<typeof testStoreLayer>) =>
-  Effect.provide(listComponentsProgram(request, type), layer);
+  Effect.provide(listComponentsProgram(request, type), Layer.merge(layer, adminAuthLayer));
 
 const getComponent = (
   request: Request,
   type: string,
   id: string,
   layer: ReturnType<typeof testStoreLayer>,
-) => Effect.provide(getComponentProgram(request, type, id), layer);
+) => Effect.provide(getComponentProgram(request, type, id), Layer.merge(layer, adminAuthLayer));
 
 const createComponent = (
   request: Request,
   type: string,
   layer: ReturnType<typeof testStoreLayer>,
-  token?: string,
-) => Effect.provide(createComponentProgram(request, type, token), layer);
+  authLayer: Layer.Layer<ComponentAuthService> = adminAuthLayer,
+) => Effect.provide(createComponentProgram(request, type), Layer.merge(layer, authLayer));
 
 const updateComponent = (
   request: Request,
   type: string,
   id: string,
   layer: ReturnType<typeof testStoreLayer>,
-) => Effect.provide(updateComponentProgram(request, type, id), layer);
+) => Effect.provide(updateComponentProgram(request, type, id), Layer.merge(layer, adminAuthLayer));
 
 const deleteComponent = (
   request: Request,
   type: string,
   id: string,
   layer: ReturnType<typeof testStoreLayer>,
-) => Effect.provide(deleteComponentProgram(request, type, id), layer);
+) => Effect.provide(deleteComponentProgram(request, type, id), Layer.merge(layer, adminAuthLayer));
 
 const publishComponentSource = (
   request: Request,
   layer: Layer.Layer<ComponentPublisherService, never, never>,
-) => Effect.provide(publishComponentSourceProgram(request), layer);
+) => Effect.provide(publishComponentSourceProgram(request), Layer.merge(layer, adminAuthLayer));
 
 afterEach(() =>
-  Effect.tryPromise({
-    try: () =>
-      Promise.all(
-        temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
-      ),
-    catch: (cause) => cause,
+  Effect.gen(function* () {
+    process.env.COMPONENT_API_ENABLED = 'true';
+    yield* Effect.tryPromise({
+      try: () =>
+        Promise.all(
+          temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
+        ),
+      catch: (cause) => cause,
+    });
   }),
 );
 
@@ -105,7 +143,7 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* listComponents(
-          new Request('http://localhost/api/components/callbacks', { method: 'GET' }),
+          authorizedRequest('http://localhost/api/components/callbacks', { method: 'GET' }),
           'callbacks',
           testStoreLayer(repoDir),
         );
@@ -124,7 +162,7 @@ describe('Component Endpoint Handlers', () => {
 
         // Create a component first
         yield* createComponent(
-          new Request('http://localhost/api/components/callbacks', {
+          authorizedRequest('http://localhost/api/components/callbacks', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -142,7 +180,7 @@ describe('Component Endpoint Handlers', () => {
           testStoreLayer(repoDir),
         );
 
-        const request = new Request(
+        const request = authorizedRequest(
           'http://localhost/api/components/callbacks?fields=id,meta.name',
           { method: 'GET' },
         );
@@ -168,9 +206,12 @@ describe('Component Endpoint Handlers', () => {
     it.effect('returns 400 for invalid fields parameter', () =>
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
-        const request = new Request('http://localhost/api/components/callbacks?fields=..invalid', {
-          method: 'GET',
-        });
+        const request = authorizedRequest(
+          'http://localhost/api/components/callbacks?fields=..invalid',
+          {
+            method: 'GET',
+          },
+        );
         const response = yield* listComponents(request, 'callbacks', testStoreLayer(repoDir));
         expect(response.status).toBe(400);
       }),
@@ -180,7 +221,7 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* listComponents(
-          new Request('http://localhost/api/components/invalid-type', { method: 'GET' }),
+          authorizedRequest('http://localhost/api/components/invalid-type', { method: 'GET' }),
           'invalid-type',
           testStoreLayer(repoDir),
         );
@@ -196,7 +237,7 @@ describe('Component Endpoint Handlers', () => {
 
         // Create first
         const createResponse = yield* createComponent(
-          new Request('http://localhost/api/components/callbacks', {
+          authorizedRequest('http://localhost/api/components/callbacks', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -221,7 +262,7 @@ describe('Component Endpoint Handlers', () => {
         const id = createData.id;
 
         const getResponse = yield* getComponent(
-          new Request(`http://localhost/api/components/callbacks/${id}`, {
+          authorizedRequest(`http://localhost/api/components/callbacks/${id}`, {
             method: 'GET',
           }),
           'callbacks',
@@ -236,7 +277,7 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* getComponent(
-          new Request(
+          authorizedRequest(
             'http://localhost/api/components/callbacks/d677e9a2-9ea5-4fc9-a7db-8668468a91c0',
             { method: 'GET' },
           ),
@@ -254,7 +295,7 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* createComponent(
-          new Request('http://localhost/api/components/callbacks', {
+          authorizedRequest('http://localhost/api/components/callbacks', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -275,7 +316,33 @@ describe('Component Endpoint Handlers', () => {
       }),
     );
 
-    it.effect('returns 401 without valid token when token is configured', () =>
+    it.effect('returns 401 when the session is not authenticated', () =>
+      Effect.gen(function* () {
+        const repoDir = yield* makeTemporaryDirectory();
+        const response = yield* createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              src: 'test source',
+              meta: {
+                name: 'test',
+                displayName: 'Test',
+                publish: false,
+                fromComponent: '',
+                fromJson: '',
+              },
+            }),
+          }),
+          'callbacks',
+          testStoreLayer(repoDir),
+          unauthenticatedLayer,
+        );
+        expect(response.status).toBe(401);
+      }),
+    );
+
+    it.effect('returns 401 without an authorization header', () =>
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* createComponent(
@@ -295,17 +362,84 @@ describe('Component Endpoint Handlers', () => {
           }),
           'callbacks',
           testStoreLayer(repoDir),
-          'secret-token',
+          unauthenticatedLayer,
         );
         expect(response.status).toBe(401);
       }),
+    );
+
+    it.effect('returns 403 for an authenticated non-admin session', () =>
+      Effect.gen(function* () {
+        const repoDir = yield* makeTemporaryDirectory();
+        const nonAdminLayer = ComponentAuth.layer({
+          getUserId: () => Promise.resolve('regular-user'),
+          getRoles: () => Promise.resolve(['ui-enduser']),
+        });
+        const response = yield* createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              src: 'test source',
+              meta: {
+                name: 'test',
+                displayName: 'Test',
+                publish: false,
+                fromComponent: '',
+                fromJson: '',
+              },
+            }),
+          }),
+          'callbacks',
+          testStoreLayer(repoDir),
+          nonAdminLayer,
+        );
+        expect(response.status).toBe(403);
+      }),
+    );
+
+    it.effect('returns 404 for every handler when the API is disabled', () =>
+      Effect.ensuring(
+        Effect.gen(function* () {
+          delete process.env.COMPONENT_API_ENABLED;
+          const repoDir = yield* makeTemporaryDirectory();
+          const list = yield* listComponents(
+            authorizedRequest('http://localhost/api/components/callbacks', { method: 'GET' }),
+            'callbacks',
+            testStoreLayer(repoDir),
+          );
+          const create = yield* createComponent(
+            authorizedRequest('http://localhost/api/components/callbacks', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                src: 'test source',
+                meta: {
+                  name: 'test',
+                  displayName: 'Test',
+                  publish: false,
+                  fromComponent: '',
+                  fromJson: '',
+                },
+              }),
+            }),
+            'callbacks',
+            testStoreLayer(repoDir),
+          );
+          expect(list.status).toBe(404);
+          expect(create.status).toBe(404);
+        }),
+        Effect.sync(() => {
+          process.env.COMPONENT_API_ENABLED = 'true';
+        }),
+      ),
     );
 
     it.effect('returns 415 for invalid content-type', () =>
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* createComponent(
-          new Request('http://localhost/api/components/callbacks', {
+          authorizedRequest('http://localhost/api/components/callbacks', {
             method: 'POST',
             headers: { 'content-type': 'text/plain' },
             body: 'test',
@@ -324,7 +458,7 @@ describe('Component Endpoint Handlers', () => {
         const repoDir = yield* makeTemporaryDirectory();
 
         const createResponse = yield* createComponent(
-          new Request('http://localhost/api/components/callbacks', {
+          authorizedRequest('http://localhost/api/components/callbacks', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -352,7 +486,7 @@ describe('Component Endpoint Handlers', () => {
         });
 
         const updateResponse = yield* updateComponent(
-          new Request(`http://localhost/api/components/callbacks/${createData.id}`, {
+          authorizedRequest(`http://localhost/api/components/callbacks/${createData.id}`, {
             method: 'PUT',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -389,7 +523,7 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* updateComponent(
-          new Request('http://localhost/api/components/callbacks/different-uuid', {
+          authorizedRequest('http://localhost/api/components/callbacks/different-uuid', {
             method: 'PUT',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -419,7 +553,7 @@ describe('Component Endpoint Handlers', () => {
         const repoDir = yield* makeTemporaryDirectory();
 
         const createResponse = yield* createComponent(
-          new Request('http://localhost/api/components/callbacks', {
+          authorizedRequest('http://localhost/api/components/callbacks', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({
@@ -443,7 +577,7 @@ describe('Component Endpoint Handlers', () => {
         });
 
         const deleteResponse = yield* deleteComponent(
-          new Request(`http://localhost/api/components/callbacks/${createData.id}`, {
+          authorizedRequest(`http://localhost/api/components/callbacks/${createData.id}`, {
             method: 'DELETE',
           }),
           'callbacks',
@@ -458,7 +592,7 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
         const response = yield* deleteComponent(
-          new Request(
+          authorizedRequest(
             'http://localhost/api/components/callbacks/d677e9a2-9ea5-4fc9-a7db-8668468a91c0',
             { method: 'DELETE' },
           ),
@@ -483,7 +617,7 @@ describe('Component Endpoint Handlers', () => {
         );
 
         const response = yield* publishComponentSource(
-          new Request('http://localhost/api/components/publish', {
+          authorizedRequest('http://localhost/api/components/publish', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({

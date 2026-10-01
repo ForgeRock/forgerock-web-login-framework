@@ -9,7 +9,9 @@
 
 import { FileSystem } from '@effect/platform';
 import { Context, Data, Effect, Layer, Predicate } from 'effect';
-import { type FileHandle, lstat, open } from 'node:fs/promises';
+import { lstat } from 'node:fs/promises';
+
+import { FileSync, type FileSyncError, type FileSyncService } from './file-sync';
 
 /**
  * Error emitted when component persistence cannot safely complete.
@@ -28,79 +30,6 @@ export interface ComponentRepoConfig {
   readonly repoDir: string;
   readonly trackedSubpath: string;
 }
-
-/**
- * Synchronizes filesystem entries after writes and renames so acknowledged saves are durable.
- */
-export interface FileSyncService {
-  readonly syncFile: (path: string) => Effect.Effect<void, ComponentRepoError>;
-  readonly syncDirectory: (path: string) => Effect.Effect<void, ComponentRepoError>;
-}
-
-/**
- * Service tag for the filesystem durability operations required by component persistence.
- */
-const FileSyncTag = Context.GenericTag<FileSyncService>('@login-app/FileSync');
-
-/**
- * Service tag and layers for filesystem durability operations required by component persistence.
- */
-export const FileSync = Object.assign(FileSyncTag, {
-  /** Layer providing Node file and directory `fsync` operations for durable component saves. */
-  layer: Layer.succeed(FileSyncTag, {
-    syncFile: (path: string) => syncPath(path, 'r+', 'temporary component file'),
-    syncDirectory: (path: string) => syncPath(path, 'r', 'component directory'),
-  }),
-  /** No-op layer for tests that do not need to verify durability syncing. */
-  layerNoop: Layer.succeed(FileSyncTag, {
-    syncFile: () => Effect.void,
-    syncDirectory: () => Effect.void,
-  }),
-});
-
-/**
- * Opens a file, passes its handle to an Effect, and always attempts to close it afterward.
- *
- * @param path - Filesystem path to open.
- * @param flags - Node.js flags controlling how the file is opened.
- * @param use - Effect that uses the opened file handle.
- * @returns An effect with the value returned by `use`.
- * @throws {ComponentRepoError} When opening the file fails.
- */
-const withFileHandle = <A>(
-  path: string,
-  flags: string,
-  use: (handle: FileHandle) => Effect.Effect<A, ComponentRepoError>,
-): Effect.Effect<A, ComponentRepoError> =>
-  Effect.acquireUseRelease(
-    Effect.tryPromise({
-      try: () => open(path, flags),
-      catch: (cause) => new ComponentRepoError({ message: `Unable to open ${path}`, cause }),
-    }),
-    use,
-    (handle) => Effect.tryPromise(() => handle.close()).pipe(Effect.catchAll(() => Effect.void)),
-  );
-
-/**
- * Opens and synchronizes a file or directory path for durable persistence.
- *
- * @param path - Filesystem path to synchronize.
- * @param flags - Node.js flags appropriate for opening the target.
- * @param target - Human-readable target name used in failure messages.
- * @returns An effect that completes once synchronization succeeds.
- * @throws {ComponentRepoError} When opening or synchronizing the path fails.
- */
-const syncPath = (
-  path: string,
-  flags: string,
-  target: string,
-): Effect.Effect<void, ComponentRepoError> =>
-  withFileHandle(path, flags, (handle) =>
-    Effect.tryPromise({
-      try: () => handle.sync(),
-      catch: (cause) => new ComponentRepoError({ message: `Unable to sync ${target}`, cause }),
-    }),
-  );
 
 /**
  * A component file expressed relative to the configured tracked subtree.
@@ -128,7 +57,7 @@ export interface ComponentRepoService {
   readonly saveComponent: (
     relPath: string,
     content: string,
-  ) => Effect.Effect<void, ComponentRepoError>;
+  ) => Effect.Effect<void, ComponentRepoError | FileSyncError>;
   /**
    * Validates and atomically replaces each artifact, synchronizing temporary files and directories.
    *
@@ -138,7 +67,7 @@ export interface ComponentRepoService {
    */
   readonly saveArtifacts: (
     artifacts: ReadonlyArray<ComponentArtifact>,
-  ) => Effect.Effect<void, ComponentRepoError>;
+  ) => Effect.Effect<void, ComponentRepoError | FileSyncError>;
 }
 
 /**
@@ -191,15 +120,14 @@ const joinPath = (...segments: ReadonlyArray<string>): string =>
     )
     .join('/');
 
-/**
- * Creates a repository error that preserves the originating failure as its cause.
- *
- * @param message - Human-readable description of the failed repository operation.
- * @param cause - Underlying failure that caused the operation to fail.
- * @returns A tagged repository error.
- */
 const componentRepoError = (message: string, cause: unknown) =>
   new ComponentRepoError({ message, cause });
+
+/** Fails with a tagged repository error when the inner effect fails, preserving its cause. */
+const orRepoError =
+  (message: string) =>
+  <A, R>(effect: Effect.Effect<A, unknown, R>): Effect.Effect<A, ComponentRepoError, R> =>
+    Effect.catchAll(effect, (cause) => Effect.fail(componentRepoError(message, cause)));
 
 /** Rejects symlink path segments to prevent cloned repositories from escaping the tracked subtree. */
 const ensureNoSymlink = (trackedRoot: string, relPath: string) =>
@@ -320,25 +248,11 @@ const makeComponentRepoLayer = (
 
           yield* Effect.forEach(prepared, ({ content, directory, tempPath }) =>
             Effect.gen(function* () {
-              yield* fileSystem.makeDirectory(directory, { recursive: true }).pipe(
-                Effect.catchAll((cause) =>
-                  Effect.fail(
-                    new ComponentRepoError({
-                      message: 'Unable to create component directory',
-                      cause,
-                    }),
-                  ),
-                ),
+              yield* orRepoError('Unable to create component directory')(
+                fileSystem.makeDirectory(directory, { recursive: true }),
               );
-              yield* fileSystem.writeFileString(tempPath, content).pipe(
-                Effect.catchAll((cause) =>
-                  Effect.fail(
-                    new ComponentRepoError({
-                      message: 'Unable to write temporary component file',
-                      cause,
-                    }),
-                  ),
-                ),
+              yield* orRepoError('Unable to write temporary component file')(
+                fileSystem.writeFileString(tempPath, content),
               );
               yield* fileSync.syncFile(tempPath);
             }),
@@ -349,15 +263,8 @@ const makeComponentRepoLayer = (
            * failure can leave earlier files replaced. Callers receive one bundle-level error.
            */
           yield* Effect.forEach(prepared, ({ finalPath, tempPath }) =>
-            fileSystem.rename(tempPath, finalPath).pipe(
-              Effect.catchAll((cause) =>
-                Effect.fail(
-                  new ComponentRepoError({
-                    message: 'Unable to atomically replace component file',
-                    cause,
-                  }),
-                ),
-              ),
+            orRepoError('Unable to atomically replace component file')(
+              fileSystem.rename(tempPath, finalPath),
             ),
           );
           yield* Effect.forEach(
@@ -376,22 +283,3 @@ const makeComponentRepoLayer = (
       return { saveArtifacts, saveComponent };
     }),
   );
-
-/**
- * Default repository layer configured by the `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH`
- * infrastructure contract with config-saver.
- */
-export const componentRepoLayer = ComponentRepo.layer({
-  repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
-  trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
-});
-
-/**
- * Saves one component file through the repository service in the current Effect environment.
- *
- * @param relPath - Safe path relative to the configured tracked subtree.
- * @param content - Complete file content to persist.
- * @returns An effect requiring {@link ComponentRepoService} that may fail with {@link ComponentRepoError}.
- */
-export const saveComponent = (relPath: string, content: string) =>
-  Effect.flatMap(ComponentRepo, (repo) => repo.saveComponent(relPath, content));

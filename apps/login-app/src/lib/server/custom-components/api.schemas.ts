@@ -150,26 +150,10 @@ export const statusResponseSchema = <const Status extends number, Body>(
 export const ComponentErrorResponseSchema = Schema.Union(
   statusResponseSchema(400, ApiErrorBodySchema),
   statusResponseSchema(401, ApiErrorBodySchema),
+  statusResponseSchema(403, ApiErrorBodySchema),
   statusResponseSchema(404, ApiErrorBodySchema),
   statusResponseSchema(409, ApiErrorBodySchema),
   statusResponseSchema(413, ApiErrorBodySchema),
   statusResponseSchema(415, ApiErrorBodySchema),
   statusResponseSchema(500, ApiErrorBodySchema),
 );
-
-/** Response contract for a component-list route. */
-export const ComponentListResponseSchema = Schema.Union(
-  statusResponseSchema(200, Schema.Array(ComponentRecordSchema)),
-  ComponentErrorResponseSchema,
-);
-
-/** Response contract for component detail, create, and update routes. */
-export const ComponentResponseSchema = Schema.Union(
-  statusResponseSchema(200, ComponentRecordSchema),
-  statusResponseSchema(201, ComponentRecordSchema),
-  statusResponseSchema(204, Schema.Void),
-  ComponentErrorResponseSchema,
-);
-
-/** A typed Component API detail response. */
-export type ComponentResponse = Schema.Schema.Type<typeof ComponentResponseSchema>;

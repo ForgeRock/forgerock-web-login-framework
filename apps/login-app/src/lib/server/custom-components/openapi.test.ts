@@ -24,24 +24,29 @@ describe('openApiSpec', () => {
       '200',
       '400',
       '401',
+      '403',
       '404',
     ]);
     expect(Object.keys(openApiSpec.paths['/api/components/{type}'].post.responses)).toEqual([
       '201',
       '400',
       '401',
+      '403',
       '413',
       '415',
       '500',
     ]);
     expect(Object.keys(openApiSpec.paths['/api/components/{type}/{id}'].get.responses)).toEqual([
       '200',
+      '401',
+      '403',
       '404',
     ]);
     expect(Object.keys(openApiSpec.paths['/api/components/{type}/{id}'].put.responses)).toEqual([
       '200',
       '400',
       '401',
+      '403',
       '404',
       '413',
       '415',
@@ -51,12 +56,14 @@ describe('openApiSpec', () => {
       '204',
       '400',
       '401',
+      '403',
       '404',
     ]);
     expect(Object.keys(openApiSpec.paths['/api/components/publish'].post.responses)).toEqual([
       '200',
       '400',
       '401',
+      '403',
       '413',
       '415',
       '500',

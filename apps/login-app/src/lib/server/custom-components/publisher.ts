@@ -9,10 +9,12 @@
 
 import { Context, Data, Effect, Layer, Schema } from 'effect';
 
-import { type Bundle, BundleSchema } from './component-api.schemas';
-import { type ComponentArtifact, ComponentRepo, isSafeRelativePath } from './component-repo';
+import { type Bundle, BundleSchema, PublishResponseSchema } from './api.schemas';
+import { type ComponentArtifact, ComponentRepo, isSafeRelativePath } from './repo';
 
-import type { ComponentRepoError } from './component-repo';
+import type { PublishRequestSchema } from './api.schemas';
+import type { FileSyncError } from './file-sync';
+import type { ComponentRepoError } from './repo';
 
 /**
  * Error emitted when a submitted component bundle cannot be decoded or contains an unsafe path.
@@ -39,7 +41,7 @@ export interface ComponentPublisherService {
    */
   readonly publishComponent: (
     bundle: string,
-  ) => Effect.Effect<void, ComponentPublisherError | ComponentRepoError>;
+  ) => Effect.Effect<void, ComponentPublisherError | ComponentRepoError | FileSyncError>;
 }
 
 /**
@@ -106,3 +108,11 @@ export const parseBundle = (
  */
 export const publishComponent = (bundle: string) =>
   ComponentPublisher.pipe(Effect.flatMap((publisher) => publisher.publishComponent(bundle)));
+
+/** Serializes a publish request into the repository bundle format. */
+export const publishBundle = (body: Schema.Schema.Type<typeof PublishRequestSchema>): string =>
+  JSON.stringify({ files: [...(body.files ?? []), { path: 'bundle.js', content: body.code }] });
+
+/** Produces the fixed publish-success response after a bundle is persisted. */
+export const publishResponse = (): Response =>
+  Response.json(Schema.encodeSync(PublishResponseSchema)({ id: crypto.randomUUID(), url: '' }));

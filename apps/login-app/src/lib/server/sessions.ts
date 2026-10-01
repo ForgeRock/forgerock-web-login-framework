@@ -147,6 +147,22 @@ export async function getUserRolesFromSession(tokenId: TokenId, realm?: string):
   if (!userId) {
     return [];
   }
+  return getUserRolesForUser(tokenId, userId, realm);
+}
+
+/**
+ * @function getUserRolesForUser - retrieves roles for an already-validated user, skipping the
+ * session-validation round-trip when the caller already knows the uid.
+ * @param {string} tokenId - AM session token ID
+ * @param {string} userId - The uid returned by getUserIdFromSession
+ * @param {string} [realm] - The realm to query; uses the configured realm when omitted.
+ * @returns {Promise<string[]>} An array of user roles or an empty roles array
+ */
+export async function getUserRolesForUser(
+  tokenId: TokenId,
+  userId: string,
+  realm?: string,
+): Promise<string[]> {
   const response = await amFetchRequest(
     tokenId,
     `/users/${encodeURIComponent(userId)}`,
