@@ -28,12 +28,12 @@ async function createMinimalProject(dir: string): Promise<void> {
     JSON.stringify({ version: '1.0.0', generatedAt: new Date().toISOString() }) + '\n',
     'utf8',
   );
-  // empty custom component dirs (runRegistryScript scans these)
+  // empty custom component dirs (scaffoldComponent scans these)
   await mkdir(join(dir, 'experimental', 'custom', 'callbacks'), { recursive: true });
   await mkdir(join(dir, 'experimental', 'custom', 'stages'), { recursive: true });
   await mkdir(join(dir, 'experimental', 'custom', 'headers'), { recursive: true });
   await mkdir(join(dir, 'experimental', 'custom', 'footers'), { recursive: true });
-  // registry output dir (runRegistryScript writes here)
+  // registry output dir (the framework's Vite plugin writes custom-registry.ts here)
   await mkdir(join(dir, 'core', 'journey', '_utilities', 'registry'), { recursive: true });
 }
 

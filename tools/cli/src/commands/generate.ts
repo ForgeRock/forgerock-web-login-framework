@@ -8,7 +8,6 @@ import { fileURLToPath } from 'node:url';
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
 import { expandTilde } from '../services/file-system.js';
-import { runRegistryScript } from '../services/registry.js';
 import { toPascalCase } from '../utils.js';
 
 const CUSTOM_DIR = 'experimental/custom';
@@ -177,11 +176,10 @@ export function scaffoldComponent(type: ScaffoldType, name: string, directory?: 
       createdFiles.push(targetPath);
     }
 
-    // ── Regenerate custom-registry.ts ────────────────────────────────────
-    yield* Console.log('Regenerating custom component registry...');
-    yield* runRegistryScript(cwd);
-
     // ── Print summary ──────────────────────────────────────────────────────
+    // custom-registry.ts is NOT regenerated here — the framework's Vite plugin
+    // picks the new component up on the next build or dev-server start (and,
+    // in dev, watches these directories for adds/removals without a restart).
     yield* Console.log(
       `Done. ${type} component scaffolded successfully.\n\n` +
         `Files created:\n` +

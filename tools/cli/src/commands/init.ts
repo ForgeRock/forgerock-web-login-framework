@@ -5,7 +5,6 @@ import { Console, Effect } from 'effect';
 import { writeVersion } from '../config/version.js';
 import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
 import { copyWithExclusions, expandTilde, isFrameworkDirectory } from '../services/file-system.js';
-import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';
 
 import type { Option } from 'effect';
@@ -110,20 +109,13 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
       { concurrency: 'unbounded', discard: true },
     );
 
-    // ── 5. Generate custom-registry.ts ────────────────────────────────────
-    // Run the canonical registry script so the file is immediately present
-    // with the correct CustomRegistryEntry format. The empty callbacks/ and
-    // stages/ dirs produce empty registries — no custom components yet.
-    yield* Console.log('Generating custom component registry...');
-    yield* runRegistryScript(resolvedDir);
-
-    // ── 6. Write .generator-version ────────────────────────────────────────
+    // ── 5. Write .generator-version ────────────────────────────────────────
     yield* writeVersion(resolvedDir, {
       version: resolvedVersion,
       generatedAt: new Date().toISOString(),
     });
 
-    // ── 7. Print next steps ───────────────────────────────────────────────
+    // ── 6. Print next steps ───────────────────────────────────────────────
     yield* Console.log(nextStepsMessage(directory));
   });
 

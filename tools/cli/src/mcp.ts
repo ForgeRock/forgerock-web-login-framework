@@ -11,7 +11,6 @@ import { initProject } from './commands/init.js';
 import { resolveSource } from './commands/source.js';
 import { assertValidProject, writeVersion } from './config/version.js';
 import { copyWithExclusions, expandTilde } from './services/file-system.js';
-import { runRegistryScript } from './services/registry.js';
 import { GithubReleaseLayer, Release } from './services/release.js';
 
 import type { FileSystem, Path } from '@effect/platform';
@@ -44,8 +43,6 @@ function formatError(cause: Cause.Cause<unknown>): string {
         return `Filesystem error (${e['operation']}) at "${e['path']}": ${e['cause']}`;
       case 'GeneratorVersionError':
         return `Generator version error: ${e['message']}${e['path'] ? ` (${e['path']})` : ''}`;
-      case 'RegistryScanError':
-        return `Registry scan failed in "${e['directory']}": ${e['cause']}`;
       case 'DirectoryConflictError':
         return `"${e['path']}" already contains a framework project. Use local path instead.`;
       case 'DirectoryNotEmptyError':
@@ -275,7 +272,6 @@ const handlerLayer = mcpToolkit.toLayer({
           }),
         );
 
-        yield* runRegistryScript(cwd);
         yield* writeVersion(cwd, {
           version: resolvedVersion,
           generatedAt: new Date().toISOString(),
