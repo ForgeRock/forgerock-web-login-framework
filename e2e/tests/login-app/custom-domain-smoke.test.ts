@@ -13,6 +13,9 @@
 //   cd e2e && LOGIN2_SMOKE_FQDN=openam-aic-login2-51.forgeblocks.com \
 //     npx playwright test custom-domain-smoke --config=playwright.live.config.ts
 // Optionally set LOGIN2_SMOKE_CUSTOM_HOST (defaults to login.customer-example.com).
+// Prerequisite: the tenant must have the aic-login2 feature enabled — with the
+// feature off, /login/ serves the legacy app and embeds no wellknown URL, so
+// the smoke fails at the "SSR page embeds a wellknown URL" assertion.
 // Skipped unless LOGIN2_SMOKE_FQDN is set, so the CI and local suites never
 // hit a live tenant.
 
