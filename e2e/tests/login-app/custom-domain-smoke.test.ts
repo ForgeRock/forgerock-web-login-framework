@@ -23,25 +23,31 @@ const CUSTOM_HOST = process.env.LOGIN2_SMOKE_CUSTOM_HOST ?? 'login.customer-exam
 
 test.skip(!FQDN, 'set LOGIN2_SMOKE_FQDN to run against the live tenant');
 
-// The SSR login page embeds the AM discovery URL it resolved for the request:
-// wellknown:"https://<host>/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration".
+// The SSR login page embeds the AM discovery URL it resolved for the request
+// (realmPath=/alpha embeds .../realms/root/realms/alpha/.well-known/...; the
+// root realm embeds .../realms/root/.well-known/...). Returns the URL's host.
 async function wellknownHost(
   request: APIRequestContext,
+  path: string,
   headers?: Record<string, string>,
 ): Promise<string> {
-  const res = await request.get(`https://${FQDN}/login/?realm=/alpha`, { headers });
-  expect(res.status(), 'SSR login page status').toBe(200);
+  const res = await request.get(`https://${FQDN}${path}`, { headers });
+  expect(res.status(), `SSR login page status for ${path}`).toBe(200);
   const match = (await res.text()).match(/wellknown:"([^"]*)"/);
-  expect(match, 'SSR page embeds a wellknown URL').not.toBeNull();
+  expect(match, `SSR page embeds a wellknown URL for ${path}`).not.toBeNull();
   return new URL(match![1]).host;
 }
 
 test.describe('Login2 custom-domain smoke', () => {
-  test('baseline discovery URL uses the tenant FQDN', async ({ request }) => {
-    expect(await wellknownHost(request)).toBe(FQDN);
-  });
+  // /login/ (no realm param) serves the root realm — the shape a custom
+  // domain serves; /login/?realm=/alpha is the sub-realm shape.
+  for (const path of ['/login/', '/login/?realm=/alpha']) {
+    test(`baseline discovery URL uses the tenant FQDN (${path})`, async ({ request }) => {
+      expect(await wellknownHost(request, path)).toBe(FQDN);
+    });
 
-  test('discovery URL follows the request Host header', async ({ request }) => {
-    expect(await wellknownHost(request, { Host: CUSTOM_HOST })).toBe(CUSTOM_HOST);
-  });
+    test(`discovery URL follows the request Host header (${path})`, async ({ request }) => {
+      expect(await wellknownHost(request, path, { Host: CUSTOM_HOST })).toBe(CUSTOM_HOST);
+    });
+  }
 });
