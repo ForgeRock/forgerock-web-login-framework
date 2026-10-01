@@ -27,6 +27,15 @@ export const load: LayoutServerLoad = async ({ url }) => {
     );
   }
 
+  // Deriving the sibling well-known paths takes the URL's path, so a malformed
+  // FR_AM_URL is a configuration error, not a per-request crash.
+  let amBasePath: string;
+  try {
+    amBasePath = new URL(amUrl).pathname.replace(/\/+$/, '');
+  } catch {
+    throw error(500, 'Login App is not configured: FR_AM_URL must be an absolute URL.');
+  }
+
   // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
   const realmPath = resolveRealmFromUrl(url);
 
@@ -36,7 +45,6 @@ export const load: LayoutServerLoad = async ({ url }) => {
   // browser fetches discovery from whichever host the user came in on (tenant
   // FQDN or custom domain) instead of a hard-coded AM FQDN.
   const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
-  const amBasePath = new URL(amUrl).pathname.replace(/\/+$/, '');
   const wellknown = new URL(
     realmPath === configuredRealm
       ? wellknownUrl

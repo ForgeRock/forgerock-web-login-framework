@@ -68,4 +68,16 @@ describe('(app)/+layout.server.ts wellknown resolution', () => {
       'https://tenant.example.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
     );
   });
+
+  it('rejects a malformed FR_AM_URL with the configuration error', async () => {
+    mockEnv.FR_AM_URL = 'not-a-url';
+    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
+    mockEnv.FR_REALM_PATH = 'root';
+    mockEnv.FR_AM_WELLKNOWN_URL = '/am/oauth2/realms/root/.well-known/openid-configuration';
+
+    await expect(loadFrom('https://tenant.example.com/login/')).rejects.toMatchObject({
+      status: 500,
+      body: { message: expect.stringContaining('FR_AM_URL must be an absolute URL') },
+    });
+  });
 });
