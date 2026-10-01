@@ -136,14 +136,13 @@ export function statusCodeClass(status: number | undefined): string {
  * Route label for a SvelteKit event: the app's server API routes keep their
  * full path, everything else (page routes and unmatched paths) collapses to
  * its SvelteKit route id or `other` so customer- and attacker-controlled
- * URLs cannot enter the label set.
+ * URLs cannot enter the label set. The /api/health/* probes never reach this
+ * (the hook bypasses them), so they are not in the set.
  */
 const API_ROUTES = new Set([
   '/api/authenticate',
   '/api/authorize',
   '/api/end-session',
-  '/api/health/live',
-  '/api/health/ready',
   '/api/locale',
   '/api/revoke',
   '/api/sessions',
