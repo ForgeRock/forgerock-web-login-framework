@@ -15,7 +15,9 @@ const AM_TIMEOUT_MS = 2000;
 
 function discoveryUrl(): string | null {
   if (!env.FR_AM_WELLKNOWN_URL || !env.FR_AM_COOKIE_NAME || !env.FR_REALM_PATH) return null;
-  return env.FR_AM_WELLKNOWN_URL;
+  // A relative well-known URL is resolved against FR_AM_URL because the ready
+  // probe runs inside the pod and fetches AM server-side, not in the browser.
+  return env.FR_AM_URL ? new URL(env.FR_AM_WELLKNOWN_URL, env.FR_AM_URL).toString() : null;
 }
 
 export const GET: RequestHandler = async () => {

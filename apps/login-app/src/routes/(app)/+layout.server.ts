@@ -32,13 +32,19 @@ export const load: LayoutServerLoad = async ({ url }) => {
 
   // Use the configured discovery endpoint for the deployment's default realm.
   // Derive a sibling endpoint only when the request explicitly selects another realm.
+  // A relative FR_AM_WELLKNOWN_URL resolves against the request origin so the
+  // browser fetches discovery from whichever host the user came in on (tenant
+  // FQDN or custom domain) instead of a hard-coded AM FQDN.
   const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
-  const wellknown =
+  const amBasePath = new URL(amUrl).pathname.replace(/\/+$/, '');
+  const wellknown = new URL(
     realmPath === configuredRealm
       ? wellknownUrl
       : realmPath === 'root'
-      ? `${amUrl}/oauth2/realms/root/.well-known/openid-configuration`
-      : `${amUrl}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`;
+      ? `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`
+      : `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
+    url.origin,
+  ).toString();
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {
