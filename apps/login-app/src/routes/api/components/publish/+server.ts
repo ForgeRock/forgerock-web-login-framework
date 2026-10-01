@@ -9,15 +9,15 @@
 
 import { Effect } from 'effect';
 
-import { publishComponentSource } from '$lib/server/component-endpoint';
-import { ComponentApiRuntime } from '$lib/server/runtime';
+import { publishComponentSource } from '$lib/server/custom-components/api';
+import { ComponentApiRuntime } from '$lib/server/custom-components/runtime';
 
 import type { RequestHandler } from './$types';
 
 /**
  * Publishes a component source bundle to the repository.
  *
- * Requires `Authorization: Bearer <COMPONENT_SAVE_TOKEN>` when the environment variable is configured.
+ * Requires an authenticated AM admin session (cookie or `Authorization: Bearer <AM session token>`) and `COMPONENT_API_ENABLED=true` in the deployment environment.
  *
  * @param event - Request event containing the JSON code bundle and optional files.
  * @returns A response with 200 and the published bundle reference; 400 for malformed input or a rejected
@@ -25,9 +25,4 @@ import type { RequestHandler } from './$types';
  * repository failure.
  */
 export const POST: RequestHandler = ({ request }) =>
-  Effect.runPromise(
-    Effect.provide(
-      publishComponentSource(request, process.env.COMPONENT_SAVE_TOKEN),
-      ComponentApiRuntime,
-    ),
-  );
+  Effect.runPromise(Effect.provide(publishComponentSource(request), ComponentApiRuntime));

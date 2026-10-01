@@ -24,7 +24,7 @@
       }
 
       await import('swagger-ui-dist/swagger-ui.css');
-      const { default: SwaggerUIBundle } = await import('swagger-ui-dist/swagger-ui-bundle.js');
+      const { SwaggerUIBundle } = await import('swagger-ui-dist/swagger-ui-bundle.js');
 
       // Swagger UI accesses the DOM, so initialize it only after client-side mounting.
       SwaggerUIBundle({

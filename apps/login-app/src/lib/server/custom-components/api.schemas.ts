@@ -134,13 +134,7 @@ export const PublishResponseSchema = Schema.Struct({
 /** Standard error payload for Component API responses. */
 export const ApiErrorBodySchema = Schema.Struct({ error: Schema.String });
 
-/**
- * Creates a tagged Component API response schema for a status and response body.
- *
- * @param status - HTTP status represented by the response schema.
- * @param bodySchema - Schema for the response body at that status.
- * @returns A schema pairing the literal status with its body.
- */
+/** Creates a tagged Component API response schema pairing a literal status with its body schema. */
 export const statusResponseSchema = <const Status extends number, Body>(
   status: Status,
   bodySchema: Schema.Schema<Body>,
@@ -150,26 +144,9 @@ export const statusResponseSchema = <const Status extends number, Body>(
 export const ComponentErrorResponseSchema = Schema.Union(
   statusResponseSchema(400, ApiErrorBodySchema),
   statusResponseSchema(401, ApiErrorBodySchema),
+  statusResponseSchema(403, ApiErrorBodySchema),
   statusResponseSchema(404, ApiErrorBodySchema),
-  statusResponseSchema(409, ApiErrorBodySchema),
   statusResponseSchema(413, ApiErrorBodySchema),
   statusResponseSchema(415, ApiErrorBodySchema),
   statusResponseSchema(500, ApiErrorBodySchema),
 );
-
-/** Response contract for a component-list route. */
-export const ComponentListResponseSchema = Schema.Union(
-  statusResponseSchema(200, Schema.Array(ComponentRecordSchema)),
-  ComponentErrorResponseSchema,
-);
-
-/** Response contract for component detail, create, and update routes. */
-export const ComponentResponseSchema = Schema.Union(
-  statusResponseSchema(200, ComponentRecordSchema),
-  statusResponseSchema(201, ComponentRecordSchema),
-  statusResponseSchema(204, Schema.Void),
-  ComponentErrorResponseSchema,
-);
-
-/** A typed Component API detail response. */
-export type ComponentResponse = Schema.Schema.Type<typeof ComponentResponseSchema>;

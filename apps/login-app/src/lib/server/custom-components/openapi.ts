@@ -16,7 +16,7 @@ import {
   PublishRequestSchema,
   PublishResponseSchema,
   UpdateComponentRequestSchema,
-} from './component-api';
+} from './fields.utils';
 
 /** OpenAPI JSON Schema for persisted component records. */
 const componentRecordSchema = OpenApiJsonSchema.makeWithDefs(ComponentRecordSchema, { defs: {} });
@@ -95,7 +95,8 @@ export const openApiSpec = {
             items: componentRecordSchema,
           }),
           '400': errorResponse('The fields projection is invalid.'),
-          '401': errorResponse('The request is not authorized.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
           '404': errorResponse('The component type is invalid.'),
         },
       },
@@ -110,7 +111,8 @@ export const openApiSpec = {
         responses: {
           '201': jsonResponse('The created component record.', componentRecordSchema),
           '400': errorResponse('The request is invalid.'),
-          '401': errorResponse('The request is not authorized.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
           '413': errorResponse('The request body exceeds the accepted size limit.'),
           '415': errorResponse('The request content type must be application/json.'),
           '500': errorResponse('The component could not be persisted.'),
@@ -127,6 +129,8 @@ export const openApiSpec = {
         ],
         responses: {
           '200': jsonResponse('The component record.', componentRecordSchema),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
           '404': errorResponse('The component record was not found.'),
         },
       },
@@ -144,7 +148,8 @@ export const openApiSpec = {
         responses: {
           '200': jsonResponse('The updated component record.', componentRecordSchema),
           '400': errorResponse('The request is invalid.'),
-          '401': errorResponse('The request is not authorized.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
           '404': errorResponse('The component record was not found.'),
           '413': errorResponse('The request body exceeds the accepted size limit.'),
           '415': errorResponse('The request content type must be application/json.'),
@@ -161,7 +166,8 @@ export const openApiSpec = {
         responses: {
           '204': { description: 'The component record was deleted.' },
           '400': errorResponse('The request is invalid.'),
-          '401': errorResponse('The request is not authorized.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
           '404': errorResponse('The component record was not found.'),
         },
       },
@@ -177,7 +183,8 @@ export const openApiSpec = {
         responses: {
           '200': jsonResponse('The published component bundle.', publishResponseSchema),
           '400': errorResponse('The request is invalid.'),
-          '401': errorResponse('The request is not authorized.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
           '413': errorResponse('The request body exceeds the accepted size limit.'),
           '415': errorResponse('The request content type must be application/json.'),
           '500': errorResponse('The component source could not be published.'),

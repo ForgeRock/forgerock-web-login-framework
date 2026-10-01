@@ -7,23 +7,16 @@
  *
  * */
 
-import { Data, Effect, Schema } from 'effect';
+import { Data, Effect } from 'effect';
 
-import { type ComponentResponse, ComponentResponseSchema } from './component-api.schemas';
-
-export * from './component-api.schemas';
+export * from './api.schemas';
 
 /** Failure returned when a fields projection contains an empty path segment. */
 export class InvalidFieldsError extends Data.TaggedError('InvalidFieldsError')<{
   readonly message: string;
 }> {}
 
-/**
- * Parses a fields projection into property paths.
- *
- * @param input - A comma-separated projection, or null when no projection was supplied.
- * @returns An Effect yielding immutable dot-notation property paths; an empty result represents the full record.
- */
+/** Parses a comma-separated projection into dot-notation property paths; empty means the full record. */
 export const parseFields = (
   input: string | null,
 ): Effect.Effect<ReadonlyArray<ReadonlyArray<string>>, InvalidFieldsError> => {
@@ -37,10 +30,8 @@ export const parseFields = (
 
 /**
  * Returns a record containing only requested top-level or nested property paths.
- *
- * @param record - The source component record.
- * @param fields - Parsed projection paths; no paths retains the full record.
- * @returns A new, projected record.
+ * Built on a null-prototype object with own-property checks so that paths like
+ * `__proto__.toString.x` cannot pollute `Object.prototype`.
  */
 export const projectRecord = (
   record: Record<string, unknown>,
@@ -48,14 +39,15 @@ export const projectRecord = (
 ): Record<string, unknown> => {
   if (fields.length === 0) return { ...record };
 
-  const projected: Record<string, unknown> = {};
+  const projected: Record<string, unknown> = Object.create(null);
   for (const path of fields) {
     let source: unknown = record;
     let destination: Record<string, unknown> = projected;
 
     for (let index = 0; index < path.length; index += 1) {
       const segment = path[index];
-      if (typeof source !== 'object' || source === null || !(segment in source)) break;
+      if (segment === '__proto__' || segment === 'constructor' || segment === 'prototype') break;
+      if (typeof source !== 'object' || source === null || !Object.hasOwn(source, segment)) break;
       const value = (source as Record<string, unknown>)[segment];
       if (index === path.length - 1) {
         destination[segment] = value;
@@ -70,17 +62,4 @@ export const projectRecord = (
     }
   }
   return projected;
-};
-
-/**
- * Converts a validated Component API response contract into an HTTP response.
- *
- * @param response - The tagged response contract to encode.
- * @returns A platform response with its corresponding status and JSON body.
- */
-export const encodeComponentResponse = (response: ComponentResponse): Response => {
-  const encoded = Schema.encodeSync(ComponentResponseSchema)(response);
-  return encoded.status === 204
-    ? new Response(null, { status: encoded.status })
-    : Response.json(encoded.body, { status: encoded.status });
 };

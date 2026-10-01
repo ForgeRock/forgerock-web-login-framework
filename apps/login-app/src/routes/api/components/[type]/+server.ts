@@ -9,8 +9,8 @@
 
 import { Effect } from 'effect';
 
-import { createComponent, listComponents } from '$lib/server/component-endpoint';
-import { ComponentApiRuntime } from '$lib/server/runtime';
+import { createComponent, listComponents } from '$lib/server/custom-components/api';
+import { ComponentApiRuntime } from '$lib/server/custom-components/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -19,29 +19,19 @@ import type { RequestHandler } from './$types';
  *
  * @param event - Request event containing the `type` path parameter and optional `fields` query parameter.
  * @returns A response with 200 records, 400 for invalid fields, 401 for an invalid Bearer token,
- * 404 for an invalid type, or 409/500 for storage failures.
+ * 404 for an invalid type, or 500 for storage failures.
  */
 export const GET: RequestHandler = ({ request, params }) =>
-  Effect.runPromise(
-    Effect.provide(
-      listComponents(request, params.type, process.env.COMPONENT_SAVE_TOKEN),
-      ComponentApiRuntime,
-    ),
-  );
+  Effect.runPromise(Effect.provide(listComponents(request, params.type), ComponentApiRuntime));
 
 /**
  * Creates a record for a component type.
  *
- * Requires `Authorization: Bearer <COMPONENT_SAVE_TOKEN>` when the environment variable is configured.
+ * Requires an authenticated AM admin session (cookie or `Authorization: Bearer <AM session token>`) and `COMPONENT_API_ENABLED=true` in the deployment environment.
  *
  * @param event - Request event containing the `type` path parameter and JSON component body.
  * @returns A response with 201 for the created record; 400 for malformed input, 401 for an invalid Bearer
- * token, 404 for an invalid type, 413 for an oversized body, 415 for non-JSON, or 409/500 for storage failures.
+ * token, 404 for an invalid type, 413 for an oversized body, 415 for non-JSON, or 500 for storage failures.
  */
 export const POST: RequestHandler = ({ request, params }) =>
-  Effect.runPromise(
-    Effect.provide(
-      createComponent(request, params.type, process.env.COMPONENT_SAVE_TOKEN),
-      ComponentApiRuntime,
-    ),
-  );
+  Effect.runPromise(Effect.provide(createComponent(request, params.type), ComponentApiRuntime));

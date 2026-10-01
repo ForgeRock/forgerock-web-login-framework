@@ -14,11 +14,10 @@ import {
   ComponentIdSchema,
   ComponentTypeSchema,
   CreateComponentRequestSchema,
-  encodeComponentResponse,
   parseFields,
   projectRecord,
   PublishRequestSchema,
-} from './component-api';
+} from './fields.utils';
 
 const componentId = '550e8400-e29b-41d4-a716-446655440000';
 const meta = {
@@ -27,15 +26,6 @@ const meta = {
   publish: true,
   fromComponent: '',
   fromJson: '',
-};
-const record = {
-  id: componentId,
-  src: '<script></script>',
-  meta: {
-    ...meta,
-    createdDate: '2026-01-01T00:00:00Z',
-    modifiedDate: '2026-01-02T00:00:00Z',
-  },
 };
 
 const decodes = <A>(schema: Schema.Schema<A>, input: unknown) =>
@@ -110,23 +100,6 @@ describe('Component API schemas', () => {
           fields,
         ),
       ).toEqual({ callback: { meta: { name: 'Password' } } });
-    }),
-  );
-
-  it.effect('encodes 201 and 404 component responses', () =>
-    Effect.gen(function* () {
-      const created = encodeComponentResponse({ status: 201, body: record });
-      const missing = encodeComponentResponse({
-        status: 404,
-        body: { error: 'Component not found' },
-      });
-
-      expect(created.status).toBe(201);
-      expect(yield* Effect.tryPromise(() => created.json())).toEqual(record);
-      expect(missing.status).toBe(404);
-      expect(yield* Effect.tryPromise(() => missing.json())).toEqual({
-        error: 'Component not found',
-      });
     }),
   );
 });

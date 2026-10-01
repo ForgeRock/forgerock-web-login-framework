@@ -14,13 +14,14 @@ import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { ComponentRepo, ComponentRepoError, FileSync } from './component-repo';
+import { FileSync } from './file-sync';
+import { ComponentRepo, ComponentRepoError } from './repo';
 
 const temporaryDirectories: string[] = [];
 
 const makeTemporaryDirectory = () =>
   Effect.tryPromise({
-    try: () => mkdtemp(join(tmpdir(), 'component-repo-')),
+    try: () => mkdtemp(join(tmpdir(), 'repo-')),
     catch: (cause) => cause,
   }).pipe(
     Effect.tap((directory) =>
@@ -38,7 +39,7 @@ const repoLayer = (repoDir: string) =>
 
 const save = (repoDir: string, relPath: string, content: string) =>
   Effect.provide(
-    Effect.flatMap(ComponentRepo, (repo) => repo.saveComponent(relPath, content)),
+    Effect.flatMap(ComponentRepo, (repo) => repo.saveArtifacts([{ relPath, content }])),
     repoLayer(repoDir),
   );
 

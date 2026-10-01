@@ -14,10 +14,11 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { ComponentRepo, FileSync } from './component-repo';
-import { ComponentStore } from './component-store';
+import { FileSync } from './file-sync';
+import { ComponentStore } from './records';
+import { ComponentRepo } from './repo';
 
-import type { ComponentStoreError } from './component-store';
+import type { ComponentStoreError } from './records';
 
 const temporaryDirectories: string[] = [];
 
@@ -35,7 +36,7 @@ const request = {
 
 const makeTemporaryDirectory = () =>
   Effect.tryPromise({
-    try: () => mkdtemp(join(tmpdir(), 'component-store-')),
+    try: () => mkdtemp(join(tmpdir(), 'records-')),
     catch: (cause) => cause,
   }).pipe(
     Effect.tap((directory) =>
@@ -166,23 +167,6 @@ describe('ComponentStore', () => {
 
       expect(result._tag).toBe('Left');
       if (result._tag === 'Left') expect(result.left.reason).toBe('NotFound');
-    }),
-  );
-
-  it.effect('rejects invalid types and ids defensively', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const invalidType = yield* Effect.either(
-        withStore(repoDir, (store) => store.list('../callbacks')),
-      );
-      const invalidId = yield* Effect.either(
-        withStore(repoDir, (store) => store.get('callbacks', '../record')),
-      );
-
-      expect(invalidType._tag).toBe('Left');
-      expect(invalidId._tag).toBe('Left');
-      if (invalidType._tag === 'Left') expect(invalidType.left.reason).toBe('InvalidType');
-      if (invalidId._tag === 'Left') expect(invalidId.left.reason).toBe('InvalidId');
     }),
   );
 

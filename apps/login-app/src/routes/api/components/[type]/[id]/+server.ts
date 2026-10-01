@@ -9,8 +9,8 @@
 
 import { Effect } from 'effect';
 
-import { deleteComponent, getComponent, updateComponent } from '$lib/server/component-endpoint';
-import { ComponentApiRuntime } from '$lib/server/runtime';
+import { deleteComponent, getComponent, updateComponent } from '$lib/server/custom-components/api';
+import { ComponentApiRuntime } from '$lib/server/custom-components/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -19,47 +19,38 @@ import type { RequestHandler } from './$types';
  *
  * @param event - Request event containing `type` and UUID `id` path parameters.
  * @returns A response with 200 for the record, 400 for an invalid id, 401 for an invalid Bearer token,
- * 404 for an invalid type or missing record, or 409/500 for storage failures.
+ * 404 for an invalid type or missing record, or 500 for storage failures.
  */
 export const GET: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    Effect.provide(
-      getComponent(request, params.type, params.id, process.env.COMPONENT_SAVE_TOKEN),
-      ComponentApiRuntime,
-    ),
+    Effect.provide(getComponent(request, params.type, params.id), ComponentApiRuntime),
   );
 
 /**
  * Updates an existing component record by type and id.
  *
- * Requires `Authorization: Bearer <COMPONENT_SAVE_TOKEN>` when the environment variable is configured.
+ * Requires an authenticated AM admin session (cookie or `Authorization: Bearer <AM session token>`) and `COMPONENT_API_ENABLED=true` in the deployment environment.
  *
  * @param event - Request event containing `type` and UUID `id` path parameters plus a JSON component body.
  * @returns A response with 200 for the updated record; 400 for malformed input or mismatched id, 401 for
  * an invalid Bearer token, 404 for an invalid type or missing record, 413 for an oversized body, 415 for
- * non-JSON, or 409/500 for storage failures.
+ * non-JSON, or 500 for storage failures.
  */
 export const PUT: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    Effect.provide(
-      updateComponent(request, params.type, params.id, process.env.COMPONENT_SAVE_TOKEN),
-      ComponentApiRuntime,
-    ),
+    Effect.provide(updateComponent(request, params.type, params.id), ComponentApiRuntime),
   );
 
 /**
  * Deletes a component record by type and id.
  *
- * Requires `Authorization: Bearer <COMPONENT_SAVE_TOKEN>` when the environment variable is configured.
+ * Requires an authenticated AM admin session (cookie or `Authorization: Bearer <AM session token>`) and `COMPONENT_API_ENABLED=true` in the deployment environment.
  *
  * @param event - Request event containing `type` and UUID `id` path parameters.
  * @returns A response with 204 and no body, 400 for an invalid id, 401 for an invalid Bearer token,
- * 404 for an invalid type or missing record, or 409/500 for storage failures.
+ * 404 for an invalid type or missing record, or 500 for storage failures.
  */
 export const DELETE: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
-    Effect.provide(
-      deleteComponent(request, params.type, params.id, process.env.COMPONENT_SAVE_TOKEN),
-      ComponentApiRuntime,
-    ),
+    Effect.provide(deleteComponent(request, params.type, params.id), ComponentApiRuntime),
   );
