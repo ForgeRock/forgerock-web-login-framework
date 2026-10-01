@@ -58,12 +58,12 @@ describe('routeLabel', () => {
   });
 
   it('collapses unmatched /api paths to api-other so labels stay bounded', () => {
-    expect(
-      routeLabel({ url: new URL('https://t.example/api/<random>'), route: undefined }),
-    ).toBe('api-other');
-    expect(
-      routeLabel({ url: new URL('https://t.example/api/users/123'), route: undefined }),
-    ).toBe('api-other');
+    expect(routeLabel({ url: new URL('https://t.example/api/<random>'), route: undefined })).toBe(
+      'api-other',
+    );
+    expect(routeLabel({ url: new URL('https://t.example/api/users/123'), route: undefined })).toBe(
+      'api-other',
+    );
   });
 });
 
