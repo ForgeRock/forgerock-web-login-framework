@@ -32,6 +32,7 @@
     "@changesets/cli": "^2.29.4",
     "@effect/platform": "^0.96.0",
     "@effect/platform-node": "^0.106.0",
+    "@effect/vitest": "0.21.0",
     "@eslint/compat": "^2.1.0",
     "@eslint/js": "^9.39.2",
     "@forgerock/journey-client": "^2.1.1",
