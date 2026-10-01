@@ -61,4 +61,20 @@ describe('api/health/ready discovery URL resolution', () => {
       expect.anything(),
     );
   });
+
+  it('reports not-ready for a malformed FR_AM_URL instead of throwing', async () => {
+    mockEnv.FR_AM_URL = 'not-a-url';
+    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
+    mockEnv.FR_REALM_PATH = 'root';
+    mockEnv.FR_AM_WELLKNOWN_URL = '/am/oauth2/realms/root/.well-known/openid-configuration';
+
+    const fetchMock = vi.fn();
+    vi.stubGlobal('fetch', fetchMock);
+
+    const response = await GET();
+
+    expect(response.status).toBe(503);
+    expect(JSON.parse(await response.text())).toEqual({ status: 'not-ready' });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
 });
