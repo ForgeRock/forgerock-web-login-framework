@@ -117,8 +117,9 @@ tenant, so `pnpm ci:e2e` never touches a live environment.
 ```shell
 cd e2e
 
-# Health + custom-domain smoke: the SSR page's embedded discovery URL must
-# follow the request Host header (what a custom domain changes).
+# Custom-domain smoke: the Login2 SSR page's embedded discovery URL must
+# follow the request Host header (what a custom domain changes). The tenant
+# must have the aic-login2 feature enabled.
 LOGIN2_SMOKE_FQDN=openam-aic-login2-51.forgeblocks.com \
   npx playwright test custom-domain-smoke --config=playwright.live.config.ts
 
