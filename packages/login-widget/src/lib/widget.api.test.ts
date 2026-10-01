@@ -7,7 +7,7 @@
  *
  **/
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
 const oidcMock = vi.fn();
@@ -34,6 +34,9 @@ vi.mock(
     };
   },
 );
+
+// Ensure Vitest processes mocks before module evaluation
+vi.hoisted(() => undefined);
 
 async function importSubject() {
   const { widgetApiFactory } = await import('./widget.api');
@@ -73,7 +76,6 @@ function readStore<T>(store: { subscribe: (run: (value: T) => void) => () => voi
 
 describe('widgetApiFactory', () => {
   beforeEach(() => {
-    vi.resetModules();
     journeyTerminateMock.mockClear();
     oidcMock.mockReset();
     // Default: a never-resolving promise so eager oidc() init calls don't throw.
@@ -540,6 +542,11 @@ describe('widgetApiFactory', () => {
 
     afterEach(() => {
       errorSpy.mockRestore();
+    });
+
+    afterAll(() => {
+      // Re-establish the file-level mock after this entire describe block completes.
+      // The inner beforeEach unmocks for these 2 tests; we must restore for subsequent tests.
       vi.doMock(
         '@forgerock/journey-client',
         async (importOriginal: () => Promise<Record<string, unknown>>) => {
