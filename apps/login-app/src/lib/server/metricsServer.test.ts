@@ -7,7 +7,7 @@
  *
  **/
 
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it } from 'vitest';
 
 import { createMetricsServer, getMetricsPort } from './metricsServer';
 
@@ -43,5 +43,29 @@ describe('metrics server', () => {
     const response = await get('/');
 
     expect(response.status).toBe(404);
+  });
+});
+
+describe('getMetricsPort', () => {
+  const original = process.env.METRICS_PORT;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.METRICS_PORT;
+    else process.env.METRICS_PORT = original;
+  });
+
+  it('parses a valid port', () => {
+    process.env.METRICS_PORT = '9123';
+    expect(getMetricsPort()).toBe(9123);
+  });
+
+  it('falls back to the default for a malformed value instead of NaN', () => {
+    process.env.METRICS_PORT = 'not-a-port';
+    expect(getMetricsPort()).toBe(9090);
+  });
+
+  it('falls back to the default for an out-of-range value', () => {
+    process.env.METRICS_PORT = '99999';
+    expect(getMetricsPort()).toBe(9090);
   });
 });

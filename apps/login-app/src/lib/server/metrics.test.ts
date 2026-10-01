@@ -11,6 +11,7 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 
 import {
   amEndpointLabel,
+  methodLabel,
   recordAmRequest,
   recordAppRequest,
   recordRedirectValidation,
@@ -54,6 +55,27 @@ describe('routeLabel', () => {
     expect(routeLabel({ url: new URL('https://t.example/favicon.ico'), route: undefined })).toBe(
       'other',
     );
+  });
+
+  it('collapses unmatched /api paths to api-other so labels stay bounded', () => {
+    expect(
+      routeLabel({ url: new URL('https://t.example/api/<random>'), route: undefined }),
+    ).toBe('api-other');
+    expect(
+      routeLabel({ url: new URL('https://t.example/api/users/123'), route: undefined }),
+    ).toBe('api-other');
+  });
+});
+
+describe('methodLabel', () => {
+  it('passes the standard methods through', () => {
+    expect(methodLabel('GET')).toBe('GET');
+    expect(methodLabel('POST')).toBe('POST');
+  });
+
+  it('collapses arbitrary custom methods to other', () => {
+    expect(methodLabel('TRACK')).toBe('other');
+    expect(methodLabel('<random>')).toBe('other');
   });
 });
 

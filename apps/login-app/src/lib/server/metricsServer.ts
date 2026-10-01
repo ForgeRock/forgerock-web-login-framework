@@ -44,7 +44,13 @@ export function createMetricsServer(): http.Server {
   return server;
 }
 
-/** Metrics listen port; read at call time so tests can set METRICS_PORT. */
+/**
+ * Metrics listen port; read at call time so tests can set METRICS_PORT. A
+ * malformed value falls back to the default instead of handing NaN (which
+ * makes listen throw synchronously) to the caller.
+ */
 export function getMetricsPort(): number {
-  return parseInt(process.env.METRICS_PORT ?? '9090', 10);
+  const parsed = parseInt(process.env.METRICS_PORT ?? '9090', 10);
+  if (!Number.isInteger(parsed) || parsed < 1 || parsed > 65535) return 9090;
+  return parsed;
 }

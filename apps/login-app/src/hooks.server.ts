@@ -9,7 +9,7 @@
 
 import { env } from '$env/dynamic/private';
 import { buildLoginCspHeaders, isHtmlResponse } from '$server/csp.utilities';
-import { appInflightRequests, recordAppRequest, routeLabel } from '$server/metrics';
+import { appInflightRequests, methodLabel, recordAppRequest, routeLabel } from '$server/metrics';
 
 import type { Handle } from '@sveltejs/kit';
 
@@ -21,7 +21,7 @@ export const handle: Handle = async ({ event, resolve }) => {
   }
 
   const route = routeLabel(event);
-  const method = event.request.method;
+  const method = methodLabel(event.request.method);
   const start = performance.now();
   appInflightRequests.inc();
   try {

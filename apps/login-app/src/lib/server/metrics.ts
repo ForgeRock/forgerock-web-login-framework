@@ -133,12 +133,28 @@ export function statusCodeClass(status: number | undefined): string {
 }
 
 /**
- * Route label for a SvelteKit event: server API routes keep their full path,
- * page routes collapse to their SvelteKit route id so customer page URLs
- * (goto params etc.) cannot enter the label set.
+ * Route label for a SvelteKit event: the app's server API routes keep their
+ * full path, everything else (page routes and unmatched paths) collapses to
+ * its SvelteKit route id or `other` so customer- and attacker-controlled
+ * URLs cannot enter the label set.
  */
+const API_ROUTES = new Set([
+  '/api/authenticate',
+  '/api/authorize',
+  '/api/end-session',
+  '/api/health/live',
+  '/api/health/ready',
+  '/api/locale',
+  '/api/revoke',
+  '/api/sessions',
+  '/api/tokens',
+  '/api/userinfo',
+]);
+
 export function routeLabel(event: { url: URL; route?: { id: string | null } }): string {
-  if (event.url.pathname.startsWith('/api/')) return event.url.pathname;
+  if (event.url.pathname.startsWith('/api/')) {
+    return API_ROUTES.has(event.url.pathname) ? event.url.pathname : 'api-other';
+  }
   return event.route?.id ?? 'other';
 }
 
@@ -167,6 +183,17 @@ export function amEndpointLabel(pathname: string): string {
   const parent = segments.at(-2);
   if (parent && AM_ENDPOINTS.has(parent)) return parent;
   return 'other';
+}
+
+/**
+ * HTTP method label: the standard methods pass through; anything else (an
+ * arbitrary custom method token is attacker-controlled) collapses to `other`
+ * so the `method` label cannot grow without bound.
+ */
+const HTTP_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS']);
+
+export function methodLabel(method: string): string {
+  return HTTP_METHODS.has(method) ? method : 'other';
 }
 
 /** Record one completed inbound request. */

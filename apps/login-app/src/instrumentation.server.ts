@@ -23,11 +23,11 @@ import { createMetricsServer, getMetricsPort } from '$server/metricsServer';
 if (process.env.METRICS_PORT) {
   const metricsServer = createMetricsServer();
 
-  metricsServer.listen(getMetricsPort(), () => {
-    console.error(`Login app metrics server listening on port ${getMetricsPort()} (path /metrics)`);
-  });
-
   metricsServer.on('error', (error) => {
     console.error('Login app metrics server failed to start:', error);
+  });
+
+  metricsServer.listen(getMetricsPort(), () => {
+    console.info(`Login app metrics server listening on port ${getMetricsPort()} (path /metrics)`);
   });
 }
