@@ -4,7 +4,6 @@ import nodePath from 'node:path';
 
 import { assertValidProject, writeVersion } from '../config/version.js';
 import { copyWithExclusions, expandTilde } from '../services/file-system.js';
-import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';
 
 export const updateCommand = Command.make(
@@ -53,18 +52,15 @@ export const updateCommand = Command.make(
         }),
       );
 
-      // ── 3. Regenerate custom-registry.ts ──────────────────────────────────
-      yield* Console.log('Regenerating custom component registry...');
-      yield* runRegistryScript(cwd);
-
-      // ── 4. Update .generator-version ──────────────────────────────────────
+      // ── 3. Update .generator-version ──────────────────────────────────────
+      // custom-registry.ts is NOT regenerated here — the framework's Vite
+      // plugin regenerates it on the next build or dev-server start.
       yield* writeVersion(cwd, {
         version: resolvedVersion,
         generatedAt: new Date().toISOString(),
       });
       yield* Console.log(
         `\nDone. Updated from ${currentVersion.version} to ${resolvedVersion}.\n` +
-          'Custom component registry regenerated.\n' +
           'Run "pnpm install" if package dependencies changed.\n',
       );
     }),

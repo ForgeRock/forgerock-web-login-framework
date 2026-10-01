@@ -48,7 +48,10 @@ export default {
           $components: resolve(__dirname, '../core/components'),
           $journey: resolve(__dirname, '../core/journey'),
           $locales: resolve(__dirname, '../core/locales'),
-          '$login-framework': resolve(__dirname, '../experimental/custom/login-framework.ts'),
+          '$login-framework-exports': resolve(
+            __dirname,
+            '../experimental/custom/login-framework.ts',
+          ),
           $lib: resolve(__dirname, '../apps/login-app/src/lib'),
         },
       },

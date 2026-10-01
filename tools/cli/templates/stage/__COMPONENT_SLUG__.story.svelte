@@ -16,7 +16,7 @@
     type StageFormObject,
     type StageJourneyObject,
     type StyleObject,
-  } from '$login-framework';
+  } from '$login-framework-exports';
   import __COMPONENT_NAME_PASCAL__ from './__COMPONENT_SLUG__.svelte';
 
   export let form: StageFormObject;

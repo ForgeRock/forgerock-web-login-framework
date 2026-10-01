@@ -48,7 +48,7 @@ pnpm --filter @forgerock/login-app run preview
 
 ## Environment Variables
 
-The app requires environment variables to connect to a ForgeRock AM instance. Set these in a `.env` file at the repository root or export them in your shell.
+The app requires environment variables to connect to a ForgeRock AM instance. Set these in a `.env` file at the repository root or in `apps/login-app/.env` (SvelteKit loads the app's own `.env`; Vite's `envDir` points at the repository root), or export them in your shell.
 
 | Variable              | Required | Description                                                                                                                                                                                                                        |
 | --------------------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -57,6 +57,8 @@ The app requires environment variables to connect to a ForgeRock AM instance. Se
 | `FR_REALM_PATH`       | Yes      | AM realm path                                                                                                                                                                                                                      |
 | `FR_AM_WELLKNOWN_URL` | Yes      | ForgeRock AM Wellknown URL used to validate startup configuration (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration`)                                                |
 | `FR_AM_JOURNEY_LOGIN` | No       | Default login journey name. Used for IDM theme resolution when no `?journey=` query param is present, and used as the fallback journey for restarting failed suspended flows. Defaults to the AM realm's default journey if unset. |
+
+Custom header/footer components are selected at build time via the `Enabled: true` `@component` property in the component file (see [custom components](../../experimental/custom/README.md)), not via environment variables.
 
 ## Type Checking
 

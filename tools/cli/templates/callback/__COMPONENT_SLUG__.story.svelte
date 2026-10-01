@@ -12,7 +12,7 @@
     type SelfSubmitFunction,
     type StepMetadata,
     type StyleObject,
-  } from '$login-framework';
+  } from '$login-framework-exports';
   import __COMPONENT_NAME_PASCAL__ from './__COMPONENT_SLUG__.svelte';
 
   export let callback: BaseCallback;
