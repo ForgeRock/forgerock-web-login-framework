@@ -11,7 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@forgerock/login-widget": "workspace:*"
+    "@forgerock/login-widget": "workspace:*",
+    "prom-client": "^15.1.3"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^7.0.0",
