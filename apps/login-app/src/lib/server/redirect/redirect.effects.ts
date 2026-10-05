@@ -11,6 +11,7 @@ import { z } from 'zod';
 
 import { AM_DOMAIN_PATH } from '$core/constants';
 import { env } from '$env/dynamic/private';
+import { log } from '$server/logger.effects';
 import {
   amFetchRequest,
   getHttpCookie,
@@ -18,7 +19,11 @@ import {
   removeHttpCookie,
   setHttpCookie,
 } from '$server/sessions';
-import { parseRedirectForm, resolveRealmFromUrl } from './redirect.utilities';
+import {
+  describeRedirectTarget,
+  parseRedirectForm,
+  resolveRealmFromUrl,
+} from './redirect.utilities';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -106,10 +111,14 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
 
   try {
     const parsed = cookieSchema.safeParse(JSON.parse(cookieValue));
-    return parsed.success ? parsed.data : {};
+    if (parsed.success) {
+      return parsed.data;
+    }
   } catch {
-    return {};
+    // Unparseable JSON takes the same warning path as a schema mismatch.
   }
+  log.warn('[redirect] ignoring malformed redirect cookie');
+  return {};
 }
 
 /**
@@ -140,6 +149,10 @@ export async function validateUrl(
     parsed.data.successUrl === 'undefined' ||
     parsed.data.successUrl === 'null'
   ) {
+    log.warn('[redirect] goto validation returned no usable successUrl', {
+      goto: describeRedirectTarget(gotoUrl),
+      realm,
+    });
     return null;
   }
   return parsed.data.successUrl;

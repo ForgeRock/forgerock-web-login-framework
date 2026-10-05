@@ -14,6 +14,7 @@ vi.mock('$env/dynamic/private', () => ({
 }));
 
 import {
+  describeRedirectTarget,
   isDefaultPath,
   parseRedirectForm,
   resolveAgainstOrigin,
@@ -220,5 +221,27 @@ describe('resolveRedirect', () => {
   it('returns an enduser fallback redirect when nothing matches', () => {
     const url = resolveRedirect(makeContext());
     expect(url).toBe('https://openam.example.com/enduser/?realm=/#/');
+  });
+});
+
+describe('describeRedirectTarget', () => {
+  it('keeps the origin and path and drops the query and fragment', () => {
+    expect(
+      describeRedirectTarget(
+        'https://app.example.com/am/oauth2/authorize?id_token_hint=jwt&login_hint=a@b.c#frag',
+      ),
+    ).toBe('https://app.example.com/am/oauth2/authorize');
+  });
+
+  it('keeps only the path of a relative URL', () => {
+    expect(describeRedirectTarget('/failure-redirect?reason=x')).toBe('/failure-redirect');
+  });
+
+  it('keeps only the scheme of a URL without an origin, so a payload is never logged', () => {
+    expect(describeRedirectTarget('javascript:alert(document.cookie)')).toBe('javascript:');
+  });
+
+  it('returns a placeholder for an unparseable URL', () => {
+    expect(describeRedirectTarget('http://')).toBe('[unparseable]');
   });
 });

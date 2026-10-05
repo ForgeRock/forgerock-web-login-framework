@@ -7,6 +7,7 @@
  *
  * */
 
+import { Cause, Effect, Exit, Option } from 'effect';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/environment', () => ({ building: false }));
@@ -37,6 +38,7 @@ vi.mock('$env/dynamic/private', () => ({
 import { AM_COOKIE_NAME } from '$core/constants';
 import { createComponentAuth, extractSessionToken } from './auth';
 
+import type { AuthUser } from './component.types';
 import type { AmSessionDependencies, ComponentAuthError } from './component.types';
 
 const adminDependencies: AmSessionDependencies = {
@@ -57,15 +59,26 @@ const failingDependencies: AmSessionDependencies = {
 const authenticateWith = (dependencies: AmSessionDependencies, request: Request) =>
   createComponentAuth(dependencies)(request);
 
-/** Unwraps a failed authentication result, failing the test when authentication succeeded. */
+/** Unwraps a failed authentication effect, failing the test when authentication succeeded. */
 const expectAuthError = async (
-  result: Promise<{ success: boolean; error?: ComponentAuthError }>,
+  effect: Effect.Effect<AuthUser, ComponentAuthError>,
 ): Promise<ComponentAuthError> => {
-  const outcome = await result;
-  if (outcome.success) {
+  const exit = await Effect.runPromiseExit(effect);
+  if (Exit.isSuccess(exit)) {
     throw new Error('Expected authentication to fail');
   }
-  return outcome.error as ComponentAuthError;
+  return Option.getOrThrow(Cause.failureOption(exit.cause)) as ComponentAuthError;
+};
+
+/** Unwraps a successful authentication effect, failing the test when it failed. */
+const expectAuthUser = async (
+  effect: Effect.Effect<AuthUser, ComponentAuthError>,
+): Promise<AuthUser> => {
+  const exit = await Effect.runPromiseExit(effect);
+  if (Exit.isFailure(exit)) {
+    throw new Error(`Expected authentication to succeed: ${Cause.failureOption(exit.cause)}`);
+  }
+  return exit.value;
 };
 
 describe('extractSessionToken', () => {
@@ -112,11 +125,8 @@ describe('createComponentAuth', () => {
       method: 'POST',
       headers: { authorization: 'Bearer am-token' },
     });
-    const outcome = await authenticateWith(adminDependencies, request);
-    expect(outcome.success).toBe(true);
-    if (outcome.success) {
-      expect(outcome.value.uid).toBe('admin-user');
-    }
+    const user = await expectAuthUser(authenticateWith(adminDependencies, request));
+    expect(user.uid).toBe('admin-user');
   });
 
   it('authenticates an AM admin session from the session cookie', async () => {
@@ -124,11 +134,8 @@ describe('createComponentAuth', () => {
       method: 'GET',
       headers: { cookie: `${AM_COOKIE_NAME}=cookie-token` },
     });
-    const outcome = await authenticateWith(adminDependencies, request);
-    expect(outcome.success).toBe(true);
-    if (outcome.success) {
-      expect(outcome.value.uid).toBe('admin-user');
-    }
+    const user = await expectAuthUser(authenticateWith(adminDependencies, request));
+    expect(user.uid).toBe('admin-user');
   });
 
   it('fails unauthenticated when no credential is present', async () => {
@@ -147,6 +154,7 @@ describe('createComponentAuth', () => {
     };
     const error = await expectAuthError(authenticateWith(rejectingDependencies, request));
     expect(error.reason).toBe('Unauthenticated');
+    expect(error.uid).toBeUndefined();
   });
 
   it('fails forbidden for a valid session without an admin role', async () => {
@@ -155,6 +163,7 @@ describe('createComponentAuth', () => {
     });
     const error = await expectAuthError(authenticateWith(enduserDependencies, request));
     expect(error.reason).toBe('Forbidden');
+    expect(error.uid).toBe('regular-user');
   });
 
   it('fails unavailable when AM cannot be reached', async () => {
@@ -178,6 +187,7 @@ describe('createComponentAuth', () => {
       });
       const error = await expectAuthError(authenticateWith(adminDependencies, request));
       expect(error.reason).toBe('Forbidden');
+      expect(error.uid).toBe('admin-user');
     } finally {
       if (previousOrigin === undefined) {
         delete process.env.ORIGIN;
@@ -220,11 +230,8 @@ describe('createComponentAuth', () => {
           origin: 'http://localhost:3000',
         },
       });
-      const outcome = await authenticateWith(adminDependencies, request);
-      expect(outcome.success).toBe(true);
-      if (outcome.success) {
-        expect(outcome.value.uid).toBe('admin-user');
-      }
+      const user = await expectAuthUser(authenticateWith(adminDependencies, request));
+      expect(user.uid).toBe('admin-user');
     } finally {
       hoistedEnv.values.ORIGIN = previousOrigin;
     }

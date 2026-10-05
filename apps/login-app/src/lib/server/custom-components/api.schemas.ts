@@ -7,7 +7,7 @@
  *
  * */
 
-import { z } from 'zod';
+import { Schema } from 'effect';
 
 /** Maximum accepted serialized component bundle size, in characters. */
 export const MAX_COMPONENT_BUNDLE_SIZE = 1024 * 1024;
@@ -16,120 +16,137 @@ export const MAX_COMPONENT_BUNDLE_SIZE = 1024 * 1024;
 export const COMPONENT_BUNDLE_SIZE_MESSAGE = 'Component bundle exceeds the 1 MiB limit';
 
 /** Component categories supported by the Component API. */
-export const ComponentTypeSchema = z.enum([
+export const ComponentTypeSchema = Schema.Literal(
   'callbacks',
   'stages',
   'containers',
   'headers',
   'footers',
-]);
+);
 
 /** A component category supported by the Component API. */
-export type ComponentType = z.infer<typeof ComponentTypeSchema>;
+export type ComponentType = typeof ComponentTypeSchema.Type;
 
 /** Client-editable component metadata. Dates are deliberately excluded because the server owns them. */
-export const ComponentMetaSchema = z.object({
-  name: z.string(),
-  displayName: z.string(),
-  publish: z.boolean(),
-  fromComponent: z.string(),
-  fromJson: z.string(),
+export const ComponentMetaSchema = Schema.Struct({
+  name: Schema.String,
+  displayName: Schema.String,
+  publish: Schema.Boolean,
+  fromComponent: Schema.String,
+  fromJson: Schema.String,
 });
 
 const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 /** Persisted component metadata, including server-owned ISO creation and modification dates. */
-export const ComponentMetaWithDatesSchema = ComponentMetaSchema.extend({
-  createdDate: z.string().refine((date) => isoDatePattern.test(date), 'Date must be ISO-8601'),
-  modifiedDate: z.string().refine((date) => isoDatePattern.test(date), 'Date must be ISO-8601'),
+export const ComponentMetaWithDatesSchema = Schema.Struct({
+  ...ComponentMetaSchema.fields,
+  createdDate: Schema.String.pipe(
+    Schema.filter((date) => isoDatePattern.test(date), { message: () => 'Date must be ISO-8601' }),
+  ),
+  modifiedDate: Schema.String.pipe(
+    Schema.filter((date) => isoDatePattern.test(date), { message: () => 'Date must be ISO-8601' }),
+  ),
 });
 
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 /** A non-empty UUID assigned by the server to identify a component. */
-export const ComponentIdSchema = z
-  .string()
-  .refine((id) => id.length > 0 && uuidPattern.test(id), 'Invalid component id');
+export const ComponentIdSchema = Schema.String.pipe(
+  Schema.filter((id) => id.length > 0 && uuidPattern.test(id), {
+    message: () => 'Invalid component id',
+  }),
+);
 
 /** A complete persisted component record. Component ids and dates are server-owned. */
-export const ComponentRecordSchema = z.object({
+export const ComponentRecordSchema = Schema.Struct({
   id: ComponentIdSchema,
-  src: z.string(),
-  json: z.unknown().optional(),
+  src: Schema.String,
+  json: Schema.optional(Schema.Unknown),
   meta: ComponentMetaWithDatesSchema,
 });
 
 /** A complete persisted component record. */
-export type ComponentRecord = z.infer<typeof ComponentRecordSchema>;
+export type ComponentRecord = typeof ComponentRecordSchema.Type;
 
 const fieldsPattern = /^[^.\s,]+(?:\.[^.\s,]+)*(?:,[^.\s,]+(?:\.[^.\s,]+)*)*$/;
 
 /** A comma-separated, dot-notation projection accepted by component list and detail routes. */
-export const FieldsSchema = z
-  .string()
-  .refine((fields) => fields === '' || fieldsPattern.test(fields), 'Invalid fields projection');
+export const FieldsSchema = Schema.String.pipe(
+  Schema.filter((fields) => fields === '' || fieldsPattern.test(fields), {
+    message: () => 'Invalid fields projection',
+  }),
+);
 
 const createComponentRequestFields = {
-  src: z
-    .string()
-    .refine((src) => src.length <= MAX_COMPONENT_BUNDLE_SIZE, COMPONENT_BUNDLE_SIZE_MESSAGE),
-  json: z.unknown().optional(),
+  src: Schema.String.pipe(
+    Schema.filter((src) => src.length <= MAX_COMPONENT_BUNDLE_SIZE, {
+      message: () => COMPONENT_BUNDLE_SIZE_MESSAGE,
+    }),
+  ),
+  json: Schema.optional(Schema.Unknown),
+  meta: ComponentMetaSchema,
 };
 
-/** Client metadata that may be sent on create/update; server-owned date keys are rejected. */
-export const ClientComponentMetaSchema = ComponentMetaSchema.extend({
-  createdDate: z.never().optional(),
-  modifiedDate: z.unknown().optional(),
+const ClientComponentMetaSchema = Schema.Struct({
+  ...ComponentMetaSchema.fields,
+  createdDate: Schema.optional(Schema.Never),
+  modifiedDate: Schema.optional(Schema.Never),
 });
 
 /** Request body for component creation. The server, not clients, assigns its id and dates. */
-export const CreateComponentRequestSchema = z.object({
+export const CreateComponentRequestSchema = Schema.Struct({
   ...createComponentRequestFields,
+  id: Schema.optional(Schema.Never),
   meta: ClientComponentMetaSchema,
-  id: z.never().optional(),
 });
 
 /** Request body for component creation. */
-export type CreateComponentRequest = z.infer<typeof CreateComponentRequestSchema>;
+export type CreateComponentRequest = typeof CreateComponentRequestSchema.Type;
 
 /** Request body for component updates. An optional id is later checked against the route id. */
-export const UpdateComponentRequestSchema = z.object({
+export const UpdateComponentRequestSchema = Schema.Struct({
   ...createComponentRequestFields,
+  id: Schema.optional(ComponentIdSchema),
   meta: ClientComponentMetaSchema,
-  id: ComponentIdSchema.optional(),
 });
 
 /** Request body for component updates. */
-export type UpdateComponentRequest = z.infer<typeof UpdateComponentRequestSchema>;
+export type UpdateComponentRequest = typeof UpdateComponentRequestSchema.Type;
 
 /** An individual path and content entry in a component bundle. */
-export const PublishFileSchema = z.object({ path: z.string(), content: z.string() });
+export const PublishFileSchema = Schema.Struct({ path: Schema.String, content: Schema.String });
 
 /** Schema for a serialized component bundle payload. */
-export const BundleSchema = z.object({ files: z.array(PublishFileSchema) });
+export const BundleSchema = Schema.Struct({
+  files: Schema.Array(PublishFileSchema),
+});
 
 /** A decoded component bundle payload. */
-export type Bundle = z.infer<typeof BundleSchema>;
+export type Bundle = typeof BundleSchema.Type;
 
 /** Request body for publishing source code and optional additional component files. */
-export const PublishRequestSchema = z.object({
-  code: z.string(),
-  files: z.array(PublishFileSchema).optional(),
+export const PublishRequestSchema = Schema.Struct({
+  code: Schema.String,
+  files: Schema.optional(Schema.Array(PublishFileSchema)),
 });
 
 /** Response returned after a component source bundle has been published. */
-export const PublishResponseSchema = z.object({ id: ComponentIdSchema, url: z.string() });
+export const PublishResponseSchema = Schema.Struct({
+  id: ComponentIdSchema,
+  url: Schema.String,
+});
 
 /** Standard error payload for Component API responses. */
-export const ApiErrorBodySchema = z.object({ error: z.string() });
+export const ApiErrorBodySchema = Schema.Struct({ error: Schema.String });
 
 /** Error responses shared by Component API routes. */
-export const ComponentErrorResponseSchema = z.discriminatedUnion('status', [
-  z.object({ status: z.literal(400), body: ApiErrorBodySchema }),
-  z.object({ status: z.literal(401), body: ApiErrorBodySchema }),
-  z.object({ status: z.literal(403), body: ApiErrorBodySchema }),
-  z.object({ status: z.literal(404), body: ApiErrorBodySchema }),
-  z.object({ status: z.literal(413), body: ApiErrorBodySchema }),
-  z.object({ status: z.literal(415), body: ApiErrorBodySchema }),
-  z.object({ status: z.literal(500), body: ApiErrorBodySchema }),
-]);
+export const ComponentErrorResponseSchema = Schema.Union(
+  Schema.Struct({ status: Schema.Literal(400), body: ApiErrorBodySchema }),
+  Schema.Struct({ status: Schema.Literal(401), body: ApiErrorBodySchema }),
+  Schema.Struct({ status: Schema.Literal(403), body: ApiErrorBodySchema }),
+  Schema.Struct({ status: Schema.Literal(404), body: ApiErrorBodySchema }),
+  Schema.Struct({ status: Schema.Literal(413), body: ApiErrorBodySchema }),
+  Schema.Struct({ status: Schema.Literal(415), body: ApiErrorBodySchema }),
+  Schema.Struct({ status: Schema.Literal(500), body: ApiErrorBodySchema }),
+);

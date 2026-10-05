@@ -7,165 +7,161 @@
  *
  * */
 
+import { Effect, Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { readdir, readFile, rm } from 'node:fs/promises';
 
-import { type ComponentRecord, ComponentRecordSchema, type ComponentType } from './fields.utils';
+import { ComponentStoreError } from './component.types';
+import { ComponentRecordSchema, type ComponentType } from './fields.utils';
 import { isSafeRelativePath, joinPath } from './repo';
 
 import type {
+  ComponentLogger,
   ComponentRepoConfig,
   ComponentRepoFn,
   ComponentStoreApi,
-  ComponentStoreError,
-  ComponentStoreFailureReason,
-  ComponentStoreResult,
   FileSyncService,
 } from './component.types';
-
-/** Builds a failure result for a component storage operation. */
-export const storeError = (
-  reason: ComponentStoreFailureReason,
-  message: string,
-  cause?: unknown,
-): ComponentStoreResult<never> => ({ success: false, error: { reason, message, cause } });
-
-/** Wraps a storage operation so thrown infrastructure errors become Storage failures. */
-const asStorageResult = async <Value>(
-  message: string,
-  operation: () => Promise<Value>,
-): Promise<ComponentStoreResult<Value>> => {
-  try {
-    return { success: true, value: await operation() };
-  } catch (cause) {
-    return storeError('Storage', message, cause);
-  }
-};
 
 /** Identifies filesystem failures that represent missing records. */
 const isNotFound = (cause: unknown): boolean =>
   typeof cause === 'object' && cause !== null && 'code' in cause && cause.code === 'ENOENT';
 
-/** Parses and validates serialized component-record JSON as a result. */
-const decodeRecord = (content: string, message: string): ComponentStoreResult<ComponentRecord> => {
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(content);
-  } catch (cause) {
-    return storeError('Storage', message, cause);
-  }
-  const result = ComponentRecordSchema.safeParse(parsed);
-  if (!result.success) {
-    return storeError('Storage', message, result.error);
-  }
-  return { success: true, value: result.data };
-};
-
-/** Builds a safe repository path for a component record, or a Storage failure. */
-const recordPath = (
-  trackedRoot: string,
-  type: ComponentType,
-  id: string,
-): { directory: string; finalPath: string; relPath: string } | ComponentStoreError => {
+/** Builds a safe repository path for a component record. */
+const recordPath = (trackedRoot: string, type: ComponentType, id: string): string => {
   const relPath = `${type}/${id}.json`;
   if (!isSafeRelativePath(relPath)) {
-    return { reason: 'Storage', message: `Unsafe component storage path: ${relPath}` };
+    throw new ComponentStoreError({
+      reason: 'Storage',
+      message: `Unsafe component storage path: ${relPath}`,
+    });
   }
-  return {
-    directory: joinPath(trackedRoot, type),
-    finalPath: joinPath(trackedRoot, relPath),
-    relPath,
-  };
+  return joinPath(trackedRoot, relPath);
 };
 
-/** Reads and decodes one record file, mapping missing files to NotFound. */
-const readRecord = async (
-  finalPath: string,
-  notFoundMessage: string,
-  storageMessage: string,
-): Promise<ComponentStoreResult<ComponentRecord>> => {
-  let content: string;
-  try {
-    content = await readFile(finalPath, 'utf8');
-  } catch (cause) {
-    return isNotFound(cause)
-      ? storeError('NotFound', notFoundMessage, cause)
-      : storeError('Storage', storageMessage, cause);
-  }
-  return decodeRecord(content, storageMessage);
-};
+/** Parses and validates serialized component-record JSON. */
+const decodeRecord = (
+  content: string,
+  message: string,
+): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> =>
+  Effect.mapError(
+    Effect.try(() => Schema.decodeUnknownSync(ComponentRecordSchema)(JSON.parse(content))),
+    (cause) => new ComponentStoreError({ reason: 'Storage', message, cause }),
+  );
 
 /**
  * Component storage operations backed by the configured component repository. List
- * deliberately skips malformed JSON artifacts without logging.
+ * skips malformed JSON artifacts and logs a warning for each one.
  *
  * @param config - Repository root and tracked subtree configuration.
- * @param repo - The `saveArtifacts` function from {@link createComponentRepo}.
+ * @param repo - The artifact-saving function from {@link createComponentRepo}.
  * @param fileSync - Durability synchronization service.
- * @returns A {@link ComponentStoreApi} whose operations return failures as values.
+ * @param log - Receives a warning for each record that list skips.
+ * @returns A {@link ComponentStoreApi} whose operations fail on the Effect error channel.
  */
 export const createComponentStore = (
   config: ComponentRepoConfig,
   repo: ComponentRepoFn,
   fileSync: FileSyncService,
+  log: ComponentLogger,
 ): ComponentStoreApi => {
   const trackedRoot = joinPath(config.repoDir, config.trackedSubpath);
 
-  const writeRecord = async (
+  const writeRecord = (
     type: ComponentType,
     id: string,
-    record: ComponentRecord,
-  ): Promise<ComponentStoreResult<ComponentRecord>> => {
-    const path = recordPath(trackedRoot, type, id);
-    if ('reason' in path) {
-      return { success: false, error: path };
-    }
-    const saved = await asStorageResult('Unable to save component record', () =>
-      repo([{ relPath: path.relPath, content: JSON.stringify(record) }]),
-    );
-    return saved.success ? { success: true, value: record } : saved;
-  };
+    record: typeof ComponentRecordSchema.Type,
+  ): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> =>
+    Effect.mapError(
+      repo([{ relPath: `${type}/${id}.json`, content: JSON.stringify(record) }]),
+      (cause) =>
+        new ComponentStoreError({
+          reason: 'Storage',
+          message: 'Unable to save component record',
+          cause,
+        }),
+    ).pipe(Effect.as(record));
 
-  return {
-    list: async (type) => {
-      const directory = joinPath(trackedRoot, type);
-      let entries: string[];
-      try {
-        entries = await readdir(directory);
-      } catch (cause) {
-        return isNotFound(cause)
-          ? { success: true, value: [] }
-          : storeError('Storage', `Unable to list components: ${type}`, cause);
-      }
-      const decoded = await Promise.all(
-        entries
-          .filter((entry) => entry.endsWith('.json'))
-          .map((entry) =>
-            readFile(`${directory}/${entry}`, 'utf8').then(
-              (content) => decodeRecord(content, `Unable to decode component: ${type}/${entry}`),
-              () => storeError('Storage', `Unable to decode component: ${type}/${entry}`),
+  const readRecord = (
+    type: ComponentType,
+    id: string,
+  ): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> =>
+    Effect.tryPromise({
+      try: () => readFile(recordPath(trackedRoot, type, id), 'utf8'),
+      catch: (cause) =>
+        new ComponentStoreError({
+          reason: isNotFound(cause) ? 'NotFound' : 'Storage',
+          message: isNotFound(cause)
+            ? `Component not found: ${type}/${id}`
+            : `Unable to decode component: ${type}/${id}`,
+          cause,
+        }),
+    }).pipe(
+      Effect.flatMap((content) =>
+        decodeRecord(content, `Unable to decode component: ${type}/${id}`),
+      ),
+    );
+
+  /** Reads every `.json` record file, carrying each entry with its decoded result-or-error. */
+  const readDirectoryEntries =
+    (directory: string, type: ComponentType) => (entries: ReadonlyArray<string>) =>
+      Effect.forEach(entries, (entry) =>
+        Effect.map(
+          Effect.either(
+            Effect.tryPromise({
+              try: () => readFile(`${directory}/${entry}`, 'utf8'),
+              catch: (cause) =>
+                new ComponentStoreError({
+                  reason: 'Storage',
+                  message: `Unable to decode component: ${type}/${entry}`,
+                  cause,
+                }),
+            }).pipe(
+              Effect.flatMap((content) =>
+                decodeRecord(content, `Unable to decode component: ${type}/${entry}`),
+              ),
             ),
           ),
+          (either) => ({ entry, either }),
+        ),
       );
-      return {
-        success: true,
-        value: decoded.flatMap((result) => (result.success ? [result.value] : [])),
-      };
-    },
 
-    get: async (type, id) => {
-      const path = recordPath(trackedRoot, type, id);
-      if ('reason' in path) {
-        return { success: false, error: path };
-      }
-      return readRecord(
-        path.finalPath,
-        `Component not found: ${type}/${id}`,
-        `Unable to decode component: ${type}/${id}`,
-      );
-    },
+  return {
+    list: (type) =>
+      Effect.tryPromise({
+        try: () => readdir(joinPath(trackedRoot, type)),
+        catch: (cause) =>
+          new ComponentStoreError({
+            reason: isNotFound(cause) ? 'NotFound' : 'Storage',
+            message: isNotFound(cause)
+              ? `No components directory: ${type}`
+              : `Unable to list components: ${type}`,
+            cause,
+          }),
+      }).pipe(
+        Effect.catchAll((error) =>
+          error.reason === 'NotFound'
+            ? Effect.succeed([] as ReadonlyArray<string>)
+            : Effect.fail(error),
+        ),
+        Effect.map((entries) => entries.filter((entry) => entry.endsWith('.json'))),
+        Effect.flatMap(readDirectoryEntries(joinPath(trackedRoot, type), type)),
+        Effect.map((decoded) => {
+          const records: Array<typeof ComponentRecordSchema.Type> = [];
+          for (const { entry, either } of decoded) {
+            if (either._tag === 'Right') {
+              records.push(either.right);
+            } else {
+              log.warn('[components] skipped unreadable record', { path: `${type}/${entry}` });
+            }
+          }
+          return records;
+        }),
+      ),
 
-    create: async (type, request) => {
+    get: (type, id) => readRecord(type, id),
+
+    create: (type, request) => {
       const id = randomUUID();
       const now = new Date().toISOString();
       return writeRecord(type, id, {
@@ -176,53 +172,45 @@ export const createComponentStore = (
       });
     },
 
-    update: async (type, id, request) => {
-      const path = recordPath(trackedRoot, type, id);
-      if ('reason' in path) {
-        return { success: false, error: path };
-      }
-      const existing = await readRecord(
-        path.finalPath,
-        `Component not found: ${type}/${id}`,
-        `Unable to decode component: ${type}/${id}`,
-      );
-      if (!existing.success) {
-        return existing;
-      }
-      return writeRecord(type, id, {
-        id,
-        src: request.src,
-        ...(request.json === undefined ? {} : { json: request.json }),
-        meta: {
-          ...request.meta,
-          createdDate: existing.value.meta.createdDate,
-          modifiedDate: new Date().toISOString(),
-        },
-      });
-    },
+    update: (type, id, request) =>
+      Effect.flatMap(readRecord(type, id), (existing) =>
+        writeRecord(type, id, {
+          id,
+          src: request.src,
+          ...(request.json === undefined ? {} : { json: request.json }),
+          meta: {
+            ...request.meta,
+            createdDate: existing.meta.createdDate,
+            modifiedDate: new Date().toISOString(),
+          },
+        }),
+      ),
 
-    remove: async (type, id) => {
-      const path = recordPath(trackedRoot, type, id);
-      if ('reason' in path) {
-        return { success: false, error: path };
-      }
-      const existing = await readRecord(
-        path.finalPath,
-        `Component not found: ${type}/${id}`,
-        `Unable to decode component: ${type}/${id}`,
-      );
-      if (!existing.success) {
-        return existing;
-      }
-      const removed = await asStorageResult(`Unable to delete component: ${type}/${id}`, () =>
-        rm(path.finalPath),
-      );
-      if (!removed.success) {
-        return removed;
-      }
-      return asStorageResult('Unable to synchronize component directory', () =>
-        fileSync.syncDirectory(path.directory),
-      );
-    },
+    remove: (type, id) =>
+      readRecord(type, id).pipe(
+        Effect.flatMap(() =>
+          Effect.tryPromise({
+            try: () => rm(recordPath(trackedRoot, type, id)),
+            catch: (cause) =>
+              new ComponentStoreError({
+                reason: 'Storage',
+                message: `Unable to delete component: ${type}/${id}`,
+                cause,
+              }),
+          }),
+        ),
+        Effect.flatMap(() =>
+          Effect.mapError(
+            fileSync.syncDirectory(joinPath(trackedRoot, type)),
+            (cause) =>
+              new ComponentStoreError({
+                reason: 'Storage',
+                message: 'Unable to synchronize component directory',
+                cause,
+              }),
+          ),
+        ),
+        Effect.asVoid,
+      ),
   };
 };

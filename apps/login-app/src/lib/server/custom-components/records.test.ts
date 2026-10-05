@@ -7,16 +7,19 @@
  *
  * */
 
+import { Cause, Effect, Exit, Option } from 'effect';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { fileSyncNoop } from './file-sync';
 import { createComponentStore } from './records';
 import { createComponentRepo } from './repo';
 
-import type { ComponentStoreError } from './component.types';
+import type { Effect as EffectType } from 'effect';
+
+import type { ComponentLogger, ComponentStoreError } from './component.types';
 
 const temporaryDirectories: string[] = [];
 
@@ -38,31 +41,33 @@ const makeTemporaryDirectory = async (): Promise<string> => {
   return directory;
 };
 
-const makeStore = (repoDir: string) => {
+const makeLog = (): ComponentLogger => ({ error: vi.fn(), warn: vi.fn(), info: vi.fn() });
+
+const makeStore = (repoDir: string, log: ComponentLogger = makeLog()) => {
   const repo = createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
-  return createComponentStore({ repoDir, trackedSubpath: 'config' }, repo, fileSyncNoop);
+  return createComponentStore({ repoDir, trackedSubpath: 'config' }, repo, fileSyncNoop, log);
 };
 
-/** Unwraps a successful storage result, failing the test when the operation errored. */
-const unwrap = async <Value>(
-  result: Promise<{ success: boolean; value?: Value; error?: ComponentStoreError }>,
-): Promise<Value> => {
-  const outcome = await result;
-  if (!outcome.success) {
-    throw new Error(`Expected a successful result, got: ${outcome.error?.message}`);
+/** Runs a store effect, failing the test when it errors. */
+const unwrap = async <Value, Error_>(effect: EffectType.Effect<Value, Error_>): Promise<Value> => {
+  const exit = await Effect.runPromiseExit(effect);
+  if (Exit.isFailure(exit)) {
+    throw new Error(
+      `Expected a successful result, got: ${Option.getOrThrow(Cause.failureOption(exit.cause))}`,
+    );
   }
-  return outcome.value as Value;
+  return exit.value;
 };
 
-/** Unwraps a failed storage result, failing the test when the operation succeeded. */
-const unwrapError = async (
-  result: Promise<{ success: boolean; error?: ComponentStoreError }>,
+/** Runs a store effect, failing the test when it succeeds. */
+const unwrapError = async <Value>(
+  effect: EffectType.Effect<Value, ComponentStoreError>,
 ): Promise<ComponentStoreError> => {
-  const outcome = await result;
-  if (outcome.success) {
+  const exit = await Effect.runPromiseExit(effect);
+  if (Exit.isSuccess(exit)) {
     throw new Error('Expected the operation to fail');
   }
-  return outcome.error as ComponentStoreError;
+  return Option.getOrThrow(Cause.failureOption(exit.cause)) as ComponentStoreError;
 };
 
 afterEach(async () => {
@@ -145,11 +150,16 @@ describe('createComponentStore', () => {
     expect(error.reason).toBe('NotFound');
   });
 
-  it('silently skips malformed artifacts while listing valid records', async () => {
+  it('skips malformed artifacts while listing valid records, warning with the path only', async () => {
     const repoDir = await makeTemporaryDirectory();
-    const created = await unwrap(makeStore(repoDir).create('callbacks', request));
+    const log = makeLog();
+    const created = await unwrap(makeStore(repoDir, log).create('callbacks', request));
     await writeFile(join(repoDir, 'config', 'callbacks', 'malformed.json'), '{bad json');
 
-    expect(await unwrap(makeStore(repoDir).list('callbacks'))).toEqual([created]);
+    expect(await unwrap(makeStore(repoDir, log).list('callbacks'))).toEqual([created]);
+    expect(log.warn).toHaveBeenCalledTimes(1);
+    expect(log.warn).toHaveBeenCalledWith('[components] skipped unreadable record', {
+      path: 'callbacks/malformed.json',
+    });
   });
 });

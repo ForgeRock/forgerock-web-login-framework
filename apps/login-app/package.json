@@ -11,7 +11,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@forgerock/login-widget": "workspace:*"
+    "@forgerock/login-widget": "workspace:*",
+    "@forgerock/sdk-logger": "^2.1.1"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^7.0.0",

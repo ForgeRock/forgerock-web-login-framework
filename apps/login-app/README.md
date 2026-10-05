@@ -59,6 +59,14 @@ The app requires environment variables to connect to a ForgeRock AM instance. Se
 | `FR_AM_JOURNEY_LOGIN` | No              | Default login journey name. Used for IDM theme resolution when no `?journey=` query param is present, and used as the fallback journey for restarting failed suspended flows. Defaults to the AM realm's default journey if unset. |
 | `ORIGIN`              | With components | This app's origin (e.g., `http://localhost:3000`). Required when the Custom Components API is enabled (`COMPONENT_API_ENABLED=true`): cookie-carried admin mutations are rejected with 500 until it is set.                        |
 
+## Logging
+
+The server writes one JSON line per event through `@forgerock/sdk-logger`: `info` goes to stdout, `warn` and `error` to stderr.
+
+Component API audit lines have the message `[components] audit`. Each carries `action` (`create`, `update`, `delete`, `publish` or `access`) and `outcome` (`succeeded`, `failed`, `rejected` or `denied`), plus `uid` (the AM username) when AM resolved one, and `type`, `id`, `name` or `paths` where they apply. Reads, missing records, client validation errors and requests without a valid session are not logged.
+
+Session tokens, cookies, request bodies and component source are never logged. Redirect targets are logged as origin and path only.
+
 ## Type Checking
 
 ```shell

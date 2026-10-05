@@ -7,27 +7,25 @@
  *
  * */
 
+import { Effect } from 'effect';
+
 import { AM_COOKIE_NAME } from '$core/constants';
 import { env } from '$env/dynamic/private';
 import { tokenIdSchema } from '$server/schemas';
+import { ComponentAuthError } from './component.types';
 
-import type {
-  AmSessionDependencies,
-  ComponentAuthError,
-  ComponentAuthFailureReason,
-  ComponentAuthResult,
-} from './component.types';
-import type { TokenId } from '$server/schemas';
+import type { AmSessionDependencies, AuthUser } from './component.types';
 
 /** AM roles that authorize Component API access, matching the admin-panel redirect convention. */
 const ADMIN_ROLES = ['ui-global-admin', 'ui-realm-admin'];
 
-/** Builds an authentication failure value. */
-const authFailure = (
-  reason: ComponentAuthFailureReason,
-  message: string,
-  cause?: unknown,
-): ComponentAuthResult => ({ success: false, error: { reason, message, cause } });
+/** Fails with Unauthenticated when a credential check resolves to no user. */
+const failUnauthenticated = (message: string) =>
+  Effect.fail(new ComponentAuthError({ reason: 'Unauthenticated', message }));
+
+/** Builds the Unavailable error thrown when an AM round trip fails, keeping cause and caller. */
+const amUnavailable = (message: string, uid?: string) => (cause: unknown) =>
+  new ComponentAuthError({ reason: 'Unavailable', message, cause, uid });
 
 /**
  * Validates AM sessions on behalf of the Component API: extracts the session token from the
@@ -35,47 +33,57 @@ const authFailure = (
  * enforces an Origin check on mutating cookie-carried requests (CSRF).
  *
  * @param dependencies - AM session readers; tests substitute their own.
- * @returns An authenticator function returning the authenticated user or a failure value.
+ * @returns An authenticator effect failing with a tagged error, or succeeding with the user.
  */
 export const createComponentAuth =
   (dependencies: AmSessionDependencies) =>
-  async (request: Request): Promise<ComponentAuthResult> => {
-    const tokenId = extractSessionToken(request);
-    if (tokenId === null) {
-      return authFailure('Unauthenticated', 'An AM session token is required');
-    }
-
-    let uid: string | null;
-    try {
-      uid = await dependencies.getUserId(tokenId);
-    } catch (cause) {
-      return authFailure('Unavailable', 'Unable to validate the AM session', cause);
-    }
-    if (uid === null) {
-      return authFailure('Unauthenticated', 'The AM session is not valid');
-    }
-
-    let roles: string[];
-    try {
-      roles = await dependencies.getRoles(tokenId, uid);
-    } catch (cause) {
-      return authFailure('Unavailable', 'Unable to read AM roles for the session', cause);
-    }
-    if (!roles.some((role) => ADMIN_ROLES.includes(role))) {
-      return authFailure('Forbidden', 'An AM admin role is required');
-    }
-
-    const csrfFailure = await csrfCheck(request);
-    return csrfFailure !== undefined
-      ? { success: false, error: csrfFailure }
-      : { success: true, value: { uid } };
-  };
+  (request: Request): Effect.Effect<AuthUser, ComponentAuthError> =>
+    Effect.sync(() => extractSessionToken(request)).pipe(
+      Effect.flatMap((tokenId) =>
+        tokenId === null
+          ? failUnauthenticated('An AM session token is required')
+          : Effect.succeed({ tokenId }),
+      ),
+      Effect.bind('uid', ({ tokenId }) =>
+        Effect.flatMap(
+          Effect.tryPromise({
+            try: () => dependencies.getUserId(tokenId),
+            catch: amUnavailable('Unable to validate the AM session'),
+          }),
+          (uid) =>
+            uid === null ? failUnauthenticated('The AM session is not valid') : Effect.succeed(uid),
+        ),
+      ),
+      Effect.bind('roles', ({ tokenId, uid }) =>
+        Effect.tryPromise({
+          try: () => dependencies.getRoles(tokenId, uid),
+          catch: amUnavailable('Unable to read AM roles for the session', uid),
+        }),
+      ),
+      Effect.flatMap(({ uid, roles }) =>
+        roles.some((role) => ADMIN_ROLES.includes(role))
+          ? Effect.succeed({ uid })
+          : Effect.fail(
+              new ComponentAuthError({
+                reason: 'Forbidden',
+                message: 'An AM admin role is required',
+                uid,
+              }),
+            ),
+      ),
+      Effect.bind('csrfFailure', () => Effect.promise(() => csrfCheck(request))),
+      Effect.flatMap(({ uid, csrfFailure }) =>
+        csrfFailure === undefined
+          ? Effect.succeed({ uid })
+          : Effect.fail(new ComponentAuthError({ ...csrfFailure, uid })),
+      ),
+    );
 
 /**
  * Enforces an Origin check on mutating cookie-carried requests, which blocks cross-site
  * requests from riding an admin's AM session cookie (CSRF). Fails closed when `ORIGIN`
  * is not configured: an enabled API must reject mutations, not skip the check.
- * Returns the failure value, or undefined when the request may proceed.
+ * Returns the failure error, or undefined when the request may proceed.
  */
 const csrfCheck = async (request: Request): Promise<ComponentAuthError | undefined> => {
   const mutating = request.method !== 'GET' && request.method !== 'HEAD';
@@ -84,22 +92,24 @@ const csrfCheck = async (request: Request): Promise<ComponentAuthError | undefin
   }
   const configuredOrigin = env.ORIGIN;
   if (configuredOrigin === undefined) {
-    return {
+    return new ComponentAuthError({
       reason: 'Unavailable',
       message: 'ORIGIN must be configured for cookie-carried mutations',
-    };
+    });
   }
   const origin = request.headers.get('origin');
   return origin === configuredOrigin
     ? undefined
-    : { reason: 'Forbidden', message: 'Request origin is not allowed' };
+    : new ComponentAuthError({ reason: 'Forbidden', message: 'Request origin is not allowed' });
 };
 
 /**
  * Extracts an AM session token from a request. Browser admin sessions arrive as the AM session
  * cookie; CLI sessions present the same session token as an `Authorization: Bearer` credential.
  */
-export const extractSessionToken = (request: Request): TokenId | null => {
+export const extractSessionToken = (
+  request: Request,
+): ReturnType<typeof tokenIdSchema.parse> | null => {
   const authorization = request.headers.get('authorization');
   if (authorization !== null && authorization.startsWith('Bearer ')) {
     return parseTokenValue(authorization.slice('Bearer '.length).trim());
@@ -115,7 +125,7 @@ export const extractSessionToken = (request: Request): TokenId | null => {
   return pair === undefined ? null : parseTokenValue(pair.slice(AM_COOKIE_NAME.length + 1));
 };
 
-const parseTokenValue = (value: string): TokenId | null => {
+const parseTokenValue = (value: string) => {
   const parsed = tokenIdSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 };

@@ -7,6 +7,7 @@
  *
  * */
 
+import { Cause, Effect, Exit } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -26,10 +27,13 @@ const makeTemporaryDirectory = async (): Promise<string> => {
 const saveWith = (repoDir: string) =>
   createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
 
-const save = async (repoDir: string, relPath: string, content: string) =>
+const saveEffect = (repoDir: string, relPath: string, content: string) =>
   saveWith(repoDir)([{ relPath, content }]);
 
-const saveArtifacts = async (
+const save = (repoDir: string, relPath: string, content: string) =>
+  Effect.runPromise(saveEffect(repoDir, relPath, content)) as Promise<void>;
+
+const saveArtifactsEffect = (
   repoDir: string,
   artifacts: ReadonlyArray<{ relPath: string; content: string }>,
 ) => saveWith(repoDir)(artifacts);
@@ -66,7 +70,12 @@ describe('createComponentRepo', () => {
     it(`rejects unsafe relative path ${relPath}`, async () => {
       const repoDir = await makeTemporaryDirectory();
 
-      await expect(save(repoDir, relPath, '{}')).rejects.toThrow(/unsafe component path/i);
+      const exit = await Effect.runPromiseExit(saveEffect(repoDir, relPath, '{}'));
+      if (Exit.isSuccess(exit)) {
+        throw new Error('Expected the save to fail');
+      }
+      const failure = Cause.prettyErrors(exit.cause).at(-1) as Error;
+      expect(failure.message).toMatch(/unsafe component path/i);
     });
   }
 
@@ -112,12 +121,13 @@ describe('createComponentRepo', () => {
   it('validates every artifact before creating temporary files', async () => {
     const repoDir = await makeTemporaryDirectory();
 
-    await expect(
-      saveArtifacts(repoDir, [
+    const exit = await Effect.runPromiseExit(
+      saveArtifactsEffect(repoDir, [
         { relPath: 'journeys/login.json', content: '{}' },
         { relPath: '../outside.json', content: '{}' },
       ]),
-    ).rejects.toThrow(/unsafe component path/i);
+    );
+    expect(Exit.isFailure(exit)).toBe(true);
     expect(await readDirectory(repoDir)).toEqual([]);
   });
 });

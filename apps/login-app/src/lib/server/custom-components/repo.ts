@@ -7,9 +7,20 @@
  *
  * */
 
+import { Effect } from 'effect';
 import { lstat, mkdir, rename, writeFile } from 'node:fs/promises';
 
+import { ComponentRepoError } from './component.types';
+
 import type { ComponentArtifact, ComponentRepoConfig, FileSyncService } from './component.types';
+
+interface PreparedArtifact {
+  readonly content: string;
+  readonly directory: string;
+  readonly finalPath: string;
+  readonly normalizedPath: string;
+  readonly tempPath: string;
+}
 
 /** Joins path segments with one slash between normalized boundaries. */
 export const joinPath = (...segments: ReadonlyArray<string>): string =>
@@ -76,6 +87,134 @@ const directoryChain = (trackedRoot: string, directory: string): ReadonlyArray<s
   return [...directories].reverse();
 };
 
+/** Validates every artifact path and computes its write plan, failing on the first unsafe path. */
+const prepareArtifacts = (trackedRoot: string) => (artifacts: ReadonlyArray<ComponentArtifact>) =>
+  Effect.forEach(
+    artifacts,
+    (artifact, index) => {
+      if (!isSafeRelativePath(artifact.relPath)) {
+        return Effect.fail(
+          new ComponentRepoError({
+            message: `Artifact ${index} has an unsafe component path: ${artifact.relPath}`,
+          }),
+        );
+      }
+      const finalPath = joinPath(trackedRoot, artifact.relPath);
+      const directory = finalPath.slice(0, finalPath.lastIndexOf('/'));
+      const basename = artifact.relPath.slice(artifact.relPath.lastIndexOf('/') + 1);
+      return Effect.succeed({
+        content: artifact.content,
+        directory,
+        finalPath,
+        normalizedPath: artifact.relPath,
+        tempPath: joinPath(
+          directory,
+          `.${basename}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`,
+        ),
+      });
+    },
+    { discard: false },
+  );
+
+/** Rejects a bundle that writes the same path twice; saving a duplicate is a caller bug. */
+const rejectDuplicatePaths = (prepared: ReadonlyArray<PreparedArtifact>) => {
+  const paths = new Set<string>();
+  for (const artifact of prepared) {
+    if (paths.has(artifact.normalizedPath)) {
+      return Effect.fail(
+        new ComponentRepoError({
+          message: `Duplicate component path at artifact ${artifact.normalizedPath}`,
+        }),
+      );
+    }
+    paths.add(artifact.normalizedPath);
+  }
+  return Effect.succeed(prepared);
+};
+
+/** Fails when any path segment is an existing symlink. */
+const checkSymlinks = (trackedRoot: string) => (prepared: ReadonlyArray<PreparedArtifact>) =>
+  Effect.forEach(
+    prepared,
+    ({ normalizedPath }) =>
+      Effect.tryPromise({
+        try: () => ensureNoSymlink(trackedRoot, normalizedPath),
+        catch: (cause) =>
+          cause instanceof ComponentRepoError
+            ? cause
+            : new ComponentRepoError({
+                message: 'Unable to inspect component path',
+                cause,
+              }),
+      }),
+    { discard: true },
+  );
+
+/** Stages every artifact as a fsynced temporary file next to its final location. */
+const stageTempFiles = (fileSync: FileSyncService) => (prepared: ReadonlyArray<PreparedArtifact>) =>
+  Effect.forEach(
+    prepared,
+    ({ content, directory, tempPath }) =>
+      Effect.tryPromise({
+        try: async () => {
+          await mkdir(directory, { recursive: true });
+          await writeFile(tempPath, content);
+        },
+        catch: (cause) =>
+          cause instanceof Error && cause.message.includes('write')
+            ? new ComponentRepoError({
+                message: 'Unable to write temporary component file',
+                cause,
+              })
+            : new ComponentRepoError({
+                message: 'Unable to create component directory',
+                cause,
+              }),
+      }).pipe(
+        Effect.flatMap(() =>
+          Effect.mapError(
+            fileSync.syncFile(tempPath),
+            (cause) => new ComponentRepoError({ message: 'Unable to sync component file', cause }),
+          ),
+        ),
+      ),
+    { discard: true },
+  );
+
+/**
+ * Files are staged before any rename, then renamed in artifact order. Each individual
+ * replacement is atomic, but this is not a directory-swap transaction: a later rename
+ * failure can leave earlier files replaced. Callers receive one bundle-level error.
+ */
+const renameIntoPlace = (prepared: ReadonlyArray<PreparedArtifact>) =>
+  Effect.forEach(
+    prepared,
+    ({ finalPath, tempPath }) =>
+      Effect.tryPromise({
+        try: () => rename(tempPath, finalPath),
+        catch: (cause) =>
+          new ComponentRepoError({
+            message: 'Unable to atomically replace component file',
+            cause,
+          }),
+      }),
+    { discard: true },
+  );
+
+/** Fsyncs every touched directory so acknowledged saves survive crashes. */
+const syncDirectories =
+  (trackedRoot: string, fileSync: FileSyncService) => (prepared: ReadonlyArray<PreparedArtifact>) =>
+    Effect.forEach(
+      [...new Set(prepared.flatMap(({ directory }) => directoryChain(trackedRoot, directory)))],
+      (directory) =>
+        Effect.mapError(
+          fileSync.syncDirectory(directory),
+          (cause) =>
+            new ComponentRepoError({ message: 'Unable to sync component directory', cause }),
+        ),
+      { discard: true },
+    );
+
 /**
  * Persists component artifacts beneath the configured repository path.
  *
@@ -87,73 +226,17 @@ const directoryChain = (trackedRoot: string, directory: string): ReadonlyArray<s
  * @param config - Repository root and tracked subtree configuration.
  * @param fileSync - Durability synchronization service.
  * @returns A function that validates and atomically replaces each artifact.
- * @throws {Error} When a path is unsafe, duplicated, or a filesystem operation fails.
  */
 export const createComponentRepo =
   (config: ComponentRepoConfig, fileSync: FileSyncService) =>
-  async (artifacts: ReadonlyArray<ComponentArtifact>): Promise<void> => {
+  (artifacts: ReadonlyArray<ComponentArtifact>): Effect.Effect<void, ComponentRepoError> => {
     const trackedRoot = joinPath(config.repoDir, config.trackedSubpath);
-    const prepared = artifacts.map((artifact, index) => {
-      if (!isSafeRelativePath(artifact.relPath)) {
-        throw new Error(`Artifact ${index} has an unsafe component path: ${artifact.relPath}`);
-      }
-      const finalPath = joinPath(trackedRoot, artifact.relPath);
-      const directory = finalPath.slice(0, finalPath.lastIndexOf('/'));
-      const basename = artifact.relPath.slice(artifact.relPath.lastIndexOf('/') + 1);
-      return {
-        content: artifact.content,
-        directory,
-        finalPath,
-        normalizedPath: artifact.relPath,
-        tempPath: joinPath(
-          directory,
-          `.${basename}.${Date.now()}.${Math.random().toString(36).slice(2)}.tmp`,
-        ),
-      };
-    });
-
-    const paths = new Set<string>();
-    for (const artifact of prepared) {
-      if (paths.has(artifact.normalizedPath)) {
-        throw new Error(`Duplicate component path at artifact ${artifact.normalizedPath}`);
-      }
-      paths.add(artifact.normalizedPath);
-    }
-
-    for (const { normalizedPath } of prepared) {
-      await ensureNoSymlink(trackedRoot, normalizedPath);
-    }
-
-    for (const { content, directory, tempPath } of prepared) {
-      try {
-        await mkdir(directory, { recursive: true });
-        await writeFile(tempPath, content);
-      } catch (cause) {
-        const message =
-          cause instanceof Error && cause.message.includes('write')
-            ? 'Unable to write temporary component file'
-            : 'Unable to create component directory';
-        throw new Error(message, { cause });
-      }
-      await fileSync.syncFile(tempPath);
-    }
-
-    /**
-     * Files are staged before any rename, then renamed in artifact order. Each individual
-     * replacement is atomic, but this is not a directory-swap transaction: a later rename
-     * failure can leave earlier files replaced. Callers receive one bundle-level error.
-     */
-    for (const { finalPath, tempPath } of prepared) {
-      try {
-        await rename(tempPath, finalPath);
-      } catch (cause) {
-        throw new Error('Unable to atomically replace component file', { cause });
-      }
-    }
-
-    for (const directory of [
-      ...new Set(prepared.flatMap(({ directory }) => directoryChain(trackedRoot, directory))),
-    ]) {
-      await fileSync.syncDirectory(directory);
-    }
+    return prepareArtifacts(trackedRoot)(artifacts).pipe(
+      Effect.flatMap(rejectDuplicatePaths),
+      Effect.flatMap((prepared) => checkSymlinks(trackedRoot)(prepared).pipe(Effect.as(prepared))),
+      Effect.flatMap((prepared) => stageTempFiles(fileSync)(prepared).pipe(Effect.as(prepared))),
+      Effect.flatMap((prepared) => renameIntoPlace(prepared).pipe(Effect.as(prepared))),
+      Effect.flatMap((prepared) => syncDirectories(trackedRoot, fileSync)(prepared)),
+      Effect.asVoid,
+    );
   };

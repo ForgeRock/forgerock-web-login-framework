@@ -11,6 +11,7 @@ import { isRedirect, redirect, type RequestEvent } from '@sveltejs/kit';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
+import { log } from '$server/logger.effects';
 import {
   createRedirectContext,
   readAndClearRedirectCookie,
@@ -19,6 +20,7 @@ import {
 } from '$server/redirect/redirect.effects';
 import {
   buildRoleUrl,
+  describeRedirectTarget,
   isOAuthAuthorizePath,
   resolveRealmFromUrl,
   resolveRedirect,
@@ -67,6 +69,12 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
           // browser to a URL AM did not bless for this request.
           if (successUrl === gotoUrl.href) {
             throw redirect(303, successUrl);
+          }
+          if (successUrl !== null) {
+            log.warn('[redirect] AM did not trust goto, using role redirect', {
+              goto: describeRedirectTarget(gotoUrl.href),
+              realm,
+            });
           }
         }
       }

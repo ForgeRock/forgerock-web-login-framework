@@ -7,7 +7,13 @@
  *
  * */
 
+import { Data } from 'effect';
+
+import type { CustomLogger } from '@forgerock/sdk-logger';
+import type { Effect } from 'effect';
+
 import type {
+  Bundle,
   ComponentRecord,
   ComponentType,
   CreateComponentRequest,
@@ -15,16 +21,12 @@ import type {
 } from './api.schemas';
 import type { TokenId } from '$server/schemas';
 
-/** A failure raised while persisting or synchronizing component files. */
-export interface FileSyncError {
-  readonly message: string;
-  readonly cause?: unknown;
-}
+export type ComponentLogger = Pick<CustomLogger, 'error' | 'warn' | 'info'>;
 
 /** Synchronizes filesystem entries after writes and renames so acknowledged saves are durable. */
 export interface FileSyncService {
-  readonly syncFile: (path: string) => Promise<void>;
-  readonly syncDirectory: (path: string) => Promise<void>;
+  readonly syncFile: (path: string) => Effect.Effect<void, unknown>;
+  readonly syncDirectory: (path: string) => Effect.Effect<void, unknown>;
 }
 
 /** Location of the repository root and its tracked component subtree. */
@@ -39,65 +41,66 @@ export interface ComponentArtifact {
   readonly content: string;
 }
 
-/** Validates and atomically persists component artifacts; throws plain errors on failure. */
-export type ComponentRepoFn = (artifacts: ReadonlyArray<ComponentArtifact>) => Promise<void>;
+/** Validates and atomically persists component artifacts; fails with a tagged error. */
+export type ComponentRepoFn = (
+  artifacts: ReadonlyArray<ComponentArtifact>,
+) => Effect.Effect<void, ComponentRepoError>;
 
 /** A failure raised when a repository write cannot safely complete. */
-export interface ComponentRepoError {
+export class ComponentRepoError extends Data.TaggedError('ComponentRepoError')<{
   readonly message: string;
   readonly cause?: unknown;
-}
+}> {}
 
-/** A component storage failure returned as a value, never thrown. */
-export interface ComponentStoreError {
-  readonly reason: ComponentStoreFailureReason;
+/** A failure raised while persisting or synchronizing component files. */
+export class FileSyncError extends Data.TaggedError('FileSyncError')<{
   readonly message: string;
   readonly cause?: unknown;
-}
+}> {}
 
 /** Why a component storage operation failed. */
 export type ComponentStoreFailureReason = 'NotFound' | 'Storage';
 
-/** The result of a component storage operation. */
-export type ComponentStoreResult<Value> =
-  | { readonly success: true; readonly value: Value }
-  | { readonly success: false; readonly error: ComponentStoreError };
+/** A component storage failure carried on the Effect error channel. */
+export class ComponentStoreError extends Data.TaggedError('ComponentStoreError')<{
+  readonly reason: ComponentStoreFailureReason;
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
 
 /** The component record storage API returned by {@link createComponentStore}. */
 export interface ComponentStoreApi {
   readonly list: (
     type: ComponentType,
-  ) => Promise<ComponentStoreResult<ReadonlyArray<ComponentRecord>>>;
-  readonly get: (type: ComponentType, id: string) => Promise<ComponentStoreResult<ComponentRecord>>;
+  ) => Effect.Effect<ReadonlyArray<ComponentRecord>, ComponentStoreError>;
+  readonly get: (
+    type: ComponentType,
+    id: string,
+  ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
   readonly create: (
     type: ComponentType,
     request: CreateComponentRequest,
-  ) => Promise<ComponentStoreResult<ComponentRecord>>;
+  ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
   readonly update: (
     type: ComponentType,
     id: string,
     request: UpdateComponentRequest,
-  ) => Promise<ComponentStoreResult<ComponentRecord>>;
-  readonly remove: (type: ComponentType, id: string) => Promise<ComponentStoreResult<void>>;
-}
-
-/** A component publication failure returned as a value, never thrown. */
-export interface ComponentPublishError {
-  readonly reason: ComponentPublishFailureReason;
-  readonly message: string;
-  readonly cause?: unknown;
+  ) => Effect.Effect<ComponentRecord, ComponentStoreError>;
+  readonly remove: (type: ComponentType, id: string) => Effect.Effect<void, ComponentStoreError>;
 }
 
 /** Why a component publication failed. */
 export type ComponentPublishFailureReason = 'Invalid' | 'Storage';
 
-/** The result of a component publication operation. */
-export type ComponentPublishResult =
-  | { readonly success: true; readonly value: void }
-  | { readonly success: false; readonly error: ComponentPublishError };
+/** A component publication failure carried on the Effect error channel. */
+export class ComponentPublishError extends Data.TaggedError('ComponentPublishError')<{
+  readonly reason: ComponentPublishFailureReason;
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
 
-/** Validates and persists a serialized component bundle, returning failures as values. */
-export type ComponentPublishFn = (bundle: string) => Promise<ComponentPublishResult>;
+/** Validates and persists a serialized component bundle, failing with a tagged error. */
+export type ComponentPublishFn = (bundle: string) => Effect.Effect<void, ComponentPublishError>;
 
 /** An authenticated Component API caller, identified by their AM session uid. */
 export interface AuthUser {
@@ -107,17 +110,14 @@ export interface AuthUser {
 /** Why a Component API authentication attempt failed. */
 export type ComponentAuthFailureReason = 'Unauthenticated' | 'Forbidden' | 'Unavailable';
 
-/** An authentication failure returned as a value, never thrown. */
-export interface ComponentAuthError {
+/** An authentication failure carried on the Effect error channel. */
+export class ComponentAuthError extends Data.TaggedError('ComponentAuthError')<{
   readonly reason: ComponentAuthFailureReason;
   readonly message: string;
   readonly cause?: unknown;
-}
-
-/** The result of a Component API authentication attempt. */
-export type ComponentAuthResult =
-  | { readonly success: true; readonly value: AuthUser }
-  | { readonly success: false; readonly error: ComponentAuthError };
+  /** Set when the AM session resolved to a user before the request was refused. */
+  readonly uid?: string;
+}> {}
 
 /** AM session readers used by the authenticator; replaceable for tests. */
 export interface AmSessionDependencies {
@@ -129,14 +129,18 @@ export interface AmSessionDependencies {
 export type ApiErrorStatus = 400 | 401 | 403 | 404 | 413 | 415 | 500;
 
 /** A client-facing HTTP failure encoded as the response's status and JSON error body. */
-export interface HttpError {
+export class HttpError extends Data.TaggedError('HttpError')<{
   readonly status: ApiErrorStatus;
   readonly message: string;
-}
+}> {}
 
 /** Handler dependencies; runtime wires the real functions, tests substitute their own. */
 export interface ComponentApiDependencies {
-  readonly authenticate: (request: Request) => Promise<ComponentAuthResult>;
+  readonly authenticate: (request: Request) => Effect.Effect<AuthUser, ComponentAuthError>;
   readonly store: ComponentStoreApi;
   readonly publish: ComponentPublishFn;
+  readonly log: ComponentLogger;
 }
+
+/** A decoded component bundle payload. */
+export type { Bundle };

@@ -7,6 +7,7 @@
  *
  * */
 
+import { Schema } from 'effect';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -26,36 +27,33 @@ const meta = {
   fromJson: '',
 };
 
-const decodes = <S extends { safeParse: (input: unknown) => { success: boolean } }>(
-  schema: S,
-  input: unknown,
-) => schema.safeParse(input).success;
-
 describe('Component API schemas', () => {
   it('accepts supported component types and rejects unknown types', () => {
-    expect(decodes(ComponentTypeSchema, 'callbacks')).toBe(true);
-    expect(decodes(ComponentTypeSchema, 'widgets')).toBe(false);
+    expect(Schema.is(ComponentTypeSchema)('callbacks')).toBe(true);
+    expect(Schema.is(ComponentTypeSchema)('widgets')).toBe(false);
   });
 
   it('accepts UUID component ids and rejects invalid ids', () => {
-    expect(decodes(ComponentIdSchema, componentId)).toBe(true);
-    expect(decodes(ComponentIdSchema, 'component-1')).toBe(false);
+    expect(Schema.is(ComponentIdSchema)(componentId)).toBe(true);
+    expect(Schema.is(ComponentIdSchema)('component-1')).toBe(false);
   });
 
   it('rejects server-owned ids and dates from create requests', () => {
+    const rejects = (input: unknown) => Schema.is(CreateComponentRequestSchema)(input) === false;
+    expect(rejects({ src: '', meta: { ...meta, createdDate: 'x' } })).toBe(true);
+    expect(rejects({ id: componentId, src: '', meta })).toBe(true);
     expect(
-      decodes(CreateComponentRequestSchema, {
+      Schema.is(CreateComponentRequestSchema)({
         src: '',
-        meta: { ...meta, createdDate: 'x' },
+        meta: { ...meta, createdDate: undefined },
       }),
-    ).toBe(false);
-    expect(decodes(CreateComponentRequestSchema, { id: componentId, src: '', meta })).toBe(false);
+    ).toBe(true);
   });
 
   it('accepts publish requests with and without files', () => {
-    expect(decodes(PublishRequestSchema, { code: 'export default {}' })).toBe(true);
+    expect(Schema.is(PublishRequestSchema)({ code: 'export default {}' })).toBe(true);
     expect(
-      decodes(PublishRequestSchema, {
+      Schema.is(PublishRequestSchema)({
         code: 'export default {}',
         files: [{ path: 'component.svelte', content: '<div />' }],
       }),

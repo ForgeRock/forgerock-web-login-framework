@@ -7,6 +7,7 @@
  *
  * **/
 
+import { log } from '$server/logger.effects';
 import { getUserIdFromSession, getUserRolesForUser } from '$server/sessions';
 import { createComponentAuth } from './auth';
 import { fileSync } from './file-sync';
@@ -32,7 +33,8 @@ export const componentApiDependencies = (): ComponentApiDependencies => {
       getUserId: getUserIdFromSession,
       getRoles: getUserRolesForUser,
     }),
-    store: createComponentStore(config, repo, fileSync),
+    store: createComponentStore(config, repo, fileSync, log),
     publish: createComponentPublisher(repo),
+    log,
   };
 };

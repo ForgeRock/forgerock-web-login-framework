@@ -7,6 +7,7 @@
  *
  * */
 
+import { Effect } from 'effect';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -30,12 +31,13 @@ import {
   updateComponent,
 } from './api';
 import { createComponentAuth } from './auth';
+import { ComponentPublishError, ComponentStoreError } from './component.types';
 import { fileSyncNoop } from './file-sync';
 import { createComponentPublisher } from './publisher';
 import { createComponentStore } from './records';
 import { createComponentRepo } from './repo';
 
-import type { ComponentApiDependencies } from './component.types';
+import type { ComponentApiDependencies, ComponentLogger } from './component.types';
 import type { AmSessionDependencies } from './component.types';
 
 const temporaryDirectories: string[] = [];
@@ -66,10 +68,12 @@ const makeDependencies = (
 ): ComponentApiDependencies => {
   const config = { repoDir, trackedSubpath: 'config' };
   const repo = createComponentRepo(config, fileSyncNoop);
+  const log: ComponentLogger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
   return {
     authenticate: createComponentAuth(authDependencies),
-    store: createComponentStore(config, repo, fileSyncNoop),
+    store: createComponentStore(config, repo, fileSyncNoop, log),
     publish: createComponentPublisher(repo),
+    log,
   };
 };
 
@@ -448,10 +452,13 @@ describe('Component Endpoint Handlers', () => {
         }),
         {
           ...dependencies,
-          publish: async () => ({
-            success: false,
-            error: { reason: 'Storage', message: 'Unable to persist component bundle' },
-          }),
+          publish: () =>
+            Effect.fail(
+              new ComponentPublishError({
+                reason: 'Storage',
+                message: 'Unable to persist component bundle',
+              }),
+            ),
         },
       );
       expect(response.status).toBe(500);
@@ -470,5 +477,289 @@ describe('Component Endpoint Handlers', () => {
       );
       expect(response.status).toBe(400);
     });
+  });
+});
+
+describe('Component API logging', () => {
+  const missingId = 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0';
+
+  const nonAdminDependencies: AmSessionDependencies = {
+    getUserId: () => Promise.resolve('regular-user'),
+    getRoles: () => Promise.resolve(['ui-enduser']),
+  };
+
+  const makeLoggedDependencies = async (authDependencies?: AmSessionDependencies) =>
+    makeDependencies(await makeTemporaryDirectory(), authDependencies);
+
+  const createRequest = (): Request =>
+    authorizedRequest('http://localhost/api/components/callbacks', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: componentBody(),
+    });
+
+  const listRequest = (): Request =>
+    authorizedRequest('http://localhost/api/components/callbacks', { method: 'GET' });
+
+  const publishRequest = (body: unknown): Request =>
+    authorizedRequest('http://localhost/api/components/publish', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+  it('audits a created component with the caller, type, id and name', async () => {
+    const dependencies = await makeLoggedDependencies();
+
+    const response = await createComponent(createRequest(), 'callbacks', dependencies);
+    const { id } = (await response.json()) as { id: string };
+
+    expect(dependencies.log.info).toHaveBeenCalledTimes(1);
+    expect(dependencies.log.info).toHaveBeenCalledWith('[components] audit', {
+      action: 'create',
+      outcome: 'succeeded',
+      uid: 'test-admin',
+      type: 'callbacks',
+      id,
+      name: 'test',
+    });
+  });
+
+  it('audits an update and a delete with the route id', async () => {
+    const dependencies = await makeLoggedDependencies();
+    const created = await createComponent(createRequest(), 'callbacks', dependencies);
+    const { id } = (await created.json()) as { id: string };
+    const url = `http://localhost/api/components/callbacks/${id}`;
+
+    await updateComponent(
+      authorizedRequest(url, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: componentBody(),
+      }),
+      'callbacks',
+      id,
+      dependencies,
+    );
+    expect(dependencies.log.info).toHaveBeenLastCalledWith('[components] audit', {
+      action: 'update',
+      outcome: 'succeeded',
+      uid: 'test-admin',
+      type: 'callbacks',
+      id,
+      name: 'test',
+    });
+
+    await deleteComponent(
+      authorizedRequest(url, { method: 'DELETE' }),
+      'callbacks',
+      id,
+      dependencies,
+    );
+    expect(dependencies.log.info).toHaveBeenLastCalledWith('[components] audit', {
+      action: 'delete',
+      outcome: 'succeeded',
+      uid: 'test-admin',
+      type: 'callbacks',
+      id,
+    });
+  });
+
+  it('logs nothing for reads, missing records, or client validation errors', async () => {
+    const dependencies = await makeLoggedDependencies();
+    const url = `http://localhost/api/components/callbacks/${missingId}`;
+
+    await listComponents(listRequest(), 'callbacks', dependencies);
+    await getComponent(
+      authorizedRequest(url, { method: 'GET' }),
+      'callbacks',
+      missingId,
+      dependencies,
+    );
+    await updateComponent(
+      authorizedRequest(url, {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: componentBody(),
+      }),
+      'callbacks',
+      missingId,
+      dependencies,
+    );
+    await deleteComponent(
+      authorizedRequest(url, { method: 'DELETE' }),
+      'callbacks',
+      missingId,
+      dependencies,
+    );
+    await createComponent(
+      authorizedRequest('http://localhost/api/components/callbacks', {
+        method: 'POST',
+        headers: { 'content-type': 'text/plain' },
+        body: 'test',
+      }),
+      'callbacks',
+      dependencies,
+    );
+
+    expect(dependencies.log.info).not.toHaveBeenCalled();
+    expect(dependencies.log.warn).not.toHaveBeenCalled();
+    expect(dependencies.log.error).not.toHaveBeenCalled();
+  });
+
+  it('logs a failed mutation as an error with the cause and no success line', async () => {
+    const base = await makeLoggedDependencies();
+    const cause = new Error('disk full');
+    const dependencies: ComponentApiDependencies = {
+      ...base,
+      store: {
+        ...base.store,
+        create: () =>
+          Effect.fail(
+            new ComponentStoreError({
+              reason: 'Storage',
+              message: 'Unable to save component record',
+              cause,
+            }),
+          ),
+      },
+    };
+
+    const response = await createComponent(createRequest(), 'callbacks', dependencies);
+
+    expect(response.status).toBe(500);
+    expect(dependencies.log.error).toHaveBeenCalledWith(
+      '[components] audit',
+      {
+        action: 'create',
+        outcome: 'failed',
+        uid: 'test-admin',
+        type: 'callbacks',
+        detail: 'Unable to save component record',
+      },
+      cause,
+    );
+    expect(dependencies.log.info).not.toHaveBeenCalled();
+  });
+
+  it('audits a publish with the files it wrote', async () => {
+    const dependencies = await makeLoggedDependencies();
+
+    await publishComponentSource(
+      publishRequest({ code: 'bundle code', files: [{ path: 'extra/a.js', content: 'a' }] }),
+      dependencies,
+    );
+
+    expect(dependencies.log.info).toHaveBeenCalledWith('[components] audit', {
+      action: 'publish',
+      outcome: 'succeeded',
+      uid: 'test-admin',
+      paths: ['extra/a.js', 'bundle.js'],
+    });
+  });
+
+  it('logs a rejected publish as a warning without echoing the unsafe path', async () => {
+    const dependencies = await makeLoggedDependencies();
+
+    const response = await publishComponentSource(
+      publishRequest({ code: 'x', files: [{ path: '../escape.js', content: 'x' }] }),
+      dependencies,
+    );
+
+    expect(response.status).toBe(400);
+    expect(dependencies.log.warn).toHaveBeenCalledWith('[components] audit', {
+      action: 'publish',
+      outcome: 'rejected',
+      uid: 'test-admin',
+      detail: 'Bundle file at index 0 has an unsafe path',
+    });
+  });
+
+  it('logs a failed publish as an error with the paths and the cause', async () => {
+    const base = await makeLoggedDependencies();
+    const cause = new Error('disk full');
+    const dependencies: ComponentApiDependencies = {
+      ...base,
+      publish: () =>
+        Effect.fail(
+          new ComponentPublishError({
+            reason: 'Storage',
+            message: 'Unable to persist component bundle',
+            cause,
+          }),
+        ),
+    };
+
+    const response = await publishComponentSource(
+      publishRequest({ code: 'bundle code' }),
+      dependencies,
+    );
+
+    expect(response.status).toBe(500);
+    expect(dependencies.log.error).toHaveBeenCalledWith(
+      '[components] audit',
+      {
+        action: 'publish',
+        outcome: 'failed',
+        uid: 'test-admin',
+        paths: ['bundle.js'],
+        detail: 'Unable to persist component bundle',
+      },
+      cause,
+    );
+  });
+
+  it('logs a request refused for a known caller, with the reason and uid', async () => {
+    const dependencies = await makeLoggedDependencies(nonAdminDependencies);
+
+    await listComponents(listRequest(), 'callbacks', dependencies);
+
+    expect(dependencies.log.warn).toHaveBeenCalledWith('[components] audit', {
+      action: 'access',
+      outcome: 'denied',
+      reason: 'Forbidden',
+      detail: 'An AM admin role is required',
+      method: 'GET',
+      path: '/api/components/callbacks',
+      uid: 'regular-user',
+    });
+  });
+
+  it('does not log a request without a valid session', async () => {
+    const dependencies = await makeLoggedDependencies(unauthenticatedDependencies);
+
+    const response = await listComponents(listRequest(), 'callbacks', dependencies);
+
+    expect(response.status).toBe(401);
+    expect(dependencies.log.warn).not.toHaveBeenCalled();
+    expect(dependencies.log.error).not.toHaveBeenCalled();
+  });
+
+  it('logs an AM failure as an error with the cause', async () => {
+    const cause = new Error('AM down');
+    const dependencies = await makeLoggedDependencies({
+      getUserId: () => Promise.reject(cause),
+      getRoles: () => Promise.resolve([]),
+    });
+
+    const response = await listComponents(listRequest(), 'callbacks', dependencies);
+
+    expect(response.status).toBe(500);
+    expect(dependencies.log.error).toHaveBeenCalledWith(
+      '[components] audit',
+      expect.objectContaining({ outcome: 'failed', reason: 'Unavailable' }),
+      cause,
+    );
+  });
+
+  it('logs nothing while the API is disabled', async () => {
+    delete process.env.COMPONENT_API_ENABLED;
+    try {
+      const dependencies = await makeLoggedDependencies(unauthenticatedDependencies);
+      await listComponents(listRequest(), 'callbacks', dependencies);
+      expect(dependencies.log.warn).not.toHaveBeenCalled();
+    } finally {
+      process.env.COMPONENT_API_ENABLED = 'true';
+    }
   });
 });

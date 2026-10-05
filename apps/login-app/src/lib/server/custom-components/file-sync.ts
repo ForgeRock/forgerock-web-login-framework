@@ -7,6 +7,7 @@
  *
  * */
 
+import { Effect } from 'effect';
 import { type FileHandle, open } from 'node:fs/promises';
 
 import type { FileSyncService } from './component.types';
@@ -29,12 +30,20 @@ const syncPath = async (path: string, flags: string, target: string): Promise<vo
 
 /** Real file and directory `fsync` operations for durable component saves. */
 export const fileSync: FileSyncService = {
-  syncFile: (path) => syncPath(path, 'r+', 'temporary component file'),
-  syncDirectory: (path) => syncPath(path, 'r', 'component directory'),
+  syncFile: (path) =>
+    Effect.tryPromise({
+      try: () => syncPath(path, 'r+', 'temporary component file'),
+      catch: (cause) => cause,
+    }),
+  syncDirectory: (path) =>
+    Effect.tryPromise({
+      try: () => syncPath(path, 'r', 'component directory'),
+      catch: (cause) => cause,
+    }),
 };
 
 /** No-op implementation for tests that do not verify durability syncing. */
 export const fileSyncNoop: FileSyncService = {
-  syncFile: async () => undefined,
-  syncDirectory: async () => undefined,
+  syncFile: () => Effect.void,
+  syncDirectory: () => Effect.void,
 };

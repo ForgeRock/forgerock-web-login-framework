@@ -7,11 +7,13 @@
  *
  * */
 
+import { Cause, Effect, Exit, Option } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { ComponentRepoError } from './component.types';
 import { fileSyncNoop } from './file-sync';
 import { createComponentPublisher, parseBundle } from './publisher';
 import { createComponentRepo } from './repo';
@@ -30,9 +32,11 @@ const publishWith = (repoDir: string) => {
 };
 
 const publish = async (repoDir: string, bundle: string) => {
-  const result = await publishWith(repoDir)(bundle);
-  if (!result.success) {
-    throw new Error(`Expected the publish to succeed: ${result.error.message}`);
+  const exit = await Effect.runPromiseExit(publishWith(repoDir)(bundle));
+  if (Exit.isFailure(exit)) {
+    throw new Error(
+      `Expected the publish to succeed: ${Option.getOrThrow(Cause.failureOption(exit.cause))}`,
+    );
   }
 };
 
@@ -46,13 +50,18 @@ afterEach(async () => {
   );
 });
 
+const runParseBundle = async (bundle: string) => Effect.runPromiseExit(parseBundle(bundle));
+
 describe('parseBundle', () => {
-  it('parses file entries and ignores unknown fields', () => {
-    const result = parseBundle(
+  it('parses file entries and ignores unknown fields', async () => {
+    const exit = await runParseBundle(
       '{"files":[{"path":"journeys/login.json","content":"{}","ignored":true}],"ignored":true}',
     );
 
-    expect(result).toEqual([{ relPath: 'journeys/login.json', content: '{}' }]);
+    expect(Exit.isSuccess(exit)).toBe(true);
+    if (Exit.isSuccess(exit)) {
+      expect(exit.value).toEqual([{ relPath: 'journeys/login.json', content: '{}' }]);
+    }
   });
 
   for (const bundle of [
@@ -63,8 +72,13 @@ describe('parseBundle', () => {
     '{"files":[{"path":"../outside.json","content":"{}"}]}',
     '{"files":[{"path":".git/config","content":"{}"}]}',
   ]) {
-    it(`rejects invalid bundle ${bundle}`, () => {
-      expect(() => parseBundle(bundle)).toThrow(/bundle|unsafe path/i);
+    it(`rejects invalid bundle ${bundle}`, async () => {
+      const exit = await runParseBundle(bundle);
+      expect(Exit.isSuccess(exit)).toBe(false);
+      if (Exit.isFailure(exit)) {
+        const failure = Option.getOrThrow(Cause.failureOption(exit.cause)) as Error;
+        expect(failure.message).toMatch(/bundle|unsafe path/i);
+      }
     });
   }
 });
@@ -89,27 +103,35 @@ describe('createComponentPublisher', () => {
     const bundle =
       '{"files":[{"path":"journeys/login.json","content":"{}"},{"path":"../outside.json","content":"{}"}]}';
 
-    const result = await publishWith(repoDir)(bundle);
-    expect(result.success).toBe(false);
-    if (result.success) {
+    const exit = await Effect.runPromiseExit(publishWith(repoDir)(bundle));
+    expect(Exit.isSuccess(exit)).toBe(false);
+    if (Exit.isSuccess(exit)) {
       return;
     }
-    expect(result.error.reason).toBe('Invalid');
+    const error = Option.getOrThrow(Cause.failureOption(exit.cause));
+    expect(error._tag).toBe('ComponentPublishError');
+    expect((error as { reason: string }).reason).toBe('Invalid');
     expect(await readDirectory(repoDir)).toEqual([]);
   });
 
   it('reports storage failures with the Storage reason', async () => {
-    const repoFailure = async () => {
-      throw new Error('disk unavailable');
-    };
+    const cause = new Error('disk unavailable');
+    const repoFailure = () =>
+      Effect.fail(new ComponentRepoError({ message: 'disk unavailable', cause }));
     const publisher = createComponentPublisher(repoFailure);
 
-    const result = await publisher('{"files":[{"path":"bundle.js","content":"{}"}]}');
-    expect(result.success).toBe(false);
-    if (result.success) {
+    const exit = await Effect.runPromiseExit(
+      publisher('{"files":[{"path":"bundle.js","content":"{}"}]}'),
+    );
+    expect(Exit.isSuccess(exit)).toBe(false);
+    if (Exit.isSuccess(exit)) {
       return;
     }
-    expect(result.error.reason).toBe('Storage');
-    expect(result.error.message).toBe('Unable to persist component bundle');
+    const error = Option.getOrThrow(Cause.failureOption(exit.cause)) as {
+      reason: string;
+      message: string;
+    };
+    expect(error.reason).toBe('Storage');
+    expect(error.message).toBe('Unable to persist component bundle');
   });
 });

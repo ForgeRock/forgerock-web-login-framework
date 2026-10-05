@@ -26,6 +26,14 @@ vi.mock('$core/locale.store', () => ({
   stringsSchema: { safeParse: () => ({ success: true, data: {} }) },
 }));
 
+const logMock = vi.hoisted(() => ({
+  error: vi.fn(),
+  warn: vi.fn(),
+  info: vi.fn(),
+  debug: vi.fn(),
+}));
+vi.mock('$server/logger.effects', () => ({ log: logMock }));
+
 const validateUrlMock = vi.hoisted(() => vi.fn());
 vi.mock('$server/redirect/redirect.effects', async (importOriginal) => {
   const actual = (await importOriginal()) as typeof redirectEffects;
@@ -88,6 +96,7 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     } catch (e) {
       expect((e as { location: string }).location).toBe(authorizeUrl);
       expect(validateUrlMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
+      expect(logMock.warn).not.toHaveBeenCalled();
     }
   });
 
@@ -103,6 +112,14 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
       location: expect.stringContaining('/enduser/'),
     });
     expect(validateUrlMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
+    expect(logMock.warn).toHaveBeenCalledTimes(1);
+    expect(logMock.warn).toHaveBeenCalledWith(
+      '[redirect] AM did not trust goto, using role redirect',
+      {
+        goto: `${AM_ORIGIN}/am/oauth2/realms/root/authorize`,
+        realm: 'alpha',
+      },
+    );
   });
 
   it('falls through to the role redirect when AM rejects the goto (null successUrl)', async () => {
@@ -116,6 +133,7 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     ).rejects.toMatchObject({
       location: expect.stringContaining('/enduser/'),
     });
+    expect(logMock.warn).not.toHaveBeenCalled();
   });
 
   it('never redirects to a cross-origin goto even when it looks like an authorize URL', async () => {

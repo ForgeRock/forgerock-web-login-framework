@@ -123,6 +123,25 @@ export function resolveAgainstOrigin(urlOrPath: string, amOrigin: string): strin
   }
 }
 
+/**
+ * @function describeRedirectTarget - Reduces a redirect URL to its origin and path for logging.
+ * The query and fragment are dropped because authorize URLs can carry tokens and hints.
+ * @param {string} url - An absolute or relative URL.
+ * @returns {string} The origin and path, the path alone for a relative URL, or a placeholder.
+ */
+export function describeRedirectTarget(url: string): string {
+  const relativeBase = 'http://relative.invalid';
+  try {
+    const parsed = new URL(url, relativeBase);
+    if (parsed.origin === 'null') {
+      return parsed.protocol;
+    }
+    return parsed.origin === relativeBase ? parsed.pathname : `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return '[unparseable]';
+  }
+}
+
 function isLoginAppPath(url: string, amOrigin: string): boolean {
   try {
     const parsed = new URL(url, amOrigin);
