@@ -6,13 +6,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { RegistryCollisionError, RegistryEnabledLimitError } from './registry.errors.js';
 import {
   buildRegistryContent,
   parseAcceptedProps,
   parseComponentHeader,
   parseEnabledState,
-  RegistryCollisionError,
-  RegistryEnabledLimitError,
   runRegistryScript,
   toPascalCase,
 } from './registry.js';
