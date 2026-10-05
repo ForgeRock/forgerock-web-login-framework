@@ -223,8 +223,8 @@ const scanDirectory = (
     // Dormant header/footer files (no "Enabled: true") are skipped entirely:
     // not validated, not bundled. Stages and callbacks are always bundled, so
     // every file there is a scan candidate. An invalid Enabled value still
-    // fails loudly (parseEnabledState throws) so a typo can't silently
-    // disable a component the developer meant to ship.
+    // fails loudly (partitionByEnabledState surfaces it as a scan failure) so
+    // a typo can't silently disable a component the developer meant to ship.
     Effect.flatMap((files) =>
       expectedType === 'header' || expectedType === 'footer'
         ? partitionByEnabledState(fs, files)
@@ -269,31 +269,36 @@ const scanDirectory = (
 /**
  * Reads each candidate header/footer file and keeps only the enabled ones
  * ("Enabled: true"); dormant files are dropped before validation
- * (skip-entirely). An invalid Enabled value propagates as a scan failure.
+ * (skip-entirely). Invalid Enabled values are collected across all candidate
+ * files and reported together, mirroring `scanDirectory`'s error aggregation.
  */
 const partitionByEnabledState = (
   fs: FileSystem.FileSystem,
   files: string[],
 ): Effect.Effect<string[], RegistryScanError> =>
-  Effect.forEach(
-    files,
-    (filePath) =>
-      fs.readFileString(filePath).pipe(
-        Effect.mapError((cause) => new RegistryScanError({ directory: filePath, cause })),
-        Effect.map((content) => ({ filePath, parsed: parseEnabledState(content) })),
-        Effect.flatMap(({ filePath, parsed }) =>
-          'error' in parsed
-            ? Effect.fail(
-                new RegistryScanError({
-                  directory: filePath,
-                  cause: parsed.error,
-                }),
-              )
-            : Effect.succeed({ filePath, state: parsed.state }),
-        ),
+  Effect.validateAll(files, (filePath) =>
+    fs.readFileString(filePath).pipe(
+      Effect.mapError((cause) => new RegistryScanError({ directory: filePath, cause })),
+      Effect.map((content) => ({ filePath, parsed: parseEnabledState(content) })),
+      Effect.flatMap(({ filePath, parsed }) =>
+        'error' in parsed
+          ? Effect.fail(
+              new RegistryScanError({
+                directory: filePath,
+                cause: parsed.error,
+              }),
+            )
+          : Effect.succeed({ filePath, state: parsed.state }),
       ),
-    { concurrency: 'unbounded' },
+    ),
   ).pipe(
+    Effect.mapError(
+      (errors) =>
+        new RegistryScanError({
+          directory: 'experimental/custom',
+          cause: errors.map((registryError) => String(registryError.cause)).join('\n'),
+        }),
+    ),
     Effect.map((tagged) =>
       tagged.filter(({ state }) => state === 'enabled').map(({ filePath }) => filePath),
     ),
@@ -465,15 +470,27 @@ export const runRegistryScript = (projectDir: string) =>
     const registryDir = path.join(projectDir, 'core', 'journey', '_utilities', 'registry');
     const registryPath = path.join(registryDir, 'custom-registry.ts');
 
+    // Validate mode across the four directory scans: a stage scan error must
+    // not mask header/footer scan errors (and vice versa) — all of them are
+    // collected and reported together, matching the per-file aggregation
+    // inside scanDirectory.
     const [stageComponents, callbackComponents, headerComponents, footerComponents] =
-      yield* Effect.all(
+      yield* Effect.validateAll(
         [
           scanDirectory(fs, path, stageDir, 'stage'),
           scanDirectory(fs, path, callbackDir, 'callback'),
           scanDirectory(fs, path, headerDir, 'header'),
           scanDirectory(fs, path, footerDir, 'footer'),
         ],
-        { concurrency: 'unbounded' },
+        (scan) => scan,
+      ).pipe(
+        Effect.mapError(
+          (errors) =>
+            new RegistryScanError({
+              directory: projectDir,
+              cause: errors.map((registryError) => String(registryError.cause)).join('\n'),
+            }),
+        ),
       );
 
     const content = yield* Effect.try({

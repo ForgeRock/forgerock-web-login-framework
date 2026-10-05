@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RegistryCollisionError, RegistryEnabledLimitError } from './registry.errors.js';
+import { RegistryCollisionError, RegistryEnabledLimitError, RegistryScanError } from './registry.errors.js';
 import {
   buildRegistryContent,
   parseAcceptedProps,
@@ -746,6 +746,36 @@ describe('runRegistryScript', () => {
       throw new Error('Expected runRegistryScript to fail');
     }
     expect(String(result.left.cause)).toContain('Invalid Enabled value "yes"');
+  });
+
+  it('reports every invalid Enabled value together instead of stopping at the first', async () => {
+    const writeEnabledFile = async (dir: string, file: string, enabledValue: string) => {
+      const invalidDir = join(tmpDir, 'experimental', 'custom', dir);
+      await mkdir(invalidDir, { recursive: true });
+      await writeFile(
+        join(invalidDir, file),
+        `<!--\n   @component\n   Type: ${dir === 'headers' ? 'header' : 'footer'}\n   Name: ${enabledValue}\n   Enabled: ${enabledValue}\n   -->\n<div></div>`,
+        'utf8',
+      );
+    };
+    await writeEnabledFile('headers', 'one.svelte', 'yes');
+    await writeEnabledFile('headers', 'two.svelte', 'nope');
+    await writeEnabledFile('footers', 'three.svelte', 'maybe');
+
+    const result = await Effect.runPromise(
+      Effect.either(runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer))),
+    );
+    if (result._tag !== 'Left') {
+      throw new Error('Expected runRegistryScript to fail');
+    }
+    const error = result.left;
+    if (!(error instanceof RegistryScanError)) {
+      throw new Error(`Expected RegistryScanError, got: ${String(error)}`);
+    }
+    const cause = String(error.cause);
+    expect(cause).toContain('Invalid Enabled value "yes"');
+    expect(cause).toContain('Invalid Enabled value "nope"');
+    expect(cause).toContain('Invalid Enabled value "maybe"');
   });
 
   it('fails when two enabled header components exist', async () => {
