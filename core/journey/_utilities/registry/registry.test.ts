@@ -6,7 +6,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { RegistryCollisionError, RegistryEnabledLimitError, RegistryScanError } from './registry.errors.js';
+import {
+  RegistryCollisionError,
+  RegistryEnabledLimitError,
+  RegistryScanError,
+} from './registry.errors.js';
 import {
   buildRegistryContent,
   parseAcceptedProps,
@@ -754,7 +758,9 @@ describe('runRegistryScript', () => {
       await mkdir(invalidDir, { recursive: true });
       await writeFile(
         join(invalidDir, file),
-        `<!--\n   @component\n   Type: ${dir === 'headers' ? 'header' : 'footer'}\n   Name: ${enabledValue}\n   Enabled: ${enabledValue}\n   -->\n<div></div>`,
+        `<!--\n   @component\n   Type: ${
+          dir === 'headers' ? 'header' : 'footer'
+        }\n   Name: ${enabledValue}\n   Enabled: ${enabledValue}\n   -->\n<div></div>`,
         'utf8',
       );
     };
