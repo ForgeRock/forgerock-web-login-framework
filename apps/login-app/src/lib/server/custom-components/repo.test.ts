@@ -7,85 +7,53 @@
  *
  * */
 
-import { NodeFileSystem } from '@effect/platform-node';
-import { afterEach, describe, expect, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { FileSync } from './file-sync';
-import { ComponentRepo, ComponentRepoError } from './repo';
+import { fileSyncNoop } from './file-sync';
+import { createComponentRepo } from './repo';
 
 const temporaryDirectories: string[] = [];
 
-const makeTemporaryDirectory = () =>
-  Effect.tryPromise({
-    try: () => mkdtemp(join(tmpdir(), 'repo-')),
-    catch: (cause) => cause,
-  }).pipe(
-    Effect.tap((directory) =>
-      Effect.sync(() => {
-        temporaryDirectories.push(directory);
-      }),
-    ),
-  );
+const makeTemporaryDirectory = async (): Promise<string> => {
+  const directory = await mkdtemp(join(tmpdir(), 'repo-'));
+  temporaryDirectories.push(directory);
+  return directory;
+};
 
-const repoLayer = (repoDir: string) =>
-  Layer.provide(
-    ComponentRepo.layer({ repoDir, trackedSubpath: 'config' }),
-    Layer.merge(NodeFileSystem.layer, FileSync.layerNoop),
-  );
+const saveWith = (repoDir: string) =>
+  createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
 
-const save = (repoDir: string, relPath: string, content: string) =>
-  Effect.provide(
-    Effect.flatMap(ComponentRepo, (repo) => repo.saveArtifacts([{ relPath, content }])),
-    repoLayer(repoDir),
-  );
+const save = async (repoDir: string, relPath: string, content: string) =>
+  saveWith(repoDir)([{ relPath, content }]);
 
-const saveArtifacts = (
+const saveArtifacts = async (
   repoDir: string,
   artifacts: ReadonlyArray<{ relPath: string; content: string }>,
-) =>
-  Effect.provide(
-    Effect.flatMap(ComponentRepo, (repo) => repo.saveArtifacts(artifacts)),
-    repoLayer(repoDir),
+) => saveWith(repoDir)(artifacts);
+
+const readUtf8 = (path: string) => readFile(path, 'utf8');
+
+const readDirectory = (path: string) => readdir(path);
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
   );
+});
 
-const readUtf8 = (path: string) =>
-  Effect.tryPromise({
-    try: () => readFile(path, 'utf8'),
-    catch: (cause) => cause,
+describe('createComponentRepo', () => {
+  it('writes a component below the tracked repository subpath', async () => {
+    const repoDir = await makeTemporaryDirectory();
+
+    await save(repoDir, 'journeys/login.json', '{"journey":"login"}');
+
+    expect(await readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe(
+      '{"journey":"login"}',
+    );
   });
-
-const readDirectory = (path: string) =>
-  Effect.tryPromise({
-    try: () => readdir(path),
-    catch: (cause) => cause,
-  });
-
-afterEach(() =>
-  Effect.tryPromise({
-    try: () =>
-      Promise.all(
-        temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
-      ),
-    catch: (cause) => cause,
-  }),
-);
-
-describe('ComponentRepo', () => {
-  it.effect('writes a component below the tracked repository subpath', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-
-      yield* save(repoDir, 'journeys/login.json', '{"journey":"login"}');
-
-      expect(yield* readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe(
-        '{"journey":"login"}',
-      );
-    }),
-  );
 
   for (const relPath of [
     '../outside.json',
@@ -95,75 +63,61 @@ describe('ComponentRepo', () => {
     '\\outside.json',
     '',
   ]) {
-    it.effect(`rejects unsafe relative path ${relPath}`, () =>
-      Effect.gen(function* () {
-        const repoDir = yield* makeTemporaryDirectory();
-        const result = yield* Effect.either(save(repoDir, relPath, '{}'));
+    it(`rejects unsafe relative path ${relPath}`, async () => {
+      const repoDir = await makeTemporaryDirectory();
 
-        expect(result._tag).toBe('Left');
-        if (result._tag === 'Left') {
-          expect(result.left).toBeInstanceOf(ComponentRepoError);
-          expect(result.left._tag).toBe('ComponentRepoError');
-        }
-      }),
-    );
+      await expect(save(repoDir, relPath, '{}')).rejects.toThrow(/unsafe component path/i);
+    });
   }
 
-  it.effect('atomically swaps complete component content for concurrent readers', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const destination = join(repoDir, 'config', 'journeys', 'login.json');
-      const oldContent = JSON.stringify({ version: 'old', payload: 'a'.repeat(50_000) });
-      const newContents = Array.from({ length: 25 }, (_, version) =>
-        JSON.stringify({ version, payload: String(version).repeat(50_000) }),
-      );
+  it('atomically swaps complete component content for concurrent readers', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const destination = join(repoDir, 'config', 'journeys', 'login.json');
+    const oldContent = JSON.stringify({ version: 'old', payload: 'a'.repeat(50_000) });
+    const newContents = Array.from({ length: 25 }, (_, version) =>
+      JSON.stringify({ version, payload: String(version).repeat(50_000) }),
+    );
 
-      yield* save(repoDir, 'journeys/login.json', oldContent);
+    await save(repoDir, 'journeys/login.json', oldContent);
 
-      const observed = new Set<string>();
-      let writing = true;
-      const reader = (async () => {
-        while (writing) {
-          observed.add(await readFile(destination, 'utf8'));
-        }
-      })();
-
-      for (const content of newContents) {
-        yield* save(repoDir, 'journeys/login.json', content);
+    const observed = new Set<string>();
+    let writing = true;
+    const reader = (async () => {
+      while (writing) {
+        observed.add(await readFile(destination, 'utf8'));
       }
-      writing = false;
-      yield* Effect.tryPromise({ try: () => reader, catch: (cause) => cause });
+    })();
 
-      const allowed = new Set([oldContent, ...newContents]);
-      for (const content of observed) {
-        expect(allowed.has(content)).toBe(true);
-        expect(JSON.parse(content)).toHaveProperty('payload');
-      }
-    }),
-  );
+    for (const content of newContents) {
+      await save(repoDir, 'journeys/login.json', content);
+    }
+    writing = false;
+    await reader;
 
-  it.effect('removes the temporary file after a successful atomic rename', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
+    const allowed = new Set([oldContent, ...newContents]);
+    for (const content of observed) {
+      expect(allowed.has(content)).toBe(true);
+      expect(JSON.parse(content)).toHaveProperty('payload');
+    }
+  });
 
-      yield* save(repoDir, 'journeys/login.json', '{}');
+  it('removes the temporary file after a successful atomic rename', async () => {
+    const repoDir = await makeTemporaryDirectory();
 
-      expect(yield* readDirectory(join(repoDir, 'config', 'journeys'))).toEqual(['login.json']);
-    }),
-  );
+    await save(repoDir, 'journeys/login.json', '{}');
 
-  it.effect('validates every artifact before creating temporary files', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const result = yield* Effect.either(
-        saveArtifacts(repoDir, [
-          { relPath: 'journeys/login.json', content: '{}' },
-          { relPath: '../outside.json', content: '{}' },
-        ]),
-      );
+    expect(await readDirectory(join(repoDir, 'config', 'journeys'))).toEqual(['login.json']);
+  });
 
-      expect(result._tag).toBe('Left');
-      expect(yield* readDirectory(repoDir)).toEqual([]);
-    }),
-  );
+  it('validates every artifact before creating temporary files', async () => {
+    const repoDir = await makeTemporaryDirectory();
+
+    await expect(
+      saveArtifacts(repoDir, [
+        { relPath: 'journeys/login.json', content: '{}' },
+        { relPath: '../outside.json', content: '{}' },
+      ]),
+    ).rejects.toThrow(/unsafe component path/i);
+    expect(await readDirectory(repoDir)).toEqual([]);
+  });
 });

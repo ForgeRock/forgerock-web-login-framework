@@ -7,10 +7,8 @@
  *
  * */
 
-import { Effect } from 'effect';
-
 import { publishComponentSource } from '$lib/server/custom-components/api';
-import { ComponentApiRuntime } from '$lib/server/custom-components/runtime';
+import { componentApiDependencies } from '$lib/server/custom-components/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -25,4 +23,4 @@ import type { RequestHandler } from './$types';
  * repository failure.
  */
 export const POST: RequestHandler = ({ request }) =>
-  Effect.runPromise(Effect.provide(publishComponentSource(request), ComponentApiRuntime));
+  publishComponentSource(request, componentApiDependencies());

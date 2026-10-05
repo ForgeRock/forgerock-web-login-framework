@@ -1,4 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 export const AM_URL = 'https://openam-sdks.forgeblocks.com/am';
 export const AM_COOKIE_NAME = '5421aeddf91aa20';
@@ -8,6 +10,8 @@ const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 const configErrorUrl = 'http://localhost:3100';
 const idmThemeUrl = 'http://localhost:3300';
 const defaultJourneyUrl = 'http://localhost:5829';
+// Shared location for the Component API file e2e tests; the tests wipe it per run.
+export const componentsRepoDir = join(tmpdir(), 'login-app-components-e2e');
 // This forgeblocks tenant serves IDM at the tenant root, not under /am — FR_IDM_URL defaults
 // to FR_AM_URL, which 404s against /openidm/config/ui/themerealm, so it must be overridden.
 const IDM_URL = 'https://openam-sdks.forgeblocks.com';
@@ -30,6 +34,10 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_OAUTH_SCOPE: 'openid profile email',
           FR_REALM_PATH: AM_REALM,
           FR_AM_WELLKNOWN_URL: `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
+          COMPONENT_API_ENABLED: 'true',
+          ORIGIN: url,
+          CONFIG_REPO_DIR: componentsRepoDir,
+          CONFIG_TRACKED_SUBPATH: 'config',
         },
       },
       // Dedicated server with FR_AM_WELLKNOWN_URL missing, so the config-error test can hit

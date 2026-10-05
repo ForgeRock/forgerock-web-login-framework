@@ -7,31 +7,16 @@
  *
  * */
 
-import { Data, Effect } from 'effect';
-
 export * from './api.schemas';
-
-/** Failure returned when a fields projection contains an empty path segment. */
-export class InvalidFieldsError extends Data.TaggedError('InvalidFieldsError')<{
-  readonly message: string;
-}> {}
-
-/** Parses a comma-separated projection into dot-notation property paths; empty means the full record. */
-export const parseFields = (
-  input: string | null,
-): Effect.Effect<ReadonlyArray<ReadonlyArray<string>>, InvalidFieldsError> => {
-  if (input === null || input.trim() === '') return Effect.succeed([]);
-
-  const fields = input.split(',').map((path) => path.split('.').map((segment) => segment.trim()));
-  return fields.some((segments) => segments.some((segment) => segment.length === 0))
-    ? Effect.fail(new InvalidFieldsError({ message: 'Invalid fields projection' }))
-    : Effect.succeed(fields);
-};
 
 /**
  * Returns a record containing only requested top-level or nested property paths.
  * Built on a null-prototype object with own-property checks so that paths like
  * `__proto__.toString.x` cannot pollute `Object.prototype`.
+ *
+ * @param record - The source component record.
+ * @param fields - Parsed projection paths; no paths retains the full record.
+ * @returns A new, projected record.
  */
 export const projectRecord = (
   record: Record<string, unknown>,

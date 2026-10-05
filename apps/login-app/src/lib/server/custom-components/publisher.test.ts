@@ -7,75 +7,53 @@
  *
  * */
 
-import { NodeFileSystem } from '@effect/platform-node';
-import { afterEach, describe, expect, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { FileSync } from './file-sync';
-import { ComponentPublisher, ComponentPublisherError, parseBundle } from './publisher';
-import { ComponentRepo } from './repo';
+import { fileSyncNoop } from './file-sync';
+import { createComponentPublisher, parseBundle } from './publisher';
+import { createComponentRepo } from './repo';
 
 const temporaryDirectories: string[] = [];
 
-const makeTemporaryDirectory = () =>
-  Effect.tryPromise({
-    try: () => mkdtemp(join(tmpdir(), 'publisher-')),
-    catch: (cause) => cause,
-  }).pipe(
-    Effect.tap((directory) =>
-      Effect.sync(() => {
-        temporaryDirectories.push(directory);
-      }),
-    ),
+const makeTemporaryDirectory = async (): Promise<string> => {
+  const directory = await mkdtemp(join(tmpdir(), 'publisher-'));
+  temporaryDirectories.push(directory);
+  return directory;
+};
+
+const publishWith = (repoDir: string) => {
+  const repo = createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
+  return createComponentPublisher(repo);
+};
+
+const publish = async (repoDir: string, bundle: string) => {
+  const result = await publishWith(repoDir)(bundle);
+  if (!result.success) {
+    throw new Error(`Expected the publish to succeed: ${result.error.message}`);
+  }
+};
+
+const readUtf8 = (path: string) => readFile(path, 'utf8');
+
+const readDirectory = (path: string) => readdir(path);
+
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
   );
-
-const publish = (repoDir: string, bundle: string) =>
-  Effect.provide(
-    Effect.flatMap(ComponentPublisher, (publisher) => publisher.publishComponent(bundle)),
-    Layer.provide(
-      ComponentPublisher.layer,
-      Layer.provide(
-        ComponentRepo.layer({ repoDir, trackedSubpath: 'config' }),
-        Layer.merge(NodeFileSystem.layer, FileSync.layerNoop),
-      ),
-    ),
-  );
-
-const readUtf8 = (path: string) =>
-  Effect.tryPromise({
-    try: () => readFile(path, 'utf8'),
-    catch: (cause) => cause,
-  });
-
-const readDirectory = (path: string) =>
-  Effect.tryPromise({
-    try: () => readdir(path),
-    catch: (cause) => cause,
-  });
-
-afterEach(() =>
-  Effect.tryPromise({
-    try: () =>
-      Promise.all(
-        temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
-      ),
-    catch: (cause) => cause,
-  }),
-);
+});
 
 describe('parseBundle', () => {
-  it.effect('parses file entries and ignores unknown fields', () =>
-    Effect.gen(function* () {
-      const result = yield* parseBundle(
-        '{"files":[{"path":"journeys/login.json","content":"{}","ignored":true}],"ignored":true}',
-      );
+  it('parses file entries and ignores unknown fields', () => {
+    const result = parseBundle(
+      '{"files":[{"path":"journeys/login.json","content":"{}","ignored":true}],"ignored":true}',
+    );
 
-      expect(result).toEqual([{ relPath: 'journeys/login.json', content: '{}' }]);
-    }),
-  );
+    expect(result).toEqual([{ relPath: 'journeys/login.json', content: '{}' }]);
+  });
 
   for (const bundle of [
     'not json',
@@ -85,45 +63,53 @@ describe('parseBundle', () => {
     '{"files":[{"path":"../outside.json","content":"{}"}]}',
     '{"files":[{"path":".git/config","content":"{}"}]}',
   ]) {
-    it.effect(`rejects invalid bundle ${bundle}`, () =>
-      Effect.gen(function* () {
-        const result = yield* Effect.either(parseBundle(bundle));
-
-        expect(result._tag).toBe('Left');
-        if (result._tag === 'Left') {
-          expect(result.left).toBeInstanceOf(ComponentPublisherError);
-        }
-      }),
-    );
+    it(`rejects invalid bundle ${bundle}`, () => {
+      expect(() => parseBundle(bundle)).toThrow(/bundle|unsafe path/i);
+    });
   }
 });
 
-describe('ComponentPublisher', () => {
-  it.effect('publishes every bundle file through ComponentRepo', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
+describe('createComponentPublisher', () => {
+  it('publishes every bundle file through the component repo', async () => {
+    const repoDir = await makeTemporaryDirectory();
 
-      yield* publish(
-        repoDir,
-        '{"files":[{"path":"journeys/login.json","content":"{\\"journey\\":\\"login\\"}"},{"path":"themes/main.json","content":"{}"}]}',
-      );
+    await publish(
+      repoDir,
+      '{"files":[{"path":"journeys/login.json","content":"{\\"journey\\":\\"login\\"}"},{"path":"themes/main.json","content":"{}"}]}',
+    );
 
-      expect(yield* readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe(
-        '{"journey":"login"}',
-      );
-      expect(yield* readUtf8(join(repoDir, 'config', 'themes', 'main.json'))).toBe('{}');
-    }),
-  );
+    expect(await readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe(
+      '{"journey":"login"}',
+    );
+    expect(await readUtf8(join(repoDir, 'config', 'themes', 'main.json'))).toBe('{}');
+  });
 
-  it.effect('validates all artifacts before writing any file', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const bundle =
-        '{"files":[{"path":"journeys/login.json","content":"{}"},{"path":"../outside.json","content":"{}"}]}';
-      const result = yield* Effect.either(publish(repoDir, bundle));
+  it('validates all artifacts before writing any file', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const bundle =
+      '{"files":[{"path":"journeys/login.json","content":"{}"},{"path":"../outside.json","content":"{}"}]}';
 
-      expect(result._tag).toBe('Left');
-      expect(yield* readDirectory(repoDir)).toEqual([]);
-    }),
-  );
+    const result = await publishWith(repoDir)(bundle);
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.reason).toBe('Invalid');
+    expect(await readDirectory(repoDir)).toEqual([]);
+  });
+
+  it('reports storage failures with the Storage reason', async () => {
+    const repoFailure = async () => {
+      throw new Error('disk unavailable');
+    };
+    const publisher = createComponentPublisher(repoFailure);
+
+    const result = await publisher('{"files":[{"path":"bundle.js","content":"{}"}]}');
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+    expect(result.error.reason).toBe('Storage');
+    expect(result.error.message).toBe('Unable to persist component bundle');
+  });
 });

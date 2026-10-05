@@ -7,14 +7,12 @@
  *
  * */
 
-import { describe, expect, it } from '@effect/vitest';
-import { Effect, Schema } from 'effect';
+import { describe, expect, it } from 'vitest';
 
 import {
   ComponentIdSchema,
   ComponentTypeSchema,
   CreateComponentRequestSchema,
-  parseFields,
   projectRecord,
   PublishRequestSchema,
 } from './fields.utils';
@@ -28,78 +26,47 @@ const meta = {
   fromJson: '',
 };
 
-const decodes = <A>(schema: Schema.Schema<A>, input: unknown) =>
-  Schema.decodeUnknown(schema)(input).pipe(Effect.either);
+const decodes = <S extends { safeParse: (input: unknown) => { success: boolean } }>(
+  schema: S,
+  input: unknown,
+) => schema.safeParse(input).success;
 
 describe('Component API schemas', () => {
-  it.effect('accepts supported component types and rejects unknown types', () =>
-    Effect.gen(function* () {
-      expect(yield* decodes(ComponentTypeSchema, 'callbacks')).toMatchObject({ _tag: 'Right' });
-      expect(yield* decodes(ComponentTypeSchema, 'widgets')).toMatchObject({ _tag: 'Left' });
-    }),
-  );
+  it('accepts supported component types and rejects unknown types', () => {
+    expect(decodes(ComponentTypeSchema, 'callbacks')).toBe(true);
+    expect(decodes(ComponentTypeSchema, 'widgets')).toBe(false);
+  });
 
-  it.effect('accepts UUID component ids and rejects invalid ids', () =>
-    Effect.gen(function* () {
-      expect(yield* decodes(ComponentIdSchema, componentId)).toMatchObject({ _tag: 'Right' });
-      expect(yield* decodes(ComponentIdSchema, 'component-1')).toMatchObject({ _tag: 'Left' });
-    }),
-  );
+  it('accepts UUID component ids and rejects invalid ids', () => {
+    expect(decodes(ComponentIdSchema, componentId)).toBe(true);
+    expect(decodes(ComponentIdSchema, 'component-1')).toBe(false);
+  });
 
-  it.effect('rejects server-owned ids and dates from create requests', () =>
-    Effect.gen(function* () {
-      expect(
-        yield* decodes(CreateComponentRequestSchema, {
-          src: '',
-          meta: { ...meta, createdDate: 'x' },
-        }),
-      ).toMatchObject({ _tag: 'Left' });
-      expect(
-        yield* decodes(CreateComponentRequestSchema, { id: componentId, src: '', meta }),
-      ).toMatchObject({ _tag: 'Left' });
-    }),
-  );
+  it('rejects server-owned ids and dates from create requests', () => {
+    expect(
+      decodes(CreateComponentRequestSchema, {
+        src: '',
+        meta: { ...meta, createdDate: 'x' },
+      }),
+    ).toBe(false);
+    expect(decodes(CreateComponentRequestSchema, { id: componentId, src: '', meta })).toBe(false);
+  });
 
-  it.effect('accepts publish requests with and without files', () =>
-    Effect.gen(function* () {
-      expect(yield* decodes(PublishRequestSchema, { code: 'export default {}' })).toMatchObject({
-        _tag: 'Right',
-      });
-      expect(
-        yield* decodes(PublishRequestSchema, {
-          code: 'export default {}',
-          files: [{ path: 'component.svelte', content: '<div />' }],
-        }),
-      ).toMatchObject({ _tag: 'Right' });
-    }),
-  );
+  it('accepts publish requests with and without files', () => {
+    expect(decodes(PublishRequestSchema, { code: 'export default {}' })).toBe(true);
+    expect(
+      decodes(PublishRequestSchema, {
+        code: 'export default {}',
+        files: [{ path: 'component.svelte', content: '<div />' }],
+      }),
+    ).toBe(true);
+  });
 
-  it.effect('parses valid fields paths and rejects empty segments', () =>
-    Effect.gen(function* () {
-      const valid = yield* parseFields('callback.id,callback.meta');
-      expect(valid).toEqual([
-        ['callback', 'id'],
-        ['callback', 'meta'],
-      ]);
-
-      const result = yield* Effect.either(parseFields('callback..id'));
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left._tag).toBe('InvalidFieldsError');
-        expect(result.left.message).toBe('Invalid fields projection');
-      }
-    }),
-  );
-
-  it.effect('projects only requested nested fields', () =>
-    Effect.gen(function* () {
-      const fields = yield* parseFields('callback.meta.name');
-      expect(
-        projectRecord(
-          { callback: { id: 'id', meta: { name: 'Password' } }, src: 'ignored' },
-          fields,
-        ),
-      ).toEqual({ callback: { meta: { name: 'Password' } } });
-    }),
-  );
+  it('projects only requested nested fields', () => {
+    expect(
+      projectRecord({ callback: { id: 'id', meta: { name: 'Password' } }, src: 'ignored' }, [
+        ['callback', 'meta', 'name'],
+      ]),
+    ).toEqual({ callback: { meta: { name: 'Password' } } });
+  });
 });

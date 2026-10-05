@@ -7,18 +7,16 @@
  *
  * */
 
-import { NodeFileSystem } from '@effect/platform-node';
-import { afterEach, describe, expect, it } from '@effect/vitest';
-import { Effect, Layer } from 'effect';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { afterEach, describe, expect, it } from 'vitest';
 
-import { FileSync } from './file-sync';
-import { ComponentStore } from './records';
-import { ComponentRepo } from './repo';
+import { fileSyncNoop } from './file-sync';
+import { createComponentStore } from './records';
+import { createComponentRepo } from './repo';
 
-import type { ComponentStoreError } from './records';
+import type { ComponentStoreError } from './component.types';
 
 const temporaryDirectories: string[] = [];
 
@@ -34,152 +32,124 @@ const request = {
   },
 };
 
-const makeTemporaryDirectory = () =>
-  Effect.tryPromise({
-    try: () => mkdtemp(join(tmpdir(), 'records-')),
-    catch: (cause) => cause,
-  }).pipe(
-    Effect.tap((directory) =>
-      Effect.sync(() => {
-        temporaryDirectories.push(directory);
-      }),
-    ),
-  );
-
-const storeLayer = (repoDir: string) => {
-  const infrastructure = Layer.merge(NodeFileSystem.layer, FileSync.layerNoop);
-  const repo = Layer.provide(
-    ComponentRepo.layer({ repoDir, trackedSubpath: 'config' }),
-    infrastructure,
-  );
-  return Layer.provide(
-    ComponentStore.layer({ repoDir, trackedSubpath: 'config' }),
-    Layer.merge(infrastructure, repo),
-  );
+const makeTemporaryDirectory = async (): Promise<string> => {
+  const directory = await mkdtemp(join(tmpdir(), 'records-'));
+  temporaryDirectories.push(directory);
+  return directory;
 };
 
-const withStore = <A>(
-  repoDir: string,
-  use: (store: typeof ComponentStore.Service) => Effect.Effect<A, ComponentStoreError>,
-) => Effect.provide(Effect.flatMap(ComponentStore, use), storeLayer(repoDir));
+const makeStore = (repoDir: string) => {
+  const repo = createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
+  return createComponentStore({ repoDir, trackedSubpath: 'config' }, repo, fileSyncNoop);
+};
 
-afterEach(() =>
-  Effect.tryPromise({
-    try: () =>
-      Promise.all(
-        temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
-      ),
-    catch: (cause) => cause,
-  }),
-);
+/** Unwraps a successful storage result, failing the test when the operation errored. */
+const unwrap = async <Value>(
+  result: Promise<{ success: boolean; value?: Value; error?: ComponentStoreError }>,
+): Promise<Value> => {
+  const outcome = await result;
+  if (!outcome.success) {
+    throw new Error(`Expected a successful result, got: ${outcome.error?.message}`);
+  }
+  return outcome.value as Value;
+};
 
-describe('ComponentStore', () => {
-  it.effect('creates and retrieves a component record', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const created = yield* withStore(repoDir, (store) => store.create('callbacks', request));
-      const retrieved = yield* withStore(repoDir, (store) => store.get('callbacks', created.id));
+/** Unwraps a failed storage result, failing the test when the operation succeeded. */
+const unwrapError = async (
+  result: Promise<{ success: boolean; error?: ComponentStoreError }>,
+): Promise<ComponentStoreError> => {
+  const outcome = await result;
+  if (outcome.success) {
+    throw new Error('Expected the operation to fail');
+  }
+  return outcome.error as ComponentStoreError;
+};
 
-      expect(created.id).toMatch(/^[0-9a-f-]{36}$/i);
-      expect(created.meta.createdDate).toBe(created.meta.modifiedDate);
-      expect(retrieved).toEqual(created);
-    }),
+afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories.splice(0).map((directory) => rm(directory, { recursive: true })),
   );
+});
 
-  it.effect('lists created records', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const first = yield* withStore(repoDir, (store) => store.create('stages', request));
-      const second = yield* withStore(repoDir, (store) =>
-        store.create('stages', { ...request, meta: { ...request.meta, name: 'second' } }),
-      );
+describe('createComponentStore', () => {
+  it('creates and retrieves a component record', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const created = await unwrap(makeStore(repoDir).create('callbacks', request));
+    const retrieved = await unwrap(makeStore(repoDir).get('callbacks', created.id));
 
-      expect(yield* withStore(repoDir, (store) => store.list('stages'))).toEqual(
-        expect.arrayContaining([first, second]),
-      );
-    }),
-  );
+    expect(created.id).toMatch(/^[0-9a-f-]{36}$/i);
+    expect(created.meta.createdDate).toBe(created.meta.modifiedDate);
+    expect(retrieved).toEqual(created);
+  });
 
-  it.effect('returns NotFound for a missing component', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const result = yield* Effect.either(
-        withStore(repoDir, (store) =>
-          store.get('callbacks', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
-        ),
-      );
+  it('lists created records', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const first = await unwrap(makeStore(repoDir).create('stages', request));
+    const second = await unwrap(
+      makeStore(repoDir).create('stages', {
+        ...request,
+        meta: { ...request.meta, name: 'second' },
+      }),
+    );
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') expect(result.left.reason).toBe('NotFound');
-    }),
-  );
+    expect(await unwrap(makeStore(repoDir).list('stages'))).toEqual(
+      expect.arrayContaining([first, second]),
+    );
+  });
 
-  it.effect('updates a component while preserving its creation date', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const created = yield* withStore(repoDir, (store) => store.create('headers', request));
-      const updated = yield* withStore(repoDir, (store) =>
-        store.update('headers', created.id, { ...request, src: 'updated source' }),
-      );
+  it('returns NotFound for a missing component', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const error = await unwrapError(
+      makeStore(repoDir).get('callbacks', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
+    );
 
-      expect(updated.meta.createdDate).toBe(created.meta.createdDate);
-      expect(updated.meta.modifiedDate >= created.meta.modifiedDate).toBe(true);
-      expect(updated.src).toBe('updated source');
-    }),
-  );
+    expect(error.reason).toBe('NotFound');
+  });
 
-  it.effect('returns NotFound when updating a missing component', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const result = yield* Effect.either(
-        withStore(repoDir, (store) =>
-          store.update('footers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0', request),
-        ),
-      );
+  it('updates a component while preserving its creation date', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const created = await unwrap(makeStore(repoDir).create('headers', request));
+    const updated = await unwrap(
+      makeStore(repoDir).update('headers', created.id, { ...request, src: 'updated source' }),
+    );
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') expect(result.left.reason).toBe('NotFound');
-    }),
-  );
+    expect(updated.meta.createdDate).toBe(created.meta.createdDate);
+    expect(updated.meta.modifiedDate >= created.meta.modifiedDate).toBe(true);
+    expect(updated.src).toBe('updated source');
+  });
 
-  it.effect('deletes a component record', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const created = yield* withStore(repoDir, (store) => store.create('containers', request));
-      yield* withStore(repoDir, (store) => store.delete('containers', created.id));
-      const result = yield* Effect.either(
-        withStore(repoDir, (store) => store.get('containers', created.id)),
-      );
+  it('returns NotFound when updating a missing component', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const error = await unwrapError(
+      makeStore(repoDir).update('footers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0', request),
+    );
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') expect(result.left.reason).toBe('NotFound');
-    }),
-  );
+    expect(error.reason).toBe('NotFound');
+  });
 
-  it.effect('returns NotFound when deleting a missing component', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const result = yield* Effect.either(
-        withStore(repoDir, (store) =>
-          store.delete('containers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
-        ),
-      );
+  it('deletes a component record', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const created = await unwrap(makeStore(repoDir).create('containers', request));
+    await unwrap(makeStore(repoDir).remove('containers', created.id));
+    const error = await unwrapError(makeStore(repoDir).get('containers', created.id));
 
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') expect(result.left.reason).toBe('NotFound');
-    }),
-  );
+    expect(error.reason).toBe('NotFound');
+  });
 
-  it.effect('silently skips malformed artifacts while listing valid records', () =>
-    Effect.gen(function* () {
-      const repoDir = yield* makeTemporaryDirectory();
-      const created = yield* withStore(repoDir, (store) => store.create('callbacks', request));
-      yield* Effect.tryPromise({
-        try: () => writeFile(join(repoDir, 'config', 'callbacks', 'malformed.json'), '{bad json'),
-        catch: (cause) => cause,
-      });
+  it('returns NotFound when deleting a missing component', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const error = await unwrapError(
+      makeStore(repoDir).remove('containers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
+    );
 
-      expect(yield* withStore(repoDir, (store) => store.list('callbacks'))).toEqual([created]);
-    }),
-  );
+    expect(error.reason).toBe('NotFound');
+  });
+
+  it('silently skips malformed artifacts while listing valid records', async () => {
+    const repoDir = await makeTemporaryDirectory();
+    const created = await unwrap(makeStore(repoDir).create('callbacks', request));
+    await writeFile(join(repoDir, 'config', 'callbacks', 'malformed.json'), '{bad json');
+
+    expect(await unwrap(makeStore(repoDir).list('callbacks'))).toEqual([created]);
+  });
 });

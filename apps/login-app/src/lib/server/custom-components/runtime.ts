@@ -5,54 +5,34 @@
  * This software may be modified and distributed under the terms
  * of the MIT license. See the LICENSE file for details.
  *
- **/
+ * **/
 
-import { NodeFileSystem } from '@effect/platform-node';
-import { Layer } from 'effect';
+import { getUserIdFromSession, getUserRolesForUser } from '$server/sessions';
+import { createComponentAuth } from './auth';
+import { fileSync } from './file-sync';
+import { createComponentPublisher } from './publisher';
+import { createComponentStore } from './records';
+import { createComponentRepo } from './repo';
 
-import { ComponentAuth, type ComponentAuthService } from './auth';
-import { FileSync } from './file-sync';
-import { ComponentPublisher, type ComponentPublisherService } from './publisher';
-import { ComponentStore, type ComponentStoreService } from './records';
-import { ComponentRepo } from './repo';
-
-/**
- * Repository layer configured by the `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH`
- * infrastructure contract with config-saver.
- */
-const componentRepoLayer = ComponentRepo.layer({
-  repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
-  trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
-});
-
-/** Shared repository runtime supplying filesystem and durable-sync services to component layers. */
-const componentRepoRuntime = Layer.provide(
-  componentRepoLayer,
-  Layer.merge(NodeFileSystem.layer, FileSync.layer),
-);
-
-/** Fully provisioned layer for component publishing (publisher + repo + filesystem + file sync). */
-export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, never, never> =
-  Layer.provide(ComponentPublisher.layer, componentRepoRuntime);
+import type { ComponentApiDependencies } from './component.types';
 
 /**
- * Fully provisioned layer for component storage and publishing API handlers, including
- * AM-session admin authentication. Tests can replace this runtime with deterministic layers.
+ * Builds the real Component API dependency graph from the `CONFIG_REPO_DIR` and
+ * `CONFIG_TRACKED_SUBPATH` infrastructure contract with config-saver. Tests construct their
+ * own dependencies instead of calling this.
  */
-export const ComponentApiRuntime: Layer.Layer<
-  ComponentStoreService | ComponentPublisherService | ComponentAuthService,
-  never,
-  never
-> = Layer.merge(
-  ComponentPublisherRuntime,
-  Layer.merge(
-    ComponentAuth.layer(),
-    Layer.provide(
-      ComponentStore.layer({
-        repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
-        trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
-      }),
-      Layer.merge(componentRepoRuntime, Layer.merge(NodeFileSystem.layer, FileSync.layer)),
-    ),
-  ),
-);
+export const componentApiDependencies = (): ComponentApiDependencies => {
+  const config = {
+    repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
+    trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
+  };
+  const repo = createComponentRepo(config, fileSync);
+  return {
+    authenticate: createComponentAuth({
+      getUserId: getUserIdFromSession,
+      getRoles: getUserRolesForUser,
+    }),
+    store: createComponentStore(config, repo, fileSync),
+    publish: createComponentPublisher(repo),
+  };
+};

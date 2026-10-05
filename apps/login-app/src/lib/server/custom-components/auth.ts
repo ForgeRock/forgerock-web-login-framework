@@ -7,92 +7,93 @@
  *
  * */
 
-import { Context, Data, Effect, Layer } from 'effect';
-
 import { AM_COOKIE_NAME } from '$core/constants';
 import { env } from '$env/dynamic/private';
 import { tokenIdSchema } from '$server/schemas';
-import { getUserIdFromSession, getUserRolesForUser } from '$server/sessions';
 
+import type {
+  AmSessionDependencies,
+  ComponentAuthError,
+  ComponentAuthFailureReason,
+  ComponentAuthResult,
+} from './component.types';
 import type { TokenId } from '$server/schemas';
 
-/** An authenticated Component API caller, identified by their AM session uid. */
-export interface AuthUser {
-  readonly uid: string;
-}
+/** AM roles that authorize Component API access, matching the admin-panel redirect convention. */
+const ADMIN_ROLES = ['ui-global-admin', 'ui-realm-admin'];
+
+/** Builds an authentication failure value. */
+const authFailure = (
+  reason: ComponentAuthFailureReason,
+  message: string,
+  cause?: unknown,
+): ComponentAuthResult => ({ success: false, error: { reason, message, cause } });
 
 /**
  * Validates AM sessions on behalf of the Component API: extracts the session token from the
  * request (Bearer credential or AM cookie), verifies it with AM, requires an AM admin role, and
  * enforces an Origin check on mutating cookie-carried requests (CSRF).
+ *
+ * @param dependencies - AM session readers; tests substitute their own.
+ * @returns An authenticator function returning the authenticated user or a failure value.
  */
-export interface ComponentAuthService {
-  /** Authenticates a Component API request, failing when the caller is unauthenticated, forbidden, or AM is unavailable. */
-  readonly authenticate: (request: Request) => Effect.Effect<AuthUser, ComponentAuthError>;
-}
+export const createComponentAuth =
+  (dependencies: AmSessionDependencies) =>
+  async (request: Request): Promise<ComponentAuthResult> => {
+    const tokenId = extractSessionToken(request);
+    if (tokenId === null) {
+      return authFailure('Unauthenticated', 'An AM session token is required');
+    }
 
-/** Failure raised when Component API authentication or authorization cannot complete. */
-export class ComponentAuthError extends Data.TaggedError('ComponentAuthError')<{
-  reason: 'Unauthenticated' | 'Forbidden' | 'Unavailable';
-  message: string;
-  cause?: unknown;
-}> {}
+    let uid: string | null;
+    try {
+      uid = await dependencies.getUserId(tokenId);
+    } catch (cause) {
+      return authFailure('Unavailable', 'Unable to validate the AM session', cause);
+    }
+    if (uid === null) {
+      return authFailure('Unauthenticated', 'The AM session is not valid');
+    }
 
-/** AM roles that authorize Component API access, matching the admin-panel redirect convention. */
-const ADMIN_ROLES = ['ui-global-admin', 'ui-realm-admin'];
+    let roles: string[];
+    try {
+      roles = await dependencies.getRoles(tokenId, uid);
+    } catch (cause) {
+      return authFailure('Unavailable', 'Unable to read AM roles for the session', cause);
+    }
+    if (!roles.some((role) => ADMIN_ROLES.includes(role))) {
+      return authFailure('Forbidden', 'An AM admin role is required');
+    }
 
-/** AM session readers used by the authenticator; replaceable for tests. */
-export interface AmSessionDependencies {
-  getUserId: (tokenId: TokenId, realm?: string) => Promise<string | null>;
-  getRoles: (tokenId: TokenId, uid: string) => Promise<string[]>;
-}
+    const csrfFailure = await csrfCheck(request);
+    return csrfFailure !== undefined
+      ? { success: false, error: csrfFailure }
+      : { success: true, value: { uid } };
+  };
 
-/** Service tag for Component API AM-session admin authentication. */
-const ComponentAuthTag = Context.GenericTag<ComponentAuthService>('@login-app/ComponentAuth');
-
-/** Service tag and layers for Component API AM-session admin authentication. */
-export const ComponentAuth = Object.assign(ComponentAuthTag, {
-  /**
-   * Creates a layer authenticating requests against AM sessions, with injectable session
-   * readers so tests avoid AM without mocking network modules.
-   */
-  layer: (
-    dependencies: AmSessionDependencies = {
-      getUserId: getUserIdFromSession,
-      getRoles: getUserRolesForUser,
-    },
-  ): Layer.Layer<ComponentAuthService> =>
-    Layer.succeed(ComponentAuthTag, {
-      authenticate: (request: Request) =>
-        Effect.flatMap(
-          Effect.sync(() => extractSessionToken(request)),
-          (tokenId) =>
-            tokenId === null
-              ? authFailure('Unauthenticated', 'An AM session token is required')
-              : Effect.flatMap(
-                  readAmSession(
-                    dependencies.getUserId,
-                    tokenId,
-                    'Unable to validate the AM session',
-                  ),
-                  (uid) =>
-                    uid === null
-                      ? authFailure('Unauthenticated', 'The AM session is not valid')
-                      : Effect.flatMap(
-                          readAmSession(
-                            (_) => dependencies.getRoles(tokenId, uid),
-                            tokenId,
-                            'Unable to read AM roles for the session',
-                          ),
-                          (roles) =>
-                            roles.some((role) => ADMIN_ROLES.includes(role))
-                              ? Effect.flatMap(csrfCheck(request), () => Effect.succeed({ uid }))
-                              : authFailure('Forbidden', 'An AM admin role is required'),
-                        ),
-                ),
-        ),
-    }),
-});
+/**
+ * Enforces an Origin check on mutating cookie-carried requests, which blocks cross-site
+ * requests from riding an admin's AM session cookie (CSRF). Fails closed when `ORIGIN`
+ * is not configured: an enabled API must reject mutations, not skip the check.
+ * Returns the failure value, or undefined when the request may proceed.
+ */
+const csrfCheck = async (request: Request): Promise<ComponentAuthError | undefined> => {
+  const mutating = request.method !== 'GET' && request.method !== 'HEAD';
+  if (!mutating || request.headers.get('authorization') !== null) {
+    return undefined;
+  }
+  const configuredOrigin = env.ORIGIN;
+  if (configuredOrigin === undefined) {
+    return {
+      reason: 'Unavailable',
+      message: 'ORIGIN must be configured for cookie-carried mutations',
+    };
+  }
+  const origin = request.headers.get('origin');
+  return origin === configuredOrigin
+    ? undefined
+    : { reason: 'Forbidden', message: 'Request origin is not allowed' };
+};
 
 /**
  * Extracts an AM session token from a request. Browser admin sessions arrive as the AM session
@@ -118,39 +119,3 @@ const parseTokenValue = (value: string): TokenId | null => {
   const parsed = tokenIdSchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 };
-
-/**
- * Enforces an Origin check on mutating cookie-carried requests, which blocks cross-site
- * requests from riding an admin's AM session cookie (CSRF). Fails closed when `ORIGIN`
- * is not configured: an enabled API must reject mutations, not skip the check.
- */
-const csrfCheck = (request: Request): Effect.Effect<void, ComponentAuthError> => {
-  const mutating = request.method !== 'GET' && request.method !== 'HEAD';
-  if (!mutating || request.headers.get('authorization') !== null) {
-    return Effect.void;
-  }
-  const configuredOrigin = env.ORIGIN;
-  if (configuredOrigin === undefined) {
-    return authFailure('Unavailable', 'ORIGIN must be configured for cookie-carried mutations');
-  }
-  const origin = request.headers.get('origin');
-  return origin !== configuredOrigin
-    ? authFailure('Forbidden', 'Request origin is not allowed')
-    : Effect.void;
-};
-
-const readAmSession = <A>(
-  reader: (tokenId: TokenId, realm?: string) => Promise<A>,
-  tokenId: TokenId,
-  message: string,
-): Effect.Effect<A, ComponentAuthError> =>
-  Effect.tryPromise({
-    try: () => reader(tokenId),
-    catch: (cause) => new ComponentAuthError({ reason: 'Unavailable', message, cause }),
-  });
-
-const authFailure = (
-  reason: 'Unauthenticated' | 'Forbidden' | 'Unavailable',
-  message: string,
-): Effect.Effect<never, ComponentAuthError> =>
-  Effect.fail(new ComponentAuthError({ reason, message }));

@@ -34,12 +34,10 @@ vi.mock('$env/dynamic/private', () => ({
   }),
 }));
 
-import { Effect } from 'effect';
-
 import { AM_COOKIE_NAME } from '$core/constants';
-import { ComponentAuth, extractSessionToken } from './auth';
+import { createComponentAuth, extractSessionToken } from './auth';
 
-import type { AmSessionDependencies } from './auth';
+import type { AmSessionDependencies, ComponentAuthError } from './component.types';
 
 const adminDependencies: AmSessionDependencies = {
   getUserId: () => Promise.resolve('admin-user'),
@@ -57,10 +55,18 @@ const failingDependencies: AmSessionDependencies = {
 };
 
 const authenticateWith = (dependencies: AmSessionDependencies, request: Request) =>
-  Effect.provide(
-    Effect.flatMap(ComponentAuth, (auth) => auth.authenticate(request)),
-    ComponentAuth.layer(dependencies),
-  );
+  createComponentAuth(dependencies)(request);
+
+/** Unwraps a failed authentication result, failing the test when authentication succeeded. */
+const expectAuthError = async (
+  result: Promise<{ success: boolean; error?: ComponentAuthError }>,
+): Promise<ComponentAuthError> => {
+  const outcome = await result;
+  if (outcome.success) {
+    throw new Error('Expected authentication to fail');
+  }
+  return outcome.error as ComponentAuthError;
+};
 
 describe('extractSessionToken', () => {
   it('reads a bearer token', () => {
@@ -100,14 +106,17 @@ describe('extractSessionToken', () => {
   });
 });
 
-describe('ComponentAuth.layer', () => {
+describe('createComponentAuth', () => {
   it('authenticates an AM admin session from a bearer token', async () => {
     const request = new Request('http://localhost/api/components/callbacks', {
       method: 'POST',
       headers: { authorization: 'Bearer am-token' },
     });
-    const user = await Effect.runPromise(authenticateWith(adminDependencies, request));
-    expect(user.uid).toBe('admin-user');
+    const outcome = await authenticateWith(adminDependencies, request);
+    expect(outcome.success).toBe(true);
+    if (outcome.success) {
+      expect(outcome.value.uid).toBe('admin-user');
+    }
   });
 
   it('authenticates an AM admin session from the session cookie', async () => {
@@ -115,19 +124,17 @@ describe('ComponentAuth.layer', () => {
       method: 'GET',
       headers: { cookie: `${AM_COOKIE_NAME}=cookie-token` },
     });
-    const user = await Effect.runPromise(authenticateWith(adminDependencies, request));
-    expect(user.uid).toBe('admin-user');
+    const outcome = await authenticateWith(adminDependencies, request);
+    expect(outcome.success).toBe(true);
+    if (outcome.success) {
+      expect(outcome.value.uid).toBe('admin-user');
+    }
   });
 
   it('fails unauthenticated when no credential is present', async () => {
     const request = new Request('http://localhost/api/components/callbacks');
-    const result = await Effect.runPromise(
-      Effect.either(authenticateWith(adminDependencies, request)),
-    );
-    expect(result._tag).toBe('Left');
-    if (result._tag === 'Left') {
-      expect(result.left.reason).toBe('Unauthenticated');
-    }
+    const error = await expectAuthError(authenticateWith(adminDependencies, request));
+    expect(error.reason).toBe('Unauthenticated');
   });
 
   it('fails unauthenticated when AM rejects the session', async () => {
@@ -138,39 +145,24 @@ describe('ComponentAuth.layer', () => {
       getUserId: () => Promise.resolve(null),
       getRoles: async () => Promise.resolve([]),
     };
-    const result = await Effect.runPromise(
-      Effect.either(authenticateWith(rejectingDependencies, request)),
-    );
-    expect(result._tag).toBe('Left');
-    if (result._tag === 'Left') {
-      expect(result.left.reason).toBe('Unauthenticated');
-    }
+    const error = await expectAuthError(authenticateWith(rejectingDependencies, request));
+    expect(error.reason).toBe('Unauthenticated');
   });
 
   it('fails forbidden for a valid session without an admin role', async () => {
     const request = new Request('http://localhost/api/components/callbacks', {
       headers: { authorization: 'Bearer enduser-token' },
     });
-    const result = await Effect.runPromise(
-      Effect.either(authenticateWith(enduserDependencies, request)),
-    );
-    expect(result._tag).toBe('Left');
-    if (result._tag === 'Left') {
-      expect(result.left.reason).toBe('Forbidden');
-    }
+    const error = await expectAuthError(authenticateWith(enduserDependencies, request));
+    expect(error.reason).toBe('Forbidden');
   });
 
   it('fails unavailable when AM cannot be reached', async () => {
     const request = new Request('http://localhost/api/components/callbacks', {
       headers: { authorization: 'Bearer any' },
     });
-    const result = await Effect.runPromise(
-      Effect.either(authenticateWith(failingDependencies, request)),
-    );
-    expect(result._tag).toBe('Left');
-    if (result._tag === 'Left') {
-      expect(result.left.reason).toBe('Unavailable');
-    }
+    const error = await expectAuthError(authenticateWith(failingDependencies, request));
+    expect(error.reason).toBe('Unavailable');
   });
 
   it('rejects a mutating cookie-carried request whose origin does not match', async () => {
@@ -184,13 +176,8 @@ describe('ComponentAuth.layer', () => {
           origin: 'http://evil.example',
         },
       });
-      const result = await Effect.runPromise(
-        Effect.either(authenticateWith(adminDependencies, request)),
-      );
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left.reason).toBe('Forbidden');
-      }
+      const error = await expectAuthError(authenticateWith(adminDependencies, request));
+      expect(error.reason).toBe('Forbidden');
     } finally {
       if (previousOrigin === undefined) {
         delete process.env.ORIGIN;
@@ -211,13 +198,8 @@ describe('ComponentAuth.layer', () => {
           origin: 'http://localhost:3000',
         },
       });
-      const result = await Effect.runPromise(
-        Effect.either(authenticateWith(adminDependencies, request)),
-      );
-      expect(result._tag).toBe('Left');
-      if (result._tag === 'Left') {
-        expect(result.left.reason).toBe('Unavailable');
-      }
+      const error = await expectAuthError(authenticateWith(adminDependencies, request));
+      expect(error.reason).toBe('Unavailable');
     } finally {
       if (previousOrigin === undefined) {
         delete process.env.ORIGIN;
@@ -238,8 +220,11 @@ describe('ComponentAuth.layer', () => {
           origin: 'http://localhost:3000',
         },
       });
-      const user = await Effect.runPromise(authenticateWith(adminDependencies, request));
-      expect(user.uid).toBe('admin-user');
+      const outcome = await authenticateWith(adminDependencies, request);
+      expect(outcome.success).toBe(true);
+      if (outcome.success) {
+        expect(outcome.value.uid).toBe('admin-user');
+      }
     } finally {
       hoistedEnv.values.ORIGIN = previousOrigin;
     }

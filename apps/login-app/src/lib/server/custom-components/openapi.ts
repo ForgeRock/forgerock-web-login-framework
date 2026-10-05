@@ -7,7 +7,7 @@
  *
  * */
 
-import * as OpenApiJsonSchema from '@effect/platform/OpenApiJsonSchema';
+import { z } from 'zod';
 
 import {
   ApiErrorBodySchema,
@@ -19,21 +19,17 @@ import {
 } from './fields.utils';
 
 /** OpenAPI JSON Schema for persisted component records. */
-const componentRecordSchema = OpenApiJsonSchema.makeWithDefs(ComponentRecordSchema, { defs: {} });
+const componentRecordSchema = z.toJSONSchema(ComponentRecordSchema);
 /** OpenAPI JSON Schema for component-creation requests. */
-const createComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(CreateComponentRequestSchema, {
-  defs: {},
-});
+const createComponentRequestSchema = z.toJSONSchema(CreateComponentRequestSchema);
 /** OpenAPI JSON Schema for component-update requests. */
-const updateComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(UpdateComponentRequestSchema, {
-  defs: {},
-});
+const updateComponentRequestSchema = z.toJSONSchema(UpdateComponentRequestSchema);
 /** OpenAPI JSON Schema for component-publication requests. */
-const publishRequestSchema = OpenApiJsonSchema.makeWithDefs(PublishRequestSchema, { defs: {} });
+const publishRequestSchema = z.toJSONSchema(PublishRequestSchema);
 /** OpenAPI JSON Schema for successful component-publication responses. */
-const publishResponseSchema = OpenApiJsonSchema.makeWithDefs(PublishResponseSchema, { defs: {} });
+const publishResponseSchema = z.toJSONSchema(PublishResponseSchema);
 /** OpenAPI JSON Schema for standardized API error bodies. */
-const errorSchema = OpenApiJsonSchema.makeWithDefs(ApiErrorBodySchema, { defs: {} });
+const errorSchema = z.toJSONSchema(ApiErrorBodySchema);
 
 /** Creates an OpenAPI JSON response definition with a description and body schema. */
 const jsonResponse = (description: string, schema: object) => ({
