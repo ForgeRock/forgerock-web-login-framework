@@ -122,7 +122,6 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
 
-        // Create a component first
         yield* createComponent(
           new Request('http://localhost/api/components/callbacks', {
             method: 'POST',
@@ -194,7 +193,6 @@ describe('Component Endpoint Handlers', () => {
       Effect.gen(function* () {
         const repoDir = yield* makeTemporaryDirectory();
 
-        // Create first
         const createResponse = yield* createComponent(
           new Request('http://localhost/api/components/callbacks', {
             method: 'POST',

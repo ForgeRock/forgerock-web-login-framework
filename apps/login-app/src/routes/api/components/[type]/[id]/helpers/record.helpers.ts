@@ -19,7 +19,11 @@ import {
   type ComponentStoreService,
 } from '$lib/server/component-store';
 
-/** A client-facing HTTP failure raised while validating a component API request. */
+/**
+ * A client-facing HTTP failure raised while validating a component API request.
+ *
+ * @category internal
+ */
 export class HttpError extends Data.TaggedError('HttpError')<{
   status: 400 | 401 | 404 | 409 | 413 | 415 | 500;
   message: string;
@@ -30,6 +34,8 @@ export class HttpError extends Data.TaggedError('HttpError')<{
  *
  * @param request - Incoming request whose headers are read.
  * @returns Authentication, content-length, and content-type header values.
+ *
+ * @category internal
  */
 const requestHeaders = (request: Request) => ({
   authorization: request.headers.get('authorization'),
@@ -45,6 +51,8 @@ const requestHeaders = (request: Request) => ({
  * @param hasBody - Whether the request must declare a JSON body.
  * @returns An effect that completes when the request satisfies all guard policies.
  * @throws {HttpError} When authentication, content type, or body size validation fails.
+ *
+ * @category internal
  */
 export const guardRequest = (
   request: Request,
@@ -79,6 +87,8 @@ export const guardRequest = (
  *
  * @param error - Tagged component store failure to translate.
  * @returns The corresponding HTTP error.
+ *
+ * @category internal
  */
 export const storeHttpError = (error: ComponentStoreError): HttpError =>
   new HttpError({
@@ -99,6 +109,8 @@ export const storeHttpError = (error: ComponentStoreError): HttpError =>
  *
  * @param effect - Response-producing effect that may fail with an HTTP error.
  * @returns The same response effect with its HTTP error channel handled.
+ *
+ * @category internal
  */
 export const toResponse = <R>(
   effect: Effect.Effect<Response, HttpError, R>,
@@ -109,7 +121,11 @@ export const toResponse = <R>(
     ),
   );
 
-/** Runs a record operation after enforcing request, type, and id policies. */
+/**
+ * Runs a record operation after enforcing request, type, and id policies.
+ *
+ * @category internal
+ */
 export const withRecord = (
   request: Request,
   type: string,
@@ -134,7 +150,11 @@ export const withRecord = (
     }),
   );
 
-/** Fails when an optional update body id differs from the validated route id. */
+/**
+ * Fails when an optional update body id differs from the validated route id.
+ *
+ * @category internal
+ */
 export const requireMatchingComponentId = (bodyId: string | undefined, routeId: string) =>
   bodyId !== undefined && bodyId !== routeId
     ? Effect.fail(new HttpError({ status: 400, message: 'Invalid component id' }))

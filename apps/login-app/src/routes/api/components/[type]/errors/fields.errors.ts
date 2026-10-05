@@ -9,12 +9,20 @@
 
 import { Data, Effect } from 'effect';
 
-/** A client-facing HTTP failure raised while validating a component API request. */
+/**
+ * A client-facing HTTP failure raised while validating a component API request.
+ *
+ * @category internal
+ */
 export class HttpError extends Data.TaggedError('HttpError')<{
   status: 400 | 401 | 404 | 409 | 413 | 415 | 500;
   message: string;
 }> {}
 
-/** Converts an invalid list fields projection into its HTTP response failure. */
+/**
+ * Converts an invalid list fields projection into its HTTP response failure.
+ *
+ * @category internal
+ */
 export const invalidFieldsHttpError = (error: { message: string }) =>
   Effect.fail(new HttpError({ status: 400, message: error.message }));

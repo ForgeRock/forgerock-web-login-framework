@@ -15,9 +15,13 @@ import { type ComponentArtifact, ComponentRepo, isSafeRelativePath } from './com
 import type { ComponentRepoError } from './component-repo';
 
 /**
- * Error emitted when a submitted component bundle cannot be decoded or contains an unsafe path.
+ * Represents an invalid component bundle submitted for publication.
  *
- * This error represents invalid bundle input rather than a thrown exception.
+ * **When to use**
+ *
+ * Use in the error channel when bundle JSON cannot be decoded or an artifact path is unsafe.
+ *
+ * @category errors
  */
 export class ComponentPublisherError extends Data.TaggedError('ComponentPublisherError')<{
   message: string;
@@ -25,8 +29,14 @@ export class ComponentPublisherError extends Data.TaggedError('ComponentPublishe
 }> {}
 
 /**
- * Validates serialized component bundles and delegates persistence to {@link ComponentRepoService}.
- * Its error channel contains bundle-validation and repository-persistence failures.
+ * Defines component bundle publication operations.
+ *
+ * **When to use**
+ *
+ * Use to validate a serialized bundle before delegating durable persistence to
+ * {@link ComponentRepoService}.
+ *
+ * @category services
  */
 export interface ComponentPublisherService {
   /**
@@ -36,6 +46,8 @@ export interface ComponentPublisherService {
    * @returns An effect that completes once all artifacts have been persisted.
    * @throws {ComponentPublisherError} When the bundle cannot be decoded or contains an unsafe path.
    * @throws {ComponentRepoError} When validated artifacts cannot be persisted.
+   *
+   * @category internal
    */
   readonly publishComponent: (
     bundle: string,
@@ -43,20 +55,34 @@ export interface ComponentPublisherService {
 }
 
 /**
- * Service tag for publishing validated component bundles.
+ * Identifies the component bundle publication service in an Effect environment.
+ *
+ * @category services
  */
 const ComponentPublisherTag = Context.GenericTag<ComponentPublisherService>(
   '@login-app/ComponentPublisher',
 );
 
 /**
- * Service tag and layer for publishing validated component bundles.
+ * Provides the component bundle publication service.
+ *
+ * **Example** (Publishing through a provided layer)
+ *
+ * ```ts
+ * const program = publishComponent('{"files":[]}')
+ * const result = program.pipe(Effect.provide(ComponentPublisher.layer))
+ * ```
+ *
+ * @see {@link publishComponent} for accessing the service from an Effect environment.
+ * @category layers
  */
 export const ComponentPublisher = Object.assign(ComponentPublisherTag, {
   /**
    * Creates a publisher layer backed by the repository service.
    *
    * @returns A layer requiring {@link ComponentRepoService}.
+   *
+   * @category internal
    */
   layer: Layer.effect(
     ComponentPublisherTag,
@@ -71,11 +97,23 @@ export const ComponentPublisher = Object.assign(ComponentPublisherTag, {
 });
 
 /**
- * Decodes a JSON bundle into repository artifacts and rejects every unsafe file path before persistence.
+ * Decodes a JSON bundle into repository artifacts with validated relative paths.
  *
- * @param bundle - JSON containing a `files` array of `{ path, content }` entries.
- * @returns Artifacts with validated relative paths.
- * @throws {ComponentPublisherError} When JSON/schema decoding fails or any path is unsafe.
+ * **When to use**
+ *
+ * Use before persistence to reject malformed JSON and unsafe artifact paths.
+ *
+ * **Example** (Decoding a single artifact)
+ *
+ * ```ts
+ * const artifacts = yield* parseBundle('{"files":[{"path":"bundle.js","content":"export {}"}]}')
+ * ```
+ *
+ * @see {@link isSafeRelativePath} for the path safety policy.
+ * @category parsing
+ *
+ * @param bundle - JSON containing `files` entries with `path` and `content`.
+ * @returns An effect yielding artifacts with validated relative paths.
  */
 export const parseBundle = (
   bundle: string,
@@ -99,10 +137,17 @@ export const parseBundle = (
   );
 
 /**
- * Publishes a serialized component bundle through the publisher service in the current environment.
+ * Publishes a serialized component bundle through the current Effect environment.
  *
- * @param bundle - JSON component bundle to validate and persist.
- * @returns An effect requiring {@link ComponentPublisherService}, which may fail with publisher or repository errors.
+ * **When to use**
+ *
+ * Use from an application boundary that provides {@link ComponentPublisher}.
+ *
+ * @see {@link parseBundle} for validation without persistence.
+ * @category operations
+ *
+ * @param bundle - The JSON component bundle to validate and persist.
+ * @returns An effect requiring {@link ComponentPublisherService}.
  */
 export const publishComponent = (bundle: string) =>
   ComponentPublisher.pipe(Effect.flatMap((publisher) => publisher.publishComponent(bundle)));

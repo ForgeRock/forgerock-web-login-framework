@@ -18,36 +18,70 @@ import {
   UpdateComponentRequestSchema,
 } from './component-api';
 
-/** OpenAPI JSON Schema for persisted component records. */
+/**
+ * OpenAPI JSON Schema for persisted component records.
+ *
+ * @category internal
+ */
 const componentRecordSchema = OpenApiJsonSchema.makeWithDefs(ComponentRecordSchema, { defs: {} });
-/** OpenAPI JSON Schema for component-creation requests. */
+/**
+ * OpenAPI JSON Schema for component-creation requests.
+ *
+ * @category internal
+ */
 const createComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(CreateComponentRequestSchema, {
   defs: {},
 });
-/** OpenAPI JSON Schema for component-update requests. */
+/**
+ * OpenAPI JSON Schema for component-update requests.
+ *
+ * @category internal
+ */
 const updateComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(UpdateComponentRequestSchema, {
   defs: {},
 });
-/** OpenAPI JSON Schema for component-publication requests. */
+/**
+ * OpenAPI JSON Schema for component-publication requests.
+ *
+ * @category internal
+ */
 const publishRequestSchema = OpenApiJsonSchema.makeWithDefs(PublishRequestSchema, { defs: {} });
-/** OpenAPI JSON Schema for successful component-publication responses. */
+/**
+ * OpenAPI JSON Schema for successful component-publication responses.
+ *
+ * @category internal
+ */
 const publishResponseSchema = OpenApiJsonSchema.makeWithDefs(PublishResponseSchema, { defs: {} });
-/** OpenAPI JSON Schema for standardized API error bodies. */
+/**
+ * OpenAPI JSON Schema for standardized API error bodies.
+ *
+ * @category internal
+ */
 const errorSchema = OpenApiJsonSchema.makeWithDefs(ApiErrorBodySchema, { defs: {} });
 
-/** Creates an OpenAPI JSON response definition with a description and body schema. */
+/**
+ * Creates an OpenAPI JSON response definition with a description and body schema.
+ *
+ * @category internal
+ */
 const jsonResponse = (description: string, schema: object) => ({
   description,
   content: { 'application/json': { schema } },
 });
 
-/** Creates an OpenAPI error response definition using the shared API error schema. */
+/**
+ * Creates an OpenAPI error response definition using the shared API error schema.
+ *
+ * @category internal
+ */
 const errorResponse = (description: string) => jsonResponse(description, errorSchema);
 
 /**
  * OpenAPI 3.1 specification for the login-app development endpoints.
  *
  * This document is intentionally exposed only while the SvelteKit app runs in development mode.
+ *
+ * @category internal
  */
 export const openApiSpec = {
   openapi: '3.1.0',

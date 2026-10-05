@@ -37,7 +37,11 @@ import {
 import type { ComponentPublisherError } from './component-publisher';
 import type { ComponentRepoError } from './component-repo';
 
-/** Encodes a Component API error with its corresponding HTTP status. */
+/**
+ * Encodes a Component API error with its corresponding HTTP status.
+ *
+ * @category internal
+ */
 const errorResponse = (
   status: 400 | 401 | 404 | 409 | 413 | 415 | 500,
   error: string,
@@ -46,7 +50,11 @@ const errorResponse = (
   return Response.json(encoded.body, { status: encoded.status });
 };
 
-/** A client-facing HTTP failure raised while validating a component API request. */
+/**
+ * A client-facing HTTP failure raised while validating a component API request.
+ *
+ * @category internal
+ */
 export class HttpError extends Data.TaggedError('HttpError')<{
   status: 400 | 401 | 404 | 409 | 413 | 415 | 500;
   message: string;
@@ -58,6 +66,8 @@ export class HttpError extends Data.TaggedError('HttpError')<{
  * @param status - HTTP status for the successful response.
  * @param record - Validated component record to encode.
  * @returns The encoded JSON response.
+ *
+ * @category internal
  */
 export const recordResponse = (
   status: 200 | 201,
@@ -72,6 +82,8 @@ export const recordResponse = (
  * @param message - Error message returned when decoding fails.
  * @returns An effect with the decoded value.
  * @throws {HttpError} When the input does not satisfy the schema.
+ *
+ * @category internal
  */
 export const decodeOrResponse = <A>(
   schema: Schema.Schema<A>,
@@ -87,6 +99,8 @@ export const decodeOrResponse = <A>(
  *
  * @param request - Incoming request whose headers are read.
  * @returns Authentication, content-length, and content-type header values.
+ *
+ * @category internal
  */
 const requestHeaders = (request: Request) => ({
   authorization: request.headers.get('authorization'),
@@ -102,6 +116,8 @@ const requestHeaders = (request: Request) => ({
  * @param hasBody - Whether the request must declare a JSON body.
  * @returns An effect that completes when the request satisfies all guard policies.
  * @throws {HttpError} When authentication, content type, or body size validation fails.
+ *
+ * @category internal
  */
 export const guardRequest = (
   request: Request,
@@ -138,6 +154,8 @@ export const guardRequest = (
  * @param schema - Schema used to parse and validate the JSON body.
  * @returns An effect with the decoded request body.
  * @throws {HttpError} When the body cannot be read, exceeds the limit, or is invalid JSON.
+ *
+ * @category internal
  */
 const readBody = <A>(request: Request, schema: Schema.Schema<A>): Effect.Effect<A, HttpError> =>
   Effect.tryPromise({
@@ -162,6 +180,8 @@ const readBody = <A>(request: Request, schema: Schema.Schema<A>): Effect.Effect<
  *
  * @param error - Tagged component store failure to translate.
  * @returns The corresponding HTTP error.
+ *
+ * @category internal
  */
 export const storeHttpError = (error: ComponentStoreError): HttpError =>
   new HttpError({
@@ -182,6 +202,8 @@ export const storeHttpError = (error: ComponentStoreError): HttpError =>
  * @param type - Untrusted component type from the route path.
  * @returns An effect with the validated component type.
  * @throws {HttpError} When the type is not supported.
+ *
+ * @category internal
  */
 export const validateType = (type: string): Effect.Effect<string, HttpError> =>
   Schema.decodeUnknown(ComponentTypeSchema)(type).pipe(
@@ -196,6 +218,8 @@ export const validateType = (type: string): Effect.Effect<string, HttpError> =>
  * @param id - Untrusted component id from the route path.
  * @returns An effect with the validated component id.
  * @throws {HttpError} When the id is not a supported component UUID.
+ *
+ * @category internal
  */
 export const validateId = (id: string): Effect.Effect<string, HttpError> =>
   Schema.decodeUnknown(ComponentIdSchema)(id).pipe(
@@ -210,6 +234,8 @@ export const validateId = (id: string): Effect.Effect<string, HttpError> =>
  *
  * @param effect - Response-producing effect that may fail with an HTTP error.
  * @returns The same response effect with its HTTP error channel handled.
+ *
+ * @category internal
  */
 export const toResponse = <R>(
   effect: Effect.Effect<Response, HttpError, R>,
@@ -226,6 +252,8 @@ export const toResponse = <R>(
  * @param request - Incoming request whose `fields` query parameter selects record properties.
  * @returns An effect with the parsed fields projection, or a 400 failure.
  * @throws {HttpError} When the fields parameter is invalid.
+ *
+ * @category internal
  */
 const listFieldsProjection = (
   request: Request,
@@ -247,6 +275,8 @@ const listFieldsProjection = (
  * @param records - Validated component records to encode.
  * @param fields - Requested field projection.
  * @returns The JSON response with projected records.
+ *
+ * @category internal
  */
 const listResponse = (
   records: ReadonlyArray<Schema.Schema.Type<typeof ComponentRecordSchema>>,
@@ -262,6 +292,8 @@ const listResponse = (
  * @param token - Optional `COMPONENT_SAVE_TOKEN` used to authorize the request.
  * @param operation - Store operation to run after validation.
  * @returns An effect resolving to the operation response, or HTTP error.
+ *
+ * @category internal
  */
 const withRecord = (
   request: Request,
@@ -296,6 +328,8 @@ const withRecord = (
  * @returns An effect resolving to 200 records, 400 for invalid fields, 401 for an invalid Bearer token,
  * or 404 for an invalid type; storage failures produce 409 or 500.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ *
+ * @category internal
  */
 export const listComponents = (
   request: Request,
@@ -325,6 +359,8 @@ export const listComponents = (
  * @returns An effect resolving to 200 with the record, 400 for an invalid id, 401 for an invalid Bearer
  * token, 404 for an invalid type or missing record, or 409/500 for storage failures.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ *
+ * @category internal
  */
 export const getComponent = (
   request: Request,
@@ -346,6 +382,8 @@ export const getComponent = (
  * invalid Bearer token, 404 for an invalid type, 413 for an oversized body, 415 for non-JSON,
  * or 409/500 for storage failures.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ *
+ * @category internal
  */
 export const createComponent = (
   request: Request,
@@ -377,6 +415,8 @@ export const createComponent = (
  * 401 for an invalid Bearer token, 404 for an invalid type or missing record, 413 for an oversized
  * body, 415 for non-JSON, or 409/500 for storage failures.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ *
+ * @category internal
  */
 export const updateComponent = (
   request: Request,
@@ -414,6 +454,8 @@ export const updateComponent = (
  * @returns An effect resolving to 204 with no body, 400 for an invalid id, 401 for an invalid Bearer
  * token, 404 for an invalid type or missing record, or 409/500 for storage failures.
  * @throws {ComponentStoreError} Is caught and encoded as its corresponding HTTP error response.
+ *
+ * @category internal
  */
 export const deleteComponent = (
   request: Request,
@@ -435,6 +477,8 @@ export const deleteComponent = (
  * or 500 when repository persistence fails.
  * @throws {ComponentPublisherError} Is caught and encoded as a 400 response.
  * @throws {ComponentRepoError} Is caught and encoded as a 500 response.
+ *
+ * @category internal
  */
 export const publishComponentSource = (
   request: Request,

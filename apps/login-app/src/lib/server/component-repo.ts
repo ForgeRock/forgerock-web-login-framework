@@ -12,9 +12,13 @@ import { Context, Data, Effect, Layer, Predicate } from 'effect';
 import { type FileHandle, lstat, open } from 'node:fs/promises';
 
 /**
- * Error emitted when component persistence cannot safely complete.
+ * Represents a filesystem or durability-sync failure during component persistence.
  *
- * This error represents filesystem or durability-sync failures in the repository effect channel.
+ * **When to use**
+ *
+ * Use in the repository error channel when a component artifact cannot be safely persisted.
+ *
+ * @category errors
  */
 export class ComponentRepoError extends Data.TaggedError('ComponentRepoError')<{
   message: string;
@@ -22,7 +26,9 @@ export class ComponentRepoError extends Data.TaggedError('ComponentRepoError')<{
 }> {}
 
 /**
- * Location of the repository root and its tracked component subtree.
+ * Defines the repository root and tracked component subtree.
+ *
+ * @category models
  */
 export interface ComponentRepoConfig {
   readonly repoDir: string;
@@ -30,7 +36,13 @@ export interface ComponentRepoConfig {
 }
 
 /**
- * Synchronizes filesystem entries after writes and renames so acknowledged saves are durable.
+ * Defines durability synchronization operations for persisted component artifacts.
+ *
+ * **When to use**
+ *
+ * Use after writing or renaming artifacts so an acknowledged save survives a crash.
+ *
+ * @category services
  */
 export interface FileSyncService {
   readonly syncFile: (path: string) => Effect.Effect<void, ComponentRepoError>;
@@ -39,19 +51,35 @@ export interface FileSyncService {
 
 /**
  * Service tag for the filesystem durability operations required by component persistence.
+ *
+ * @category internal
  */
 const FileSyncTag = Context.GenericTag<FileSyncService>('@login-app/FileSync');
 
 /**
- * Service tag and layers for filesystem durability operations required by component persistence.
+ * Provides filesystem durability synchronization operations.
+ *
+ * **Gotchas**
+ *
+ * `layerNoop` is suitable only for tests that intentionally do not verify durability.
+ *
+ * @category layers
  */
 export const FileSync = Object.assign(FileSyncTag, {
-  /** Layer providing Node file and directory `fsync` operations for durable component saves. */
+  /**
+   * Layer providing Node file and directory `fsync` operations for durable component saves.
+   *
+   * @category internal
+   */
   layer: Layer.succeed(FileSyncTag, {
     syncFile: (path: string) => syncPath(path, 'r+', 'temporary component file'),
     syncDirectory: (path: string) => syncPath(path, 'r', 'component directory'),
   }),
-  /** No-op layer for tests that do not need to verify durability syncing. */
+  /**
+   * No-op layer for tests that do not need to verify durability syncing.
+   *
+   * @category internal
+   */
   layerNoop: Layer.succeed(FileSyncTag, {
     syncFile: () => Effect.void,
     syncDirectory: () => Effect.void,
@@ -66,6 +94,8 @@ export const FileSync = Object.assign(FileSyncTag, {
  * @param use - Effect that uses the opened file handle.
  * @returns An effect with the value returned by `use`.
  * @throws {ComponentRepoError} When opening the file fails.
+ *
+ * @category internal
  */
 const withFileHandle = <A>(
   path: string,
@@ -89,6 +119,8 @@ const withFileHandle = <A>(
  * @param target - Human-readable target name used in failure messages.
  * @returns An effect that completes once synchronization succeeds.
  * @throws {ComponentRepoError} When opening or synchronizing the path fails.
+ *
+ * @category internal
  */
 const syncPath = (
   path: string,
@@ -104,6 +136,8 @@ const syncPath = (
 
 /**
  * A component file expressed relative to the configured tracked subtree.
+ *
+ * @category internal
  */
 export interface ComponentArtifact {
   readonly relPath: string;
@@ -111,10 +145,17 @@ export interface ComponentArtifact {
 }
 
 /**
- * Persists component artifacts beneath the configured repository path.
+ * Defines durable persistence operations for component artifacts.
  *
- * Every operation may fail with {@link ComponentRepoError}; its implementation also requires
- * `FileSystem.FileSystem` and {@link FileSyncService} to create durable atomic replacements.
+ * **When to use**
+ *
+ * Use to persist validated artifacts beneath the configured repository subtree.
+ *
+ * **Gotchas**
+ *
+ * Artifact replacement is atomic per file, not as a multi-file transaction.
+ *
+ * @category services
  */
 export interface ComponentRepoService {
   /**
@@ -124,6 +165,8 @@ export interface ComponentRepoService {
    * @param content - Complete content to write.
    * @returns An effect that completes after the file and parent directory have been synchronized.
    * @throws {ComponentRepoError} When path validation or filesystem persistence fails.
+   *
+   * @category internal
    */
   readonly saveComponent: (
     relPath: string,
@@ -135,6 +178,8 @@ export interface ComponentRepoService {
    * @param artifacts - Files to persist relative to the tracked subtree.
    * @returns An effect that completes after every artifact has been durably persisted.
    * @throws {ComponentRepoError} When a path is unsafe or a filesystem operation fails.
+   *
+   * @category internal
    */
   readonly saveArtifacts: (
     artifacts: ReadonlyArray<ComponentArtifact>,
@@ -143,11 +188,23 @@ export interface ComponentRepoService {
 
 /**
  * Service tag for repository-backed component persistence.
+ *
+ * @category internal
  */
 const ComponentRepoTag = Context.GenericTag<ComponentRepoService>('@login-app/ComponentRepo');
 
 /**
- * Service tag and layer factory for repository-backed component persistence.
+ * Provides repository-backed component persistence.
+ *
+ * **Example** (Providing persistence)
+ *
+ * ```ts
+ * const program = saveComponent("bundle.js", "export {}")
+ * const persisted = program.pipe(Effect.provide(ComponentRepo.layer(config)))
+ * ```
+ *
+ * @see {@link saveComponent} for accessing the service from an Effect environment.
+ * @category layers
  */
 export const ComponentRepo = Object.assign(ComponentRepoTag, {
   /**
@@ -155,6 +212,8 @@ export const ComponentRepo = Object.assign(ComponentRepoTag, {
    *
    * @param config - Repository root and tracked subtree used for component artifacts.
    * @returns A layer requiring filesystem and durable-sync services.
+   *
+   * @category internal
    */
   layer: (
     config: ComponentRepoConfig,
@@ -163,11 +222,24 @@ export const ComponentRepo = Object.assign(ComponentRepoTag, {
 });
 
 /**
- * Determines whether a bundle path is a non-empty, slash-delimited relative path safe to write.
- * Rejects absolute paths, Windows separators, empty segments, traversal segments, and `.git` segments.
+ * Determines whether an untrusted bundle path is safe to write beneath the tracked subtree.
  *
- * @param path - Untrusted path supplied by a component bundle.
- * @returns `true` only when the path stays within the configured tracked subtree.
+ * **Gotchas**
+ *
+ * Absolute paths, Windows separators, empty segments, traversal segments, and `.git`
+ * segments are rejected.
+ *
+ * **Example** (Validating a relative artifact path)
+ *
+ * ```ts
+ * isSafeRelativePath("callbacks/login.js") // true
+ * isSafeRelativePath("../secrets") // false
+ * ```
+ *
+ * @category validation
+ *
+ * @param path - The untrusted path supplied by a component bundle.
+ * @returns `true` only when the path stays within the tracked subtree.
  */
 export const isSafeRelativePath = (path: string): boolean =>
   Predicate.isString(path) &&
@@ -183,6 +255,8 @@ export const isSafeRelativePath = (path: string): boolean =>
  *
  * @param segments - Path segments to join.
  * @returns The normalized slash-delimited path.
+ *
+ * @category internal
  */
 const joinPath = (...segments: ReadonlyArray<string>): string =>
   segments
@@ -197,11 +271,17 @@ const joinPath = (...segments: ReadonlyArray<string>): string =>
  * @param message - Human-readable description of the failed repository operation.
  * @param cause - Underlying failure that caused the operation to fail.
  * @returns A tagged repository error.
+ *
+ * @category internal
  */
 const componentRepoError = (message: string, cause: unknown) =>
   new ComponentRepoError({ message, cause });
 
-/** Rejects symlink path segments to prevent cloned repositories from escaping the tracked subtree. */
+/**
+ * Rejects symlink path segments that could escape the tracked subtree.
+ *
+ * @category validation
+ */
 const ensureNoSymlink = (trackedRoot: string, relPath: string) =>
   Effect.forEach(
     relPath
@@ -241,6 +321,8 @@ const ensureNoSymlink = (trackedRoot: string, relPath: string) =>
  * @param trackedRoot - Root of the tracked component subtree.
  * @param directory - Descendant directory containing a persisted artifact.
  * @returns Directories ordered from the deepest path through the tracked root.
+ *
+ * @category internal
  */
 const directoryChain = (trackedRoot: string, directory: string): ReadonlyArray<string> => {
   const relativeDirectory = directory.slice(trackedRoot.length).replace(/^\/+/, '');
@@ -263,6 +345,8 @@ const directoryChain = (trackedRoot: string, directory: string): ReadonlyArray<s
  *
  * @param config - Repository root and tracked subtree used for component artifacts.
  * @returns A layer that provides {@link ComponentRepoService} and requires filesystem and sync services.
+ *
+ * @category internal
  */
 const makeComponentRepoLayer = (
   config: ComponentRepoConfig,
@@ -343,11 +427,6 @@ const makeComponentRepoLayer = (
               yield* fileSync.syncFile(tempPath);
             }),
           );
-          /**
-           * Files are staged before any rename, then renamed in artifact order. Each individual
-           * replacement is atomic, but this is not a directory-swap transaction: a later rename
-           * failure can leave earlier files replaced. Callers receive one bundle-level error.
-           */
           yield* Effect.forEach(prepared, ({ finalPath, tempPath }) =>
             fileSystem.rename(tempPath, finalPath).pipe(
               Effect.catchAll((cause) =>
@@ -378,8 +457,9 @@ const makeComponentRepoLayer = (
   );
 
 /**
- * Default repository layer configured by the `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH`
- * infrastructure contract with config-saver.
+ * Provides repository persistence configured by the config-saver infrastructure contract.
+ *
+ * @category layers
  */
 export const componentRepoLayer = ComponentRepo.layer({
   repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
@@ -387,11 +467,18 @@ export const componentRepoLayer = ComponentRepo.layer({
 });
 
 /**
- * Saves one component file through the repository service in the current Effect environment.
+ * Saves one component artifact through the repository service in the current Effect environment.
  *
- * @param relPath - Safe path relative to the configured tracked subtree.
- * @param content - Complete file content to persist.
- * @returns An effect requiring {@link ComponentRepoService} that may fail with {@link ComponentRepoError}.
+ * **When to use**
+ *
+ * Use after validating an artifact path or when persisting a single generated component file.
+ *
+ * @see {@link isSafeRelativePath} for path validation.
+ * @category operations
+ *
+ * @param relPath - The safe path relative to the tracked subtree.
+ * @param content - The complete artifact content to persist.
+ * @returns An effect requiring {@link ComponentRepoService}.
  */
 export const saveComponent = (relPath: string, content: string) =>
   Effect.flatMap(ComponentRepo, (repo) => repo.saveComponent(relPath, content));

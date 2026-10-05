@@ -15,11 +15,9 @@ import { ComponentApiRuntime } from '$lib/server/runtime';
 import type { RequestHandler } from './$types';
 
 /**
- * Retrieves a component record by type and id.
+ * Retrieves a component record by type and ID.
  *
- * @param event - Request event containing `type` and UUID `id` path parameters.
- * @returns A response with 200 for the record, 400 for an invalid id, 401 for an invalid Bearer token,
- * 404 for an invalid type or missing record, or 409/500 for storage failures.
+ * @category routes
  */
 export const GET: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
@@ -30,14 +28,14 @@ export const GET: RequestHandler = ({ request, params }) =>
   );
 
 /**
- * Updates an existing component record by type and id.
+ * Replaces an existing component record by type and ID.
  *
- * Requires `Authorization: Bearer <COMPONENT_SAVE_TOKEN>` when the environment variable is configured.
+ * **Gotchas**
  *
- * @param event - Request event containing `type` and UUID `id` path parameters plus a JSON component body.
- * @returns A response with 200 for the updated record; 400 for malformed input or mismatched id, 401 for
- * an invalid Bearer token, 404 for an invalid type or missing record, 413 for an oversized body, 415 for
- * non-JSON, or 409/500 for storage failures.
+ * When `COMPONENT_SAVE_TOKEN` is configured, the request must include a matching
+ * `Authorization: Bearer` credential. A supplied body ID must match the route ID.
+ *
+ * @category routes
  */
 export const PUT: RequestHandler = ({ request, params }) =>
   Effect.runPromise(
@@ -48,13 +46,14 @@ export const PUT: RequestHandler = ({ request, params }) =>
   );
 
 /**
- * Deletes a component record by type and id.
+ * Deletes a component record by type and ID.
  *
- * Requires `Authorization: Bearer <COMPONENT_SAVE_TOKEN>` when the environment variable is configured.
+ * **Gotchas**
  *
- * @param event - Request event containing `type` and UUID `id` path parameters.
- * @returns A response with 204 and no body, 400 for an invalid id, 401 for an invalid Bearer token,
- * 404 for an invalid type or missing record, or 409/500 for storage failures.
+ * When `COMPONENT_SAVE_TOKEN` is configured, the request must include a matching
+ * `Authorization: Bearer` credential.
+ *
+ * @category routes
  */
 export const DELETE: RequestHandler = ({ request, params }) =>
   Effect.runPromise(

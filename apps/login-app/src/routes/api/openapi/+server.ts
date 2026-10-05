@@ -13,7 +13,11 @@ import { openApiSpec } from '$lib/server/openapi';
 /**
  * Serves the development-only OpenAPI document.
  *
- * @returns The OpenAPI specification with 200 in development, or 404 in other environments.
+ * **Gotchas**
+ *
+ * This route deliberately returns `404` outside SvelteKit development mode.
+ *
+ * @category routes
  */
 export const GET = () => {
   if (!dev) {

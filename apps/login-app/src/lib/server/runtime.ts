@@ -15,32 +15,54 @@ import { ComponentRepo, FileSync } from './component-repo';
 import { ComponentStore, type ComponentStoreService } from './component-store';
 
 /**
- * Repository layer configured by the `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH`
- * infrastructure contract with config-saver.
+ * Configures repository persistence from the config-saver infrastructure contract.
+ *
+ * @category layers
  */
 const componentRepoLayer = ComponentRepo.layer({
   repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
   trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
 });
 
-/** Shared repository runtime supplying filesystem and durable-sync services to component layers. */
+/**
+ * Provides filesystem and durable-sync services to component repository layers.
+ *
+ * @category layers
+ */
 const componentRepoRuntime = Layer.provide(
   componentRepoLayer,
   Layer.merge(NodeFileSystem.layer, FileSync.layer),
 );
 
 /**
- * Fully provisioned layer for component publishing. It supplies the publisher with repository,
- * Node filesystem, and durable file-sync implementations, so consumers require no services.
+ * Provides a fully provisioned component publication service.
+ *
+ * **When to use**
+ *
+ * Use at an application boundary that needs to run publication effects without
+ * supplying repository infrastructure.
+ *
+ * **Example** (Providing publication infrastructure)
+ *
+ * ```ts
+ * const response = Effect.provide(publishComponent(bundle), ComponentPublisherRuntime)
+ * ```
+ *
+ * @category layers
  */
 export const ComponentPublisherRuntime: Layer.Layer<ComponentPublisherService, never, never> =
   Layer.provide(ComponentPublisher.layer, componentRepoRuntime);
 
 /**
- * Fully provisioned layer for component storage and publishing API handlers.
+ * Provides the production storage and publication services used by Component API handlers.
  *
- * Composes both production services once so handlers remain focused on request policy rather than
- * infrastructure wiring; tests can replace this single runtime with deterministic service layers.
+ * **When to use**
+ *
+ * Use when running an endpoint operation in production. Tests may replace this
+ * composition point with deterministic service layers.
+ *
+ * @see {@link ComponentPublisherRuntime} for publication-only infrastructure.
+ * @category layers
  */
 export const ComponentApiRuntime: Layer.Layer<
   ComponentStoreService | ComponentPublisherService,
@@ -58,9 +80,8 @@ export const ComponentApiRuntime: Layer.Layer<
 );
 
 /**
- * Re-exports the publisher tag as the server runtime's single composition point.
+ * Re-exports the publisher service tag from the production composition module.
  *
- * Keeping this export adjacent to the production runtime gives tests one stable seam for replacing
- * publisher behavior without coupling handlers to their concrete infrastructure.
+ * @category services
  */
 export { ComponentPublisher };

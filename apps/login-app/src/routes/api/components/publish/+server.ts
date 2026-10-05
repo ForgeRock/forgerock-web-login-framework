@@ -15,14 +15,14 @@ import { ComponentApiRuntime } from '$lib/server/runtime';
 import type { RequestHandler } from './$types';
 
 /**
- * Publishes a component source bundle to the repository.
+ * Publishes a component source bundle to the configured repository.
  *
- * Requires `Authorization: Bearer <COMPONENT_SAVE_TOKEN>` when the environment variable is configured.
+ * **Gotchas**
  *
- * @param event - Request event containing the JSON code bundle and optional files.
- * @returns A response with 200 and the published bundle reference; 400 for malformed input or a rejected
- * bundle, 401 for an invalid Bearer token, 413 for an oversized body, 415 for non-JSON, or 500 for a
- * repository failure.
+ * When `COMPONENT_SAVE_TOKEN` is configured, the request must include a matching
+ * `Authorization: Bearer` credential.
+ *
+ * @category routes
  */
 export const POST: RequestHandler = ({ request }) =>
   Effect.runPromise(
