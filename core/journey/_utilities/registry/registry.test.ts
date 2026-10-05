@@ -7,15 +7,13 @@ import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
-  RegistryCollisionError,
-  RegistryEnabledLimitError,
-  RegistryScanError,
-} from './registry.errors.js';
-import {
   buildRegistryContent,
   parseAcceptedProps,
   parseComponentHeader,
   parseEnabledState,
+  RegistryCollisionError,
+  RegistryEnabledLimitError,
+  RegistryScanError,
   runRegistryScript,
   toPascalCase,
 } from './registry.js';
