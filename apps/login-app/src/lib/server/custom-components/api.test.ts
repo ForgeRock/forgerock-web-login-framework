@@ -22,6 +22,8 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
+import { Effect } from 'effect';
+
 import {
   createComponent,
   deleteComponent,
@@ -30,12 +32,15 @@ import {
   publishComponentSource,
   updateComponent,
 } from './api';
+import { createArtifactWriter } from './artifact-writer';
 import { createComponentAuth } from './auth';
 import { ComponentPublishError, ComponentStoreError } from './component.types';
-import { fileSyncNoop } from './file-sync';
+
+import type { FileSyncService } from './component.types';
+
+const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
 import { createComponentPublisher } from './publisher';
-import { createComponentStore } from './records';
-import { createComponentRepo } from './repo';
+import { createComponentStore } from './store';
 
 import type { ComponentApiDependencies, ComponentLogger } from './component.types';
 import type { AmSessionDependencies } from './component.types';
@@ -67,12 +72,12 @@ const makeDependencies = (
   authDependencies: AmSessionDependencies = adminDependencies,
 ): ComponentApiDependencies => {
   const config = { repoDir, trackedSubpath: 'config' };
-  const repo = createComponentRepo(config, fileSyncNoop);
+  const writer = createArtifactWriter(config, fileSyncNoop);
   const log: ComponentLogger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
   return {
     authenticate: createComponentAuth(authDependencies),
-    store: createComponentStore(config, repo, fileSyncNoop, log),
-    publish: createComponentPublisher(repo),
+    store: createComponentStore(config, writer, fileSyncNoop, log),
+    publish: createComponentPublisher(writer),
     log,
   };
 };
@@ -719,8 +724,6 @@ describe('Component API logging', () => {
       outcome: 'denied',
       reason: 'Forbidden',
       detail: 'An AM admin role is required',
-      method: 'GET',
-      path: '/api/components/callbacks',
       uid: 'regular-user',
     });
   });

@@ -25,12 +25,11 @@ export type ComponentLogger = Pick<CustomLogger, 'error' | 'warn' | 'info'>;
 
 /** Synchronizes filesystem entries after writes and renames so acknowledged saves are durable. */
 export interface FileSyncService {
-  readonly syncFile: (path: string) => Effect.Effect<void, unknown>;
-  readonly syncDirectory: (path: string) => Effect.Effect<void, unknown>;
+  readonly fsync: (path: string) => Effect.Effect<void, unknown>;
 }
 
 /** Location of the repository root and its tracked component subtree. */
-export interface ComponentRepoConfig {
+export interface ArtifactWriterConfig {
   readonly repoDir: string;
   readonly trackedSubpath: string;
 }
@@ -42,18 +41,12 @@ export interface ComponentArtifact {
 }
 
 /** Validates and atomically persists component artifacts; fails with a tagged error. */
-export type ComponentRepoFn = (
+export type ArtifactWriterFn = (
   artifacts: ReadonlyArray<ComponentArtifact>,
-) => Effect.Effect<void, ComponentRepoError>;
+) => Effect.Effect<void, ArtifactWriterError>;
 
 /** A failure raised when a repository write cannot safely complete. */
-export class ComponentRepoError extends Data.TaggedError('ComponentRepoError')<{
-  readonly message: string;
-  readonly cause?: unknown;
-}> {}
-
-/** A failure raised while persisting or synchronizing component files. */
-export class FileSyncError extends Data.TaggedError('FileSyncError')<{
+export class ArtifactWriterError extends Data.TaggedError('ArtifactWriterError')<{
   readonly message: string;
   readonly cause?: unknown;
 }> {}

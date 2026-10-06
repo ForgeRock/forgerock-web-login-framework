@@ -20,7 +20,7 @@ import type { RequestHandler } from './$types';
  * 404 for an invalid type, or 500 for storage failures.
  */
 export const GET: RequestHandler = ({ request, params }) =>
-  listComponents(request, params.type, componentApiDependencies());
+  listComponents(request, params.type, componentApiDependencies);
 
 /**
  * Creates a record for a component type.
@@ -32,4 +32,4 @@ export const GET: RequestHandler = ({ request, params }) =>
  * token, 404 for an invalid type, 413 for an oversized body, 415 for non-JSON, or 500 for storage failures.
  */
 export const POST: RequestHandler = ({ request, params }) =>
-  createComponent(request, params.type, componentApiDependencies());
+  createComponent(request, params.type, componentApiDependencies);

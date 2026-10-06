@@ -11,14 +11,14 @@ import { Effect, Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 import { readdir, readFile, rm } from 'node:fs/promises';
 
+import { isSafeRelativePath, joinPath } from './artifact-writer';
 import { ComponentStoreError } from './component.types';
 import { ComponentRecordSchema, type ComponentType } from './fields.utils';
-import { isSafeRelativePath, joinPath } from './repo';
 
 import type {
+  ArtifactWriterConfig,
+  ArtifactWriterFn,
   ComponentLogger,
-  ComponentRepoConfig,
-  ComponentRepoFn,
   ComponentStoreApi,
   FileSyncService,
 } from './component.types';
@@ -40,28 +40,27 @@ const recordPath = (trackedRoot: string, type: ComponentType, id: string): strin
 };
 
 /** Parses and validates serialized component-record JSON. */
-const decodeRecord = (
-  content: string,
-  message: string,
-): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> =>
-  Effect.mapError(
-    Effect.try(() => Schema.decodeUnknownSync(ComponentRecordSchema)(JSON.parse(content))),
-    (cause) => new ComponentStoreError({ reason: 'Storage', message, cause }),
-  );
+const decodeRecord =
+  (message: string) =>
+  (content: string): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> =>
+    Effect.mapError(
+      Effect.try(() => Schema.decodeUnknownSync(ComponentRecordSchema)(JSON.parse(content))),
+      (cause) => new ComponentStoreError({ reason: 'Storage', message, cause }),
+    );
 
 /**
  * Component storage operations backed by the configured component repository. List
  * skips malformed JSON artifacts and logs a warning for each one.
  *
  * @param config - Repository root and tracked subtree configuration.
- * @param repo - The artifact-saving function from {@link createComponentRepo}.
+ * @param writer - The artifact-saving function from {@link createArtifactWriter}.
  * @param fileSync - Durability synchronization service.
  * @param log - Receives a warning for each record that list skips.
  * @returns A {@link ComponentStoreApi} whose operations fail on the Effect error channel.
  */
 export const createComponentStore = (
-  config: ComponentRepoConfig,
-  repo: ComponentRepoFn,
+  config: ArtifactWriterConfig,
+  writer: ArtifactWriterFn,
   fileSync: FileSyncService,
   log: ComponentLogger,
 ): ComponentStoreApi => {
@@ -73,7 +72,7 @@ export const createComponentStore = (
     record: typeof ComponentRecordSchema.Type,
   ): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> =>
     Effect.mapError(
-      repo([{ relPath: `${type}/${id}.json`, content: JSON.stringify(record) }]),
+      writer([{ relPath: `${type}/${id}.json`, content: JSON.stringify(record) }]),
       (cause) =>
         new ComponentStoreError({
           reason: 'Storage',
@@ -96,11 +95,7 @@ export const createComponentStore = (
             : `Unable to decode component: ${type}/${id}`,
           cause,
         }),
-    }).pipe(
-      Effect.flatMap((content) =>
-        decodeRecord(content, `Unable to decode component: ${type}/${id}`),
-      ),
-    );
+    }).pipe(Effect.flatMap(decodeRecord(`Unable to decode component: ${type}/${id}`)));
 
   /** Reads every `.json` record file, carrying each entry with its decoded result-or-error. */
   const readDirectoryEntries =
@@ -116,11 +111,7 @@ export const createComponentStore = (
                   message: `Unable to decode component: ${type}/${entry}`,
                   cause,
                 }),
-            }).pipe(
-              Effect.flatMap((content) =>
-                decodeRecord(content, `Unable to decode component: ${type}/${entry}`),
-              ),
-            ),
+            }).pipe(Effect.flatMap(decodeRecord(`Unable to decode component: ${type}/${entry}`))),
           ),
           (either) => ({ entry, either }),
         ),
@@ -201,7 +192,7 @@ export const createComponentStore = (
         ),
         Effect.flatMap(() =>
           Effect.mapError(
-            fileSync.syncDirectory(joinPath(trackedRoot, type)),
+            fileSync.fsync(joinPath(trackedRoot, type)),
             (cause) =>
               new ComponentStoreError({
                 reason: 'Storage',

@@ -20,7 +20,7 @@ import type { RequestHandler } from './$types';
  * 404 for an invalid type or missing record, or 500 for storage failures.
  */
 export const GET: RequestHandler = ({ request, params }) =>
-  getComponent(request, params.type, params.id, componentApiDependencies());
+  getComponent(request, params.type, params.id, componentApiDependencies);
 
 /**
  * Updates an existing component record by type and id.
@@ -33,7 +33,7 @@ export const GET: RequestHandler = ({ request, params }) =>
  * non-JSON, or 500 for storage failures.
  */
 export const PUT: RequestHandler = ({ request, params }) =>
-  updateComponent(request, params.type, params.id, componentApiDependencies());
+  updateComponent(request, params.type, params.id, componentApiDependencies);
 
 /**
  * Deletes a component record by type and id.
@@ -45,4 +45,4 @@ export const PUT: RequestHandler = ({ request, params }) =>
  * 404 for an invalid type or missing record, or 500 for storage failures.
  */
 export const DELETE: RequestHandler = ({ request, params }) =>
-  deleteComponent(request, params.type, params.id, componentApiDependencies());
+  deleteComponent(request, params.type, params.id, componentApiDependencies);

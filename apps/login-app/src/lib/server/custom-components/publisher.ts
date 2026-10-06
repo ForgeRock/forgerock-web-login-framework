@@ -10,23 +10,23 @@
 import { Effect, Schema } from 'effect';
 
 import { type Bundle, BundleSchema, PublishResponseSchema } from './api.schemas';
+import { isSafeRelativePath } from './artifact-writer';
 import { ComponentPublishError } from './component.types';
-import { isSafeRelativePath } from './repo';
 
-import type { ComponentArtifact, ComponentPublishFn, ComponentRepoFn } from './component.types';
+import type { ArtifactWriterFn, ComponentArtifact, ComponentPublishFn } from './component.types';
 
 /**
  * Validates serialized component bundles and delegates persistence to the component repository.
  *
- * @param repo - The artifact-saving function from {@link createComponentRepo}.
+ * @param writer - The artifact-saving function from {@link createArtifactWriter}.
  * @returns A function that validates and persists a serialized bundle, failing with a tagged error.
  */
 export const createComponentPublisher =
-  (repo: ComponentRepoFn): ComponentPublishFn =>
+  (writer: ArtifactWriterFn): ComponentPublishFn =>
   (bundle) =>
     Effect.flatMap(parseBundle(bundle), (artifacts) =>
       Effect.mapError(
-        repo(artifacts),
+        writer(artifacts),
         (cause) =>
           new ComponentPublishError({
             reason: 'Storage',

@@ -8,13 +8,17 @@
  * */
 
 import { Cause, Effect, Exit } from 'effect';
+import { Effect } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { fileSyncNoop } from './file-sync';
-import { createComponentRepo } from './repo';
+import { createArtifactWriter } from './artifact-writer';
+
+import type { FileSyncService } from './component.types';
+
+const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
 
 const temporaryDirectories: string[] = [];
 
@@ -25,7 +29,7 @@ const makeTemporaryDirectory = async (): Promise<string> => {
 };
 
 const saveWith = (repoDir: string) =>
-  createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
+  createArtifactWriter({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
 
 const saveEffect = (repoDir: string, relPath: string, content: string) =>
   saveWith(repoDir)([{ relPath, content }]);
@@ -48,7 +52,7 @@ afterEach(async () => {
   );
 });
 
-describe('createComponentRepo', () => {
+describe('createArtifactWriter', () => {
   it('writes a component below the tracked repository subpath', async () => {
     const repoDir = await makeTemporaryDirectory();
 

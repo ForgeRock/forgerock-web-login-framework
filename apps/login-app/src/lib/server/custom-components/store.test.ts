@@ -8,14 +8,18 @@
  * */
 
 import { Cause, Effect, Exit, Option } from 'effect';
+import { Effect } from 'effect';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { fileSyncNoop } from './file-sync';
-import { createComponentStore } from './records';
-import { createComponentRepo } from './repo';
+import { createArtifactWriter } from './artifact-writer';
+
+import type { FileSyncService } from './component.types';
+
+const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
+import { createComponentStore } from './store';
 
 import type { Effect as EffectType } from 'effect';
 
@@ -44,8 +48,8 @@ const makeTemporaryDirectory = async (): Promise<string> => {
 const makeLog = (): ComponentLogger => ({ error: vi.fn(), warn: vi.fn(), info: vi.fn() });
 
 const makeStore = (repoDir: string, log: ComponentLogger = makeLog()) => {
-  const repo = createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
-  return createComponentStore({ repoDir, trackedSubpath: 'config' }, repo, fileSyncNoop, log);
+  const writer = createArtifactWriter({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
+  return createComponentStore({ repoDir, trackedSubpath: 'config' }, writer, fileSyncNoop, log);
 };
 
 /** Runs a store effect, failing the test when it errors. */

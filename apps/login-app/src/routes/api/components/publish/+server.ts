@@ -23,4 +23,4 @@ import type { RequestHandler } from './$types';
  * repository failure.
  */
 export const POST: RequestHandler = ({ request }) =>
-  publishComponentSource(request, componentApiDependencies());
+  publishComponentSource(request, componentApiDependencies);

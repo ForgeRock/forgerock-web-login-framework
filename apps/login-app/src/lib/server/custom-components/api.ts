@@ -31,7 +31,6 @@ import type {
   ApiErrorStatus,
   AuthUser,
   ComponentApiDependencies,
-  ComponentAuthError,
   ComponentAuthFailureReason,
   ComponentLogger,
   ComponentPublishError,
@@ -100,7 +99,7 @@ const fromStore = <Value>(
 ): Effect.Effect<Response, HttpError> =>
   Effect.map(Effect.mapError(effect, fromStoreError), onSuccess);
 
-/** Logs how a store mutation ended; a missing record changes nothing, so it is not audited. */
+/** Logs a successful or failed store mutation at its juncture; a missing record changes nothing. */
 const auditMutation = <Value>(
   log: ComponentLogger,
   audit: AuditFields,
@@ -115,6 +114,7 @@ const auditMutation = <Value>(
     ),
     Effect.tapError((error) =>
       Effect.sync(() => {
+        // A NotFound failure changes nothing, so it is not an audit event.
         if (error.reason === 'Storage') {
           log.error(
             AUDIT_MESSAGE,
@@ -126,97 +126,66 @@ const auditMutation = <Value>(
     ),
   );
 
-/** Logs a request refused for a known caller, or an authentication failure on our side. */
-const auditDenied = (log: ComponentLogger, request: Request, error: ComponentAuthError): void => {
-  // No valid session means no identity to audit; the HTTP layer already records the request.
-  if (error.reason === 'Unauthenticated') {
-    return;
-  }
-  const audit: AuditFields = {
-    action: 'access',
-    outcome: error.reason === 'Unavailable' ? 'failed' : 'denied',
-    reason: error.reason,
-    detail: error.message,
-    method: request.method,
-    path: new URL(request.url).pathname,
-    uid: error.uid,
-  };
-  if (error.reason === 'Unavailable') {
-    log.error(AUDIT_MESSAGE, audit, ...causeDetails(error.cause));
-    return;
-  }
-  log.warn(AUDIT_MESSAGE, audit);
-};
-
-/** Logs a rejected or failed publish; paths are left out of rejections because they are unsafe. */
-const auditPublishFailure = (
-  log: ComponentLogger,
-  uid: string,
-  paths: ReadonlyArray<string>,
-  error: ComponentPublishError,
-): void => {
-  if (error.reason === 'Invalid') {
-    log.warn(AUDIT_MESSAGE, { action: 'publish', outcome: 'rejected', uid, detail: error.message });
-    return;
-  }
-  log.error(
-    AUDIT_MESSAGE,
-    { action: 'publish', outcome: 'failed', uid, paths, detail: error.message },
-    ...causeDetails(error.cause),
-  );
-};
-
 /**
- * Enforces API enablement (`COMPONENT_API_ENABLED=true`), AM admin authentication, JSON content
- * type, and the declared body size limit. Disabled deployments 404; authentication fails closed.
- * Returns the authenticated caller when the request may proceed.
+ * Enforces API enablement (`COMPONENT_API_ENABLED=true`) and AM admin authentication. Disabled
+ * deployments 404; authentication fails closed.
  */
 const guardRequest = (
   request: Request,
-  hasBody: boolean,
   dependencies: Pick<ComponentApiDependencies, 'authenticate' | 'log'>,
 ): Effect.Effect<AuthUser, HttpError> => {
-  const fail = (status: ApiErrorStatus, message: string) =>
-    Effect.fail(new HttpError({ status, message }));
-
   if (!isComponentApiEnabled()) {
-    return fail(404, 'Not found');
+    return Effect.fail(new HttpError({ status: 404, message: 'Not found' }));
   }
   return dependencies.authenticate(request).pipe(
-    Effect.tapError((error) => Effect.sync(() => auditDenied(dependencies.log, request, error))),
+    Effect.tapError((error) =>
+      Effect.sync(() => {
+        // Unauthenticated callers have no uid to audit; the access log already holds the request.
+        if (error.reason === 'Unauthenticated') {
+          return;
+        }
+        const fields = {
+          action: 'access',
+          outcome: error.reason === 'Unavailable' ? 'failed' : 'denied',
+          reason: error.reason,
+          detail: error.message,
+          uid: error.uid,
+        };
+        if (error.reason === 'Unavailable') {
+          dependencies.log.error(AUDIT_MESSAGE, fields, ...causeDetails(error.cause));
+        } else {
+          dependencies.log.warn(AUDIT_MESSAGE, fields);
+        }
+      }),
+    ),
     Effect.mapError(
       (error) => new HttpError({ status: AUTH_STATUS[error.reason], message: error.message }),
     ),
-    Effect.flatMap((user) => {
-      if (
-        hasBody &&
-        request.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase() !==
-          'application/json'
-      ) {
-        return fail(415, 'Content-Type must be application/json');
-      }
-      if (!hasBody) {
-        return Effect.succeed(user);
-      }
-      const header = request.headers.get('content-length');
-      if (header === null) {
-        return Effect.succeed(user);
-      }
-      const length = Number(header);
-      if (!Number.isFinite(length) || length > MAX_COMPONENT_BUNDLE_SIZE) {
-        return fail(413, COMPONENT_BUNDLE_SIZE_MESSAGE);
-      }
-      return Effect.succeed(user);
-    }),
   );
 };
 
-/** Reads and decodes a size-limited JSON request body. */
+/** Validates the JSON content type and declared size, then reads and decodes a request body. */
 const readBody = <A, I>(
   request: Request,
   schema: Schema.Schema<A, I>,
-): Effect.Effect<A, HttpError> =>
-  Effect.tryPromise({
+): Effect.Effect<A, HttpError> => {
+  if (
+    request.headers.get('content-type')?.split(';', 1)[0]?.trim().toLowerCase() !==
+    'application/json'
+  ) {
+    return Effect.fail(
+      new HttpError({ status: 415, message: 'Content-Type must be application/json' }),
+    );
+  }
+  const header = request.headers.get('content-length');
+  const declaredLength = header === null ? undefined : Number(header);
+  if (
+    declaredLength !== undefined &&
+    (!Number.isFinite(declaredLength) || declaredLength > MAX_COMPONENT_BUNDLE_SIZE)
+  ) {
+    return Effect.fail(new HttpError({ status: 413, message: COMPONENT_BUNDLE_SIZE_MESSAGE }));
+  }
+  return Effect.tryPromise({
     try: () => request.text(),
     catch: () => new HttpError({ status: 400, message: 'Unable to read component request body' }),
   }).pipe(
@@ -232,29 +201,28 @@ const readBody = <A, I>(
         catch: () => new HttpError({ status: 400, message: 'Invalid request body' }),
       }),
     ),
-    Effect.flatMap((parsed) => {
-      const result = Schema.decodeUnknownEither(schema)(parsed);
-      return result._tag === 'Left'
-        ? Effect.fail(new HttpError({ status: 400, message: 'Invalid request body' }))
-        : Effect.succeed(result.right);
-    }),
+    Effect.flatMap((parsed) =>
+      Effect.mapError(
+        Schema.decodeUnknown(schema)(parsed),
+        () => new HttpError({ status: 400, message: 'Invalid request body' }),
+      ),
+    ),
   );
+};
 
 /** Validates a route component type, 404 on unknown values. */
-const validateType = (type: string): Effect.Effect<typeof ComponentTypeSchema.Type, HttpError> => {
-  const result = Schema.decodeUnknownEither(ComponentTypeSchema)(type);
-  return result._tag === 'Right'
-    ? Effect.succeed(result.right)
-    : Effect.fail(new HttpError({ status: 404, message: 'Invalid component type' }));
-};
+const validateType = (type: string): Effect.Effect<typeof ComponentTypeSchema.Type, HttpError> =>
+  Effect.mapError(
+    Schema.decodeUnknown(ComponentTypeSchema)(type),
+    () => new HttpError({ status: 404, message: 'Invalid component type' }),
+  );
 
 /** Validates a route component id, 400 on non-UUID values. */
-const validateId = (id: string): Effect.Effect<string, HttpError> => {
-  const result = Schema.decodeUnknownEither(ComponentIdSchema)(id);
-  return result._tag === 'Right'
-    ? Effect.succeed(result.right)
-    : Effect.fail(new HttpError({ status: 400, message: 'Invalid component id' }));
-};
+const validateId = (id: string): Effect.Effect<string, HttpError> =>
+  Effect.mapError(
+    Schema.decodeUnknown(ComponentIdSchema)(id),
+    () => new HttpError({ status: 400, message: 'Invalid component id' }),
+  );
 
 /** Parses the `?fields=` query parameter into projection paths, 400 on an invalid projection. */
 const parseProjection = (
@@ -264,12 +232,12 @@ const parseProjection = (
   if (fieldsInput === null || fieldsInput === '') {
     return Effect.succeed([]);
   }
-  const result = Schema.decodeUnknownEither(FieldsSchema)(fieldsInput);
-  if (result._tag === 'Left') {
-    return Effect.fail(new HttpError({ status: 400, message: 'Invalid fields projection' }));
-  }
-  return Effect.succeed(
-    result.right.split(',').map((path) => path.split('.').map((segment) => segment.trim())),
+  return Effect.map(
+    Effect.mapError(
+      Schema.decodeUnknown(FieldsSchema)(fieldsInput),
+      () => new HttpError({ status: 400, message: 'Invalid fields projection' }),
+    ),
+    (fields) => fields.split(',').map((path) => path.split('.').map((segment) => segment.trim())),
   );
 };
 
@@ -288,26 +256,11 @@ const handler = <A, I>(
   dependencies: ComponentApiDependencies,
 ): Promise<Response> =>
   runApi(
-    guardRequest(request, true, dependencies).pipe(
+    guardRequest(request, dependencies).pipe(
       Effect.flatMap((user) =>
         Effect.map(readBody(request, bodySchema), (body) => ({ body, user })),
       ),
       Effect.flatMap(({ body, user }) => operation({ store: dependencies.store, body, user })),
-    ),
-  );
-
-/** Handler skeleton for requests without a body (GET, DELETE). */
-const bodylessHandler = (
-  request: Request,
-  operation: (context: {
-    store: ComponentApiDependencies['store'];
-    user: AuthUser;
-  }) => Effect.Effect<Response, HttpError>,
-  dependencies: ComponentApiDependencies,
-): Promise<Response> =>
-  runApi(
-    guardRequest(request, false, dependencies).pipe(
-      Effect.flatMap((user) => operation({ store: dependencies.store, user })),
     ),
   );
 
@@ -325,7 +278,7 @@ export const listComponents = (
   dependencies: ComponentApiDependencies,
 ): Promise<Response> =>
   runApi(
-    guardRequest(request, false, dependencies).pipe(
+    guardRequest(request, dependencies).pipe(
       Effect.flatMap(() => validateType(type)),
       Effect.flatMap((validType) =>
         Effect.map(parseProjection(request), (fields) => ({ fields, validType })),
@@ -353,15 +306,18 @@ export const getComponent = (
   id: string,
   dependencies: ComponentApiDependencies,
 ): Promise<Response> =>
-  bodylessHandler(
-    request,
-    ({ store }) =>
-      Effect.flatMap(validateType(type), (validType) =>
-        Effect.flatMap(validateId(id), (validId) =>
-          fromStore(store.get(validType, validId), (found) => recordResponse(200, found)),
+  runApi(
+    guardRequest(request, dependencies).pipe(
+      Effect.flatMap(() =>
+        Effect.flatMap(validateType(type), (validType) =>
+          Effect.flatMap(validateId(id), (validId) =>
+            fromStore(dependencies.store.get(validType, validId), (found) =>
+              recordResponse(200, found),
+            ),
+          ),
         ),
       ),
-    dependencies,
+    ),
   );
 
 /**
@@ -449,22 +405,23 @@ export const deleteComponent = (
   id: string,
   dependencies: ComponentApiDependencies,
 ): Promise<Response> =>
-  bodylessHandler(
-    request,
-    ({ store, user }) =>
-      Effect.flatMap(validateType(type), (validType) =>
-        Effect.flatMap(validateId(id), (validId) =>
-          fromStore(
-            auditMutation(
-              dependencies.log,
-              { action: 'delete', uid: user.uid, type: validType, id: validId },
-              store.remove(validType, validId),
+  runApi(
+    guardRequest(request, dependencies).pipe(
+      Effect.flatMap(({ uid }) =>
+        Effect.flatMap(validateType(type), (validType) =>
+          Effect.flatMap(validateId(id), (validId) =>
+            fromStore(
+              auditMutation(
+                dependencies.log,
+                { action: 'delete', uid, type: validType, id: validId },
+                dependencies.store.remove(validType, validId),
+              ),
+              () => new Response(null, { status: 204 }),
             ),
-            () => new Response(null, { status: 204 }),
           ),
         ),
       ),
-    dependencies,
+    ),
   );
 
 /**
@@ -478,28 +435,48 @@ export const publishComponentSource = (
   request: Request,
   dependencies: ComponentApiDependencies,
 ): Promise<Response> =>
-  runApi(
-    guardRequest(request, true, dependencies).pipe(
-      Effect.flatMap((user) =>
-        Effect.map(readBody(request, PublishRequestSchema), (body) => ({ body, user })),
-      ),
-      Effect.flatMap(({ body, user }) => {
-        const paths = [...(body.files ?? []).map((file) => file.path), BUNDLE_ENTRY_PATH];
-        return dependencies.publish(publishBundle(body)).pipe(
-          Effect.tapError((error) =>
-            Effect.sync(() => auditPublishFailure(dependencies.log, user.uid, paths, error)),
-          ),
-          Effect.mapError(fromPublishError),
-          Effect.map(() => {
-            dependencies.log.info(AUDIT_MESSAGE, {
-              action: 'publish',
-              outcome: 'succeeded',
-              uid: user.uid,
-              paths,
-            });
-            return publishResponse();
+  handler(
+    request,
+    PublishRequestSchema,
+    ({ body, user }) => {
+      const paths = [...(body.files ?? []).map((file) => file.path), BUNDLE_ENTRY_PATH];
+      return dependencies.publish(publishBundle(body)).pipe(
+        Effect.tapError((error) =>
+          Effect.sync(() => {
+            // Paths are left out of rejections because they are unsafe to echo.
+            if (error.reason === 'Invalid') {
+              dependencies.log.warn(AUDIT_MESSAGE, {
+                action: 'publish',
+                outcome: 'rejected',
+                uid: user.uid,
+                detail: error.message,
+              });
+              return;
+            }
+            dependencies.log.error(
+              AUDIT_MESSAGE,
+              {
+                action: 'publish',
+                outcome: 'failed',
+                uid: user.uid,
+                paths,
+                detail: error.message,
+              },
+              ...causeDetails(error.cause),
+            );
           }),
-        );
-      }),
-    ),
+        ),
+        Effect.mapError(fromPublishError),
+        Effect.map(() => {
+          dependencies.log.info(AUDIT_MESSAGE, {
+            action: 'publish',
+            outcome: 'succeeded',
+            uid: user.uid,
+            paths,
+          });
+          return publishResponse();
+        }),
+      );
+    },
+    dependencies,
   );

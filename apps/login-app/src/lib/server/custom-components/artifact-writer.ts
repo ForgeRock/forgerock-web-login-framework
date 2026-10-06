@@ -10,9 +10,9 @@
 import { Effect } from 'effect';
 import { lstat, mkdir, rename, writeFile } from 'node:fs/promises';
 
-import { ComponentRepoError } from './component.types';
+import { ArtifactWriterError } from './component.types';
 
-import type { ComponentArtifact, ComponentRepoConfig, FileSyncService } from './component.types';
+import type { ArtifactWriterConfig, ComponentArtifact, FileSyncService } from './component.types';
 
 interface PreparedArtifact {
   readonly content: string;
@@ -94,7 +94,7 @@ const prepareArtifacts = (trackedRoot: string) => (artifacts: ReadonlyArray<Comp
     (artifact, index) => {
       if (!isSafeRelativePath(artifact.relPath)) {
         return Effect.fail(
-          new ComponentRepoError({
+          new ArtifactWriterError({
             message: `Artifact ${index} has an unsafe component path: ${artifact.relPath}`,
           }),
         );
@@ -122,7 +122,7 @@ const rejectDuplicatePaths = (prepared: ReadonlyArray<PreparedArtifact>) => {
   for (const artifact of prepared) {
     if (paths.has(artifact.normalizedPath)) {
       return Effect.fail(
-        new ComponentRepoError({
+        new ArtifactWriterError({
           message: `Duplicate component path at artifact ${artifact.normalizedPath}`,
         }),
       );
@@ -140,9 +140,9 @@ const checkSymlinks = (trackedRoot: string) => (prepared: ReadonlyArray<Prepared
       Effect.tryPromise({
         try: () => ensureNoSymlink(trackedRoot, normalizedPath),
         catch: (cause) =>
-          cause instanceof ComponentRepoError
+          cause instanceof ArtifactWriterError
             ? cause
-            : new ComponentRepoError({
+            : new ArtifactWriterError({
                 message: 'Unable to inspect component path',
                 cause,
               }),
@@ -162,19 +162,19 @@ const stageTempFiles = (fileSync: FileSyncService) => (prepared: ReadonlyArray<P
         },
         catch: (cause) =>
           cause instanceof Error && cause.message.includes('write')
-            ? new ComponentRepoError({
+            ? new ArtifactWriterError({
                 message: 'Unable to write temporary component file',
                 cause,
               })
-            : new ComponentRepoError({
+            : new ArtifactWriterError({
                 message: 'Unable to create component directory',
                 cause,
               }),
       }).pipe(
         Effect.flatMap(() =>
           Effect.mapError(
-            fileSync.syncFile(tempPath),
-            (cause) => new ComponentRepoError({ message: 'Unable to sync component file', cause }),
+            fileSync.fsync(tempPath),
+            (cause) => new ArtifactWriterError({ message: 'Unable to sync component file', cause }),
           ),
         ),
       ),
@@ -193,7 +193,7 @@ const renameIntoPlace = (prepared: ReadonlyArray<PreparedArtifact>) =>
       Effect.tryPromise({
         try: () => rename(tempPath, finalPath),
         catch: (cause) =>
-          new ComponentRepoError({
+          new ArtifactWriterError({
             message: 'Unable to atomically replace component file',
             cause,
           }),
@@ -208,9 +208,9 @@ const syncDirectories =
       [...new Set(prepared.flatMap(({ directory }) => directoryChain(trackedRoot, directory)))],
       (directory) =>
         Effect.mapError(
-          fileSync.syncDirectory(directory),
+          fileSync.fsync(directory),
           (cause) =>
-            new ComponentRepoError({ message: 'Unable to sync component directory', cause }),
+            new ArtifactWriterError({ message: 'Unable to sync component directory', cause }),
         ),
       { discard: true },
     );
@@ -227,9 +227,9 @@ const syncDirectories =
  * @param fileSync - Durability synchronization service.
  * @returns A function that validates and atomically replaces each artifact.
  */
-export const createComponentRepo =
-  (config: ComponentRepoConfig, fileSync: FileSyncService) =>
-  (artifacts: ReadonlyArray<ComponentArtifact>): Effect.Effect<void, ComponentRepoError> => {
+export const createArtifactWriter =
+  (config: ArtifactWriterConfig, fileSync: FileSyncService) =>
+  (artifacts: ReadonlyArray<ComponentArtifact>): Effect.Effect<void, ArtifactWriterError> => {
     const trackedRoot = joinPath(config.repoDir, config.trackedSubpath);
     return prepareArtifacts(trackedRoot)(artifacts).pipe(
       Effect.flatMap(rejectDuplicatePaths),

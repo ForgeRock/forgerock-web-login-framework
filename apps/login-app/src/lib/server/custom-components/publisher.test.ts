@@ -8,15 +8,19 @@
  * */
 
 import { Cause, Effect, Exit, Option } from 'effect';
+import { Effect } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { ComponentRepoError } from './component.types';
-import { fileSyncNoop } from './file-sync';
+import { createArtifactWriter } from './artifact-writer';
+import { ArtifactWriterError } from './component.types';
+
+import type { FileSyncService } from './component.types';
+
+const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
 import { createComponentPublisher, parseBundle } from './publisher';
-import { createComponentRepo } from './repo';
 
 const temporaryDirectories: string[] = [];
 
@@ -27,8 +31,8 @@ const makeTemporaryDirectory = async (): Promise<string> => {
 };
 
 const publishWith = (repoDir: string) => {
-  const repo = createComponentRepo({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
-  return createComponentPublisher(repo);
+  const writer = createArtifactWriter({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
+  return createComponentPublisher(writer);
 };
 
 const publish = async (repoDir: string, bundle: string) => {
@@ -117,7 +121,7 @@ describe('createComponentPublisher', () => {
   it('reports storage failures with the Storage reason', async () => {
     const cause = new Error('disk unavailable');
     const repoFailure = () =>
-      Effect.fail(new ComponentRepoError({ message: 'disk unavailable', cause }));
+      Effect.fail(new ArtifactWriterError({ message: 'disk unavailable', cause }));
     const publisher = createComponentPublisher(repoFailure);
 
     const exit = await Effect.runPromiseExit(

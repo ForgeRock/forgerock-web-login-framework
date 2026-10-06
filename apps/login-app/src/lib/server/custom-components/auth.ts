@@ -42,16 +42,18 @@ export const createComponentAuth =
       Effect.flatMap((tokenId) =>
         tokenId === null
           ? failUnauthenticated('An AM session token is required')
-          : Effect.succeed({ tokenId }),
+          : Effect.succeed(tokenId),
       ),
-      Effect.bind('uid', ({ tokenId }) =>
+      Effect.flatMap((tokenId) =>
         Effect.flatMap(
           Effect.tryPromise({
             try: () => dependencies.getUserId(tokenId),
             catch: amUnavailable('Unable to validate the AM session'),
           }),
           (uid) =>
-            uid === null ? failUnauthenticated('The AM session is not valid') : Effect.succeed(uid),
+            uid === null
+              ? failUnauthenticated('The AM session is not valid')
+              : Effect.succeed({ tokenId, uid }),
         ),
       ),
       Effect.bind('roles', ({ tokenId, uid }) =>
