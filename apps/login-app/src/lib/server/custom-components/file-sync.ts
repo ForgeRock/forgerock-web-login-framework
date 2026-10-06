@@ -7,19 +7,19 @@
  *
  * */
 
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { type FileHandle, open } from 'node:fs/promises';
 
-import type { FileSyncService } from './component.types';
+import { FileSync } from './component.types';
 
 /** Real `fsync` so acknowledged component saves survive crashes. */
-export const fileSync: FileSyncService = {
+export const FileSyncLive: Layer.Layer<FileSync> = Layer.succeed(FileSync, {
   fsync: (path) =>
     Effect.tryPromise({
       try: async () => {
         let handle: FileHandle | undefined;
         try {
-          handle = await open(path, 'r+');
+          handle = await open(path, 'r');
           await handle.sync();
         } finally {
           if (handle !== undefined) {
@@ -30,4 +30,4 @@ export const fileSync: FileSyncService = {
       catch: (cause) =>
         cause instanceof Error ? new Error(`Unable to fsync ${path}`, { cause }) : cause,
     }),
-};
+});

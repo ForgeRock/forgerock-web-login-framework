@@ -7,8 +7,10 @@
  *
  * */
 
+import { Effect } from 'effect';
+
 import { deleteComponent, getComponent, updateComponent } from '$lib/server/custom-components/api';
-import { componentApiDependencies } from '$lib/server/custom-components/runtime';
+import { ComponentApiLive } from '$lib/server/custom-components/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -20,7 +22,9 @@ import type { RequestHandler } from './$types';
  * 404 for an invalid type or missing record, or 500 for storage failures.
  */
 export const GET: RequestHandler = ({ request, params }) =>
-  getComponent(request, params.type, params.id, componentApiDependencies);
+  Effect.runPromise(
+    Effect.provide(getComponent(request, params.type, params.id), ComponentApiLive),
+  );
 
 /**
  * Updates an existing component record by type and id.
@@ -33,7 +37,9 @@ export const GET: RequestHandler = ({ request, params }) =>
  * non-JSON, or 500 for storage failures.
  */
 export const PUT: RequestHandler = ({ request, params }) =>
-  updateComponent(request, params.type, params.id, componentApiDependencies);
+  Effect.runPromise(
+    Effect.provide(updateComponent(request, params.type, params.id), ComponentApiLive),
+  );
 
 /**
  * Deletes a component record by type and id.
@@ -45,4 +51,6 @@ export const PUT: RequestHandler = ({ request, params }) =>
  * 404 for an invalid type or missing record, or 500 for storage failures.
  */
 export const DELETE: RequestHandler = ({ request, params }) =>
-  deleteComponent(request, params.type, params.id, componentApiDependencies);
+  Effect.runPromise(
+    Effect.provide(deleteComponent(request, params.type, params.id), ComponentApiLive),
+  );

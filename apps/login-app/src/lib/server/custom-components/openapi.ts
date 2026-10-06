@@ -47,14 +47,14 @@ const errorResponse = (description: string) => jsonResponse(description, errorSc
 /**
  * OpenAPI 3.1 specification for the login-app development endpoints.
  *
- * This document is intentionally exposed only while the SvelteKit app runs in development mode.
+ * This document is exposed wherever the Component API is enabled (`COMPONENT_API_ENABLED=true`).
  */
 export const openApiSpec = {
   openapi: '3.1.0',
   info: {
-    title: 'Login App Development API',
+    title: 'Login App Component API',
     version: '1.0.0',
-    description: 'Development-only API for managing and publishing custom components.',
+    description: 'API for managing and publishing custom components in dev tenants.',
   },
   tags: [
     {
@@ -66,11 +66,29 @@ export const openApiSpec = {
       description: 'Application liveness probe.',
     },
   ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        description:
+          'An AM session token as `Authorization: Bearer <AM session token>` for CLI clients.',
+      },
+      cookieAuth: {
+        type: 'apiKey',
+        in: 'cookie',
+        name: 'AM session cookie',
+        description: 'The browser admin session cookie set by an AM sign-in.',
+      },
+    },
+  },
+  security: [{ bearerAuth: [] }, { cookieAuth: [] }],
   paths: {
     '/api/health/live': {
       get: {
         tags: ['Health'],
         summary: 'Check application liveness',
+        security: [],
         responses: {
           '200': jsonResponse('The application is live.', {
             type: 'object',

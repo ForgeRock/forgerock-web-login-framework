@@ -36,8 +36,7 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_AM_WELLKNOWN_URL: `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
           COMPONENT_API_ENABLED: 'true',
           ORIGIN: url,
-          CONFIG_REPO_DIR: componentsRepoDir,
-          CONFIG_TRACKED_SUBPATH: 'config',
+          COMPONENT_CONFIG_DIR: join(componentsRepoDir, 'config'),
         },
       },
       // Dedicated server with FR_AM_WELLKNOWN_URL missing, so the config-error test can hit

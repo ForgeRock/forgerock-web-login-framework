@@ -7,20 +7,15 @@
  *
  * */
 
-import { Cause, Effect, Exit, Option } from 'effect';
-import { Effect } from 'effect';
+import { Cause, Effect, Exit, Layer, Option, Runtime } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createArtifactWriter } from './artifact-writer';
-import { ArtifactWriterError } from './component.types';
-
-import type { FileSyncService } from './component.types';
-
-const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
-import { createComponentPublisher, parseBundle } from './publisher';
+import { joinPath, WriterLive } from './artifact-writer';
+import { ArtifactWriterError, FileSync, Publish, Writer } from './component.types';
+import { parseBundle, PublishLive } from './publisher';
 
 const temporaryDirectories: string[] = [];
 
@@ -30,13 +25,37 @@ const makeTemporaryDirectory = async (): Promise<string> => {
   return directory;
 };
 
-const publishWith = (repoDir: string) => {
-  const writer = createArtifactWriter({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
-  return createComponentPublisher(writer);
-};
+const fileSyncLayer = Layer.succeed(FileSync, {
+  fsync: () => Effect.void,
+});
 
-const publish = async (repoDir: string, bundle: string) => {
-  const exit = await Effect.runPromiseExit(publishWith(repoDir)(bundle));
+const makePublishRuntime = async (repoDir: string) =>
+  Effect.runPromise(
+    Layer.toRuntime(
+      PublishLive.pipe(
+        Layer.provide(WriterLive({ trackedRoot: joinPath(repoDir, 'config') })),
+        Layer.provide(fileSyncLayer),
+      ),
+    ).pipe(Effect.scoped),
+  );
+
+const makeFailingWriterRuntime = async () =>
+  Effect.runPromise(
+    Layer.toRuntime(
+      PublishLive.pipe(
+        Layer.provide(
+          Layer.succeed(Writer, () =>
+            Effect.fail(new ArtifactWriterError({ message: 'disk unavailable' })),
+          ),
+        ),
+      ),
+    ).pipe(Effect.scoped),
+  );
+
+const publishEffect = (bundle: string) => Effect.flatMap(Publish, (publish) => publish(bundle));
+
+const publish = async (runtime: Runtime.Runtime<Publish>, repoDir: string, bundle: string) => {
+  const exit = await Runtime.runPromiseExit(runtime)(publishEffect(bundle));
   if (Exit.isFailure(exit)) {
     throw new Error(
       `Expected the publish to succeed: ${Option.getOrThrow(Cause.failureOption(exit.cause))}`,
@@ -87,11 +106,13 @@ describe('parseBundle', () => {
   }
 });
 
-describe('createComponentPublisher', () => {
+describe('PublishLive', () => {
   it('publishes every bundle file through the component repo', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makePublishRuntime(repoDir);
 
     await publish(
+      runtime,
       repoDir,
       '{"files":[{"path":"journeys/login.json","content":"{\\"journey\\":\\"login\\"}"},{"path":"themes/main.json","content":"{}"}]}',
     );
@@ -104,10 +125,11 @@ describe('createComponentPublisher', () => {
 
   it('validates all artifacts before writing any file', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makePublishRuntime(repoDir);
     const bundle =
       '{"files":[{"path":"journeys/login.json","content":"{}"},{"path":"../outside.json","content":"{}"}]}';
 
-    const exit = await Effect.runPromiseExit(publishWith(repoDir)(bundle));
+    const exit = await Runtime.runPromiseExit(runtime)(publishEffect(bundle));
     expect(Exit.isSuccess(exit)).toBe(false);
     if (Exit.isSuccess(exit)) {
       return;
@@ -119,13 +141,10 @@ describe('createComponentPublisher', () => {
   });
 
   it('reports storage failures with the Storage reason', async () => {
-    const cause = new Error('disk unavailable');
-    const repoFailure = () =>
-      Effect.fail(new ArtifactWriterError({ message: 'disk unavailable', cause }));
-    const publisher = createComponentPublisher(repoFailure);
+    const runtime = await makeFailingWriterRuntime();
 
-    const exit = await Effect.runPromiseExit(
-      publisher('{"files":[{"path":"bundle.js","content":"{}"}]}'),
+    const exit = await Runtime.runPromiseExit(runtime)(
+      publishEffect('{"files":[{"path":"bundle.js","content":"{}"}]}'),
     );
     expect(Exit.isSuccess(exit)).toBe(false);
     if (Exit.isSuccess(exit)) {

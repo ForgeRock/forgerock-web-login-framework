@@ -7,7 +7,7 @@
  *
  * -->
 
-<!-- Dev-only page hosting Swagger UI fed by /api/openapi. -->
+<!-- Swagger UI page fed by /api/openapi; renders the spec wherever the Component API is enabled. -->
 <script lang="ts">
   import { onMount } from 'svelte';
 
@@ -46,7 +46,7 @@
   <h1 class="mb-6 text-3xl font-semibold">API documentation</h1>
 
   {#if unavailable}
-    <p>OpenAPI spec is only available in dev mode.</p>
+    <p>OpenAPI spec is only available while the Component API is enabled.</p>
   {:else}
     <div class="swagger-ui-container">
       <div id="swagger-ui" bind:this={swaggerUi}></div>

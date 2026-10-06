@@ -9,6 +9,7 @@ This app serves multiple roles:
 - **Development**: Provides a live environment for developing and testing the `@forgerock/login-widget` package
 - **Documentation**: Hosts rendered documentation pages via [mdsvex](https://mdsvex.pngwn.io/)
 - **E2E Test Host**: The Playwright E2E tests run against this app's built output
+- **Component API**: Serves the Custom Components CRUD and publish API under `/api/components/*` (disabled unless `COMPONENT_API_ENABLED=true`), with an OpenAPI description at `/api/openapi` and interactive docs at `/api-docs`
 
 The app consumes the widget via a `workspace:*` dependency, meaning it always uses the local version from `packages/login-widget`.
 
@@ -50,14 +51,22 @@ pnpm --filter @forgerock/login-app run preview
 
 The app requires environment variables to connect to a ForgeRock AM instance. Set these in a `.env` file at the repository root or export them in your shell.
 
-| Variable              | Required        | Description                                                                                                                                                                                                                        |
-| --------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `FR_AM_URL`           | Yes             | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                                                                                                                             |
-| `FR_AM_COOKIE_NAME`   | Yes             | AM session cookie name                                                                                                                                                                                                             |
-| `FR_REALM_PATH`       | Yes             | AM realm path                                                                                                                                                                                                                      |
-| `FR_AM_WELLKNOWN_URL` | Yes             | ForgeRock AM Wellknown URL used to validate startup configuration (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration`)                                                |
-| `FR_AM_JOURNEY_LOGIN` | No              | Default login journey name. Used for IDM theme resolution when no `?journey=` query param is present, and used as the fallback journey for restarting failed suspended flows. Defaults to the AM realm's default journey if unset. |
-| `ORIGIN`              | With components | This app's origin (e.g., `http://localhost:3000`). Required when the Custom Components API is enabled (`COMPONENT_API_ENABLED=true`): cookie-carried admin mutations are rejected with 500 until it is set.                        |
+| Variable                | Required        | Description                                                                                                                                                                                                                        |
+| ----------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `FR_AM_URL`             | Yes             | ForgeRock AM base URL (e.g., `https://openam-sdks.forgeblocks.com/am`)                                                                                                                                                             |
+| `FR_AM_COOKIE_NAME`     | Yes             | AM session cookie name                                                                                                                                                                                                             |
+| `FR_REALM_PATH`         | Yes             | AM realm path                                                                                                                                                                                                                      |
+| `FR_AM_WELLKNOWN_URL`   | Yes             | ForgeRock AM Wellknown URL used to validate startup configuration (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration`)                                                |
+| `FR_AM_JOURNEY_LOGIN`   | No              | Default login journey name. Used for IDM theme resolution when no `?journey=` query param is present, and used as the fallback journey for restarting failed suspended flows. Defaults to the AM realm's default journey if unset. |
+| `ORIGIN`                | With components | This app's origin (e.g., `http://localhost:3000`). Required when the Custom Components API is enabled (`COMPONENT_API_ENABLED=true`): cookie-carried admin mutations are rejected with 500 until it is set.                        |
+| `COMPONENT_API_ENABLED` | With components | Set to `true` to serve `/api/components/*` at all. Disabled unless opted in; intended for dev tenants only.                                                                                                                        |
+| `COMPONENT_CONFIG_DIR`  | With components | Absolute path of the tracked config directory the Component API reads and writes. Defaults to `/config/config` (the compose `config` profile mounts a config-saver repository at `/config` with a `config` tracked subtree).       |
+
+### Component API authentication
+
+Callers authenticate with an AM admin session: the browser session cookie, or
+`Authorization: Bearer <AM session token>` for CLI clients. The session must
+carry an AM admin role (`ui-global-admin` or `ui-realm-admin`).
 
 ## Logging
 

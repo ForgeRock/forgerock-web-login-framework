@@ -7,34 +7,44 @@
  *
  * */
 
-import { Effect, Schema } from 'effect';
+import { Effect, Layer, Schema } from 'effect';
 
 import { type Bundle, BundleSchema, PublishResponseSchema } from './api.schemas';
 import { isSafeRelativePath } from './artifact-writer';
-import { ComponentPublishError } from './component.types';
+import { ComponentPublishError, Publish, Writer } from './component.types';
 
-import type { ArtifactWriterFn, ComponentArtifact, ComponentPublishFn } from './component.types';
+import type { ArtifactWriterFn, ComponentArtifact } from './component.types';
 
 /**
- * Validates serialized component bundles and delegates persistence to the component repository.
+ * Validates serialized component bundles and delegates persistence to the artifact writer.
  *
- * @param writer - The artifact-saving function from {@link createArtifactWriter}.
- * @returns A function that validates and persists a serialized bundle, failing with a tagged error.
+ * @returns A layer providing the publisher, requiring the writer service.
  */
-export const createComponentPublisher =
-  (writer: ArtifactWriterFn): ComponentPublishFn =>
-  (bundle) =>
-    Effect.flatMap(parseBundle(bundle), (artifacts) =>
-      Effect.mapError(
-        writer(artifacts),
-        (cause) =>
-          new ComponentPublishError({
-            reason: 'Storage',
-            message: 'Unable to persist component bundle',
-            cause,
-          }),
-      ),
-    );
+export const PublishLive: Layer.Layer<Publish, never, Writer> = Layer.effect(
+  Publish,
+  Effect.flatMap(Writer, (writer) =>
+    Effect.succeed(
+      (bundle: string): Effect.Effect<void, ComponentPublishError> => publish(bundle, writer),
+    ),
+  ),
+);
+
+/** Validates a bundle and persists it through the writer, failing with a tagged error. */
+const publish = (
+  bundle: string,
+  writer: ArtifactWriterFn,
+): Effect.Effect<void, ComponentPublishError> =>
+  Effect.flatMap(parseBundle(bundle), (artifacts) =>
+    Effect.mapError(
+      writer(artifacts),
+      (cause) =>
+        new ComponentPublishError({
+          reason: 'Storage',
+          message: 'Unable to persist component bundle',
+          cause,
+        }),
+    ),
+  );
 
 /** Decodes a JSON bundle into repository artifacts, rejecting every unsafe file path. */
 export const parseBundle = (
@@ -46,19 +56,16 @@ export const parseBundle = (
       new ComponentPublishError({ reason: 'Invalid', message: 'Bundle must be valid JSON', cause }),
   }).pipe(
     Effect.flatMap((parsed: Bundle) =>
-      Effect.try({
-        try: () =>
-          parsed.files.map(({ path, content }, index) => {
-            if (!isSafeRelativePath(path)) {
-              throw new ComponentPublishError({
+      Effect.forEach(parsed.files, ({ path, content }, index) =>
+        isSafeRelativePath(path)
+          ? Effect.succeed({ relPath: path, content })
+          : Effect.fail(
+              new ComponentPublishError({
                 reason: 'Invalid',
                 message: `Bundle file at index ${index} has an unsafe path`,
-              });
-            }
-            return { relPath: path, content };
-          }),
-        catch: (cause) => cause as ComponentPublishError,
-      }),
+              }),
+            ),
+      ),
     ),
   );
 
@@ -75,4 +82,6 @@ export const publishBundle = (body: {
 
 /** Produces the fixed publish-success response after a bundle is persisted. */
 export const publishResponse = (): Response =>
-  Response.json(Schema.encodeSync(PublishResponseSchema)({ id: crypto.randomUUID(), url: '' }));
+  Response.json(Schema.encodeSync(PublishResponseSchema)({ id: crypto.randomUUID(), url: '' }), {
+    headers: { 'cache-control': 'no-store' },
+  });

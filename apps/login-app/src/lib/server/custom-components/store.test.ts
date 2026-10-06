@@ -7,21 +7,15 @@
  *
  * */
 
-import { Cause, Effect, Exit, Option } from 'effect';
-import { Effect } from 'effect';
+import { Cause, Effect, Exit, Layer, Option, Runtime } from 'effect';
 import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createArtifactWriter } from './artifact-writer';
-
-import type { FileSyncService } from './component.types';
-
-const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
-import { createComponentStore } from './store';
-
-import type { Effect as EffectType } from 'effect';
+import { joinPath, WriterLive } from './artifact-writer';
+import { FileSync, Log, Store } from './component.types';
+import { StoreLive } from './store';
 
 import type { ComponentLogger, ComponentStoreError } from './component.types';
 
@@ -47,14 +41,24 @@ const makeTemporaryDirectory = async (): Promise<string> => {
 
 const makeLog = (): ComponentLogger => ({ error: vi.fn(), warn: vi.fn(), info: vi.fn() });
 
-const makeStore = (repoDir: string, log: ComponentLogger = makeLog()) => {
-  const writer = createArtifactWriter({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
-  return createComponentStore({ repoDir, trackedSubpath: 'config' }, writer, fileSyncNoop, log);
+const fileSyncNoop = Layer.succeed(FileSync, { fsync: () => Effect.void });
+
+/** Builds the real store over a temporary repository with a no-op fsync and a given log. */
+const makeStore = async (repoDir: string, log: ComponentLogger = makeLog()) => {
+  const layer = StoreLive({ trackedRoot: joinPath(repoDir, 'config') }).pipe(
+    Layer.provide(WriterLive({ trackedRoot: joinPath(repoDir, 'config') })),
+    Layer.provide(fileSyncNoop),
+    Layer.provide(Layer.succeed(Log, log)),
+  );
+  return Effect.runPromise(Layer.toRuntime(layer).pipe(Effect.scoped));
 };
 
-/** Runs a store effect, failing the test when it errors. */
-const unwrap = async <Value, Error_>(effect: EffectType.Effect<Value, Error_>): Promise<Value> => {
-  const exit = await Effect.runPromiseExit(effect);
+/** Runs a store operation against a test runtime, failing the test when it errors. */
+const unwrap = async <Value>(
+  runtime: Runtime.Runtime<Store>,
+  effect: Effect.Effect<Value, ComponentStoreError, Store>,
+): Promise<Value> => {
+  const exit = await Runtime.runPromiseExit(runtime)(effect);
   if (Exit.isFailure(exit)) {
     throw new Error(
       `Expected a successful result, got: ${Option.getOrThrow(Cause.failureOption(exit.cause))}`,
@@ -63,11 +67,12 @@ const unwrap = async <Value, Error_>(effect: EffectType.Effect<Value, Error_>): 
   return exit.value;
 };
 
-/** Runs a store effect, failing the test when it succeeds. */
+/** Runs a store operation against a test runtime, failing the test when it succeeds. */
 const unwrapError = async <Value>(
-  effect: EffectType.Effect<Value, ComponentStoreError>,
+  runtime: Runtime.Runtime<Store>,
+  effect: Effect.Effect<Value, ComponentStoreError, Store>,
 ): Promise<ComponentStoreError> => {
-  const exit = await Effect.runPromiseExit(effect);
+  const exit = await Runtime.runPromiseExit(runtime)(effect);
   if (Exit.isSuccess(exit)) {
     throw new Error('Expected the operation to fail');
   }
@@ -80,11 +85,18 @@ afterEach(async () => {
   );
 });
 
-describe('createComponentStore', () => {
+describe('StoreLive', () => {
   it('creates and retrieves a component record', async () => {
     const repoDir = await makeTemporaryDirectory();
-    const created = await unwrap(makeStore(repoDir).create('callbacks', request));
-    const retrieved = await unwrap(makeStore(repoDir).get('callbacks', created.id));
+    const runtime = await makeStore(repoDir);
+    const created = await unwrap(
+      runtime,
+      Effect.flatMap(Store, (store) => store.create('callbacks', request)),
+    );
+    const retrieved = await unwrap(
+      runtime,
+      Effect.flatMap(Store, (store) => store.get('callbacks', created.id)),
+    );
 
     expect(created.id).toMatch(/^[0-9a-f-]{36}$/i);
     expect(created.meta.createdDate).toBe(created.meta.modifiedDate);
@@ -93,23 +105,34 @@ describe('createComponentStore', () => {
 
   it('lists created records', async () => {
     const repoDir = await makeTemporaryDirectory();
-    const first = await unwrap(makeStore(repoDir).create('stages', request));
+    const runtime = await makeStore(repoDir);
+    const first = await unwrap(
+      runtime,
+      Effect.flatMap(Store, (store) => store.create('stages', request)),
+    );
     const second = await unwrap(
-      makeStore(repoDir).create('stages', {
-        ...request,
-        meta: { ...request.meta, name: 'second' },
-      }),
+      runtime,
+      Effect.flatMap(Store, (store) =>
+        store.create('stages', { ...request, meta: { ...request.meta, name: 'second' } }),
+      ),
     );
 
-    expect(await unwrap(makeStore(repoDir).list('stages'))).toEqual(
-      expect.arrayContaining([first, second]),
-    );
+    expect(
+      await unwrap(
+        runtime,
+        Effect.flatMap(Store, (store) => store.list('stages')),
+      ),
+    ).toEqual(expect.arrayContaining([first, second]));
   });
 
   it('returns NotFound for a missing component', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makeStore(repoDir);
     const error = await unwrapError(
-      makeStore(repoDir).get('callbacks', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
+      runtime,
+      Effect.flatMap(Store, (store) =>
+        store.get('callbacks', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
+      ),
     );
 
     expect(error.reason).toBe('NotFound');
@@ -117,9 +140,16 @@ describe('createComponentStore', () => {
 
   it('updates a component while preserving its creation date', async () => {
     const repoDir = await makeTemporaryDirectory();
-    const created = await unwrap(makeStore(repoDir).create('headers', request));
+    const runtime = await makeStore(repoDir);
+    const created = await unwrap(
+      runtime,
+      Effect.flatMap(Store, (store) => store.create('headers', request)),
+    );
     const updated = await unwrap(
-      makeStore(repoDir).update('headers', created.id, { ...request, src: 'updated source' }),
+      runtime,
+      Effect.flatMap(Store, (store) =>
+        store.update('headers', created.id, { ...request, src: 'updated source' }),
+      ),
     );
 
     expect(updated.meta.createdDate).toBe(created.meta.createdDate);
@@ -129,8 +159,12 @@ describe('createComponentStore', () => {
 
   it('returns NotFound when updating a missing component', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makeStore(repoDir);
     const error = await unwrapError(
-      makeStore(repoDir).update('footers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0', request),
+      runtime,
+      Effect.flatMap(Store, (store) =>
+        store.update('footers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0', request),
+      ),
     );
 
     expect(error.reason).toBe('NotFound');
@@ -138,17 +172,31 @@ describe('createComponentStore', () => {
 
   it('deletes a component record', async () => {
     const repoDir = await makeTemporaryDirectory();
-    const created = await unwrap(makeStore(repoDir).create('containers', request));
-    await unwrap(makeStore(repoDir).remove('containers', created.id));
-    const error = await unwrapError(makeStore(repoDir).get('containers', created.id));
+    const runtime = await makeStore(repoDir);
+    const created = await unwrap(
+      runtime,
+      Effect.flatMap(Store, (store) => store.create('containers', request)),
+    );
+    await unwrap(
+      runtime,
+      Effect.flatMap(Store, (store) => store.remove('containers', created.id)),
+    );
+    const error = await unwrapError(
+      runtime,
+      Effect.flatMap(Store, (store) => store.get('containers', created.id)),
+    );
 
     expect(error.reason).toBe('NotFound');
   });
 
   it('returns NotFound when deleting a missing component', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makeStore(repoDir);
     const error = await unwrapError(
-      makeStore(repoDir).remove('containers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
+      runtime,
+      Effect.flatMap(Store, (store) =>
+        store.remove('containers', 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0'),
+      ),
     );
 
     expect(error.reason).toBe('NotFound');
@@ -157,10 +205,19 @@ describe('createComponentStore', () => {
   it('skips malformed artifacts while listing valid records, warning with the path only', async () => {
     const repoDir = await makeTemporaryDirectory();
     const log = makeLog();
-    const created = await unwrap(makeStore(repoDir, log).create('callbacks', request));
+    const runtime = await makeStore(repoDir, log);
+    const created = await unwrap(
+      runtime,
+      Effect.flatMap(Store, (store) => store.create('callbacks', request)),
+    );
     await writeFile(join(repoDir, 'config', 'callbacks', 'malformed.json'), '{bad json');
 
-    expect(await unwrap(makeStore(repoDir, log).list('callbacks'))).toEqual([created]);
+    expect(
+      await unwrap(
+        runtime,
+        Effect.flatMap(Store, (store) => store.list('callbacks')),
+      ),
+    ).toEqual([created]);
     expect(log.warn).toHaveBeenCalledTimes(1);
     expect(log.warn).toHaveBeenCalledWith('[components] skipped unreadable record', {
       path: 'callbacks/malformed.json',

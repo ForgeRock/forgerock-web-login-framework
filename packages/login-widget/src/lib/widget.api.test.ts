@@ -35,9 +35,6 @@ vi.mock(
   },
 );
 
-// Ensure Vitest processes mocks before module evaluation
-vi.hoisted(() => undefined);
-
 async function importSubject() {
   const { widgetApiFactory } = await import('./widget.api');
   const { componentApi } = await import('./_utilities/component.utilities');
@@ -76,6 +73,7 @@ function readStore<T>(store: { subscribe: (run: (value: T) => void) => () => voi
 
 describe('widgetApiFactory', () => {
   beforeEach(() => {
+    vi.resetModules();
     journeyTerminateMock.mockClear();
     oidcMock.mockReset();
     // Default: a never-resolving promise so eager oidc() init calls don't throw.

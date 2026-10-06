@@ -7,8 +7,10 @@
  *
  * */
 
+import { Effect } from 'effect';
+
 import { createComponent, listComponents } from '$lib/server/custom-components/api';
-import { componentApiDependencies } from '$lib/server/custom-components/runtime';
+import { ComponentApiLive } from '$lib/server/custom-components/runtime';
 
 import type { RequestHandler } from './$types';
 
@@ -20,7 +22,7 @@ import type { RequestHandler } from './$types';
  * 404 for an invalid type, or 500 for storage failures.
  */
 export const GET: RequestHandler = ({ request, params }) =>
-  listComponents(request, params.type, componentApiDependencies);
+  Effect.runPromise(Effect.provide(listComponents(request, params.type), ComponentApiLive));
 
 /**
  * Creates a record for a component type.
@@ -32,4 +34,4 @@ export const GET: RequestHandler = ({ request, params }) =>
  * token, 404 for an invalid type, 413 for an oversized body, 415 for non-JSON, or 500 for storage failures.
  */
 export const POST: RequestHandler = ({ request, params }) =>
-  createComponent(request, params.type, componentApiDependencies);
+  Effect.runPromise(Effect.provide(createComponent(request, params.type), ComponentApiLive));

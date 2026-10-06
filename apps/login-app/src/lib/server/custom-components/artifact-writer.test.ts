@@ -7,18 +7,16 @@
  *
  * */
 
-import { Cause, Effect, Exit } from 'effect';
-import { Effect } from 'effect';
+import { Cause, Effect, Exit, Layer, Runtime } from 'effect';
 import { mkdtemp, readdir, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { createArtifactWriter } from './artifact-writer';
+import { joinPath, WriterLive } from './artifact-writer';
+import { FileSync, Writer } from './component.types';
 
-import type { FileSyncService } from './component.types';
-
-const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
+const fileSyncNoop = Layer.succeed(FileSync, { fsync: () => Effect.void });
 
 const temporaryDirectories: string[] = [];
 
@@ -28,19 +26,22 @@ const makeTemporaryDirectory = async (): Promise<string> => {
   return directory;
 };
 
-const saveWith = (repoDir: string) =>
-  createArtifactWriter({ repoDir, trackedSubpath: 'config' }, fileSyncNoop);
+const makeWriterRuntime = async (repoDir: string) =>
+  Effect.runPromise(
+    Layer.toRuntime(
+      WriterLive({ trackedRoot: joinPath(repoDir, 'config') }).pipe(Layer.provide(fileSyncNoop)),
+    ).pipe(Effect.scoped),
+  );
 
 const saveEffect = (repoDir: string, relPath: string, content: string) =>
-  saveWith(repoDir)([{ relPath, content }]);
+  Effect.flatMap(Writer, (writer) => writer([{ relPath, content }]));
 
-const save = (repoDir: string, relPath: string, content: string) =>
-  Effect.runPromise(saveEffect(repoDir, relPath, content)) as Promise<void>;
-
-const saveArtifactsEffect = (
+const save = async (
+  runtime: Runtime.Runtime<Writer>,
   repoDir: string,
-  artifacts: ReadonlyArray<{ relPath: string; content: string }>,
-) => saveWith(repoDir)(artifacts);
+  relPath: string,
+  content: string,
+) => Runtime.runPromise(runtime)(saveEffect(repoDir, relPath, content));
 
 const readUtf8 = (path: string) => readFile(path, 'utf8');
 
@@ -52,11 +53,12 @@ afterEach(async () => {
   );
 });
 
-describe('createArtifactWriter', () => {
+describe('WriterLive', () => {
   it('writes a component below the tracked repository subpath', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makeWriterRuntime(repoDir);
 
-    await save(repoDir, 'journeys/login.json', '{"journey":"login"}');
+    await save(runtime, repoDir, 'journeys/login.json', '{"journey":"login"}');
 
     expect(await readUtf8(join(repoDir, 'config', 'journeys', 'login.json'))).toBe(
       '{"journey":"login"}',
@@ -73,8 +75,9 @@ describe('createArtifactWriter', () => {
   ]) {
     it(`rejects unsafe relative path ${relPath}`, async () => {
       const repoDir = await makeTemporaryDirectory();
+      const runtime = await makeWriterRuntime(repoDir);
 
-      const exit = await Effect.runPromiseExit(saveEffect(repoDir, relPath, '{}'));
+      const exit = await Runtime.runPromiseExit(runtime)(saveEffect(repoDir, relPath, '{}'));
       if (Exit.isSuccess(exit)) {
         throw new Error('Expected the save to fail');
       }
@@ -85,13 +88,14 @@ describe('createArtifactWriter', () => {
 
   it('atomically swaps complete component content for concurrent readers', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makeWriterRuntime(repoDir);
     const destination = join(repoDir, 'config', 'journeys', 'login.json');
     const oldContent = JSON.stringify({ version: 'old', payload: 'a'.repeat(50_000) });
     const newContents = Array.from({ length: 25 }, (_, version) =>
       JSON.stringify({ version, payload: String(version).repeat(50_000) }),
     );
 
-    await save(repoDir, 'journeys/login.json', oldContent);
+    await save(runtime, repoDir, 'journeys/login.json', oldContent);
 
     const observed = new Set<string>();
     let writing = true;
@@ -102,7 +106,7 @@ describe('createArtifactWriter', () => {
     })();
 
     for (const content of newContents) {
-      await save(repoDir, 'journeys/login.json', content);
+      await save(runtime, repoDir, 'journeys/login.json', content);
     }
     writing = false;
     await reader;
@@ -116,20 +120,24 @@ describe('createArtifactWriter', () => {
 
   it('removes the temporary file after a successful atomic rename', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makeWriterRuntime(repoDir);
 
-    await save(repoDir, 'journeys/login.json', '{}');
+    await save(runtime, repoDir, 'journeys/login.json', '{}');
 
     expect(await readDirectory(join(repoDir, 'config', 'journeys'))).toEqual(['login.json']);
   });
 
   it('validates every artifact before creating temporary files', async () => {
     const repoDir = await makeTemporaryDirectory();
+    const runtime = await makeWriterRuntime(repoDir);
 
-    const exit = await Effect.runPromiseExit(
-      saveArtifactsEffect(repoDir, [
-        { relPath: 'journeys/login.json', content: '{}' },
-        { relPath: '../outside.json', content: '{}' },
-      ]),
+    const exit = await Runtime.runPromiseExit(runtime)(
+      Effect.flatMap(Writer, (writer) =>
+        writer([
+          { relPath: 'journeys/login.json', content: '{}' },
+          { relPath: '../outside.json', content: '{}' },
+        ]),
+      ),
     );
     expect(Exit.isFailure(exit)).toBe(true);
     expect(await readDirectory(repoDir)).toEqual([]);

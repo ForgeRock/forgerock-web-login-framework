@@ -22,7 +22,7 @@ services:
       - config
     environment:
       ORIGIN: http://localhost:3000
-      CONFIG_REPO_DIR: /config
+      COMPONENT_CONFIG_DIR: /config/config
       COMPONENT_API_ENABLED: 'true'
     volumes:
       - config-repo:/config

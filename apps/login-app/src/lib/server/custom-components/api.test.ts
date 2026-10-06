@@ -7,7 +7,7 @@
  *
  * */
 
-import { Effect } from 'effect';
+import { Context, Effect, Layer, ManagedRuntime } from 'effect';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -22,8 +22,6 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
-import { Effect } from 'effect';
-
 import {
   createComponent,
   deleteComponent,
@@ -32,17 +30,21 @@ import {
   publishComponentSource,
   updateComponent,
 } from './api';
-import { createArtifactWriter } from './artifact-writer';
-import { createComponentAuth } from './auth';
-import { ComponentPublishError, ComponentStoreError } from './component.types';
+import { joinPath, WriterLive } from './artifact-writer';
+import { AuthLive } from './auth';
+import {
+  Auth,
+  ComponentPublishError,
+  ComponentStoreError,
+  Log,
+  Publish,
+  Store,
+} from './component.types';
+import { FileSyncLive } from './file-sync';
+import { PublishLive } from './publisher';
+import { StoreLive } from './store';
 
-import type { FileSyncService } from './component.types';
-
-const fileSyncNoop: FileSyncService = { fsync: () => Effect.void };
-import { createComponentPublisher } from './publisher';
-import { createComponentStore } from './store';
-
-import type { ComponentApiDependencies, ComponentLogger } from './component.types';
+import type { ComponentLogger } from './component.types';
 import type { AmSessionDependencies } from './component.types';
 
 const temporaryDirectories: string[] = [];
@@ -67,19 +69,27 @@ const makeTemporaryDirectory = async (): Promise<string> => {
   return directory;
 };
 
-const makeDependencies = (
-  repoDir: string,
-  authDependencies: AmSessionDependencies = adminDependencies,
-): ComponentApiDependencies => {
-  const config = { repoDir, trackedSubpath: 'config' };
-  const writer = createArtifactWriter(config, fileSyncNoop);
+/** The component layer graph over a temporary repository, with a spy logger. */
+const makeTest = async (authDependencies: AmSessionDependencies = adminDependencies) => {
+  const repoDir = await makeTemporaryDirectory();
   const log: ComponentLogger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
-  return {
-    authenticate: createComponentAuth(authDependencies),
-    store: createComponentStore(config, writer, fileSyncNoop, log),
-    publish: createComponentPublisher(writer),
-    log,
-  };
+  const layer = Layer.mergeAll(
+    StoreLive({ trackedRoot: joinPath(repoDir, 'config') }).pipe(
+      Layer.provide(WriterLive({ trackedRoot: joinPath(repoDir, 'config') })),
+      Layer.provide(FileSyncLive),
+      Layer.provide(Layer.succeed(Log, log)),
+    ),
+    AuthLive(authDependencies),
+    PublishLive.pipe(
+      Layer.provide(WriterLive({ trackedRoot: joinPath(repoDir, 'config') })),
+      Layer.provide(FileSyncLive),
+    ),
+    Layer.succeed(Log, log),
+  );
+  const runtime = ManagedRuntime.make(layer);
+  const run = <A>(effect: Effect.Effect<A, never, Store | Auth | Publish | Log>) =>
+    runtime.runPromise(effect as Effect.Effect<A, never, never>);
+  return { log, run, dispose: () => runtime.dispose() };
 };
 
 const authorizedRequest = (url: string, init?: RequestInit): Request =>
@@ -110,34 +120,37 @@ afterEach(async () => {
 describe('Component Endpoint Handlers', () => {
   describe('listComponents', () => {
     it('returns an empty array when no components exist', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await listComponents(
-        authorizedRequest('http://localhost/api/components/callbacks', { method: 'GET' }),
-        'callbacks',
-        makeDependencies(repoDir),
+      const test = await makeTest();
+      const response = await test.run(
+        listComponents(
+          authorizedRequest('http://localhost/api/components/callbacks', { method: 'GET' }),
+          'callbacks',
+        ),
       );
       expect(response.status).toBe(200);
       expect(await response.json()).toEqual([]);
+      await test.dispose();
     });
 
     it('returns projected fields when fields query parameter is provided', async () => {
-      const repoDir = await makeTemporaryDirectory();
+      const test = await makeTest();
 
-      await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir),
+      await test.run(
+        createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody(),
+          }),
+          'callbacks',
+        ),
       );
 
       const request = authorizedRequest(
         'http://localhost/api/components/callbacks?fields=id,meta.name',
         { method: 'GET' },
       );
-      const response = await listComponents(request, 'callbacks', makeDependencies(repoDir));
+      const response = await test.run(listComponents(request, 'callbacks'));
 
       expect(response.status).toBe(200);
       const body = (await response.json()) as Array<Record<string, unknown>>;
@@ -150,187 +163,209 @@ describe('Component Endpoint Handlers', () => {
         expect('name' in meta).toBe(true);
         expect('src' in record).toBe(false);
       }
+      await test.dispose();
     });
 
     it('returns 400 for invalid fields parameter', async () => {
-      const repoDir = await makeTemporaryDirectory();
+      const test = await makeTest();
       const request = authorizedRequest(
         'http://localhost/api/components/callbacks?fields=..invalid',
         {
           method: 'GET',
         },
       );
-      const response = await listComponents(request, 'callbacks', makeDependencies(repoDir));
+      const response = await test.run(listComponents(request, 'callbacks'));
       expect(response.status).toBe(400);
+      await test.dispose();
     });
 
     it('returns 404 for invalid component type', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await listComponents(
-        authorizedRequest('http://localhost/api/components/invalid-type', { method: 'GET' }),
-        'invalid-type',
-        makeDependencies(repoDir),
+      const test = await makeTest();
+      const response = await test.run(
+        listComponents(
+          authorizedRequest('http://localhost/api/components/invalid-type', { method: 'GET' }),
+          'invalid-type',
+        ),
       );
       expect(response.status).toBe(404);
+      await test.dispose();
     });
   });
 
   describe('getComponent', () => {
     it('returns a component by id', async () => {
-      const repoDir = await makeTemporaryDirectory();
+      const test = await makeTest();
 
-      const createResponse = await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir),
-      );
-
-      const createData = (await createResponse.json()) as { id: string };
-      const id = createData.id;
-
-      const getResponse = await getComponent(
-        authorizedRequest(`http://localhost/api/components/callbacks/${id}`, {
-          method: 'GET',
-        }),
-        'callbacks',
-        id,
-        makeDependencies(repoDir),
-      );
-      expect(getResponse.status).toBe(200);
-    });
-
-    it('returns 404 for missing component', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await getComponent(
-        authorizedRequest(
-          'http://localhost/api/components/callbacks/d677e9a2-9ea5-4fc9-a7db-8668468a91c0',
-          { method: 'GET' },
-        ),
-        'callbacks',
-        'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
-        makeDependencies(repoDir),
-      );
-      expect(response.status).toBe(404);
-    });
-  });
-
-  describe('createComponent', () => {
-    it('creates a component and returns 201', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir),
-      );
-      expect(response.status).toBe(201);
-    });
-
-    it('returns 401 when the session is not authenticated', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir, unauthenticatedDependencies),
-      );
-      expect(response.status).toBe(401);
-    });
-
-    it('returns 401 without an authorization header', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await createComponent(
-        new Request('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir, unauthenticatedDependencies),
-      );
-      expect(response.status).toBe(401);
-    });
-
-    it('returns 403 for an authenticated non-admin session', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const nonAdminDependencies: AmSessionDependencies = {
-        getUserId: () => Promise.resolve('regular-user'),
-        getRoles: () => Promise.resolve(['ui-enduser']),
-      };
-      const response = await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir, nonAdminDependencies),
-      );
-      expect(response.status).toBe(403);
-    });
-
-    it('returns 404 for every handler when the API is disabled', async () => {
-      delete process.env.COMPONENT_API_ENABLED;
-      try {
-        const repoDir = await makeTemporaryDirectory();
-        const list = await listComponents(
-          authorizedRequest('http://localhost/api/components/callbacks', { method: 'GET' }),
-          'callbacks',
-          makeDependencies(repoDir),
-        );
-        const create = await createComponent(
+      const createResponse = await test.run(
+        createComponent(
           authorizedRequest('http://localhost/api/components/callbacks', {
             method: 'POST',
             headers: { 'content-type': 'application/json' },
             body: componentBody(),
           }),
           'callbacks',
-          makeDependencies(repoDir),
+        ),
+      );
+
+      const createData = (await createResponse.json()) as { id: string };
+      const id = createData.id;
+
+      const getResponse = await test.run(
+        getComponent(
+          authorizedRequest(`http://localhost/api/components/callbacks/${id}`, {
+            method: 'GET',
+          }),
+          'callbacks',
+          id,
+        ),
+      );
+      expect(getResponse.status).toBe(200);
+      await test.dispose();
+    });
+
+    it('returns 404 for missing component', async () => {
+      const test = await makeTest();
+      const response = await test.run(
+        getComponent(
+          authorizedRequest(
+            'http://localhost/api/components/callbacks/d677e9a2-9ea5-4fc9-a7db-8668468a91c0',
+            { method: 'GET' },
+          ),
+          'callbacks',
+          'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
+        ),
+      );
+      expect(response.status).toBe(404);
+      await test.dispose();
+    });
+  });
+
+  describe('createComponent', () => {
+    it('creates a component and returns 201', async () => {
+      const test = await makeTest();
+      const response = await test.run(
+        createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody(),
+          }),
+          'callbacks',
+        ),
+      );
+      expect(response.status).toBe(201);
+      await test.dispose();
+    });
+
+    it('returns 401 when the session is not authenticated', async () => {
+      const test = await makeTest(unauthenticatedDependencies);
+      const response = await test.run(
+        createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody(),
+          }),
+          'callbacks',
+        ),
+      );
+      expect(response.status).toBe(401);
+      await test.dispose();
+    });
+
+    it('returns 401 without an authorization header', async () => {
+      const test = await makeTest(unauthenticatedDependencies);
+      const response = await test.run(
+        createComponent(
+          new Request('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody(),
+          }),
+          'callbacks',
+        ),
+      );
+      expect(response.status).toBe(401);
+      await test.dispose();
+    });
+
+    it('returns 403 for an authenticated non-admin session', async () => {
+      const test = await makeTest({
+        getUserId: () => Promise.resolve('regular-user'),
+        getRoles: () => Promise.resolve(['ui-enduser']),
+      });
+      const response = await test.run(
+        createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody(),
+          }),
+          'callbacks',
+        ),
+      );
+      expect(response.status).toBe(403);
+      await test.dispose();
+    });
+
+    it('returns 404 for every handler when the API is disabled', async () => {
+      delete process.env.COMPONENT_API_ENABLED;
+      const test = await makeTest();
+      try {
+        const list = await test.run(
+          listComponents(
+            authorizedRequest('http://localhost/api/components/callbacks', { method: 'GET' }),
+            'callbacks',
+          ),
+        );
+        const create = await test.run(
+          createComponent(
+            authorizedRequest('http://localhost/api/components/callbacks', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: componentBody(),
+            }),
+            'callbacks',
+          ),
         );
         expect(list.status).toBe(404);
         expect(create.status).toBe(404);
       } finally {
         process.env.COMPONENT_API_ENABLED = 'true';
+        await test.dispose();
       }
     });
 
     it('returns 415 for invalid content-type', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'text/plain' },
-          body: 'test',
-        }),
-        'callbacks',
-        makeDependencies(repoDir),
+      const test = await makeTest();
+      const response = await test.run(
+        createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'text/plain' },
+            body: 'test',
+          }),
+          'callbacks',
+        ),
       );
       expect(response.status).toBe(415);
+      await test.dispose();
     });
   });
 
   describe('updateComponent', () => {
     it('updates a component and returns 200', async () => {
-      const repoDir = await makeTemporaryDirectory();
+      const test = await makeTest();
 
-      const createResponse = await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir),
+      const createResponse = await test.run(
+        createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody(),
+          }),
+          'callbacks',
+        ),
       );
 
       const createData = (await createResponse.json()) as {
@@ -338,15 +373,16 @@ describe('Component Endpoint Handlers', () => {
         meta: { createdDate: string; modifiedDate: string };
       };
 
-      const updateResponse = await updateComponent(
-        authorizedRequest(`http://localhost/api/components/callbacks/${createData.id}`, {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody().replace('test source', 'updated source'),
-        }),
-        'callbacks',
-        createData.id,
-        makeDependencies(repoDir),
+      const updateResponse = await test.run(
+        updateComponent(
+          authorizedRequest(`http://localhost/api/components/callbacks/${createData.id}`, {
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody().replace('test source', 'updated source'),
+          }),
+          'callbacks',
+          createData.id,
+        ),
       );
 
       expect(updateResponse.status).toBe(200);
@@ -356,131 +392,152 @@ describe('Component Endpoint Handlers', () => {
       };
       expect(updateData.meta.createdDate).toBe(createData.meta.createdDate);
       expect(updateData.meta.modifiedDate >= createData.meta.modifiedDate).toBe(true);
+      await test.dispose();
     });
 
     it('returns 400 when body id does not match URL id', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await updateComponent(
-        authorizedRequest('http://localhost/api/components/callbacks/different-uuid', {
-          method: 'PUT',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            id: 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
-            src: 'updated source',
-            meta: {
-              name: 'test',
-              displayName: 'Test',
-              publish: false,
-              fromComponent: '',
-              fromJson: '',
-            },
+      const test = await makeTest();
+      const response = await test.run(
+        updateComponent(
+          authorizedRequest('http://localhost/api/components/callbacks/different-uuid', {
+            method: 'PUT',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              id: 'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
+              src: 'updated source',
+              meta: {
+                name: 'test',
+                displayName: 'Test',
+                publish: false,
+                fromComponent: '',
+                fromJson: '',
+              },
+            }),
           }),
-        }),
-        'callbacks',
-        'different-uuid',
-        makeDependencies(repoDir),
+          'callbacks',
+          'different-uuid',
+        ),
       );
       expect(response.status).toBe(400);
+      await test.dispose();
     });
   });
 
   describe('deleteComponent', () => {
     it('deletes a component and returns 204', async () => {
-      const repoDir = await makeTemporaryDirectory();
+      const test = await makeTest();
 
-      const createResponse = await createComponent(
-        authorizedRequest('http://localhost/api/components/callbacks', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: componentBody(),
-        }),
-        'callbacks',
-        makeDependencies(repoDir),
+      const createResponse = await test.run(
+        createComponent(
+          authorizedRequest('http://localhost/api/components/callbacks', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: componentBody(),
+          }),
+          'callbacks',
+        ),
       );
 
       const createData = (await createResponse.json()) as { id: string };
 
-      const deleteResponse = await deleteComponent(
-        authorizedRequest(`http://localhost/api/components/callbacks/${createData.id}`, {
-          method: 'DELETE',
-        }),
-        'callbacks',
-        createData.id,
-        makeDependencies(repoDir),
+      const deleteResponse = await test.run(
+        deleteComponent(
+          authorizedRequest(`http://localhost/api/components/callbacks/${createData.id}`, {
+            method: 'DELETE',
+          }),
+          'callbacks',
+          createData.id,
+        ),
       );
       expect(deleteResponse.status).toBe(204);
+      await test.dispose();
     });
 
     it('returns 404 for missing component', async () => {
-      const repoDir = await makeTemporaryDirectory();
-      const response = await deleteComponent(
-        authorizedRequest(
-          'http://localhost/api/components/callbacks/d677e9a2-9ea5-4fc9-a7db-8668468a91c0',
-          { method: 'DELETE' },
+      const test = await makeTest();
+      const response = await test.run(
+        deleteComponent(
+          authorizedRequest(
+            'http://localhost/api/components/callbacks/d677e9a2-9ea5-4fc9-a7db-8668468a91c0',
+            { method: 'DELETE' },
+          ),
+          'callbacks',
+          'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
         ),
-        'callbacks',
-        'd677e9a2-9ea5-4fc9-a7db-8668468a91c0',
-        makeDependencies(repoDir),
       );
       expect(response.status).toBe(404);
+      await test.dispose();
     });
   });
 
   describe('publishComponentSource', () => {
     it('publishes a component bundle and returns 200', async () => {
-      const repoDir = await makeTemporaryDirectory();
+      const test = await makeTest();
 
-      const response = await publishComponentSource(
-        authorizedRequest('http://localhost/api/components/publish', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            code: 'bundle code',
-            files: [{ path: 'test.js', content: 'test' }],
+      const response = await test.run(
+        publishComponentSource(
+          authorizedRequest('http://localhost/api/components/publish', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              code: 'bundle code',
+              files: [{ path: 'test.js', content: 'test' }],
+            }),
           }),
-        }),
-        makeDependencies(repoDir),
+        ),
       );
       expect(response.status).toBe(200);
       const result = (await response.json()) as { id: string; url: string };
       expect(result).toHaveProperty('id');
       expect(result.url).toBe('');
+      await test.dispose();
     });
 
     it('returns 500 when persisting the bundle fails', async () => {
-      const dependencies = makeDependencies(await makeTemporaryDirectory());
-      const response = await publishComponentSource(
-        authorizedRequest('http://localhost/api/components/publish', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ code: 'bundle code' }),
-        }),
-        {
-          ...dependencies,
-          publish: () =>
-            Effect.fail(
-              new ComponentPublishError({
-                reason: 'Storage',
-                message: 'Unable to persist component bundle',
-              }),
-            ),
-        },
+      const test = await makeTest();
+      const failingPublish = Layer.succeed(Publish, () =>
+        Effect.fail(
+          new ComponentPublishError({
+            reason: 'Storage',
+            message: 'Unable to persist component bundle',
+          }),
+        ),
+      );
+      const runtime = ManagedRuntime.make(
+        Layer.mergeAll(
+          failingPublish,
+          Layer.succeed(Log, test.log),
+          Layer.succeed(Auth, () => Effect.succeed({ uid: 'test-admin' })),
+        ),
+      );
+      const response = await runtime.runPromise(
+        publishComponentSource(
+          authorizedRequest('http://localhost/api/components/publish', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ code: 'bundle code' }),
+          }),
+        ) as Effect.Effect<Response, never, never>,
       );
       expect(response.status).toBe(500);
       const body = (await response.json()) as { error: string };
       expect(body.error).toBe('Unable to persist component bundle');
+      await runtime.dispose();
     });
 
     it('returns 400 for an invalid bundle payload', async () => {
-      const response = await publishComponentSource(
-        authorizedRequest('http://localhost/api/components/publish', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: 'not json',
-        }),
-        makeDependencies(await makeTemporaryDirectory()),
+      const test = await makeTest();
+      const response = await test.run(
+        publishComponentSource(
+          authorizedRequest('http://localhost/api/components/publish', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: 'not json',
+          }),
+        ),
       );
       expect(response.status).toBe(400);
+      await test.dispose();
     });
   });
 });
@@ -492,9 +549,6 @@ describe('Component API logging', () => {
     getUserId: () => Promise.resolve('regular-user'),
     getRoles: () => Promise.resolve(['ui-enduser']),
   };
-
-  const makeLoggedDependencies = async (authDependencies?: AmSessionDependencies) =>
-    makeDependencies(await makeTemporaryDirectory(), authDependencies);
 
   const createRequest = (): Request =>
     authorizedRequest('http://localhost/api/components/callbacks', {
@@ -514,13 +568,13 @@ describe('Component API logging', () => {
     });
 
   it('audits a created component with the caller, type, id and name', async () => {
-    const dependencies = await makeLoggedDependencies();
+    const test = await makeTest();
 
-    const response = await createComponent(createRequest(), 'callbacks', dependencies);
+    const response = await test.run(createComponent(createRequest(), 'callbacks'));
     const { id } = (await response.json()) as { id: string };
 
-    expect(dependencies.log.info).toHaveBeenCalledTimes(1);
-    expect(dependencies.log.info).toHaveBeenCalledWith('[components] audit', {
+    expect(test.log.info).toHaveBeenCalledTimes(1);
+    expect(test.log.info).toHaveBeenCalledWith('[components] audit', {
       action: 'create',
       outcome: 'succeeded',
       uid: 'test-admin',
@@ -528,25 +582,27 @@ describe('Component API logging', () => {
       id,
       name: 'test',
     });
+    await test.dispose();
   });
 
   it('audits an update and a delete with the route id', async () => {
-    const dependencies = await makeLoggedDependencies();
-    const created = await createComponent(createRequest(), 'callbacks', dependencies);
+    const test = await makeTest();
+    const created = await test.run(createComponent(createRequest(), 'callbacks'));
     const { id } = (await created.json()) as { id: string };
     const url = `http://localhost/api/components/callbacks/${id}`;
 
-    await updateComponent(
-      authorizedRequest(url, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: componentBody(),
-      }),
-      'callbacks',
-      id,
-      dependencies,
+    await test.run(
+      updateComponent(
+        authorizedRequest(url, {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: componentBody(),
+        }),
+        'callbacks',
+        id,
+      ),
     );
-    expect(dependencies.log.info).toHaveBeenLastCalledWith('[components] audit', {
+    expect(test.log.info).toHaveBeenLastCalledWith('[components] audit', {
       action: 'update',
       outcome: 'succeeded',
       uid: 'test-admin',
@@ -555,70 +611,69 @@ describe('Component API logging', () => {
       name: 'test',
     });
 
-    await deleteComponent(
-      authorizedRequest(url, { method: 'DELETE' }),
-      'callbacks',
-      id,
-      dependencies,
-    );
-    expect(dependencies.log.info).toHaveBeenLastCalledWith('[components] audit', {
+    await test.run(deleteComponent(authorizedRequest(url, { method: 'DELETE' }), 'callbacks', id));
+    expect(test.log.info).toHaveBeenLastCalledWith('[components] audit', {
       action: 'delete',
       outcome: 'succeeded',
       uid: 'test-admin',
       type: 'callbacks',
       id,
     });
+    await test.dispose();
   });
 
   it('logs nothing for reads, missing records, or client validation errors', async () => {
-    const dependencies = await makeLoggedDependencies();
+    const test = await makeTest();
     const url = `http://localhost/api/components/callbacks/${missingId}`;
 
-    await listComponents(listRequest(), 'callbacks', dependencies);
-    await getComponent(
-      authorizedRequest(url, { method: 'GET' }),
-      'callbacks',
-      missingId,
-      dependencies,
+    await test.run(listComponents(listRequest(), 'callbacks'));
+    await test.run(getComponent(authorizedRequest(url, { method: 'GET' }), 'callbacks', missingId));
+    await test.run(
+      updateComponent(
+        authorizedRequest(url, {
+          method: 'PUT',
+          headers: { 'content-type': 'application/json' },
+          body: componentBody(),
+        }),
+        'callbacks',
+        missingId,
+      ),
     );
-    await updateComponent(
-      authorizedRequest(url, {
-        method: 'PUT',
-        headers: { 'content-type': 'application/json' },
-        body: componentBody(),
-      }),
-      'callbacks',
-      missingId,
-      dependencies,
+    await test.run(
+      deleteComponent(authorizedRequest(url, { method: 'DELETE' }), 'callbacks', missingId),
     );
-    await deleteComponent(
-      authorizedRequest(url, { method: 'DELETE' }),
-      'callbacks',
-      missingId,
-      dependencies,
-    );
-    await createComponent(
-      authorizedRequest('http://localhost/api/components/callbacks', {
-        method: 'POST',
-        headers: { 'content-type': 'text/plain' },
-        body: 'test',
-      }),
-      'callbacks',
-      dependencies,
+    await test.run(
+      createComponent(
+        authorizedRequest('http://localhost/api/components/callbacks', {
+          method: 'POST',
+          headers: { 'content-type': 'text/plain' },
+          body: 'test',
+        }),
+        'callbacks',
+      ),
     );
 
-    expect(dependencies.log.info).not.toHaveBeenCalled();
-    expect(dependencies.log.warn).not.toHaveBeenCalled();
-    expect(dependencies.log.error).not.toHaveBeenCalled();
+    expect(test.log.info).not.toHaveBeenCalled();
+    expect(test.log.warn).not.toHaveBeenCalled();
+    expect(test.log.error).not.toHaveBeenCalled();
+    await test.dispose();
   });
 
   it('logs a failed mutation as an error with the cause and no success line', async () => {
-    const base = await makeLoggedDependencies();
     const cause = new Error('disk full');
-    const dependencies: ComponentApiDependencies = {
-      ...base,
-      store: {
-        ...base.store,
+    const log: ComponentLogger = { error: vi.fn(), warn: vi.fn(), info: vi.fn() };
+    const repoDir = await makeTemporaryDirectory();
+    const config = { trackedRoot: joinPath(repoDir, 'config') };
+
+    // The real store with only `create` overridden to fail.
+    const realStore = StoreLive(config).pipe(
+      Layer.provide(WriterLive(config)),
+      Layer.provide(FileSyncLive),
+    );
+    const failingCreate = Layer.effect(
+      Store,
+      Effect.map(Effect.context<Store>(), (context) => ({
+        ...Context.get(context, Store),
         create: () =>
           Effect.fail(
             new ComponentStoreError({
@@ -627,13 +682,22 @@ describe('Component API logging', () => {
               cause,
             }),
           ),
-      },
-    };
+      })),
+    );
 
-    const response = await createComponent(createRequest(), 'callbacks', dependencies);
+    const runtime = ManagedRuntime.make(
+      Layer.mergeAll(
+        failingCreate.pipe(Layer.provide(realStore), Layer.provide(Layer.succeed(Log, log))),
+        Layer.succeed(Log, log),
+        Layer.succeed(Auth, () => Effect.succeed({ uid: 'test-admin' })),
+      ),
+    );
+    const response = await runtime.runPromise(
+      createComponent(createRequest(), 'callbacks') as Effect.Effect<Response, never, never>,
+    );
 
     expect(response.status).toBe(500);
-    expect(dependencies.log.error).toHaveBeenCalledWith(
+    expect(log.error).toHaveBeenCalledWith(
       '[components] audit',
       {
         action: 'create',
@@ -644,48 +708,53 @@ describe('Component API logging', () => {
       },
       cause,
     );
-    expect(dependencies.log.info).not.toHaveBeenCalled();
+    expect(log.info).not.toHaveBeenCalled();
+    await runtime.dispose();
   });
 
   it('audits a publish with the files it wrote', async () => {
-    const dependencies = await makeLoggedDependencies();
+    const test = await makeTest();
 
-    await publishComponentSource(
-      publishRequest({ code: 'bundle code', files: [{ path: 'extra/a.js', content: 'a' }] }),
-      dependencies,
+    await test.run(
+      publishComponentSource(
+        publishRequest({ code: 'bundle code', files: [{ path: 'extra/a.js', content: 'a' }] }),
+      ),
     );
 
-    expect(dependencies.log.info).toHaveBeenCalledWith('[components] audit', {
+    expect(test.log.info).toHaveBeenCalledWith('[components] audit', {
       action: 'publish',
       outcome: 'succeeded',
       uid: 'test-admin',
       paths: ['extra/a.js', 'bundle.js'],
     });
+    await test.dispose();
   });
 
   it('logs a rejected publish as a warning without echoing the unsafe path', async () => {
-    const dependencies = await makeLoggedDependencies();
+    const test = await makeTest();
 
-    const response = await publishComponentSource(
-      publishRequest({ code: 'x', files: [{ path: '../escape.js', content: 'x' }] }),
-      dependencies,
+    const response = await test.run(
+      publishComponentSource(
+        publishRequest({ code: 'x', files: [{ path: '../escape.js', content: 'x' }] }),
+      ),
     );
 
     expect(response.status).toBe(400);
-    expect(dependencies.log.warn).toHaveBeenCalledWith('[components] audit', {
+    expect(test.log.warn).toHaveBeenCalledWith('[components] audit', {
       action: 'publish',
       outcome: 'rejected',
       uid: 'test-admin',
       detail: 'Bundle file at index 0 has an unsafe path',
     });
+    await test.dispose();
   });
 
   it('logs a failed publish as an error with the paths and the cause', async () => {
-    const base = await makeLoggedDependencies();
+    const test = await makeTest();
     const cause = new Error('disk full');
-    const dependencies: ComponentApiDependencies = {
-      ...base,
-      publish: () =>
+    const failingPublish = Layer.effect(
+      Publish,
+      Effect.succeed(() =>
         Effect.fail(
           new ComponentPublishError({
             reason: 'Storage',
@@ -693,15 +762,26 @@ describe('Component API logging', () => {
             cause,
           }),
         ),
-    };
+      ),
+    );
 
-    const response = await publishComponentSource(
-      publishRequest({ code: 'bundle code' }),
-      dependencies,
+    const runtime = ManagedRuntime.make(
+      Layer.mergeAll(
+        failingPublish,
+        Layer.succeed(Log, test.log),
+        Layer.succeed(Auth, () => Effect.succeed({ uid: 'test-admin' })),
+      ),
+    );
+    const response = await runtime.runPromise(
+      publishComponentSource(publishRequest({ code: 'bundle code' })) as Effect.Effect<
+        Response,
+        never,
+        never
+      >,
     );
 
     expect(response.status).toBe(500);
-    expect(dependencies.log.error).toHaveBeenCalledWith(
+    expect(test.log.error).toHaveBeenCalledWith(
       '[components] audit',
       {
         action: 'publish',
@@ -712,57 +792,62 @@ describe('Component API logging', () => {
       },
       cause,
     );
+    await runtime.dispose();
   });
 
   it('logs a request refused for a known caller, with the reason and uid', async () => {
-    const dependencies = await makeLoggedDependencies(nonAdminDependencies);
+    const test = await makeTest(nonAdminDependencies);
 
-    await listComponents(listRequest(), 'callbacks', dependencies);
+    await test.run(listComponents(listRequest(), 'callbacks'));
 
-    expect(dependencies.log.warn).toHaveBeenCalledWith('[components] audit', {
+    expect(test.log.warn).toHaveBeenCalledWith('[components] audit', {
       action: 'access',
       outcome: 'denied',
       reason: 'Forbidden',
       detail: 'An AM admin role is required',
       uid: 'regular-user',
     });
+    await test.dispose();
   });
 
   it('does not log a request without a valid session', async () => {
-    const dependencies = await makeLoggedDependencies(unauthenticatedDependencies);
+    const test = await makeTest(unauthenticatedDependencies);
 
-    const response = await listComponents(listRequest(), 'callbacks', dependencies);
+    const response = await test.run(listComponents(listRequest(), 'callbacks'));
 
     expect(response.status).toBe(401);
-    expect(dependencies.log.warn).not.toHaveBeenCalled();
-    expect(dependencies.log.error).not.toHaveBeenCalled();
+    expect(test.log.warn).not.toHaveBeenCalled();
+    expect(test.log.error).not.toHaveBeenCalled();
+    await test.dispose();
   });
 
   it('logs an AM failure as an error with the cause', async () => {
     const cause = new Error('AM down');
-    const dependencies = await makeLoggedDependencies({
+    const test = await makeTest({
       getUserId: () => Promise.reject(cause),
       getRoles: () => Promise.resolve([]),
     });
 
-    const response = await listComponents(listRequest(), 'callbacks', dependencies);
+    const response = await test.run(listComponents(listRequest(), 'callbacks'));
 
     expect(response.status).toBe(500);
-    expect(dependencies.log.error).toHaveBeenCalledWith(
+    expect(test.log.error).toHaveBeenCalledWith(
       '[components] audit',
       expect.objectContaining({ outcome: 'failed', reason: 'Unavailable' }),
       cause,
     );
+    await test.dispose();
   });
 
   it('logs nothing while the API is disabled', async () => {
     delete process.env.COMPONENT_API_ENABLED;
+    const test = await makeTest(unauthenticatedDependencies);
     try {
-      const dependencies = await makeLoggedDependencies(unauthenticatedDependencies);
-      await listComponents(listRequest(), 'callbacks', dependencies);
-      expect(dependencies.log.warn).not.toHaveBeenCalled();
+      await test.run(listComponents(listRequest(), 'callbacks'));
+      expect(test.log.warn).not.toHaveBeenCalled();
     } finally {
       process.env.COMPONENT_API_ENABLED = 'true';
+      await test.dispose();
     }
   });
 });

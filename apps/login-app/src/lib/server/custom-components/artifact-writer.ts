@@ -7,12 +7,12 @@
  *
  * */
 
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { lstat, mkdir, rename, writeFile } from 'node:fs/promises';
 
-import { ArtifactWriterError } from './component.types';
+import { ArtifactWriterError, FileSync, Writer } from './component.types';
 
-import type { ArtifactWriterConfig, ComponentArtifact, FileSyncService } from './component.types';
+import type { ComponentArtifact, ComponentStoreConfig, FileSyncService } from './component.types';
 
 interface PreparedArtifact {
   readonly content: string;
@@ -150,6 +150,14 @@ const checkSymlinks = (trackedRoot: string) => (prepared: ReadonlyArray<Prepared
     { discard: true },
   );
 
+/** Distinguishes write failures (EACCES, ENOSPC, …) from directory-creation failures (ENOENT parents). */
+const isWriteError = (cause: unknown): boolean =>
+  typeof cause === 'object' &&
+  cause !== null &&
+  'code' in cause &&
+  typeof cause.code === 'string' &&
+  cause.code !== 'ENOENT';
+
 /** Stages every artifact as a fsynced temporary file next to its final location. */
 const stageTempFiles = (fileSync: FileSyncService) => (prepared: ReadonlyArray<PreparedArtifact>) =>
   Effect.forEach(
@@ -161,7 +169,7 @@ const stageTempFiles = (fileSync: FileSyncService) => (prepared: ReadonlyArray<P
           await writeFile(tempPath, content);
         },
         catch: (cause) =>
-          cause instanceof Error && cause.message.includes('write')
+          isWriteError(cause)
             ? new ArtifactWriterError({
                 message: 'Unable to write temporary component file',
                 cause,
@@ -223,20 +231,29 @@ const syncDirectories =
  * saves survive crashes. This honors the config-repo pipeline contract: config-saver
  * polls every 10 seconds and will commit whatever complete files it finds.
  *
- * @param config - Repository root and tracked subtree configuration.
- * @param fileSync - Durability synchronization service.
- * @returns A function that validates and atomically replaces each artifact.
+ * @param config - Tracked config directory configuration.
+ * @returns A layer providing the artifact writer, requiring the fsync service.
  */
-export const createArtifactWriter =
-  (config: ArtifactWriterConfig, fileSync: FileSyncService) =>
-  (artifacts: ReadonlyArray<ComponentArtifact>): Effect.Effect<void, ArtifactWriterError> => {
-    const trackedRoot = joinPath(config.repoDir, config.trackedSubpath);
-    return prepareArtifacts(trackedRoot)(artifacts).pipe(
-      Effect.flatMap(rejectDuplicatePaths),
-      Effect.flatMap((prepared) => checkSymlinks(trackedRoot)(prepared).pipe(Effect.as(prepared))),
-      Effect.flatMap((prepared) => stageTempFiles(fileSync)(prepared).pipe(Effect.as(prepared))),
-      Effect.flatMap((prepared) => renameIntoPlace(prepared).pipe(Effect.as(prepared))),
-      Effect.flatMap((prepared) => syncDirectories(trackedRoot, fileSync)(prepared)),
-      Effect.asVoid,
-    );
-  };
+export const WriterLive = (config: ComponentStoreConfig): Layer.Layer<Writer, never, FileSync> =>
+  Layer.effect(
+    Writer,
+    Effect.flatMap(FileSync, (fileSync) =>
+      Effect.succeed(
+        (artifacts: ReadonlyArray<ComponentArtifact>): Effect.Effect<void, ArtifactWriterError> => {
+          const trackedRoot = config.trackedRoot;
+          return prepareArtifacts(trackedRoot)(artifacts).pipe(
+            Effect.flatMap(rejectDuplicatePaths),
+            Effect.flatMap((prepared) =>
+              checkSymlinks(trackedRoot)(prepared).pipe(Effect.as(prepared)),
+            ),
+            Effect.flatMap((prepared) =>
+              stageTempFiles(fileSync)(prepared).pipe(Effect.as(prepared)),
+            ),
+            Effect.flatMap((prepared) => renameIntoPlace(prepared).pipe(Effect.as(prepared))),
+            Effect.flatMap((prepared) => syncDirectories(trackedRoot, fileSync)(prepared)),
+            Effect.asVoid,
+          );
+        },
+      ),
+    ),
+  );

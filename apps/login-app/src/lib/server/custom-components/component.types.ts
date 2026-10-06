@@ -7,13 +7,12 @@
  *
  * */
 
-import { Data } from 'effect';
+import { Context, Data } from 'effect';
 
 import type { CustomLogger } from '@forgerock/sdk-logger';
 import type { Effect } from 'effect';
 
 import type {
-  Bundle,
   ComponentRecord,
   ComponentType,
   CreateComponentRequest,
@@ -28,10 +27,9 @@ export interface FileSyncService {
   readonly fsync: (path: string) => Effect.Effect<void, unknown>;
 }
 
-/** Location of the repository root and its tracked component subtree. */
-export interface ArtifactWriterConfig {
-  readonly repoDir: string;
-  readonly trackedSubpath: string;
+/** Absolute path of the tracked config directory the Component API reads and writes. */
+export interface ComponentStoreConfig {
+  readonly trackedRoot: string;
 }
 
 /** A component file expressed relative to the configured tracked subtree. */
@@ -61,7 +59,7 @@ export class ComponentStoreError extends Data.TaggedError('ComponentStoreError')
   readonly cause?: unknown;
 }> {}
 
-/** The component record storage API returned by {@link createComponentStore}. */
+/** The component record storage API. */
 export interface ComponentStoreApi {
   readonly list: (
     type: ComponentType,
@@ -127,13 +125,19 @@ export class HttpError extends Data.TaggedError('HttpError')<{
   readonly message: string;
 }> {}
 
-/** Handler dependencies; runtime wires the real functions, tests substitute their own. */
-export interface ComponentApiDependencies {
-  readonly authenticate: (request: Request) => Effect.Effect<AuthUser, ComponentAuthError>;
-  readonly store: ComponentStoreApi;
-  readonly publish: ComponentPublishFn;
-  readonly log: ComponentLogger;
-}
+/** Service tags for the Component API dependency graph; layers provide implementations. */
+export class FileSync extends Context.Tag('FileSync')<FileSync, FileSyncService>() {}
 
-/** A decoded component bundle payload. */
-export type { Bundle };
+export class Writer extends Context.Tag('Writer')<Writer, ArtifactWriterFn>() {}
+
+export class Store extends Context.Tag('Store')<Store, ComponentStoreApi>() {}
+
+export class Publish extends Context.Tag('Publish')<Publish, ComponentPublishFn>() {}
+
+export class Log extends Context.Tag('Log')<Log, ComponentLogger>() {}
+
+/** Authenticates a request as an AM admin session. */
+export class Auth extends Context.Tag('Auth')<
+  Auth,
+  (request: Request) => Effect.Effect<AuthUser, ComponentAuthError>
+>() {}

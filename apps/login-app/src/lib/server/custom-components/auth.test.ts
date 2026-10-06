@@ -7,7 +7,7 @@
  *
  * */
 
-import { Cause, Effect, Exit, Option } from 'effect';
+import { Cause, Context, Effect, Exit, Layer, Option } from 'effect';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/environment', () => ({ building: false }));
@@ -36,7 +36,8 @@ vi.mock('$env/dynamic/private', () => ({
 }));
 
 import { AM_COOKIE_NAME } from '$core/constants';
-import { createComponentAuth, extractSessionToken } from './auth';
+import { AuthLive, extractSessionToken } from './auth';
+import { Auth } from './component.types';
 
 import type { AuthUser } from './component.types';
 import type { AmSessionDependencies, ComponentAuthError } from './component.types';
@@ -57,7 +58,12 @@ const failingDependencies: AmSessionDependencies = {
 };
 
 const authenticateWith = (dependencies: AmSessionDependencies, request: Request) =>
-  createComponentAuth(dependencies)(request);
+  Effect.scoped(
+    Layer.build(AuthLive(dependencies)).pipe(
+      Effect.map((context) => Context.get(context, Auth)),
+      Effect.flatMap((authenticate) => authenticate(request)),
+    ),
+  );
 
 /** Unwraps a failed authentication effect, failing the test when authentication succeeded. */
 const expectAuthError = async (
@@ -119,7 +125,7 @@ describe('extractSessionToken', () => {
   });
 });
 
-describe('createComponentAuth', () => {
+describe('AuthLive', () => {
   it('authenticates an AM admin session from a bearer token', async () => {
     const request = new Request('http://localhost/api/components/callbacks', {
       method: 'POST',

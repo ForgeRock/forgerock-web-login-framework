@@ -7,12 +7,12 @@
  *
  * */
 
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 
 import { AM_COOKIE_NAME } from '$core/constants';
 import { env } from '$env/dynamic/private';
 import { tokenIdSchema } from '$server/schemas';
-import { ComponentAuthError } from './component.types';
+import { Auth, ComponentAuthError } from './component.types';
 
 import type { AmSessionDependencies, AuthUser } from './component.types';
 
@@ -31,55 +31,54 @@ const amUnavailable = (message: string, uid?: string) => (cause: unknown) =>
  * Validates AM sessions on behalf of the Component API: extracts the session token from the
  * request (Bearer credential or AM cookie), verifies it with AM, requires an AM admin role, and
  * enforces an Origin check on mutating cookie-carried requests (CSRF).
- *
- * @param dependencies - AM session readers; tests substitute their own.
- * @returns An authenticator effect failing with a tagged error, or succeeding with the user.
  */
-export const createComponentAuth =
-  (dependencies: AmSessionDependencies) =>
-  (request: Request): Effect.Effect<AuthUser, ComponentAuthError> =>
-    Effect.sync(() => extractSessionToken(request)).pipe(
-      Effect.flatMap((tokenId) =>
-        tokenId === null
-          ? failUnauthenticated('An AM session token is required')
-          : Effect.succeed(tokenId),
-      ),
-      Effect.flatMap((tokenId) =>
-        Effect.flatMap(
+export const AuthLive = (dependencies: AmSessionDependencies): Layer.Layer<Auth> =>
+  Layer.succeed(
+    Auth,
+    (request: Request): Effect.Effect<AuthUser, ComponentAuthError> =>
+      Effect.sync(() => extractSessionToken(request)).pipe(
+        Effect.flatMap((tokenId) =>
+          tokenId === null
+            ? failUnauthenticated('An AM session token is required')
+            : Effect.succeed(tokenId),
+        ),
+        Effect.flatMap((tokenId) =>
+          Effect.flatMap(
+            Effect.tryPromise({
+              try: () => dependencies.getUserId(tokenId),
+              catch: amUnavailable('Unable to validate the AM session'),
+            }),
+            (uid) =>
+              uid === null
+                ? failUnauthenticated('The AM session is not valid')
+                : Effect.succeed({ tokenId, uid }),
+          ),
+        ),
+        Effect.bind('roles', ({ tokenId, uid }) =>
           Effect.tryPromise({
-            try: () => dependencies.getUserId(tokenId),
-            catch: amUnavailable('Unable to validate the AM session'),
+            try: () => dependencies.getRoles(tokenId, uid),
+            catch: amUnavailable('Unable to read AM roles for the session', uid),
           }),
-          (uid) =>
-            uid === null
-              ? failUnauthenticated('The AM session is not valid')
-              : Effect.succeed({ tokenId, uid }),
+        ),
+        Effect.flatMap(({ uid, roles }) =>
+          roles.some((role) => ADMIN_ROLES.includes(role))
+            ? Effect.succeed({ uid })
+            : Effect.fail(
+                new ComponentAuthError({
+                  reason: 'Forbidden',
+                  message: 'An AM admin role is required',
+                  uid,
+                }),
+              ),
+        ),
+        Effect.bind('csrfFailure', () => Effect.promise(() => csrfCheck(request))),
+        Effect.flatMap(({ uid, csrfFailure }) =>
+          csrfFailure === undefined
+            ? Effect.succeed({ uid })
+            : Effect.fail(new ComponentAuthError({ ...csrfFailure, uid })),
         ),
       ),
-      Effect.bind('roles', ({ tokenId, uid }) =>
-        Effect.tryPromise({
-          try: () => dependencies.getRoles(tokenId, uid),
-          catch: amUnavailable('Unable to read AM roles for the session', uid),
-        }),
-      ),
-      Effect.flatMap(({ uid, roles }) =>
-        roles.some((role) => ADMIN_ROLES.includes(role))
-          ? Effect.succeed({ uid })
-          : Effect.fail(
-              new ComponentAuthError({
-                reason: 'Forbidden',
-                message: 'An AM admin role is required',
-                uid,
-              }),
-            ),
-      ),
-      Effect.bind('csrfFailure', () => Effect.promise(() => csrfCheck(request))),
-      Effect.flatMap(({ uid, csrfFailure }) =>
-        csrfFailure === undefined
-          ? Effect.succeed({ uid })
-          : Effect.fail(new ComponentAuthError({ ...csrfFailure, uid })),
-      ),
-    );
+  );
 
 /**
  * Enforces an Origin check on mutating cookie-carried requests, which blocks cross-site

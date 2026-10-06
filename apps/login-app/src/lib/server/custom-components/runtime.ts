@@ -7,34 +7,42 @@
  *
  * **/
 
+import { Layer } from 'effect';
+
 import { log } from '$server/logger.effects';
 import { getUserIdFromSession, getUserRolesForUser } from '$server/sessions';
-import { createArtifactWriter } from './artifact-writer';
-import { createComponentAuth } from './auth';
-import { fileSync } from './file-sync';
-import { createComponentPublisher } from './publisher';
-import { createComponentStore } from './store';
+import { WriterLive } from './artifact-writer';
+import { AuthLive } from './auth';
+import { Log } from './component.types';
+import { FileSyncLive } from './file-sync';
+import { PublishLive } from './publisher';
+import { StoreLive } from './store';
 
-import type { ComponentApiDependencies } from './component.types';
+import type { Auth, ComponentStoreConfig, Publish, Store } from './component.types';
+
+/** The tracked config directory from the config-saver infrastructure contract. */
+const config: ComponentStoreConfig = {
+  trackedRoot: process.env.COMPONENT_CONFIG_DIR ?? '/config/config',
+};
+
+/** The real logger implementation, provided as a layer. */
+const LogLive = Layer.succeed(Log, log);
+
+/** One shared writer over the real fsync; every layer that writes reuses this instance. */
+const writerLive = WriterLive(config).pipe(Layer.provide(FileSyncLive));
 
 /**
  * The real Component API dependency graph, assembled once per server process from the
- * `CONFIG_REPO_DIR` and `CONFIG_TRACKED_SUBPATH` infrastructure contract with config-saver.
- * Tests construct their own dependencies instead of importing this.
+ * `COMPONENT_CONFIG_DIR` infrastructure contract with config-saver.
+ * Tests provide their own layers instead of importing this.
  */
-export const componentApiDependencies: ComponentApiDependencies = (() => {
-  const config = {
-    repoDir: process.env.CONFIG_REPO_DIR ?? '/config',
-    trackedSubpath: process.env.CONFIG_TRACKED_SUBPATH ?? 'config',
-  };
-  const writer = createArtifactWriter(config, fileSync);
-  return {
-    authenticate: createComponentAuth({
-      getUserId: getUserIdFromSession,
-      getRoles: getUserRolesForUser,
-    }),
-    store: createComponentStore(config, writer, fileSync, log),
-    publish: createComponentPublisher(writer),
-    log,
-  };
-})();
+export const ComponentApiLive = Layer.mergeAll(
+  StoreLive(config).pipe(
+    Layer.provide(writerLive),
+    Layer.provide(FileSyncLive),
+    Layer.provide(LogLive),
+  ),
+  AuthLive({ getUserId: getUserIdFromSession, getRoles: getUserRolesForUser }),
+  PublishLive.pipe(Layer.provide(writerLive), Layer.provide(FileSyncLive)),
+  LogLive,
+) as Layer.Layer<Store | Auth | Publish | Log>;

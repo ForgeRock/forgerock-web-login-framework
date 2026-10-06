@@ -16,7 +16,7 @@ import { password as adminPassword, username as adminUsername } from '../utiliti
 import { password as demoPassword, username as demoUsername } from '../utilities/demo-user.js';
 
 // The shared port-3000 preview server serves the Component API with
-// COMPONENT_API_ENABLED=true and CONFIG_REPO_DIR pointing at componentsRepoDir.
+// COMPONENT_API_ENABLED=true and COMPONENT_CONFIG_DIR under componentsRepoDir.
 const api = 'http://localhost:3000/api/components';
 
 let adminToken: string | undefined;
@@ -72,6 +72,13 @@ test.afterAll(async () => {
 });
 
 test.describe('Component API file persistence', () => {
+  test('serves the OpenAPI document from the production build while the API is enabled', async () => {
+    const response = await fetch('http://localhost:3000/api/openapi');
+    expect(response.status).toBe(200);
+    const spec = (await response.json()) as { paths: Record<string, unknown> };
+    expect(Object.keys(spec.paths)).toContain('/api/components/{type}');
+  });
+
   test('creates a record file under the tracked subpath with server-owned id and dates', async () => {
     const response = await jsonRequest('/callbacks', 'POST', {
       src: 'e2e source',
