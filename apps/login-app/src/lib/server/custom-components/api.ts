@@ -9,7 +9,6 @@
 
 import { Effect, Schema } from 'effect';
 
-import { Auth, HttpError, Log, Publish, Store } from './component.types';
 import {
   COMPONENT_BUNDLE_SIZE_MESSAGE,
   ComponentErrorResponseSchema,
@@ -19,46 +18,41 @@ import {
   CreateComponentRequestSchema,
   FieldsSchema,
   MAX_COMPONENT_BUNDLE_SIZE,
-  projectRecord,
   PublishRequestSchema,
   UpdateComponentRequestSchema,
-} from './fields.utils';
-import { BUNDLE_ENTRY_PATH, publishBundle, publishResponse } from './publisher';
+} from './api.schemas';
+import { Auth } from './auth/auth';
+import { projectRecord } from './fields.utilities';
+import { BUNDLE_ENTRY_PATH, Publish, publishBundle, publishResponse } from './publish/publish';
+import { componentApiEnabled } from './settings';
+import { type ApiErrorStatus, type ComponentLogger, HttpError, Log } from './shared';
+import { type ComponentStoreError, Store } from './store/store';
 
 import type { LogMessage } from '@forgerock/sdk-logger';
 
-import type {
-  ApiErrorStatus,
-  AuthUser,
-  ComponentAuthFailureReason,
-  ComponentLogger,
-  ComponentPublishError,
-  ComponentPublishFailureReason,
-  ComponentStoreError,
-  ComponentStoreFailureReason,
-} from './component.types';
+import type { AuthFn } from './auth/auth';
+import type { ComponentPublishFn } from './publish/publish';
+import type { AuthUser } from './shared';
+import type { ComponentStoreApi } from './store/store';
 
-/** Whether this deployment serves the Component API. Disabled deployments 404 every route. */
-export const isComponentApiEnabled = (): boolean => process.env.COMPONENT_API_ENABLED === 'true';
+/** Maps an authentication failure to the HTTP status a client should see. */
+const AUTH_STATUS = {
+  AuthUnauthenticatedError: 401,
+  AuthForbiddenError: 403,
+  AuthUnavailableError: 503,
+} as const;
 
-/** Maps an authentication failure reason to the HTTP status a client should see. */
-const AUTH_STATUS: Record<ComponentAuthFailureReason, ApiErrorStatus> = {
-  Unauthenticated: 401,
-  Forbidden: 403,
-  Unavailable: 500,
-};
+/** Maps a store failure to the HTTP status a client should see. */
+const STORE_STATUS = {
+  StoreNotFoundError: 404,
+  StoreStorageError: 500,
+} as const;
 
-/** Maps a store failure reason to the HTTP status a client should see. */
-const STORE_STATUS: Record<ComponentStoreFailureReason, ApiErrorStatus> = {
-  NotFound: 404,
-  Storage: 500,
-};
-
-/** Maps a publish failure reason to the HTTP status a client should see. */
-const PUBLISH_STATUS: Record<ComponentPublishFailureReason, ApiErrorStatus> = {
-  Invalid: 400,
-  Storage: 500,
-};
+/** Maps a publish failure to the HTTP status a client should see. */
+const PUBLISH_STATUS = {
+  PublishInvalidError: 400,
+  PublishStorageError: 500,
+} as const;
 
 const AUDIT_MESSAGE = '[components] audit';
 
@@ -86,22 +80,35 @@ const recordResponse = (status: 200 | 201, record: typeof ComponentRecordSchema.
     headers: { 'cache-control': 'no-store' },
   });
 
-/** Converts a tagged store error into its client-facing HttpError. */
-const fromStoreError = (error: ComponentStoreError): HttpError =>
-  new HttpError({ status: STORE_STATUS[error.reason], message: error.message });
-
-/** Converts a tagged publish error into its client-facing HttpError. */
-const fromPublishError = (error: ComponentPublishError): HttpError =>
-  new HttpError({ status: PUBLISH_STATUS[error.reason], message: error.message });
-
 /** Converts a store operation into its response value or client-facing HttpError. */
 const fromStore = <Value, R>(
   effect: Effect.Effect<Value, ComponentStoreError, R>,
   onSuccess: (value: Value) => Response,
 ): Effect.Effect<Response, HttpError, R> =>
-  Effect.map(Effect.mapError(effect, fromStoreError), onSuccess);
+  Effect.map(
+    Effect.catchTags(effect, {
+      StoreNotFoundError: (error) =>
+        Effect.fail(new HttpError({ status: STORE_STATUS[error._tag], message: error.message })),
+      StoreStorageError: (error) =>
+        Effect.fail(new HttpError({ status: STORE_STATUS[error._tag], message: error.message })),
+    }),
+    onSuccess,
+  );
 
-/** Logs a successful or failed store mutation at its juncture; a missing record changes nothing. */
+/** Logs a failed store mutation; a missing record changes nothing, so it is not an audit event. */
+const auditStoreFailure =
+  (log: ComponentLogger, audit: AuditFields) => (error: ComponentStoreError) =>
+    error._tag === 'StoreStorageError'
+      ? Effect.sync(() =>
+          log.error(
+            AUDIT_MESSAGE,
+            { ...audit, outcome: 'failed', detail: error.message },
+            ...causeDetails(error.cause),
+          ),
+        )
+      : Effect.void;
+
+/** Logs a successful or failed store mutation at its juncture. */
 const auditMutation = <Value>(
   log: ComponentLogger,
   audit: AuditFields,
@@ -114,58 +121,72 @@ const auditMutation = <Value>(
         log.info(AUDIT_MESSAGE, { ...audit, ...describe(value), outcome: 'succeeded' }),
       ),
     ),
-    Effect.tapError((error) =>
-      Effect.sync(() => {
-        // A NotFound failure changes nothing, so it is not an audit event.
-        if (error.reason === 'Storage') {
-          log.error(
-            AUDIT_MESSAGE,
-            { ...audit, outcome: 'failed', detail: error.message },
-            ...causeDetails(error.cause),
-          );
-        }
-      }),
-    ),
+    Effect.tapError(auditStoreFailure(log, audit)),
   );
 
 /**
  * Enforces API enablement (`COMPONENT_API_ENABLED=true`) and AM admin authentication. Disabled
  * deployments 404; authentication fails closed. Requires the Auth and Log services.
  */
-const guardRequest = (request: Request): Effect.Effect<AuthUser, HttpError, Auth | Log> => {
-  if (!isComponentApiEnabled()) {
-    return Effect.fail(new HttpError({ status: 404, message: 'Not found' }));
-  }
-  return Effect.flatMap(Log, (log) =>
-    Effect.flatMap(Auth, (authenticate) =>
-      authenticate(request).pipe(
-        Effect.tapError((error) =>
-          Effect.sync(() => {
-            // Unauthenticated callers have no uid to audit; the access log already holds the request.
-            if (error.reason === 'Unauthenticated') {
-              return;
-            }
-            const fields = {
-              action: 'access',
-              outcome: error.reason === 'Unavailable' ? 'failed' : 'denied',
-              reason: error.reason,
-              detail: error.message,
-              uid: error.uid,
-            };
-            if (error.reason === 'Unavailable') {
-              log.error(AUDIT_MESSAGE, fields, ...causeDetails(error.cause));
-            } else {
-              log.warn(AUDIT_MESSAGE, fields);
-            }
+const guardRequest = (
+  request: Request,
+): Effect.Effect<AuthUser, HttpError, AuthFn | ComponentLogger> =>
+  Effect.flatMap(Effect.orDie(componentApiEnabled), (enabled) => {
+    if (!enabled) {
+      return Effect.fail(new HttpError({ status: 404, message: 'Not found' }));
+    }
+    return Effect.flatMap(Log, (log) =>
+      Effect.flatMap(Auth, (authenticate) =>
+        authenticate(request).pipe(
+          Effect.tapError((error) =>
+            Effect.sync(() => {
+              // Unauthenticated callers have no uid to audit; the access log already holds the request.
+              if (error._tag === 'AuthUnauthenticatedError') {
+                return;
+              }
+              if (error._tag === 'ConfigError') {
+                log.error(AUDIT_MESSAGE, {
+                  action: 'access',
+                  outcome: 'failed',
+                  reason: error._tag,
+                  detail: error.message,
+                });
+                return;
+              }
+              const fields = {
+                action: 'access',
+                outcome: error._tag === 'AuthUnavailableError' ? 'failed' : 'denied',
+                reason: error._tag,
+                detail: error.message,
+                uid: error.uid,
+              };
+              if (error._tag === 'AuthUnavailableError') {
+                log.error(AUDIT_MESSAGE, fields, ...causeDetails(error.cause));
+              } else {
+                log.warn(AUDIT_MESSAGE, fields);
+              }
+            }),
+          ),
+          Effect.catchTags({
+            AuthUnauthenticatedError: (error) =>
+              Effect.fail(
+                new HttpError({ status: AUTH_STATUS[error._tag], message: error.message }),
+              ),
+            AuthForbiddenError: (error) =>
+              Effect.fail(
+                new HttpError({ status: AUTH_STATUS[error._tag], message: error.message }),
+              ),
+            AuthUnavailableError: (error) =>
+              Effect.fail(
+                new HttpError({ status: AUTH_STATUS[error._tag], message: error.message }),
+              ),
+            ConfigError: (error) =>
+              Effect.fail(new HttpError({ status: 500, message: error.message })),
           }),
         ),
-        Effect.mapError(
-          (error) => new HttpError({ status: AUTH_STATUS[error.reason], message: error.message }),
-        ),
       ),
-    ),
-  );
-};
+    );
+  });
 
 /** Validates the JSON content type and declared size, then reads and decodes a request body. */
 const readBody = <A, I>(
@@ -193,20 +214,14 @@ const readBody = <A, I>(
     catch: () => new HttpError({ status: 400, message: 'Unable to read component request body' }),
   }).pipe(
     Effect.flatMap((bodyText) => {
-      if (bodyText.length > MAX_COMPONENT_BUNDLE_SIZE) {
+      if (Buffer.byteLength(bodyText, 'utf8') > MAX_COMPONENT_BUNDLE_SIZE) {
         return Effect.fail(new HttpError({ status: 413, message: COMPONENT_BUNDLE_SIZE_MESSAGE }));
       }
       return Effect.succeed(bodyText);
     }),
     Effect.flatMap((bodyText) =>
-      Effect.try({
-        try: () => JSON.parse(bodyText) as unknown,
-        catch: () => new HttpError({ status: 400, message: 'Invalid request body' }),
-      }),
-    ),
-    Effect.flatMap((parsed) =>
       Effect.mapError(
-        Schema.decodeUnknown(schema)(parsed),
+        Schema.decodeUnknown(Schema.parseJson(schema))(bodyText),
         () => new HttpError({ status: 400, message: 'Invalid request body' }),
       ),
     ),
@@ -253,11 +268,19 @@ const handler = <A, I, R>(
   request: Request,
   bodySchema: Schema.Schema<A, I>,
   operation: (context: { body: A; user: AuthUser }) => Effect.Effect<Response, HttpError, R>,
-): Effect.Effect<Response, HttpError, Auth | Log | R> =>
+): Effect.Effect<Response, HttpError, AuthFn | ComponentLogger | R> =>
   guardRequest(request).pipe(
     Effect.flatMap((user) => Effect.map(readBody(request, bodySchema), (body) => ({ body, user }))),
     Effect.flatMap(({ body, user }) => operation({ body, user })),
   );
+
+/** auditMutation with the logger taken from the Log service. */
+const auditMutationEffect = <Value>(
+  audit: AuditFields,
+  effect: Effect.Effect<Value, ComponentStoreError>,
+  describe: (value: Value) => AuditFields = () => ({}),
+): Effect.Effect<Value, ComponentStoreError, ComponentLogger> =>
+  Effect.flatMap(Log, (log) => auditMutation(log, audit, effect, describe));
 
 /**
  * Lists component records for a route type, projecting fields from the `?fields=` query parameter.
@@ -269,7 +292,7 @@ const handler = <A, I, R>(
 export const listComponents = (
   request: Request,
   type: string,
-): Effect.Effect<Response, never, Auth | Log | Store> =>
+): Effect.Effect<Response, never, AuthFn | ComponentLogger | ComponentStoreApi> =>
   toResponse(
     guardRequest(request).pipe(
       Effect.flatMap(() => validateType(type)),
@@ -303,7 +326,7 @@ export const getComponent = (
   request: Request,
   type: string,
   id: string,
-): Effect.Effect<Response, never, Auth | Log | Store> =>
+): Effect.Effect<Response, never, AuthFn | ComponentLogger | ComponentStoreApi> =>
   toResponse(
     guardRequest(request).pipe(
       Effect.flatMap(() =>
@@ -328,7 +351,7 @@ export const getComponent = (
 export const createComponent = (
   request: Request,
   type: string,
-): Effect.Effect<Response, never, Auth | Log | Store> =>
+): Effect.Effect<Response, never, AuthFn | ComponentLogger | ComponentStoreApi> =>
   toResponse(
     handler(request, CreateComponentRequestSchema, ({ body, user }) =>
       Effect.flatMap(validateType(type), (validType) =>
@@ -346,14 +369,6 @@ export const createComponent = (
     ),
   );
 
-/** auditMutation with the logger taken from the Log service. */
-const auditMutationEffect = <Value>(
-  audit: AuditFields,
-  effect: Effect.Effect<Value, ComponentStoreError>,
-  describe: (value: Value) => AuditFields = () => ({}),
-): Effect.Effect<Value, ComponentStoreError, Log> =>
-  Effect.flatMap(Log, (log) => auditMutation(log, audit, effect, describe));
-
 /**
  * Updates an existing component record, preserving its creation date.
  * A body id, when present, must match the route id.
@@ -367,7 +382,7 @@ export const updateComponent = (
   request: Request,
   type: string,
   id: string,
-): Effect.Effect<Response, never, Auth | Log | Store> =>
+): Effect.Effect<Response, never, AuthFn | ComponentLogger | ComponentStoreApi> =>
   toResponse(
     handler(request, UpdateComponentRequestSchema, ({ body, user }) =>
       Effect.flatMap(validateType(type), (validType) =>
@@ -402,7 +417,7 @@ export const deleteComponent = (
   request: Request,
   type: string,
   id: string,
-): Effect.Effect<Response, never, Auth | Log | Store> =>
+): Effect.Effect<Response, never, AuthFn | ComponentLogger | ComponentStoreApi> =>
   toResponse(
     guardRequest(request).pipe(
       Effect.flatMap(({ uid }) =>
@@ -431,39 +446,63 @@ export const deleteComponent = (
  */
 export const publishComponentSource = (
   request: Request,
-): Effect.Effect<Response, never, Auth | Log | Publish> =>
+): Effect.Effect<Response, never, AuthFn | ComponentLogger | ComponentPublishFn> =>
   toResponse(
     handler(request, PublishRequestSchema, ({ body, user }) =>
-      Effect.all([Publish, Log]).pipe(
-        Effect.flatMap(([publish, log]) => {
+      Effect.flatMap(Publish, (publish) =>
+        Effect.flatMap(Log, (log) => {
+          if ((body.files ?? []).some((file) => file.path === BUNDLE_ENTRY_PATH)) {
+            const reserved = new HttpError({
+              status: 400,
+              message: `Bundle file path is reserved: ${BUNDLE_ENTRY_PATH}`,
+            });
+            return Effect.tapError(Effect.fail(reserved), () =>
+              Effect.sync(() =>
+                log.warn(AUDIT_MESSAGE, {
+                  action: 'publish',
+                  outcome: 'rejected',
+                  uid: user.uid,
+                  detail: reserved.message,
+                }),
+              ),
+            );
+          }
           const paths = [...(body.files ?? []).map((file) => file.path), BUNDLE_ENTRY_PATH];
           return publish(publishBundle(body)).pipe(
-            Effect.tapError((error) =>
-              Effect.sync(() => {
-                // Paths are left out of rejections because they are unsafe to echo.
-                if (error.reason === 'Invalid') {
-                  log.warn(AUDIT_MESSAGE, {
-                    action: 'publish',
-                    outcome: 'rejected',
-                    uid: user.uid,
-                    detail: error.message,
-                  });
-                  return;
-                }
-                log.error(
-                  AUDIT_MESSAGE,
-                  {
-                    action: 'publish',
-                    outcome: 'failed',
-                    uid: user.uid,
-                    paths,
-                    detail: error.message,
-                  },
-                  ...causeDetails(error.cause),
-                );
-              }),
+            Effect.catchTags({
+              PublishInvalidError: (error) =>
+                Effect.tapError(Effect.fail(error), () =>
+                  Effect.sync(() =>
+                    // Paths are left out of rejections because they are unsafe to echo.
+                    log.warn(AUDIT_MESSAGE, {
+                      action: 'publish',
+                      outcome: 'rejected',
+                      uid: user.uid,
+                      detail: error.message,
+                    }),
+                  ),
+                ),
+              PublishStorageError: (error) =>
+                Effect.tapError(Effect.fail(error), () =>
+                  Effect.sync(() =>
+                    log.error(
+                      AUDIT_MESSAGE,
+                      {
+                        action: 'publish',
+                        outcome: 'failed',
+                        uid: user.uid,
+                        paths,
+                        detail: error.message,
+                      },
+                      ...causeDetails(error.cause),
+                    ),
+                  ),
+                ),
+            }),
+            Effect.mapError(
+              (error) =>
+                new HttpError({ status: PUBLISH_STATUS[error._tag], message: error.message }),
             ),
-            Effect.mapError(fromPublishError),
             Effect.map(() => {
               log.info(AUDIT_MESSAGE, {
                 action: 'publish',

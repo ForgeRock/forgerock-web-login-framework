@@ -75,7 +75,7 @@ export async function createRedirectContext(
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
   const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'root';
   const successUrl = tokenId && gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
-  const roles = tokenId ? await getUserRolesFromSession(tokenId, realm) : [];
+  const roles = tokenId ? (await getUserRolesFromSession(tokenId, realm)).roles : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
 
   return {

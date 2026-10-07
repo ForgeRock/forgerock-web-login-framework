@@ -67,7 +67,11 @@ function firstOf(redirectContext: RedirectData, ...resolvers: Resolver[]): strin
  * @param {string | undefined} realm - The realm name.
  * @returns {string} The role-based redirect URL.
  */
-export function buildRoleUrl(amOrigin: string, roles: string[], realm: string | undefined): string {
+export function buildRoleUrl(
+  amOrigin: string,
+  roles: ReadonlyArray<string>,
+  realm: string | undefined,
+): string {
   const isAdmin = roles.includes('ui-global-admin') || roles.includes('ui-realm-admin');
   const realmPath = realm && realm !== 'root' ? `/${realm}` : '/';
   return isAdmin

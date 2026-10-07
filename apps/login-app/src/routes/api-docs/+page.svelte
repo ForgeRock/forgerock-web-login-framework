@@ -11,7 +11,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  let swaggerUi: HTMLDivElement;
   let unavailable = false;
 
   onMount(async () => {
@@ -24,7 +23,9 @@
       }
 
       await import('swagger-ui-dist/swagger-ui.css');
-      const { SwaggerUIBundle } = await import('swagger-ui-dist/swagger-ui-bundle.js');
+      // Vite pre-bundles swagger-ui-dist as a default-only ES module.
+      const mod = await import('swagger-ui-dist/swagger-ui-bundle.js');
+      const SwaggerUIBundle = mod.SwaggerUIBundle ?? mod.default;
 
       // Swagger UI accesses the DOM, so initialize it only after client-side mounting.
       SwaggerUIBundle({
@@ -42,34 +43,16 @@
   <title>API documentation</title>
 </svelte:head>
 
-<main class="mx-auto max-w-screen-xl p-6">
-  <h1 class="mb-6 text-3xl font-semibold">API documentation</h1>
+<main class="tw_bg-background-light dark:tw_bg-background-dark tw_min-h-screen tw_p-6">
+  <h1 class="tw_primary-header dark:tw_primary-header_dark">API documentation</h1>
 
   {#if unavailable}
-    <p>OpenAPI spec is only available while the Component API is enabled.</p>
+    <p class="tw_text-secondary-dark dark:tw_text-secondary-light">
+      OpenAPI spec is only available while the Component API is enabled.
+    </p>
   {:else}
     <div class="swagger-ui-container">
-      <div id="swagger-ui" bind:this={swaggerUi}></div>
+      <div id="swagger-ui"></div>
     </div>
   {/if}
 </main>
-
-<style>
-  .swagger-ui-container :global(.swagger-ui .opblock-tag) {
-    margin-top: 2rem;
-    padding: 1rem;
-    border-left: 4px solid #4f46e5;
-    border-radius: 0.5rem;
-    background-color: #eef2ff;
-    color: #1f2937;
-    font-size: 1.5rem;
-    font-weight: 800;
-    letter-spacing: 0.05em;
-    line-height: 1.25;
-    text-transform: uppercase;
-  }
-
-  .swagger-ui-container :global(.swagger-ui .opblock-tag:first-of-type) {
-    margin-top: 0;
-  }
-</style>

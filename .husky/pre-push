@@ -1,2 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
+
+CI=true pnpm run test && pnpm ci:e2e

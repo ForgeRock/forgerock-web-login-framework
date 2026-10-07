@@ -9,11 +9,11 @@
 
 import { Schema } from 'effect';
 
-/** Maximum accepted serialized component bundle size, in characters. */
-export const MAX_COMPONENT_BUNDLE_SIZE = 1024 * 1024;
+/** Maximum accepted serialized component bundle size, in bytes; matches adapter-node's 512 KiB default. */
+export const MAX_COMPONENT_BUNDLE_SIZE = 512 * 1024;
 
 /** User-facing message returned when a component bundle exceeds the size limit. */
-export const COMPONENT_BUNDLE_SIZE_MESSAGE = 'Component bundle exceeds the 1 MiB limit';
+export const COMPONENT_BUNDLE_SIZE_MESSAGE = 'Component bundle exceeds the 512 KiB limit';
 
 /** Component categories supported by the Component API. */
 export const ComponentTypeSchema = Schema.Literal(
@@ -149,4 +149,5 @@ export const ComponentErrorResponseSchema = Schema.Union(
   Schema.Struct({ status: Schema.Literal(413), body: ApiErrorBodySchema }),
   Schema.Struct({ status: Schema.Literal(415), body: ApiErrorBodySchema }),
   Schema.Struct({ status: Schema.Literal(500), body: ApiErrorBodySchema }),
+  Schema.Struct({ status: Schema.Literal(503), body: ApiErrorBodySchema }),
 );

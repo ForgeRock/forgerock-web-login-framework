@@ -96,6 +96,7 @@ describe('openApiSpec', () => {
     ]);
     expect(Object.keys(openApiSpec.paths['/api/components/{type}/{id}'].get.responses)).toEqual([
       '200',
+      '400',
       '401',
       '403',
       '404',

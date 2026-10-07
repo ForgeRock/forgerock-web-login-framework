@@ -7,18 +7,21 @@
  *
  * **/
 
-import { isComponentApiEnabled } from '$lib/server/custom-components/api';
+import { Effect } from 'effect';
+
 import { openApiSpec } from '$lib/server/custom-components/openapi';
+import { componentApiEnabled, SettingsLive } from '$lib/server/custom-components/settings';
+
+import type { RequestHandler } from './$types';
 
 /**
  * Serves the OpenAPI document wherever the Component API is enabled.
  *
  * @returns The OpenAPI specification with 200 when the Component API is enabled, or 404 otherwise.
  */
-export const GET = () => {
-  if (!isComponentApiEnabled()) {
-    return new Response('Not Found', { status: 404 });
-  }
-
-  return Response.json(openApiSpec);
-};
+export const GET: RequestHandler = () =>
+  Effect.runPromise(
+    Effect.map(componentApiEnabled, (enabled) =>
+      enabled ? Response.json(openApiSpec) : new Response('Not Found', { status: 404 }),
+    ).pipe(Effect.provide(SettingsLive)),
+  );

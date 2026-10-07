@@ -12,6 +12,7 @@ const idmThemeUrl = 'http://localhost:3300';
 const defaultJourneyUrl = 'http://localhost:5829';
 // Shared location for the Component API file e2e tests; the tests wipe it per run.
 export const componentsRepoDir = join(tmpdir(), 'login-app-components-e2e');
+export const componentsApiUrl = `${url.replace(/\/$/, '')}/api/components`;
 // This forgeblocks tenant serves IDM at the tenant root, not under /am — FR_IDM_URL defaults
 // to FR_AM_URL, which 404s against /openidm/config/ui/themerealm, so it must be overridden.
 const IDM_URL = 'https://openam-sdks.forgeblocks.com';
@@ -61,6 +62,9 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           // Explicitly blank out rather than omit — SvelteKit's vite plugin backfills unset
           // vars from the root .env file during preview, which would mask this guard.
           FR_AM_WELLKNOWN_URL: '',
+          // The config-error server must run with the Component API disabled, but a dev
+          // .env with the flag true would backfill in through the vite plugin otherwise.
+          COMPONENT_API_ENABLED: 'false',
         },
       },
       // Dedicated preview server with FR_IDM_URL pointed at the tenant root, so the
@@ -134,7 +138,7 @@ export default defineConfig({
     {
       name: 'chromium',
       grepInvert: /webauthn/,
-      testIgnore: /config-error|idm-theme|default-journey/,
+      testIgnore: /config-error|idm-theme|default-journey|component-api-disabled/,
       use: {
         ...devices['Desktop Chrome'],
         // ...devices['Desktop Edge'],
@@ -142,7 +146,7 @@ export default defineConfig({
     },
     {
       name: 'config-error',
-      testMatch: /config-error/,
+      testMatch: /config-error|component-api-disabled/,
       use: {
         ...devices['Desktop Chrome'],
         baseURL: `${configErrorUrl}/e2e/`,

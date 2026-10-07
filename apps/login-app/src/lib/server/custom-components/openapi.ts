@@ -12,11 +12,12 @@ import * as OpenApiJsonSchema from '@effect/platform/OpenApiJsonSchema';
 import {
   ApiErrorBodySchema,
   ComponentRecordSchema,
+  ComponentTypeSchema,
   CreateComponentRequestSchema,
   PublishRequestSchema,
   PublishResponseSchema,
   UpdateComponentRequestSchema,
-} from './fields.utils';
+} from './fields.utilities';
 
 /** OpenAPI JSON Schema for persisted component records. */
 const componentRecordSchema = OpenApiJsonSchema.makeWithDefs(ComponentRecordSchema, { defs: {} });
@@ -43,6 +44,17 @@ const jsonResponse = (description: string, schema: object) => ({
 
 /** Creates an OpenAPI error response definition using the shared API error schema. */
 const errorResponse = (description: string) => jsonResponse(description, errorSchema);
+
+/** OpenAPI JSON Schema for the component type path parameter, matching ComponentTypeSchema. */
+const componentTypeParameter = {
+  name: 'type',
+  in: 'path',
+  required: true,
+  schema: {
+    type: 'string',
+    enum: ComponentTypeSchema.literals,
+  },
+} as const;
 
 /**
  * OpenAPI 3.1 specification for the login-app development endpoints.
@@ -104,7 +116,7 @@ export const openApiSpec = {
         tags: ['Components'],
         summary: 'List component records',
         parameters: [
-          { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
+          componentTypeParameter,
           { name: 'fields', in: 'query', required: false, schema: { type: 'string' } },
         ],
         responses: {
@@ -121,7 +133,7 @@ export const openApiSpec = {
       post: {
         tags: ['Components'],
         summary: 'Create a component record',
-        parameters: [{ name: 'type', in: 'path', required: true, schema: { type: 'string' } }],
+        parameters: [componentTypeParameter],
         requestBody: {
           required: true,
           content: { 'application/json': { schema: createComponentRequestSchema } },
@@ -142,11 +154,12 @@ export const openApiSpec = {
         tags: ['Components'],
         summary: 'Retrieve a component record',
         parameters: [
-          { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
+          componentTypeParameter,
           { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         responses: {
           '200': jsonResponse('The component record.', componentRecordSchema),
+          '400': errorResponse('The component id is invalid.'),
           '401': errorResponse('The request is not authenticated.'),
           '403': errorResponse('An AM admin session is required.'),
           '404': errorResponse('The component record was not found.'),
@@ -156,7 +169,7 @@ export const openApiSpec = {
         tags: ['Components'],
         summary: 'Update a component record',
         parameters: [
-          { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
+          componentTypeParameter,
           { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         requestBody: {
@@ -178,12 +191,12 @@ export const openApiSpec = {
         tags: ['Components'],
         summary: 'Delete a component record',
         parameters: [
-          { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
+          componentTypeParameter,
           { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         responses: {
           '204': { description: 'The component record was deleted.' },
-          '400': errorResponse('The request is invalid.'),
+          '400': errorResponse('The component id is invalid.'),
           '401': errorResponse('The request is not authenticated.'),
           '403': errorResponse('An AM admin session is required.'),
           '404': errorResponse('The component record was not found.'),

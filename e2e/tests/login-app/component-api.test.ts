@@ -11,13 +11,13 @@ import { expect, test } from '@playwright/test';
 import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { AM_REALM, AM_URL, componentsRepoDir } from '../../playwright.config';
+import { AM_REALM, AM_URL, componentsApiUrl, componentsRepoDir } from '../../playwright.config';
 import { password as adminPassword, username as adminUsername } from '../utilities/admin-user.js';
 import { password as demoPassword, username as demoUsername } from '../utilities/demo-user.js';
 
 // The shared port-3000 preview server serves the Component API with
 // COMPONENT_API_ENABLED=true and COMPONENT_CONFIG_DIR under componentsRepoDir.
-const api = 'http://localhost:3000/api/components';
+const api = componentsApiUrl;
 
 let adminToken: string | undefined;
 
@@ -73,10 +73,21 @@ test.afterAll(async () => {
 
 test.describe('Component API file persistence', () => {
   test('serves the OpenAPI document from the production build while the API is enabled', async () => {
-    const response = await fetch('http://localhost:3000/api/openapi');
+    const response = await fetch(`${componentsApiUrl}/../openapi`);
     expect(response.status).toBe(200);
     const spec = (await response.json()) as { paths: Record<string, unknown> };
     expect(Object.keys(spec.paths)).toContain('/api/components/{type}');
+  });
+
+  test('renders Swagger UI on the api-docs page', async ({ page }) => {
+    await page.goto('/api-docs');
+
+    await expect(page.getByRole('heading', { name: /Login App Component API/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Authorize' })).toBeVisible();
+
+    for (const section of ['Components', 'Health']) {
+      await expect(page.getByRole('heading', { name: section })).toBeVisible();
+    }
   });
 
   test('creates a record file under the tracked subpath with server-owned id and dates', async () => {

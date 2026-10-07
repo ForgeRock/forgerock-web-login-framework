@@ -15,6 +15,7 @@
     "@forgerock/sdk-logger": "^2.1.1"
   },
   "devDependencies": {
+    "@effect/vitest": "^0.26.0",
     "@sveltejs/adapter-auto": "^7.0.0",
     "@sveltejs/adapter-node": "^5.5.4",
     "@sveltejs/kit": "^2.53.3",

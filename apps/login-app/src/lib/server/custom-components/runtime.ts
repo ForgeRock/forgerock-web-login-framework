@@ -7,42 +7,62 @@
  *
  * **/
 
-import { Layer } from 'effect';
+import { Path } from '@effect/platform';
+import { NodeFileSystem } from '@effect/platform-node';
+import { Effect, Layer } from 'effect';
 
 import { log } from '$server/logger.effects';
-import { getUserIdFromSession, getUserRolesForUser } from '$server/sessions';
-import { WriterLive } from './artifact-writer';
-import { AuthLive } from './auth';
-import { Log } from './component.types';
-import { FileSyncLive } from './file-sync';
-import { PublishLive } from './publisher';
-import { StoreLive } from './store';
+import { getUserRolesFromSession } from '$server/sessions';
+import { AuthLive } from './auth/auth';
+import { PublishLive } from './publish/publish';
+import { componentConfigDir, SettingsLive } from './settings';
+import { type ComponentLogger, type ComponentStoreConfig, Log } from './shared';
+import { StoreLive } from './store/store';
+import { FileSyncLive, WriterLive } from './writer/writer';
 
-import type { Auth, ComponentStoreConfig, Publish, Store } from './component.types';
+import type { AuthFn } from './auth/auth';
+import type { ComponentPublishFn } from './publish/publish';
+import type { ComponentStoreApi } from './store/store';
 
-/** The tracked config directory from the config-saver infrastructure contract. */
-const config: ComponentStoreConfig = {
-  trackedRoot: process.env.COMPONENT_CONFIG_DIR ?? '/config/config',
+/** Assembles the full Component API graph for one resolved config. */
+const componentApiLayer = (
+  config: ComponentStoreConfig,
+): Layer.Layer<ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger> => {
+  const LogLive = Layer.succeed(Log, log);
+  const nodeFileSystem = NodeFileSystem.layer;
+  const fileSyncLive = FileSyncLive.pipe(Layer.provide(nodeFileSystem));
+  const writerLive = WriterLive(config).pipe(
+    Layer.provide(fileSyncLive),
+    Layer.provide(nodeFileSystem),
+    Layer.provide(Path.layer),
+  );
+  return Layer.mergeAll(
+    StoreLive(config).pipe(
+      Layer.provide(writerLive),
+      Layer.provide(fileSyncLive),
+      Layer.provide(nodeFileSystem),
+      Layer.provide(Path.layer),
+      Layer.provide(LogLive),
+    ),
+    AuthLive(getUserRolesFromSession),
+    PublishLive.pipe(Layer.provide(writerLive)),
+    LogLive,
+  ) as Layer.Layer<ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger>;
 };
-
-/** The real logger implementation, provided as a layer. */
-const LogLive = Layer.succeed(Log, log);
-
-/** One shared writer over the real fsync; every layer that writes reuses this instance. */
-const writerLive = WriterLive(config).pipe(Layer.provide(FileSyncLive));
 
 /**
  * The real Component API dependency graph, assembled once per server process from the
- * `COMPONENT_CONFIG_DIR` infrastructure contract with config-saver.
+ * `COMPONENT_CONFIG_DIR` infrastructure contract with config-saver. Config resolves
+ * when the layer builds, so a deployment sets the directory via the environment.
  * Tests provide their own layers instead of importing this.
  */
-export const ComponentApiLive = Layer.mergeAll(
-  StoreLive(config).pipe(
-    Layer.provide(writerLive),
-    Layer.provide(FileSyncLive),
-    Layer.provide(LogLive),
+export const ComponentApiLive: Layer.Layer<
+  ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger
+> = Layer.unwrapEffect(
+  Effect.map(
+    Effect.orDie(
+      Effect.map(componentConfigDir, (trackedRoot): ComponentStoreConfig => ({ trackedRoot })),
+    ),
+    componentApiLayer,
   ),
-  AuthLive({ getUserId: getUserIdFromSession, getRoles: getUserRolesForUser }),
-  PublishLive.pipe(Layer.provide(writerLive), Layer.provide(FileSyncLive)),
-  LogLive,
-) as Layer.Layer<Store | Auth | Publish | Log>;
+).pipe(Layer.provide(SettingsLive));

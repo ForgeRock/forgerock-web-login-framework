@@ -22,7 +22,9 @@ export const projectRecord = (
   record: Record<string, unknown>,
   fields: ReadonlyArray<ReadonlyArray<string>>,
 ): Record<string, unknown> => {
-  if (fields.length === 0) return { ...record };
+  if (fields.length === 0) {
+    return { ...record };
+  }
 
   const projected: Record<string, unknown> = Object.create(null);
   for (const path of fields) {
@@ -31,8 +33,12 @@ export const projectRecord = (
 
     for (let index = 0; index < path.length; index += 1) {
       const segment = path[index];
-      if (segment === '__proto__' || segment === 'constructor' || segment === 'prototype') break;
-      if (typeof source !== 'object' || source === null || !Object.hasOwn(source, segment)) break;
+      if (segment === '__proto__' || segment === 'constructor' || segment === 'prototype') {
+        break;
+      }
+      if (typeof source !== 'object' || source === null || !Object.hasOwn(source, segment)) {
+        break;
+      }
       const value = (source as Record<string, unknown>)[segment];
       if (index === path.length - 1) {
         destination[segment] = value;
