@@ -11,7 +11,6 @@ import { initProject } from './commands/init.js';
 import { resolveSource } from './commands/source.js';
 import { assertValidProject, writeVersion } from './config/version.js';
 import { copyWithExclusions, expandTilde } from './services/file-system.js';
-import { runRegistryScript } from './services/registry.js';
 import { GithubReleaseLayer, Release } from './services/release.js';
 
 import type { FileSystem, Path } from '@effect/platform';
@@ -44,8 +43,6 @@ function formatError(cause: Cause.Cause<unknown>): string {
         return `Filesystem error (${e['operation']}) at "${e['path']}": ${e['cause']}`;
       case 'GeneratorVersionError':
         return `Generator version error: ${e['message']}${e['path'] ? ` (${e['path']})` : ''}`;
-      case 'RegistryScanError':
-        return `Registry scan failed in "${e['directory']}": ${e['cause']}`;
       case 'DirectoryConflictError':
         return `"${e['path']}" already contains a framework project. Use local path instead.`;
       case 'DirectoryNotEmptyError':
@@ -140,6 +137,40 @@ const GenerateStageTool = Tool.make('generate_stage', {
   .annotate(Tool.OpenWorld, false)
   .annotate(Tool.Idempotent, false);
 
+const GenerateHeaderTool = Tool.make('generate_header', {
+  description:
+    'Scaffold a new custom header component under experimental/custom/headers/. Run from an initialized project root.',
+  parameters: {
+    name: Schema.String.annotations({
+      description:
+        'Name for the header (e.g. "Corporate Header"). Registered under this name — the scaffolded component ships with Enabled: true (at most one header may be enabled).',
+    }),
+    directory: directoryParam,
+  },
+  success: Schema.String,
+  failure: Schema.String,
+})
+  .annotate(Tool.Destructive, true)
+  .annotate(Tool.OpenWorld, false)
+  .annotate(Tool.Idempotent, false);
+
+const GenerateFooterTool = Tool.make('generate_footer', {
+  description:
+    'Scaffold a new custom footer component under experimental/custom/footers/. Run from an initialized project root.',
+  parameters: {
+    name: Schema.String.annotations({
+      description:
+        'Name for the footer (e.g. "Corporate Footer"). Registered under this name — the scaffolded component ships with Enabled: true (at most one footer may be enabled).',
+    }),
+    directory: directoryParam,
+  },
+  success: Schema.String,
+  failure: Schema.String,
+})
+  .annotate(Tool.Destructive, true)
+  .annotate(Tool.OpenWorld, false)
+  .annotate(Tool.Idempotent, false);
+
 const UpdateTool = Tool.make('update', {
   description:
     'Fetch the latest (or specified) framework version and overwrite core files while preserving experimental/custom/. Run from an initialized project root.',
@@ -177,6 +208,8 @@ export const mcpToolkit = Toolkit.make(
   InitTool,
   GenerateCallbackTool,
   GenerateStageTool,
+  GenerateHeaderTool,
+  GenerateFooterTool,
   UpdateTool,
   ListReleasesTool,
 );
@@ -207,6 +240,20 @@ const handlerLayer = mcpToolkit.toLayer({
       ),
     ),
 
+  generate_header: ({ name, directory }) =>
+    catchToolErrors(
+      scaffoldComponent('header', name, directory).pipe(
+        Effect.map(() => `Header component "${name}" scaffolded successfully.`),
+      ),
+    ),
+
+  generate_footer: ({ name, directory }) =>
+    catchToolErrors(
+      scaffoldComponent('footer', name, directory).pipe(
+        Effect.map(() => `Footer component "${name}" scaffolded successfully.`),
+      ),
+    ),
+
   update: ({ version: ver, local, directory }) =>
     catchToolErrors(
       Effect.gen(function* () {
@@ -225,7 +272,6 @@ const handlerLayer = mcpToolkit.toLayer({
           }),
         );
 
-        yield* runRegistryScript(cwd);
         yield* writeVersion(cwd, {
           version: resolvedVersion,
           generatedAt: new Date().toISOString(),

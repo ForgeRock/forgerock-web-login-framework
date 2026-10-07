@@ -24,17 +24,17 @@
   // ─── SDK types ─────────────────────────────────────────────────────────────
   // ─── Framework imports ──────────────────────────────────────────────────────
   /**
-   * Import everything you need from '$login-framework' — the framework's centralized
+   * Import everything you need from '$login-framework-exports' — the framework's centralized
    * exports for custom components. No need to reach into internal aliases like
    * $core, $components, or $journey directly.
    *
    * Available exports (see experimental/custom/login-framework.ts for the full list):
    */
-  import { interpolate, Stacked, textToKey } from '$login-framework';
+  import { interpolate, Stacked, textToKey } from '$login-framework-exports';
 
   import type { NameCallback } from '@forgerock/journey-client/types';
 
-  import type { CallbackMetadata, Maybe } from '$login-framework';
+  import type { CallbackMetadata, Maybe } from '$login-framework-exports';
 
   // ─── Prop contract ──────────────────────────────────────────────────────────
   export let callback: NameCallback;

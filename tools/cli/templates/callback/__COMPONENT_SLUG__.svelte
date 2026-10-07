@@ -16,7 +16,7 @@ Custom callback component. Replace this description with your own.
   export let callback: BaseCallback;
 
   // Optionally declare any of these if your component needs them:
-  // import type { CallbackMetadata, Maybe, SelfSubmitFunction, StepMetadata, StyleObject } from '$login-framework';
+  // import type { CallbackMetadata, Maybe, SelfSubmitFunction, StepMetadata, StyleObject } from '$login-framework-exports';
   // export let selfSubmitFunction: Maybe<SelfSubmitFunction> = null;
   // export let stepMetadata: Maybe<StepMetadata> = null;
   // export let callbackMetadata: Maybe<CallbackMetadata> = null;

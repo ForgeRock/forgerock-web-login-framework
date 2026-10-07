@@ -36,9 +36,11 @@ core/**/*.d.ts
 core/journey/_utilities/registry/custom-registry.ts
 
 # Custom component implementations (developer-authored; gitignored so customer forks don't conflict)
-# The stage/ and callback/ folders themselves (with .gitkeep) remain tracked as scaffolding references.
+# The stage/, callback/, header/ and footer/ folders themselves (with .gitkeep) remain tracked as scaffolding references.
 experimental/custom/stages/*/
 experimental/custom/callbacks/*/
+experimental/custom/headers/*/
+experimental/custom/footers/*/
 
 # Claude Code
 .claude/

@@ -34,7 +34,7 @@
 
   // ─── Framework imports ──────────────────────────────────────────────────────
   /**
-   * Import everything you need from '$login-framework' — the framework's centralized
+   * Import everything you need from '$login-framework-exports' — the framework's centralized
    * exports for custom components. No need to reach into internal aliases like
    * $core, $components, or $journey directly.
    *
@@ -54,7 +54,7 @@
     interpolate,
     styleStore,
     T,
-  } from '$login-framework';
+  } from '$login-framework-exports';
 
   import type { JourneyStep } from '@forgerock/journey-client/types';
 
@@ -65,7 +65,7 @@
     StageJourneyObject,
     StepMetadata,
     StyleObject,
-  } from '$login-framework';
+  } from '$login-framework-exports';
 
   // ─── Stage props ─────────────────────────────────────────────────────────────
   export let componentStyle: 'app' | 'inline' | 'modal';

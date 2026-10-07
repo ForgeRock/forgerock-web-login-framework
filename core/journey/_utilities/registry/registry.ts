@@ -6,7 +6,17 @@ import { parse } from 'svelte/compiler';
 // Types
 // --------------------------------------------------------------------------
 
-type ComponentType = 'stage' | 'callback';
+type ComponentType = 'stage' | 'callback' | 'header' | 'footer';
+
+const COMPONENT_TYPES = [
+  'stage',
+  'callback',
+  'header',
+  'footer',
+] as const satisfies readonly ComponentType[];
+
+const isComponentType = (value: string): value is ComponentType =>
+  COMPONENT_TYPES.some((componentType) => componentType === value);
 
 interface ComponentEntry {
   filePath: string;
@@ -19,6 +29,56 @@ interface ComponentEntry {
 // Helpers (exported for testing)
 // --------------------------------------------------------------------------
 
+/**
+ * Parses the optional `Enabled:` property from a Svelte file's leading
+ * `<!-- @component -->` comment block, from the raw content.
+ *
+ * Returns one of three outcomes:
+ * - `{ state: 'enabled' }` — an `Enabled: true` line is present.
+ * - `{ state: 'dormant' }` — the line is absent, or says `Enabled: false`. The
+ *   component is not bundled; header/footer files in this state are skipped
+ *   before any further validation (skip-entirely).
+ * - `{ error }` — the line is present with any other value. Invalid values
+ *   fail loudly even though the file would be dormant, so a typo cannot
+ *   silently disable a component the developer meant to ship.
+ *
+ * `Enabled` is a header/footer-only property. Stage/callback files never
+ * reach this parser (they are always bundled), so a stray `Enabled:` line
+ * there is silently ignored by `parseComponentHeader`.
+ */
+export type EnabledParseResult = { state: 'enabled' } | { state: 'dormant' } | { error: string };
+
+export function parseEnabledState(content: string): EnabledParseResult {
+  const commentMatch = content.match(/^<!--([\s\S]*?)-->/);
+  if (!commentMatch) {
+    return { state: 'dormant' };
+  }
+
+  // Per-line anchored: only a line whose own content is the property counts.
+  // A plain /Enabled:\s*(.*)/ over the block would match the first occurrence
+  // of the text anywhere, letting prose (e.g. '"Enabled: true" opts this
+  // component into the bundle') shadow or replace the real property line —
+  // which breaks exactly the documented "remove the line to disable" path.
+  const enabledLine = commentMatch[1].split('\n').find((line) => /^\s*Enabled:/.test(line));
+  if (!enabledLine) {
+    return { state: 'dormant' };
+  }
+
+  const value = (enabledLine.match(/^\s*Enabled:\s*(.*)$/) ?? [])[1]?.trim() ?? '';
+  if (value === 'true') {
+    return { state: 'enabled' };
+  }
+  if (value === 'false') {
+    return { state: 'dormant' };
+  }
+
+  return {
+    error:
+      `Invalid Enabled value "${value}". Expected "Enabled: true" or "Enabled: false" ` +
+      `(or omit the property entirely). Enabled is a header/footer-only property.`,
+  };
+}
+
 /** Extracts names of all `export let` prop declarations from a Svelte component's `<script>` block using the Svelte compiler AST. */
 export function parseAcceptedProps(content: string): string[] {
   const abstractSyntaxTree = parse(content, { modern: false });
@@ -29,7 +89,9 @@ export function parseAcceptedProps(content: string): string[] {
     }
     if (node.declaration?.type === 'VariableDeclaration' && node.declaration.kind === 'let') {
       for (const declarator of node.declaration.declarations) {
-        props.push(declarator.id.name);
+        if (declarator.id.type === 'Identifier') {
+          props.push(declarator.id.name);
+        }
       }
     }
   }
@@ -61,7 +123,7 @@ export const parseComponentHeader = (
   if (!commentMatch) {
     return fail(
       'Missing @component header. Every custom component must begin with:\n' +
-        '<!--\n   @component\n   Type: stage|callback\n   Name: <ComponentName>\n   -->',
+        '<!--\n   @component\n   Type: stage|callback|header|footer\n   Name: <ComponentName>\n   -->',
     );
   }
 
@@ -73,13 +135,15 @@ export const parseComponentHeader = (
   const typeMatch = block.match(/Type:\s*(\S+)/);
   if (!typeMatch) {
     return fail(
-      'Missing "Type:" field in @component header. Expected: Type: stage or Type: callback',
+      'Missing "Type:" field in @component header. Expected: Type: stage, callback, header, or footer',
     );
   }
 
   const rawType = typeMatch[1].toLowerCase();
-  if (rawType !== 'stage' && rawType !== 'callback') {
-    return fail(`Invalid Type value "${typeMatch[1]}". Must be "stage" or "callback".`);
+  if (!isComponentType(rawType)) {
+    return fail(
+      `Invalid Type value "${typeMatch[1]}". Must be "stage", "callback", "header", or "footer".`,
+    );
   }
 
   const nameMatch = block.match(/Name:\s*(.+)/);
@@ -87,7 +151,18 @@ export const parseComponentHeader = (
     return fail('Missing "Name:" field in @component header. Expected: Name: <ComponentName>');
   }
 
-  return Effect.succeed({ type: rawType as ComponentType, name: nameMatch[1].trim() });
+  const name = nameMatch[1].trim();
+  // "__proto__" as an object-literal key sets the prototype instead of defining
+  // an own property, so the generated Record would silently lose the entry;
+  // "constructor" is inherited-but-shadowable and kept reserved for symmetry.
+  if (name === '__proto__' || name === 'constructor') {
+    return fail(
+      `Reserved key "${name}" cannot be used as a Name. The generated registry is an ` +
+        `object literal, and this key would corrupt the Record instead of registering the component.`,
+    );
+  }
+
+  return Effect.succeed({ type: rawType, name });
 };
 
 // --------------------------------------------------------------------------
@@ -139,8 +214,18 @@ const scanDirectory = (
   expectedType: ComponentType,
 ): Effect.Effect<ComponentEntry[], RegistryScanError> =>
   findSvelteFiles(fs, path, dir).pipe(
+    // Dormant header/footer files (no "Enabled: true") are skipped entirely:
+    // not validated, not bundled. Stages and callbacks are always bundled, so
+    // every file there is a scan candidate. An invalid Enabled value still
+    // fails loudly (partitionByEnabledState surfaces it as a scan failure) so
+    // a typo can't silently disable a component the developer meant to ship.
     Effect.flatMap((files) =>
-      Effect.validateAll(files, (filePath) =>
+      expectedType === 'header' || expectedType === 'footer'
+        ? partitionByEnabledState(fs, files)
+        : Effect.succeed(files),
+    ),
+    Effect.flatMap((enabledFiles) =>
+      Effect.validateAll(enabledFiles, (filePath) =>
         fs.readFileString(filePath).pipe(
           Effect.mapError((cause) => new RegistryScanError({ directory: filePath, cause })),
           Effect.flatMap((content) =>
@@ -175,88 +260,231 @@ const scanDirectory = (
     ),
   );
 
+/**
+ * Reads each candidate header/footer file and keeps only the enabled ones
+ * ("Enabled: true"); dormant files are dropped before validation
+ * (skip-entirely). Invalid Enabled values are collected across all candidate
+ * files and reported together, mirroring `scanDirectory`'s error aggregation.
+ */
+const partitionByEnabledState = (
+  fs: FileSystem.FileSystem,
+  files: string[],
+): Effect.Effect<string[], RegistryScanError> =>
+  Effect.validateAll(files, (filePath) =>
+    fs.readFileString(filePath).pipe(
+      Effect.mapError((cause) => new RegistryScanError({ directory: filePath, cause })),
+      Effect.map((content) => ({ filePath, parsed: parseEnabledState(content) })),
+      Effect.flatMap(({ filePath, parsed }) =>
+        'error' in parsed
+          ? Effect.fail(
+              new RegistryScanError({
+                directory: filePath,
+                cause: parsed.error,
+              }),
+            )
+          : Effect.succeed({ filePath, state: parsed.state }),
+      ),
+    ),
+  ).pipe(
+    Effect.mapError(
+      (errors) =>
+        new RegistryScanError({
+          directory: 'experimental/custom',
+          cause: errors.map((registryError) => String(registryError.cause)).join('\n'),
+        }),
+    ),
+    Effect.map((tagged) =>
+      tagged.filter(({ state }) => state === 'enabled').map(({ filePath }) => filePath),
+    ),
+  );
+
 // --------------------------------------------------------------------------
 // Registry content builder (pure, exported for testing)
 // --------------------------------------------------------------------------
+
+/** Raised when components collide on a generated identifier or registry key. */
+export class RegistryCollisionError extends Data.TaggedError('RegistryCollisionError')<{
+  readonly kind: 'name-collision';
+  readonly type: string;
+  readonly name: string;
+  readonly filePaths: string[];
+}> {
+  get message(): string {
+    const collidingFiles = this.filePaths.map((filePath) => `  - ${filePath}`).join('\n');
+    return (
+      `Duplicate component name "${this.name}" in type "${this.type}". Colliding files:\n` +
+      collidingFiles +
+      `\nRename one component's "Name:" field so every ${this.type} has a unique generated identifier.`
+    );
+  }
+}
+
+/**
+ * Raised when more than one header or footer component declares
+ * `Enabled: true` in its `@component` header. Only one component of each type
+ * is bundled with the login app; the rest stay dormant on disk.
+ */
+export class RegistryEnabledLimitError extends Data.TaggedError('RegistryEnabledLimitError')<{
+  readonly type: 'header' | 'footer';
+  readonly filePaths: string[];
+}> {
+  get message(): string {
+    const enabledFiles = this.filePaths.map((filePath) => `  - ${filePath}`).join('\n');
+    return (
+      `More than one ${this.type} component is enabled. Enabled files:\n` +
+      enabledFiles +
+      `\nExactly one ${this.type} may declare "Enabled: true" in its @component header. ` +
+      `Remove the "Enabled: true" line (or set "Enabled: false") from all but one file.`
+    );
+  }
+}
+
+interface RegistryVarEntry {
+  varName: string;
+  importPath: string;
+  name: string;
+  acceptedProps: string[];
+}
 
 export function buildRegistryContent(
   path: Path.Path,
   registryDir: string,
   stageComponents: ComponentEntry[],
   callbackComponents: ComponentEntry[],
-): string {
+  headerComponents: ComponentEntry[] = [],
+  footerComponents: ComponentEntry[] = [],
+): Effect.Effect<string, RegistryCollisionError | RegistryEnabledLimitError> {
+  // Enabled limit: header/footer components are opt-in via "Enabled: true", and
+  // at most one of each type is bundled with the login app. Checked before name
+  // collisions so the actionable message wins when both problems exist.
+  const checkEnabledLimit = (type: 'header' | 'footer', entries: RegistryVarEntry[]) => {
+    if (entries.length > 1) {
+      return Effect.fail(
+        new RegistryEnabledLimitError({
+          type,
+          filePaths: entries.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
+        }),
+      );
+    }
+    return Effect.void;
+  };
   const toEntry =
     (prefix: string) =>
     ({ filePath, name, acceptedProps }: ComponentEntry) => {
       const relPath = path.relative(registryDir, filePath).replace(/\\/g, '/');
       const importPath = relPath.startsWith('.') ? relPath : `./${relPath}`;
-      return { varName: `${prefix}${toPascalCase(name)}`, importPath, name, acceptedProps };
+      return {
+        varName: `${prefix}${toPascalCase(name)}`,
+        importPath,
+        name,
+        acceptedProps,
+      };
     };
 
   const stageEntries = stageComponents.map(toEntry('Stage'));
   const callbackEntries = callbackComponents.map(toEntry('Callback'));
+  const headerEntries = headerComponents.map(toEntry('CustomHeader'));
+  const footerEntries = footerComponents.map(toEntry('CustomFooter'));
 
-  const lines: string[] = [
-    `/**`,
-    ` * AUTO-GENERATED — do not edit by hand.`,
-    ` * Regenerated by the login-framework Vite plugin on every build and on file changes during dev.`,
-    ` *`,
-    ` * Source: /experimental/custom/stages/ and /experimental/custom/callbacks/`,
-    ` */`,
-    ``,
-    `import type { Component } from 'svelte';`,
-    ``,
-    `export interface CustomRegistryEntry {`,
-    `  component: Component;`,
-    `  /** Props declared via \`export let\` in the component — only these are forwarded by the mapper. */`,
-    `  acceptedProps: string[];`,
-    `}`,
-    ``,
-  ];
+  const build = (): string => {
+    const lines: string[] = [
+      `/**`,
+      ` * AUTO-GENERATED — do not edit by hand.`,
+      ` * Regenerated by the login-framework Vite plugin on every build and on file changes during dev.`,
+      ` *`,
+      ` * Source: /experimental/custom/{stages,callbacks,headers,footers}/`,
+      ` */`,
+      ``,
+      `import type { Component } from 'svelte';`,
+      ``,
+      `export interface CustomRegistryEntry {`,
+      `  component: Component;`,
+      `  /** Props declared via \`export let\` in the component — only these are forwarded by the mapper. */`,
+      `  acceptedProps: string[];`,
+      `}`,
+      ``,
+    ];
 
-  if (stageEntries.length > 0) {
-    lines.push(`// Stage overrides / extensions`);
-    for (const { varName, importPath } of stageEntries) {
-      lines.push(`import ${varName} from '${importPath}';`);
+    const collectImportBlock = (
+      comment: string,
+      entries: { varName: string; importPath: string }[],
+    ) => {
+      if (entries.length === 0) {
+        return;
+      }
+      lines.push(comment);
+      for (const { varName, importPath } of entries) {
+        lines.push(`import ${varName} from '${importPath}';`);
+      }
+      lines.push(``);
+    };
+
+    collectImportBlock(`// Stage overrides / extensions`, stageEntries);
+    collectImportBlock(`// Callback overrides / extensions`, callbackEntries);
+    collectImportBlock(`// Custom headers (at most one enabled)`, headerEntries);
+    collectImportBlock(`// Custom footers (at most one enabled)`, footerEntries);
+
+    const pushRecordRegistry = (
+      exportName: string,
+      entries: { varName: string; name: string; acceptedProps: string[] }[],
+    ) => {
+      lines.push(`export const ${exportName}: Record<string, CustomRegistryEntry> = {`);
+      for (const { varName, name, acceptedProps } of entries) {
+        lines.push(
+          `  ${JSON.stringify(
+            name,
+          )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
+            acceptedProps,
+          )} },`,
+        );
+      }
+      lines.push(`};`);
+      lines.push(``);
+    };
+
+    pushRecordRegistry('customStageRegistry', stageEntries);
+    pushRecordRegistry('customCallbackRegistry', callbackEntries);
+    pushRecordRegistry('customHeaderRegistry', headerEntries);
+    pushRecordRegistry('customFooterRegistry', footerEntries);
+
+    return lines.join('\n');
+  };
+
+  // Name collisions: any two components sharing a generated identifier would emit a
+  // duplicate TS identifier (broken build) or a shadowed registry key (silent last-wins).
+  const byVarName = new Map<string, { types: Set<string>; filePaths: string[] }>();
+  const collect = (type: string, entries: RegistryVarEntry[]) => {
+    for (const { varName, importPath, name } of entries) {
+      const existing = byVarName.get(varName) ?? { types: new Set<string>(), filePaths: [] };
+      existing.types.add(type);
+      existing.filePaths.push(`${importPath} (Name: ${name})`);
+      byVarName.set(varName, existing);
     }
-    lines.push(``);
-  }
+  };
+  collect('stage', stageEntries);
+  collect('callback', callbackEntries);
+  collect('header', headerEntries);
+  collect('footer', footerEntries);
 
-  if (callbackEntries.length > 0) {
-    lines.push(`// Callback overrides / extensions`);
-    for (const { varName, importPath } of callbackEntries) {
-      lines.push(`import ${varName} from '${importPath}';`);
+  return Effect.gen(function* () {
+    yield* checkEnabledLimit('header', headerEntries);
+    yield* checkEnabledLimit('footer', footerEntries);
+
+    for (const [varName, collisions] of byVarName) {
+      if (collisions.filePaths.length > 1) {
+        return yield* Effect.fail(
+          new RegistryCollisionError({
+            kind: 'name-collision',
+            type: [...collisions.types].join(', '),
+            name: varName,
+            filePaths: collisions.filePaths,
+          }),
+        );
+      }
     }
-    lines.push(``);
-  }
 
-  lines.push(`export const customStageRegistry: Record<string, CustomRegistryEntry> = {`);
-  for (const { varName, name, acceptedProps } of stageEntries) {
-    lines.push(
-      `  ${JSON.stringify(
-        name,
-      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
-        acceptedProps,
-      )} },`,
-    );
-  }
-  lines.push(`};`);
-  lines.push(``);
-
-  lines.push(`export const customCallbackRegistry: Record<string, CustomRegistryEntry> = {`);
-  for (const { varName, name, acceptedProps } of callbackEntries) {
-    lines.push(
-      `  ${JSON.stringify(
-        name,
-      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
-        acceptedProps,
-      )} },`,
-    );
-  }
-  lines.push(`};`);
-  lines.push(``);
-
-  return lines.join('\n');
+    return build();
+  });
 }
 
 // --------------------------------------------------------------------------
@@ -264,13 +492,14 @@ export function buildRegistryContent(
 // --------------------------------------------------------------------------
 
 /**
- * Scans `experimental/custom/stages/` and `experimental/custom/callbacks/` for
+ * Scans `experimental/custom/{stages,callbacks,headers,footers}/` for
  * `@component`-annotated Svelte files and writes
  * `core/journey/_utilities/registry/custom-registry.ts`.
  *
  * All I/O runs in-process via the platform `FileSystem` service — no subprocess
  * spawning. Validation errors across multiple components are collected and
- * reported together.
+ * reported together. Ambiguous output (duplicate names across any type) fails
+ * with `RegistryCollisionError` rather than silently picking a winner.
  */
 export const runRegistryScript = (projectDir: string) =>
   Effect.gen(function* () {
@@ -278,18 +507,42 @@ export const runRegistryScript = (projectDir: string) =>
     const path = yield* Path.Path;
     const stageDir = path.join(projectDir, 'experimental', 'custom', 'stages');
     const callbackDir = path.join(projectDir, 'experimental', 'custom', 'callbacks');
+    const headerDir = path.join(projectDir, 'experimental', 'custom', 'headers');
+    const footerDir = path.join(projectDir, 'experimental', 'custom', 'footers');
     const registryDir = path.join(projectDir, 'core', 'journey', '_utilities', 'registry');
     const registryPath = path.join(registryDir, 'custom-registry.ts');
 
-    const [stageComponents, callbackComponents] = yield* Effect.all(
-      [
-        scanDirectory(fs, path, stageDir, 'stage'),
-        scanDirectory(fs, path, callbackDir, 'callback'),
-      ],
-      { concurrency: 'unbounded' },
-    );
+    // Validate mode across the four directory scans: a stage scan error must
+    // not mask header/footer scan errors (and vice versa) — all of them are
+    // collected and reported together, matching the per-file aggregation
+    // inside scanDirectory.
+    const [stageComponents, callbackComponents, headerComponents, footerComponents] =
+      yield* Effect.validateAll(
+        [
+          scanDirectory(fs, path, stageDir, 'stage'),
+          scanDirectory(fs, path, callbackDir, 'callback'),
+          scanDirectory(fs, path, headerDir, 'header'),
+          scanDirectory(fs, path, footerDir, 'footer'),
+        ],
+        (scan) => scan,
+      ).pipe(
+        Effect.mapError(
+          (errors) =>
+            new RegistryScanError({
+              directory: projectDir,
+              cause: errors.map((registryError) => String(registryError.cause)).join('\n'),
+            }),
+        ),
+      );
 
-    const content = buildRegistryContent(path, registryDir, stageComponents, callbackComponents);
+    const content = yield* buildRegistryContent(
+      path,
+      registryDir,
+      stageComponents,
+      callbackComponents,
+      headerComponents,
+      footerComponents,
+    );
 
     yield* fs
       .makeDirectory(registryDir, { recursive: true })
@@ -298,31 +551,39 @@ export const runRegistryScript = (projectDir: string) =>
       .writeFileString(registryPath, content)
       .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: registryPath, cause })));
 
-    const total = stageComponents.length + callbackComponents.length;
+    const lines = [
+      stageComponents.length > 0 &&
+        `  Stages    (${stageComponents.length}): ${stageComponents
+          .map((stageComponent) => stageComponent.name)
+          .join(', ')}`,
+      callbackComponents.length > 0 &&
+        `  Callbacks (${callbackComponents.length}): ${callbackComponents
+          .map((callbackComponent) => callbackComponent.name)
+          .join(', ')}`,
+      headerComponents.length > 0 &&
+        `  Headers   (${headerComponents.length}): ${headerComponents
+          .map((headerComponent) => headerComponent.name)
+          .join(', ')}`,
+      footerComponents.length > 0 &&
+        `  Footers   (${footerComponents.length}): ${footerComponents
+          .map((footerComponent) => footerComponent.name)
+          .join(', ')}`,
+    ].filter((line): line is string => line !== false);
+
+    const total = lines.length;
     if (total === 0) {
       yield* Console.log(
         `custom-registry.ts generated (no custom components found — registries are empty)`,
       );
     } else {
       yield* Console.log(`custom-registry.ts generated:`);
-      if (stageComponents.length > 0) {
-        yield* Console.log(
-          `  Stages    (${stageComponents.length}): ${stageComponents
-            .map((stageComponent) => stageComponent.name)
-            .join(', ')}`,
-        );
-      }
-      if (callbackComponents.length > 0) {
-        yield* Console.log(
-          `  Callbacks (${callbackComponents.length}): ${callbackComponents
-            .map((callbackComponent) => callbackComponent.name)
-            .join(', ')}`,
-        );
+      for (const line of lines) {
+        yield* Console.log(line);
       }
     }
   });
 
-class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
+export class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
   readonly directory: string;
   readonly cause?: unknown;
 }> {}

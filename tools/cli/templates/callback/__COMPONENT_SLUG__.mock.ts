@@ -6,7 +6,7 @@
  * an authentication tree.
  */
 
-import { createJourneyStep } from '$login-framework';
+import { createJourneyStep } from '$login-framework-exports';
 
 export default createJourneyStep({
   authId: 'test-auth-id',

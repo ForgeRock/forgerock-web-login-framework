@@ -25,7 +25,7 @@ submit button, links).
     interpolate,
     styleStore,
     T,
-  } from '$login-framework';
+  } from '$login-framework-exports';
 
   import type { JourneyStep } from '@forgerock/journey-client/types';
 
@@ -36,7 +36,7 @@ submit button, links).
     StageJourneyObject,
     StepMetadata,
     StyleObject,
-  } from '$login-framework';
+  } from '$login-framework-exports';
 
   /** Display mode — determines which chrome is visible (header, links, etc.). */
   export let componentStyle: 'app' | 'inline' | 'modal';

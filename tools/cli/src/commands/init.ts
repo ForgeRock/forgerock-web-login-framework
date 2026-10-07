@@ -5,7 +5,6 @@ import { Console, Effect } from 'effect';
 import { writeVersion } from '../config/version.js';
 import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
 import { copyWithExclusions, expandTilde, isFrameworkDirectory } from '../services/file-system.js';
-import { runRegistryScript } from '../services/registry.js';
 import { resolveSource } from './source.js';
 
 import type { Option } from 'effect';
@@ -19,6 +18,12 @@ const PNPM_WORKSPACE = `packages:
   - 'e2e'
 `;
 
+/**
+ * Custom component directories scaffolded (with .gitkeep) at project init.
+ * Protected during `ping-lf update` — see PROTECTED_DIRS in services/file-system.
+ */
+export const CUSTOM_COMPONENT_DIRS = ['callbacks', 'stages', 'headers', 'footers'] as const;
+
 const nextStepsMessage = (dir: string) => `
 Done. Project initialized successfully.
 
@@ -31,6 +36,8 @@ Next steps:
 To scaffold your first custom component:
   ping-lf generate callback MyCallback
   ping-lf generate stage MyStage
+  ping-lf generate header MyHeader
+  ping-lf generate footer MyFooter
 
 Read the authoring guide: experimental/custom/README.md
 `;
@@ -87,12 +94,12 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     // ── 4. Scaffold experimental/custom/ ──────────────────────────────────
     // copyWithExclusions already copies experimental/custom/demo/,
     // login-framework.ts, README.md, and tsconfig.json from the source.
-    // Only callbacks/ and stages/ are protected (they hold user components).
+    // Only the custom component dirs are protected (they hold user components).
     // Create them as empty dirs with .gitkeep — components come via `ping-lf generate`.
     yield* Console.log('Scaffolding custom component directories...');
 
     yield* Effect.forEach(
-      ['callbacks', 'stages'] as const,
+      CUSTOM_COMPONENT_DIRS,
       (dir) =>
         Effect.gen(function* () {
           const customDir = path.join(resolvedDir, 'experimental', 'custom', dir);
@@ -102,20 +109,13 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
       { concurrency: 'unbounded', discard: true },
     );
 
-    // ── 5. Generate custom-registry.ts ────────────────────────────────────
-    // Run the canonical registry script so the file is immediately present
-    // with the correct CustomRegistryEntry format. The empty callbacks/ and
-    // stages/ dirs produce empty registries — no custom components yet.
-    yield* Console.log('Generating custom component registry...');
-    yield* runRegistryScript(resolvedDir);
-
-    // ── 6. Write .generator-version ────────────────────────────────────────
+    // ── 5. Write .generator-version ────────────────────────────────────────
     yield* writeVersion(resolvedDir, {
       version: resolvedVersion,
       generatedAt: new Date().toISOString(),
     });
 
-    // ── 7. Print next steps ───────────────────────────────────────────────
+    // ── 6. Print next steps ───────────────────────────────────────────────
     yield* Console.log(nextStepsMessage(directory));
   });
 
