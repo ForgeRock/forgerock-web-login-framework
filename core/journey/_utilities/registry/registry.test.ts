@@ -33,6 +33,16 @@ const nodePath = Effect.runSync(
   ),
 );
 
+// buildRegistryContent returns an Effect (never throws): success unwraps the
+// generated content, failure unwraps the typed error — mirroring decode/decodeError.
+const buildContent = (...args: Parameters<typeof buildRegistryContent>): string =>
+  Effect.runSync(buildRegistryContent(...args));
+
+const buildError = (
+  ...args: Parameters<typeof buildRegistryContent>
+): RegistryCollisionError | RegistryEnabledLimitError =>
+  Effect.runSync(Effect.flip(buildRegistryContent(...args)));
+
 describe('parseComponentHeader', () => {
   describe('valid headers', () => {
     it('parses a stage component header', () => {
@@ -197,7 +207,7 @@ describe('buildRegistryContent enabled limit', () => {
   });
 
   it('allows one enabled header', () => {
-    const output = buildRegistryContent(
+    const output = buildContent(
       nodePath,
       registryDir,
       [],
@@ -207,89 +217,86 @@ describe('buildRegistryContent enabled limit', () => {
     expect(output).toContain('"One": {');
   });
 
-  it('throws when two headers are enabled', () => {
-    const twoEnabled = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [],
-        [],
-        [
-          enabledHeader('/repo/experimental/custom/headers/a/one.svelte', 'One'),
-          enabledHeader('/repo/experimental/custom/headers/b/two.svelte', 'Two'),
-        ],
-      );
-    expect(twoEnabled).toThrow(RegistryEnabledLimitError);
-    expect(twoEnabled).toThrow(/More than one header component is enabled/);
-    expect(twoEnabled).toThrow(/a\/one\.svelte/);
-    expect(twoEnabled).toThrow(/b\/two\.svelte/);
+  it('fails when two headers are enabled', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [
+        enabledHeader('/repo/experimental/custom/headers/a/one.svelte', 'One'),
+        enabledHeader('/repo/experimental/custom/headers/b/two.svelte', 'Two'),
+      ],
+    );
+    expect(error instanceof RegistryEnabledLimitError).toBe(true);
+    expect(error.message).toMatch(/More than one header component is enabled/);
+    expect(error.message).toMatch(/a\/one\.svelte/);
+    expect(error.message).toMatch(/b\/two\.svelte/);
   });
 
-  it('throws when two footers are enabled', () => {
-    const twoEnabled = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [],
-        [],
-        [],
-        [
-          {
-            filePath: '/repo/experimental/custom/footers/a/one.svelte',
-            name: 'One',
-            type: 'footer',
-            acceptedProps: [],
-          },
-          {
-            filePath: '/repo/experimental/custom/footers/b/two.svelte',
-            name: 'Two',
-            type: 'footer',
-            acceptedProps: [],
-          },
-        ],
-      );
-    expect(twoEnabled).toThrow(RegistryEnabledLimitError);
-    expect(twoEnabled).toThrow(/More than one footer component is enabled/);
+  it('fails when two footers are enabled', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [],
+      [
+        {
+          filePath: '/repo/experimental/custom/footers/a/one.svelte',
+          name: 'One',
+          type: 'footer',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/footers/b/two.svelte',
+          name: 'Two',
+          type: 'footer',
+          acceptedProps: [],
+        },
+      ],
+    );
+    expect(error instanceof RegistryEnabledLimitError).toBe(true);
+    expect(error.message).toMatch(/More than one footer component is enabled/);
   });
 
   it('reports the enabled limit before name collisions when both problems exist', () => {
-    const both = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [],
-        [],
-        [
-          enabledHeader('/repo/experimental/custom/headers/a/same.svelte', 'Same'),
-          enabledHeader('/repo/experimental/custom/headers/b/same.svelte', 'Same'),
-        ],
-      );
-    expect(both).toThrow(RegistryEnabledLimitError);
-    expect(both).not.toThrow(RegistryCollisionError);
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [
+        enabledHeader('/repo/experimental/custom/headers/a/same.svelte', 'Same'),
+        enabledHeader('/repo/experimental/custom/headers/b/same.svelte', 'Same'),
+      ],
+    );
+    expect(error instanceof RegistryEnabledLimitError).toBe(true);
+    expect(error instanceof RegistryCollisionError).toBe(false);
   });
 
   it('never enforces the enabled limit on stages and callbacks (always bundled)', () => {
-    const multi = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [
-          {
-            filePath: '/repo/experimental/custom/stages/a/one.svelte',
-            name: 'One',
-            type: 'stage',
-            acceptedProps: [],
-          },
-          {
-            filePath: '/repo/experimental/custom/stages/b/two.svelte',
-            name: 'Two',
-            type: 'stage',
-            acceptedProps: [],
-          },
-        ],
-        [],
-      );
-    expect(multi).not.toThrow();
+    const output = buildContent(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/a/one.svelte',
+          name: 'One',
+          type: 'stage',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/stages/b/two.svelte',
+          name: 'Two',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(output).toContain('"One": {');
+    expect(output).toContain('"Two": {');
   });
 });
 
@@ -347,7 +354,7 @@ describe('buildRegistryContent', () => {
   const registryDir = '/repo/core/journey/_utilities/registry';
 
   it('produces empty registries when no components are scanned', () => {
-    const output = buildRegistryContent(nodePath, registryDir, [], []);
+    const output = buildContent(nodePath, registryDir, [], []);
     expect(output).toContain(
       'export const customStageRegistry: Record<string, CustomRegistryEntry> = {',
     );
@@ -359,7 +366,7 @@ describe('buildRegistryContent', () => {
   });
 
   it('emits import lines and registry entries for stages and callbacks', () => {
-    const output = buildRegistryContent(
+    const output = buildContent(
       nodePath,
       registryDir,
       [
@@ -395,7 +402,7 @@ describe('buildRegistryContent', () => {
   });
 
   it('uses PascalCase identifiers derived from arbitrary names', () => {
-    const output = buildRegistryContent(
+    const output = buildContent(
       nodePath,
       registryDir,
       [
@@ -412,7 +419,7 @@ describe('buildRegistryContent', () => {
   });
 
   it('emits a full Record for a header component', () => {
-    const output = buildRegistryContent(
+    const output = buildContent(
       nodePath,
       registryDir,
       [],
@@ -439,7 +446,7 @@ describe('buildRegistryContent', () => {
   });
 
   it('emits a full Record for a footer component', () => {
-    const output = buildRegistryContent(
+    const output = buildContent(
       nodePath,
       registryDir,
       [],
@@ -466,13 +473,13 @@ describe('buildRegistryContent', () => {
   });
 
   it('does not emit default pointer exports', () => {
-    const output = buildRegistryContent(nodePath, registryDir, [], [], [], []);
+    const output = buildContent(nodePath, registryDir, [], [], [], []);
     expect(output).not.toContain('customHeaderDefault');
     expect(output).not.toContain('customFooterDefault');
   });
 
   it('emits empty Record braces for an empty header registry', () => {
-    const output = buildRegistryContent(nodePath, registryDir, [], [], [], []);
+    const output = buildContent(nodePath, registryDir, [], [], [], []);
     const headerBlock = output.slice(
       output.indexOf('customHeaderRegistry'),
       output.indexOf('customFooterRegistry'),
@@ -480,170 +487,160 @@ describe('buildRegistryContent', () => {
     expect(headerBlock).toContain('};');
   });
 
-  it('throws RegistryEnabledLimitError when two header components are passed (at most one enabled)', () => {
-    const twoHeaders = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [],
-        [],
-        [
-          {
-            filePath: '/repo/experimental/custom/headers/a/one.svelte',
-            name: 'One',
-            type: 'header',
-            acceptedProps: [],
-          },
-          {
-            filePath: '/repo/experimental/custom/headers/b/two.svelte',
-            name: 'Two',
-            type: 'header',
-            acceptedProps: [],
-          },
-        ],
-        [],
-      );
-    expect(twoHeaders).toThrow(RegistryEnabledLimitError);
-    expect(twoHeaders).toThrow(/More than one header component is enabled/);
+  it('fails RegistryEnabledLimitError when two header components are passed (at most one enabled)', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [
+        {
+          filePath: '/repo/experimental/custom/headers/a/one.svelte',
+          name: 'One',
+          type: 'header',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/headers/b/two.svelte',
+          name: 'Two',
+          type: 'header',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(error instanceof RegistryEnabledLimitError).toBe(true);
+    expect(error.message).toMatch(/More than one header component is enabled/);
   });
 
-  it('throws RegistryEnabledLimitError instead of a collision error when 2+ enabled headers share a name', () => {
-    const duplicate = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [],
-        [],
-        [
-          {
-            filePath: '/repo/experimental/custom/headers/a/brand.svelte',
-            name: 'Brand',
-            type: 'header',
-            acceptedProps: [],
-          },
-          {
-            filePath: '/repo/experimental/custom/headers/b/brand.svelte',
-            name: 'Brand',
-            type: 'header',
-            acceptedProps: [],
-          },
-        ],
-        [],
-      );
-    expect(duplicate).toThrow(RegistryEnabledLimitError);
-    expect(duplicate).toThrow(/a\/brand\.svelte/);
-    expect(duplicate).toThrow(/b\/brand\.svelte/);
+  it('fails RegistryEnabledLimitError instead of a collision error when 2+ enabled headers share a name', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [
+        {
+          filePath: '/repo/experimental/custom/headers/a/brand.svelte',
+          name: 'Brand',
+          type: 'header',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/headers/b/brand.svelte',
+          name: 'Brand',
+          type: 'header',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(error instanceof RegistryEnabledLimitError).toBe(true);
+    expect(error.message).toMatch(/a\/brand\.svelte/);
+    expect(error.message).toMatch(/b\/brand\.svelte/);
   });
 
-  it('throws when two components share a registry key (exact duplicate name)', () => {
-    const duplicate = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [
-          {
-            filePath: '/repo/experimental/custom/stages/a/login.svelte',
-            name: 'Login',
-            type: 'stage',
-            acceptedProps: [],
-          },
-          {
-            filePath: '/repo/experimental/custom/stages/b/login.svelte',
-            name: 'Login',
-            type: 'stage',
-            acceptedProps: [],
-          },
-        ],
-        [],
-      );
-    expect(duplicate).toThrow(/Duplicate component name "StageLogin" in type "stage"/);
-    expect(duplicate).toThrow(/a\/login\.svelte/);
-    expect(duplicate).toThrow(/b\/login\.svelte/);
+  it('fails when two components share a registry key (exact duplicate name)', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/a/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/stages/b/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(error.message).toMatch(/Duplicate component name "StageLogin" in type "stage"/);
+    expect(error.message).toMatch(/a\/login\.svelte/);
+    expect(error.message).toMatch(/b\/login\.svelte/);
   });
 
-  it('throws when distinct names collide in the generated identifier ("My Login" vs "MyLogin")', () => {
-    const colliding = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [
-          {
-            filePath: '/repo/experimental/custom/stages/my-login/login.svelte',
-            name: 'My Login',
-            type: 'stage',
-            acceptedProps: [],
-          },
-          {
-            filePath: '/repo/experimental/custom/stages/mylogin/login.svelte',
-            name: 'MyLogin',
-            type: 'stage',
-            acceptedProps: [],
-          },
-        ],
-        [],
-      );
-    expect(colliding).toThrow(/Duplicate component name "StageMyLogin" in type "stage"/);
-    expect(colliding).toThrow(/my-login\/login\.svelte/);
-    expect(colliding).toThrow(/mylogin\/login\.svelte/);
+  it('fails when distinct names collide in the generated identifier ("My Login" vs "MyLogin")', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/my-login/login.svelte',
+          name: 'My Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/stages/mylogin/login.svelte',
+          name: 'MyLogin',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(error.message).toMatch(/Duplicate component name "StageMyLogin" in type "stage"/);
+    expect(error.message).toMatch(/my-login\/login\.svelte/);
+    expect(error.message).toMatch(/mylogin\/login\.svelte/);
   });
 
-  it('throws when a stage and a callback produce the same identifier across registries', () => {
-    const colliding = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [
-          {
-            filePath: '/repo/experimental/custom/stages/foo/foo.svelte',
-            name: 'Foo',
-            type: 'stage',
-            acceptedProps: [],
-          },
-        ],
-        [
-          {
-            filePath: '/repo/experimental/custom/callbacks/foo/foo.svelte',
-            name: 'StageFoo',
-            type: 'callback',
-            acceptedProps: [],
-          },
-        ],
-      );
+  it('does not fail when a stage and a callback produce the same identifier across registries', () => {
     // Stage prefix + "Foo" → StageFoo; callback prefix + "StageFoo" → CallbackStageFoo.
     // Distinct identifiers, so this is NOT a collision — verify both registries emit.
-    expect(colliding).not.toThrow();
-    const output = colliding();
+    const output = buildContent(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/foo/foo.svelte',
+          name: 'Foo',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [
+        {
+          filePath: '/repo/experimental/custom/callbacks/foo/foo.svelte',
+          name: 'StageFoo',
+          type: 'callback',
+          acceptedProps: [],
+        },
+      ],
+    );
     expect(output).toContain('StageFoo');
     expect(output).toContain('CallbackStageFoo');
   });
 
   it('allows a header and footer with identifiers that remain distinct', () => {
-    const distinct = () =>
-      buildRegistryContent(
-        nodePath,
-        registryDir,
-        [],
-        [],
-        [
-          {
-            filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
-            name: 'Brand',
-            type: 'header',
-            acceptedProps: [],
-          },
-        ],
-        [
-          {
-            filePath: '/repo/experimental/custom/footers/brand/brand.svelte',
-            name: 'Brand',
-            type: 'footer',
-            acceptedProps: [],
-          },
-        ],
-      );
     // CustomHeaderBrand vs CustomFooterBrand — distinct identifiers, both registries emit.
-    expect(distinct).not.toThrow();
-    const output = distinct();
+    const output = buildContent(
+      nodePath,
+      registryDir,
+      [],
+      [],
+      [
+        {
+          filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
+          name: 'Brand',
+          type: 'header',
+          acceptedProps: [],
+        },
+      ],
+      [
+        {
+          filePath: '/repo/experimental/custom/footers/brand/brand.svelte',
+          name: 'Brand',
+          type: 'footer',
+          acceptedProps: [],
+        },
+      ],
+    );
     expect(output).toContain('CustomHeaderBrand');
     expect(output).toContain('CustomFooterBrand');
   });
