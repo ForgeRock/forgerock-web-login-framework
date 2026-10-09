@@ -8,7 +8,7 @@
  * */
 
 import { FileSystem, Path } from '@effect/platform';
-import { Context, Data, Effect, Layer, Schema } from 'effect';
+import { Array, Context, Data, DateTime, Effect, Either, Layer, Schema } from 'effect';
 import { randomUUID } from 'node:crypto';
 
 import {
@@ -62,6 +62,23 @@ export interface ComponentStoreApi {
 /** Service tag for component record storage; layers provide implementations. */
 export const Store = Context.GenericTag<ComponentStoreApi>('Store');
 
+/** Parses and validates serialized component-record JSON. */
+const decodeRecord = (content: string) =>
+  Effect.catchTag(
+    Schema.decodeUnknown(Schema.parseJson(ComponentRecordSchema))(content),
+    'ParseError',
+    (cause) => new StoreStorageError({ message: 'Unable to decode component record', cause }),
+  );
+
+/** Builds a safe repository path for a component record. */
+const recordPath = (path: Path.Path, trackedRoot: string, type: ComponentType, id: string) => {
+  const relPath = `${type}/${id}.json`;
+  if (!isSafeRelativePath(relPath)) {
+    return undefined;
+  }
+  return path.join(trackedRoot, relPath);
+};
+
 /**
  * Component storage operations backed by the configured component repository. List
  * skips malformed JSON artifacts and logs a warning for each one.
@@ -87,27 +104,34 @@ export const StoreLive = (
 
       const trackedRoot = config.trackedRoot;
 
+      /** Serializes an already-validated record for the writer; encoding adds no validation. */
+      const encodeRecord = (record: typeof ComponentRecordSchema.Type): string =>
+        JSON.stringify(record);
+
       const writeRecord = (
         type: ComponentType,
         id: string,
-        record: ComponentRecord,
-      ): Effect.Effect<ComponentRecord, ComponentStoreError> =>
-        writer([
-          {
-            relPath: `${type}/${id}.json`,
-            content: Schema.encodeSync(Schema.parseJson(ComponentRecordSchema))(record),
-          },
-        ]).pipe(
-          Effect.mapError(
-            (cause) => new StoreStorageError({ message: 'Unable to save component record', cause }),
-          ),
-          Effect.as(record),
-        );
+        record: typeof ComponentRecordSchema.Type,
+      ): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> =>
+        writer
+          .write([
+            {
+              relPath: `${type}/${id}.json`,
+              content: encodeRecord(record),
+            },
+          ])
+          .pipe(
+            Effect.mapError(
+              (cause) =>
+                new StoreStorageError({ message: 'Unable to save component record', cause }),
+            ),
+            Effect.as(record),
+          );
 
       const readRecord = (
         type: ComponentType,
         id: string,
-      ): Effect.Effect<ComponentRecord, ComponentStoreError> => {
+      ): Effect.Effect<typeof ComponentRecordSchema.Type, ComponentStoreError> => {
         const filePath = recordPath(path, trackedRoot, type, id);
         if (filePath === undefined) {
           return Effect.fail(
@@ -115,62 +139,103 @@ export const StoreLive = (
           );
         }
         return fileSystem.readFileString(filePath).pipe(
-          Effect.mapError((cause) =>
-            cause._tag === 'SystemError' && cause.reason === 'NotFound'
-              ? new StoreNotFoundError({ message: `Component not found: ${type}/${id}`, cause })
-              : new StoreStorageError({
+          Effect.catchTags({
+            SystemError: (cause) =>
+              cause.reason === 'NotFound'
+                ? Effect.fail(
+                    new StoreNotFoundError({
+                      message: `Component not found: ${type}/${id}`,
+                      cause,
+                    }),
+                  )
+                : Effect.fail(
+                    new StoreStorageError({
+                      message: `Unable to read component: ${type}/${id}`,
+                      cause,
+                    }),
+                  ),
+            BadArgument: (cause) =>
+              Effect.fail(
+                new StoreStorageError({
                   message: `Unable to read component: ${type}/${id}`,
                   cause,
                 }),
-          ),
-          Effect.flatMap(decodeRecord(`Unable to decode component: ${type}/${id}`)),
+              ),
+          }),
+          Effect.flatMap(decodeRecord),
         );
       };
 
-      const readDirectoryEntries =
-        (directory: string, type: ComponentType) => (entries: ReadonlyArray<string>) =>
-          Effect.forEach(entries, (entry) =>
-            Effect.map(
-              Effect.either(
-                fileSystem.readFileString(`${directory}/${entry}`).pipe(
-                  Effect.mapError(
-                    (cause) =>
-                      new StoreStorageError({
-                        message: `Unable to decode component: ${type}/${entry}`,
-                        cause,
-                      }),
-                  ),
-                  Effect.flatMap(decodeRecord(`Unable to decode component: ${type}/${entry}`)),
-                ),
+      /** Reads one directory entry, tagging read and decode failures for the list projection. */
+      const readEntry = (directory: string, type: ComponentType) => (entry: string) =>
+        fileSystem.readFileString(`${directory}/${entry}`).pipe(
+          Effect.catchTags({
+            SystemError: (cause) =>
+              Effect.fail(
+                new StoreStorageError({
+                  message: `Unable to decode component: ${type}/${entry}`,
+                  cause,
+                }),
               ),
-              (either) => ({ entry, either }),
-            ),
-          );
+            BadArgument: (cause) =>
+              Effect.fail(
+                new StoreStorageError({
+                  message: `Unable to decode component: ${type}/${entry}`,
+                  cause,
+                }),
+              ),
+          }),
+          Effect.flatMap(decodeRecord),
+        );
 
       return {
         list: (type) => {
           const directory = path.join(trackedRoot, type);
           return fileSystem.readDirectory(directory).pipe(
-            Effect.mapError((cause) =>
-              cause._tag === 'SystemError' && cause.reason === 'NotFound'
-                ? new StoreNotFoundError({ message: `No components directory: ${type}`, cause })
-                : new StoreStorageError({ message: `Unable to list components: ${type}`, cause }),
-            ),
-            Effect.catchAll((error) =>
-              error._tag === 'StoreNotFoundError' ? Effect.succeed([]) : Effect.fail(error),
-            ),
+            Effect.catchTags({
+              SystemError: (cause) =>
+                cause.reason === 'NotFound'
+                  ? Effect.fail(
+                      new StoreNotFoundError({
+                        message: `No components directory: ${type}`,
+                        cause,
+                      }),
+                    )
+                  : Effect.fail(
+                      new StoreStorageError({
+                        message: `Unable to list components: ${type}`,
+                        cause,
+                      }),
+                    ),
+              BadArgument: (cause) =>
+                Effect.fail(
+                  new StoreStorageError({
+                    message: `Unable to list components: ${type}`,
+                    cause,
+                  }),
+                ),
+            }),
+            Effect.catchTag('StoreNotFoundError', () => Effect.succeed([] as Array<string>)),
             Effect.map((entries) => entries.filter((entry) => entry.endsWith('.json'))),
-            Effect.flatMap(readDirectoryEntries(directory, type)),
+            Effect.flatMap((entries) =>
+              Effect.forEach(entries, (entry) =>
+                readEntry(
+                  directory,
+                  type,
+                )(entry).pipe(
+                  Effect.either,
+                  Effect.map((either) => ({ entry, either })),
+                ),
+              ),
+            ),
             Effect.map((decoded) => {
-              const records: Array<ComponentRecord> = [];
-              for (const { entry, either } of decoded) {
-                if (either._tag === 'Right') {
-                  records.push(either.right);
-                } else {
-                  log.warn('[components] skipped unreadable record', {
-                    path: `${type}/${entry}`,
-                  });
-                }
+              const [failed, records] = Array.partitionMap(decoded, ({ entry, either }) =>
+                Either.mapLeft(either, () => entry),
+              );
+              for (const entry of failed) {
+                log.warn('[components] skipped unreadable record', {
+                  path: `${type}/${entry}`,
+                });
               }
               return records;
             }),
@@ -179,29 +244,32 @@ export const StoreLive = (
 
         get: (type, id) => readRecord(type, id),
 
-        create: (type, request) => {
-          const id = randomUUID();
-          const now = new Date().toISOString();
-          return writeRecord(type, id, {
-            id,
-            src: request.src,
-            ...(request.json === undefined ? {} : { json: request.json }),
-            meta: { ...request.meta, createdDate: now, modifiedDate: now },
-          });
-        },
-
-        update: (type, id, request) =>
-          Effect.flatMap(readRecord(type, id), (existing) =>
-            writeRecord(type, id, {
+        create: (type, request) =>
+          Effect.flatMap(DateTime.now, (now) => {
+            const id = randomUUID();
+            const timestamp = DateTime.formatIso(now);
+            return writeRecord(type, id, {
               id,
               src: request.src,
               ...(request.json === undefined ? {} : { json: request.json }),
-              meta: {
-                ...request.meta,
-                createdDate: existing.meta.createdDate,
-                modifiedDate: new Date().toISOString(),
-              },
-            }),
+              meta: { ...request.meta, createdDate: timestamp, modifiedDate: timestamp },
+            });
+          }),
+
+        update: (type, id, request) =>
+          Effect.flatMap(DateTime.now, (now) =>
+            Effect.flatMap(readRecord(type, id), (existing) =>
+              writeRecord(type, id, {
+                id,
+                src: request.src,
+                ...(request.json === undefined ? {} : { json: request.json }),
+                meta: {
+                  ...request.meta,
+                  createdDate: existing.meta.createdDate,
+                  modifiedDate: DateTime.formatIso(now),
+                },
+              }),
+            ),
           ),
 
         remove: (type, id) => {
@@ -214,13 +282,22 @@ export const StoreLive = (
           return readRecord(type, id).pipe(
             Effect.flatMap(() =>
               fileSystem.remove(filePath).pipe(
-                Effect.mapError(
-                  (cause) =>
-                    new StoreStorageError({
-                      message: `Unable to delete component: ${type}/${id}`,
-                      cause,
-                    }),
-                ),
+                Effect.catchTags({
+                  SystemError: (cause) =>
+                    Effect.fail(
+                      new StoreStorageError({
+                        message: `Unable to delete component: ${type}/${id}`,
+                        cause,
+                      }),
+                    ),
+                  BadArgument: (cause) =>
+                    Effect.fail(
+                      new StoreStorageError({
+                        message: `Unable to delete component: ${type}/${id}`,
+                        cause,
+                      }),
+                    ),
+                }),
               ),
             ),
             Effect.flatMap(() =>
@@ -238,22 +315,4 @@ export const StoreLive = (
         },
       };
     }),
-  );
-
-type ComponentRecord = typeof ComponentRecordSchema.Type;
-
-/** Builds a safe repository path for a component record. */
-const recordPath = (path: Path.Path, trackedRoot: string, type: ComponentType, id: string) => {
-  const relPath = `${type}/${id}.json`;
-  if (!isSafeRelativePath(relPath)) {
-    return undefined;
-  }
-  return path.join(trackedRoot, relPath);
-};
-
-/** Parses and validates serialized component-record JSON, replacing bare JSON.parse. */
-const decodeRecord = (message: string) => (content: string) =>
-  Effect.mapError(
-    Schema.decodeUnknown(Schema.parseJson(ComponentRecordSchema))(content),
-    (cause) => new StoreStorageError({ message, cause }),
   );

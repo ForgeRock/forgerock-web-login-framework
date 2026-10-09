@@ -37,7 +37,7 @@ const writerLayer = (repoDir: string) =>
   );
 
 const saveEffect = (relPath: string, content: string) =>
-  Effect.flatMap(Writer, (writer) => writer([{ relPath, content }]));
+  Effect.flatMap(Writer, (writer) => writer.write([{ relPath, content }]));
 
 const readUtf8 = (path: string) => readFile(path, 'utf8');
 
@@ -158,7 +158,7 @@ describe('WriterLive', () => {
       const repoDir = yield* Effect.promise(makeTemporaryDirectory);
       const exit = yield* Effect.either(
         Effect.flatMap(Writer, (writer) =>
-          writer([
+          writer.write([
             { relPath: 'journeys/login.json', content: '{}' },
             { relPath: '../outside.json', content: '{}' },
           ]),
@@ -175,7 +175,7 @@ describe('WriterLive', () => {
       const repoDir = yield* Effect.promise(makeTemporaryDirectory);
       const exit = yield* Effect.either(
         Effect.flatMap(Writer, (writer) =>
-          writer([
+          writer.write([
             { relPath: 'same.json', content: 'a' },
             { relPath: 'same.json', content: 'b' },
           ]),
@@ -191,7 +191,7 @@ describe('WriterLive', () => {
       const trackedRoot = join(repoDir, 'config');
       const exit = yield* Effect.either(
         Effect.flatMap(Writer, (writer) =>
-          writer([
+          writer.write([
             { relPath: 'a.json', content: 'a' },
             { relPath: 'b.json', content: 'b' },
           ]),

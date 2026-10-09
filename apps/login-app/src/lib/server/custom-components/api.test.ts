@@ -44,9 +44,9 @@ import { type ComponentLogger, Log } from './shared';
 import { Store, StoreLive, StoreStorageError } from './store/store';
 import { FileSyncLive, WriterLive } from './writer/writer';
 
-import type { AuthFn } from './auth/auth';
+import type { AuthService } from './auth/auth';
 import type { AmSessionReader } from './auth/auth';
-import type { ComponentPublishFn } from './publish/publish';
+import type { PublishService } from './publish/publish';
 import type { ComponentStoreApi } from './store/store';
 import type { AmSession } from '$server/sessions';
 
@@ -92,7 +92,7 @@ const makeGraph = (log: ComponentLogger, authReader: AmSessionReader) =>
         Layer.provide(Layer.succeed(Log, log)),
       ),
       AuthLive(authReader),
-      PublishLive.pipe(Layer.provide(writerLayer)),
+      PublishLive.pipe(Layer.provide(writerLayer), Layer.provide(Layer.succeed(Log, log))),
       Layer.succeed(Log, log),
     );
   });
@@ -102,7 +102,7 @@ const runWith = <A>(
   effect: Effect.Effect<
     A,
     never,
-    ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger
+    ComponentStoreApi | AuthService | PublishService | ComponentLogger
   >,
   log: ComponentLogger,
   authReader: AmSessionReader = adminReader,
@@ -122,7 +122,7 @@ const withGraph =
     body: Effect.Effect<
       A,
       never,
-      ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger
+      ComponentStoreApi | AuthService | PublishService | ComponentLogger
     >,
   ) =>
     Effect.flatMap(makeGraph(log, authReader), (layer) =>
@@ -551,17 +551,18 @@ describe('Component Endpoint Handlers', () => {
     it.effect('returns 500 when persisting the bundle fails', () =>
       Effect.gen(function* () {
         const log = makeLog();
-        const failingPublish = Layer.succeed(Publish, () =>
-          Effect.fail(
-            new PublishStorageError({
-              message: 'Unable to persist component bundle',
-            }),
-          ),
-        );
+        const failingPublish = Layer.succeed(Publish, {
+          publish: () =>
+            Effect.fail(
+              new PublishStorageError({
+                message: 'Unable to persist component bundle',
+              }),
+            ),
+        });
         const layer = Layer.mergeAll(
           failingPublish,
           Layer.succeed(Log, log),
-          Layer.succeed(Auth, () => Effect.succeed({ uid: 'test-admin' })),
+          Layer.succeed(Auth, { authenticate: () => Effect.succeed({ uid: 'test-admin' }) }),
         );
         const response = yield* Effect.provide(
           publishComponentSource(
@@ -789,7 +790,7 @@ describe('Component API logging', () => {
           Layer.provide(Path.layer),
         ),
         Layer.succeed(Log, log),
-        Layer.succeed(Auth, () => Effect.succeed({ uid: 'test-admin' })),
+        Layer.succeed(Auth, { authenticate: () => Effect.succeed({ uid: 'test-admin' }) }),
       );
       const response = yield* Effect.provide(createComponent(createRequest(), 'callbacks'), layer);
 
@@ -854,22 +855,20 @@ describe('Component API logging', () => {
     Effect.gen(function* () {
       const cause = new Error('disk full');
       const log = makeLog();
-      const failingPublish = Layer.effect(
-        Publish,
-        Effect.succeed(() =>
+      const failingPublish = Layer.succeed(Publish, {
+        publish: () =>
           Effect.fail(
             new PublishStorageError({
               message: 'Unable to persist component bundle',
               cause,
             }),
           ),
-        ),
-      );
+      });
 
       const layer = Layer.mergeAll(
         failingPublish,
         Layer.succeed(Log, log),
-        Layer.succeed(Auth, () => Effect.succeed({ uid: 'test-admin' })),
+        Layer.succeed(Auth, { authenticate: () => Effect.succeed({ uid: 'test-admin' }) }),
       );
       const response = yield* Effect.provide(
         publishComponentSource(publishRequest({ code: 'bundle code' })),

@@ -16,18 +16,18 @@ import { getUserRolesFromSession } from '$server/sessions';
 import { AuthLive } from './auth/auth';
 import { PublishLive } from './publish/publish';
 import { componentConfigDir, SettingsLive } from './settings';
-import { type ComponentLogger, type ComponentStoreConfig, Log } from './shared';
+import { type ComponentLogger, type ComponentStoreConfig, HttpError, Log } from './shared';
 import { StoreLive } from './store/store';
 import { FileSyncLive, WriterLive } from './writer/writer';
 
-import type { AuthFn } from './auth/auth';
-import type { ComponentPublishFn } from './publish/publish';
+import type { AuthService } from './auth/auth';
+import type { PublishService } from './publish/publish';
 import type { ComponentStoreApi } from './store/store';
 
 /** Assembles the full Component API graph for one resolved config. */
 const componentApiLayer = (
   config: ComponentStoreConfig,
-): Layer.Layer<ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger> => {
+): Layer.Layer<ComponentStoreApi | AuthService | PublishService | ComponentLogger> => {
   const LogLive = Layer.succeed(Log, log);
   const nodeFileSystem = NodeFileSystem.layer;
   const fileSyncLive = FileSyncLive.pipe(Layer.provide(nodeFileSystem));
@@ -45,9 +45,9 @@ const componentApiLayer = (
       Layer.provide(LogLive),
     ),
     AuthLive(getUserRolesFromSession),
-    PublishLive.pipe(Layer.provide(writerLive)),
+    PublishLive.pipe(Layer.provide(writerLive), Layer.provide(LogLive)),
     LogLive,
-  ) as Layer.Layer<ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger>;
+  ) as Layer.Layer<ComponentStoreApi | AuthService | PublishService | ComponentLogger>;
 };
 
 /**
@@ -57,11 +57,17 @@ const componentApiLayer = (
  * Tests provide their own layers instead of importing this.
  */
 export const ComponentApiLive: Layer.Layer<
-  ComponentStoreApi | AuthFn | ComponentPublishFn | ComponentLogger
+  ComponentStoreApi | AuthService | PublishService | ComponentLogger
 > = Layer.unwrapEffect(
   Effect.map(
-    Effect.orDie(
+    Effect.mapError(
       Effect.map(componentConfigDir, (trackedRoot): ComponentStoreConfig => ({ trackedRoot })),
+      (cause) =>
+        new HttpError({
+          status: 503,
+          message: 'Component API is misconfigured: unable to resolve COMPONENT_CONFIG_DIR',
+          cause,
+        }),
     ),
     componentApiLayer,
   ),

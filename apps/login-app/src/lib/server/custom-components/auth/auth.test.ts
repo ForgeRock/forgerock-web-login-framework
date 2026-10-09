@@ -42,9 +42,8 @@ const enduserReader: AmSessionReader = () =>
 const failingReader: AmSessionReader = () => Promise.reject(new Error('AM down'));
 
 const authenticateWith = (reader: AmSessionReader, request: Request, origin?: string) =>
-  Effect.flatMap(Auth, (authenticate) => authenticate(request)).pipe(
-    Effect.provide(AuthLive(reader)),
-    Effect.provide(configLayer(origin)),
+  Effect.flatMap(Auth, (auth) => auth.authenticate(request)).pipe(
+    Effect.provide(AuthLive(reader).pipe(Layer.provide(configLayer(origin)))),
   );
 
 /** Runs an authentication effect, moving its error into the success channel for assertions. */

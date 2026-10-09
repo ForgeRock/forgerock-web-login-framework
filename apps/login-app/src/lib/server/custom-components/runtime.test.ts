@@ -31,7 +31,7 @@ import { Publish } from './publish/publish';
 import { ComponentApiLive } from './runtime';
 import { Store } from './store/store';
 
-import type { ComponentPublishFn } from './publish/publish';
+import type { PublishService } from './publish/publish';
 
 /**
  * The only test that exercises the production composition graph. Unit tests for the
@@ -76,8 +76,8 @@ describe('ComponentApiLive', () => {
       const result = yield* Effect.scoped(Effect.provide(program, ComponentApiLive));
 
       expect(result[0]).toEqual([]);
-      expect(result[1]).toBe('function');
-      expect(result[2]).toBe('function');
+      expect(result[1]).toBe('object');
+      expect(result[2]).toBe('object');
     }),
   );
 
@@ -85,8 +85,8 @@ describe('ComponentApiLive', () => {
     Effect.gen(function* () {
       yield* Effect.scoped(
         Effect.provide(
-          Effect.flatMap(Publish, (publish: ComponentPublishFn) =>
-            publish('{"files":[{"path":"components/x/a.json","content":"{}"}]}'),
+          Effect.flatMap(Publish, (publish: PublishService) =>
+            publish.publish({ code: '', files: [{ path: 'components/x/a.json', content: '{}' }] }),
           ),
           ComponentApiLive,
         ),

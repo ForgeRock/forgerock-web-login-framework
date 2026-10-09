@@ -7,7 +7,56 @@
  *
  * */
 
+import { Option } from 'effect';
+
 export * from './api.schemas';
+
+/** Path segments that could pollute `Object.prototype` and are never projected. */
+const UNSAFE_SEGMENTS = new Set(['__proto__', 'constructor', 'prototype']);
+
+/** Reads the value at a path of segments, or none when any hop is missing or unsafe. */
+const valueAtPath = (source: unknown, segments: ReadonlyArray<string>): Option.Option<unknown> => {
+  if (segments.length === 0 || UNSAFE_SEGMENTS.has(segments[0])) {
+    return Option.none();
+  }
+  return segments.reduce<Option.Option<unknown>>(
+    (value, segment) =>
+      Option.flatMap(value, (step) =>
+        typeof step === 'object' &&
+        step !== null &&
+        !Array.isArray(step) &&
+        Object.hasOwn(step, segment)
+          ? Option.some((step as Record<string, unknown>)[segment])
+          : Option.none(),
+      ),
+    Option.some(source),
+  );
+};
+
+/** Returns the object at the parent of a path, creating intermediate objects as needed. */
+const containerAtPath = (
+  tree: Record<string, unknown>,
+  segments: ReadonlyArray<string>,
+): Option.Option<Record<string, unknown>> => {
+  const parent = segments.slice(0, -1);
+  return parent.reduce<Option.Option<Record<string, unknown>>>(
+    (container, segment) =>
+      Option.flatMap(container, (step) => {
+        if (UNSAFE_SEGMENTS.has(segment)) {
+          return Option.none();
+        }
+        if (
+          typeof step[segment] !== 'object' ||
+          step[segment] === null ||
+          Array.isArray(step[segment])
+        ) {
+          step[segment] = {};
+        }
+        return Option.some(step[segment] as Record<string, unknown>);
+      }),
+    Option.some(tree),
+  );
+};
 
 /**
  * Returns a record containing only requested top-level or nested property paths.
@@ -26,31 +75,21 @@ export const projectRecord = (
     return { ...record };
   }
 
-  const projected: Record<string, unknown> = Object.create(null);
-  for (const path of fields) {
-    let source: unknown = record;
-    let destination: Record<string, unknown> = projected;
-
-    for (let index = 0; index < path.length; index += 1) {
-      const segment = path[index];
-      if (segment === '__proto__' || segment === 'constructor' || segment === 'prototype') {
-        break;
-      }
-      if (typeof source !== 'object' || source === null || !Object.hasOwn(source, segment)) {
-        break;
-      }
-      const value = (source as Record<string, unknown>)[segment];
-      if (index === path.length - 1) {
-        destination[segment] = value;
-      } else {
-        const next = destination[segment];
-        if (typeof next !== 'object' || next === null || Array.isArray(next)) {
-          destination[segment] = {};
-        }
-        destination = destination[segment] as Record<string, unknown>;
-        source = value;
-      }
+  return fields.reduce<Record<string, unknown>>((projected, segments) => {
+    const leaf = segments.at(-1);
+    if (leaf === undefined) {
+      return projected;
     }
-  }
-  return projected;
+    return Option.match(containerAtPath(projected, segments), {
+      onNone: () => projected,
+      onSome: (container) =>
+        Option.match(valueAtPath(record, segments), {
+          onNone: () => container,
+          onSome: (value) => {
+            container[leaf] = value;
+            return projected;
+          },
+        }),
+    });
+  }, Object.create(null));
 };

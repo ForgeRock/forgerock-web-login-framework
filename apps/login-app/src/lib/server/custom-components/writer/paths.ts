@@ -8,19 +8,23 @@
  * */
 
 /**
- * Determines whether a bundle path is safe to write. Rejects absolute paths, Windows
- * separators, empty segments, traversal and dot segments, and `.git` segments in any case.
+ * Segments that may not appear in a repository-relative path: traversal (`..`), the
+ * current directory (`.`), empty segments, and git internals (any case).
  */
-export const isSafeRelativePath = (path: string): boolean =>
-  typeof path === 'string' &&
-  path.length > 0 &&
-  !path.startsWith('/') &&
-  !path.includes('\u0000') &&
-  !path.includes('\\') &&
-  !/^[a-zA-Z]:/.test(path) &&
-  path
+const FORBIDDEN_SEGMENTS = new Set(['..', '.', '']);
+
+/**
+ * Determines whether a bundle path is safe to write. Rejects absolute paths, Windows
+ * separators, traversal and dot segments, and `.git` segments in any case.
+ */
+export const isSafeRelativePath = (path: string): boolean => {
+  if (path.length === 0 || path.startsWith('/') || path.includes('\u0000')) {
+    return false;
+  }
+  if (path.includes('\\') || /^[a-zA-Z]:/.test(path)) {
+    return false;
+  }
+  return path
     .split('/')
-    .every(
-      (segment) =>
-        segment !== '..' && segment !== '.' && segment.toLowerCase() !== '.git' && segment !== '',
-    );
+    .every((segment) => !FORBIDDEN_SEGMENTS.has(segment) && segment.toLowerCase() !== '.git');
+};

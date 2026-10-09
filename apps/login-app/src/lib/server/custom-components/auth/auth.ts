@@ -7,6 +7,7 @@
  *
  * */
 
+import { Cookies } from '@effect/platform';
 import { Config, Context, Data, Effect, Layer, Option } from 'effect';
 
 import { AM_COOKIE_NAME } from '$core/constants';
@@ -61,60 +62,70 @@ export type AmSessionReader = (tokenId: TokenId, realm?: string) => Promise<AmSe
 /** Authenticates a request, failing with a tagged auth error. */
 export type AuthFn = (request: Request) => Effect.Effect<AuthUser, ComponentAuthError>;
 
+/** The Component API authentication service. */
+export interface AuthService {
+  readonly authenticate: (request: Request) => Effect.Effect<AuthUser, ComponentAuthError>;
+}
+
 /** Service tag for Component API authentication; layers provide implementations. */
-export const Auth = Context.GenericTag<AuthFn>('Auth');
+export const Auth = Context.GenericTag<AuthService>('Auth');
 
 /**
  * Validates AM sessions on behalf of the Component API: extracts the session token from the
  * request (Bearer credential or AM cookie), verifies it with AM, requires an AM admin role, and
  * enforces an Origin check on mutating cookie-carried requests (CSRF).
  */
-export const AuthLive = (readAmSession: AmSessionReader): Layer.Layer<AuthFn> =>
-  Layer.succeed(
+export const AuthLive = (readAmSession: AmSessionReader): Layer.Layer<AuthService> =>
+  Layer.effect(
     Auth,
-    (request: Request): Effect.Effect<AuthUser, ComponentAuthError> =>
-      Effect.gen(function* () {
-        const tokenIdOption = extractSessionToken(request);
-        if (Option.isNone(tokenIdOption)) {
-          return yield* Effect.fail(
-            new AuthUnauthenticatedError({ message: 'An AM session token is required' }),
-          );
-        }
-        const session = yield* Effect.tryPromise({
-          try: () => readAmSession(tokenIdOption.value),
-          catch: (cause) =>
-            new AuthUnavailableError({
-              message: 'Unable to validate the AM session',
-              cause,
-            }),
-        });
-        if (session.unreachable) {
-          return yield* Effect.fail(new AuthUnavailableError({ message: 'AM is unavailable' }));
-        }
-        if (session.userId === null) {
-          return yield* Effect.fail(
-            new AuthUnauthenticatedError({ message: 'The AM session is not valid' }),
-          );
-        }
-        if (!session.roles.some((role) => ADMIN_ROLES.includes(role))) {
-          return yield* Effect.fail(
-            new AuthForbiddenError({
-              message: 'An AM admin role is required',
-              uid: session.userId,
-            }),
-          );
-        }
-        const configuredOrigin = yield* authOrigin;
-        const csrfFailure = yield* Effect.sync(() => csrfCheck(request, configuredOrigin));
-        if (csrfFailure !== undefined) {
-          return yield* Effect.fail(
-            csrfFailure._tag === 'AuthForbiddenError'
-              ? new AuthForbiddenError({ ...csrfFailure, uid: session.userId })
-              : csrfFailure,
-          );
-        }
-        return { uid: session.userId };
-      }),
+    Effect.gen(function* () {
+      // Yielded once at build time so the caller never resolves it per request.
+      const configuredOrigin = yield* authOrigin;
+      return {
+        authenticate: (request: Request): Effect.Effect<AuthUser, ComponentAuthError> =>
+          Effect.gen(function* () {
+            const tokenIdOption = extractSessionToken(request);
+            if (Option.isNone(tokenIdOption)) {
+              return yield* Effect.fail(
+                new AuthUnauthenticatedError({ message: 'An AM session token is required' }),
+              );
+            }
+            const session = yield* Effect.tryPromise({
+              try: () => readAmSession(tokenIdOption.value),
+              catch: (cause) =>
+                new AuthUnavailableError({
+                  message: 'Unable to validate the AM session',
+                  cause,
+                }),
+            });
+            if (session.unreachable) {
+              return yield* Effect.fail(new AuthUnavailableError({ message: 'AM is unavailable' }));
+            }
+            if (session.userId === null) {
+              return yield* Effect.fail(
+                new AuthUnauthenticatedError({ message: 'The AM session is not valid' }),
+              );
+            }
+            if (!session.roles.some((role) => ADMIN_ROLES.includes(role))) {
+              return yield* Effect.fail(
+                new AuthForbiddenError({
+                  message: 'An AM admin role is required',
+                  uid: session.userId,
+                }),
+              );
+            }
+            const csrfFailure = csrfCheck(request, configuredOrigin);
+            if (csrfFailure !== undefined) {
+              return yield* Effect.fail(
+                csrfFailure._tag === 'AuthForbiddenError'
+                  ? new AuthForbiddenError({ ...csrfFailure, uid: session.userId })
+                  : csrfFailure,
+              );
+            }
+            return { uid: session.userId };
+          }),
+      };
+    }),
   );
 
 /** The app's configured origin, resolved through Effect `Config`; empty means not configured. */
@@ -157,13 +168,10 @@ export const extractSessionToken = (request: Request): Option.Option<TokenId> =>
   if (cookieHeader === null) {
     return Option.none();
   }
-  const pair = cookieHeader
-    .split(';')
-    .map((part) => part.trim())
-    .find((part) => part.startsWith(`${AM_COOKIE_NAME}=`));
-  return pair === undefined
+  const cookies = Cookies.parseHeader(cookieHeader);
+  return cookies[AM_COOKIE_NAME] === undefined
     ? Option.none()
-    : parseTokenValue(pair.slice(AM_COOKIE_NAME.length + 1));
+    : parseTokenValue(cookies[AM_COOKIE_NAME]);
 };
 
 const parseTokenValue = (value: string): Option.Option<TokenId> => {
