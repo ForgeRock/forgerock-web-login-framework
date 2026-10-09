@@ -47,6 +47,14 @@ e2e/
 │   ├── utilities/          # Shared test utilities
 │   │   ├── async-events.js
 │   │   └── demo-user.js
+│   ├── login-app/          # Login-app server feature tests
+│   │   ├── component-api.test.ts     # Custom Components CRUD + publish API
+│   │   ├── config-error.test.ts      # Startup env validation
+│   │   ├── idm-theme.test.ts         # IDM theme resolution
+│   │   ├── locale.test.ts
+│   │   ├── redirect.test.ts
+│   │   ├── register.test.ts
+│   │   └── suspend-restart*.test.ts
 │   └── widget/
 │       ├── inline/         # Inline form factor tests
 │       │   ├── widget-inline.test.js
@@ -94,6 +102,10 @@ Tests connect to a ForgeRock AM instance. The Playwright config provides default
 | `FR_REALM_PATH`            | AM realm path                                            |
 | `FR_AM_WELLKNOWN_URL`      | AM OIDC discovery URL used to validate app configuration |
 | `PLAYWRIGHT_TEST_BASE_URL` | Override the app URL (default: `http://localhost:3000`)  |
+
+The AM defaults are hardcoded in `e2e/playwright.config.ts`
+(`openam-sdks.forgeblocks.com`), so the suite runs locally with no environment
+setup when those defaults are current.
 
 ## Debugging
 

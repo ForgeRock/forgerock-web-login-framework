@@ -137,42 +137,36 @@ export function resolveOAuthRealmPath(realm?: string): string {
 }
 
 /**
- * @function getUserRolesFromSession - retrieves the user's roles from the AM backend using their session token
- * @param {string} tokenId - The session token ID
- * @param {string} realm - The realm the user authenticated in (e.g. 'alpha', 'root')
- * @returns {Promise<string[]>} An array of user roles or an empty roles array
+ * The outcome of reading an AM session. `unreachable` is true when AM could not be
+ * reached (network error, timeout, or a non-OK AM response), so callers can report
+ * an AM outage instead of treating it as an invalid session. When AM answers, `userId`
+ * is the session's uid or null for an invalid or expired session, and `roles` carries
+ * that user's AM roles (empty for an invalid session).
  */
-export async function getUserRolesFromSession(tokenId: TokenId, realm?: string): Promise<string[]> {
-  const userId = await getUserIdFromSession(tokenId, realm);
-  if (!userId) {
-    return [];
-  }
-  const response = await amFetchRequest(
-    tokenId,
-    `/users/${encodeURIComponent(userId)}`,
-    'GET',
-    undefined,
-    realm,
-  );
-  const parsed = z.object({ roles: z.array(z.string()) }).safeParse(response);
-  return parsed.success ? parsed.data.roles : [];
+export interface AmSession {
+  readonly userId: string | null;
+  readonly roles: ReadonlyArray<string>;
+  readonly unreachable: boolean;
 }
 
 /**
- * @function getUserIdFromSession - retrieves the user ID associated with a session token
+ * @function getUserRolesFromSession - validates an AM session token and fetches that
+ * user's roles, distinguishing "AM answered" from "AM could not be reached" so callers
+ * can report AM outages instead of treating them as invalid sessions.
  * @param {string} tokenId - The session token ID
- * @param {string} realm - The realm the user authenticated in (e.g. 'alpha', 'root')
- * @returns {Promise<string|null>} The user ID or null if not found
+ * @param {string} [realm] - The realm the user authenticated in (e.g. 'alpha', 'root')
+ * @returns {Promise<AmSession>} The session's user id, roles, and AM reachability.
  */
-export async function getUserIdFromSession(
+export async function getUserRolesFromSession(
   tokenId: TokenId,
   realm?: string,
-): Promise<string | null> {
+): Promise<AmSession> {
   // AIC blocks /users?_action=idFromSession (403). Use sessions validate instead,
   // which returns uid = the username string on AIC.
   const realmPath = resolveJsonRealmPath(realm);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
+  let userId: string | null;
   try {
     const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
       method: 'POST',
@@ -185,15 +179,33 @@ export async function getUserIdFromSession(
       body: JSON.stringify({ tokenId }),
       signal: controller.signal,
     });
-    if (!response.ok) return null;
+    if (!response.ok) {
+      return { userId: null, roles: [], unreachable: true };
+    }
     const data = await response.json();
     const parsed = z.object({ valid: z.boolean(), uid: z.string().optional() }).safeParse(data);
-    return parsed.success && parsed.data.valid ? parsed.data.uid ?? null : null;
+    userId = parsed.success && parsed.data.valid ? parsed.data.uid ?? null : null;
   } catch {
-    return null;
+    return { userId: null, roles: [], unreachable: true };
   } finally {
     clearTimeout(timeout);
   }
+  if (userId === null) {
+    return { userId: null, roles: [], unreachable: false };
+  }
+  const rolesResponse = await amFetchRequest(
+    tokenId,
+    `/users/${encodeURIComponent(userId)}`,
+    'GET',
+    undefined,
+    realm,
+  );
+  const parsedRoles = z.object({ roles: z.array(z.string()) }).safeParse(rolesResponse);
+  return {
+    userId,
+    roles: parsedRoles.success ? parsedRoles.data.roles : [],
+    unreachable: false,
+  };
 }
 
 /**

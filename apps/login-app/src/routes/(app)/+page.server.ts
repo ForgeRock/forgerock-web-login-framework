@@ -11,6 +11,7 @@ import { isRedirect, redirect, type RequestEvent } from '@sveltejs/kit';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
+import { log } from '$server/logger.effects';
 import {
   createRedirectContext,
   readAndClearRedirectCookie,
@@ -19,12 +20,13 @@ import {
 } from '$server/redirect/redirect.effects';
 import {
   buildRoleUrl,
+  describeRedirectTarget,
   isOAuthAuthorizePath,
   resolveRealmFromUrl,
   resolveRedirect,
 } from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
-import { getHttpCookie, getUserIdFromSession, getUserRolesFromSession } from '$server/sessions';
+import { getHttpCookie, getUserRolesFromSession } from '$server/sessions';
 
 import type { z } from 'zod';
 
@@ -49,8 +51,10 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
       const realm = resolveRealmFromUrl(event.url);
 
       // Validate the session is live before acting on it.
-      const userId = await getUserIdFromSession(tokenId, realm);
-      if (!userId) throw new Error('Session invalid or expired');
+      const session = await getUserRolesFromSession(tokenId, realm);
+      if (session.userId === null || session.unreachable) {
+        throw new Error('Session invalid or expired');
+      }
 
       // If goto targets AM's OAuth authorize endpoint, let AM validate it
       // (validateGoto) and only follow the successUrl AM returns, so the SPA's
@@ -68,11 +72,16 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
           if (successUrl === gotoUrl.href) {
             throw redirect(303, successUrl);
           }
+          if (successUrl !== null) {
+            log.warn('[redirect] AM did not trust goto, using role redirect', {
+              goto: describeRedirectTarget(gotoUrl.href),
+              realm,
+            });
+          }
         }
       }
 
-      const roles = await getUserRolesFromSession(tokenId, realm);
-      throw redirect(303, buildRoleUrl(amOrigin, roles, realm));
+      throw redirect(303, buildRoleUrl(amOrigin, session.roles, realm));
     } catch (err) {
       // Only re-throw SvelteKit redirects; ignore AM errors (expired/invalid session)
       if (isRedirect(err)) throw err;

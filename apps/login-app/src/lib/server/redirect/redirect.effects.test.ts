@@ -7,7 +7,7 @@
  *
  **/
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/environment', () => ({ building: false }));
 vi.mock('$env/dynamic/private', () => ({
@@ -21,7 +21,24 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
+const { logMock, sessionsMock } = vi.hoisted(() => ({
+  logMock: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
+  sessionsMock: {
+    amFetchRequest: vi.fn(),
+    getHttpCookie: vi.fn(),
+    getUserRolesFromSession: vi.fn(),
+    removeHttpCookie: vi.fn(),
+    setHttpCookie: vi.fn(),
+  },
+}));
+vi.mock('$server/logger.effects', () => ({ log: logMock }));
+vi.mock('$server/sessions', () => sessionsMock);
+
+import { tokenIdSchema } from '$server/schemas';
+import { readAndClearRedirectCookie, validateUrl } from './redirect.effects';
 import { resolveRealmFromUrl } from './redirect.utilities';
+
+import type { RequestEvent } from '@sveltejs/kit';
 
 describe('resolveRealmFromUrl', () => {
   it('falls back to the configured FR_REALM_PATH when no realm param is present', () => {
@@ -51,4 +68,74 @@ describe('resolveRealmFromUrl', () => {
       resolveRealmFromUrl(new URL('https://login.example.com/?realm=' + encodeURIComponent('a b'))),
     ).toBe('alpha');
   });
+});
+
+describe('readAndClearRedirectCookie', () => {
+  const event = { cookies: {} } as unknown as RequestEvent;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the stored params without warning', () => {
+    sessionsMock.getHttpCookie.mockReturnValue(
+      JSON.stringify({ goto: 'https://app.example.com/cb', gotoOnFail: '/failed', realm: 'alpha' }),
+    );
+
+    expect(readAndClearRedirectCookie(event)).toEqual({
+      goto: 'https://app.example.com/cb',
+      gotoOnFail: '/failed',
+      realm: 'alpha',
+    });
+    expect(sessionsMock.removeHttpCookie).toHaveBeenCalledTimes(1);
+    expect(logMock.warn).not.toHaveBeenCalled();
+  });
+
+  it('returns nothing without warning when there is no cookie', () => {
+    sessionsMock.getHttpCookie.mockReturnValue(undefined);
+
+    expect(readAndClearRedirectCookie(event)).toEqual({});
+    expect(logMock.warn).not.toHaveBeenCalled();
+  });
+
+  it.each(['{not json', JSON.stringify({ goto: 42 })])(
+    'ignores a malformed cookie with one warning that does not echo it: %s',
+    (cookieValue) => {
+      sessionsMock.getHttpCookie.mockReturnValue(cookieValue);
+
+      expect(readAndClearRedirectCookie(event)).toEqual({});
+      expect(logMock.warn).toHaveBeenCalledTimes(1);
+      expect(logMock.warn).toHaveBeenCalledWith('[redirect] ignoring malformed redirect cookie');
+    },
+  );
+});
+
+describe('validateUrl', () => {
+  const tokenId = tokenIdSchema.parse('session-token');
+  const goto = 'https://app.example.com/cb?state=opaque-state&login_hint=user@example.com';
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('returns the successUrl AM validated without warning', async () => {
+    sessionsMock.amFetchRequest.mockResolvedValue({ successUrl: 'https://app.example.com/cb' });
+
+    expect(await validateUrl(tokenId, goto, 'alpha')).toBe('https://app.example.com/cb');
+    expect(logMock.warn).not.toHaveBeenCalled();
+  });
+
+  it.each([null, {}, { successUrl: '' }, { successUrl: 'undefined' }, { successUrl: 'null' }])(
+    'warns with the goto origin and path only when AM gives no usable successUrl: %j',
+    async (response) => {
+      sessionsMock.amFetchRequest.mockResolvedValue(response);
+
+      expect(await validateUrl(tokenId, goto, 'alpha')).toBeNull();
+      expect(logMock.warn).toHaveBeenCalledTimes(1);
+      expect(logMock.warn).toHaveBeenCalledWith(
+        '[redirect] goto validation returned no usable successUrl',
+        { goto: 'https://app.example.com/cb', realm: 'alpha' },
+      );
+    },
+  );
 });

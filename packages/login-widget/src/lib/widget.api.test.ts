@@ -7,7 +7,7 @@
  *
  **/
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const journeyTerminateMock = vi.fn().mockResolvedValue(undefined);
 const oidcMock = vi.fn();
@@ -540,6 +540,11 @@ describe('widgetApiFactory', () => {
 
     afterEach(() => {
       errorSpy.mockRestore();
+    });
+
+    afterAll(() => {
+      // Re-establish the file-level mock after this entire describe block completes.
+      // The inner beforeEach unmocks for these 2 tests; we must restore for subsequent tests.
       vi.doMock(
         '@forgerock/journey-client',
         async (importOriginal: () => Promise<Record<string, unknown>>) => {
