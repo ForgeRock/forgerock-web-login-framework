@@ -69,7 +69,9 @@
 
     idps = socialProviders.map((option) => ({
       value: option.provider,
-      text: option.uiConfig.buttonDisplayName,
+      text: option.uiConfig?.buttonDisplayName?.trim()
+        ? option.uiConfig.buttonDisplayName
+        : option.provider,
     }));
   }
 </script>
@@ -128,6 +130,11 @@
         onClick={() => setBtnValue(idp.value)}
       >
         <MicrosoftIcon classes="tw_inline-block tw_fill-current" />
+        <T key="continueWith" />
+        {idp.text}
+      </Button>
+    {:else}
+      <Button type="button" width="auto" onClick={() => setBtnValue(idp.value)}>
         <T key="continueWith" />
         {idp.text}
       </Button>
