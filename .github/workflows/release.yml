@@ -25,6 +25,11 @@ on:
         required: false
         default: 'public'
         type: string
+      docker_only:
+        description: 'Only build Docker branch image (skip npm snapshot)'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -133,7 +138,7 @@ jobs:
 
   # ─── Snapshot (manual via workflow_dispatch) ────────────────────────────
   snapshot:
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.docker_only != true
     name: Publish Snapshot
     runs-on: ubuntu-latest
     env:

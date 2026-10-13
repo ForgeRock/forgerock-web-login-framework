@@ -27,18 +27,32 @@ export const load: LayoutServerLoad = async ({ url }) => {
     );
   }
 
+  // Deriving the sibling well-known paths takes the URL's path, so a malformed
+  // FR_AM_URL is a configuration error, not a per-request crash.
+  let amBasePath: string;
+  try {
+    amBasePath = new URL(amUrl).pathname.replace(/\/+$/, '');
+  } catch {
+    throw error(500, 'Login App is not configured: FR_AM_URL must be an absolute URL.');
+  }
+
   // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
   const realmPath = resolveRealmFromUrl(url);
 
   // Use the configured discovery endpoint for the deployment's default realm.
   // Derive a sibling endpoint only when the request explicitly selects another realm.
+  // A relative FR_AM_WELLKNOWN_URL resolves against the request origin so the
+  // browser fetches discovery from whichever host the user came in on (tenant
+  // FQDN or custom domain) instead of a hard-coded AM FQDN.
   const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
-  const wellknown =
+  const wellknown = new URL(
     realmPath === configuredRealm
       ? wellknownUrl
       : realmPath === 'root'
-      ? `${amUrl}/oauth2/realms/root/.well-known/openid-configuration`
-      : `${amUrl}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`;
+      ? `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`
+      : `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
+    url.origin,
+  ).toString();
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {
