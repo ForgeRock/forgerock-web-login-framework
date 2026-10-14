@@ -15,13 +15,16 @@
   import Box from '$components/primitives/box/centered.svelte';
   import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
-  import {
-    customFooterRegistry,
-    customHeaderRegistry,
-  } from '$core/journey/_utilities/registry/custom-registry';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
-  import { fallbackJourneyStore, initialize as initializeJourney } from '$journey/journey.store';
+  import Footer from '$custom/footer/footer.svelte';
+  import Header from '$custom/header/header.svelte';
+  import { deriveJourneyName } from '$journey/_utilities/journey-name.utilities';
+  import {
+    fallbackJourneyStore,
+    initialize as initializeJourney,
+    stack,
+  } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
 
@@ -30,12 +33,18 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  // Custom header/footer registries hold 0 or 1 entries each: the registry
-  // build fails when more than one header or footer declares Enabled: true,
-  // and dormant (non-enabled) components never reach the Record. The single
-  // enabled entry, when present, renders above/below the journey container.
-  const headerEntry = Object.values(customHeaderRegistry)[0];
-  const footerEntry = Object.values(customFooterRegistry)[0];
+  // The header/footer wrappers are fixed, user-editable files imported directly
+  // (no registry). They mount client-side only: the first journey step latches
+  // `wrappersVisible`, and the wrappers then stay mounted through step nulling
+  // (start(), completion, error), journey switches, and the redirect state.
+  let wrappersVisible = false;
+  $: if ($journeyStore?.step) {
+    wrappersVisible = true;
+  }
+  // Store subscription at the boundary: journeyName derives reactively from the
+  // latest stack entry ('' = AM default journey). journey.svelte applies the
+  // same step gate (core/journey/journey.svelte), so SSR never renders wrappers.
+  $: journeyName = deriveJourneyName($stack);
 
   const authIndexValue = $page.url.searchParams.get('authIndexValue');
   const codeParam = $page.url.searchParams.get('code');
@@ -143,10 +152,9 @@
 </script>
 
 <div bind:this={journeyRootEl} class="tw_h-full tw_flex tw_flex-col">
-  {#if headerEntry}
-    {@const CustomHeader = headerEntry.component}
+  {#if wrappersVisible}
     <div class="tw_shrink-0">
-      <svelte:component this={CustomHeader} />
+      <Header {journeyName} />
     </div>
   {/if}
 
@@ -171,10 +179,9 @@
     </Box>
   </main>
 
-  {#if footerEntry}
-    {@const CustomFooter = footerEntry.component}
+  {#if wrappersVisible}
     <div class="tw_shrink-0">
-      <svelte:component this={CustomFooter} />
+      <Footer {journeyName} />
     </div>
   {/if}
 </div>

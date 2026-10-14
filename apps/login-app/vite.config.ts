@@ -22,6 +22,8 @@ export default defineConfig(
         $locales: resolve('../../core/locales'),
         $package: resolve('../../packages/login-widget/dist'),
         '$login-framework-exports': resolve('../../experimental/custom/login-framework.ts'),
+        $custom: resolve('../../experimental/custom'),
+        '$custom/*': resolve('../../experimental/custom/*'),
       },
     },
     server: {

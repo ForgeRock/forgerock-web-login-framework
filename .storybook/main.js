@@ -52,6 +52,8 @@ export default {
             __dirname,
             '../experimental/custom/login-framework.ts',
           ),
+          $custom: resolve(__dirname, '../experimental/custom'),
+          '$custom/*': resolve(__dirname, '../experimental/custom/*'),
           $lib: resolve(__dirname, '../apps/login-app/src/lib'),
         },
       },
