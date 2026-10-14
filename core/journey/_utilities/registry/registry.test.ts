@@ -526,6 +526,47 @@ describe('customRegistry vite plugin', () => {
     expect(after).not.toContain('StageStray');
   });
 
+  it('ignores header and footer component events — wrappers render client-side, not via the registry', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    // Seed a baseline registry file while the tree holds no stage components.
+    await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+    const baseline = await readFile(registryPath(), 'utf8');
+    expect(baseline).not.toContain('StageBrand');
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+
+    // A valid stage component exists on disk, but the only watcher event fired is
+    // for a header file — headers/footers are no longer watched (wrappers render
+    // client-side, not via the registry), so the event must NOT trigger a
+    // regeneration that would pick up the stage.
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
+    await writeFile(
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'legacy');
+    await mkdir(headerDir, { recursive: true });
+    await writeFile(
+      join(headerDir, 'legacy.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Legacy\n   -->\n<div></div>',
+      'utf8',
+    );
+    for (const listener of listeners) {
+      listener('add', join(headerDir, 'legacy.svelte'));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const after = await readFile(registryPath(), 'utf8');
+    expect(after).toBe(baseline);
+    expect(after).not.toContain('StageBrand');
+    expect(after).not.toContain('HeaderLegacy');
+  });
+
   it('logs a stale-registry action sentence when a watcher regeneration collides on a name', async () => {
     const { customRegistry } = await import('./vite-plugin.js');
     const plugin = customRegistry({ projectRoot: tmpDir });
