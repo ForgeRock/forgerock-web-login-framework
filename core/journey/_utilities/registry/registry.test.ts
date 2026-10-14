@@ -10,13 +10,11 @@ import {
   buildRegistryContent,
   parseAcceptedProps,
   parseComponentHeader,
-  parseEnabledState,
-  RegistryCollisionError,
-  RegistryEnabledLimitError,
-  RegistryScanError,
   runRegistryScript,
   toPascalCase,
 } from './registry.js';
+
+import type { RegistryCollisionError } from './registry.js';
 
 const decode = (filePath: string, content: string) =>
   Effect.runSync(parseComponentHeader(filePath, content));
@@ -38,9 +36,7 @@ const nodePath = Effect.runSync(
 const buildContent = (...args: Parameters<typeof buildRegistryContent>): string =>
   Effect.runSync(buildRegistryContent(...args));
 
-const buildError = (
-  ...args: Parameters<typeof buildRegistryContent>
-): RegistryCollisionError | RegistryEnabledLimitError =>
+const buildError = (...args: Parameters<typeof buildRegistryContent>): RegistryCollisionError =>
   Effect.runSync(Effect.flip(buildRegistryContent(...args)));
 
 describe('parseComponentHeader', () => {
@@ -63,16 +59,6 @@ describe('parseComponentHeader', () => {
     it('parses a callback component header', () => {
       const content = `<!--\n   @component\n   Type: callback\n   Name: MyCallback\n   -->\n<script>...`;
       expect(decode('test.svelte', content)).toEqual({ type: 'callback', name: 'MyCallback' });
-    });
-
-    it('parses a header component header', () => {
-      const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   -->\n<div>branding</div>`;
-      expect(decode('test.svelte', content)).toEqual({ type: 'header', name: 'MyHeader' });
-    });
-
-    it('parses a footer component header', () => {
-      const content = `<!--\n   @component\n   Type: footer\n   Name: MyFooter\n   -->\n<div>legal</div>`;
-      expect(decode('test.svelte', content)).toEqual({ type: 'footer', name: 'MyFooter' });
     });
 
     it('normalizes Type to lowercase', () => {
@@ -110,6 +96,16 @@ describe('parseComponentHeader', () => {
       expect(String(err.cause)).toContain('Invalid Type value');
     });
 
+    it('fails when Type value is header (removed type)', () => {
+      const err = decodeError('test.svelte', `<!-- @component\n   Type: header\n   Name: Foo -->`);
+      expect(String(err.cause)).toContain('Invalid Type value');
+    });
+
+    it('fails when Type value is footer (removed type)', () => {
+      const err = decodeError('test.svelte', `<!-- @component\n   Type: footer\n   Name: Foo -->`);
+      expect(String(err.cause)).toContain('Invalid Type value');
+    });
+
     it('fails when Name field is missing', () => {
       const err = decodeError('test.svelte', `<!-- @component\n   Type: stage -->`);
       expect(String(err.cause)).toContain('Missing "Name:" field');
@@ -118,7 +114,7 @@ describe('parseComponentHeader', () => {
     it('fails when Name is "__proto__" (would corrupt the generated Record literal)', () => {
       const err = decodeError(
         'test.svelte',
-        `<!-- @component\n   Type: header\n   Name: __proto__ -->`,
+        `<!-- @component\n   Type: stage\n   Name: __proto__ -->`,
       );
       expect(String(err.cause)).toContain('Reserved key "__proto__"');
     });
@@ -126,177 +122,10 @@ describe('parseComponentHeader', () => {
     it('fails when Name is "constructor" (reserved object-literal key)', () => {
       const err = decodeError(
         'test.svelte',
-        `<!-- @component\n   Type: footer\n   Name: constructor -->`,
+        `<!-- @component\n   Type: callback\n   Name: constructor -->`,
       );
       expect(String(err.cause)).toContain('Reserved key "constructor"');
     });
-  });
-});
-
-describe('parseEnabledState', () => {
-  it('returns enabled for Enabled: true', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Enabled: true\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({ state: 'enabled' });
-  });
-
-  it('returns dormant for Enabled: false', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Enabled: false\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({ state: 'dormant' });
-  });
-
-  it('returns dormant when Enabled is absent', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({ state: 'dormant' });
-  });
-
-  it('returns dormant when there is no comment at all', () => {
-    expect(parseEnabledState('<div>no header</div>')).toEqual({ state: 'dormant' });
-  });
-
-  it('is case-sensitive on the property name (enabled: true is inert)', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   enabled: true\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({ state: 'dormant' });
-  });
-
-  it('ignores prose mentioning Enabled: when the property line is removed (dormant)', () => {
-    // The shipped template documents "remove this line to keep the component
-    // dormant" while its prose mentions "Enabled: true" — that prose must not
-    // parse as the property.
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n\n   "Enabled: true" opts this component into the bundle. Remove the line to disable.\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({ state: 'dormant' });
-  });
-
-  it('finds the real property line even when prose mentions Enabled: before it', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Docs: set "Enabled: false" to disable.\n   Enabled: true\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({ state: 'enabled' });
-  });
-
-  it('only treats lines that are the property: prose after a real false line does not win', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Enabled: false\n   Prose: "Enabled: true" is how you opt in.\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({ state: 'dormant' });
-  });
-
-  it('errors on an invalid Enabled value even though the file would be dormant', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Enabled: yes\n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({
-      error: expect.stringContaining('Invalid Enabled value "yes"'),
-    });
-  });
-
-  it('errors on an empty Enabled value', () => {
-    const content = `<!--\n   @component\n   Type: header\n   Name: MyHeader\n   Enabled:   \n   -->\n<div>x</div>`;
-    expect(parseEnabledState(content)).toEqual({
-      error: expect.stringContaining('Invalid Enabled value ""'),
-    });
-  });
-});
-
-describe('buildRegistryContent enabled limit', () => {
-  // buildRegistryContent's `registryDir` constant is declared in the
-  // buildRegistryContent describe below; replicate it here for standalone use.
-  const registryDir = '/repo/core/journey/_utilities/registry';
-
-  // buildRegistryContent receives ONLY enabled components — scanDirectory
-  // filters dormant header/footer files out before calling it — so every
-  // header/footer entry passed here counts toward the at-most-one limit.
-  const enabledHeader = (filePath: string, name: string) => ({
-    filePath,
-    name,
-    type: 'header' as const,
-    acceptedProps: [] as string[],
-  });
-
-  it('allows one enabled header', () => {
-    const output = buildContent(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [enabledHeader('/repo/experimental/custom/headers/a/one.svelte', 'One')],
-    );
-    expect(output).toContain('"One": {');
-  });
-
-  it('fails when two headers are enabled', () => {
-    const error = buildError(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [
-        enabledHeader('/repo/experimental/custom/headers/a/one.svelte', 'One'),
-        enabledHeader('/repo/experimental/custom/headers/b/two.svelte', 'Two'),
-      ],
-    );
-    expect(error instanceof RegistryEnabledLimitError).toBe(true);
-    expect(error.message).toMatch(/More than one header component is enabled/);
-    expect(error.message).toMatch(/a\/one\.svelte/);
-    expect(error.message).toMatch(/b\/two\.svelte/);
-  });
-
-  it('fails when two footers are enabled', () => {
-    const error = buildError(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [],
-      [
-        {
-          filePath: '/repo/experimental/custom/footers/a/one.svelte',
-          name: 'One',
-          type: 'footer',
-          acceptedProps: [],
-        },
-        {
-          filePath: '/repo/experimental/custom/footers/b/two.svelte',
-          name: 'Two',
-          type: 'footer',
-          acceptedProps: [],
-        },
-      ],
-    );
-    expect(error instanceof RegistryEnabledLimitError).toBe(true);
-    expect(error.message).toMatch(/More than one footer component is enabled/);
-  });
-
-  it('reports the enabled limit before name collisions when both problems exist', () => {
-    const error = buildError(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [
-        enabledHeader('/repo/experimental/custom/headers/a/same.svelte', 'Same'),
-        enabledHeader('/repo/experimental/custom/headers/b/same.svelte', 'Same'),
-      ],
-    );
-    expect(error instanceof RegistryEnabledLimitError).toBe(true);
-    expect(error instanceof RegistryCollisionError).toBe(false);
-  });
-
-  it('never enforces the enabled limit on stages and callbacks (always bundled)', () => {
-    const output = buildContent(
-      nodePath,
-      registryDir,
-      [
-        {
-          filePath: '/repo/experimental/custom/stages/a/one.svelte',
-          name: 'One',
-          type: 'stage',
-          acceptedProps: [],
-        },
-        {
-          filePath: '/repo/experimental/custom/stages/b/two.svelte',
-          name: 'Two',
-          type: 'stage',
-          acceptedProps: [],
-        },
-      ],
-      [],
-    );
-    expect(output).toContain('"One": {');
-    expect(output).toContain('"Two": {');
   });
 });
 
@@ -365,6 +194,12 @@ describe('buildRegistryContent', () => {
     expect(output).not.toContain('// Callback overrides');
   });
 
+  it('does not emit header or footer registries (removed types)', () => {
+    const output = buildContent(nodePath, registryDir, [], []);
+    expect(output).not.toContain('customHeaderRegistry');
+    expect(output).not.toContain('customFooterRegistry');
+  });
+
   it('emits import lines and registry entries for stages and callbacks', () => {
     const output = buildContent(
       nodePath,
@@ -418,126 +253,10 @@ describe('buildRegistryContent', () => {
     expect(output).toContain('StageMyLoginStage');
   });
 
-  it('emits a full Record for a header component', () => {
-    const output = buildContent(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [
-        {
-          filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
-          name: 'Brand',
-          type: 'header',
-          acceptedProps: [],
-        },
-      ],
-      [],
-    );
-    expect(output).toContain(
-      `import CustomHeaderBrand from '../../../../experimental/custom/headers/brand/brand.svelte';`,
-    );
-    expect(output).toContain(
-      'export const customHeaderRegistry: Record<string, CustomRegistryEntry> = {',
-    );
-    expect(output).toContain(
-      `"Brand": { get component() { return CustomHeaderBrand; }, acceptedProps: [] },`,
-    );
-  });
-
-  it('emits a full Record for a footer component', () => {
-    const output = buildContent(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [],
-      [
-        {
-          filePath: '/repo/experimental/custom/footers/legal/legal.svelte',
-          name: 'Legal',
-          type: 'footer',
-          acceptedProps: [],
-        },
-      ],
-    );
-    expect(output).toContain(
-      `import CustomFooterLegal from '../../../../experimental/custom/footers/legal/legal.svelte';`,
-    );
-    expect(output).toContain(
-      'export const customFooterRegistry: Record<string, CustomRegistryEntry> = {',
-    );
-    expect(output).toContain(
-      `"Legal": { get component() { return CustomFooterLegal; }, acceptedProps: [] },`,
-    );
-  });
-
   it('does not emit default pointer exports', () => {
-    const output = buildContent(nodePath, registryDir, [], [], [], []);
+    const output = buildContent(nodePath, registryDir, [], []);
     expect(output).not.toContain('customHeaderDefault');
     expect(output).not.toContain('customFooterDefault');
-  });
-
-  it('emits empty Record braces for an empty header registry', () => {
-    const output = buildContent(nodePath, registryDir, [], [], [], []);
-    const headerBlock = output.slice(
-      output.indexOf('customHeaderRegistry'),
-      output.indexOf('customFooterRegistry'),
-    );
-    expect(headerBlock).toContain('};');
-  });
-
-  it('fails RegistryEnabledLimitError when two header components are passed (at most one enabled)', () => {
-    const error = buildError(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [
-        {
-          filePath: '/repo/experimental/custom/headers/a/one.svelte',
-          name: 'One',
-          type: 'header',
-          acceptedProps: [],
-        },
-        {
-          filePath: '/repo/experimental/custom/headers/b/two.svelte',
-          name: 'Two',
-          type: 'header',
-          acceptedProps: [],
-        },
-      ],
-      [],
-    );
-    expect(error instanceof RegistryEnabledLimitError).toBe(true);
-    expect(error.message).toMatch(/More than one header component is enabled/);
-  });
-
-  it('fails RegistryEnabledLimitError instead of a collision error when 2+ enabled headers share a name', () => {
-    const error = buildError(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [
-        {
-          filePath: '/repo/experimental/custom/headers/a/brand.svelte',
-          name: 'Brand',
-          type: 'header',
-          acceptedProps: [],
-        },
-        {
-          filePath: '/repo/experimental/custom/headers/b/brand.svelte',
-          name: 'Brand',
-          type: 'header',
-          acceptedProps: [],
-        },
-      ],
-      [],
-    );
-    expect(error instanceof RegistryEnabledLimitError).toBe(true);
-    expect(error.message).toMatch(/a\/brand\.svelte/);
-    expect(error.message).toMatch(/b\/brand\.svelte/);
   });
 
   it('fails when two components share a registry key (exact duplicate name)', () => {
@@ -616,34 +335,6 @@ describe('buildRegistryContent', () => {
     expect(output).toContain('StageFoo');
     expect(output).toContain('CallbackStageFoo');
   });
-
-  it('allows a header and footer with identifiers that remain distinct', () => {
-    // CustomHeaderBrand vs CustomFooterBrand — distinct identifiers, both registries emit.
-    const output = buildContent(
-      nodePath,
-      registryDir,
-      [],
-      [],
-      [
-        {
-          filePath: '/repo/experimental/custom/headers/brand/brand.svelte',
-          name: 'Brand',
-          type: 'header',
-          acceptedProps: [],
-        },
-      ],
-      [
-        {
-          filePath: '/repo/experimental/custom/footers/brand/brand.svelte',
-          name: 'Brand',
-          type: 'footer',
-          acceptedProps: [],
-        },
-      ],
-    );
-    expect(output).toContain('CustomHeaderBrand');
-    expect(output).toContain('CustomFooterBrand');
-  });
 });
 
 describe('runRegistryScript', () => {
@@ -659,7 +350,7 @@ describe('runRegistryScript', () => {
   });
 
   const writeComponent = async (
-    kind: 'stages' | 'callbacks' | 'headers' | 'footers',
+    kind: 'stages' | 'callbacks',
     dirName: string,
     fileName: string,
     name: string,
@@ -686,115 +377,42 @@ describe('runRegistryScript', () => {
   const run = () =>
     runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
 
-  it('scans stages, callbacks, headers, and footers and emits all four registries', async () => {
+  it('scans stages and callbacks and emits both registries', async () => {
     await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
     await writeComponent('callbacks', 'name', 'name.svelte', 'Name', 'callback');
-    await writeComponent('headers', 'brand', 'brand.svelte', 'Brand', 'header');
-    await writeComponent('footers', 'legal', 'legal.svelte', 'Legal', 'footer');
     await run();
 
     const output = await readRegistry();
     expect(output).toContain('customStageRegistry');
     expect(output).toContain('customCallbackRegistry');
-    expect(output).toContain('customHeaderRegistry: Record<string, CustomRegistryEntry> = {');
-    expect(output).toContain('customFooterRegistry: Record<string, CustomRegistryEntry> = {');
-    expect(output).toContain('CustomHeaderBrand');
-    expect(output).toContain('CustomFooterLegal');
+    expect(output).toContain('StageLogin');
+    expect(output).toContain('CallbackName');
   });
 
-  it('excludes a dormant header (no Enabled: true) from the emitted Record', async () => {
-    await writeComponent('headers', 'brand', 'brand.svelte', 'Brand', 'header', false);
-    await writeComponent('footers', 'legal', 'legal.svelte', 'Legal', 'footer', false);
+  it('ignores header and footer directories even when populated (removed types)', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'brand');
+    await mkdir(headerDir, { recursive: true });
+    await writeFile(
+      join(headerDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Brand\n   Enabled: true\n   -->\n<div></div>',
+      'utf8',
+    );
+    const footerDir = join(tmpDir, 'experimental', 'custom', 'footers', 'legal');
+    await mkdir(footerDir, { recursive: true });
+    await writeFile(
+      join(footerDir, 'legal.svelte'),
+      '<!--\n   @component\n   Type: footer\n   Name: Legal\n   Enabled: true\n   -->\n<div></div>',
+      'utf8',
+    );
     await run();
 
     const output = await readRegistry();
+    expect(output).toContain('StageLogin');
+    expect(output).not.toContain('customHeaderRegistry');
+    expect(output).not.toContain('customFooterRegistry');
     expect(output).not.toContain('CustomHeaderBrand');
     expect(output).not.toContain('CustomFooterLegal');
-    expect(output).toContain('customHeaderRegistry: Record<string, CustomRegistryEntry> = {');
-  });
-
-  it('excludes a dormant header even when its content is invalid (skip-entirely)', async () => {
-    // Dormant files are skipped before any parsing: a file with a garbage header
-    // but no Enabled: true must not fail the build.
-    const dormantDir = join(tmpDir, 'experimental', 'custom', 'headers', 'draft');
-    await mkdir(dormantDir, { recursive: true });
-    await writeFile(
-      join(dormantDir, 'draft.svelte'),
-      `<script>no component header at all</script>\n<div></div>`,
-      'utf8',
-    );
-    await run();
-
-    const output = await readRegistry();
-    expect(output).not.toContain('CustomHeaderDraft');
-  });
-
-  it('fails when a dormant header has an invalid Enabled value', async () => {
-    const invalidDir = join(tmpDir, 'experimental', 'custom', 'headers', 'bad');
-    await mkdir(invalidDir, { recursive: true });
-    await writeFile(
-      join(invalidDir, 'bad.svelte'),
-      `<!--\n   @component\n   Type: header\n   Name: Bad\n   Enabled: yes\n   -->\n<div></div>`,
-      'utf8',
-    );
-
-    const result = await Effect.runPromise(
-      Effect.either(runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer))),
-    );
-    if (result._tag !== 'Left') {
-      throw new Error('Expected runRegistryScript to fail');
-    }
-    expect(String(result.left.cause)).toContain('Invalid Enabled value "yes"');
-  });
-
-  it('reports every invalid Enabled value together instead of stopping at the first', async () => {
-    const writeEnabledFile = async (dir: string, file: string, enabledValue: string) => {
-      const invalidDir = join(tmpDir, 'experimental', 'custom', dir);
-      await mkdir(invalidDir, { recursive: true });
-      await writeFile(
-        join(invalidDir, file),
-        `<!--\n   @component\n   Type: ${
-          dir === 'headers' ? 'header' : 'footer'
-        }\n   Name: ${enabledValue}\n   Enabled: ${enabledValue}\n   -->\n<div></div>`,
-        'utf8',
-      );
-    };
-    await writeEnabledFile('headers', 'one.svelte', 'yes');
-    await writeEnabledFile('headers', 'two.svelte', 'nope');
-    await writeEnabledFile('footers', 'three.svelte', 'maybe');
-
-    const result = await Effect.runPromise(
-      Effect.either(runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer))),
-    );
-    if (result._tag !== 'Left') {
-      throw new Error('Expected runRegistryScript to fail');
-    }
-    const error = result.left;
-    if (!(error instanceof RegistryScanError)) {
-      throw new Error(`Expected RegistryScanError, got: ${String(error)}`);
-    }
-    const cause = String(error.cause);
-    expect(cause).toContain('Invalid Enabled value "yes"');
-    expect(cause).toContain('Invalid Enabled value "nope"');
-    expect(cause).toContain('Invalid Enabled value "maybe"');
-  });
-
-  it('fails when two enabled header components exist', async () => {
-    await writeComponent('headers', 'a', 'one.svelte', 'One', 'header');
-    await writeComponent('headers', 'b', 'two.svelte', 'Two', 'header');
-
-    const result = await Effect.runPromise(
-      Effect.either(runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer))),
-    );
-    if (result._tag !== 'Left') {
-      throw new Error('Expected runRegistryScript to fail');
-    }
-    const error = result.left;
-    if (!(error instanceof RegistryEnabledLimitError)) {
-      throw new Error(`Expected RegistryEnabledLimitError, got: ${String(error)}`);
-    }
-    expect(error.type).toBe('header');
-    expect(error.message).toContain('one.svelte');
   });
 
   it('keeps the multi-entry Record behavior for stages and callbacks', async () => {
@@ -820,44 +438,6 @@ describe('runRegistryScript', () => {
     const output = await readRegistry();
     // The stray line is silently ignored: the stage bundles regardless.
     expect(output).toContain('StageStray');
-  });
-
-  it('emits empty Records when header/footer directories are empty', async () => {
-    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
-    await run();
-
-    const output = await readRegistry();
-    expect(output).toContain('customHeaderRegistry: Record<string, CustomRegistryEntry> = {');
-    expect(output).toContain('customFooterRegistry: Record<string, CustomRegistryEntry> = {');
-  });
-
-  it('emits a single enabled header as a Record key and drops dormant headers', async () => {
-    await writeComponent('headers', 'a', 'one.svelte', 'One', 'header');
-    await writeComponent('headers', 'b', 'two.svelte', 'Two', 'header', false);
-    await run();
-
-    const output = await readRegistry();
-    expect(output).toContain('"One": {');
-    expect(output).toContain('CustomHeaderOne');
-    expect(output).not.toContain('CustomHeaderTwo');
-  });
-
-  it('fails when two enabled header components collide on a name', async () => {
-    await writeComponent('headers', 'a', 'one.svelte', 'Same', 'header');
-    await writeComponent('headers', 'b', 'two.svelte', 'Same', 'header');
-
-    const result = await Effect.runPromise(
-      Effect.either(runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer))),
-    );
-    if (result._tag !== 'Left') {
-      throw new Error('Expected runRegistryScript to fail');
-    }
-    const error = result.left;
-    if (!(error instanceof RegistryEnabledLimitError)) {
-      throw new Error(`Expected RegistryEnabledLimitError, got: ${String(error)}`);
-    }
-    expect(error.type).toBe('header');
-    expect(error.message).toContain('one.svelte');
   });
 });
 
@@ -890,30 +470,30 @@ describe('customRegistry vite plugin', () => {
   const registryPath = () =>
     join(tmpDir, 'core', 'journey', '_utilities', 'registry', 'custom-registry.ts');
 
-  it('watched dirs include headers and footers: a header add event regenerates the registry', async () => {
+  it('a stage add event regenerates the registry', async () => {
     const { customRegistry } = await import('./vite-plugin.js');
     const plugin = customRegistry({ projectRoot: tmpDir });
     const { server, listeners } = makeServer();
     (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
     expect(server.watcher.on).toHaveBeenCalledWith('all', expect.any(Function));
 
-    // Add an ENABLED header component and fire the add event through the watcher listener.
-    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'brand');
-    await mkdir(headerDir, { recursive: true });
+    // Add a stage component and fire the add event through the watcher listener.
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
     await writeFile(
-      join(headerDir, 'brand.svelte'),
-      '<!--\n   @component\n   Type: header\n   Name: Brand\n   Enabled: true\n   -->\n<div></div>',
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
       'utf8',
     );
     expect(listeners.length).toBeGreaterThan(0);
     for (const listener of listeners) {
-      listener('add', join(headerDir, 'brand.svelte'));
+      listener('add', join(stageDir, 'brand.svelte'));
     }
 
     await vi.waitFor(async () => {
       const output = await readFile(registryPath(), 'utf8');
-      expect(output).toContain('customHeaderRegistry: Record<string, CustomRegistryEntry> = {');
-      expect(output).toContain('CustomHeaderBrand');
+      expect(output).toContain('customStageRegistry: Record<string, CustomRegistryEntry> = {');
+      expect(output).toContain('StageBrand');
     });
   });
 
@@ -928,12 +508,12 @@ describe('customRegistry vite plugin', () => {
     const { server, listeners } = makeServer();
     (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
 
-    // Add a header file OUTSIDE the watched dirs and fire the event.
+    // Add a stage file OUTSIDE the watched dirs and fire the event.
     const outsideDir = join(tmpDir, 'experimental', 'elsewhere');
     await mkdir(outsideDir, { recursive: true });
     await writeFile(
       join(outsideDir, 'stray.svelte'),
-      '<!--\n   @component\n   Type: header\n   Name: Stray\n   -->\n<div></div>',
+      '<!--\n   @component\n   Type: stage\n   Name: Stray\n   -->\n<div></div>',
       'utf8',
     );
     for (const listener of listeners) {
@@ -943,30 +523,30 @@ describe('customRegistry vite plugin', () => {
 
     const after = await readFile(registryPath(), 'utf8');
     expect(after).toBe(baseline);
-    expect(after).not.toContain('CustomHeaderStray');
+    expect(after).not.toContain('StageStray');
   });
 
   it('logs a stale-registry action sentence when a watcher regeneration collides on a name', async () => {
     const { customRegistry } = await import('./vite-plugin.js');
     const plugin = customRegistry({ projectRoot: tmpDir });
 
-    // Seed a valid registry with one enabled header.
-    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'brand');
-    await mkdir(headerDir, { recursive: true });
+    // Seed a valid registry with one stage.
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
     await writeFile(
-      join(headerDir, 'brand.svelte'),
-      '<!--\n   @component\n   Type: header\n   Name: Brand\n   Enabled: true\n   -->\n<div></div>',
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
       'utf8',
     );
     await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
     const baseline = await readFile(registryPath(), 'utf8');
 
-    // Introduce a second ENABLED header with the SAME Name: — the regeneration collides.
-    const collidingDir = join(tmpDir, 'experimental', 'custom', 'headers', 'other');
+    // Introduce a second stage with the SAME Name: — the regeneration collides.
+    const collidingDir = join(tmpDir, 'experimental', 'custom', 'stages', 'other');
     await mkdir(collidingDir, { recursive: true });
     await writeFile(
       join(collidingDir, 'other.svelte'),
-      '<!--\n   @component\n   Type: header\n   Name: Brand\n   Enabled: true\n   -->\n<div></div>',
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
       'utf8',
     );
 
