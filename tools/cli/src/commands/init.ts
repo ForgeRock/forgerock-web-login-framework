@@ -4,7 +4,12 @@ import { Console, Effect } from 'effect';
 
 import { writeVersion } from '../config/version.js';
 import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
-import { copyWithExclusions, expandTilde, isFrameworkDirectory } from '../services/file-system.js';
+import {
+  copyWithExclusions,
+  copyWrapperFiles,
+  expandTilde,
+  isFrameworkDirectory,
+} from '../services/file-system.js';
 import { resolveSource } from './source.js';
 
 import type { Option } from 'effect';
@@ -22,7 +27,7 @@ const PNPM_WORKSPACE = `packages:
  * Custom component directories scaffolded (with .gitkeep) at project init.
  * Protected during `ping-lf update` — see PROTECTED_DIRS in services/file-system.
  */
-export const CUSTOM_COMPONENT_DIRS = ['callbacks', 'stages', 'headers', 'footers'] as const;
+export const CUSTOM_COMPONENT_DIRS = ['callbacks', 'stages'] as const;
 
 const nextStepsMessage = (dir: string) => `
 Done. Project initialized successfully.
@@ -84,6 +89,13 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
         yield* fs.makeDirectory(resolvedDir, { recursive: true });
         yield* copyWithExclusions(sourceDir, resolvedDir);
 
+        // ── 2b. Place the framework-shipped wrapper files ──────────────────
+        // The bulk copy skips them (they are file-protected: customer edits
+        // to them must survive `update`), so init places them explicitly. The
+        // app's +page.svelte imports them directly, so a project without them
+        // cannot build.
+        yield* copyWrapperFiles(sourceDir, resolvedDir);
+
         return resolvedVersion;
       }),
     );
@@ -97,7 +109,6 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     // Only the custom component dirs are protected (they hold user components).
     // Create them as empty dirs with .gitkeep — components come via `ping-lf generate`.
     yield* Console.log('Scaffolding custom component directories...');
-
     yield* Effect.forEach(
       CUSTOM_COMPONENT_DIRS,
       (dir) =>

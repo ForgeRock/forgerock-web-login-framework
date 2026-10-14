@@ -3,8 +3,57 @@ import { Console, Effect, Option } from 'effect';
 import nodePath from 'node:path';
 
 import { assertValidProject, writeVersion } from '../config/version.js';
-import { copyWithExclusions, expandTilde } from '../services/file-system.js';
+import { copyWithExclusions, copyWrapperFiles, expandTilde } from '../services/file-system.js';
 import { resolveSource } from './source.js';
+
+export interface UpdateProjectOptions {
+  readonly directory: Option.Option<string>;
+  readonly local: Option.Option<string>;
+  readonly tag: Option.Option<string>;
+}
+
+export const updateProject = ({ directory, local, tag }: UpdateProjectOptions) =>
+  Effect.gen(function* () {
+    const cwd = nodePath.resolve(expandTilde(Option.getOrElse(directory, () => process.cwd())));
+
+    // ── 1. Verify this is an initialized project ──────────────────────────
+    const currentVersion = yield* assertValidProject(cwd);
+
+    yield* Console.log(`\nUpdating project from version: ${currentVersion.version}\n`);
+
+    // ── 2. Resolve source + copy framework (scoped: temp dir auto-cleaned) ──
+    // Effect.scoped closes the Scope that release.fetch opens, triggering
+    // automatic removal of the .framework-tmp directory after copying.
+    const resolvedVersion = yield* Effect.scoped(
+      Effect.gen(function* () {
+        const { sourceDir, resolvedVersion } = yield* resolveSource(local, tag, cwd);
+        yield* Console.log('Copying updated framework files...');
+        yield* copyWithExclusions(sourceDir, cwd);
+
+        // ── 2b. Backfill missing wrapper files ─────────────────────────────
+        // The bulk copy skips them (they are file-protected so customer edits
+        // survive), but a project updated from an older framework version may
+        // not have them yet — the app's +page.svelte imports them directly, so
+        // a project missing one cannot build. copyWrapperFiles copies only
+        // absent files, never overwriting customer edits.
+        yield* copyWrapperFiles(sourceDir, cwd);
+
+        return resolvedVersion;
+      }),
+    );
+
+    // ── 3. Update .generator-version ──────────────────────────────────────
+    // custom-registry.ts is NOT regenerated here — the framework's Vite
+    // plugin regenerates it on the next build or dev-server start.
+    yield* writeVersion(cwd, {
+      version: resolvedVersion,
+      generatedAt: new Date().toISOString(),
+    });
+    yield* Console.log(
+      `\nDone. Updated from ${currentVersion.version} to ${resolvedVersion}.\n` +
+        'Run "pnpm install" if package dependencies changed.\n',
+    );
+  });
 
 export const updateCommand = Command.make(
   'update',
@@ -31,39 +80,7 @@ export const updateCommand = Command.make(
       ),
     ),
   },
-  ({ local, tag, directory }) =>
-    Effect.gen(function* () {
-      const cwd = nodePath.resolve(expandTilde(Option.getOrElse(directory, () => process.cwd())));
-
-      // ── 1. Verify this is an initialized project ──────────────────────────
-      const currentVersion = yield* assertValidProject(cwd);
-
-      yield* Console.log(`\nUpdating project from version: ${currentVersion.version}\n`);
-
-      // ── 2. Resolve source + copy framework (scoped: temp dir auto-cleaned) ──
-      // Effect.scoped closes the Scope that release.fetch opens, triggering
-      // automatic removal of the .framework-tmp directory after copying.
-      const resolvedVersion = yield* Effect.scoped(
-        Effect.gen(function* () {
-          const { sourceDir, resolvedVersion } = yield* resolveSource(local, tag, cwd);
-          yield* Console.log('Copying updated framework files...');
-          yield* copyWithExclusions(sourceDir, cwd);
-          return resolvedVersion;
-        }),
-      );
-
-      // ── 3. Update .generator-version ──────────────────────────────────────
-      // custom-registry.ts is NOT regenerated here — the framework's Vite
-      // plugin regenerates it on the next build or dev-server start.
-      yield* writeVersion(cwd, {
-        version: resolvedVersion,
-        generatedAt: new Date().toISOString(),
-      });
-      yield* Console.log(
-        `\nDone. Updated from ${currentVersion.version} to ${resolvedVersion}.\n` +
-          'Run "pnpm install" if package dependencies changed.\n',
-      );
-    }),
+  updateProject,
 ).pipe(
   Command.withDescription(
     'Fetch the latest (or a specified) framework version and overwrite core files while preserving experimental/custom/.',

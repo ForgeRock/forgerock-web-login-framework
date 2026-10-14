@@ -1,4 +1,4 @@
-import { FileSystem } from '@effect/platform';
+import { FileSystem, Path } from '@effect/platform';
 import { Effect } from 'effect';
 import path from 'node:path';
 
@@ -31,11 +31,19 @@ export const isFrameworkDirectory = Effect.fnUntraced(function* (dir: string) {
   return hasPkgJson && (hasExperimental || hasPnpmWorkspace);
 });
 
-const PROTECTED_DIRS = [
-  'experimental/custom/callbacks/',
-  'experimental/custom/stages/',
-  'experimental/custom/headers/',
-  'experimental/custom/footers/',
+const PROTECTED_DIRS = ['experimental/custom/callbacks/', 'experimental/custom/stages/'] as const;
+
+/**
+ * Framework-shipped custom wrapper files. Each is a fixed, tracked,
+ * user-editable file rendered by the login app (`+page.svelte` imports it
+ * directly). The bulk copy skips them so `update` can never overwrite
+ * customer edits; `copyWrapperFiles` backfills any the target is missing so a
+ * project updated onto a framework version whose app imports the wrappers
+ * still gets the defaults.
+ */
+export const CUSTOM_WRAPPER_FILES = [
+  'experimental/custom/header/header.svelte',
+  'experimental/custom/footer/footer.svelte',
 ] as const;
 
 /** Expand a leading `~` to the user's home directory. */
@@ -49,7 +57,10 @@ export function expandTilde(p: string): string {
 
 function isProtected(relativePath: string): boolean {
   const normalized = normalizeSeparators(relativePath);
-  return PROTECTED_DIRS.some((dir) => `${normalized}/`.startsWith(dir));
+  return (
+    PROTECTED_DIRS.some((dir) => `${normalized}/`.startsWith(dir)) ||
+    (CUSTOM_WRAPPER_FILES as readonly string[]).includes(normalized)
+  );
 }
 
 const walk = (
@@ -102,4 +113,43 @@ export const copyWithExclusions = (sourceDir: string, targetDir: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     yield* walk(fs, sourceDir, targetDir, sourceDir);
+  });
+
+/**
+ * Backfills the framework-shipped wrapper files into `targetDir`, skipping any
+ * the target already has. Customer edits are never overwritten — a file is
+ * copied only when absent. A missing wrapper file in the source is a no-op,
+ * which keeps older framework versions (whose app does not import wrappers)
+ * safe to update from.
+ */
+export const copyWrapperFiles = (sourceDir: string, targetDir: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+
+    yield* Effect.forEach(
+      CUSTOM_WRAPPER_FILES,
+      (relativePath) =>
+        Effect.gen(function* () {
+          const sourcePath = path.join(sourceDir, relativePath);
+          const targetPath = path.join(targetDir, relativePath);
+
+          const hasSource = yield* fs.exists(sourcePath).pipe(Effect.orElseSucceed(() => false));
+          if (!hasSource) {
+            return;
+          }
+
+          const hasTarget = yield* fs.exists(targetPath).pipe(Effect.orElseSucceed(() => false));
+          if (hasTarget) {
+            return;
+          }
+
+          const parentDir = path.dirname(targetPath);
+          yield* fs
+            .makeDirectory(parentDir, { recursive: true })
+            .pipe(wrapFsCall('makeDirectory', parentDir));
+          yield* fs.copyFile(sourcePath, targetPath).pipe(wrapFsCall('copyFile', sourcePath));
+        }),
+      { concurrency: 'unbounded', discard: true },
+    );
   });
