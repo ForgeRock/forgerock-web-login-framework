@@ -47,7 +47,7 @@ export function setupPasskeyAutofill(journeyStore: JourneyStore) {
 
     lastAuthId = authId;
 
-    if (!isPasskeyAutofillStep(step) || !(await WebAuthn.isConditionalMediationSupported())) {
+    if (!(await isPasskeyAutofillStep(step))) {
       return;
     }
 
