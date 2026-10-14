@@ -15,7 +15,7 @@ export type RedirectData = {
   isGotoOnFail: boolean;
   gotoUrl: string;
   successUrl: string | null;
-  roles: string[];
+  roles: ReadonlyArray<string>;
   realm: string | undefined;
   amOrigin: string;
 };

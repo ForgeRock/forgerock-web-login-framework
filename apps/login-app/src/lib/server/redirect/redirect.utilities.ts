@@ -67,7 +67,11 @@ function firstOf(redirectContext: RedirectData, ...resolvers: Resolver[]): strin
  * @param {string | undefined} realm - The realm name.
  * @returns {string} The role-based redirect URL.
  */
-export function buildRoleUrl(amOrigin: string, roles: string[], realm: string | undefined): string {
+export function buildRoleUrl(
+  amOrigin: string,
+  roles: ReadonlyArray<string>,
+  realm: string | undefined,
+): string {
   const isAdmin = roles.includes('ui-global-admin') || roles.includes('ui-realm-admin');
   const realmPath = realm && realm !== 'root' ? `/${realm}` : '/';
   return isAdmin
@@ -120,6 +124,25 @@ export function resolveAgainstOrigin(urlOrPath: string, amOrigin: string): strin
     return new URL(urlOrPath, amOrigin).href;
   } catch {
     return urlOrPath;
+  }
+}
+
+/**
+ * @function describeRedirectTarget - Reduces a redirect URL to its origin and path for logging.
+ * The query and fragment are dropped because authorize URLs can carry tokens and hints.
+ * @param {string} url - An absolute or relative URL.
+ * @returns {string} The origin and path, the path alone for a relative URL, or a placeholder.
+ */
+export function describeRedirectTarget(url: string): string {
+  const relativeBase = 'http://relative.invalid';
+  try {
+    const parsed = new URL(url, relativeBase);
+    if (parsed.origin === 'null') {
+      return parsed.protocol;
+    }
+    return parsed.origin === relativeBase ? parsed.pathname : `${parsed.origin}${parsed.pathname}`;
+  } catch {
+    return '[unparseable]';
   }
 }
 

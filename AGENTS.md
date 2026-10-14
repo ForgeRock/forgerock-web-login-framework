@@ -45,12 +45,13 @@ Vite config):
 | `$locales`    | `core/locales/`    |
 
 **Dependency hoisting:** `core/`'s runtime deps (e.g.
-`@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
-`xss`, `zod`, `qrcode`) are declared in `packages/login-widget/package.json`
-and hoisted to root `node_modules` via `public-hoist-pattern` rules in
-`.npmrc`. **When adding a new dependency that `core/` imports, add it to
-`packages/login-widget/package.json` and, if needed, add a
-`public-hoist-pattern` entry in `.npmrc`.**
+`@forgerock/protect`, `xss`, `zod`, `qrcode`) are declared in
+`packages/login-widget/package.json`. Some also appear as root devDependencies
+or in the declaring workspace of whichever app compiles `core/` (for example
+`@forgerock/journey-client` is imported directly by `apps/login-app` stages and
+declared there). `public-hoist-pattern` rules in `.npmrc` cover only `effect`
+and `@effect/*`. **When adding a new dependency that `core/` imports, declare it
+in every workspace that compiles the importing `core/` code.**
 
 ### Public API
 
