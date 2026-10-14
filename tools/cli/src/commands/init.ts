@@ -41,8 +41,6 @@ Next steps:
 To scaffold your first custom component:
   ping-lf generate callback MyCallback
   ping-lf generate stage MyStage
-  ping-lf generate header MyHeader
-  ping-lf generate footer MyFooter
 
 Read the authoring guide: experimental/custom/README.md
 `;
