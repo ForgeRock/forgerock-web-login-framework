@@ -11,6 +11,7 @@ import { isRedirect, redirect, type RequestEvent } from '@sveltejs/kit';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
+import { getHttpCookie, getUserIdFromSession, getUserRolesFromSession } from '$server/am-session';
 import {
   createRedirectContext,
   readAndClearRedirectCookie,
@@ -24,7 +25,6 @@ import {
   resolveRedirect,
 } from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
-import { getHttpCookie, getUserIdFromSession, getUserRolesFromSession } from '$server/sessions';
 
 import type { z } from 'zod';
 

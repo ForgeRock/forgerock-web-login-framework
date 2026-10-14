@@ -18,6 +18,23 @@ import type { TokenId } from '$server/schemas';
 const AM_TIMEOUT_MS = 2000;
 
 /**
+ * Builds the proxied response for an AM JSON/OAuth call: AM's status and
+ * content-type are relayed (an upstream 4xx must not surface as 200), the
+ * response is marked no-store, and no-body statuses (204/205/304) get a null
+ * body, which the Response constructor requires.
+ */
+export function amProxyResponse(response: Response, body: string): Response {
+  const headers = new Headers();
+  const contentType = response.headers.get('content-type');
+  if (contentType) headers.set('content-type', contentType);
+  headers.set('cache-control', 'no-store');
+
+  const status = response.status;
+  const hasBody = status !== 204 && status !== 205 && status !== 304;
+  return new Response(hasBody ? body : null, { status, headers });
+}
+
+/**
  * Builds the AM session cookie header from the browser-owned cookie.
  * Kept stateless, since requests can land on any replica.
  */
