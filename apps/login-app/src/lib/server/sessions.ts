@@ -10,12 +10,31 @@
 import { z } from 'zod';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
+import { amEndpointLabel, recordAmRequest } from '$server/metrics';
 
 import type { Cookies } from '@sveltejs/kit';
 
 import type { TokenId } from '$server/schemas';
 
 const AM_TIMEOUT_MS = 2000;
+
+/**
+ * Fetches an AM URL and records the call against the AM health metrics
+ * (endpoint label collapsed across realms, status class bounded to 2xx-5xx
+ * and `error` for network/timeout failures).
+ */
+export async function amFetch(url: string, init?: RequestInit): Promise<Response> {
+  const endpoint = amEndpointLabel(new URL(url).pathname);
+  const start = performance.now();
+  try {
+    const response = await fetch(url, init);
+    recordAmRequest(endpoint, response.status, (performance.now() - start) / 1000);
+    return response;
+  } catch (error) {
+    recordAmRequest(endpoint, undefined, (performance.now() - start) / 1000);
+    throw error;
+  }
+}
 
 /**
  * Builds the AM session cookie header from the browser-owned cookie.
@@ -174,7 +193,7 @@ export async function getUserIdFromSession(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
-    const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
+    const response = await amFetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
       method: 'POST',
       headers: {
         accept: 'application/json',
@@ -216,7 +235,7 @@ export async function amFetchRequest(
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
-    const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}${endpoint}`, {
+    const response = await amFetch(`${AM_DOMAIN_PATH}${realmPath}${endpoint}`, {
       method,
       headers: {
         accept: 'application/json',

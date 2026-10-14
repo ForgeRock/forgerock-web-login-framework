@@ -1,4 +1,3 @@
-import auto from '@sveltejs/adapter-auto';
 import node from '@sveltejs/adapter-node';
 import { mdsvex } from 'mdsvex';
 import path from 'path';
@@ -16,7 +15,18 @@ const config = {
     },
   },
   kit: {
-    adapter: process.env.PREVIEW ? node() : auto(),
+    // The app deploys as the adapter-node Docker image (Dockerfile PREVIEW
+    // stage); adapter-node also serves `vite preview` for e2e. The
+    // adapter-auto default is replaced so the build target is the same
+    // everywhere.
+    adapter: node(),
+    experimental: {
+      // Starts src/instrumentation.server.ts (the dedicated Prometheus
+      // metrics listener) before app code loads.
+      instrumentation: {
+        server: true,
+      },
+    },
     // $lib now defaults to SvelteKit's standard src/lib/ — the app's own code
     alias: {
       $core: path.resolve('../../core'),

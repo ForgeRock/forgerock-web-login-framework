@@ -11,6 +11,7 @@ import { z } from 'zod';
 
 import { AM_DOMAIN_PATH } from '$core/constants';
 import { env } from '$env/dynamic/private';
+import { recordRedirectValidation } from '$server/metrics';
 import {
   amFetchRequest,
   getHttpCookie,
@@ -140,7 +141,9 @@ export async function validateUrl(
     parsed.data.successUrl === 'undefined' ||
     parsed.data.successUrl === 'null'
   ) {
+    recordRedirectValidation(response === null ? 'error' : 'rejected');
     return null;
   }
+  recordRedirectValidation('accepted');
   return parsed.data.successUrl;
 }
