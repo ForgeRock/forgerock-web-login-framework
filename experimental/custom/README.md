@@ -18,12 +18,14 @@ experimental/custom/
 ├── callbacks/
 │   └── <your-callback-name>/
 │       └── (same structure as above)
-├── headers/
-│   └── <your-header-name>/
-│       └── (same structure as above)
-└── footers/
-    └── <your-footer-name>/
-        └── (same structure as above)
+├── header/
+│   ├── header.svelte                # page header wrapper — fixed file, edit directly
+│   ├── header.stories.js            # optional (Storybook)
+│   └── header.story.svelte          # optional (Storybook)
+└── footer/
+    ├── footer.svelte                # page footer wrapper — fixed file, edit directly
+    ├── footer.stories.js            # optional (Storybook)
+    └── footer.story.svelte          # optional (Storybook)
 ```
 
 ## Component format
@@ -57,20 +59,40 @@ The `@component` comment is required. The framework's Vite plugin reads it to re
 
 ## Types
 
-| Type       | What it replaces                                  | Scope                                     |
-| ---------- | ------------------------------------------------- | ----------------------------------------- |
-| `stage`    | The entire form layout for a named stage          | One stage only                            |
-| `callback` | A specific callback type renderer                 | Every occurrence globally                 |
-| `header`   | The page-level header slot (branding, nav links)  | At most one `Enabled: true`, rest dormant |
-| `footer`   | The page-level footer slot (legal, links, markup) | At most one `Enabled: true`, rest dormant |
+| Type       | What it replaces                         | Scope                     |
+| ---------- | ---------------------------------------- | ------------------------- |
+| `stage`    | The entire form layout for a named stage | One stage only            |
+| `callback` | A specific callback type renderer        | Every occurrence globally |
 
-Header and footer components take no props — they are static branding slots rendered above and below the journey in the login app. They are opt-in via an `Enabled:` property in the `@component` comment block:
+Only `stage` and `callback` are registry component types. The page header and
+footer are not registry components — they are fixed wrapper files.
 
-- `Enabled: true` bundles the component with the login app and renders it above (header) or below (footer) the journey. At most one header and one footer may declare it — a second enabled component of the same type fails the build.
-- Absent, or `Enabled: false`, keeps the component dormant on disk: not bundled, not validated. Remove the `Enabled` line (or set it to `false`) to disable a component without deleting it.
-- Any other value fails the build, so a typo cannot silently disable a component meant to ship. The property name is case-sensitive (`Enabled`, matching `Name` and `Type`).
+## Page header and footer wrappers
 
-Stages and callbacks are always bundled and never use `Enabled`; a stray `Enabled:` line there is silently ignored.
+The login app renders two fixed wrapper files around the journey container:
+
+- `header/header.svelte` — rendered above the journey
+- `footer/footer.svelte` — rendered below the journey
+
+Unlike stages and callbacks, there is exactly **one** wrapper per element and no
+registry lookup, `@component` header, or selection step. The files are tracked
+in git, placed by `ping-lf init`, and never overwritten by `ping-lf update`, so
+edit them directly and your changes survive framework upgrades.
+
+Each wrapper receives a single prop:
+
+| Prop          | Type     | Description                                                                                           |
+| ------------- | -------- | ----------------------------------------------------------------------------------------------------- |
+| `journeyName` | `string` | Journey currently driving the page (e.g. `"Login"`, `"Register"`). `''` means the AM default journey. |
+
+The wrappers mount client-side only: they first render once a journey step
+arrives, then stay mounted through step transitions, journey switches, and the
+completion redirect. On the default journey (`''`) they still render — show
+your default-journey view, never a blank slot.
+
+Everything you need inside a wrapper comes from
+[`$login-framework-exports`](#module-imports-available); the shared
+`CustomWrapperProps` type is also exported from there.
 
 ## Component props
 
@@ -143,7 +165,7 @@ import type { NameCallback, JourneyStep } from '@forgerock/journey-client/types'
 
 ## Hot module reloading note
 
-The framework's Vite plugin watches `experimental/custom/{stages,callbacks,headers,footers}/` during `pnpm dev` and regenerates `custom-registry.ts` automatically when you add, remove, or rename a component file. Editing an existing registered component reloads normally via Vite HMR.
+The framework's Vite plugin watches `experimental/custom/{stages,callbacks}/` during `pnpm dev` and regenerates `custom-registry.ts` automatically when you add, remove, or rename a component file. Editing an existing registered component reloads normally via Vite HMR. The header and footer wrappers are statically imported by the login app — editing them hot-reloads like any other Svelte file.
 
 If you generate a component while only Storybook is running (Storybook uses its own Vite config and doesn't load this plugin), trigger a regeneration with:
 
