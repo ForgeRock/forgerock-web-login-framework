@@ -11,6 +11,7 @@ import {
   parseAcceptedProps,
   parseComponentHeader,
   runRegistryScript,
+  seedMissingWrappers,
   toPascalCase,
 } from './registry.js';
 
@@ -441,6 +442,98 @@ describe('runRegistryScript', () => {
   });
 });
 
+describe('seedMissingWrappers', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'core-registry-seed-test-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  /** Writes the tracked wrapper templates into the fake repo layout. */
+  const writeTemplates = async () => {
+    const templatesDir = join(
+      tmpDir,
+      'core',
+      'journey',
+      '_utilities',
+      'registry',
+      'wrapper-templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(join(templatesDir, 'header.svelte'), '<!-- template header -->', 'utf8');
+    await writeFile(join(templatesDir, 'footer.svelte'), '<!-- template footer -->', 'utf8');
+  };
+
+  const run = () =>
+    seedMissingWrappers(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+
+  const seedPath = (element: 'header' | 'footer') =>
+    join(tmpDir, 'experimental', 'custom', element, `${element}.svelte`);
+
+  const readSeed = async (element: 'header' | 'footer') => readFile(seedPath(element), 'utf8');
+
+  it('seeds both wrappers when they are absent', async () => {
+    await writeTemplates();
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- template header -->');
+    expect(await readSeed('footer')).toBe('<!-- template footer -->');
+  });
+
+  it('skips writing when a wrapper already exists (never overwrites)', async () => {
+    await writeTemplates();
+    const customDir = join(tmpDir, 'experimental', 'custom', 'header');
+    await mkdir(customDir, { recursive: true });
+    await writeFile(seedPath('header'), '<!-- customer-edited header -->', 'utf8');
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- customer-edited header -->');
+  });
+
+  it('seeds the missing element while leaving the present one untouched (per-file fill-if-absent)', async () => {
+    await writeTemplates();
+    const customDir = join(tmpDir, 'experimental', 'custom', 'footer');
+    await mkdir(customDir, { recursive: true });
+    await writeFile(seedPath('footer'), '<!-- customer footer -->', 'utf8');
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- template header -->');
+    expect(await readSeed('footer')).toBe('<!-- customer footer -->');
+  });
+
+  it('creates the element directories recursively when they were deleted entirely', async () => {
+    await writeTemplates();
+    // No experimental/custom tree exists at all in tmpDir.
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- template header -->');
+    expect(await readSeed('footer')).toBe('<!-- template footer -->');
+  });
+
+  it('fails loudly naming the seed step when a template is missing', async () => {
+    // Only the header template exists; footer's read fails.
+    const templatesDir = join(
+      tmpDir,
+      'core',
+      'journey',
+      '_utilities',
+      'registry',
+      'wrapper-templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(join(templatesDir, 'header.svelte'), '<!-- template header -->', 'utf8');
+
+    const failure = await run().catch((cause: unknown) => cause);
+    expect(String(failure)).toContain('wrapper template');
+    // The wrapper that could not be seeded must not exist half-written.
+    await expect(readFile(seedPath('footer'), 'utf8')).rejects.toThrow();
+  });
+});
+
 describe('customRegistry vite plugin', () => {
   let tmpDir: string;
 
@@ -469,6 +562,47 @@ describe('customRegistry vite plugin', () => {
 
   const registryPath = () =>
     join(tmpDir, 'core', 'journey', '_utilities', 'registry', 'custom-registry.ts');
+
+  /** Writes the wrapper templates the plugin's seeding step reads. */
+  const writePluginTemplates = async () => {
+    const templatesDir = join(
+      tmpDir,
+      'core',
+      'journey',
+      '_utilities',
+      'registry',
+      'wrapper-templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(join(templatesDir, 'header.svelte'), '<!-- template header -->', 'utf8');
+    await writeFile(join(templatesDir, 'footer.svelte'), '<!-- template footer -->', 'utf8');
+  };
+
+  it('buildStart seeds missing wrappers before regenerating the registry', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    await writePluginTemplates();
+
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
+    await writeFile(
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+
+    const plugin = customRegistry({ projectRoot: tmpDir });
+    await (plugin as { buildStart: () => Promise<void> }).buildStart();
+
+    // Wrappers seeded by buildStart from the templates.
+    const seededHeader = await readFile(
+      join(tmpDir, 'experimental', 'custom', 'header', 'header.svelte'),
+      'utf8',
+    );
+    expect(seededHeader).toBe('<!-- template header -->');
+    // Registry regenerated in the same buildStart.
+    const output = await readFile(registryPath(), 'utf8');
+    expect(output).toContain('StageBrand');
+  });
 
   it('a stage add event regenerates the registry', async () => {
     const { customRegistry } = await import('./vite-plugin.js');

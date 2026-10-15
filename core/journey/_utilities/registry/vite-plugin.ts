@@ -2,7 +2,7 @@ import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
 import path from 'node:path';
 
-import { runRegistryScript } from './registry';
+import { runRegistryScript, seedMissingWrappers } from './registry';
 
 interface CustomRegistryPluginOptions {
   /**
@@ -30,9 +30,10 @@ const STALE_REGISTRY_NOTE =
 /**
  * Regenerates `core/journey/_utilities/registry/custom-registry.ts` by scanning
  * `experimental/custom/{stages,callbacks}/` for `@component`-annotated
- * Svelte files. Runs once at `buildStart` and, in dev, watches for adds/removals so
- * scaffolding a new component via `ping-lf generate` is picked up without a
- * server restart.
+ * Svelte files, and seeds the page header/footer wrapper files into
+ * `experimental/custom/{header,footer}/` when absent. Both run at
+ * `buildStart`; in dev, the watcher also picks up adds/removals so scaffolding
+ * a new component via `ping-lf generate` needs no server restart.
  */
 export function customRegistry({ projectRoot }: CustomRegistryPluginOptions) {
   const watchedDirs = [
@@ -43,9 +44,14 @@ export function customRegistry({ projectRoot }: CustomRegistryPluginOptions) {
   const regenerate = () =>
     Effect.runPromise(runRegistryScript(projectRoot).pipe(Effect.provide(NodeContext.layer)));
 
+  const seed = () =>
+    Effect.runPromise(seedMissingWrappers(projectRoot).pipe(Effect.provide(NodeContext.layer)));
+
+  const buildStart = () => seed().then(regenerate);
+
   return {
     name: 'login-framework:custom-registry',
-    buildStart: regenerate,
+    buildStart,
     configureServer(server: ViteDevServer) {
       server.watcher.on('all', (_event, filePath) => {
         if (

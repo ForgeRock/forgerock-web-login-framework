@@ -333,6 +333,68 @@ export function buildRegistryContent(
 // Public API
 // --------------------------------------------------------------------------
 
+const WRAPPER_ELEMENTS = ['header', 'footer'] as const;
+
+/**
+ * Seeds the page header/footer wrapper files into
+ * `experimental/custom/{header,footer}/<element>.svelte` when they are absent,
+ * copying from the tracked `wrapper-templates/` directory that lives next to
+ * this module. Fill-if-absent: a wrapper that already exists (customer-edited
+ * or previously seeded) is never overwritten, and each element is handled
+ * independently so one present wrapper does not block the other.
+ *
+ * The wrappers are static imports of the login app page, so a missing file is
+ * a hard build error; seeding here makes every build (repo CI, Storybook,
+ * Docker deploys, customer projects) self-healing with no CI-specific step.
+ * Seed failures fail loudly naming this step — a silent failure would only
+ * surface later as a bare Rollup "Failed to resolve import".
+ */
+export const seedMissingWrappers = (projectDir: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const registryDir = path.join(projectDir, 'core', 'journey', '_utilities', 'registry');
+    const templatesDir = path.join(registryDir, 'wrapper-templates');
+
+    yield* Effect.forEach(WRAPPER_ELEMENTS, (element) =>
+      Effect.gen(function* () {
+        const seedPath = path.join(
+          projectDir,
+          'experimental',
+          'custom',
+          element,
+          `${element}.svelte`,
+        );
+        if (yield* fs.exists(seedPath)) {
+          return;
+        }
+        const templatePath = path.join(templatesDir, `${element}.svelte`);
+        const template = yield* fs.readFileString(templatePath).pipe(
+          Effect.mapError(
+            (cause) =>
+              new RegistryScanError({
+                directory: templatePath,
+                cause:
+                  `Failed to read the ${element} wrapper template while seeding the page wrappers. ` +
+                  `The wrapper files are generated on first build from core/journey/_utilities/registry/wrapper-templates/. ` +
+                  `If this file is missing, the framework installation is incomplete: ${String(
+                    cause,
+                  )}`,
+              }),
+          ),
+        );
+        yield* fs.makeDirectory(path.dirname(seedPath), { recursive: true });
+        // Write to a temp sibling then rename: a build interrupted mid-seed can
+        // never leave a torn wrapper file behind that later runs would treat as
+        // a customer edit.
+        const tempPath = `${seedPath}.seed-tmp`;
+        yield* fs.writeFileString(tempPath, template);
+        yield* fs.rename(tempPath, seedPath);
+        yield* Console.log(`[custom-registry] seeded missing wrapper: ${path.basename(seedPath)}`);
+      }),
+    );
+  });
+
 /**
  * Scans `experimental/custom/{stages,callbacks}/` for `@component`-annotated
  * Svelte files and writes
