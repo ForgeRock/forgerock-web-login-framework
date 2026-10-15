@@ -1,10 +1,11 @@
 import { NodeContext } from '@effect/platform-node';
+import { it } from '@effect/vitest';
 import { Effect } from 'effect';
 import { Schema } from 'effect';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect } from 'vitest';
 
 import {
   CallbackNameSchema,

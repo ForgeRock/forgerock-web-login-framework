@@ -5,7 +5,8 @@
   (inside the root div of the login app's +page.svelte). It is never
   overwritten once it exists — not by rebuilds, not by `ping-lf update` — so
   edit it freely; your changes survive framework upgrades. If you ever delete
-  or damage it, restore the default with `ping-lf generate wrapper header`.
+  it, the next build or dev-server start regenerates the default (only when
+  the file is absent; your edits are never touched).
 
   HOW IT RENDERS
   ──────────────
