@@ -4,6 +4,7 @@ import nodePath from 'node:path';
 
 import { assertValidProject, writeVersion } from '../config/version.js';
 import { copyWithExclusions, copyWrapperFiles, expandTilde } from '../services/file-system.js';
+import { getTemplatesDir } from './generate.js';
 import { resolveSource } from './source.js';
 
 export interface UpdateProjectOptions {
@@ -35,8 +36,9 @@ export const updateProject = ({ directory, local, tag }: UpdateProjectOptions) =
         // survive), but a project updated from an older framework version may
         // not have them yet — the app's +page.svelte imports them directly, so
         // a project missing one cannot build. copyWrapperFiles copies only
-        // absent files, never overwriting customer edits.
-        yield* copyWrapperFiles(sourceDir, cwd);
+        // absent files, from the CLI's own wrapper templates, never
+        // overwriting customer edits.
+        yield* copyWrapperFiles(cwd, getTemplatesDir());
 
         return resolvedVersion;
       }),

@@ -116,21 +116,11 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     await writeFile(join(sourceDir, 'package.json'), '{}', 'utf8');
     await mkdir(join(sourceDir, 'experimental', 'custom', 'callbacks'), { recursive: true });
     await mkdir(join(sourceDir, 'experimental', 'custom', 'stages'), { recursive: true });
-    await mkdir(join(sourceDir, 'experimental', 'custom', 'header'), { recursive: true });
-    await mkdir(join(sourceDir, 'experimental', 'custom', 'footer'), { recursive: true });
-    await writeFile(
-      join(sourceDir, 'experimental', 'custom', 'header', 'header.svelte'),
-      '<!-- framework header -->',
-      'utf8',
-    );
-    await writeFile(
-      join(sourceDir, 'experimental', 'custom', 'footer', 'footer.svelte'),
-      '<!-- framework footer -->',
-      'utf8',
-    );
+    // Wrapper content comes from the CLI's own templates/wrapper/ dir (resolved
+    // inside the CLI, not from the framework source tree) — no core/ stub needed.
   };
 
-  it('scaffolds callbacks/stages .gitkeep dirs, places wrapper files, skips headers/footers', async () => {
+  it('scaffolds callbacks/stages .gitkeep dirs, places wrapper files from CLI templates, skips headers/footers', async () => {
     await seedFrameworkSource();
 
     await provide(
@@ -146,12 +136,14 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     // headers/ and footers/ (registry-era dirs) are NOT scaffolded
     await expect(access(join(targetDir, 'experimental', 'custom', 'headers'))).rejects.toThrow();
     await expect(access(join(targetDir, 'experimental', 'custom', 'footers'))).rejects.toThrow();
-    // wrapper files placed from the framework source
-    await expect(
-      readFile(join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'), 'utf8'),
-    ).resolves.toBe('<!-- framework header -->');
-    await expect(
-      readFile(join(targetDir, 'experimental', 'custom', 'footer', 'footer.svelte'), 'utf8'),
-    ).resolves.toBe('<!-- framework footer -->');
+    // wrapper files placed from the CLI's own wrapper templates
+    for (const element of ['header', 'footer']) {
+      const wrapper = await readFile(
+        join(targetDir, 'experimental', 'custom', element, `${element}.svelte`),
+        'utf8',
+      );
+      expect(wrapper.length).toBeGreaterThan(0);
+      expect(wrapper).toContain('journeyName');
+    }
   });
 });

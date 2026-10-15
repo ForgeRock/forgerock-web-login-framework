@@ -12,6 +12,7 @@ import {
   copyWrapperFiles,
   CUSTOM_WRAPPER_FILES,
   expandTilde,
+  WRAPPER_TEMPLATE_ELEMENTS,
 } from '../src/services/file-system.js';
 
 describe('expandTilde', () => {
@@ -164,37 +165,35 @@ describe('copyWithExclusions — protected custom component paths', () => {
   );
 });
 
-describe('copyWrapperFiles — fill-if-absent wrapper backfill', () => {
-  let sourceDir: string;
+describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrapper templates', () => {
+  let templatesDir: string;
   let targetDir: string;
 
   beforeEach(async () => {
-    sourceDir = await mkdtemp(join(tmpdir(), 'ping-lf-wrap-src-test-'));
+    templatesDir = await mkdtemp(join(tmpdir(), 'ping-lf-wrap-tpl-test-'));
     targetDir = await mkdtemp(join(tmpdir(), 'ping-lf-wrap-tgt-test-'));
   });
 
   afterEach(async () => {
-    await rm(sourceDir, { recursive: true, force: true });
+    await rm(templatesDir, { recursive: true, force: true });
     await rm(targetDir, { recursive: true, force: true });
   });
 
-  const seedSourceWrappers = () =>
+  // The copy source is the CLI's own shipped templates (templates/wrapper/),
+  // mirroring the callback/stage scaffold templates. The CLI never reads the
+  // framework's core/ tree: build-time vs. runtime boundary.
+  const seedWrapperTemplates = () =>
     Effect.gen(function* () {
-      yield* Effect.promise(() =>
-        Promise.all([
-          mkdir(join(sourceDir, 'experimental', 'custom', 'header'), { recursive: true }),
-          mkdir(join(sourceDir, 'experimental', 'custom', 'footer'), { recursive: true }),
-        ]),
-      );
+      yield* Effect.promise(() => mkdir(join(templatesDir, 'wrapper'), { recursive: true }));
       yield* Effect.promise(() =>
         Promise.all([
           writeFile(
-            join(sourceDir, 'experimental', 'custom', 'header', 'header.svelte'),
+            join(templatesDir, 'wrapper', 'header.svelte'),
             '<!-- framework header -->',
             'utf8',
           ),
           writeFile(
-            join(sourceDir, 'experimental', 'custom', 'footer', 'footer.svelte'),
+            join(templatesDir, 'wrapper', 'footer.svelte'),
             '<!-- framework footer -->',
             'utf8',
           ),
@@ -204,9 +203,9 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill', () => {
 
   it.effect('copies wrapper files that are absent from the target', () =>
     Effect.gen(function* () {
-      yield* seedSourceWrappers();
+      yield* seedWrapperTemplates();
 
-      yield* copyWrapperFiles(sourceDir, targetDir).pipe(Effect.provide(NodeContext.layer));
+      yield* copyWrapperFiles(targetDir, templatesDir).pipe(Effect.provide(NodeContext.layer));
 
       const header = yield* Effect.promise(() =>
         readFile(join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'), 'utf8'),
@@ -221,7 +220,7 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill', () => {
 
   it.effect('never overwrites wrapper files the target already has', () =>
     Effect.gen(function* () {
-      yield* seedSourceWrappers();
+      yield* seedWrapperTemplates();
 
       yield* Effect.promise(() =>
         mkdir(join(targetDir, 'experimental', 'custom', 'header'), { recursive: true }),
@@ -234,7 +233,7 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill', () => {
         ),
       );
 
-      yield* copyWrapperFiles(sourceDir, targetDir).pipe(Effect.provide(NodeContext.layer));
+      yield* copyWrapperFiles(targetDir, templatesDir).pipe(Effect.provide(NodeContext.layer));
 
       const header = yield* Effect.promise(() =>
         readFile(join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'), 'utf8'),
@@ -247,12 +246,13 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill', () => {
     }),
   );
 
-  it.effect('no-ops when the framework source has no wrapper files', () =>
+  it.effect('no-ops when no wrapper templates are shipped', () =>
     Effect.gen(function* () {
-      // source stays empty. Old framework versions ship no wrapper files, and a
-      // version-matched old app does not import them either, so skipping is safe.
+      // templatesDir stays empty. Older CLI versions ship no wrapper
+      // templates, and the framework versions they pair with do not import
+      // wrappers either, so skipping is safe.
 
-      yield* copyWrapperFiles(sourceDir, targetDir).pipe(Effect.provide(NodeContext.layer));
+      yield* copyWrapperFiles(targetDir, templatesDir).pipe(Effect.provide(NodeContext.layer));
 
       const headerExit = yield* Effect.exit(
         Effect.promise(() =>
@@ -271,6 +271,17 @@ describe('init scaffold + update guard coverage', () => {
     // and the framework-shipped wrapper files are file-protected so `update`
     // can never overwrite customer edits to them.
     expect([...CUSTOM_COMPONENT_DIRS]).toEqual(['callbacks', 'stages']);
+    expect([...CUSTOM_WRAPPER_FILES]).toEqual([
+      'experimental/custom/header/header.svelte',
+      'experimental/custom/footer/footer.svelte',
+    ]);
+  });
+
+  it('wrapper backfill pairs one CLI-shipped template per element', () => {
+    // The copy source is the CLI's own templates/wrapper/ dir (shipped in
+    // dist like the callback/stage templates), one per element, never a core/
+    // path: tools/cli cannot depend on core/.
+    expect([...WRAPPER_TEMPLATE_ELEMENTS]).toEqual(['header', 'footer']);
     expect([...CUSTOM_WRAPPER_FILES]).toEqual([
       'experimental/custom/header/header.svelte',
       'experimental/custom/footer/footer.svelte',

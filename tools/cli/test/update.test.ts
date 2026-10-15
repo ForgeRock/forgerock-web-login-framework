@@ -44,18 +44,8 @@ describe('updateProject — wrapper file preservation', () => {
 
   const seedFrameworkSource = async () => {
     await writeFile(join(sourceDir, 'package.json'), '{}', 'utf8');
-    await mkdir(join(sourceDir, 'experimental', 'custom', 'header'), { recursive: true });
-    await mkdir(join(sourceDir, 'experimental', 'custom', 'footer'), { recursive: true });
-    await writeFile(
-      join(sourceDir, 'experimental', 'custom', 'header', 'header.svelte'),
-      '<!-- framework header -->',
-      'utf8',
-    );
-    await writeFile(
-      join(sourceDir, 'experimental', 'custom', 'footer', 'footer.svelte'),
-      '<!-- framework footer -->',
-      'utf8',
-    );
+    // Wrapper content comes from the CLI's own templates/wrapper/ dir (resolved
+    // inside the CLI, not from the framework source tree) — no core/ stub needed.
   };
 
   const seedCustomerProject = async (overrides: {
@@ -120,6 +110,8 @@ describe('updateProject — wrapper file preservation', () => {
       }),
     );
 
+    // header preserved (customer edit), footer backfilled from the CLI's
+    // own wrapper template (content = the shipped template bytes)
     const header = await readFile(
       join(projectDir, 'experimental', 'custom', 'header', 'header.svelte'),
       'utf8',
@@ -129,6 +121,6 @@ describe('updateProject — wrapper file preservation', () => {
       'utf8',
     );
     expect(header).toBe('<!-- customer header -->');
-    expect(footer).toBe('<!-- framework footer -->');
+    expect(footer).toContain('Custom page footer wrapper');
   });
 });

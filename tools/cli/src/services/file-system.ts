@@ -34,17 +34,30 @@ export const isFrameworkDirectory = Effect.fnUntraced(function* (dir: string) {
 const PROTECTED_DIRS = ['experimental/custom/callbacks/', 'experimental/custom/stages/'] as const;
 
 /**
- * Framework-shipped custom wrapper files. Each is a fixed, tracked,
- * user-editable file rendered by the login app (`+page.svelte` imports it
- * directly). The bulk copy skips them so `update` can never overwrite
- * customer edits; `copyWrapperFiles` backfills any the target is missing so a
- * project updated onto a framework version whose app imports the wrappers
- * still gets the defaults.
+ * Framework-shipped custom wrapper files. Each is a fixed, user-editable file
+ * rendered by the login app (`+page.svelte` imports it directly). The bulk
+ * copy skips them so `update` can never overwrite customer edits;
+ * `copyWrapperFiles` backfills any the target is missing from the CLI's own
+ * wrapper templates (see WRAPPER_TEMPLATE_ELEMENTS) so a project updated onto
+ * a framework version whose app imports the wrappers still gets the defaults.
  */
 export const CUSTOM_WRAPPER_FILES = [
   'experimental/custom/header/header.svelte',
   'experimental/custom/footer/footer.svelte',
 ] as const;
+
+/**
+ * The page elements that ship a wrapper file. `copyWrapperFiles` copies
+ * `templates/wrapper/<element>.svelte` (the CLI's own shipped templates,
+ * resolved like the callback/stage scaffold templates) into
+ * `experimental/custom/<element>/<element>.svelte`.
+ *
+ * The CLI never reads the framework's `core/` tree — build-time vs. runtime
+ * boundary — so it owns copies of the wrapper templates instead of importing
+ * the framework's `core/.../wrapper-templates/`. The per-element order
+ * matches CUSTOM_WRAPPER_FILES.
+ */
+export const WRAPPER_TEMPLATE_ELEMENTS = ['header', 'footer'] as const;
 
 /** Expand a leading `~` to the user's home directory. */
 export function expandTilde(p: string): string {
@@ -118,21 +131,29 @@ export const copyWithExclusions = (sourceDir: string, targetDir: string) =>
 /**
  * Backfills the framework-shipped wrapper files into `targetDir`, skipping any
  * the target already has. Customer edits are never overwritten — a file is
- * copied only when absent. A missing wrapper file in the source is a no-op,
- * which keeps older framework versions (whose app does not import wrappers)
- * safe to update from.
+ * copied only when absent. The copy reads from the CLI's own wrapper templates
+ * (`templates/wrapper/`, passed as `templatesDir`), mirroring the
+ * callback/stage scaffold templates. A missing template is a no-op, which
+ * keeps older CLI versions (whose paired framework app does not import
+ * wrappers) safe.
  */
-export const copyWrapperFiles = (sourceDir: string, targetDir: string) =>
+export const copyWrapperFiles = (targetDir: string, templatesDir: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
 
     yield* Effect.forEach(
-      CUSTOM_WRAPPER_FILES,
-      (relativePath) =>
+      // Pair each wrapper target element with its template source. Positional
+      // zip on two pinned constants: the contract test pins both arrays and
+      // their per-element order, so an accidental desync fails the build.
+      WRAPPER_TEMPLATE_ELEMENTS.map((element, index) => ({
+        element,
+        wrapperPath: CUSTOM_WRAPPER_FILES[index],
+      })),
+      ({ element, wrapperPath }) =>
         Effect.gen(function* () {
-          const sourcePath = path.join(sourceDir, relativePath);
-          const targetPath = path.join(targetDir, relativePath);
+          const sourcePath = path.join(templatesDir, 'wrapper', `${element}.svelte`);
+          const targetPath = path.join(targetDir, wrapperPath);
 
           const hasSource = yield* fs.exists(sourcePath).pipe(Effect.orElseSucceed(() => false));
           if (!hasSource) {

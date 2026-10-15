@@ -81,7 +81,7 @@ export const StageNameSchema = Schema.String.pipe(
  * at dist/src/templates/. In Vitest (src/commands/) they live two levels up at
  * the workspace root templates/ directory — the same fallback pattern used in mcp.ts.
  */
-function getTemplatesDir(): string {
+export function getTemplatesDir(): string {
   const __dirname = nodePath.dirname(fileURLToPath(import.meta.url));
   const compiledPath = nodePath.join(__dirname, '../templates');
   return existsSync(compiledPath) ? compiledPath : nodePath.join(__dirname, '../../templates');

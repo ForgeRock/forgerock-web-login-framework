@@ -10,6 +10,7 @@ import {
   expandTilde,
   isFrameworkDirectory,
 } from '../services/file-system.js';
+import { getTemplatesDir } from './generate.js';
 import { resolveSource } from './source.js';
 
 import type { Option } from 'effect';
@@ -89,10 +90,10 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
 
         // ── 2b. Place the framework-shipped wrapper files ──────────────────
         // The bulk copy skips them (they are file-protected: customer edits
-        // to them must survive `update`), so init places them explicitly. The
-        // app's +page.svelte imports them directly, so a project without them
-        // cannot build.
-        yield* copyWrapperFiles(sourceDir, resolvedDir);
+        // to them must survive `update`), so init places them explicitly from
+        // the CLI's own wrapper templates. The app's +page.svelte imports them
+        // directly, so a project without them cannot build.
+        yield* copyWrapperFiles(resolvedDir, getTemplatesDir());
 
         return resolvedVersion;
       }),
