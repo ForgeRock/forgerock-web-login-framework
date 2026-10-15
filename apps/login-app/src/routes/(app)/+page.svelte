@@ -153,7 +153,7 @@
 
 <div bind:this={journeyRootEl} class="tw_h-full tw_flex tw_flex-col">
   {#if wrappersVisible}
-    <div class="tw_shrink-0">
+    <div class="tw_shrink-0" data-journey-name={journeyName}>
       <Header {journeyName} />
     </div>
   {/if}
@@ -180,7 +180,7 @@
   </main>
 
   {#if wrappersVisible}
-    <div class="tw_shrink-0">
+    <div class="tw_shrink-0" data-journey-name={journeyName}>
       <Footer {journeyName} />
     </div>
   {/if}
