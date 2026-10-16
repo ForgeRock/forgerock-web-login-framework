@@ -265,7 +265,7 @@ describe('runInitialEntry first mount orchestration', () => {
   it('starts hash journey once with preserved query and no resume/goto', async () => {
     const resume = vi.fn(async () => {});
     const start = vi.fn(async () => {});
-    const gotoMock = vi.fn(async () => {});
+    const replaceStateMock = vi.fn(async () => {});
     let autoRestart = true;
     const outcome = await runInitialEntry(
       {
@@ -284,7 +284,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume,
         start,
-        goto: gotoMock,
+        replaceState: replaceStateMock,
         getPriorAutoRestart: () => autoRestart,
         setAutoRestart: (v) => {
           autoRestart = v;
@@ -293,7 +293,7 @@ describe('runInitialEntry first mount orchestration', () => {
       },
     );
     expect(resume).not.toHaveBeenCalled();
-    expect(gotoMock).not.toHaveBeenCalled();
+    expect(replaceStateMock).not.toHaveBeenCalled();
     expect(start).toHaveBeenCalledTimes(1);
     expect(start).toHaveBeenCalledWith({
       journey: 'FRForgotUsername',
@@ -320,7 +320,7 @@ describe('runInitialEntry first mount orchestration', () => {
   it('ignores bad hash and falls back to query identity', async () => {
     const resume = vi.fn(async () => {});
     const start = vi.fn(async () => {});
-    const gotoMock = vi.fn(async () => {});
+    const replaceStateMock = vi.fn(async () => {});
     await runInitialEntry(
       {
         href: 'https://login.example.com/login/',
@@ -338,7 +338,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume,
         start,
-        goto: gotoMock,
+        replaceState: replaceStateMock,
         getPriorAutoRestart: () => true,
         setAutoRestart: () => {},
         getResumeState: () => null,
@@ -351,7 +351,7 @@ describe('runInitialEntry first mount orchestration', () => {
   it('gives suspended resume precedence over hash without a second start', async () => {
     const resume = vi.fn(async () => {});
     const start = vi.fn(async () => {});
-    const gotoMock = vi.fn(async () => {});
+    const replaceStateMock = vi.fn(async () => {});
     let autoRestart = true;
     const outcome = await runInitialEntry(
       {
@@ -370,7 +370,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume,
         start,
-        goto: gotoMock,
+        replaceState: replaceStateMock,
         getPriorAutoRestart: () => autoRestart,
         setAutoRestart: (v) => {
           autoRestart = v;
@@ -383,8 +383,8 @@ describe('runInitialEntry first mount orchestration', () => {
       'https://login.example.com/login/?suspendedId=s1&authIndexValue=AdminOnboarding',
     );
     expect(start).not.toHaveBeenCalled();
-    expect(gotoMock).toHaveBeenCalledTimes(1);
-    expect(gotoMock).toHaveBeenCalledWith('/', expect.objectContaining({ replaceState: true }));
+    expect(replaceStateMock).toHaveBeenCalledTimes(1);
+    expect(replaceStateMock).toHaveBeenCalledWith('/login/?authIndexValue=AdminOnboarding');
     expect(outcome).toEqual({ kind: 'resumed' });
     expect(autoRestart).toBe(true);
   });
@@ -392,7 +392,7 @@ describe('runInitialEntry first mount orchestration', () => {
   it('reports legacy failure without goto when store is completed unsuccessful', async () => {
     const resume = vi.fn(async () => {});
     const start = vi.fn(async () => {});
-    const gotoMock = vi.fn(async () => {});
+    const replaceStateMock = vi.fn(async () => {});
     let autoRestart = true;
     const outcome = await runInitialEntry(
       {
@@ -412,7 +412,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume,
         start,
-        goto: gotoMock,
+        replaceState: replaceStateMock,
         getPriorAutoRestart: () => autoRestart,
         setAutoRestart: (v) => {
           autoRestart = v;
@@ -422,7 +422,7 @@ describe('runInitialEntry first mount orchestration', () => {
     );
     expect(resume).toHaveBeenCalledTimes(1);
     expect(start).not.toHaveBeenCalled();
-    expect(gotoMock).not.toHaveBeenCalled();
+    expect(replaceStateMock).not.toHaveBeenCalled();
     expect(outcome).toEqual({ kind: 'resumed-legacy-failed', legacyFailed: true });
     expect(autoRestart).toBe(true);
   });
@@ -432,7 +432,7 @@ describe('runInitialEntry first mount orchestration', () => {
       throw new Error('expired');
     });
     const start = vi.fn(async () => {});
-    const gotoMock = vi.fn(async () => {});
+    const replaceStateMock = vi.fn(async () => {});
     let autoRestart = true;
     const setSpy = vi.fn((v: boolean) => {
       autoRestart = v;
@@ -454,7 +454,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume,
         start,
-        goto: gotoMock,
+        replaceState: replaceStateMock,
         getPriorAutoRestart: () => autoRestart,
         setAutoRestart: setSpy,
         getResumeState: () => null,
@@ -462,7 +462,7 @@ describe('runInitialEntry first mount orchestration', () => {
     );
     expect(resume).toHaveBeenCalledTimes(1);
     expect(start).not.toHaveBeenCalled();
-    expect(gotoMock).not.toHaveBeenCalled();
+    expect(replaceStateMock).not.toHaveBeenCalled();
     expect(outcome).toEqual({ kind: 'resumed-legacy-failed', legacyFailed: true });
     expect(autoRestart).toBe(true);
     expect(setSpy).toHaveBeenCalledTimes(2);
@@ -470,10 +470,10 @@ describe('runInitialEntry first mount orchestration', () => {
     expect(setSpy.mock.calls[1]?.[0]).toBe(true);
   });
 
-  it('preserves successful legacy resume with goto cleanup and restored autoRestart', async () => {
+  it('preserves successful legacy resume with shallow URL cleanup and restored autoRestart', async () => {
     const resume = vi.fn(async () => {});
     const start = vi.fn(async () => {});
-    const gotoMock = vi.fn(async () => {});
+    const replaceStateMock = vi.fn(async () => {});
     let autoRestart = true;
     const outcome = await runInitialEntry(
       {
@@ -492,7 +492,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume,
         start,
-        goto: gotoMock,
+        replaceState: replaceStateMock,
         getPriorAutoRestart: () => autoRestart,
         setAutoRestart: (v) => {
           autoRestart = v;
@@ -502,8 +502,8 @@ describe('runInitialEntry first mount orchestration', () => {
     );
     expect(resume).toHaveBeenCalledTimes(1);
     expect(start).not.toHaveBeenCalled();
-    expect(gotoMock).toHaveBeenCalledTimes(1);
-    expect(gotoMock).toHaveBeenCalledWith('/', expect.objectContaining({ replaceState: true }));
+    expect(replaceStateMock).toHaveBeenCalledTimes(1);
+    expect(replaceStateMock).toHaveBeenCalledWith('/login/');
     expect(outcome).toEqual({ kind: 'resumed' });
     expect(autoRestart).toBe(true);
   });
@@ -521,7 +521,7 @@ describe('runInitialEntry first mount orchestration', () => {
         expect(autoRestart).toBe(priorAutoRestart);
       });
       const start = vi.fn(async () => {});
-      const gotoMock = vi.fn(async () => {});
+      const replaceStateMock = vi.fn(async () => {});
       const outcome = await runInitialEntry(
         {
           href: 'https://login.example.com/login/?suspendedId=expired',
@@ -536,7 +536,7 @@ describe('runInitialEntry first mount orchestration', () => {
         {
           resume,
           start,
-          goto: gotoMock,
+          replaceState: replaceStateMock,
           getPriorAutoRestart: () => autoRestart,
           setAutoRestart,
           getResumeState: () => ({ completed: false, successful: false }),
@@ -546,7 +546,7 @@ describe('runInitialEntry first mount orchestration', () => {
       expect(resume).toHaveBeenCalledWith('https://login.example.com/login/?suspendedId=expired');
       expect(start).not.toHaveBeenCalled();
       expect(setAutoRestart).not.toHaveBeenCalled();
-      expect(gotoMock).toHaveBeenCalledWith('/', { replaceState: true });
+      expect(replaceStateMock).toHaveBeenCalledWith('/login/');
       expect(outcome).toEqual({ kind: 'resumed' });
       expect(autoRestart).toBe(priorAutoRestart);
     },
@@ -566,7 +566,7 @@ describe('runInitialEntry first mount orchestration', () => {
         if (autoRestart) restartedJourneys.push('TEST_LoginSuspendEmail');
       });
       const start = vi.fn(async () => {});
-      const gotoMock = vi.fn(async () => {});
+      const replaceStateMock = vi.fn(async () => {});
       const href =
         'https://login.example.com/login/?journey=TEST_LoginSuspendEmail&suspendedId=expired';
       const outcome = await runInitialEntry(
@@ -583,7 +583,7 @@ describe('runInitialEntry first mount orchestration', () => {
         {
           resume,
           start,
-          goto: gotoMock,
+          replaceState: replaceStateMock,
           getPriorAutoRestart: () => autoRestart,
           setAutoRestart,
           getResumeState: () => ({ completed: false, successful: false }),
@@ -594,7 +594,7 @@ describe('runInitialEntry first mount orchestration', () => {
       expect(restartedJourneys).toEqual(['TEST_LoginSuspendEmail']);
       expect(setAutoRestart).not.toHaveBeenCalled();
       expect(start).not.toHaveBeenCalled();
-      expect(gotoMock).toHaveBeenCalledWith('/', { replaceState: true });
+      expect(replaceStateMock).toHaveBeenCalledWith('/login/?journey=TEST_LoginSuspendEmail');
       expect(outcome).toEqual({ kind: 'resumed' });
       expect(autoRestart).toBe(true);
     },
@@ -603,7 +603,7 @@ describe('runInitialEntry first mount orchestration', () => {
   it('keeps OAuth code+state and formpost resume without legacy autoRestart toggle', async () => {
     const resume = vi.fn(async () => {});
     const start = vi.fn(async () => {});
-    const gotoMock = vi.fn(async () => {});
+    const replaceStateMock = vi.fn(async () => {});
     const setAutoRestart = vi.fn();
     const oauthOutcome = await runInitialEntry(
       {
@@ -622,7 +622,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume,
         start,
-        goto: gotoMock,
+        replaceState: replaceStateMock,
         getPriorAutoRestart: () => true,
         setAutoRestart,
         getResumeState: () => ({ completed: false, successful: false }),
@@ -631,11 +631,11 @@ describe('runInitialEntry first mount orchestration', () => {
     expect(oauthOutcome).toEqual({ kind: 'resumed' });
     expect(resume).toHaveBeenCalledTimes(1);
     expect(start).not.toHaveBeenCalled();
-    expect(gotoMock).toHaveBeenCalledTimes(1);
+    expect(replaceStateMock).toHaveBeenCalledTimes(1);
     expect(setAutoRestart).not.toHaveBeenCalled();
 
     const formpostResume = vi.fn(async () => {});
-    const formpostGoto = vi.fn(async () => {});
+    const formpostReplaceState = vi.fn(async () => {});
     const formpostStart = vi.fn(async () => {});
     const formpostOutcome = await runInitialEntry(
       {
@@ -654,7 +654,7 @@ describe('runInitialEntry first mount orchestration', () => {
       {
         resume: formpostResume,
         start: formpostStart,
-        goto: formpostGoto,
+        replaceState: formpostReplaceState,
         getPriorAutoRestart: () => true,
         setAutoRestart,
         getResumeState: () => ({ completed: false, successful: false }),
@@ -663,7 +663,7 @@ describe('runInitialEntry first mount orchestration', () => {
     expect(formpostOutcome).toEqual({ kind: 'resumed' });
     expect(formpostResume).toHaveBeenCalledTimes(1);
     expect(formpostStart).not.toHaveBeenCalled();
-    expect(formpostGoto).toHaveBeenCalledTimes(1);
+    expect(formpostReplaceState).toHaveBeenCalledTimes(1);
   });
 });
 

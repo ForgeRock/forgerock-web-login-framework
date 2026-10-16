@@ -73,6 +73,12 @@
   let policyChecked = false;
 
   $: ready = !!selectedJurisdiction && policyChecked;
+
+  function submitWhenReady() {
+    if (ready && !journey?.loading) {
+      form?.submit();
+    }
+  }
 </script>
 
 <Form
@@ -80,7 +86,7 @@
   ariaDescribedBy={formAriaDescriptor}
   id={formElementId}
   needsFocus={formNeedsFocus}
-  onSubmitWhenValid={() => form?.submit()}
+  onSubmitWhenValid={submitWhenReady}
 >
   {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={!!form?.message} type="error">
@@ -110,6 +116,9 @@
   <div class="tw_mb-4">
     <Select
       isFirstInvalidInput={false}
+      isRequired={true}
+      message={interpolate('inputRequiredError')}
+      showMessage={false}
       key="adminInvitePrivacyPolicyJurisdiction"
       label={jurisdictionSelectLabel}
       onChange={(event) => {
@@ -123,6 +132,9 @@
   <div class="tw_mb-4 tw_p-4" class:tw_invisible={!selectedJurisdiction}>
     <Checkbox
       isFirstInvalidInput={false}
+      isRequired={true}
+      message={interpolate('inputRequiredError')}
+      showMessage={false}
       key="privacyPolicyCheck"
       onChange={(event) => {
         policyChecked = (event.target as HTMLInputElement).checked;
@@ -133,14 +145,7 @@
     </Checkbox>
   </div>
 
-  <Button
-    busy={journey?.loading}
-    classes={ready ? '' : 'tw_opacity-50 tw_pointer-events-none'}
-    style="primary"
-    type="button"
-    width="full"
-    onClick={() => form?.submit()}
-  >
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">
     <T key="continueButton" />
   </Button>
 </Form>

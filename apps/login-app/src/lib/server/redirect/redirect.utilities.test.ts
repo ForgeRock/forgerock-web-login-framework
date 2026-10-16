@@ -114,6 +114,69 @@ describe('resolveRedirect', () => {
     ...overrides,
   });
 
+  it('continues an AM-validated same-origin OAuth request before role redirection', () => {
+    const gotoUrl =
+      'https://openam.example.com/am/oauth2/authorize?client_id=example&state=original';
+    const url = resolveRedirect(
+      makeContext({
+        tokenId: 'abc123' as RedirectData['tokenId'],
+        roles: ['ui-global-admin'],
+        gotoUrl,
+        successUrl: gotoUrl,
+        journeyStepUrl: gotoUrl,
+      }),
+    );
+    expect(url).toBe(gotoUrl);
+  });
+
+  it.each([
+    {
+      gotoUrl: 'https://openam.example.com/am/oauth2/authorize?state=original',
+      successUrl: '/am/console',
+    },
+    {
+      gotoUrl: 'https://openam.example.com/am/oauth2/authorize?state=original',
+      successUrl: 'https://openam.example.com/am/oauth2/authorize?state=changed',
+    },
+    {
+      gotoUrl: 'https://untrusted.example.com/oauth2/authorize',
+      successUrl: 'https://untrusted.example.com/oauth2/authorize',
+    },
+  ])('does not continue an OAuth URL AM did not validate for this request: %j', (urls) => {
+    expect(
+      resolveRedirect(
+        makeContext({
+          tokenId: 'abc123' as RedirectData['tokenId'],
+          roles: ['ui-global-admin'],
+          journeyStepUrl: urls.gotoUrl,
+          ...urls,
+        }),
+      ),
+    ).toBe('https://openam.example.com/platform/?realm=/');
+  });
+
+  it.each([
+    { tokenId: '' as RedirectData['tokenId'], isGotoOnFail: false },
+    { tokenId: 'abc123' as RedirectData['tokenId'], isGotoOnFail: true },
+  ])('does not continue OAuth without successful authentication: %j', (authentication) => {
+    const gotoUrl = 'https://openam.example.com/am/oauth2/authorize?state=original';
+    expect(
+      resolveRedirect(
+        makeContext({
+          roles: ['ui-global-admin'],
+          gotoUrl,
+          successUrl: gotoUrl,
+          journeyStepUrl: gotoUrl,
+          ...authentication,
+        }),
+      ),
+    ).toBe(
+      authentication.isGotoOnFail
+        ? '/failure-redirect'
+        : 'https://openam.example.com/enduser/?realm=/#/',
+    );
+  });
+
   it('uses successUrl when it is provided and not a default path', () => {
     const url = resolveRedirect(makeContext({ successUrl: '/enduser' }));
     expect(url).toBe('https://openam.example.com/enduser');
