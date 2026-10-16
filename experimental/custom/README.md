@@ -19,11 +19,11 @@ experimental/custom/
 │   └── <your-callback-name>/
 │       └── (same structure as above)
 ├── header/
-│   ├── header.svelte                # page header wrapper — fixed file, edit directly
+│   ├── header.svelte                # page header wrapper — generated on first build, edit freely
 │   ├── header.stories.js            # optional (Storybook)
 │   └── header.story.svelte          # optional (Storybook)
 └── footer/
-    ├── footer.svelte                # page footer wrapper — fixed file, edit directly
+    ├── footer.svelte                # page footer wrapper — generated on first build, edit freely
     ├── footer.stories.js            # optional (Storybook)
     └── footer.story.svelte          # optional (Storybook)
 ```
@@ -75,9 +75,15 @@ The login app renders two fixed wrapper files around the journey container:
 - `footer/footer.svelte` — rendered below the journey
 
 Unlike stages and callbacks, there is exactly **one** wrapper per element and no
-registry lookup, `@component` header, or selection step. The files are tracked
-in git, placed by `ping-lf init`, and never overwritten by `ping-lf update`, so
-edit them directly and your changes survive framework upgrades.
+registry lookup, `@component` header, or selection step.
+
+The wrapper files are **generated on the first build**: the framework's Vite
+plugin seeds any missing wrapper at build start and never overwrites one that
+exists. `ping-lf init` places them in a new project, and `ping-lf update`
+backfills only wrappers that are absent. Like every file in this directory,
+they are yours to edit — changes survive framework upgrades, and a deleted
+wrapper regenerates with the default content on the next build or dev-server
+start.
 
 Each wrapper receives a single prop:
 

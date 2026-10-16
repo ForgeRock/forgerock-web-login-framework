@@ -58,7 +58,7 @@ The app requires environment variables to connect to a ForgeRock AM instance. Se
 | `FR_AM_WELLKNOWN_URL` | Yes      | ForgeRock AM Wellknown URL used to validate startup configuration (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration`)                                                |
 | `FR_AM_JOURNEY_LOGIN` | No       | Default login journey name. Used for IDM theme resolution when no `?journey=` query param is present, and used as the fallback journey for restarting failed suspended flows. Defaults to the AM realm's default journey if unset. |
 
-Custom page header and footer come from the fixed wrapper files `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte` (see [custom components](../../experimental/custom/README.md)). They render client-side around the journey and are not configured via environment variables.
+Custom page header and footer come from the wrapper files `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte` (see [custom components](../../experimental/custom/README.md)). The files are generated on the first build and never overwritten once they exist. They render client-side around the journey and are not configured via environment variables.
 
 ## Type Checking
 

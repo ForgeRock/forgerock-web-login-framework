@@ -45,7 +45,7 @@ pnpm dev
 1. Downloads the framework archive from GitHub Releases (or copies from `--local`)
 2. Copies framework files, excluding build artifacts, secrets, and `tools/`
 3. Writes a minimal `pnpm-workspace.yaml`
-4. Creates `experimental/custom/callbacks/` and `experimental/custom/stages/` with `.gitkeep` placeholders, plus the tracked header and footer wrapper files `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte`
+4. Creates `experimental/custom/callbacks/` and `experimental/custom/stages/` with `.gitkeep` placeholders, and places the page header and footer wrapper files `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte`
 5. Copies the component authoring guide to `experimental/custom/README.md`
 6. Writes `.generator-version` to track the framework version in use
 
@@ -93,7 +93,7 @@ Name: NameCallback
 
 Setting `Name` to an existing default (e.g. `NameCallback`, `DefaultLogin`) **overrides** that component. Setting it to a new name **extends** the framework with a custom type.
 
-Page headers and footers are not scaffolded with `generate`: they are fixed wrapper files (`experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte`) placed by `init` and preserved by `update`. Edit the wrappers directly.
+Page headers and footers are not scaffolded with `generate`: they are fixed wrapper files (`experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte`), generated on first build by the framework's Vite plugin and never overwritten once they exist. Edit the wrappers directly.
 
 See `experimental/custom/README.md` for the full prop contract.
 
@@ -173,6 +173,7 @@ ping-lf update --directory /path/to/project  # target a specific project root
 **What it preserves**
 
 - `experimental/custom/` — all custom components are untouched
+- The header and footer wrapper files are never overwritten — `update` only backfills ones that are missing, so your edits survive
 - `pnpm-workspace.yaml` — your workspace config is not overwritten
 - `.env` files — excluded from the copy
 
@@ -194,8 +195,8 @@ my-login-project/
 │       ├── README.md             # Component authoring guide
 │       ├── callbacks/            # Your custom callback components
 │       ├── stages/               # Your custom stage components
-│       ├── header/header.svelte  # Page header wrapper (fixed file — edit directly)
-│       └── footer/footer.svelte  # Page footer wrapper (fixed file — edit directly)
+│       ├── header/header.svelte  # Page header wrapper (generated on first build — edit freely)
+│       └── footer/footer.svelte  # Page footer wrapper (generated on first build — edit freely)
 ├── .generator-version            # Tracks the framework version in use
 └── pnpm-workspace.yaml
 ```
