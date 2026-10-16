@@ -32,11 +32,11 @@
 <script lang="ts">
   // ─── Framework imports ──────────────────────────────────────────────────────
   /**
-   * Import everything you need from '$login-framework-exports' — the
+   * Import everything you need from '$login-framework' — the
    * framework's centralized exports for custom components. No need to reach
    * into internal aliases like $core, $components, or $journey directly.
    */
-  import type { CustomWrapperProps } from '$login-framework-exports';
+  import type { CustomWrapperProps } from '$login-framework';
 
   /** The one prop the framework passes: the active journey name (`''` = default). */
   export let journeyName: CustomWrapperProps['journeyName'] = '';

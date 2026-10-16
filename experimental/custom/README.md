@@ -102,7 +102,7 @@ completion redirect. On the default journey (`''`) they still render — show
 your default-journey view, never a blank slot.
 
 Everything you need inside a wrapper comes from
-[`$login-framework-exports`](#module-imports-available); the shared
+[`$login-framework`](#module-imports-available); the shared
 `CustomWrapperProps` type is also exported from there.
 
 ## Component props
@@ -138,7 +138,7 @@ Everything you need inside a wrapper comes from
 
 ## Module imports available
 
-Inside your custom component, import everything you need from the **`$login-framework-exports`** alias — a centralized set of exports from the login framework for custom components:
+Inside your custom component, import everything you need from the **`$login-framework`** alias — a centralized set of exports from the login framework for custom components:
 
 ```ts
 import {
@@ -163,10 +163,10 @@ import {
   type StageJourneyObject,
   type Maybe,
   type StyleObject,
-} from '$login-framework-exports';
+} from '$login-framework';
 ```
 
-`$login-framework-exports` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`experimental/custom/login-framework.ts`](./login-framework.ts).
+`$login-framework` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`experimental/custom/login-framework.ts`](./login-framework.ts).
 
 Journey Client types (callback classes, `JourneyStep`, etc.) are imported directly from `@forgerock/journey-client/types`:
 

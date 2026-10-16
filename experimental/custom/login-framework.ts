@@ -4,7 +4,7 @@
  * Import everything your custom stage or callback component needs from here
  * instead of reaching into internal framework aliases directly:
  *
- *   import { Stacked, interpolate, type CallbackMetadata } from '$login-framework-exports';
+ *   import { Stacked, interpolate, type CallbackMetadata } from '$login-framework';
  *
  * This file is the intentionally-curated public surface for custom components.
  * It will not expose internal implementation details that may change across
