@@ -2,7 +2,7 @@
 
 > 🧪 **Experimental feature.** Custom components are an early-access feature — the API may change between releases as we refine it.
 
-This directory is the entry point for your custom journey components. Files here are **never overwritten by upstream framework updates** — this is where your customizations live.
+This directory is the entry point for your custom journey components. Files you create here are **never overwritten by upstream framework updates** — this is where your customizations live.
 
 ## Directory structure
 
@@ -30,7 +30,8 @@ experimental/custom/
 
 ## Component format
 
-Every `.svelte` file must begin with an HTML comment block that declares its type and name:
+Every stage or callback `.svelte` file under `stages/` and `callbacks/` must
+begin with an HTML comment block that declares its type and name:
 
 ```svelte
 <!--
@@ -55,7 +56,10 @@ Name: DefaultLogin
 <!-- <style> is optional; scoped to this component and takes final precedence -->
 ```
 
-The `@component` comment is required. The framework's Vite plugin reads it to register your component during dev and build. **A missing or malformed header will fail the build.**
+The `@component` comment is required for stage and callback components. The
+framework's Vite plugin reads it to register your component during dev and
+build. **A missing or malformed header will fail the build.** (The header and
+footer wrappers are not scanned — they carry no `@component` header.)
 
 ## Types
 
@@ -80,10 +84,11 @@ registry lookup, `@component` header, or selection step.
 The wrapper files are **generated on the first build**: the framework's Vite
 plugin seeds any missing wrapper at build start and never overwrites one that
 exists. `ping-lf init` places them in a new project, and `ping-lf update`
-backfills only wrappers that are absent. Like every file in this directory,
-they are yours to edit — changes survive framework upgrades, and a deleted
-wrapper regenerates with the default content on the next build or dev-server
-start.
+backfills only wrappers that are absent. They are yours to edit — changes
+survive framework upgrades, and a deleted wrapper regenerates with the default
+content on the next build or dev-server start. (The framework-shipped files
+around them — this README, `login-framework.ts`, and the `demo/` examples —
+are updated with the framework and may be replaced by an update.)
 
 Each wrapper receives a single prop:
 
@@ -171,10 +176,11 @@ import type { NameCallback, JourneyStep } from '@forgerock/journey-client/types'
 
 ## Hot module reloading note
 
-The framework's Vite plugin watches `experimental/custom/{stages,callbacks}/` during `pnpm dev` and regenerates `custom-registry.ts` automatically when you add, remove, or rename a component file. Editing an existing registered component reloads normally via Vite HMR. The header and footer wrappers are statically imported by the login app — editing them hot-reloads like any other Svelte file.
-
-If you generate a component while only Storybook is running (Storybook uses its own Vite config and doesn't load this plugin), trigger a regeneration with:
-
-```sh
-pnpm build:widget   # or restart pnpm dev
-```
+The framework's Vite plugin watches `experimental/custom/{stages,callbacks}/`
+during `pnpm dev` and regenerates `custom-registry.ts` automatically when you
+add, remove, or rename a component file. The plugin is also loaded by
+Storybook (`.storybook/main.js`), so generating a component while only
+Storybook is running regenerates the registry the same way. Editing an
+existing registered component or a wrapper hot-reloads like any other Svelte
+file. If neither dev server is running, the next `pnpm dev`, `pnpm
+build:widget`, or Storybook start regenerates on build start.
