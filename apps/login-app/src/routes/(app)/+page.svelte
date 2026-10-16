@@ -33,10 +33,11 @@
   /** @type {import('./$types').PageData} */
   export let data;
 
-  // The header/footer wrappers are fixed, user-editable files imported directly
-  // (no registry). They mount client-side only: the first journey step latches
-  // `wrappersVisible`, and the wrappers then stay mounted through step nulling
-  // (start(), completion, error), journey switches, and the redirect state.
+  // The header/footer wrappers are user-owned files (not in this repo) that the
+  // Vite plugin seeds on first build from its templates when absent. They mount
+  // client-side only: the first journey step latches `wrappersVisible`, and the
+  // wrappers then stay mounted through step nulling (start(), completion,
+  // error), journey switches, and the redirect state.
   let wrappersVisible = false;
   $: if ($journeyStore?.step) {
     wrappersVisible = true;

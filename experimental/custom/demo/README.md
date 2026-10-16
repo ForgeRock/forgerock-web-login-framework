@@ -36,7 +36,7 @@ This directory contains fully commented reference implementations of custom stag
    pnpm build:widget   # or start pnpm dev
    ```
 
-> **Page headers and footers are different.** They are not registry components. Edit the fixed wrapper files directly at `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte` (see their Storybook stories under `Custom/Header/Wrapper` and `Custom/Footer/Wrapper`). The `header/` and `footer/` demos here are not copy-and-register templates — copy their markup and styles **into** the wrapper files, then check your work in their stories (`Custom/Header/BrandedHeader`, `Custom/Footer/BrandedFooter`).
+> **Page headers and footers are different.** They are not registry components. Edit the fixed wrapper files directly at `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte`. The `header/` and `footer/` demos here are not copy-and-register templates — copy their markup and styles **into** the wrapper files, then verify with `pnpm dev` or by adding your own stories in the wrapper folders (they are yours, like `stages/` and `callbacks/`).
 
 ## Directory layout
 
