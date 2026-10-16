@@ -11,7 +11,7 @@
   import { onDestroy, onMount, tick } from 'svelte';
   import { get } from 'svelte/store';
 
-  import { goto } from '$app/navigation';
+  import { replaceState } from '$app/navigation';
   import { page } from '$app/stores';
   import Box from '$components/primitives/box/centered.svelte';
   import { applyLogoVars, applyThemeVars } from '$core/_effects/theme.effects';
@@ -121,7 +121,7 @@
           resume: (href: string) => journeyStore.resume(href),
           start: (options: { journey: string; query: Record<string, string> }) =>
             journeyStore.start(options),
-          goto: (url: string, options?: { replaceState?: boolean }) => goto(url, options),
+          replaceState: (url: string) => replaceState(url, get(page).state),
           getPriorAutoRestart: () => get(autoRestartStore),
           setAutoRestart: (value: boolean) => autoRestartStore.set(value),
           getResumeState: () => get(journeyStore),

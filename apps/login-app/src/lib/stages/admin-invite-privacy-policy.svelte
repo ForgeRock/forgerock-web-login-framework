@@ -73,6 +73,12 @@
   let policyChecked = false;
 
   $: ready = !!selectedJurisdiction && policyChecked;
+
+  function submitWhenReady() {
+    if (ready) {
+      form?.submit();
+    }
+  }
 </script>
 
 <Form
@@ -80,7 +86,7 @@
   ariaDescribedBy={formAriaDescriptor}
   id={formElementId}
   needsFocus={formNeedsFocus}
-  onSubmitWhenValid={() => form?.submit()}
+  onSubmitWhenValid={submitWhenReady}
 >
   {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={!!form?.message} type="error">
@@ -135,11 +141,12 @@
 
   <Button
     busy={journey?.loading}
+    disabled={!ready}
     classes={ready ? '' : 'tw_opacity-50 tw_pointer-events-none'}
     style="primary"
     type="button"
     width="full"
-    onClick={() => form?.submit()}
+    onClick={submitWhenReady}
   >
     <T key="continueButton" />
   </Button>

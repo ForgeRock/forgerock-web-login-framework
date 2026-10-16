@@ -9,7 +9,7 @@
 
 import { callbackType } from '@forgerock/journey-client';
 import { expect, fn } from 'storybook/test';
-import { fireEvent, userEvent, within } from 'storybook/test';
+import { fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
@@ -430,6 +430,7 @@ export const ConfirmPasswordInteraction = {
     await password2.blur();
 
     const submitBtn = canvas.getByRole('button', { name: 'Next' });
+    await waitFor(() => expect(submitBtn).toBeDisabled());
     await fireEvent.click(submitBtn);
 
     // Expecting the form NOT to be submitted due to mismatched passwords
@@ -442,6 +443,7 @@ export const ConfirmPasswordInteraction = {
     await userEvent.type(password2, 'Password123');
     await password2.blur();
 
+    await waitFor(() => expect(submitBtn).toBeEnabled());
     await fireEvent.click(submitBtn);
     await expect(ConfirmPassword.args.form.submit).toHaveBeenCalled();
 

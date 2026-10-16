@@ -7,7 +7,7 @@
  *
  **/
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/environment', () => ({ building: false }));
 vi.mock('$env/dynamic/private', () => ({
@@ -21,7 +21,10 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
-import { resolveRealmFromUrl } from './redirect.utilities';
+import { createRedirectContext, validateUrl } from './redirect.effects';
+import { resolveRealmFromUrl, resolveRedirect } from './redirect.utilities';
+
+afterEach(() => vi.unstubAllGlobals());
 
 describe('resolveRealmFromUrl', () => {
   it('falls back to the configured FR_REALM_PATH when no realm param is present', () => {
@@ -51,4 +54,60 @@ describe('resolveRealmFromUrl', () => {
       resolveRealmFromUrl(new URL('https://login.example.com/?realm=' + encodeURIComponent('a b'))),
     ).toBe('alpha');
   });
+});
+
+describe('AM redirect validation', () => {
+  const goto = 'https://openam.example.com/am/oauth2/authorize?client_id=mcp&state=fixture';
+
+  it('continues root OAuth after validating through the AIC root action route', async () => {
+    const fetch = vi.fn(async (input: string) => {
+      const url = new URL(input);
+      if (url.searchParams.get('_action') === 'validateGoto') {
+        if (url.pathname === '/am/json/realms/root/users') {
+          return new Response('{}', { status: 403 });
+        }
+        expect(url.pathname).toBe('/am/json/users');
+        return Response.json({ successURL: goto });
+      }
+      if (url.pathname.endsWith('/sessions')) {
+        return Response.json({ valid: true, uid: 'admin' });
+      }
+      return Response.json({ roles: ['ui-global-admin'] });
+    });
+    vi.stubGlobal('fetch', fetch);
+    const form = new FormData();
+    form.set('loginResult', 'success');
+    form.set('tokenId', 'abc123');
+    form.set('journeyStepUrl', goto);
+
+    const context = await createRedirectContext(form, { goto, realm: 'root' });
+
+    expect(context.successUrl).toBe(goto);
+    expect(resolveRedirect(context)).toBe(goto);
+    expect(fetch.mock.calls[0][0]).toBe(
+      'https://openam.example.com/am/json/users?_action=validateGoto',
+    );
+  });
+
+  it.each(['alpha', 'bravo'])('preserves validation in the named %s realm', async (realm) => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ successURL: goto }));
+    vi.stubGlobal('fetch', fetch);
+
+    expect(await validateUrl('abc123' as Parameters<typeof validateUrl>[0], goto, realm)).toBe(
+      goto,
+    );
+    expect(fetch.mock.calls[0][0]).toBe(
+      `https://openam.example.com/am/json/realms/root/realms/${realm}/users?_action=validateGoto`,
+    );
+  });
+
+  it.each([null, {}, { successURL: 42 }, { successURL: 'null' }, { successURL: 'undefined' }])(
+    'rejects a missing or malformed AM validation result: %j',
+    async (response) => {
+      vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(response)));
+      expect(await validateUrl('abc123' as Parameters<typeof validateUrl>[0], goto, 'root')).toBe(
+        null,
+      );
+    },
+  );
 });

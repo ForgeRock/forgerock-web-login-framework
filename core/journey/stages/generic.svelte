@@ -58,6 +58,7 @@
   let formAriaDescriptor = 'genericStepHeader';
   let formNeedsFocus = false;
   let linkWrapper: HTMLElement;
+  let submitReady = false;
 
   function determineSubmission() {
     // TODO: the below is more strict; all self-submitting cbs have to complete before submitting
@@ -73,6 +74,57 @@
     formNeedsFocus = false;
     form?.submit();
   }
+
+  function updateSubmitReadiness() {
+    submitReady =
+      !!formEl &&
+      Array.from(
+        formEl.querySelectorAll<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>(
+          'input, select, textarea',
+        ),
+      ).every(
+        (input) =>
+          (!input.willValidate || input.validity.valid) &&
+          input.dataset.forceValidityFailure !== 'true',
+      );
+  }
+
+  function observeSubmitReadiness() {
+    if (!formEl) return;
+    const currentForm = formEl;
+    const observer = new MutationObserver(updateSubmitReadiness);
+    observer.observe(currentForm, {
+      subtree: true,
+      childList: true,
+      attributes: true,
+      attributeFilter: [
+        'data-force-validity-failure',
+        'required',
+        'disabled',
+        'readonly',
+        'pattern',
+        'minlength',
+        'maxlength',
+        'min',
+        'max',
+        'step',
+        'type',
+        'value',
+        'checked',
+      ],
+    });
+    currentForm.addEventListener('input', updateSubmitReadiness);
+    currentForm.addEventListener('change', updateSubmitReadiness);
+    updateSubmitReadiness();
+    return () => {
+      observer.disconnect();
+      currentForm.removeEventListener('input', updateSubmitReadiness);
+      currentForm.removeEventListener('change', updateSubmitReadiness);
+    };
+  }
+
+  afterUpdate(updateSubmitReadiness);
+  onMount(observeSubmitReadiness);
 
   afterUpdate(() => {
     if (form?.message) {
@@ -150,15 +202,33 @@
     - If no self-submittable callbacks, render button (most generic steps)
   -->
   {#if !metadata?.step?.derived.isStepSelfSubmittable()}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
+    <Button
+      busy={journey?.loading}
+      disabled={!submitReady}
+      style="primary"
+      type="submit"
+      width="full"
+    >
       <T key="nextButton" />
     </Button>
   {:else if metadata?.step?.derived.isUserInputOptional}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
+    <Button
+      busy={journey?.loading}
+      disabled={!submitReady}
+      style="primary"
+      type="submit"
+      width="full"
+    >
       <T key="nextButton" />
     </Button>
   {:else if !metadata?.step?.derived.numOfSelfSubmittableCbs}
-    <Button busy={journey?.loading} style="primary" type="submit" width="full">
+    <Button
+      busy={journey?.loading}
+      disabled={!submitReady}
+      style="primary"
+      type="submit"
+      width="full"
+    >
       <T key="nextButton" />
     </Button>
   {/if}

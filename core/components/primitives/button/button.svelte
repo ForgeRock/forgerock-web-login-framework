@@ -12,6 +12,7 @@
   import Spinner from '$components/primitives/spinner/spinner.svelte';
 
   export let busy = false;
+  export let disabled = false;
   export let classes = '';
   // export let customCss: { key: string; value: string }[] = [];
   export let onClick: (event: Event) => void = () => {};
@@ -48,6 +49,7 @@
   )} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width} ${classes}`}
   on:click={onClick}
   {type}
+  {disabled}
 >
   {#if busy}
     <!-- Render a small spinner during form submission -->

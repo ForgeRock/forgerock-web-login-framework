@@ -37,6 +37,7 @@ export function resolveRealmFromUrl(url: URL): string {
 export function resolveRedirect(redirectContext: RedirectData): string {
   const resolved = firstOf(
     redirectContext,
+    getValidatedOAuthRedirect,
     getSuccessRedirect,
     getDefaultPathRedirect,
     getSamlRedirect,
@@ -152,6 +153,27 @@ export function isOAuthAuthorizePath(url: string): boolean {
  * @param {RedirectData} redirectContext - The redirect context.
  * @returns {string | null} The success URL or null.
  */
+function getValidatedOAuthRedirect(context: RedirectData): string | null {
+  if (context.isGotoOnFail || !context.tokenId || !context.successUrl || !context.gotoUrl) {
+    return null;
+  }
+  try {
+    const amOrigin = new URL(context.amOrigin).origin;
+    const validated = new URL(context.successUrl, amOrigin);
+    const requested = new URL(context.gotoUrl, amOrigin);
+    if (
+      validated.origin === amOrigin &&
+      validated.href === requested.href &&
+      isOAuthAuthorizePath(validated.href)
+    ) {
+      return validated.href;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 function getSuccessRedirect(redirectContext: RedirectData): string | null {
   const { successUrl, amOrigin } = redirectContext;
   if (

@@ -79,6 +79,9 @@
   }
 
   async function submit(value: string) {
+    if (value !== 'resend' && (value.length !== OTP_LENGTH || !/^\d{6}$/.test(value))) {
+      return;
+    }
     hiddenValueCb?.setInputValue(value);
     await tick();
     form?.submit();
@@ -115,7 +118,7 @@
   ariaDescribedBy={formAriaDescriptor}
   id={formElementId}
   needsFocus={formNeedsFocus}
-  onSubmitWhenValid={() => form?.submit()}
+  onSubmitWhenValid={() => submit(otpDigits.join(''))}
 >
   {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={!!form?.message} type="error">
@@ -169,6 +172,7 @@
 
   <Button
     busy={journey?.loading}
+    disabled={!otpComplete}
     classes={otpComplete ? '' : 'tw_opacity-50 tw_pointer-events-none'}
     style="primary"
     type="button"

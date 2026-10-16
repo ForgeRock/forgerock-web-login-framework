@@ -7,7 +7,7 @@
  *
  **/
 
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/environment', () => ({ building: false }));
 vi.mock('$env/dynamic/private', () => ({
@@ -18,7 +18,15 @@ vi.mock('$env/dynamic/private', () => ({
   },
 }));
 
-import { getAmCookie, resolveJsonRealmPath, resolveOAuthRealmPath, setAmCookie } from './sessions';
+import {
+  amFetchRequest,
+  getAmCookie,
+  resolveJsonRealmPath,
+  resolveOAuthRealmPath,
+  setAmCookie,
+} from './sessions';
+
+afterEach(() => vi.unstubAllGlobals());
 
 function cookies(values: Record<string, string> = {}) {
   return {
@@ -104,5 +112,46 @@ describe('Login2 realm paths', () => {
   it('rejects path traversal and falls back for malformed overrides', () => {
     expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root/realms/alpha');
     expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root/realms/alpha');
+  });
+});
+
+describe('Root redirect validation transport', () => {
+  it.each(['/', 'root', '/root'])('uses the root action alias for %s only', async (realm) => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ successURL: '/platform/' }));
+    vi.stubGlobal('fetch', fetch);
+
+    await amFetchRequest(
+      'abc123' as Parameters<typeof amFetchRequest>[0],
+      '/users?_action=validateGoto',
+      'POST',
+      { goto: '/platform/' },
+      realm,
+    );
+
+    expect(fetch.mock.calls[0][0]).toBe(
+      'https://am.example.com/am/json/users?_action=validateGoto',
+    );
+    expect(fetch.mock.calls[0][1]).toMatchObject({
+      method: 'POST',
+      headers: { cookie: 'iPlanetDirectoryPro=abc123' },
+      body: JSON.stringify({ goto: '/platform/' }),
+    });
+  });
+
+  it('preserves the qualified root path for other AM operations', async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ valid: true }));
+    vi.stubGlobal('fetch', fetch);
+
+    await amFetchRequest(
+      'abc123' as Parameters<typeof amFetchRequest>[0],
+      '/sessions?_action=validate',
+      'POST',
+      undefined,
+      'root',
+    );
+
+    expect(fetch.mock.calls[0][0]).toBe(
+      'https://am.example.com/am/json/realms/root/sessions?_action=validate',
+    );
   });
 });
