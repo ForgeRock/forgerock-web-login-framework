@@ -69,11 +69,16 @@ export function buildLoginCspHeaders(
   const headers = new Headers();
 
   if (CUSTOMER_CSP_REALMS.has(realm) || isCustomHost(context)) {
-    headers.set('Content-Security-Policy', cspEnvironment.enforced || DEFAULT_CSP_ENFORCED);
-    headers.set(
-      'Content-Security-Policy-Report-Only',
-      cspEnvironment.reportOnly || DEFAULT_CSP_REPORT_ONLY,
-    );
+    if (cspEnvironment.enforced !== '') {
+      headers.set('Content-Security-Policy', cspEnvironment.enforced ?? DEFAULT_CSP_ENFORCED);
+    }
+
+    if (cspEnvironment.reportOnly !== '') {
+      headers.set(
+        'Content-Security-Policy-Report-Only',
+        cspEnvironment.reportOnly ?? DEFAULT_CSP_REPORT_ONLY,
+      );
+    }
 
     return headers;
   }

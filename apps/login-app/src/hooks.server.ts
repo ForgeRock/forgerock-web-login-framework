@@ -19,7 +19,8 @@ export const handle: Handle = async ({ event, resolve }) => {
     return response;
   }
 
-  response.headers.set('Cache-Control', 'no-store');
+  response.headers.set('Cache-Control', 'no-cache, no-store');
+  response.headers.set('Edge-Control', 'no-store');
   response.headers.set('Pragma', 'no-cache');
   response.headers.set('Referrer-Policy', 'origin');
   response.headers.set('X-Content-Type-Options', 'nosniff');

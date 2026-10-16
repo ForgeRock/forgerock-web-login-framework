@@ -8,7 +8,8 @@
  -->
 
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
+  import { get } from 'svelte/store';
 
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
@@ -21,12 +22,18 @@
   import Header from '$custom/header/header.svelte';
   import { deriveJourneyName } from '$journey/_utilities/journey-name.utilities';
   import {
+    autoRestartStore,
     fallbackJourneyStore,
     initialize as initializeJourney,
     stack,
   } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
+  import {
+    attachLegacyHashListener,
+    buildLoginEntryQuery,
+    runInitialEntry,
+  } from './login-entry.effects';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
@@ -71,6 +78,26 @@
   let tokenId = '';
   let journeyStepUrl = '';
   let journeyRootEl: HTMLDivElement;
+  let legacyResumeFailed = false;
+  let legacyResumeInProgress = false;
+  let detachLegacyHashListener: (() => void) | null = null;
+  let destroyed = false;
+
+  function buildPreservedQuery(): Record<string, string> {
+    return buildLoginEntryQuery({
+      goto: data.redirectParams?.goto,
+      gotoOnFail: data.redirectParams?.gotoOnFail,
+      uuid: uuidParam,
+    });
+  }
+
+  function handleStartOver(): void {
+    legacyResumeFailed = false;
+    journeyStore.start({
+      journey: journeyParam || authIndexValue || '',
+      query: buildPreservedQuery(),
+    });
+  }
 
   $: pageTheme = resolvePageTheme(
     $styleStore?.themeCatalog,
@@ -86,46 +113,73 @@
   initializeContent(data.content);
 
   // Use if not initializing journey in a "context module"
+  // Legacy AM anchors use generic `#/service/<journey>` (for example
+  // `#/service/FRForgotUsername`). Resume takes precedence; hash only
+  // drives the start path. No window reads outside onMount/onDestroy.
   onMount(async () => {
-    if (suspendedIdParam || formPostEntryParam || (codeParam && stateParam)) {
-      await journeyStore.resume(location.href);
-      goto('/', { replaceState: true });
-    } else {
-      // noSession set to false is required to receive session token from AM
-      const query: Record<string, string> = {
-        noSession: 'false',
-      };
-
-      /**
-       * goto and gotoOnFail are sent at the beginning of journey
-       * to support temporarily suspended flows like email verification
-       * and to help AM set journey step successUrl.
-       * Only add these when present, since undefined would otherwise be serialized
-       * as the literal string "undefined" by URLSearchParams and corrupt AM's successUrl.
-       */
-      if (data.redirectParams?.goto) {
-        query.goto = data.redirectParams.goto;
-      }
-      if (data.redirectParams?.gotoOnFail) {
-        query.gotoOnFail = data.redirectParams.gotoOnFail;
-      }
-      if (uuidParam) {
-        query.uuid = uuidParam;
-      }
-
-      journeyStore.start({
-        journey: journeyParam || authIndexValue || '',
-        query,
-      });
+    if (suspendedIdParam) {
+      legacyResumeInProgress = true;
     }
+    try {
+      const outcome = await runInitialEntry(
+        {
+          href: window.location.href,
+          hash: window.location.hash,
+          suspendedId: suspendedIdParam,
+          formPostEntry: formPostEntryParam,
+          code: codeParam,
+          state: stateParam,
+          journeyParam,
+          authIndexValue,
+          goto: data.redirectParams?.goto,
+          gotoOnFail: data.redirectParams?.gotoOnFail,
+          uuid: uuidParam,
+        },
+        {
+          resume: (href: string) => journeyStore.resume(href),
+          start: (options: { journey: string; query: Record<string, string> }) =>
+            journeyStore.start(options),
+          goto: (url: string, options?: { replaceState?: boolean }) => goto(url, options),
+          getPriorAutoRestart: () => get(autoRestartStore),
+          setAutoRestart: (value: boolean) => autoRestartStore.set(value),
+          getResumeState: () => get(journeyStore),
+        },
+      );
+      if (outcome.kind === 'resumed-legacy-failed') {
+        legacyResumeFailed = true;
+      }
+    } finally {
+      legacyResumeInProgress = false;
+    }
+
+    if (destroyed) return;
+
+    detachLegacyHashListener = attachLegacyHashListener(window, (hashJourney) => {
+      journeyStore.start({
+        journey: hashJourney,
+        query: buildPreservedQuery(),
+      });
+    });
+  });
+
+  onDestroy(() => {
+    destroyed = true;
+    detachLegacyHashListener?.();
+    detachLegacyHashListener = null;
   });
 
   $: {
     /**
      * hasSubmitted check prevents multiple form submissions
      * submit only when hasSubmitted is false, then set it to true
+     * Legacy resume in progress/failed must not auto-post past the failed-resume UI.
      */
-    if ($journeyStore?.completed && !hasSubmitted) {
+    if (
+      $journeyStore?.completed &&
+      !hasSubmitted &&
+      !legacyResumeInProgress &&
+      !legacyResumeFailed
+    ) {
       hasSubmitted = true;
 
       if ($journeyStore?.successful) {
@@ -167,7 +221,10 @@
         <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
       </form>
 
-      {#if hasSubmitted}
+      {#if legacyResumeFailed}
+        <p>Unable to resume session. It may have expired.</p>
+        <a href="#" on:click|preventDefault={handleStartOver}>Start Over</a>
+      {:else if hasSubmitted}
         <p class="tw_mb-6">You are being redirected...</p>
       {:else}
         <Journey
