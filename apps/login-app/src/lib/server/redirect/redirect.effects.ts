@@ -133,14 +133,14 @@ export async function validateUrl(
     },
     realm,
   );
-  const parsed = z.object({ successUrl: z.string().optional() }).safeParse(response);
+  const parsed = z.object({ successURL: z.string().optional() }).safeParse(response);
   if (
     !parsed.success ||
-    !parsed.data.successUrl ||
-    parsed.data.successUrl === 'undefined' ||
-    parsed.data.successUrl === 'null'
+    !parsed.data.successURL ||
+    parsed.data.successURL === 'undefined' ||
+    parsed.data.successURL === 'null'
   ) {
     return null;
   }
-  return parsed.data.successUrl;
+  return parsed.data.successURL;
 }

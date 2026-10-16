@@ -9,7 +9,7 @@
 
 import { callbackType } from '@forgerock/journey-client';
 import { expect, fn } from 'storybook/test';
-import { fireEvent, userEvent, within } from 'storybook/test';
+import { fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
@@ -423,6 +423,17 @@ export const ConfirmPasswordInteraction = {
     const password1 = canvas.getByLabelText('Password');
     const password2 = canvas.getByLabelText('Confirm password');
 
+    const initialSubmit = canvas.getByRole('button', { name: 'Next' });
+    await expect(initialSubmit).toHaveAttribute('aria-disabled', 'false');
+    await expect(initialSubmit).not.toHaveAttribute('disabled');
+    initialSubmit.focus();
+    await expect(initialSubmit).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(ConfirmPassword.args.form.submit).not.toHaveBeenCalled();
+    await expect(username).toHaveFocus();
+    await expect(username).toHaveAttribute('aria-invalid', 'true');
+    await expect(canvas.getAllByText('Value is required')[0]).toBeVisible();
+
     await userEvent.type(username, 'username01');
     await userEvent.type(password1, 'Password123');
     await userEvent.type(password2, 'PasswordABC');
@@ -430,6 +441,11 @@ export const ConfirmPasswordInteraction = {
     await password2.blur();
 
     const submitBtn = canvas.getByRole('button', { name: 'Next' });
+    await expect(submitBtn).toHaveAttribute('aria-disabled', 'false');
+    await expect(submitBtn).not.toHaveAttribute('disabled');
+    submitBtn.focus();
+    await expect(submitBtn).toHaveFocus();
+    await userEvent.keyboard('{Enter} ');
     await fireEvent.click(submitBtn);
 
     // Expecting the form NOT to be submitted due to mismatched passwords
@@ -442,6 +458,7 @@ export const ConfirmPasswordInteraction = {
     await userEvent.type(password2, 'Password123');
     await password2.blur();
 
+    await waitFor(() => expect(submitBtn).toHaveAttribute('aria-disabled', 'false'));
     await fireEvent.click(submitBtn);
     await expect(ConfirmPassword.args.form.submit).toHaveBeenCalled();
 
