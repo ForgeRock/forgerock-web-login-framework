@@ -18,10 +18,14 @@
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
+  import Footer from '$custom/footer/footer.svelte';
+  import Header from '$custom/header/header.svelte';
+  import { deriveJourneyName } from '$journey/_utilities/journey-name.utilities';
   import {
     autoRestartStore,
     fallbackJourneyStore,
     initialize as initializeJourney,
+    stack,
   } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
   import { loginAppStages } from '$lib/stages';
@@ -35,6 +39,20 @@
 
   /** @type {import('./$types').PageData} */
   export let data;
+
+  // The header/footer wrappers are user-owned files (not in this repo) that the
+  // Vite plugin seeds on first build from its templates when absent. They mount
+  // client-side only: the first journey step latches `wrappersVisible`, and the
+  // wrappers then stay mounted through step nulling (start(), completion,
+  // error), journey switches, and the redirect state.
+  let wrappersVisible = false;
+  $: if ($journeyStore?.step) {
+    wrappersVisible = true;
+  }
+  // Store subscription at the boundary: journeyName derives reactively from the
+  // latest stack entry ('' = AM default journey). journey.svelte applies the
+  // same step gate (core/journey/journey.svelte), so SSR never renders wrappers.
+  $: journeyName = deriveJourneyName($stack);
 
   const authIndexValue = $page.url.searchParams.get('authIndexValue');
   const codeParam = $page.url.searchParams.get('code');
@@ -188,26 +206,40 @@
   }
 </script>
 
-<div bind:this={journeyRootEl} class="tw_h-full">
-  <Box>
-    <form method="POST" bind:this={redirectForm} hidden>
-      <input type="hidden" name="loginResult" value={loginResult} />
-      <input type="hidden" name="tokenId" value={tokenId} />
-      <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
-    </form>
+<div bind:this={journeyRootEl} class="tw_h-full tw_flex tw_flex-col">
+  {#if wrappersVisible}
+    <div class="tw_shrink-0" data-journey-name={journeyName}>
+      <Header {journeyName} />
+    </div>
+  {/if}
 
-    {#if legacyResumeFailed}
-      <p>Unable to resume session. It may have expired.</p>
-      <a href="#" on:click|preventDefault={handleStartOver}>Start Over</a>
-    {:else if hasSubmitted}
-      <p class="tw_mb-6">You are being redirected...</p>
-    {:else}
-      <Journey
-        componentStyle="app"
-        displayIcon={true}
-        {journeyStore}
-        externalStages={loginAppStages}
-      />
-    {/if}
-  </Box>
+  <main class="tw_flex-1 tw_min-h-0">
+    <Box>
+      <form method="POST" bind:this={redirectForm} hidden>
+        <input type="hidden" name="loginResult" value={loginResult} />
+        <input type="hidden" name="tokenId" value={tokenId} />
+        <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
+      </form>
+
+      {#if legacyResumeFailed}
+        <p>Unable to resume session. It may have expired.</p>
+        <a href="#" on:click|preventDefault={handleStartOver}>Start Over</a>
+      {:else if hasSubmitted}
+        <p class="tw_mb-6">You are being redirected...</p>
+      {:else}
+        <Journey
+          componentStyle="app"
+          displayIcon={true}
+          {journeyStore}
+          externalStages={loginAppStages}
+        />
+      {/if}
+    </Box>
+  </main>
+
+  {#if wrappersVisible}
+    <div class="tw_shrink-0" data-journey-name={journeyName}>
+      <Footer {journeyName} />
+    </div>
+  {/if}
 </div>
