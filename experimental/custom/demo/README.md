@@ -10,8 +10,8 @@ This directory contains fully commented reference implementations of custom stag
 
    - `stages/custom-login/` — stage override (replaces an entire form layout)
    - `callbacks/custom-name/` — callback override (replaces a single input renderer)
-   - `header/branded-header/` — branded page header (worked example for the wrapper)
-   - `footer/branded-footer/` — branded page footer (worked example for the wrapper)
+   - `header/` — branded page header (worked example for the wrapper)
+   - `footer/` — branded page footer (worked example for the wrapper)
 
 2. Copy the directory into the correct scanned location:
 
@@ -55,15 +55,13 @@ demo/
 │       ├── custom-name.story.svelte   # Storybook wrapper with metadata stubs
 │       └── custom-name.stories.js    # CSF 3 stories (Base, Interaction)
 ├── header/
-│   └── branded-header/
-│       ├── branded-header.svelte      # branded header example (branches on journeyName)
-│       ├── branded-header.story.svelte # Storybook wrapper with store initialization
-│       └── branded-header.stories.js  # CSF 3 stories (Default, Named, Register, Interaction)
+│   ├── branded-header.svelte        # branded header example (branches on journeyName)
+│   ├── branded-header.story.svelte  # Storybook wrapper with store initialization
+│   └── branded-header.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
 └── footer/
-    └── branded-footer/
-        ├── branded-footer.svelte      # branded footer example (branches on journeyName)
-        ├── branded-footer.story.svelte # Storybook wrapper with store initialization
-        └── branded-footer.stories.js  # CSF 3 stories (Default, Named, Register, Interaction)
+    ├── branded-footer.svelte        # branded footer example (branches on journeyName)
+    ├── branded-footer.story.svelte  # Storybook wrapper with store initialization
+    └── branded-footer.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
 ```
 
 > **Note:** Files under `demo/` are committed to the repository as reference material.
