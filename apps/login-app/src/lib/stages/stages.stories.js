@@ -7,7 +7,7 @@
  *
  **/
 
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
 import { createJourneyStep } from '$journey/_utilities/step.mock';
@@ -80,6 +80,69 @@ export const VerifyCode = {
     journey: { loading: false, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
     stage: 'AdminInviteVerifyCode',
     step: frAdminInviteVerifyCode,
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const next = canvas.getByRole('button', { name: 'Next', exact: true });
+    const digits = canvas.getAllByRole('textbox');
+    await expect(digits).toHaveLength(6);
+    await expect(next).not.toHaveAttribute('aria-disabled');
+    await expect(next).not.toHaveAttribute('disabled');
+    digits[5].focus();
+    await userEvent.tab();
+    await expect(next).toHaveFocus();
+    await userEvent.keyboard('{Enter}');
+    await expect(digits[0]).toHaveFocus();
+    await expect(digits[0]).toHaveAttribute('aria-invalid', 'true');
+    await expect(canvas.getByText('Value is required', { exact: true })).toBeVisible();
+    next.focus();
+    await userEvent.keyboard(' ');
+    await expect(digits[0]).toHaveFocus();
+    await userEvent.click(next);
+    await fireEvent.submit(canvasElement.querySelector('form'));
+    await expect(args.form.submit).not.toHaveBeenCalled();
+    for (const [index, input] of digits.entries()) {
+      await userEvent.type(input, String(index + 1));
+    }
+    await waitFor(() => expect(next).not.toHaveAttribute('aria-disabled'));
+    await expect(canvas.queryByText('Value is required', { exact: true })).toBe(null);
+    next.focus();
+    await userEvent.keyboard('{Enter}');
+    await waitFor(() => expect(args.form.submit).toHaveBeenCalledTimes(1));
+    await expect(args.step.getCallbacksOfType('HiddenValueCallback')[0].getInputValue()).toBe(
+      '123456',
+    );
+  },
+};
+
+export const VerifyCodeBusy = {
+  args: {
+    form: { icon: true, message: '', status: '', submit: fn() },
+    journey: { loading: true, pop: fn(), push: fn(), restart: fn(), stack: writable([]) },
+    stage: 'AdminInviteVerifyCode',
+    step: createJourneyStep(adminRegOtpStep),
+  },
+  play: async ({ args, canvasElement }) => {
+    const canvas = within(canvasElement);
+    const next = canvas.getByRole('button', { name: /Next$/ });
+    const digits = canvas.getAllByRole('textbox');
+    const originalAnswer = args.step.getCallbacksOfType('HiddenValueCallback')[0].getInputValue();
+    for (const [index, input] of digits.entries()) {
+      await userEvent.type(input, String(index + 1));
+    }
+    next.focus();
+    await expect(next).toHaveFocus();
+    await expect(next.querySelector('.tw_spinner')).toBeVisible();
+    await expect(next).not.toHaveAttribute('aria-disabled');
+    await expect(next).not.toHaveAttribute('disabled');
+    await userEvent.keyboard('{Enter} ');
+    await userEvent.click(next);
+    await fireEvent.submit(canvasElement.querySelector('form'));
+    await userEvent.click(canvas.getByRole('button', { name: /resend/i }));
+    await expect(args.form.submit).not.toHaveBeenCalled();
+    await expect(args.step.getCallbacksOfType('HiddenValueCallback')[0].getInputValue()).toBe(
+      originalAnswer,
+    );
   },
 };
 
