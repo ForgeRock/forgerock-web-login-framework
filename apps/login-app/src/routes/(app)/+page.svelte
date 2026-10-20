@@ -218,7 +218,7 @@
     </div>
   {/if}
 
-  <main class="tw_flex-1 tw_min-h-0">
+  <main class="tw_flex-1">
     <Box>
       <form method="POST" bind:this={redirectForm} hidden>
         <input type="hidden" name="loginResult" value={loginResult} />
