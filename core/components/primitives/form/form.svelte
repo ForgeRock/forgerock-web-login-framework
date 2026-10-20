@@ -62,7 +62,9 @@
         // Grab the associated elements to this input
         const messageKey = input.getAttribute('aria-describedby') || '';
         const messageContainer = document.getElementById(messageKey);
-        const messageEl = messageContainer?.querySelector('.__input-message');
+        const messageEl = messageContainer?.matches('.__input-message')
+          ? messageContainer
+          : messageContainer?.querySelector('.__input-message');
 
         // If input is invalid, mark it with error and message
         if (!isValid) {

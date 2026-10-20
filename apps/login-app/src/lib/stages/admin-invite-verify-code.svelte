@@ -45,6 +45,7 @@
 
   let hiddenValueCb: HiddenValueCallback | null = null;
   let otpHasError = false;
+  let otpInputError = false;
   let otpDigits: string[] = Array.from({ length: OTP_LENGTH }, () => '');
   let otpInputs: HTMLInputElement[] = [];
 
@@ -79,12 +80,22 @@
   }
 
   async function submit(value: string) {
+    if (journey?.loading) {
+      return;
+    }
+
+    if (value !== 'resend' && (value.length !== OTP_LENGTH || !/^\d{6}$/.test(value))) {
+      return;
+    }
     hiddenValueCb?.setInputValue(value);
     await tick();
     form?.submit();
   }
 
   $: otpComplete = otpDigits.every((digit) => /^\d$/.test(digit));
+  $: if (otpComplete) {
+    otpInputError = false;
+  }
 
   // AM toggles the retry warning via if(false)/if(true) in the script:
   // first load: if (false) { ... p1aic-otp-retry-warning ... }
@@ -115,7 +126,7 @@
   ariaDescribedBy={formAriaDescriptor}
   id={formElementId}
   needsFocus={formNeedsFocus}
-  onSubmitWhenValid={() => form?.submit()}
+  onSubmitWhenValid={() => submit(otpDigits.join(''))}
 >
   {#if form?.message}
     <Alert id={formFailureMessageId} needsFocus={!!form?.message} type="error">
@@ -148,10 +159,13 @@
         bind:this={otpInputs[i]}
         bind:value={otpDigits[i]}
         aria-label={`Digit ${i + 1}`}
+        aria-describedby="adminInviteVerifyCodeInputMessage"
         class="tw_w-full tw_h-16 tw_text-center tw_text-2xl tw_font-medium tw_border tw_border-secondary-dark dark:tw_border-secondary-light tw_rounded tw_bg-white dark:tw_bg-gray-800 tw_text-primary-dark dark:tw_text-primary-light focus:tw_outline-none focus:tw_ring-2 focus:tw_ring-primary"
         inputmode="numeric"
         maxlength="1"
         pattern="[0-9]"
+        required
+        on:invalid={() => (otpInputError = true)}
         type="text"
         on:input={() => handleOtpInput(i)}
         on:keyup={(e) => handleOtpKeyup(e, i)}
@@ -161,20 +175,16 @@
   </div>
 
   <p
+    id="adminInviteVerifyCodeInputMessage"
     aria-live="polite"
     class="tw_text-error-dark dark:tw_text-error-light tw_text-sm tw_text-center tw_mb-4 tw_min-h-[1.25rem]"
   >
-    {#if otpHasError}<T key="adminRegOtpError" />{/if}
+    {#if otpInputError}<T key="inputRequiredError" />{:else if otpHasError}<T
+        key="adminRegOtpError"
+      />{/if}
   </p>
 
-  <Button
-    busy={journey?.loading}
-    classes={otpComplete ? '' : 'tw_opacity-50 tw_pointer-events-none'}
-    style="primary"
-    type="button"
-    width="full"
-    onClick={() => submit(otpDigits.join(''))}
-  >
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">
     <T key="nextButton" />
   </Button>
 

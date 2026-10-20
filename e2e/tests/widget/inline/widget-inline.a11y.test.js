@@ -62,6 +62,7 @@ test('Registration accessibility ensuring password field focus when submitted tw
   // initially skip over password field!
   const password = page.getByLabel('Password');
   await expect(password).toBeFocused();
+  await expect(password).toHaveJSProperty('required', true);
   await page.keyboard.press('Tab');
   await page.keyboard.press('Tab'); // tab again because of the eyeball
 
@@ -96,7 +97,15 @@ test('Registration accessibility ensuring password field focus when submitted tw
   await page.keyboard.press('Tab');
 
   const { pressEnter } = asyncEvents(page);
-  await pressEnter('/authenticate');
+  let authenticationRequests = 0;
+  const countAuthenticationRequests = (request) => {
+    if (new URL(request.url()).pathname.endsWith('/authenticate')) {
+      authenticationRequests += 1;
+    }
+  };
+  page.on('request', countAuthenticationRequests);
+  // Invalid submissions are rejected locally, so no AM response is expected.
+  await page.keyboard.press('Enter');
   await expect(password).toBeFocused();
 
   // tab back through to the Register button!
@@ -112,10 +121,12 @@ test('Registration accessibility ensuring password field focus when submitted tw
   const register = page.getByRole('button', { name: 'Register' });
   await expect(register).toBeFocused();
 
-  await pressEnter('/authenticate');
+  await page.keyboard.press('Enter');
 
   // verify the password field gets refocused, as this was a bug!
   await expect(password).toBeFocused();
+  expect(authenticationRequests).toBe(0);
+  page.off('request', countAuthenticationRequests);
   await page.keyboard.type('Password1!', { delay: 100 });
 
   // tab back through to the Register button!

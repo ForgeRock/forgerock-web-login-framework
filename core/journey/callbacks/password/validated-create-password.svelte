@@ -9,7 +9,6 @@
 
 <script lang="ts">
   import { getValidationFailures } from '$journey/callbacks/_utilities/callback.utilities';
-  import { isInputRequired } from '$journey/callbacks/_utilities/callback.utilities';
   import Policies from '$journey/callbacks/_utilities/policies.svelte';
   import Base from '$journey/callbacks/password/base.svelte';
 
@@ -33,7 +32,8 @@
   export let callbackMetadata: Maybe<CallbackMetadata>;
   export let style: z.infer<typeof styleSchema> = {};
 
-  const isRequired = isInputRequired(callback);
+  // Password collection requires a value even when AM only supplies type policies.
+  const isRequired = true;
 
   let inputName: string;
   let isInvalid: boolean;

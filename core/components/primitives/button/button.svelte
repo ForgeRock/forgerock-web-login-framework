@@ -19,6 +19,16 @@
   export let type: 'button' | 'submit' | null = null;
   export let width: 'auto' | 'full' = 'auto';
 
+  function handleClick(event: Event) {
+    if (busy) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+
+    onClick(event);
+  }
+
   function generateClassString(...args: string[]) {
     return args.reduce((prev, curr) => {
       switch (curr) {
@@ -46,7 +56,7 @@
     style,
     width,
   )} tw_button-base tw_focusable-element dark:tw_focusable-element_dark width-${width} ${classes}`}
-  on:click={onClick}
+  on:click={handleClick}
   {type}
 >
   {#if busy}

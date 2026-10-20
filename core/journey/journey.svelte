@@ -45,6 +45,10 @@
   const passkeyAutofill = journeyStore ? setupPasskeyAutofill(journeyStore) : null;
 
   function submitForm() {
+    if ($journeyStore.loading) {
+      return;
+    }
+
     // Abort any in-flight conditional mediation request; ignore failures.
     passkeyAutofill?.abort();
     // Get next step, passing previous step with new data

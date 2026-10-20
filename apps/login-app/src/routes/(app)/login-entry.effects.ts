@@ -152,7 +152,7 @@ export interface RunInitialEntryInputs {
 export interface RunInitialEntryDeps {
   resume: (href: string) => Promise<void> | void;
   start: (options: { journey: string; query: Record<string, string> }) => Promise<void> | void;
-  goto: (url: string, options?: { replaceState?: boolean }) => Promise<void> | void;
+  replaceState: (url: string) => Promise<void> | void;
   getPriorAutoRestart: () => boolean;
   setAutoRestart: (value: boolean) => void;
   getResumeState: () =>
@@ -165,6 +165,14 @@ export type RunInitialEntryOutcome =
   | { kind: 'resumed' }
   | { kind: 'resumed-legacy-failed'; legacyFailed: true }
   | { kind: 'started'; journey: string; query: Record<string, string> };
+
+export function cleanResumeUrl(href: string): string {
+  const url = new URL(href);
+  for (const name of ['suspendedId', 'form_post_entry', 'code', 'state']) {
+    url.searchParams.delete(name);
+  }
+  return `${url.pathname}${url.search}${url.hash}`;
+}
 
 export async function runInitialEntry(
   inputs: RunInitialEntryInputs,
@@ -196,11 +204,11 @@ export async function runInitialEntry(
       if (state?.completed && !state?.successful) {
         return { kind: 'resumed-legacy-failed', legacyFailed: true };
       }
-      await deps.goto('/', { replaceState: true });
+      await deps.replaceState(cleanResumeUrl(inputs.href));
       return { kind: 'resumed' };
     }
     await deps.resume(inputs.href);
-    await deps.goto('/', { replaceState: true });
+    await deps.replaceState(cleanResumeUrl(inputs.href));
     return { kind: 'resumed' };
   }
   await deps.start({ journey: decision.journey, query: decision.query });

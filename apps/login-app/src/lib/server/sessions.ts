@@ -213,10 +213,16 @@ export async function amFetchRequest(
   realm?: string,
 ): Promise<unknown> {
   const realmPath = resolveJsonRealmPath(realm);
+  // AIC blocks the fully qualified root users collection, including actions.
+  // Use its equivalent root action route only for redirect validation.
+  const requestRealmPath =
+    endpoint === '/users?_action=validateGoto' && realmPath === '/json/realms/root'
+      ? '/json'
+      : realmPath;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
-    const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}${endpoint}`, {
+    const response = await fetch(`${AM_DOMAIN_PATH}${requestRealmPath}${endpoint}`, {
       method,
       headers: {
         accept: 'application/json',
