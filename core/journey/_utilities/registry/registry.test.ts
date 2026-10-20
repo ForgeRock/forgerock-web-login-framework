@@ -310,6 +310,46 @@ describe('buildRegistryContent', () => {
     expect(error.message).toMatch(/mylogin\/login\.svelte/);
   });
 
+  it('reports the first collision in stage-then-callback scan order when multiple collisions exist', () => {
+    // Both types collide. The error must name the FIRST collision encountered
+    // (stage entries before callback entries), not an arbitrary one — this pins
+    // the deterministic selection the build order provides.
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/a/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/stages/b/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [
+        {
+          filePath: '/repo/experimental/custom/callbacks/x/logout.svelte',
+          name: 'Logout',
+          type: 'callback',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/callbacks/y/logout.svelte',
+          name: 'Logout',
+          type: 'callback',
+          acceptedProps: [],
+        },
+      ],
+    );
+    expect(error.message).toMatch(/Duplicate component name "StageLogin" in type "stage"/);
+    expect(error.message).not.toMatch(/CallbackLogout/);
+  });
+
   it('does not fail when a stage and a callback produce the same identifier across registries', () => {
     // Stage prefix + "Foo" → StageFoo; callback prefix + "StageFoo" → CallbackStageFoo.
     // Distinct identifiers, so this is NOT a collision — verify both registries emit.
