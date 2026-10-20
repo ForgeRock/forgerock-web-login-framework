@@ -11,6 +11,7 @@
   import { onDestroy, onMount, tick } from 'svelte';
   import { get } from 'svelte/store';
 
+  import { browser } from '$app/environment';
   import { goto } from '$app/navigation';
   import { page } from '$app/stores';
   import Box from '$components/primitives/box/centered.svelte';
@@ -46,7 +47,11 @@
   // wrappers then stay mounted through step nulling (start(), completion,
   // error), journey switches, and the redirect state.
   let wrappersVisible = false;
-  $: if ($journeyStore?.step) {
+  // `browser` excludes the SSR pass explicitly: the wrappers are user code, and
+  // even their module-level side effects must never run on the server. The step
+  // check alone already implies this (step is only set after the client-side
+  // journey start), so this is defense-in-depth, not a behavior change.
+  $: if (browser && $journeyStore?.step) {
     wrappersVisible = true;
   }
   // Store subscription at the boundary: journeyName derives reactively from the
