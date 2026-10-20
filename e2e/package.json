@@ -7,9 +7,9 @@
     "ci:e2e:debug": "PWDEBUG=1 playwright test"
   },
   "devDependencies": {
-    "@playwright/test": "^1.44.1",
+    "@playwright/test": "^1.64.1",
     "axe-playwright": "^1.2.3",
-    "playwright": "^1.44.0",
+    "playwright": "^1.64.1",
     "uuid": "9.0.1"
   }
 }

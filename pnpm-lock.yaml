@@ -78,7 +78,7 @@ importers:
         version: 10.0.7(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       axe-playwright:
         specifier: ^1.2.3
-        version: 1.2.3(playwright@1.58.2)
+        version: 1.2.3(playwright@1.64.1)
       chromatic:
         specifier: ^10.9.1
         version: 10.9.6
@@ -240,14 +240,14 @@ importers:
   e2e:
     devDependencies:
       '@playwright/test':
-        specifier: ^1.44.1
-        version: 1.58.2
+        specifier: ^1.64.1
+        version: 1.64.1
       axe-playwright:
         specifier: ^1.2.3
-        version: 1.2.3(playwright@1.58.2)
+        version: 1.2.3(playwright@1.64.1)
       playwright:
-        specifier: ^1.44.0
-        version: 1.58.2
+        specifier: ^1.64.1
+        version: 1.64.1
       uuid:
         specifier: ^14.0.0
         version: 14.0.0
@@ -323,7 +323,7 @@ importers:
         version: 10.4.24(postcss@8.5.28)
       axe-playwright:
         specifier: ^1.2.3
-        version: 1.2.3(playwright@1.58.2)
+        version: 1.2.3(playwright@1.64.1)
       babel-loader:
         specifier: ^9.1.2
         version: 9.2.1(@babel/core@7.29.7)(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
@@ -331,8 +331,8 @@ importers:
         specifier: ^10.9.1
         version: 10.9.6
       playwright:
-        specifier: ^1.44.0
-        version: 1.58.2
+        specifier: ^1.64.1
+        version: 1.64.1
       postcss:
         specifier: ^8.5.28
         version: 8.5.28
@@ -1509,9 +1509,9 @@ packages:
     resolution: {integrity: sha512-QNqXyfVS2wm9hweSYD2O7F0G06uurj9kZ96TRQE5Y9hU7+tgdZwIkbAKc5Ocy1HxEY2kuDQa6cQ1WRs/O5LFKA==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@playwright/test@1.58.2':
-    resolution: {integrity: sha512-akea+6bHYBBfA9uQqSYmlJXn61cTa+jbO87xVLCWbTqbWadRVmhxlXATaOjOgcBaWU4ePo0wB41KMFv3o35IXA==}
-    engines: {node: '>=18'}
+  '@playwright/test@1.64.1':
+    resolution: {integrity: sha512-IaYGml/nSOiZWROfPtuIL7neuu9qDOZ3TNvNljUIrhDMxiGTgPjzj/g9p9RxpS2tSepPDRY+UwAaEeiKtUvIAg==}
+    engines: {node: '>=20'}
     hasBin: true
 
   '@polka/url@1.0.0-next.29':
@@ -3753,11 +3753,6 @@ packages:
   fs.realpath@1.0.0:
     resolution: {integrity: sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==}
 
-  fsevents@2.3.2:
-    resolution: {integrity: sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==}
-    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
-    os: [darwin]
-
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
@@ -5079,9 +5074,14 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.58.2:
-    resolution: {integrity: sha512-vA30H8Nvkq/cPBnNw4Q8TWz1EJyqgpuinBcHET0YVJVFldr8JDNiU9LaWAE1KqSkRYazuaBhTpB5ZzShOezQ6A==}
-    engines: {node: '>=18'}
+  playwright-core@1.64.1:
+    resolution: {integrity: sha512-BC4s8y6SEVA6Q1rSxZTto8hI1KUI3xXlHGZgvGqP4IqPdI/a6FX9H29IDNz7vKo9l21b6LfYosScPL6M3xxyDQ==}
+    engines: {node: '>=20'}
+    hasBin: true
+
+  playwright@1.64.1:
+    resolution: {integrity: sha512-HCrVhHr5QQuwYoswEUGTb7gGp522yflbv/ST8nF4sFWGuLjQCt17Q/EubpGGSNKYn1tsTCPZxqHhHCfVURu7UA==}
+    engines: {node: '>=20'}
     hasBin: true
 
   pngjs@5.0.0:
@@ -7616,9 +7616,9 @@ snapshots:
 
   '@pkgr/core@0.2.9': {}
 
-  '@playwright/test@1.58.2':
+  '@playwright/test@1.64.1':
     dependencies:
-      playwright: 1.58.2
+      playwright: 1.64.1
 
   '@polka/url@1.0.0-next.29': {}
 
@@ -8031,7 +8031,7 @@ snapshots:
       jest-serializer-html: 7.1.0
       jest-watch-typeahead: 3.0.1(jest@30.2.0(@types/node@25.3.0))
       nyc: 15.1.0
-      playwright: 1.58.2
+      playwright: 1.64.1
       playwright-core: 1.58.2
       rimraf: 3.0.2
       storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -8065,7 +8065,7 @@ snapshots:
       jest-serializer-html: 7.1.0
       jest-watch-typeahead: 3.0.1(jest@30.2.0(@types/node@26.6.3))
       nyc: 15.1.0
-      playwright: 1.58.2
+      playwright: 1.64.1
       playwright-core: 1.58.2
       rimraf: 3.0.2
       storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -8921,12 +8921,12 @@ snapshots:
       mustache: 4.2.0
       rimraf: 3.0.2
 
-  axe-playwright@1.2.3(playwright@1.58.2):
+  axe-playwright@1.2.3(playwright@1.64.1):
     dependencies:
       axe-core: 4.11.1
       axe-html-reporter: 2.2.3(axe-core@4.11.1)
       picocolors: 1.1.1
-      playwright: 1.58.2
+      playwright: 1.64.1
 
   axios@1.13.5:
     dependencies:
@@ -10140,9 +10140,6 @@ snapshots:
       universalify: 2.0.1
 
   fs.realpath@1.0.0: {}
-
-  fsevents@2.3.2:
-    optional: true
 
   fsevents@2.3.3:
     optional: true
@@ -11755,11 +11752,11 @@ snapshots:
 
   playwright-core@1.58.2: {}
 
-  playwright@1.58.2:
+  playwright-core@1.64.1: {}
+
+  playwright@1.64.1:
     dependencies:
-      playwright-core: 1.58.2
-    optionalDependencies:
-      fsevents: 2.3.2
+      playwright-core: 1.64.1
 
   pngjs@5.0.0: {}
 

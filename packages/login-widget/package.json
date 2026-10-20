@@ -60,7 +60,7 @@
     "axe-playwright": "^1.2.3",
     "babel-loader": "^9.1.2",
     "chromatic": "^10.9.1",
-    "playwright": "^1.44.0",
+    "playwright": "^1.64.1",
     "postcss": "^8.5.28",
     "postcss-cli": "^10.1.0",
     "postcss-import": "^15.0.0",
