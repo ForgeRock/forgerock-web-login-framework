@@ -16,6 +16,9 @@
       "$package/*": ["../../packages/login-widget/dist/*"],
       "$server": ["./src/lib/server"],
       "$server/*": ["./src/lib/server/*"],
+      "$login-framework": ["../../experimental/custom/login-framework.ts"],
+      "$custom": ["../../experimental/custom"],
+      "$custom/*": ["../../experimental/custom/*"],
       "$lib": ["./src/lib"],
       "$lib/*": ["./src/lib/*"]
     },

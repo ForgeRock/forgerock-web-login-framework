@@ -8,7 +8,6 @@ import { fileURLToPath } from 'node:url';
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
 import { expandTilde } from '../services/file-system.js';
-import { runRegistryScript } from '../services/registry.js';
 import { toPascalCase } from '../utils.js';
 
 const CUSTOM_DIR = 'experimental/custom';
@@ -82,20 +81,23 @@ export const StageNameSchema = Schema.String.pipe(
  * at dist/src/templates/. In Vitest (src/commands/) they live two levels up at
  * the workspace root templates/ directory — the same fallback pattern used in mcp.ts.
  */
-function getTemplatesDir(): string {
+export function getTemplatesDir(): string {
   const __dirname = nodePath.dirname(fileURLToPath(import.meta.url));
   const compiledPath = nodePath.join(__dirname, '../templates');
   return existsSync(compiledPath) ? compiledPath : nodePath.join(__dirname, '../../templates');
 }
 
-export function scaffoldComponent(type: 'callback' | 'stage', name: string, directory?: string) {
+/** Supported custom component types for scaffolding. */
+type ScaffoldType = 'callback' | 'stage';
+
+export function scaffoldComponent(type: ScaffoldType, name: string, directory?: string) {
   return Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const p = yield* Path.Path;
 
     // ── Guard: validate component name format ─────────────────────────────
     // Callbacks must be valid  name (PascalCase, alphanumeric only).
-    // Stages are arbitrary AM strings with no naming convention constraint.
+    // Stages are arbitrary strings with no naming convention constraint.
     const nameSchema = type === 'callback' ? CallbackNameSchema : StageNameSchema;
     const { slug } = yield* Schema.decode(nameSchema)(name).pipe(
       Effect.mapError(() => new InvalidComponentNameError({ name })),
@@ -106,8 +108,11 @@ export function scaffoldComponent(type: 'callback' | 'stage', name: string, dire
     // ── Guard: must be run from an initialized project root ───────────────
     yield* assertValidProject(cwd);
 
-    const subDir = type === 'callback' ? 'callbacks' : 'stages';
-    const componentDir = p.join(cwd, CUSTOM_DIR, subDir, slug);
+    const subDirs: Record<ScaffoldType, string> = {
+      callback: 'callbacks',
+      stage: 'stages',
+    };
+    const componentDir = p.join(cwd, CUSTOM_DIR, subDirs[type], slug);
     const templatesDir = p.join(getTemplatesDir(), type);
 
     // ── Guard: prevent overwriting an existing component ──────────────────
@@ -141,11 +146,10 @@ export function scaffoldComponent(type: 'callback' | 'stage', name: string, dire
       createdFiles.push(targetPath);
     }
 
-    // ── Regenerate custom-registry.ts ────────────────────────────────────
-    yield* Console.log('Regenerating custom component registry...');
-    yield* runRegistryScript(cwd);
-
     // ── Print summary ──────────────────────────────────────────────────────
+    // custom-registry.ts is NOT regenerated here — the framework's Vite plugin
+    // picks the new component up on the next build or dev-server start (and,
+    // in dev, watches these directories for adds/removals without a restart).
     yield* Console.log(
       `Done. ${type} component scaffolded successfully.\n\n` +
         `Files created:\n` +

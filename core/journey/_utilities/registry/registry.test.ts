@@ -1,14 +1,21 @@
 import { Path } from '@effect/platform';
 import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
-import { describe, expect, it } from 'vitest';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   buildRegistryContent,
   parseAcceptedProps,
   parseComponentHeader,
+  runRegistryScript,
+  seedMissingWrappers,
   toPascalCase,
 } from './registry.js';
+
+import type { RegistryCollisionError } from './registry.js';
 
 const decode = (filePath: string, content: string) =>
   Effect.runSync(parseComponentHeader(filePath, content));
@@ -24,6 +31,14 @@ const nodePath = Effect.runSync(
     NodeContext.layer,
   ),
 );
+
+// buildRegistryContent returns an Effect (never throws): success unwraps the
+// generated content, failure unwraps the typed error — mirroring decode/decodeError.
+const buildContent = (...args: Parameters<typeof buildRegistryContent>): string =>
+  Effect.runSync(buildRegistryContent(...args));
+
+const buildError = (...args: Parameters<typeof buildRegistryContent>): RegistryCollisionError =>
+  Effect.runSync(Effect.flip(buildRegistryContent(...args)));
 
 describe('parseComponentHeader', () => {
   describe('valid headers', () => {
@@ -74,9 +89,43 @@ describe('parseComponentHeader', () => {
       expect(String(err.cause)).toContain('Invalid Type value');
     });
 
+    it('fails when Type value is an unknown custom component type', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!-- @component\n   Type: container\n   Name: Foo -->`,
+      );
+      expect(String(err.cause)).toContain('Invalid Type value');
+    });
+
+    it('fails when Type value is header (removed type)', () => {
+      const err = decodeError('test.svelte', `<!-- @component\n   Type: header\n   Name: Foo -->`);
+      expect(String(err.cause)).toContain('Invalid Type value');
+    });
+
+    it('fails when Type value is footer (removed type)', () => {
+      const err = decodeError('test.svelte', `<!-- @component\n   Type: footer\n   Name: Foo -->`);
+      expect(String(err.cause)).toContain('Invalid Type value');
+    });
+
     it('fails when Name field is missing', () => {
       const err = decodeError('test.svelte', `<!-- @component\n   Type: stage -->`);
       expect(String(err.cause)).toContain('Missing "Name:" field');
+    });
+
+    it('fails when Name is "__proto__" (would corrupt the generated Record literal)', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!-- @component\n   Type: stage\n   Name: __proto__ -->`,
+      );
+      expect(String(err.cause)).toContain('Reserved key "__proto__"');
+    });
+
+    it('fails when Name is "constructor" (reserved object-literal key)', () => {
+      const err = decodeError(
+        'test.svelte',
+        `<!-- @component\n   Type: callback\n   Name: constructor -->`,
+      );
+      expect(String(err.cause)).toContain('Reserved key "constructor"');
     });
   });
 });
@@ -105,6 +154,16 @@ describe('parseAcceptedProps', () => {
     const content = `<script>\nexport let callback;\nexport const style = {};\nexport const stepMetadata = null;\n</script>`;
     expect(parseAcceptedProps(content)).toEqual(['callback']);
   });
+
+  it('skips destructured export let declarations instead of pushing undefined', () => {
+    const content = `<script>\nexport let { a, b } = props;\nexport let plain;\n</script>`;
+    expect(parseAcceptedProps(content)).toEqual(['plain']);
+  });
+
+  it('skips array-pattern export let declarations', () => {
+    const content = `<script>\nexport let [first, second] = pair;\n</script>`;
+    expect(parseAcceptedProps(content)).toEqual([]);
+  });
 });
 
 describe('toPascalCase', () => {
@@ -125,7 +184,7 @@ describe('buildRegistryContent', () => {
   const registryDir = '/repo/core/journey/_utilities/registry';
 
   it('produces empty registries when no components are scanned', () => {
-    const output = buildRegistryContent(nodePath, registryDir, [], []);
+    const output = buildContent(nodePath, registryDir, [], []);
     expect(output).toContain(
       'export const customStageRegistry: Record<string, CustomRegistryEntry> = {',
     );
@@ -136,8 +195,14 @@ describe('buildRegistryContent', () => {
     expect(output).not.toContain('// Callback overrides');
   });
 
+  it('does not emit header or footer registries (removed types)', () => {
+    const output = buildContent(nodePath, registryDir, [], []);
+    expect(output).not.toContain('customHeaderRegistry');
+    expect(output).not.toContain('customFooterRegistry');
+  });
+
   it('emits import lines and registry entries for stages and callbacks', () => {
-    const output = buildRegistryContent(
+    const output = buildContent(
       nodePath,
       registryDir,
       [
@@ -173,7 +238,7 @@ describe('buildRegistryContent', () => {
   });
 
   it('uses PascalCase identifiers derived from arbitrary names', () => {
-    const output = buildRegistryContent(
+    const output = buildContent(
       nodePath,
       registryDir,
       [
@@ -187,5 +252,535 @@ describe('buildRegistryContent', () => {
       [],
     );
     expect(output).toContain('StageMyLoginStage');
+  });
+
+  it('does not emit default pointer exports', () => {
+    const output = buildContent(nodePath, registryDir, [], []);
+    expect(output).not.toContain('customHeaderDefault');
+    expect(output).not.toContain('customFooterDefault');
+  });
+
+  it('fails when two components share a registry key (exact duplicate name)', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/a/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/stages/b/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(error.message).toMatch(/Duplicate component name "StageLogin" in type "stage"/);
+    expect(error.message).toMatch(/a\/login\.svelte/);
+    expect(error.message).toMatch(/b\/login\.svelte/);
+  });
+
+  it('fails when distinct names collide in the generated identifier ("My Login" vs "MyLogin")', () => {
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/my-login/login.svelte',
+          name: 'My Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/stages/mylogin/login.svelte',
+          name: 'MyLogin',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [],
+    );
+    expect(error.message).toMatch(/Duplicate component name "StageMyLogin" in type "stage"/);
+    expect(error.message).toMatch(/my-login\/login\.svelte/);
+    expect(error.message).toMatch(/mylogin\/login\.svelte/);
+  });
+
+  it('reports the first collision in stage-then-callback scan order when multiple collisions exist', () => {
+    // Both types collide. The error must name the FIRST collision encountered
+    // (stage entries before callback entries), not an arbitrary one — this pins
+    // the deterministic selection the build order provides.
+    const error = buildError(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/a/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/stages/b/login.svelte',
+          name: 'Login',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [
+        {
+          filePath: '/repo/experimental/custom/callbacks/x/logout.svelte',
+          name: 'Logout',
+          type: 'callback',
+          acceptedProps: [],
+        },
+        {
+          filePath: '/repo/experimental/custom/callbacks/y/logout.svelte',
+          name: 'Logout',
+          type: 'callback',
+          acceptedProps: [],
+        },
+      ],
+    );
+    expect(error.message).toMatch(/Duplicate component name "StageLogin" in type "stage"/);
+    expect(error.message).not.toMatch(/CallbackLogout/);
+  });
+
+  it('does not fail when a stage and a callback produce the same identifier across registries', () => {
+    // Stage prefix + "Foo" → StageFoo; callback prefix + "StageFoo" → CallbackStageFoo.
+    // Distinct identifiers, so this is NOT a collision — verify both registries emit.
+    const output = buildContent(
+      nodePath,
+      registryDir,
+      [
+        {
+          filePath: '/repo/experimental/custom/stages/foo/foo.svelte',
+          name: 'Foo',
+          type: 'stage',
+          acceptedProps: [],
+        },
+      ],
+      [
+        {
+          filePath: '/repo/experimental/custom/callbacks/foo/foo.svelte',
+          name: 'StageFoo',
+          type: 'callback',
+          acceptedProps: [],
+        },
+      ],
+    );
+    expect(output).toContain('StageFoo');
+    expect(output).toContain('CallbackStageFoo');
+  });
+});
+
+describe('runRegistryScript', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    tmpDir = await mkdtemp(join(tmpdir(), 'core-registry-test-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  const writeComponent = async (
+    kind: 'stages' | 'callbacks',
+    dirName: string,
+    fileName: string,
+    name: string,
+    type: string,
+    enabled: boolean = true,
+  ) => {
+    const dir = join(tmpDir, 'experimental', 'custom', kind, dirName);
+    await mkdir(dir, { recursive: true });
+    await writeFile(
+      join(dir, fileName),
+      `<!--\n   @component\n   Type: ${type}\n   Name: ${name}\n${
+        enabled ? '   Enabled: true\n' : ''
+      }   -->\n<div></div>`,
+      'utf8',
+    );
+  };
+
+  const readRegistry = async () =>
+    readFile(
+      join(tmpDir, 'core', 'journey', '_utilities', 'registry', 'custom-registry.ts'),
+      'utf8',
+    );
+
+  const run = () =>
+    runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+
+  it('scans stages and callbacks and emits both registries', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await writeComponent('callbacks', 'name', 'name.svelte', 'Name', 'callback');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('customStageRegistry');
+    expect(output).toContain('customCallbackRegistry');
+    expect(output).toContain('StageLogin');
+    expect(output).toContain('CallbackName');
+  });
+
+  it('ignores header and footer directories even when populated (removed types)', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'brand');
+    await mkdir(headerDir, { recursive: true });
+    await writeFile(
+      join(headerDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Brand\n   Enabled: true\n   -->\n<div></div>',
+      'utf8',
+    );
+    const footerDir = join(tmpDir, 'experimental', 'custom', 'footers', 'legal');
+    await mkdir(footerDir, { recursive: true });
+    await writeFile(
+      join(footerDir, 'legal.svelte'),
+      '<!--\n   @component\n   Type: footer\n   Name: Legal\n   Enabled: true\n   -->\n<div></div>',
+      'utf8',
+    );
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('StageLogin');
+    expect(output).not.toContain('customHeaderRegistry');
+    expect(output).not.toContain('customFooterRegistry');
+    expect(output).not.toContain('CustomHeaderBrand');
+    expect(output).not.toContain('CustomFooterLegal');
+  });
+
+  it('keeps the multi-entry Record behavior for stages and callbacks', async () => {
+    await writeComponent('stages', 'a', 'one.svelte', 'One', 'stage');
+    await writeComponent('stages', 'b', 'two.svelte', 'Two', 'stage');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('"One": {');
+    expect(output).toContain('"Two": {');
+  });
+
+  it('bundles a stage file with a stray Enabled: line (tolerance, never enforced on stages)', async () => {
+    const strayDir = join(tmpDir, 'experimental', 'custom', 'stages', 'stray');
+    await mkdir(strayDir, { recursive: true });
+    await writeFile(
+      join(strayDir, 'stray.svelte'),
+      `<!--\n   @component\n   Type: stage\n   Name: Stray\n   Enabled: true\n   -->\n<div></div>`,
+      'utf8',
+    );
+    await run();
+
+    const output = await readRegistry();
+    // The stray line is silently ignored: the stage bundles regardless.
+    expect(output).toContain('StageStray');
+  });
+});
+
+describe('seedMissingWrappers', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'core-registry-seed-test-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  /** Writes the tracked wrapper templates into the fake repo layout. */
+  const writeTemplates = async () => {
+    const templatesDir = join(
+      tmpDir,
+      'core',
+      'journey',
+      '_utilities',
+      'registry',
+      'wrapper-templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(join(templatesDir, 'header.svelte'), '<!-- template header -->', 'utf8');
+    await writeFile(join(templatesDir, 'footer.svelte'), '<!-- template footer -->', 'utf8');
+  };
+
+  const run = () =>
+    seedMissingWrappers(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+
+  const seedPath = (element: 'header' | 'footer') =>
+    join(tmpDir, 'experimental', 'custom', element, `${element}.svelte`);
+
+  const readSeed = async (element: 'header' | 'footer') => readFile(seedPath(element), 'utf8');
+
+  it('seeds both wrappers when they are absent', async () => {
+    await writeTemplates();
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- template header -->');
+    expect(await readSeed('footer')).toBe('<!-- template footer -->');
+  });
+
+  it('skips writing when a wrapper already exists (never overwrites)', async () => {
+    await writeTemplates();
+    const customDir = join(tmpDir, 'experimental', 'custom', 'header');
+    await mkdir(customDir, { recursive: true });
+    await writeFile(seedPath('header'), '<!-- customer-edited header -->', 'utf8');
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- customer-edited header -->');
+  });
+
+  it('seeds the missing element while leaving the present one untouched (per-file fill-if-absent)', async () => {
+    await writeTemplates();
+    const customDir = join(tmpDir, 'experimental', 'custom', 'footer');
+    await mkdir(customDir, { recursive: true });
+    await writeFile(seedPath('footer'), '<!-- customer footer -->', 'utf8');
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- template header -->');
+    expect(await readSeed('footer')).toBe('<!-- customer footer -->');
+  });
+
+  it('creates the element directories recursively when they were deleted entirely', async () => {
+    await writeTemplates();
+    // No experimental/custom tree exists at all in tmpDir.
+    await run();
+
+    expect(await readSeed('header')).toBe('<!-- template header -->');
+    expect(await readSeed('footer')).toBe('<!-- template footer -->');
+  });
+
+  it('fails loudly naming the seed step when a template is missing', async () => {
+    // Only the header template exists; footer's read fails.
+    const templatesDir = join(
+      tmpDir,
+      'core',
+      'journey',
+      '_utilities',
+      'registry',
+      'wrapper-templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(join(templatesDir, 'header.svelte'), '<!-- template header -->', 'utf8');
+
+    const failure = await run().catch((cause: unknown) => cause);
+    expect(String(failure)).toContain('wrapper template');
+    // The wrapper that could not be seeded must not exist half-written.
+    await expect(readFile(seedPath('footer'), 'utf8')).rejects.toThrow();
+  });
+});
+
+describe('customRegistry vite plugin', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = await mkdtemp(join(tmpdir(), 'core-registry-plugin-test-'));
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  const makeServer = () => {
+    const listeners: ((event: string, filePath: string) => void)[] = [];
+    return {
+      server: {
+        watcher: {
+          on: vi.fn((_event: string, listener: (event: string, filePath: string) => void) => {
+            listeners.push(listener);
+          }),
+        },
+        config: { logger: { error: vi.fn() } },
+      },
+      listeners,
+    };
+  };
+
+  const registryPath = () =>
+    join(tmpDir, 'core', 'journey', '_utilities', 'registry', 'custom-registry.ts');
+
+  /** Writes the wrapper templates the plugin's seeding step reads. */
+  const writePluginTemplates = async () => {
+    const templatesDir = join(
+      tmpDir,
+      'core',
+      'journey',
+      '_utilities',
+      'registry',
+      'wrapper-templates',
+    );
+    await mkdir(templatesDir, { recursive: true });
+    await writeFile(join(templatesDir, 'header.svelte'), '<!-- template header -->', 'utf8');
+    await writeFile(join(templatesDir, 'footer.svelte'), '<!-- template footer -->', 'utf8');
+  };
+
+  it('buildStart seeds missing wrappers before regenerating the registry', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    await writePluginTemplates();
+
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
+    await writeFile(
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+
+    const plugin = customRegistry({ projectRoot: tmpDir });
+    await (plugin as { buildStart: () => Promise<void> }).buildStart();
+
+    // Wrappers seeded by buildStart from the templates.
+    const seededHeader = await readFile(
+      join(tmpDir, 'experimental', 'custom', 'header', 'header.svelte'),
+      'utf8',
+    );
+    expect(seededHeader).toBe('<!-- template header -->');
+    // Registry regenerated in the same buildStart.
+    const output = await readFile(registryPath(), 'utf8');
+    expect(output).toContain('StageBrand');
+  });
+
+  it('a stage add event regenerates the registry', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+    expect(server.watcher.on).toHaveBeenCalledWith('all', expect.any(Function));
+
+    // Add a stage component and fire the add event through the watcher listener.
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
+    await writeFile(
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+    expect(listeners.length).toBeGreaterThan(0);
+    for (const listener of listeners) {
+      listener('add', join(stageDir, 'brand.svelte'));
+    }
+
+    await vi.waitFor(async () => {
+      const output = await readFile(registryPath(), 'utf8');
+      expect(output).toContain('customStageRegistry: Record<string, CustomRegistryEntry> = {');
+      expect(output).toContain('StageBrand');
+    });
+  });
+
+  it('ignores changes outside the watched directories', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    // Seed a baseline registry file, then record its content.
+    await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+    const baseline = await readFile(registryPath(), 'utf8');
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+
+    // Add a stage file OUTSIDE the watched dirs and fire the event.
+    const outsideDir = join(tmpDir, 'experimental', 'elsewhere');
+    await mkdir(outsideDir, { recursive: true });
+    await writeFile(
+      join(outsideDir, 'stray.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Stray\n   -->\n<div></div>',
+      'utf8',
+    );
+    for (const listener of listeners) {
+      listener('add', join(outsideDir, 'stray.svelte'));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const after = await readFile(registryPath(), 'utf8');
+    expect(after).toBe(baseline);
+    expect(after).not.toContain('StageStray');
+  });
+
+  it('ignores header and footer component events — wrappers render client-side, not via the registry', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    // Seed a baseline registry file while the tree holds no stage components.
+    await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+    const baseline = await readFile(registryPath(), 'utf8');
+    expect(baseline).not.toContain('StageBrand');
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+
+    // A valid stage component exists on disk, but the only watcher event fired is
+    // for a header file — headers/footers are no longer watched (wrappers render
+    // client-side, not via the registry), so the event must NOT trigger a
+    // regeneration that would pick up the stage.
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
+    await writeFile(
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'legacy');
+    await mkdir(headerDir, { recursive: true });
+    await writeFile(
+      join(headerDir, 'legacy.svelte'),
+      '<!--\n   @component\n   Type: header\n   Name: Legacy\n   -->\n<div></div>',
+      'utf8',
+    );
+    for (const listener of listeners) {
+      listener('add', join(headerDir, 'legacy.svelte'));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const after = await readFile(registryPath(), 'utf8');
+    expect(after).toBe(baseline);
+    expect(after).not.toContain('StageBrand');
+    expect(after).not.toContain('HeaderLegacy');
+  });
+
+  it('logs a stale-registry action sentence when a watcher regeneration collides on a name', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    // Seed a valid registry with one stage.
+    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
+    await writeFile(
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+    await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+    const baseline = await readFile(registryPath(), 'utf8');
+
+    // Introduce a second stage with the SAME Name: — the regeneration collides.
+    const collidingDir = join(tmpDir, 'experimental', 'custom', 'stages', 'other');
+    await mkdir(collidingDir, { recursive: true });
+    await writeFile(
+      join(collidingDir, 'other.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+    for (const listener of listeners) {
+      listener('add', join(collidingDir, 'other.svelte'));
+    }
+
+    await vi.waitFor(() => {
+      expect(server.config.logger.error).toHaveBeenCalledWith(
+        expect.stringContaining('custom-registry.ts is stale'),
+      );
+      expect(server.config.logger.error).toHaveBeenCalledWith(expect.stringContaining('Brand'));
+    });
+
+    // The stale file is left on disk (a collision is a fix-on-disk situation, not an
+    // auto-deletion): the previously generated content still reads the old set.
+    const after = await readFile(registryPath(), 'utf8');
+    expect(after).toBe(baseline);
   });
 });

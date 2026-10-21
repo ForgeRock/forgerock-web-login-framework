@@ -1,10 +1,11 @@
 import { NodeContext } from '@effect/platform-node';
+import { it } from '@effect/vitest';
 import { Effect } from 'effect';
 import { Schema } from 'effect';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect } from 'vitest';
 
 import {
   CallbackNameSchema,
@@ -27,10 +28,10 @@ async function createMinimalProject(dir: string): Promise<void> {
     JSON.stringify({ version: '1.0.0', generatedAt: new Date().toISOString() }) + '\n',
     'utf8',
   );
-  // empty custom component dirs (runRegistryScript scans these)
+  // empty custom component dirs (scaffoldComponent scans these)
   await mkdir(join(dir, 'experimental', 'custom', 'callbacks'), { recursive: true });
   await mkdir(join(dir, 'experimental', 'custom', 'stages'), { recursive: true });
-  // registry output dir (runRegistryScript writes here)
+  // registry output dir (the framework's Vite plugin writes custom-registry.ts here)
   await mkdir(join(dir, 'core', 'journey', '_utilities', 'registry'), { recursive: true });
 }
 

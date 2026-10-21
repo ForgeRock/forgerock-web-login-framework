@@ -46,7 +46,17 @@ e2e/
 ├── tests/
 │   ├── utilities/          # Shared test utilities
 │   │   ├── async-events.js
-│   │   └── demo-user.js
+│   │   ├── demo-user.js
+│   │   └── delete-webauthn-device.js
+│   ├── login-app/          # SvelteKit login-app tests (run on the (app) route)
+│   │   ├── config-error.test.ts
+│   │   ├── idm-theme.test.ts
+│   │   ├── locale.test.ts
+│   │   ├── redirect.test.ts
+│   │   ├── register.test.ts
+│   │   ├── suspend-restart.test.ts
+│   │   ├── suspend-restart-default-journey.test.ts
+│   │   └── wrappers.test.ts
 │   └── widget/
 │       ├── inline/         # Inline form factor tests
 │       │   ├── widget-inline.test.js

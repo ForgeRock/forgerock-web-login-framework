@@ -186,6 +186,16 @@ export type { BaseCallback } from '@forgerock/journey-client/types';
 /** A full journey step — the shape passed to a custom stage component as `step`. */
 export type { JourneyStep } from '@forgerock/journey-client/types';
 
+/**
+ * The single prop a custom header/footer wrapper receives from the framework.
+ * `journeyName` is the journey currently driving the page, derived from the
+ * latest journey-stack entry; `''` means the AM default journey.
+ */
+export interface CustomWrapperProps {
+  /** Name of the journey currently driving the page. `''` = AM default journey. */
+  journeyName: string;
+}
+
 // ─── Storybook helpers ───────────────────────────────────────────────────────
 // These are convenience wrappers for use inside `*.story.svelte` and `*.mock.ts`
 // files. They are not part of the runtime API surface — production code should

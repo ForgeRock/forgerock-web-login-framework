@@ -8,10 +8,23 @@ import { parse } from 'svelte/compiler';
 
 type ComponentType = 'stage' | 'callback';
 
+const COMPONENT_TYPES = ['stage', 'callback'] as const satisfies readonly ComponentType[];
+
+const isComponentType = (value: string): value is ComponentType =>
+  COMPONENT_TYPES.some((componentType) => componentType === value);
+
 interface ComponentEntry {
   filePath: string;
   name: string;
   type: ComponentType;
+  acceptedProps: string[];
+}
+
+/** A `ComponentEntry` prepared for code generation: registry key, import path, and generated identifier. */
+interface RegistryEntry {
+  varName: string;
+  importPath: string;
+  name: string;
   acceptedProps: string[];
 }
 
@@ -21,19 +34,34 @@ interface ComponentEntry {
 
 /** Extracts names of all `export let` prop declarations from a Svelte component's `<script>` block using the Svelte compiler AST. */
 export function parseAcceptedProps(content: string): string[] {
-  const abstractSyntaxTree = parse(content, { modern: false });
-  const props: string[] = [];
-  for (const node of abstractSyntaxTree.instance?.content.body ?? []) {
-    if (node.type !== 'ExportNamedDeclaration') {
-      continue;
-    }
-    if (node.declaration?.type === 'VariableDeclaration' && node.declaration.kind === 'let') {
-      for (const declarator of node.declaration.declarations) {
-        props.push(declarator.id.name);
-      }
-    }
-  }
-  return props;
+  // `modern: true` returns the typed AST.Root (real node unions, the Svelte 6
+  // default) instead of the legacy `Record<string, any>`. The node types come
+  // from Svelte's own estree dependency, so we narrow with Extract over the
+  // inferred element type rather than importing estree directly.
+  const abstractSyntaxTree = parse(content, { modern: true });
+  const scriptBody = abstractSyntaxTree.instance?.content.body ?? [];
+  type ScriptNode = (typeof scriptBody)[number];
+  // The exact estree `VariableDeclaration` type is Svelte-internal, so model
+  // the shape this function actually reads: a `let` with identifier declarators.
+  type VariableDeclarationLike = {
+    declarations: { id: { type: string; name: string } }[];
+  };
+
+  const propDeclarations = scriptBody.filter(
+    (
+      node,
+    ): node is Extract<ScriptNode, { type: 'ExportNamedDeclaration' }> & {
+      declaration: VariableDeclarationLike;
+    } =>
+      node.type === 'ExportNamedDeclaration' &&
+      node.declaration?.type === 'VariableDeclaration' &&
+      node.declaration.kind === 'let',
+  );
+
+  return propDeclarations
+    .flatMap((node) => node.declaration.declarations)
+    .filter((declarator) => declarator.id.type === 'Identifier')
+    .map((declarator) => declarator.id.name);
 }
 
 /**
@@ -72,13 +100,11 @@ export const parseComponentHeader = (
 
   const typeMatch = block.match(/Type:\s*(\S+)/);
   if (!typeMatch) {
-    return fail(
-      'Missing "Type:" field in @component header. Expected: Type: stage or Type: callback',
-    );
+    return fail('Missing "Type:" field in @component header. Expected: Type: stage or callback');
   }
 
   const rawType = typeMatch[1].toLowerCase();
-  if (rawType !== 'stage' && rawType !== 'callback') {
+  if (!isComponentType(rawType)) {
     return fail(`Invalid Type value "${typeMatch[1]}". Must be "stage" or "callback".`);
   }
 
@@ -87,7 +113,18 @@ export const parseComponentHeader = (
     return fail('Missing "Name:" field in @component header. Expected: Name: <ComponentName>');
   }
 
-  return Effect.succeed({ type: rawType as ComponentType, name: nameMatch[1].trim() });
+  const name = nameMatch[1].trim();
+  // "__proto__" as an object-literal key sets the prototype instead of defining
+  // an own property, so the generated Record would silently lose the entry;
+  // "constructor" is inherited-but-shadowable and kept reserved for symmetry.
+  if (name === '__proto__' || name === 'constructor') {
+    return fail(
+      `Reserved key "${name}" cannot be used as a Name. The generated registry is an ` +
+        `object literal, and this key would corrupt the Record instead of registering the component.`,
+    );
+  }
+
+  return Effect.succeed({ type: rawType, name });
 };
 
 // --------------------------------------------------------------------------
@@ -175,102 +212,209 @@ const scanDirectory = (
     ),
   );
 
-// --------------------------------------------------------------------------
-// Registry content builder (pure, exported for testing)
-// --------------------------------------------------------------------------
+/** Raised when components collide on a generated identifier or registry key. */
+export class RegistryCollisionError extends Data.TaggedError('RegistryCollisionError')<{
+  readonly kind: 'name-collision';
+  readonly type: string;
+  readonly name: string;
+  readonly filePaths: string[];
+}> {
+  get message(): string {
+    const collidingFiles = this.filePaths.map((filePath) => `  - ${filePath}`).join('\n');
+    return (
+      `Duplicate component name "${this.name}" in type "${this.type}". Colliding files:\n` +
+      collidingFiles +
+      `\nRename one component's "Name:" field so every ${this.type} has a unique generated identifier.`
+    );
+  }
+}
 
 export function buildRegistryContent(
   path: Path.Path,
   registryDir: string,
   stageComponents: ComponentEntry[],
   callbackComponents: ComponentEntry[],
-): string {
+): Effect.Effect<string, RegistryCollisionError> {
   const toEntry =
     (prefix: string) =>
     ({ filePath, name, acceptedProps }: ComponentEntry) => {
       const relPath = path.relative(registryDir, filePath).replace(/\\/g, '/');
       const importPath = relPath.startsWith('.') ? relPath : `./${relPath}`;
-      return { varName: `${prefix}${toPascalCase(name)}`, importPath, name, acceptedProps };
+      return {
+        varName: `${prefix}${toPascalCase(name)}`,
+        importPath,
+        name,
+        acceptedProps,
+      };
     };
 
   const stageEntries = stageComponents.map(toEntry('Stage'));
   const callbackEntries = callbackComponents.map(toEntry('Callback'));
 
-  const lines: string[] = [
-    `/**`,
-    ` * AUTO-GENERATED — do not edit by hand.`,
-    ` * Regenerated by the login-framework Vite plugin on every build and on file changes during dev.`,
-    ` *`,
-    ` * Source: /experimental/custom/stages/ and /experimental/custom/callbacks/`,
-    ` */`,
-    ``,
-    `import type { Component } from 'svelte';`,
-    ``,
-    `export interface CustomRegistryEntry {`,
-    `  component: Component;`,
-    `  /** Props declared via \`export let\` in the component — only these are forwarded by the mapper. */`,
-    `  acceptedProps: string[];`,
-    `}`,
+  const importLines = (comment: string, entries: RegistryEntry[]): string[] =>
+    entries.length === 0
+      ? []
+      : [
+          comment,
+          ...entries.map(({ varName, importPath }) => `import ${varName} from '${importPath}';`),
+          ``,
+        ];
+
+  const recordLines = (exportName: string, entries: RegistryEntry[]): string[] => [
+    `export const ${exportName}: Record<string, CustomRegistryEntry> = {`,
+    ...entries.map(
+      ({ varName, name, acceptedProps }) =>
+        `  ${JSON.stringify(
+          name,
+        )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
+          acceptedProps,
+        )} },`,
+    ),
+    `};`,
     ``,
   ];
 
-  if (stageEntries.length > 0) {
-    lines.push(`// Stage overrides / extensions`);
-    for (const { varName, importPath } of stageEntries) {
-      lines.push(`import ${varName} from '${importPath}';`);
+  const build = (): string =>
+    [
+      // Constants inlined as-is (called once each; a named builder per constant
+      // would be a name-jump with no reuse).
+      [
+        `/**`,
+        ` * AUTO-GENERATED — do not edit by hand.`,
+        ` * Regenerated by the login-framework Vite plugin on every build and on file changes during dev.`,
+        ` *`,
+        ` * Source: /experimental/custom/{stages,callbacks}/`,
+        ` */`,
+        ``,
+        `import type { Component } from 'svelte';`,
+        ``,
+        `export interface CustomRegistryEntry {`,
+        `  component: Component;`,
+        `  /** Props declared via \`export let\` in the component — only these are forwarded by the mapper. */`,
+        `  acceptedProps: string[];`,
+        `}`,
+        ``,
+      ],
+      ...importLines(`// Stage overrides / extensions`, stageEntries),
+      ...importLines(`// Callback overrides / extensions`, callbackEntries),
+      ...recordLines('customStageRegistry', stageEntries),
+      ...recordLines('customCallbackRegistry', callbackEntries),
+    ]
+      .flat()
+      .join('\n');
+
+  // Every component, stages first then callbacks — scan order decides which
+  // collision a multi-collision build reports first.
+  const allEntries = [
+    ...stageEntries.map((entry): RegistryEntry & { type: ComponentType } => ({
+      ...entry,
+      type: 'stage',
+    })),
+    ...callbackEntries.map((entry): RegistryEntry & { type: ComponentType } => ({
+      ...entry,
+      type: 'callback',
+    })),
+  ];
+
+  // Name collisions: any two components sharing a generated identifier would
+  // emit a duplicate TS identifier (broken build) or a shadowed registry key
+  // (silent last-wins). First duplicate in scan order wins the report.
+  const duplicateVarName = allEntries
+    .map((entry) => entry.varName)
+    .find((varName, index, allVarNames) => allVarNames.indexOf(varName) !== index);
+
+  return Effect.gen(function* () {
+    if (duplicateVarName !== undefined) {
+      const colliding = allEntries.filter((entry) => entry.varName === duplicateVarName);
+      return yield* Effect.fail(
+        new RegistryCollisionError({
+          kind: 'name-collision',
+          type: [...new Set(colliding.map((entry) => entry.type))].join(', '),
+          name: duplicateVarName,
+          filePaths: colliding.map((entry) => `${entry.importPath} (Name: ${entry.name})`),
+        }),
+      );
     }
-    lines.push(``);
-  }
 
-  if (callbackEntries.length > 0) {
-    lines.push(`// Callback overrides / extensions`);
-    for (const { varName, importPath } of callbackEntries) {
-      lines.push(`import ${varName} from '${importPath}';`);
-    }
-    lines.push(``);
-  }
-
-  lines.push(`export const customStageRegistry: Record<string, CustomRegistryEntry> = {`);
-  for (const { varName, name, acceptedProps } of stageEntries) {
-    lines.push(
-      `  ${JSON.stringify(
-        name,
-      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
-        acceptedProps,
-      )} },`,
-    );
-  }
-  lines.push(`};`);
-  lines.push(``);
-
-  lines.push(`export const customCallbackRegistry: Record<string, CustomRegistryEntry> = {`);
-  for (const { varName, name, acceptedProps } of callbackEntries) {
-    lines.push(
-      `  ${JSON.stringify(
-        name,
-      )}: { get component() { return ${varName}; }, acceptedProps: ${JSON.stringify(
-        acceptedProps,
-      )} },`,
-    );
-  }
-  lines.push(`};`);
-  lines.push(``);
-
-  return lines.join('\n');
+    return build();
+  });
 }
 
 // --------------------------------------------------------------------------
 // Public API
 // --------------------------------------------------------------------------
 
+const WRAPPER_ELEMENTS = ['header', 'footer'] as const;
+
 /**
- * Scans `experimental/custom/stages/` and `experimental/custom/callbacks/` for
- * `@component`-annotated Svelte files and writes
+ * Seeds the page header/footer wrapper files into
+ * `experimental/custom/{header,footer}/<element>.svelte` when they are absent,
+ * copying from the tracked `wrapper-templates/` directory that lives next to
+ * this module. Fill-if-absent: a wrapper that already exists (customer-edited
+ * or previously seeded) is never overwritten, and each element is handled
+ * independently so one present wrapper does not block the other.
+ *
+ * The wrappers are static imports of the login app page, so a missing file is
+ * a hard build error; seeding here makes every build (repo CI, Storybook,
+ * Docker deploys, customer projects) self-healing with no CI-specific step.
+ * Seed failures fail loudly naming this step — a silent failure would only
+ * surface later as a bare Rollup "Failed to resolve import".
+ */
+export const seedMissingWrappers = (projectDir: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const registryDir = path.join(projectDir, 'core', 'journey', '_utilities', 'registry');
+    const templatesDir = path.join(registryDir, 'wrapper-templates');
+
+    yield* Effect.forEach(WRAPPER_ELEMENTS, (element) =>
+      Effect.gen(function* () {
+        const seedPath = path.join(
+          projectDir,
+          'experimental',
+          'custom',
+          element,
+          `${element}.svelte`,
+        );
+        if (yield* fs.exists(seedPath)) {
+          return;
+        }
+        const templatePath = path.join(templatesDir, `${element}.svelte`);
+        const template = yield* fs.readFileString(templatePath).pipe(
+          Effect.mapError(
+            (cause) =>
+              new RegistryScanError({
+                directory: templatePath,
+                cause:
+                  `Failed to read the ${element} wrapper template while seeding the page wrappers. ` +
+                  `The wrapper files are generated on first build from core/journey/_utilities/registry/wrapper-templates/. ` +
+                  `If this file is missing, the framework installation is incomplete: ${String(
+                    cause,
+                  )}`,
+              }),
+          ),
+        );
+        yield* fs.makeDirectory(path.dirname(seedPath), { recursive: true });
+        // Write to a temp sibling then rename: a build interrupted mid-seed can
+        // never leave a torn wrapper file behind that later runs would treat as
+        // a customer edit.
+        const tempPath = `${seedPath}.seed-tmp`;
+        yield* fs.writeFileString(tempPath, template);
+        yield* fs.rename(tempPath, seedPath);
+        yield* Console.log(`[custom-registry] seeded missing wrapper: ${path.basename(seedPath)}`);
+      }),
+    );
+  });
+
+/**
+ * Scans `experimental/custom/{stages,callbacks}/` for `@component`-annotated
+ * Svelte files and writes
  * `core/journey/_utilities/registry/custom-registry.ts`.
  *
  * All I/O runs in-process via the platform `FileSystem` service — no subprocess
  * spawning. Validation errors across multiple components are collected and
- * reported together.
+ * reported together. Ambiguous output (duplicate names across any type) fails
+ * with `RegistryCollisionError` rather than silently picking a winner.
  */
 export const runRegistryScript = (projectDir: string) =>
   Effect.gen(function* () {
@@ -281,15 +425,32 @@ export const runRegistryScript = (projectDir: string) =>
     const registryDir = path.join(projectDir, 'core', 'journey', '_utilities', 'registry');
     const registryPath = path.join(registryDir, 'custom-registry.ts');
 
-    const [stageComponents, callbackComponents] = yield* Effect.all(
+    // Validate mode across the directory scans: a stage scan error must not
+    // mask callback scan errors (and vice versa) — all of them are collected
+    // and reported together, matching the per-file aggregation inside
+    // scanDirectory.
+    const [stageComponents, callbackComponents] = yield* Effect.validateAll(
       [
         scanDirectory(fs, path, stageDir, 'stage'),
         scanDirectory(fs, path, callbackDir, 'callback'),
       ],
-      { concurrency: 'unbounded' },
+      (scan) => scan,
+    ).pipe(
+      Effect.mapError(
+        (errors) =>
+          new RegistryScanError({
+            directory: projectDir,
+            cause: errors.map((registryError) => String(registryError.cause)).join('\n'),
+          }),
+      ),
     );
 
-    const content = buildRegistryContent(path, registryDir, stageComponents, callbackComponents);
+    const content = yield* buildRegistryContent(
+      path,
+      registryDir,
+      stageComponents,
+      callbackComponents,
+    );
 
     yield* fs
       .makeDirectory(registryDir, { recursive: true })
@@ -298,31 +459,28 @@ export const runRegistryScript = (projectDir: string) =>
       .writeFileString(registryPath, content)
       .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: registryPath, cause })));
 
-    const total = stageComponents.length + callbackComponents.length;
-    if (total === 0) {
-      yield* Console.log(
-        `custom-registry.ts generated (no custom components found — registries are empty)`,
-      );
-    } else {
-      yield* Console.log(`custom-registry.ts generated:`);
-      if (stageComponents.length > 0) {
-        yield* Console.log(
-          `  Stages    (${stageComponents.length}): ${stageComponents
-            .map((stageComponent) => stageComponent.name)
-            .join(', ')}`,
-        );
-      }
-      if (callbackComponents.length > 0) {
-        yield* Console.log(
-          `  Callbacks (${callbackComponents.length}): ${callbackComponents
-            .map((callbackComponent) => callbackComponent.name)
-            .join(', ')}`,
-        );
-      }
-    }
+    const summaryLines = [
+      stageComponents.length > 0 &&
+        `  Stages    (${stageComponents.length}): ${stageComponents
+          .map((stageComponent) => stageComponent.name)
+          .join(', ')}`,
+      callbackComponents.length > 0 &&
+        `  Callbacks (${callbackComponents.length}): ${callbackComponents
+          .map((callbackComponent) => callbackComponent.name)
+          .join(', ')}`,
+    ].filter((line): line is string => line !== false);
+
+    // Expression-style branch: the empty-registry message differs from the
+    // populated one, so compose the exact output lines first, then write once.
+    const outputLines =
+      summaryLines.length === 0
+        ? [`custom-registry.ts generated (no custom components found — registries are empty)`]
+        : [`custom-registry.ts generated:`, ...summaryLines];
+
+    yield* Effect.forEach(outputLines, (line) => Console.log(line));
   });
 
-class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
+export class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
   readonly directory: string;
   readonly cause?: unknown;
 }> {}

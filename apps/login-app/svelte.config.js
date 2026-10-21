@@ -34,6 +34,11 @@ const config = {
       // Server utilities live in the app, not the widget
       $server: path.resolve('./src/lib/server'),
       '$server/*': path.resolve('./src/lib/server/*'),
+      // Curated public surface for custom components (stage/callback/header/footer)
+      '$login-framework': path.resolve('../../experimental/custom/login-framework.ts'),
+      // Fixed tracked wrapper components (header/footer) — one file per element
+      $custom: path.resolve('../../experimental/custom'),
+      '$custom/*': path.resolve('../../experimental/custom/*'),
     },
   },
   server: {

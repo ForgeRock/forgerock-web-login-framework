@@ -8,6 +8,7 @@ module.exports = {
     './packages/login-widget/src/**/*.{html,js,svelte,ts}',
     './core/**/*.{html,js,svelte,ts}',
     './apps/**/*.{html,js,svelte,ts}',
+    './experimental/custom/**/*.{html,js,svelte,ts}',
   ],
   darkMode: 'class',
   presets: [require('../themes/default/config.cjs')],

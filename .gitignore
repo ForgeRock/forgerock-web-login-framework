@@ -39,6 +39,8 @@ core/journey/_utilities/registry/custom-registry.ts
 # The stage/ and callback/ folders themselves (with .gitkeep) remain tracked as scaffolding references.
 experimental/custom/stages/*/
 experimental/custom/callbacks/*/
+experimental/custom/header/
+experimental/custom/footer/
 
 # Claude Code
 .claude/

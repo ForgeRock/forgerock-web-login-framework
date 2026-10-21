@@ -4,8 +4,13 @@ import { Console, Effect } from 'effect';
 
 import { writeVersion } from '../config/version.js';
 import { DirectoryConflictError, DirectoryNotEmptyError } from '../errors.js';
-import { copyWithExclusions, expandTilde, isFrameworkDirectory } from '../services/file-system.js';
-import { runRegistryScript } from '../services/registry.js';
+import {
+  copyWithExclusions,
+  copyWrapperFiles,
+  expandTilde,
+  isFrameworkDirectory,
+} from '../services/file-system.js';
+import { getTemplatesDir } from './generate.js';
 import { resolveSource } from './source.js';
 
 import type { Option } from 'effect';
@@ -18,6 +23,12 @@ const PNPM_WORKSPACE = `packages:
   - 'apps/*'
   - 'e2e'
 `;
+
+/**
+ * Custom component directories scaffolded (with .gitkeep) at project init.
+ * Protected during `ping-lf update` — see PROTECTED_DIRS in services/file-system.
+ */
+export const CUSTOM_COMPONENT_DIRS = ['callbacks', 'stages'] as const;
 
 const nextStepsMessage = (dir: string) => `
 Done. Project initialized successfully.
@@ -77,6 +88,13 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
         yield* fs.makeDirectory(resolvedDir, { recursive: true });
         yield* copyWithExclusions(sourceDir, resolvedDir);
 
+        // ── 2b. Place the framework-shipped wrapper files ──────────────────
+        // The bulk copy skips them (they are file-protected: customer edits
+        // to them must survive `update`), so init places them explicitly from
+        // the CLI's own wrapper templates. The app's +page.svelte imports them
+        // directly, so a project without them cannot build.
+        yield* copyWrapperFiles(resolvedDir, getTemplatesDir());
+
         return resolvedVersion;
       }),
     );
@@ -87,12 +105,11 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     // ── 4. Scaffold experimental/custom/ ──────────────────────────────────
     // copyWithExclusions already copies experimental/custom/demo/,
     // login-framework.ts, README.md, and tsconfig.json from the source.
-    // Only callbacks/ and stages/ are protected (they hold user components).
+    // Only the custom component dirs are protected (they hold user components).
     // Create them as empty dirs with .gitkeep — components come via `ping-lf generate`.
     yield* Console.log('Scaffolding custom component directories...');
-
     yield* Effect.forEach(
-      ['callbacks', 'stages'] as const,
+      CUSTOM_COMPONENT_DIRS,
       (dir) =>
         Effect.gen(function* () {
           const customDir = path.join(resolvedDir, 'experimental', 'custom', dir);
@@ -102,20 +119,13 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
       { concurrency: 'unbounded', discard: true },
     );
 
-    // ── 5. Generate custom-registry.ts ────────────────────────────────────
-    // Run the canonical registry script so the file is immediately present
-    // with the correct CustomRegistryEntry format. The empty callbacks/ and
-    // stages/ dirs produce empty registries — no custom components yet.
-    yield* Console.log('Generating custom component registry...');
-    yield* runRegistryScript(resolvedDir);
-
-    // ── 6. Write .generator-version ────────────────────────────────────────
+    // ── 5. Write .generator-version ────────────────────────────────────────
     yield* writeVersion(resolvedDir, {
       version: resolvedVersion,
       generatedAt: new Date().toISOString(),
     });
 
-    // ── 7. Print next steps ───────────────────────────────────────────────
+    // ── 6. Print next steps ───────────────────────────────────────────────
     yield* Console.log(nextStepsMessage(directory));
   });
 
