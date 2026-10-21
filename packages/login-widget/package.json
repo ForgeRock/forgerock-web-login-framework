@@ -65,7 +65,7 @@
     "postcss-cli": "^10.1.0",
     "postcss-import": "^15.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
-    "storybook": "^10.1.11",
+    "storybook": "^10.6.2",
     "svelte": "^5.53.7",
     "svelte-check": "^4.4.5",
     "svelte-loader": "^3.2.4",
