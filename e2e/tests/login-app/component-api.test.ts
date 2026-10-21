@@ -48,6 +48,11 @@ const configDir = join(componentsRepoDir, 'config');
 // The app's session reader posts tokenId to AM's sessions validate endpoint with the
 // token in both the cookie header and the body, so a bare authenticate tokenId works as a Bearer credential.
 const authenticate = async (user: string, pass: string): Promise<string> => {
+  if (!user || !pass) {
+    throw new Error(
+      'Admin credentials are required (CI secrets FR_AM_ADMIN_USERNAME/FR_AM_ADMIN_PASSWORD)',
+    );
+  }
   const response = await fetch(`${AM_URL}/json/realms/root/realms/${AM_REALM}/authenticate`, {
     method: 'POST',
     headers: {
@@ -63,7 +68,17 @@ const authenticate = async (user: string, pass: string): Promise<string> => {
 };
 
 test.beforeAll(async () => {
-  adminToken = await authenticate(adminUsername, adminPassword);
+  // These tests authenticate as an AM admin — CI-only (repo secrets).
+  test.skip(!process.env.CI, 'Component API tests run only in CI');
+
+  try {
+    adminToken = await authenticate(adminUsername, adminPassword);
+  } catch {
+    throw new Error(
+      'AM rejected the Component API admin credentials — check FR_AM_ADMIN_USERNAME/FR_AM_ADMIN_PASSWORD',
+    );
+  }
+
   await rm(componentsRepoDir, { recursive: true, force: true });
 });
 

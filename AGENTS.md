@@ -123,9 +123,9 @@ E2E tests and the login-app require AM connection details via `.env` or shell:
 - `FR_AM_COOKIE_NAME`: AM session cookie name
 - `FR_REALM_PATH`: AM realm path
 - `FR_AM_WELLKNOWN_URL`: AM OIDC discovery URL used to validate app configuration
-- `FR_AM_ADMIN_USERNAME` / `FR_AM_ADMIN_PASSWORD`: AM admin credentials — required
-  by the Component API e2e tests (`e2e/tests/utilities/admin-user.js` fails fast
-  without them); loaded from the root `.env` locally, repository secrets in CI
+
+`FR_AM_ADMIN_USERNAME` / `FR_AM_ADMIN_PASSWORD` are CI-only (repository
+secrets) for the Component API e2e tests — never needed in a local `.env`.
 
 ## Tests and Stories
 

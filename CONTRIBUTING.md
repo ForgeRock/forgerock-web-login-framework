@@ -79,8 +79,9 @@ Optional, only when working with the Custom Components API (see
 | `COMPONENT_API_ENABLED` | Set to `true` to serve the Custom Components API under `/api/components/*` (disabled by default) |
 | `COMPONENT_CONFIG_DIR`  | Directory the API reads/writes component records; defaults to `/config/config`                   |
 | `ORIGIN`                | App origin; required for cookie-carried admin mutations when the API is enabled                  |
-| `FR_AM_ADMIN_USERNAME`  | AM admin username — required by the Component API e2e tests                                      |
-| `FR_AM_ADMIN_PASSWORD`  | AM admin password — required by the Component API e2e tests                                      |
+
+`FR_AM_ADMIN_USERNAME` / `FR_AM_ADMIN_PASSWORD` are **CI-only** (repository
+secrets) for the Component API e2e tests — never needed in a local `.env`.
 
 See [.env.example](.env.example) for the full list with formats.
 

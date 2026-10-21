@@ -1,10 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import { config as loadEnvFile } from 'dotenv';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-loadEnvFile({ path: join(dirname(fileURLToPath(import.meta.url)), '..', '.env') });
+import { join } from 'node:path';
 
 export const AM_URL = 'https://openam-sdks.forgeblocks.com/am';
 export const AM_COOKIE_NAME = '5421aeddf91aa20';
