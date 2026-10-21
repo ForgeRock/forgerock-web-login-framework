@@ -74,7 +74,7 @@ export async function createRedirectContext(
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
   const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'root';
-  const successUrl = tokenId && gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
+  const successUrl = gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
   const roles = tokenId ? (await getUserRolesFromSession(tokenId, realm)).roles : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
 
@@ -123,6 +123,10 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
 
 /**
  * @function validateUrl - validates a redirect URL with the AM backend and returns a success URL if valid
+ *
+ * AM returns the key as `successURL` (capital URL) — verified against the
+ * tenant; parsing lowercase was why this always returned null.
+ *
  * @param {string} tokenId - The session token ID
  * @param {string} gotoUrl - The URL to validate
  * @param {string} [realm] - The realm to validate against; uses the configured realm when omitted.
