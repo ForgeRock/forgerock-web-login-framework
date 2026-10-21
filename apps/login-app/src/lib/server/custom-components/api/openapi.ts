@@ -1,0 +1,236 @@
+/**
+ *
+ * Copyright © 2026 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ * */
+
+import * as OpenApiJsonSchema from '@effect/platform/OpenApiJsonSchema';
+
+import {
+  ApiErrorBodySchema,
+  ComponentRecordSchema,
+  ComponentTypeSchema,
+  CreateComponentRequestSchema,
+  PublishRequestSchema,
+  UpdateComponentRequestSchema,
+} from './api.schemas';
+
+/** OpenAPI JSON Schema for persisted component records. */
+const componentRecordSchema = OpenApiJsonSchema.makeWithDefs(ComponentRecordSchema, { defs: {} });
+/** OpenAPI JSON Schema for component-creation requests. */
+const createComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(CreateComponentRequestSchema, {
+  defs: {},
+});
+/** OpenAPI JSON Schema for component-update requests. */
+const updateComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(UpdateComponentRequestSchema, {
+  defs: {},
+});
+/** OpenAPI JSON Schema for component-publication requests. */
+const publishRequestSchema = OpenApiJsonSchema.makeWithDefs(PublishRequestSchema, { defs: {} });
+/** OpenAPI JSON Schema for standardized API error bodies. */
+const errorSchema = OpenApiJsonSchema.makeWithDefs(ApiErrorBodySchema, { defs: {} });
+
+/** Creates an OpenAPI JSON response definition with a description and body schema. */
+const jsonResponse = (description: string, schema: object) => ({
+  description,
+  content: { 'application/json': { schema } },
+});
+
+/** Creates an OpenAPI error response definition using the shared API error schema. */
+const errorResponse = (description: string) => jsonResponse(description, errorSchema);
+
+/** OpenAPI JSON Schema for the component type path parameter, matching ComponentTypeSchema. */
+const componentTypeParameter = {
+  name: 'type',
+  in: 'path',
+  required: true,
+  schema: {
+    type: 'string',
+    enum: ComponentTypeSchema.literals,
+  },
+} as const;
+
+/**
+ * OpenAPI 3.1 specification for the login-app development endpoints.
+ *
+ * This document is exposed wherever the Component API is enabled (`COMPONENT_API_ENABLED=true`).
+ */
+export const openApiSpec = {
+  openapi: '3.1.0',
+  info: {
+    title: 'Login App Component API',
+    version: '1.0.0',
+    description: 'API for managing and publishing custom components in dev tenants.',
+  },
+  tags: [
+    {
+      name: 'Components',
+      description: 'Manage custom UI component bundles.',
+    },
+    {
+      name: 'Health',
+      description: 'Application liveness probe.',
+    },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: 'http',
+        scheme: 'bearer',
+        description:
+          'An AM session token as `Authorization: Bearer <AM session token>` for CLI clients.',
+      },
+      cookieAuth: {
+        type: 'apiKey',
+        in: 'cookie',
+        name: 'AM session cookie',
+        description: 'The browser admin session cookie set by an AM sign-in.',
+      },
+    },
+  },
+  security: [{ bearerAuth: [] }, { cookieAuth: [] }],
+  paths: {
+    '/api/health/live': {
+      get: {
+        tags: ['Health'],
+        summary: 'Check application liveness',
+        security: [],
+        responses: {
+          '200': jsonResponse('The application is live.', {
+            type: 'object',
+            required: ['status'],
+            properties: { status: { const: 'ok' } },
+            additionalProperties: false,
+          }),
+        },
+      },
+    },
+    '/api/components/{type}': {
+      get: {
+        tags: ['Components'],
+        summary: 'List component records',
+        parameters: [
+          componentTypeParameter,
+          { name: 'fields', in: 'query', required: false, schema: { type: 'string' } },
+        ],
+        responses: {
+          '200': jsonResponse(
+            'Component records. With `fields`, each item carries only the requested properties.',
+            {
+              type: 'array',
+              items: componentRecordSchema,
+            },
+          ),
+          '400': errorResponse('The fields projection is invalid.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
+          '404': errorResponse('The component type is invalid.'),
+          '500': errorResponse('The component records could not be read.'),
+          '503': errorResponse('The Component API is misconfigured or AM is unavailable.'),
+        },
+      },
+      post: {
+        tags: ['Components'],
+        summary: 'Create a component record',
+        parameters: [componentTypeParameter],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: createComponentRequestSchema } },
+        },
+        responses: {
+          '201': jsonResponse('The created component record.', componentRecordSchema),
+          '400': errorResponse('The request is invalid.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
+          '404': errorResponse('The component type is invalid.'),
+          '413': errorResponse('The request body exceeds the accepted size limit.'),
+          '415': errorResponse('The request content type must be application/json.'),
+          '500': errorResponse('The component could not be persisted.'),
+          '503': errorResponse('The Component API is misconfigured or AM is unavailable.'),
+        },
+      },
+    },
+    '/api/components/{type}/{id}': {
+      get: {
+        tags: ['Components'],
+        summary: 'Retrieve a component record',
+        parameters: [
+          componentTypeParameter,
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '200': jsonResponse('The component record.', componentRecordSchema),
+          '400': errorResponse('The component id is invalid.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
+          '404': errorResponse('The component type is invalid or the record was not found.'),
+          '500': errorResponse('The component record could not be read.'),
+          '503': errorResponse('The Component API is misconfigured or AM is unavailable.'),
+        },
+      },
+      put: {
+        tags: ['Components'],
+        summary: 'Update a component record',
+        parameters: [
+          componentTypeParameter,
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: updateComponentRequestSchema } },
+        },
+        responses: {
+          '200': jsonResponse('The updated component record.', componentRecordSchema),
+          '400': errorResponse('The request is invalid.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
+          '404': errorResponse('The component type is invalid or the record was not found.'),
+          '413': errorResponse('The request body exceeds the accepted size limit.'),
+          '415': errorResponse('The request content type must be application/json.'),
+          '500': errorResponse('The component could not be persisted.'),
+          '503': errorResponse('The Component API is misconfigured or AM is unavailable.'),
+        },
+      },
+      delete: {
+        tags: ['Components'],
+        summary: 'Delete a component record',
+        parameters: [
+          componentTypeParameter,
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: {
+          '204': { description: 'The component record was deleted.' },
+          '400': errorResponse('The component id is invalid.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
+          '404': errorResponse('The component type is invalid or the record was not found.'),
+          '500': errorResponse('The component record could not be deleted.'),
+          '503': errorResponse('The Component API is misconfigured or AM is unavailable.'),
+        },
+      },
+    },
+    '/api/components/publish': {
+      post: {
+        tags: ['Components'],
+        summary: 'Publish component source code',
+        requestBody: {
+          required: true,
+          content: { 'application/json': { schema: publishRequestSchema } },
+        },
+        responses: {
+          '204': { description: 'The component bundle was published to the repository.' },
+          '400': errorResponse('The request is invalid.'),
+          '401': errorResponse('The request is not authenticated.'),
+          '403': errorResponse('An AM admin session is required.'),
+          '413': errorResponse('The request body exceeds the accepted size limit.'),
+          '415': errorResponse('The request content type must be application/json.'),
+          '500': errorResponse('The component source could not be published.'),
+          '503': errorResponse('The Component API is misconfigured or AM is unavailable.'),
+        },
+      },
+    },
+  },
+} as const;

@@ -31,10 +31,14 @@ afterEach(() => vi.unstubAllGlobals());
 function cookies(values: Record<string, string> = {}) {
   return {
     get: (name: string) => values[name],
+    getAll: () => Object.entries(values).map(([name, value]) => ({ name, value })),
+    serialize: (name: string, value: string) => `${name}=${value}`,
     set: vi.fn(),
     delete: vi.fn(),
   } as unknown as {
     get: (name: string) => string | undefined;
+    getAll: () => Array<{ name: string; value: string }>;
+    serialize: (name: string, value: string) => string;
     set: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };

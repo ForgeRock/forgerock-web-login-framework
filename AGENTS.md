@@ -45,12 +45,13 @@ Vite config):
 | `$locales`    | `core/locales/`    |
 
 **Dependency hoisting:** `core/`'s runtime deps (e.g.
-`@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
-`xss`, `zod`, `qrcode`) are declared in `packages/login-widget/package.json`
-and hoisted to root `node_modules` via `public-hoist-pattern` rules in
-`.npmrc`. **When adding a new dependency that `core/` imports, add it to
-`packages/login-widget/package.json` and, if needed, add a
-`public-hoist-pattern` entry in `.npmrc`.**
+`@forgerock/protect`, `xss`, `zod`, `qrcode`) are declared in
+`packages/login-widget/package.json`. Some also appear as root devDependencies
+or in the declaring workspace of whichever app compiles `core/` (for example
+`@forgerock/journey-client` is imported directly by `apps/login-app` stages and
+declared there). `public-hoist-pattern` rules in `.npmrc` cover only `effect`
+and `@effect/*`. **When adding a new dependency that `core/` imports, declare it
+in every workspace that compiles the importing `core/` code.**
 
 ### Public API
 
@@ -122,6 +123,9 @@ E2E tests and the login-app require AM connection details via `.env` or shell:
 - `FR_AM_COOKIE_NAME`: AM session cookie name
 - `FR_REALM_PATH`: AM realm path
 - `FR_AM_WELLKNOWN_URL`: AM OIDC discovery URL used to validate app configuration
+- `FR_AM_ADMIN_USERNAME` / `FR_AM_ADMIN_PASSWORD`: AM admin credentials — required
+  by the Component API e2e tests (`e2e/tests/utilities/admin-user.js` fails fast
+  without them); loaded from the root `.env` locally, repository secrets in CI
 
 ## Tests and Stories
 
@@ -192,6 +196,20 @@ Compositions build on primitives.
 exposes `widgetApiFactory`; `index.svelte` re-exports the public API. Builds the
 ES, IIFE, and type-declaration outputs (see [Widget Build](#widget-build)).
 
+**Component API** (`apps/login-app/src/lib/server/custom-components/`): an
+admin-only CRUD + publish API for Custom Components source files, served under
+`/api/components/*` with an OpenAPI description at `/api/openapi` and
+interactive docs at `/api-docs`. Disabled unless `COMPONENT_API_ENABLED=true`.
+Auth validates an AM session (cookie or Bearer) and requires an AM admin role.
+Records land as JSON files in `COMPONENT_CONFIG_DIR` (default `/config/config`)
+— one `<id>.json` per component — where the platform config-saver pipeline picks
+them up; publish writes `bundle.js` to the same directory. Writes are durable:
+temp file + fsync + atomic rename (see `writer/`). Internal layout: `api/`
+(HTTP handlers, schemas, OpenAPI), `auth/` (session + role + CSRF checks),
+`publish/`, `store/` (record repository), `writer/` (atomic file writes).
+Config parsing lives in `settings.ts`; the store seam (`store/store.ts`) is the
+swap point if storage ever moves off the filesystem.
+
 ## Project Structure
 
 ```
@@ -233,6 +251,7 @@ packages/login-widget/         # @forgerock/login-widget — published package
 └── scripts/                   # copyTypes.mjs, processTypes.mjs (type post-processing)
 
 apps/login-app/                # SvelteKit dev/docs host app
+│   └── src/lib/server/custom-components/   # Component API (CRUD + publish, admin-only)
 e2e/tests/                     # Playwright suites (widget, login-app, utilities)
 ```
 

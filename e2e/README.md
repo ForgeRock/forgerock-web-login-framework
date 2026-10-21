@@ -45,13 +45,17 @@ pnpm ci:e2e -- --headed
 e2e/
 ├── tests/
 │   ├── utilities/          # Shared test utilities
+│   │   ├── admin-user.js
 │   │   ├── async-events.js
 │   │   ├── demo-user.js
 │   │   └── delete-webauthn-device.js
-│   ├── login-app/          # SvelteKit login-app tests (run on the (app) route)
+│   ├── login-app/          # Login-app server feature tests
+│   │   ├── component-api.test.ts
+│   │   ├── component-api-disabled.test.ts
 │   │   ├── config-error.test.ts
 │   │   ├── idm-theme.test.ts
 │   │   ├── locale.test.ts
+│   │   ├── privacy-consent.test.ts
 │   │   ├── redirect.test.ts
 │   │   ├── register.test.ts
 │   │   ├── suspend-restart.test.ts
@@ -103,7 +107,16 @@ Tests connect to a ForgeRock AM instance. The Playwright config provides default
 | `FR_AM_COOKIE_NAME`        | AM session cookie name                                   |
 | `FR_REALM_PATH`            | AM realm path                                            |
 | `FR_AM_WELLKNOWN_URL`      | AM OIDC discovery URL used to validate app configuration |
+| `FR_AM_ADMIN_USERNAME`     | AM admin username for the Component API tests            |
+| `FR_AM_ADMIN_PASSWORD`     | AM admin password for the Component API tests            |
 | `PLAYWRIGHT_TEST_BASE_URL` | Override the app URL (default: `http://localhost:3000`)  |
+
+The AM defaults are hardcoded in `e2e/playwright.config.ts`
+(`openam-sdks.forgeblocks.com`), so the suite runs locally with no environment
+setup when those defaults are current. The admin credentials are required —
+`tests/utilities/admin-user.js` fails fast without them. Set them in a root
+`.env` file (loaded by the Playwright config via dotenv) or export them in your
+shell; CI reads them from repository secrets.
 
 ## Debugging
 

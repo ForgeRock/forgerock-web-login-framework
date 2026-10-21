@@ -7,9 +7,13 @@
  *
  **/
 
+import { json } from '@sveltejs/kit';
+
 import type { RequestHandler } from './$types';
 
-export const GET: RequestHandler = () =>
-  new Response(JSON.stringify({ status: 'ok' }), {
-    headers: { 'content-type': 'application/json' },
-  });
+/**
+ * Returns a successful liveness status for load balancer health checks.
+ *
+ * @returns A JSON response whose status is `ok`.
+ */
+export const GET: RequestHandler = () => json({ status: 'ok' });

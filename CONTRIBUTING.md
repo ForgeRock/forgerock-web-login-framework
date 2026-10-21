@@ -71,6 +71,19 @@ The login-app requires environment variables for connecting to a ForgeRock AM in
 | `FR_REALM_PATH`       | AM realm path                                                          |
 | `FR_AM_WELLKNOWN_URL` | AM OIDC discovery URL used to validate app configuration               |
 
+Optional, only when working with the Custom Components API (see
+[apps/login-app/README.md](apps/login-app/README.md) for details):
+
+| Variable                | Description                                                                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `COMPONENT_API_ENABLED` | Set to `true` to serve the Custom Components API under `/api/components/*` (disabled by default) |
+| `COMPONENT_CONFIG_DIR`  | Directory the API reads/writes component records; defaults to `/config/config`                   |
+| `ORIGIN`                | App origin; required for cookie-carried admin mutations when the API is enabled                  |
+| `FR_AM_ADMIN_USERNAME`  | AM admin username — required by the Component API e2e tests                                      |
+| `FR_AM_ADMIN_PASSWORD`  | AM admin password — required by the Component API e2e tests                                      |
+
+See [.env.example](.env.example) for the full list with formats.
+
 ## Making Changes
 
 This project uses [Changesets](https://github.com/changesets/changesets) for release management. Every PR that changes published package behavior should include a changeset.
