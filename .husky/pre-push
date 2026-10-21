@@ -1,4 +1,4 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-pnpm run check:lint && pnpm run build:widget && CI=true pnpm run test
+CI=true pnpm run test && pnpm ci:e2e

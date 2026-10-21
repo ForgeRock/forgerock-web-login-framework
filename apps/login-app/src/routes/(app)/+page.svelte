@@ -38,8 +38,12 @@
 
   import type { JourneyStore } from '$journey/journey.interfaces';
 
-  /** @type {import('./$types').PageData} */
-  export let data;
+  export let data: {
+    wellknown: string;
+    fallbackJourney?: string | null;
+    redirectParams?: { goto?: string; gotoOnFail?: string };
+    content: Record<string, string>;
+  };
 
   // The header/footer wrappers are user-owned files (not in this repo) that the
   // Vite plugin seeds on first build from its templates when absent. They mount
@@ -228,7 +232,7 @@
 
       {#if legacyResumeFailed}
         <p>Unable to resume session. It may have expired.</p>
-        <a href="#" on:click|preventDefault={handleStartOver}>Start Over</a>
+        <button type="button" on:click={handleStartOver}>Start Over</button>
       {:else if hasSubmitted}
         <p class="tw_mb-6">You are being redirected...</p>
       {:else}

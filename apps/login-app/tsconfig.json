@@ -22,7 +22,8 @@
       "$lib": ["./src/lib"],
       "$lib/*": ["./src/lib/*"]
     },
-    "strict": true
+    "strict": true,
+    "skipLibCheck": true
   },
-  "exclude": ["../../core/locales/**"]
+  "exclude": ["../../core/locales/**", "src/routes/e2e/**"]
 }

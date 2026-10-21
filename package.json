@@ -76,7 +76,7 @@
     "vite": "^5.4.21",
     "wait-on": "^7.2.0",
     "xss": "^1.0.15",
-    "zod": "^4.3.6"
+    "zod": "^4.6.7"
   },
   "engines": {
     "node": ">=20.0.0",
@@ -86,8 +86,8 @@
     "node": "22.13.1"
   },
   "lint-staged": {
-    "*.{js,svelte,ts}": "eslint --cache --fix",
-    "*.{js,css,md,json,svelte}": "prettier --plugin prettier-plugin-svelte --write --config .prettierrc"
+    "*.{js,svelte,ts,cjs,mjs}": "eslint --cache --fix",
+    "*.{js,css,md,json,svelte,ts,cjs,mjs}": "prettier --plugin prettier-plugin-svelte --write --config .prettierrc"
   },
   "repository": {
     "type": "git",
@@ -106,7 +106,7 @@
       "uuid": "^14.0.0",
       "postcss-selector-parser": ">=7.1.6",
       "nanoid@3": ">=3.3.17",
-      "undici": ">=8.12.2",
+      "undici": ">=8.12.3",
       "ws": ">=8.21.1",
       "yaml": ">=2.8.3",
       "toml": ">=4.1.2",

@@ -10,7 +10,7 @@ overrides:
   uuid: ^14.0.0
   postcss-selector-parser: '>=7.1.6'
   nanoid@3: '>=3.3.17'
-  undici: '>=8.12.2'
+  undici: '>=8.12.3'
   ws: '>=8.21.1'
   yaml: '>=2.8.3'
   toml: '>=4.1.2'
@@ -42,10 +42,10 @@ importers:
         version: 9.39.3
       '@forgerock/journey-client':
         specifier: ^2.1.1
-        version: 2.1.1(react@19.2.4)
+        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/oidc-client':
         specifier: ^2.1.1
-        version: 2.1.1(react@19.2.4)
+        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/protect':
         specifier: ^2.1.1
         version: 2.1.1
@@ -175,7 +175,13 @@ importers:
       '@forgerock/login-widget':
         specifier: workspace:*
         version: link:../../packages/login-widget
+      '@forgerock/sdk-logger':
+        specifier: ^2.1.1
+        version: 2.1.1
     devDependencies:
+      '@effect/vitest':
+        specifier: ^0.26.0
+        version: 0.26.0(effect@3.21.0)(vitest@3.2.6(@types/node@26.6.3)(terser@5.51.2))
       '@sveltejs/adapter-auto':
         specifier: ^7.0.0
         version: 7.0.1(@sveltejs/kit@2.53.3(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(svelte@5.53.7)(typescript@5.9.3)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))
@@ -224,6 +230,9 @@ importers:
       svelte-preprocess:
         specifier: ^6.0.3
         version: 6.0.3(@babel/core@7.29.7)(postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.28)(yaml@2.8.3))(postcss@8.5.28)(svelte@5.53.7)(typescript@5.9.3)
+      swagger-ui-dist:
+        specifier: ^5.33.0
+        version: 5.33.1
       tailwindcss:
         specifier: ^3.3.3
         version: 3.4.19(yaml@2.8.3)
@@ -245,6 +254,9 @@ importers:
       axe-playwright:
         specifier: ^1.2.3
         version: 1.2.3(playwright@1.64.1)
+      dotenv:
+        specifier: ^16.4.1
+        version: 16.6.1
       playwright:
         specifier: ^1.64.1
         version: 1.64.1
@@ -256,10 +268,10 @@ importers:
     dependencies:
       '@forgerock/journey-client':
         specifier: ^2.1.1
-        version: 2.1.1(react@19.2.4)
+        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/oidc-client':
         specifier: ^2.1.1
-        version: 2.1.1(react@19.2.4)
+        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/protect':
         specifier: ^2.1.1
         version: 2.1.1
@@ -797,6 +809,12 @@ packages:
     resolution: {integrity: sha512-L/2o2ImeqbemFlqH0b3y2PqQTFc+E0/DUnffCU8bkJUGh0yUZmh2RXuXhR8QOpfNCe718JQjI+mLnpVF2MMmaQ==}
     peerDependencies:
       effect: ^3.21.0
+
+  '@effect/vitest@0.26.0':
+    resolution: {integrity: sha512-h7r21XRtHpl8CQmIuplCK54bYJkUij4c6bUxK27y4d9dTXn4s7c/I3Lilb4VZxv3P3S3sChCu5YIGW4pdQFjZg==}
+    peerDependencies:
+      effect: ^3.18.0
+      vitest: ^3.2.0
 
   '@effect/vitest@0.29.0':
     resolution: {integrity: sha512-DvWr1aeEcaZ8mtu8hNVb4e3rEYvGEwQSr7wsNrW53t6nKYjkmjRICcvVEsXUhjoCblRHSxRsRV0TOt0+UmcvaQ==}
@@ -1817,6 +1835,9 @@ packages:
   '@rtsao/scc@1.1.0':
     resolution: {integrity: sha512-zt6OdqaDoOnJ1ZYsCYGt9YmWzDXl4vQdKTyJev62gFhRGKdx7mcT54V9KIjg+d2wi9EXsPvAPKe7i7WjfVWB8g==}
 
+  '@scarf/scarf@1.4.0':
+    resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
+
   '@sideway/address@4.1.5':
     resolution: {integrity: sha512-IqO/DUQHUkPeixNQ8n0JA6102hT9CmaljNTPmQ1u8MEhBo/R4Q8eKLN/vGZxuebwOroDB4cbpjheD4+/sKFK4Q==}
 
@@ -2171,6 +2192,9 @@ packages:
 
   '@types/unist@2.0.11':
     resolution: {integrity: sha512-CmBKiL6NNo/OqgmMn95Fk9Whlp2mtvIv+KNpQKN2F4SjvrEesubTRWGYSg+BnWZOnlCaSTU1sMpsBOzgbYhnsA==}
+
+  '@types/use-sync-external-store@0.0.6':
+    resolution: {integrity: sha512-zFDAD+tlpf2r4asuHEj0XH6pY6i0g5NeAHPn+15wk3BV6JA69eERFXC1gyGThDkVa1zCyKr5jox1+2LbV/AMLg==}
 
   '@types/uuid@9.0.8':
     resolution: {integrity: sha512-jg+97EGIcY9AGHJJRaaPVgetKDsrTgbRjQ5Msgjh/DQKEFl0DtyRr/VCOyD1T2R1MNeWPK/u7JoGhlDZnKBAfA==}
@@ -5282,6 +5306,18 @@ packages:
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
 
+  react-redux@9.3.0:
+    resolution: {integrity: sha512-KQopgqFo/p/fgmAs5qz6p5RWaNAzq40WAu7fJIXnQpYxFPbJYtsJPWvGeF2rOBaY/kEuV77AVsX8TsQzKm+A/g==}
+    peerDependencies:
+      '@types/react': ^18.2.25 || ^19
+      react: ^18.0 || ^19
+      redux: ^5.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      redux:
+        optional: true
+
   react@19.2.4:
     resolution: {integrity: sha512-9nfp2hYpCwOjAN+8TZFGhtWEwgvWHXqESH8qT89AT/lWklpLON22Lc8pEtnpsZz7VmawabSU0gCjnj8aC0euHQ==}
     engines: {node: '>=0.10.0'}
@@ -5818,6 +5854,9 @@ packages:
   svelte@5.53.7:
     resolution: {integrity: sha512-uxck1KI7JWtlfP3H6HOWi/94soAl23jsGJkBzN2BAWcQng0+lTrRNhxActFqORgnO9BHVd1hKJhG+ljRuIUWfQ==}
     engines: {node: '>=18'}
+
+  swagger-ui-dist@5.33.1:
+    resolution: {integrity: sha512-H872wWkA53bFIsGgi7OWgmq+CRWw3nFQGdJWRqOB9wNwTm6e5ol34+qPDkV4AJlK+gglM2EsJiOOzsGsEGbluA==}
 
   synckit@0.11.12:
     resolution: {integrity: sha512-Bh7QjT8/SuKUIfObSXNHNSK6WHo6J1tHCqJsuaFDP7gP0fkzSfTxI8y85JrppZ0h8l0maIgc2tfuZQ6/t3GtnQ==}
@@ -6945,6 +6984,11 @@ snapshots:
     dependencies:
       effect: 3.21.0
 
+  '@effect/vitest@0.26.0(effect@3.21.0)(vitest@3.2.6(@types/node@26.6.3)(terser@5.51.2))':
+    dependencies:
+      effect: 3.21.0
+      vitest: 3.2.6(@types/node@26.6.3)(terser@5.51.2)
+
   '@effect/vitest@0.29.0(effect@3.21.0)(vitest@3.2.6(@types/node@26.6.3)(terser@5.51.2))':
     dependencies:
       effect: 3.21.0
@@ -7157,31 +7201,31 @@ snapshots:
 
   '@forgerock/iframe-manager@2.1.1': {}
 
-  '@forgerock/journey-client@2.1.1(react@19.2.4)':
+  '@forgerock/journey-client@2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
     dependencies:
       '@forgerock/sdk-logger': 2.1.1
       '@forgerock/sdk-oidc': 2.1.1
-      '@forgerock/sdk-request-middleware': 2.1.1(react@19.2.4)
+      '@forgerock/sdk-request-middleware': 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/sdk-types': 2.1.1
       '@forgerock/sdk-utilities': 2.1.1
       '@forgerock/storage': 2.1.1
-      '@reduxjs/toolkit': 2.11.2(react@19.2.4)
+      '@reduxjs/toolkit': 2.11.2(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       effect: 3.21.0
       tslib: 2.8.1
     transitivePeerDependencies:
       - react
       - react-redux
 
-  '@forgerock/oidc-client@2.1.1(react@19.2.4)':
+  '@forgerock/oidc-client@2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
     dependencies:
       '@forgerock/iframe-manager': 2.1.1
       '@forgerock/sdk-logger': 2.1.1
       '@forgerock/sdk-oidc': 2.1.1
-      '@forgerock/sdk-request-middleware': 2.1.1(react@19.2.4)
+      '@forgerock/sdk-request-middleware': 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/sdk-types': 2.1.1
       '@forgerock/sdk-utilities': 2.1.1
       '@forgerock/storage': 2.1.1
-      '@reduxjs/toolkit': 2.11.2(react@19.2.4)
+      '@reduxjs/toolkit': 2.11.2(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       effect: 3.21.0
       jose: 6.2.4
     transitivePeerDependencies:
@@ -7199,9 +7243,9 @@ snapshots:
       '@forgerock/sdk-types': 2.1.1
       '@forgerock/sdk-utilities': 2.1.1
 
-  '@forgerock/sdk-request-middleware@2.1.1(react@19.2.4)':
+  '@forgerock/sdk-request-middleware@2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
     dependencies:
-      '@reduxjs/toolkit': 2.11.2(react@19.2.4)
+      '@reduxjs/toolkit': 2.11.2(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
     transitivePeerDependencies:
       - react
       - react-redux
@@ -7622,7 +7666,7 @@ snapshots:
 
   '@polka/url@1.0.0-next.29': {}
 
-  '@reduxjs/toolkit@2.11.2(react@19.2.4)':
+  '@reduxjs/toolkit@2.11.2(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
     dependencies:
       '@standard-schema/spec': 1.1.0
       '@standard-schema/utils': 0.3.0
@@ -7632,6 +7676,7 @@ snapshots:
       reselect: 5.1.1
     optionalDependencies:
       react: 19.2.4
+      react-redux: 9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1)
 
   '@rollup/plugin-commonjs@29.0.2(rollup@4.59.0)':
     dependencies:
@@ -7820,6 +7865,8 @@ snapshots:
     optional: true
 
   '@rtsao/scc@1.1.0': {}
+
+  '@scarf/scarf@1.4.0': {}
 
   '@sideway/address@4.1.5':
     dependencies:
@@ -8360,6 +8407,9 @@ snapshots:
   '@types/trusted-types@2.0.7': {}
 
   '@types/unist@2.0.11': {}
+
+  '@types/use-sync-external-store@0.0.6':
+    optional: true
 
   '@types/uuid@9.0.8': {}
 
@@ -11934,6 +11984,16 @@ snapshots:
 
   react-is@18.3.1: {}
 
+  react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1):
+    dependencies:
+      '@types/use-sync-external-store': 0.0.6
+      react: 19.2.4
+      use-sync-external-store: 1.6.0(react@19.2.4)
+    optionalDependencies:
+      '@types/react': 19.2.14
+      redux: 5.0.1
+    optional: true
+
   react@19.2.4: {}
 
   read-cache@1.0.0:
@@ -12581,6 +12641,10 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.21
       zimmerframe: 1.1.4
+
+  swagger-ui-dist@5.33.1:
+    dependencies:
+      '@scarf/scarf': 1.4.0
 
   synckit@0.11.12:
     dependencies:

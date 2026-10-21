@@ -22,8 +22,16 @@ vi.mock('$server/idm-theme.effects', () => ({
 
 import { load } from './+layout.server';
 
-function loadFrom(requestUrl: string) {
-  return load({ url: new URL(requestUrl) } as unknown as Parameters<typeof load>[0]);
+// The load reads only `url` from the event; tests drive it through this helper.
+// The declared LayoutServerLoad type includes a void arm (loads may throw), so the
+// awaited result is narrowed to its data side for property assertions.
+const loadEvent = (requestUrl: string) =>
+  ({ url: new URL(requestUrl) }) as unknown as Parameters<typeof load>[0];
+
+type LoadResult = Exclude<Awaited<ReturnType<typeof load>>, void>;
+
+async function loadFrom(requestUrl: string): Promise<LoadResult> {
+  return (await load(loadEvent(requestUrl))) as LoadResult;
 }
 
 describe('(app)/+layout.server.ts wellknown resolution', () => {

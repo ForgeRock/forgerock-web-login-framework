@@ -35,7 +35,7 @@
   {:else if stage === 'AdminInvitePrivacyPolicy'}
     <AdminInvitePrivacyPolicy componentStyle="modal" {form} {journey} {step} />
   {:else if stage === 'AdminInviteInvalid'}
-    <AdminInviteInvalid componentStyle="modal" {form} {journey} {step} />
+    <AdminInviteInvalid componentStyle="modal" />
   {:else if stage === 'MfaSetupPrompt'}
     <MfaSetupPrompt componentStyle="modal" {form} {journey} {step} />
   {:else if stage === 'MfaDownloadApp'}

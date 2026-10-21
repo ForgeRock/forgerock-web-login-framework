@@ -67,12 +67,20 @@ pnpm ci:e2e -- --headed
 
 E2E tests require ForgeRock AM connection details. Set these in your environment or a `.env` file:
 
-| Variable              | Description                                              |
-| --------------------- | -------------------------------------------------------- |
-| `FR_AM_URL`           | ForgeRock AM base URL                                    |
-| `FR_AM_COOKIE_NAME`   | AM session cookie name                                   |
-| `FR_REALM_PATH`       | AM realm path                                            |
-| `FR_AM_WELLKNOWN_URL` | AM OIDC discovery URL used to validate app configuration |
+| Variable               | Description                                              |
+| ---------------------- | -------------------------------------------------------- |
+| `FR_AM_URL`            | ForgeRock AM base URL                                    |
+| `FR_AM_COOKIE_NAME`    | AM session cookie name                                   |
+| `FR_REALM_PATH`        | AM realm path                                            |
+| `FR_AM_WELLKNOWN_URL`  | AM OIDC discovery URL used to validate app configuration |
+| `FR_AM_ADMIN_USERNAME` | AM admin username — required by the Component API tests  |
+| `FR_AM_ADMIN_PASSWORD` | AM admin password — required by the Component API tests  |
+
+The AM connection defaults are hardcoded in `e2e/playwright.config.ts`, so the
+suite runs locally without them when current. The admin credentials are always
+required: `e2e/tests/utilities/admin-user.js` fails fast without them. Set them
+in a root `.env` file or export them in your shell; CI reads them from
+repository secrets.
 
 ## Linting
 

@@ -46,6 +46,8 @@ jobs:
       FR_AM_COOKIE_NAME: ${{ secrets.VITE_FR_AM_COOKIE_NAME }}
       FR_REALM_PATH: ${{ secrets.VITE_FR_REALM_PATH }}
       FR_AM_WELLKNOWN_URL: ${{ secrets.FR_AM_WELLKNOWN_URL }}
+      FR_AM_ADMIN_USERNAME: ${{ secrets.FR_AM_ADMIN_USERNAME }}
+      FR_AM_ADMIN_PASSWORD: ${{ secrets.FR_AM_ADMIN_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4

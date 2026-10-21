@@ -15,6 +15,9 @@ vi.mock('$env/dynamic/private', () => ({ env: mockEnv }));
 
 import { GET } from './+server';
 
+// The handler ignores its RequestEvent; the tests stub `fetch` and env instead.
+const noEvent = undefined as unknown as Parameters<typeof GET>[0];
+
 function mockFetchOnce(status: number) {
   return vi.fn(async () => new Response('{}', { status }));
 }
@@ -34,7 +37,7 @@ describe('api/health/ready discovery URL resolution', () => {
     const fetchMock = mockFetchOnce(200);
     vi.stubGlobal('fetch', fetchMock);
 
-    const response = await GET();
+    const response = await GET(noEvent);
 
     expect(response.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -53,7 +56,7 @@ describe('api/health/ready discovery URL resolution', () => {
     const fetchMock = mockFetchOnce(200);
     vi.stubGlobal('fetch', fetchMock);
 
-    const response = await GET();
+    const response = await GET(noEvent);
 
     expect(response.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledWith(
@@ -71,7 +74,7 @@ describe('api/health/ready discovery URL resolution', () => {
     const fetchMock = vi.fn();
     vi.stubGlobal('fetch', fetchMock);
 
-    const response = await GET();
+    const response = await GET(noEvent);
 
     expect(response.status).toBe(503);
     expect(JSON.parse(await response.text())).toEqual({ status: 'not-ready' });
