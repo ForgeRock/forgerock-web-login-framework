@@ -107,16 +107,15 @@ Tests connect to a ForgeRock AM instance. The Playwright config provides default
 | `FR_AM_COOKIE_NAME`        | AM session cookie name                                   |
 | `FR_REALM_PATH`            | AM realm path                                            |
 | `FR_AM_WELLKNOWN_URL`      | AM OIDC discovery URL used to validate app configuration |
-| `FR_AM_ADMIN_USERNAME`     | AM admin username for the Component API tests            |
-| `FR_AM_ADMIN_PASSWORD`     | AM admin password for the Component API tests            |
 | `PLAYWRIGHT_TEST_BASE_URL` | Override the app URL (default: `http://localhost:3000`)  |
+
+`FR_AM_ADMIN_USERNAME` / `FR_AM_ADMIN_PASSWORD` are **CI-only** (repository
+secrets): the Component API tests authenticate as an AM admin and never run in
+normal local development — do not add them to a local `.env`.
 
 The AM defaults are hardcoded in `e2e/playwright.config.ts`
 (`openam-sdks.forgeblocks.com`), so the suite runs locally with no environment
-setup when those defaults are current. The admin credentials are required —
-`tests/utilities/admin-user.js` fails fast without them. Set them in a root
-`.env` file (loaded by the Playwright config via dotenv) or export them in your
-shell; CI reads them from repository secrets.
+setup when those defaults are current.
 
 ## Debugging
 

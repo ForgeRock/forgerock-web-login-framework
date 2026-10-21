@@ -254,9 +254,6 @@ importers:
       axe-playwright:
         specifier: ^1.2.3
         version: 1.2.3(playwright@1.64.1)
-      dotenv:
-        specifier: ^16.4.1
-        version: 16.6.1
       playwright:
         specifier: ^1.64.1
         version: 1.64.1
