@@ -103,12 +103,20 @@ export function buildSandboxSrcdoc({ devServerOrigin, frameworkEntryUrl }: Sandb
       // (stringsStore starts writable(null)), and without the style/style
       // initializers styleStore stays empty so labels don't float and
       // checks/radios don't animate.
+      //
+      // The stores are module singletons in this long-lived iframe, so a demo
+      // that mutates them (demo-widget-runtime calls configure(), which resets
+      // links, style and content) would leak into the next demo. The same boot
+      // therefore runs again before every render.
+      const bootFramework = async () => {
+        const fw = await import('$login-framework');
+        fw.initializeLocale?.();
+        fw.initializeLinks?.({ termsAndConditions: 'https://example.com/terms' });
+        fw.initializeStyles?.();
+      };
       (async () => {
         try {
-          const fw = await import('$login-framework');
-          fw.initializeLocale?.();
-          fw.initializeLinks?.({ termsAndConditions: 'https://example.com/terms' });
-          fw.initializeStyles?.();
+          await bootFramework();
           window.__frameworkReady = true;
           parent.postMessage({ type: 'framework-ready' }, '*');
         } catch (error) {
@@ -121,6 +129,7 @@ export function buildSandboxSrcdoc({ devServerOrigin, frameworkEntryUrl }: Sandb
         if (event.data?.type !== 'render') return;
         document.getElementById('preview-root').innerHTML = '';
         try {
+          await bootFramework();
           const blob = new Blob([event.data.code], { type: 'text/javascript' });
           const url = URL.createObjectURL(blob);
           await import(url);
