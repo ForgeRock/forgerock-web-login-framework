@@ -93,11 +93,19 @@ export function compileComponent(source: string): CompileResult {
 // a mount call so the compiled output can self-render inside the preview iframe.
 // mockPropsExpr is a raw JS object-literal expression (not JSON) so mock props
 // can carry functions for components expecting SDK-shaped objects.
+//
+// createDemoStep: real-framework preview (IAM-12011) means demo `step` props
+// must be real JourneyStep objects (CallbackMapper calls callback.getType()).
+// Built via the real createJourneyStep re-exported from $login-framework, so
+// the fixtures exercise the genuine callback construction machinery. The AM
+// journey request itself stays mocked — these are static payloads.
 export function getMountCode(compiledJs: string, mockPropsExpr: string): string {
   return [
     compiledJs,
     MOUNT_WRAPPER_MARKER,
     `import { mount } from 'svelte';`,
+    `import { createJourneyStep } from '$login-framework';`,
+    `const createDemoStep = (payload) => createJourneyStep({ authId: 'demo', callbacks: payload.callbacks ?? [], header: payload.header, description: payload.description, stage: payload.stage, status: 200 });`,
     `mount(Component, { target: document.getElementById('preview-root'), props: (${mockPropsExpr}) });`,
   ].join('\n');
 }

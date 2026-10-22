@@ -14,6 +14,22 @@
     "moduleDetection": "force",
     "noEmit": true,
 
+    /* Path aliases — mirror experimental/editor-poc/vite.config.ts so tsc
+       resolves the same modules Vite does. Needed once src/preview-framework.ts
+       started importing the real widget surface (packages/login-widget/src/lib),
+       whose files use $core/$journey/$components aliases (IAM-12011 task 4).
+       These match core/tsconfig.json + packages/login-widget/tsconfig.json. */
+    "paths": {
+      "$core": ["../../core"],
+      "$core/*": ["../../core/*"],
+      "$components": ["../../core/components"],
+      "$components/*": ["../../core/components/*"],
+      "$journey": ["../../core/journey"],
+      "$journey/*": ["../../core/journey/*"],
+      "$locales": ["../../core/locales"],
+      "$locales/*": ["../../core/locales/*"]
+    },
+
     /* Linting */
     "noUnusedLocals": true,
     "noUnusedParameters": true,

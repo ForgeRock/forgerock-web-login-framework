@@ -3,6 +3,8 @@
 // core/journey/_utilities/registry/vite-plugin.ts). The sidebar groups by
 // `kind`; `saveName` (only set for repo-backed entries) tells the local save
 // endpoint which of those two directories to write into.
+import { callbackCatalog, CATALOG_TYPES } from './callback-catalog';
+
 export type CustomComponentKind = 'callback' | 'stage';
 
 export interface CustomComponentEntry {
@@ -19,7 +21,10 @@ export interface CustomComponentEntry {
   saveName?: string;
 }
 
-export const customComponents: CustomComponentEntry[] = [
+// Repo-backed demo components. These mirror real files under
+// experimental/custom/{stages,callbacks}/ (via saveName) or are mock-only
+// demos with no repo file.
+export const repoCustomComponents: CustomComponentEntry[] = [
   {
     // Real repo file, verbatim: experimental/custom/stages/hello-world/hello-world.svelte
     // First editor example: only Hello World! renders; the rest is a progressive tutorial.
@@ -33,7 +38,7 @@ Name: HelloWorld
 -->
 
 <script lang="ts">
-  import { Form } from '$login-framework';
+  import { Button, Form } from '$login-framework';
 
   import type { StageFormObject, StageJourneyObject } from '$login-framework';
 
@@ -44,27 +49,8 @@ Name: HelloWorld
 
 <Form bind:formEl onSubmitWhenValid={form?.submit}>
   <span style="color: #334155"> Hello World! </span>
-  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">Next</Button>
 </Form>
-
-<style>
-  .tutorial-next {
-    background-color: #3b6073;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .tutorial-next:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-</style>
 `,
     mockProps: `{
   form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
@@ -84,7 +70,7 @@ Name: HelloWorldNative
 -->
 
 <script lang="ts">
-  import { Form } from '$login-framework';
+  import { Button, Form } from '$login-framework';
 
   import type { StageFormObject, StageJourneyObject } from '$login-framework';
 
@@ -110,28 +96,9 @@ Name: HelloWorldNative
       Remember me
     </label>
 
-    <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">Next</Button>
   </div>
 </Form>
-
-<style>
-  .tutorial-next {
-    background-color: #3b6073;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .tutorial-next:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-</style>
 `,
     mockProps: `{
   form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
@@ -156,7 +123,7 @@ DEMO COMPONENT — Step 3: AM callbacks
   import { onDestroy } from 'svelte';
   import { get } from 'svelte/store';
 
-  import { CallbackMapper, Form, styleStore } from '$login-framework';
+  import { Button, CallbackMapper, Form, styleStore } from '$login-framework';
 
   import type { JourneyStep } from '@forgerock/journey-client/types';
 
@@ -204,7 +171,7 @@ DEMO COMPONENT — Step 3: AM callbacks
     />
   {/each}
 
-  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">Next</Button>
 </Form>
 
 <style>
@@ -224,23 +191,6 @@ DEMO COMPONENT — Step 3: AM callbacks
     margin-bottom: 1.5rem;
     text-align: center;
   }
-
-  .tutorial-next {
-    background-color: #3b6073;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .tutorial-next:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
 </style>
 `,
     mockProps: `{
@@ -251,7 +201,12 @@ DEMO COMPONENT — Step 3: AM callbacks
     callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [{}] },
+  step: createDemoStep({
+    callbacks: [
+      { type: 'NameCallback', output: [{ name: 'prompt', value: 'User Name' }], input: [{ name: 'IDToken1', value: '' }], _id: 0 },
+      { type: 'PasswordCallback', output: [{ name: 'prompt', value: 'Password' }], input: [{ name: 'IDToken2', value: '' }], _id: 1 },
+    ],
+  }),
 }`,
   },
   {
@@ -268,7 +223,7 @@ DEMO COMPONENT — Step 4: scoped styles
 -->
 
 <script lang="ts">
-  import { Form } from '$login-framework';
+  import { Button, Form } from '$login-framework';
 
   import type { StageFormObject, StageJourneyObject } from '$login-framework';
 
@@ -317,7 +272,7 @@ DEMO COMPONENT — Step 4: scoped styles
       {/if}
     </label>
 
-    <button class="tutorial-next" disabled={journey?.loading} type="submit">Next →</button>
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">Next →</Button>
   </section>
 </Form>
 
@@ -408,7 +363,7 @@ DEMO COMPONENT — Step 4: scoped styles
     font-size: 0.75rem;
   }
 
-  .tutorial-next {
+  .tutorial-card :global(button) {
     background: linear-gradient(135deg, #7c3aed, #2563eb, #db2777);
     background-size: 150% 100%;
     background-position: 0% 0%;
@@ -424,14 +379,9 @@ DEMO COMPONENT — Step 4: scoped styles
     width: 100%;
   }
 
-  .tutorial-next:hover:not(:disabled) {
+  .tutorial-card :global(button:hover) {
     background-position: 100% 0%;
     transform: translateY(-1px);
-  }
-
-  .tutorial-next:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
   }
 </style>
 `,
@@ -460,6 +410,7 @@ DEMO COMPONENT — Step 5: form and journey actions
 
   import {
     Alert,
+    Button,
     CallbackMapper,
     convertStringToKey,
     Form,
@@ -534,15 +485,12 @@ DEMO COMPONENT — Step 5: form and journey actions
     />
   {/each}
 
-  <button class="tutorial-next" disabled={journey?.loading} type="submit">Next</button>
-  <button
-    class="tutorial-restart"
-    disabled={journey?.loading}
-    on:click={restartCurrentJourney}
-    type="button"
-  >
-    Start over
-  </button>
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">Next</Button>
+  <div class="tutorial-restart">
+    <Button onClick={restartCurrentJourney} style="outline" type="button" width="full">
+      Start over
+    </Button>
+  </div>
 </Form>
 
 <style>
@@ -564,42 +512,7 @@ DEMO COMPONENT — Step 5: form and journey actions
   }
 
   .tutorial-restart {
-    background: none;
-    border: 0;
-    color: #2563eb;
-    cursor: pointer;
-    display: block;
-    font: inherit;
-    margin: 1rem auto;
-    padding: 0;
-    text-decoration: underline;
-  }
-
-  .tutorial-restart:focus-visible {
-    outline: 2px solid #027ab8;
-    outline-offset: 2px;
-  }
-
-  .tutorial-restart:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-
-  .tutorial-next {
-    background-color: #3b6073;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .tutorial-next:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
+    margin-top: 1rem;
   }
 </style>
 `,
@@ -611,7 +524,12 @@ DEMO COMPONENT — Step 5: form and journey actions
     callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [{}] },
+  step: createDemoStep({
+    callbacks: [
+      { type: 'NameCallback', output: [{ name: 'prompt', value: 'User Name' }], input: [{ name: 'IDToken1', value: '' }], _id: 0 },
+      { type: 'PasswordCallback', output: [{ name: 'prompt', value: 'Password' }], input: [{ name: 'IDToken2', value: '' }], _id: 1 },
+    ],
+  }),
 }`,
   },
   {
@@ -742,11 +660,11 @@ DEMO COMPONENT — Step 5: form and journey actions
 }`,
   },
   {
-    // Real repo file, verbatim: experimental/custom/demo/stages/custom-login/custom-login.svelte
+    // Based on repo file experimental/custom/demo/stages/custom-login/custom-login.svelte;
+    // this editor copy renders the submit action with the framework Button.
     // Imports Alert/Button/Form/CallbackMapper/styleStore/convertStringToKey/T/
-    // captureLinks from $login-framework — the mock module only exports
-    // Stacked/interpolate/textToKey, so live preview will fail on unresolved
-    // imports until login-framework-mock.ts's export surface is extended.
+    // captureLinks from $login-framework — exercises the real framework surface
+    // end to end in the preview (IAM-12011).
     name: 'custom-login.svelte',
     kind: 'stage',
     saveName: 'custom-login',
@@ -786,6 +704,7 @@ DEMO COMPONENT — Step 5: form and journey actions
 
   import {
     Alert,
+    Button,
     CallbackMapper,
     convertStringToKey,
     Form,
@@ -867,9 +786,9 @@ DEMO COMPONENT — Step 5: form and journey actions
   {/each}
 
   {#if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-    <button class="signin-button" disabled={journey?.loading} type="submit">
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">
       {journey?.loading ? 'Signing in…' : 'Sign In'}
-    </button>
+    </Button>
   {/if}
 
   <p class="custom-login-footer">
@@ -931,35 +850,6 @@ DEMO COMPONENT — Step 5: form and journey actions
     padding-top: 1rem;
     text-align: center;
   }
-
-  .signin-button {
-    background-color: #027ab8;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    line-height: 1.5;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .signin-button:hover:not(:disabled),
-  .signin-button:focus-visible:not(:disabled) {
-    background-color: #01699f;
-    border-color: #01699f;
-  }
-
-  .signin-button:focus-visible {
-    outline: 2px solid #027ab8;
-    outline-offset: 2px;
-  }
-
-  .signin-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
 </style>
 `,
     // StageFormObject/StageJourneyObject/JourneyStep shapes mocked by hand —
@@ -973,7 +863,12 @@ DEMO COMPONENT — Step 5: form and journey actions
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [{}] },
+  step: createDemoStep({
+    callbacks: [
+      { type: 'NameCallback', output: [{ name: 'prompt', value: 'User Name' }], input: [{ name: 'IDToken1', value: '' }], _id: 0 },
+      { type: 'PasswordCallback', output: [{ name: 'prompt', value: 'Password' }], input: [{ name: 'IDToken2', value: '' }], _id: 1 },
+    ],
+  }),
 }`,
   },
   {
@@ -1002,6 +897,7 @@ DEMO COMPONENT — Step 5: form and journey actions
 
   import {
     Alert,
+    Button,
     CallbackMapper,
     convertStringToKey,
     Form,
@@ -1097,9 +993,9 @@ DEMO COMPONENT — Step 5: form and journey actions
     {/if}
   </label>
 
-  <button class="signin-button" disabled={journey?.loading} type="submit">
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">
     {journey?.loading ? 'Signing in…' : 'Sign In'}
-  </button>
+  </Button>
 </Form>
 
 <style>
@@ -1134,23 +1030,6 @@ DEMO COMPONENT — Step 5: form and journey actions
     color: #dc2626;
     font-size: 0.75rem;
   }
-
-  .signin-button {
-    background-color: #027ab8;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .signin-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
 </style>
 `,
     mockProps: `{
@@ -1161,7 +1040,12 @@ DEMO COMPONENT — Step 5: form and journey actions
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [{}] },
+  step: createDemoStep({
+    callbacks: [
+      { type: 'NameCallback', output: [{ name: 'prompt', value: 'User Name' }], input: [{ name: 'IDToken1', value: '' }], _id: 0 },
+      { type: 'PasswordCallback', output: [{ name: 'prompt', value: 'Password' }], input: [{ name: 'IDToken2', value: '' }], _id: 1 },
+    ],
+  }),
 }`,
   },
   {
@@ -1188,6 +1072,7 @@ DEMO COMPONENT — Step 5: form and journey actions
 
   import {
     Alert,
+    Button,
     CallbackMapper,
     convertStringToKey,
     Form,
@@ -1262,9 +1147,9 @@ DEMO COMPONENT — Step 5: form and journey actions
         />
       {/each}
 
-      <button class="signin-button" disabled={journey?.loading} type="submit">
+      <Button busy={journey?.loading} style="primary" type="submit" width="full">
         {journey?.loading ? 'Signing in…' : 'Sign In'}
-      </button>
+      </Button>
     </Form>
   </div>
 </div>
@@ -1299,23 +1184,6 @@ DEMO COMPONENT — Step 5: form and journey actions
     font-weight: 300;
     margin: 0 0 1rem;
   }
-
-  .signin-button {
-    background-color: #027ab8;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .signin-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
 </style>
 `,
     mockProps: `{
@@ -1326,7 +1194,12 @@ DEMO COMPONENT — Step 5: form and journey actions
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [{}] },
+  step: createDemoStep({
+    callbacks: [
+      { type: 'NameCallback', output: [{ name: 'prompt', value: 'User Name' }], input: [{ name: 'IDToken1', value: '' }], _id: 0 },
+      { type: 'PasswordCallback', output: [{ name: 'prompt', value: 'Password' }], input: [{ name: 'IDToken2', value: '' }], _id: 1 },
+    ],
+  }),
 }`,
   },
   {
@@ -1355,6 +1228,7 @@ DEMO COMPONENT — Step 5: form and journey actions
 
   import {
     Alert,
+    Button,
     CallbackMapper,
     convertStringToKey,
     Form,
@@ -1422,9 +1296,9 @@ DEMO COMPONENT — Step 5: form and journey actions
     />
   {/each}
 
-  <button class="continue-button" disabled={journey?.loading} type="submit">
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">
     {journey?.loading ? 'Continuing…' : 'Continue'}
-  </button>
+  </Button>
 </Form>
 
 <style>
@@ -1434,23 +1308,6 @@ DEMO COMPONENT — Step 5: form and journey actions
     font-weight: 300;
     margin: 0 0 1rem;
     text-align: center;
-  }
-
-  .continue-button {
-    background-color: #027ab8;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-size: 1rem;
-    padding: 0.75rem 1.5rem;
-    text-align: center;
-    width: 100%;
-  }
-
-  .continue-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
   }
 </style>
 `,
@@ -1462,7 +1319,12 @@ DEMO COMPONENT — Step 5: form and journey actions
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [{}] },
+  step: createDemoStep({
+    callbacks: [
+      { type: 'NameCallback', output: [{ name: 'prompt', value: 'User Name' }], input: [{ name: 'IDToken1', value: '' }], _id: 0 },
+      { type: 'PasswordCallback', output: [{ name: 'prompt', value: 'Password' }], input: [{ name: 'IDToken2', value: '' }], _id: 1 },
+    ],
+  }),
 }`,
   },
   {
@@ -1491,6 +1353,7 @@ DEMO COMPONENT — Step 5: form and journey actions
 
   import {
     Alert,
+    Button,
     CallbackMapper,
     convertStringToKey,
     Form,
@@ -1562,9 +1425,11 @@ DEMO COMPONENT — Step 5: form and journey actions
     Scoped styles below always win over the theme injected via styleStore —
     this button ignores currentStyle entirely and uses its own gradient.
   -->
-  <button class="brand-gradient-button" disabled={journey?.loading} type="submit">
-    {journey?.loading ? 'Signing in…' : 'Sign In'}
-  </button>
+  <div class="brand-gradient-cta">
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">
+      {journey?.loading ? 'Signing in…' : 'Sign In'}
+    </Button>
+  </div>
 </Form>
 
 <style>
@@ -1576,7 +1441,7 @@ DEMO COMPONENT — Step 5: form and journey actions
     text-align: center;
   }
 
-  .brand-gradient-button {
+  .brand-gradient-cta :global(button) {
     background: linear-gradient(90deg, #7c3aed, #db2777);
     border: none;
     border-radius: 0.5rem;
@@ -1588,11 +1453,6 @@ DEMO COMPONENT — Step 5: form and journey actions
     text-align: center;
     width: 100%;
   }
-
-  .brand-gradient-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
 </style>
 `,
     mockProps: `{
@@ -1603,7 +1463,12 @@ DEMO COMPONENT — Step 5: form and journey actions
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: { callbacks: [{}] },
+  step: createDemoStep({
+    callbacks: [
+      { type: 'NameCallback', output: [{ name: 'prompt', value: 'User Name' }], input: [{ name: 'IDToken1', value: '' }], _id: 0 },
+      { type: 'PasswordCallback', output: [{ name: 'prompt', value: 'Password' }], input: [{ name: 'IDToken2', value: '' }], _id: 1 },
+    ],
+  }),
 }`,
   },
   {
@@ -1629,6 +1494,7 @@ DEMO COMPONENT — Step 5: form and journey actions
 
   import {
     Alert,
+    Button,
     CallbackMapper,
     convertStringToKey,
     Form,
@@ -1728,20 +1594,15 @@ DEMO COMPONENT — Step 5: form and journey actions
   {/each}
 
   {#if buttons.length}
-    <button class="submit-button" disabled={journey?.loading} type="submit">Continue</button>
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">Continue</Button>
   {:else if metadata?.step?.derived.isUserInputOptional || !metadata?.step?.derived.isStepSelfSubmittable()}
-    <button class="submit-button" disabled={journey?.loading} type="submit">Continue</button>
+    <Button busy={journey?.loading} style="primary" type="submit" width="full">Continue</Button>
   {/if}
 
   <p class="start-over">
-    <button
-      class="start-over-button"
-      disabled={journey?.loading}
-      on:click={restartCurrentJourney}
-      type="button"
-    >
+    <Button onClick={restartCurrentJourney} style="outline" type="button" width="full">
       Start over
-    </button>
+    </Button>
   </p>
 </Form>
 
@@ -1767,66 +1628,14 @@ DEMO COMPONENT — Step 5: form and journey actions
     text-align: center;
   }
 
-  .submit-button {
-    background-color: #027ab8;
-    border: 1px solid #027ab8;
-    border-radius: 0.25rem;
-    color: #fff;
-    cursor: pointer;
-    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
-    font-size: 0.9375rem;
-    line-height: 1.5;
-    padding: 0.75rem 1.5rem;
-    position: relative;
-    text-align: center;
-    width: 100%;
-  }
-
-  .submit-button:hover:not(:disabled),
-  .submit-button:focus-visible:not(:disabled) {
-    background-color: #01699f;
-    border-color: #01699f;
-  }
-
-  .submit-button:focus-visible,
-  .start-over-button:focus-visible {
-    outline: 3px solid rgb(2 122 184 / 10%);
-    outline-offset: 2px;
-  }
-
-  .submit-button:disabled,
-  .start-over-button:disabled {
-    cursor: not-allowed;
-    opacity: 0.65;
-  }
-
   .start-over {
     margin: 1rem 0;
     text-align: center;
   }
 
-  .start-over-button {
-    background: none;
-    border: 0;
-    color: #2563eb;
-    cursor: pointer;
-    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
-    font-size: 0.9375rem;
-    padding: 0;
-    text-decoration: underline;
-  }
-
-  .start-over-button:hover:not(:disabled) {
-    text-decoration: none;
-  }
-
   :global(.dark) .otp-heading,
   :global(.dark) .otp-supporting-text {
     color: #d1d5db;
-  }
-
-  :global(.dark) .start-over-button {
-    color: #60a5fa;
   }
 </style>
 `,
@@ -1842,10 +1651,383 @@ DEMO COMPONENT — Step 5: form and journey actions
     callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
   },
-  step: {
-    callbacks: [{ getType: () => 'NameCallback' }],
-    getCallbacksOfType: () => [],
-  },
+  step: createDemoStep({
+    callbacks: [
+      {
+        type: 'NameCallback',
+        output: [{ name: 'prompt', value: 'Username' }],
+        input: [{ name: 'IDToken1', value: '' }],
+        _id: 0,
+      },
+    ],
+  }),
 }`,
   },
+  {
+    // DEMO COMPONENT — mock-only (no repo file): IAM-12011 task 5. Imports
+    // all five public `$login-framework` runtime APIs (configure, journey,
+    // component, user, protect) and drives the REAL widget runtime over the
+    // mocked AM journey client. Self-boots: on mount it awaits configure(),
+    // starts the journey, subscribes the component/user stores and starts
+    // protect; the Form's submit path drives journeyStore.next() exactly the
+    // way journey.svelte's submitForm does, and the mock client answers with
+    // LoginSuccess. No mockProps step — the runtime state comes from the
+    // stores this component initializes itself.
+    name: 'demo-widget-runtime.svelte',
+    kind: 'stage',
+    source: `<!--
+@component
+Type: stage
+Name: DemoWidgetRuntime
+
+DEMO COMPONENT — IAM-12011 task 5
+─────────────────────────────────
+Imports ALL FIVE public $login-framework runtime APIs (configure, journey,
+component, user, protect) and drives the REAL widget runtime over the mocked
+AM journey client:
+
+  1. await configure({ serverConfig }) — real Zod parsing + journey store
+     initialization (the mocked journey client answers the start calls;
+     nothing reaches a network).
+  2. journey({ oauth: false, user: false }).start() — the mock client
+     returns a Name/Password step; the real journeyStore publishes it.
+  3. Submission through Form onSubmitWhenValid mirrors what journey.svelte's
+     submitForm does — journeyStore.next(step) — and the mock client answers
+     with LoginSuccess.
+  4. component().subscribe — the real componentStore action events.
+  5. user.info / protect.start — real store guards (OIDC is not configured
+     in the preview, so user.info reports the documented "OIDC client not
+     configured" state; protect runs against the stub's no-op client).
+
+NOT a component you would author — it is the editor-preview demo proving the
+full public API renders and runs inside the sandbox.
+-->
+
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import {
+    Button,
+    CallbackMapper,
+    component,
+    configure,
+    Form,
+    getStores,
+    journey as journeyApiFactory,
+    protect,
+    styleStore,
+    T,
+    user,
+  } from '$login-framework';
+
+  import type { StageFormObject, StageJourneyObject } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+
+  let runtimeStatus = 'configuring…';
+  let componentEvents: string[] = [];
+  let userStatus = 'not queried';
+  let protectStatus = 'not started';
+  // Snapshot of the real journeyStore value for the markup below — kept as a
+  // plain reactive variable (updated by the store subscription in
+  // bootRuntime) instead of a $-prefixed auto-subscription, because
+  // getStores() is only usable after configure() resolves.
+  type JourneyState = {
+    metadata: { callbacks: Array<unknown>; step: Record<string, unknown> } | null;
+    step: { callbacks: Array<unknown>; type: string } | null;
+  } | null;
+  let journeyState: JourneyState = null;
+
+  // The stores/APIs throw "missing configuration" until configure() resolves
+  // (widget.api.ts guards every accessor), so ALL runtime calls happen inside
+  // bootRuntime() after the awaited configure — same ordering rule the
+  // published widget documents. Only the component factory is safe early:
+  // componentStore is configuration-independent.
+  const componentApiInstance = component();
+  const unsubComponent = componentApiInstance.subscribe((state) => {
+    if (state.lastAction) {
+      componentEvents = [...componentEvents.slice(-3), state.lastAction];
+    }
+  });
+
+  let journeyStoreUnsubscribe: (() => void) | null = null;
+  let userUnsubscribe: (() => void) | null = null;
+  // Subscriptions created inside the async bootRuntime (after component init,
+  // where Svelte forbids onDestroy) collect here; the single onDestroy at
+  // component init drains the array on teardown.
+  const bootUnsubscribers: Array<() => void> = [];
+
+  // Submit the CURRENT step through the real journey store — the same call
+  // journey.svelte's submitForm makes when a stage form is submitted.
+  function submitStep(): void {
+    if (!journeyStoreUnsubscribe) {
+      return;
+    }
+    const { journeyStore } = getStores();
+    const state = get(journeyStore);
+    if (state.step && state.step.type === 'Step') {
+      void journeyStore.next(state.step);
+    }
+  }
+
+  async function bootRuntime(): Promise<void> {
+    try {
+      // configure() runs the real pipeline: serverConfigSchema.parse ->
+      // initializeJourney -> mocked journey client construction (no network)
+      // -> oauth/user store initialization (OIDC-less).
+      await configure({
+        serverConfig: {
+          wellknown: 'https://mock.example.com/am/oauth2/alpha/.well-known/openid-configuration',
+        },
+      });
+
+      // Real user store — OIDC is not configured in the preview, so the
+      // store's documented "OIDC client not configured" error state is what
+      // shows here. user.info() AFTER configure (pre-config it throws).
+      const userApi = user.info();
+      userUnsubscribe = userApi.subscribe((state) => {
+        userStatus = state.error?.message ?? (state.completed ? 'completed' : 'loading');
+      });
+      void userApi.get();
+      // Real protect store over the stub client — start() resolves the no-op.
+      void protect.start({ envId: 'editor-preview-env' }).then((result) => {
+        protectStatus = result && 'error' in result ? \`error: \${result.error}\` : 'started';
+      });
+
+      // Real journey API over the mocked client. oauth/user disabled: the
+      // preview has no OIDC client, and the journey promise then resolves on
+      // step success alone (widget.api.ts start() !requestsOauth branch).
+      const journeyApi = journeyApiFactory({ oauth: false, user: false });
+      bootUnsubscribers.push(
+        journeyApi.subscribe((state) => {
+          runtimeStatus = state.journey.successful
+            ? 'success (mock LoginSuccess)'
+            : state.journey.step
+              ? 'awaiting submission'
+              : 'starting…';
+        }),
+      );
+
+      // Mirror the real journeyStore into the markup-facing journeyState.
+      const { journeyStore } = getStores();
+      journeyStoreUnsubscribe = journeyStore.subscribe((value) => {
+        journeyState = {
+          metadata: value.metadata,
+          step: value.step as { callbacks: Array<unknown>; type: string },
+        };
+      });
+
+      // Fire the start; the mock client's start() returns the Name/Password
+      // step and the real journeyStore publishes it. The start() promise
+      // resolves only when the journey completes (after submission below).
+      void journeyApi.start({ journey: 'Login' });
+
+      runtimeStatus = 'configured — awaiting submission';
+    } catch (error) {
+      runtimeStatus = \`configure failed: \${error instanceof Error ? error.message : String(error)}\`;
+    }
+  }
+
+  void bootRuntime();
+
+  onDestroy(() => {
+    unsubComponent();
+    userUnsubscribe?.();
+    journeyStoreUnsubscribe?.();
+    bootUnsubscribers.forEach((unsubscribe) => unsubscribe());
+  });
+</script>
+
+<Form bind:formEl onSubmitWhenValid={submitStep}>
+  <h2 class="demo-heading">
+    <T key="loginHeader">Widget runtime demo</T>
+  </h2>
+
+  <ul class="demo-status-list">
+    <li><strong>configure:</strong> {runtimeStatus}</li>
+    <li>
+      <strong>current step:</strong>
+      {#if journeyState?.step?.type === 'Step'}
+        <div class="demo-step-callbacks">
+          {#each journeyState.step.callbacks as callback, index}
+            <CallbackMapper
+              props={{
+                callback,
+                callbackMetadata: journeyState.metadata?.callbacks[index],
+                selfSubmitFunction: () => undefined,
+                stepMetadata: journeyState.metadata?.step && { ...journeyState.metadata.step },
+                style: get(styleStore),
+              }}
+            />
+          {/each}
+        </div>
+      {:else}
+        (none yet)
+      {/if}
+    </li>
+    <li><strong>component events:</strong> {componentEvents.join(', ') || '(none)'}</li>
+    <li><strong>user.info:</strong> {userStatus}</li>
+    <li><strong>protect.start:</strong> {protectStatus}</li>
+  </ul>
+
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">
+    Submit step (journeyStore.next)
+  </Button>
+</Form>
+
+<style>
+  .demo-heading {
+    color: #334155;
+    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 1.5rem;
+    font-weight: 300;
+    margin-bottom: 1rem;
+    text-align: center;
+  }
+
+  .demo-status-list {
+    color: #374151;
+    font-family: 'Open Sans', ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.875rem;
+    line-height: 1.6;
+    margin: 0 0 1.25rem;
+    padding-left: 1.25rem;
+    text-align: left;
+  }
+
+  .demo-step-callbacks {
+    display: block;
+    margin-top: 0.5rem;
+  }
+</style>
+`,
+    mockProps: `{
+  form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+}`,
+  },
+];
+
+// ─── Callback catalog demos (IAM-12011 task 3) ──────────────────────────────
+// One demo per AM callback type. Every demo shares the same stage source —
+// the catalog demos exist to exercise the REAL rendering path (payload →
+// createJourneyStep → real createCallback factory → CallbackMapper → real
+// callback component), not to showcase custom stage code. The step payload
+// comes from callback-catalog.ts, which was derived from the journey-client
+// callback classes and adversarially verified against them + the core
+// components (see callback-catalog.ts header).
+//
+// A single-metadata array entry per step: metadata.callbacks[0] backs the
+// first (and only) callback; metadata.step.derived mocks the self-submit
+// flags the generic submit-button logic reads.
+
+// Single stage source shared by every catalog demo — mirrors what
+// core/journey/stages/generic.svelte does with CallbackMapper + Form.
+const CATALOG_STAGE_SOURCE = `<!--
+  @component
+  Type: stage
+  Name: CallbackCatalogDemo
+
+  DEMO COMPONENT — callback catalog viewer
+  ────────────────────────────────────────
+  Renders whatever callbacks the mock AM journey step carries through the
+  REAL CallbackMapper. Not a component you would author — this demo exists
+  to prove each AM callback type in the catalog renders correctly inside
+  the preview.
+-->
+
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import { get } from 'svelte/store';
+
+  import { Button, CallbackMapper, Form, styleStore } from '$login-framework';
+
+  import type { JourneyStep } from '@forgerock/journey-client/types';
+
+  import type {
+    CallbackMetadata,
+    Maybe,
+    StageFormObject,
+    StageJourneyObject,
+    StepMetadata,
+    StyleObject,
+  } from '$login-framework';
+
+  export let form: StageFormObject;
+  export let formEl: HTMLFormElement | null = null;
+  export let journey: StageJourneyObject;
+  export let metadata: Maybe<{ callbacks: CallbackMetadata[]; step: StepMetadata }>;
+  export let step: JourneyStep;
+
+  let currentStyle: StyleObject = get(styleStore);
+  const unsubStyle = styleStore.subscribe((value) => (currentStyle = value));
+  onDestroy(unsubStyle);
+
+  function determineSubmission() {
+    if (metadata?.step?.derived.isStepSelfSubmittable()) {
+      form?.submit();
+    }
+  }
+</script>
+
+<Form bind:formEl onSubmitWhenValid={form?.submit}>
+  {#each step?.callbacks as callback, idx}
+    <CallbackMapper
+      props={{
+        callback,
+        callbackMetadata: metadata?.callbacks[idx],
+        selfSubmitFunction: determineSubmission,
+        stepMetadata: metadata?.step && { ...metadata.step },
+        style: currentStyle,
+      }}
+    />
+  {/each}
+
+  <Button busy={journey?.loading} style="primary" type="submit" width="full">Next</Button>
+</Form>
+`;
+
+// This module's catalog entries come from callback-catalog.ts (raw AM Step
+// payloads). Each entry's mockProps parses its payload through
+// JSON.parse inside the sandbox and feeds it to createDemoStep — same
+// real-machinery path every other demo uses.
+function catalogMockProps(payloadJson: string): string {
+  return `{
+  form: { message: '', submit: () => console.log('submit') },
+  formEl: null,
+  journey: { loading: false },
+  metadata: {
+    callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
+    step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
+  },
+  step: createDemoStep({ callbacks: [JSON.parse(${JSON.stringify(payloadJson)})] }),
+}`;
+}
+
+// DISPLAY_NAME — human label shown in the sidebar for each catalog demo.
+const CATALOG_DISPLAY_PREFIX = 'AM: ';
+
+// One catalog demo per AM callback type. Demo-only entries (no saveName) —
+// they render mock payloads, they are not repo files to save.
+export const callbackCatalogComponents: CustomComponentEntry[] = CATALOG_TYPES.map(
+  (callbackType) => ({
+    name: `${CATALOG_DISPLAY_PREFIX}${callbackType}`,
+    kind: 'stage',
+    source: CATALOG_STAGE_SOURCE,
+    mockProps: catalogMockProps(callbackCatalog[callbackType]),
+  }),
+);
+
+// Composite export: the repo-backed demo components first, then the catalog
+// demos (one per AM callback type, IAM-12011 task 3). Order matters: the
+// editor opens on the first `stage` entry, so the repo demos must lead. The
+// catalog covers the 23 AM enum types core/ can render plus the
+// deliberately-unregistered Unknown fallback.
+export const customComponents: CustomComponentEntry[] = [
+  ...repoCustomComponents,
+  ...callbackCatalogComponents,
 ];

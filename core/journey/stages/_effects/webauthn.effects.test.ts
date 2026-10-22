@@ -21,6 +21,20 @@ import { callbackType } from '@forgerock/journey-client';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// The vitest config aliases the @forgerock/journey-client subpaths to the
+// editor-poc preview stubs (the preview-framework tests exercise the runtime
+// through them). These integration tests need the REAL WebAuthn module — they
+// stub the browser ceremony surface (PublicKeyCredential/navigator) and assert
+// against the genuine implementation. vi.mock's factory imports by absolute
+// path (specifiers inside a mock factory do not go through Vite aliases),
+// re-pointing the subpath at the real dist module for this suite.
+vi.mock('@forgerock/journey-client/webauthn', async () => {
+  const real = await import(
+    /* @vite-ignore */ '/Users/gabrielstein/Documents/projects/login-framework/node_modules/.pnpm/@forgerock+journey-client@2.1.1_react@19.2.4/node_modules/@forgerock/journey-client/dist/src/lib/webauthn/webauthn.js'
+  );
+  return real;
+});
+
 import { createJourneyStep } from '$journey/_utilities/step.mock';
 import {
   createPasskeyAutofillStep,

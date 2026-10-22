@@ -1,37 +1,56 @@
 // Sandboxed preview iframe — no `allow-same-origin`, so author code never shares
-// origin/cookies/DOM with the admin shell. Validates the isolation gap flagged
-// against every alternative in Task 2's findings (iframe isolation is owed
-// regardless of which compiler produced the code).
+// origin/cookies/DOM with the admin shell (the SDKS-5259 opaque-origin decision,
+// unchanged by IAM-12011).
 //
-// NOTE: resolves the bare `svelte` import via esm.sh at the pinned runtime
-// version — a real build would self-host the runtime bundle instead of a CDN.
-// Flagging this as a gap: an admin-authoring surface should not take an
-// external network dependency for its preview sandbox.
+// IAM-12011 deltas from the SDKS-5324 version:
+// 1. The `svelte` runtime and `$login-framework` resolve through an import map
+//    to the REAL dev-server modules (/@id/ and /@fs/ URLs) instead of esm.sh
+//    and a generated mock data: URL. Real core/ components are compiled by
+//    vite-plugin-svelte on demand; no external CDN dependency remains.
+//    `$login-framework` maps to src/preview-framework.ts — the curated surface
+//    PLUS the widget runtime API (configure/journey/component/user/protect),
+//    so authored components import the full public surface (IAM-12011 task 4).
+//    `server.cors: true` in vite.config.ts is what lets this opaque-origin
+//    iframe fetch them (`Origin: null` + ACAO: *) — a module-supply loosening,
+//    not an origin-boundary change. fs.allow scopes supply to core/ +
+//    experimental/ + packages/.// 2. A boot script runs the framework's real store initializers so `T` renders
+//    real i18n catalog strings and `styleStore` emits real defaults.
 import widgetCss from '../../../packages/login-widget/dist/widget.css?raw';
 import { brand } from './brand';
 
-const SVELTE_VERSION = '5.56.10';
+export interface SandboxOptions {
+  devServerOrigin: string;
+  frameworkEntryUrl: string;
+}
 
-export function buildSandboxSrcdoc(loginFrameworkMockUrl: string): string {
+export function buildSandboxSrcdoc({ devServerOrigin, frameworkEntryUrl }: SandboxOptions): string {
   return `<!doctype html>
 <html>
   <head>
+    <!--
+      Base href points at the dev server so the ABSOLUTE module URLs the Vite
+      dev transform emits (/node_modules/.vite/deps/..., /@id/..., /@fs/...)
+      resolve against the dev server despite this iframe's opaque origin.
+      The origin itself stays null (sandbox without allow-same-origin); only
+      URL resolution changes. cors:true in vite.config.ts authorizes the
+      resulting cross-origin GETs (Origin: null -> ACAO: *).
+    -->
+    <base href="${devServerOrigin}/" />
     <script type="importmap">
       {
         "imports": {
-          "svelte": "https://esm.sh/svelte@${SVELTE_VERSION}",
-          "svelte/": "https://esm.sh/svelte@${SVELTE_VERSION}/",
-          "$login-framework": "${loginFrameworkMockUrl}"
+          "svelte": "${devServerOrigin}/@id/svelte",
+          "svelte/": "${devServerOrigin}/@id/svelte/",
+          "$login-framework": "${frameworkEntryUrl}"
         }
       }
     </script>
     <style>html, body { margin: 0; padding: 0; height: 100%; font-family: system-ui, sans-serif; }</style>
     <!--
       Real widget build output (packages/login-widget/dist/widget.css) — the
-      tw_* classes authored components use (and $login-framework's mocked
-      components reuse) are meaningless without it: no Tailwind, so sizes,
-      spacing, and colors all fall back to browser defaults instead of the
-      widget's actual look.
+      tw_* classes authored components use are meaningless without it: no
+      Tailwind, so sizes, spacing, and colors all fall back to browser
+      defaults instead of the widget's actual look.
     -->
     <style>${widgetCss}</style>
     <style>
@@ -78,6 +97,25 @@ export function buildSandboxSrcdoc(loginFrameworkMockUrl: string): string {
         </div>
       </div>
     </div>
+    <script>
+      // Boot the real framework stores before the first render: without the
+      // locale initializer the T component renders key-derived fallback text
+      // (stringsStore starts writable(null)), and without the style/style
+      // initializers styleStore stays empty so labels don't float and
+      // checks/radios don't animate.
+      (async () => {
+        try {
+          const fw = await import('$login-framework');
+          fw.initializeLocale?.();
+          fw.initializeLinks?.({ termsAndConditions: 'https://example.com/terms' });
+          fw.initializeStyles?.();
+          window.__frameworkReady = true;
+          parent.postMessage({ type: 'framework-ready' }, '*');
+        } catch (error) {
+          parent.postMessage({ type: 'render-error', message: 'Framework boot failed: ' + String(error?.message ?? error) }, '*');
+        }
+      })();
+    </script>
     <script>
       window.addEventListener('message', async (event) => {
         if (event.data?.type !== 'render') return;

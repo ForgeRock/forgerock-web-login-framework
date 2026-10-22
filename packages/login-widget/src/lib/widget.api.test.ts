@@ -533,7 +533,19 @@ describe('widgetApiFactory', () => {
     let errorSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      vi.doUnmock('@forgerock/journey-client');
+      // The vitest config aliases '@forgerock/journey-client' to the editor-poc
+      // preview mock (the preview-framework tests exercise the runtime through
+      // it). This block needs the REAL client entry — its isValidWellknownUrl
+      // rejects a malformed URL before any network access. vi.doMock's factory
+      // imports by absolute path (specifiers inside a mock factory do not go
+      // through Vite aliases), so this swaps the PoC mock for the genuine
+      // module while keeping the module graph the test drives identical.
+      vi.doMock('@forgerock/journey-client', async () => {
+        const real = (await import(
+          /* @vite-ignore */ '/Users/gabrielstein/Documents/projects/login-framework/node_modules/.pnpm/@forgerock+journey-client@2.1.1_react@19.2.4/node_modules/@forgerock/journey-client/dist/src/index.js'
+        )) as unknown as Record<string, unknown>;
+        return { ...real, journey: real.journey };
+      });
       vi.resetModules();
       errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     });

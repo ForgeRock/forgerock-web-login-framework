@@ -214,3 +214,6 @@ export { initialize as initializeLinks } from '$core/links.store';
 
 /** Initialise the widget style store. Call inside a story before rendering a stage. */
 export { initialize as initializeStyles } from '$core/style.store';
+
+/** Initialise the locale store (real i18n catalog strings). Call before rendering `T`. */
+export { initialize as initializeLocale } from '$core/locale.store';

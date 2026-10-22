@@ -5,9 +5,18 @@ import TsWorker from 'monaco-editor/language/typescript/ts.worker?worker';
 import { brand } from './brand';
 import { compileComponent, getMountCode } from './compiler';
 import { type CustomComponentKind, customComponents } from './components';
-import { buildLoginFrameworkMockDataUrl } from './login-framework-mock';
 import { buildSandboxSrcdoc } from './sandbox';
 import { definePingBrandTheme, PING_BRAND_THEME_NAME } from './theme-monaco';
+
+// Machine-absolute path of the real framework surface the sandbox imports.
+// /@fs/ URLs require an absolute filesystem path; this stays correct as long
+// as the PoC runs from this repo checkout (a spike constraint — production
+// would serve the framework through a stable route, not /@fs/).
+// Points at src/preview-framework.ts: the curated custom-component surface
+// PLUS the widget runtime API (configure/journey/component/user/protect),
+// composed without touching the production-aliased curated file.
+const FRAMEWORK_ENTRY_PATH =
+  '/Users/gabrielstein/Documents/projects/login-framework/experimental/editor-poc/src/preview-framework.ts';
 
 // Monaco loads its tokenizer/language-service work off the main thread via
 // dedicated Web Workers. Vite's `?worker` import handles bundling them —
@@ -53,7 +62,11 @@ document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
         <div style="padding:10px 14px; border-bottom:1px solid ${brand.border};">
           <span style="color:${brand.textPrimary}; font-size:13px; font-weight:600;">Live preview</span>
         </div>
-        <iframe id="preview" sandbox="allow-scripts" style="flex:1; border:none;"></iframe>
+        <!-- allow-forms: the widget's Form primitive submits real <form> elements
+             (journeyStore.next runs in the submit handler) — without it the
+             sandbox blocks the submission event and the runtime demo cannot
+             advance. The origin boundary is unchanged (still no allow-same-origin). -->
+        <iframe id="preview" sandbox="allow-scripts allow-forms" style="flex:1; border:none;"></iframe>
         <pre id="error-boundary" style="margin:0; padding:8px 14px; color:${brand.danger}; background:#fef2f1; min-height:1.4em; font-size:12px; white-space:pre-wrap; border-top:1px solid ${brand.border};"></pre>
       </div>
     </div>
@@ -120,6 +133,11 @@ function selectComponent(index: number): void {
   renderFileTree();
   editor.setValue(customComponents[index].source);
   updateSaveButton();
+  // setValue with identical content (e.g. every AM callback-catalog demo
+  // shares one stage source; only its mockProps differ) fires no
+  // onDidChangeModelContent, so the preview would keep showing the previous
+  // demo's render. Always recompile on selection.
+  recompile();
 }
 
 function updateSaveButton(): void {
@@ -164,7 +182,17 @@ fileTree.addEventListener('click', (event) => {
   selectComponent(Number(target.dataset.index));
 });
 
-preview.srcdoc = buildSandboxSrcdoc(buildLoginFrameworkMockDataUrl());
+// The sandbox resolves `$login-framework` to the REAL framework surface
+// (experimental/custom/login-framework.ts) compiled by vite-plugin-svelte on
+// this dev server, via a /@fs/ URL. The parent runs inside the dev-server
+// origin, so deriving from window.location.origin keeps the port/hostname in
+// sync without hardcoding. The boot GET warms Vite's dependency optimization
+// (svelte/zod/xss/qrcode) so the first authored render doesn't stall.
+const devServerOrigin = window.location.origin;
+const frameworkEntryUrl = `${devServerOrigin}/@fs${FRAMEWORK_ENTRY_PATH}`;
+fetch(frameworkEntryUrl).catch(() => undefined);
+
+preview.srcdoc = buildSandboxSrcdoc({ devServerOrigin, frameworkEntryUrl });
 
 window.addEventListener('message', (event) => {
   if (event.data?.type === 'render-error') {
