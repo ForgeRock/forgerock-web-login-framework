@@ -1,0 +1,13 @@
+/* Global stylesheet: Tailwind entry plus the small base layer the app needs.
+   All component styling is tw_ utility classes in markup (themes/default preset). */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind variants;
+
+@layer base {
+  body {
+    @apply tw_bg-slate-100 tw_text-slate-700 tw_font-sans;
+  }
+}
