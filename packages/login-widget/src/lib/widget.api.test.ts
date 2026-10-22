@@ -539,10 +539,19 @@ describe('widgetApiFactory', () => {
       // rejects a malformed URL before any network access. vi.doMock's factory
       // imports by absolute path (specifiers inside a mock factory do not go
       // through Vite aliases), so this swaps the PoC mock for the genuine
-      // module while keeping the module graph the test drives identical.
+      // module while keeping the module graph the test drives identical. The
+      // path is derived from the installed package (the same realpath logic as
+      // vitest.config.ts), so it holds on any checkout or CI.
       vi.doMock('@forgerock/journey-client', async () => {
+        const { realpathSync } = await import('node:fs');
+        const { createRequire } = await import('node:module');
+        const { dirname, join } = await import('node:path');
+        const packageJsonPath = createRequire(import.meta.url).resolve(
+          '@forgerock/journey-client/package.json',
+        );
+        const packageRoot = dirname(realpathSync(packageJsonPath));
         const real = (await import(
-          /* @vite-ignore */ '/Users/gabrielstein/Documents/projects/login-framework/node_modules/.pnpm/@forgerock+journey-client@2.1.1_react@19.2.4/node_modules/@forgerock/journey-client/dist/src/index.js'
+          /* @vite-ignore */ join(packageRoot, 'dist/src/index.js')
         )) as unknown as Record<string, unknown>;
         return { ...real, journey: real.journey };
       });

@@ -27,10 +27,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 // stub the browser ceremony surface (PublicKeyCredential/navigator) and assert
 // against the genuine implementation. vi.mock's factory imports by absolute
 // path (specifiers inside a mock factory do not go through Vite aliases),
-// re-pointing the subpath at the real dist module for this suite.
+// re-pointing the subpath at the real dist module for this suite. The path is
+// derived from the installed package (the same realpath logic as
+// packages/login-widget/vitest.config.ts), so it holds on any checkout or CI.
 vi.mock('@forgerock/journey-client/webauthn', async () => {
+  const { realpathSync } = await import('node:fs');
+  const { createRequire } = await import('node:module');
+  const { dirname, join } = await import('node:path');
+  const packageJsonPath = createRequire(import.meta.url).resolve(
+    '@forgerock/journey-client/package.json',
+  );
+  const packageRoot = dirname(realpathSync(packageJsonPath));
   const real = await import(
-    /* @vite-ignore */ '/Users/gabrielstein/Documents/projects/login-framework/node_modules/.pnpm/@forgerock+journey-client@2.1.1_react@19.2.4/node_modules/@forgerock/journey-client/dist/src/lib/webauthn/webauthn.js'
+    /* @vite-ignore */ join(packageRoot, 'dist/src/lib/webauthn/webauthn.js')
   );
   return real;
 });
