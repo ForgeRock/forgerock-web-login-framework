@@ -99,12 +99,21 @@ export function compileComponent(source: string): CompileResult {
 // Built via the real createJourneyStep re-exported from $login-framework, so
 // the fixtures exercise the genuine callback construction machinery. The AM
 // journey request itself stays mocked — these are static payloads.
-export function getMountCode(compiledJs: string, mockPropsExpr: string): string {
+//
+// createDemoJourney: the `journey` prop mock (finding T6). Imported by absolute
+// URL (demoJourneyUrl) instead of through $login-framework so authored code
+// cannot import it; it satisfies the full StageJourneyObject contract.
+export function getMountCode(
+  compiledJs: string,
+  mockPropsExpr: string,
+  demoJourneyUrl: string,
+): string {
   return [
     compiledJs,
     MOUNT_WRAPPER_MARKER,
     `import { mount } from 'svelte';`,
     `import { createJourneyStep } from '$login-framework';`,
+    `import { createDemoJourney } from '${demoJourneyUrl}';`,
     `const createDemoStep = (payload) => createJourneyStep({ authId: 'demo', callbacks: payload.callbacks ?? [], header: payload.header, description: payload.description, stage: payload.stage, status: 200 });`,
     `mount(Component, { target: document.getElementById('preview-root'), props: (${mockPropsExpr}) });`,
   ].join('\n');

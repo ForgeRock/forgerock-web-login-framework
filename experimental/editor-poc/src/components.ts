@@ -55,7 +55,7 @@ Name: HelloWorld
     mockProps: `{
   form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
 }`,
   },
   {
@@ -103,7 +103,7 @@ Name: HelloWorldNative
     mockProps: `{
   form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
 }`,
   },
   {
@@ -196,7 +196,7 @@ DEMO COMPONENT — Step 3: AM callbacks
     mockProps: `{
   form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -388,7 +388,7 @@ DEMO COMPONENT — Step 4: scoped styles
     mockProps: `{
   form: { submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
 }`,
   },
   {
@@ -449,7 +449,7 @@ DEMO COMPONENT — Step 5: form and journey actions
   }
 
   async function restartCurrentJourney() {
-    await journey.restartCurrent();
+    await journey.restart();
   }
 
   afterUpdate(() => {
@@ -519,7 +519,7 @@ DEMO COMPONENT — Step 5: form and journey actions
     mockProps: `{
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false, restartCurrent: async () => console.log('restart current journey') },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -858,7 +858,7 @@ DEMO COMPONENT — Step 5: form and journey actions
     mockProps: `{
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -1035,7 +1035,7 @@ DEMO COMPONENT — Step 5: form and journey actions
     mockProps: `{
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -1189,7 +1189,7 @@ DEMO COMPONENT — Step 5: form and journey actions
     mockProps: `{
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -1314,7 +1314,7 @@ DEMO COMPONENT — Step 5: form and journey actions
     mockProps: `{
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -1458,7 +1458,7 @@ DEMO COMPONENT — Step 5: form and journey actions
     mockProps: `{
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -1539,7 +1539,7 @@ DEMO COMPONENT — Step 5: form and journey actions
   }
 
   async function restartCurrentJourney() {
-    await journey.restartCurrent();
+    await journey.restart();
   }
 
   afterUpdate(() => {
@@ -1643,10 +1643,7 @@ DEMO COMPONENT — Step 5: form and journey actions
   componentStyle: 'modal',
   form: { icon: true, message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: {
-    loading: false,
-    restartCurrent: async () => console.log('restart current journey'),
-  },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },
@@ -1907,7 +1904,7 @@ full public API renders and runs inside the sandbox.
     mockProps: `{
   form: { icon: false, message: '', status: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
 }`,
   },
 ];
@@ -1999,7 +1996,7 @@ function catalogMockProps(payloadJson: string): string {
   return `{
   form: { message: '', submit: () => console.log('submit') },
   formEl: null,
-  journey: { loading: false },
+  journey: createDemoJourney(),
   metadata: {
     callbacks: [{ idx: 0, derived: { isFirstInvalidInput: false } }],
     step: { derived: { isStepSelfSubmittable: () => false, isUserInputOptional: false } },

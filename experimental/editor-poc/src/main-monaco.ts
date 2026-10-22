@@ -190,6 +190,8 @@ fileTree.addEventListener('click', (event) => {
 // (svelte/zod/xss/qrcode) so the first authored render doesn't stall.
 const devServerOrigin = window.location.origin;
 const frameworkEntryUrl = `${devServerOrigin}/@fs${FRAMEWORK_ENTRY_PATH}`;
+// Sibling of the framework entry: the `journey` prop mock the mount wrapper imports.
+const demoJourneyUrl = frameworkEntryUrl.replace(/preview-framework\.ts$/, 'demo-journey.ts');
 fetch(frameworkEntryUrl).catch(() => undefined);
 
 preview.srcdoc = buildSandboxSrcdoc({ devServerOrigin, frameworkEntryUrl });
@@ -213,7 +215,7 @@ function recompile(): void {
     return;
   }
 
-  const previewCode = getMountCode(js, customComponents[activeIndex].mockProps);
+  const previewCode = getMountCode(js, customComponents[activeIndex].mockProps, demoJourneyUrl);
   preview.contentWindow?.postMessage({ type: 'render', code: previewCode }, '*');
 }
 
