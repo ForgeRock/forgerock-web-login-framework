@@ -7,29 +7,38 @@
  *
  * */
 
+import { error } from '@sveltejs/kit';
+
+import { findTab } from '../tabs';
+
 import type { PageLoad } from './$types';
-import type { ComponentRecord } from '$lib/api';
 
 /** A list entry: the record plus the type it was listed under. */
 interface Entry {
   type: string;
-  record: ComponentRecord;
+  record: {
+    id: string;
+    src: string;
+    meta: {
+      name: string;
+      displayName: string;
+      modifiedDate: string;
+    };
+  };
 }
 
-/** Tabs mirror the design: Stage Components | Callback Components | Layout. */
-const TABS: ReadonlyArray<{ id: string; types: readonly string[] }> = [
-  { id: 'stage', types: ['stages'] },
-  { id: 'callback', types: ['callbacks'] },
-  { id: 'layout', types: ['headers', 'footers', 'containers'] },
-];
+/**
+ *   tabId = 'layout'  →  loads headers + footers + containers, merged
+ *   tabId = 'stage'   →  loads stages only
+ * Unknown tab segments 404 — a path names a resource, it cannot default.
+ */
+export const load: PageLoad = async ({ params, fetch: eventFetch }) => {
+  const tab = findTab(params.tab);
+  if (!tab) {
+    throw error(404, `Unknown component tab: ${params.tab}`);
+  }
 
-/** Loads the active tab's records through the Component API. */
-export const load: PageLoad = async ({ url, fetch: eventFetch }) => {
-  const requested = url.searchParams.get('tab');
-  const tabId = TABS.some((tab) => tab.id === requested) ? requested! : 'stage';
-  const tab = TABS.find((candidate) => candidate.id === tabId)!;
-
-  // Same-origin: pass SvelteKit's fetch so relative /api URLs work in any context.
+  // Same-origin: pass SvelteKit's fetch so relative /api URLs work server- and client-side.
   const lists = await Promise.all(
     tab.types.map(async (type) => {
       const response = await eventFetch(`/api/components/${type}`);
@@ -40,7 +49,7 @@ export const load: PageLoad = async ({ url, fetch: eventFetch }) => {
       if (!response.ok) {
         return 'error' as const;
       }
-      const records = (await response.json()) as ComponentRecord[];
+      const records = (await response.json()) as Entry['record'][];
       return records.map((record): Entry => ({ type, record }));
     }),
   );
@@ -49,5 +58,5 @@ export const load: PageLoad = async ({ url, fetch: eventFetch }) => {
   const entries: Entry[] = failed
     ? []
     : lists.filter((list): list is Entry[] => list !== 'error').flat();
-  return { tabId, tabTypes: tab.types, entries, failed };
+  return { tabId: tab.id, tabTypes: tab.types, entries, failed };
 };

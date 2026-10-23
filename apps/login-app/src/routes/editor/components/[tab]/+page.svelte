@@ -10,11 +10,9 @@
 <!-- Journey Components list — tabs, table, global publish, per-row delete (IAM-12074). -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { createRecord, deleteRecord, publishBundle } from '$lib/api';
+  import { createRecord, deleteRecord, publishBundle } from '../api';
 
   import type { PageData } from './$types';
-
-  let { data }: { data: PageData } = $props();
 
   const TAB_LABELS: Record<string, string> = {
     stage: 'Stage Components',
@@ -32,6 +30,8 @@
     stage: 'Create Stage Component',
     callback: 'Create Callback Component',
   };
+
+  let { data }: { data: PageData } = $props();
 
   let searchTerm = $state<string>('');
   let confirmingId = $state<string>('');
@@ -129,7 +129,7 @@
       return;
     }
     creating = false;
-    await goto(`/custom-components/${createType}/${result.data.id}`);
+    await goto(`/editor/components/${data.tabId}/${result.data.id}`);
   }
 </script>
 
@@ -168,7 +168,7 @@
         data.tabId
           ? 'tw_text-primary-light tw_font-semibold tw_border-primary-light'
           : 'tw_text-gray-500'}"
-        href={`/custom-components?tab=${tabId}`}
+        href={`/editor/components/${tabId}`}
       >
         {label}
       </a>
@@ -240,7 +240,7 @@
             <td class="tw_px-4 tw_py-2.5 tw_border-b tw_border-slate-200">
               <a
                 class="tw_no-underline"
-                href={`/custom-components/${entry.type}/${entry.record.id}`}
+                href={`/editor/components/${data.tabId}/${entry.record.id}`}
               >
                 <span class="tw_font-semibold tw_text-gray-700">
                   {entry.record.meta.displayName || entry.record.meta.name || '(unnamed)'}

@@ -9,10 +9,10 @@
 
 <!-- Editor view — top bar (back | name + badge | Reset + Save), file tab, source pane (IAM-12074). -->
 <script lang="ts">
-  import { saveRecord } from '$lib/api';
+  import { saveRecord } from '../../api';
 
+  import type { ComponentRecord } from '../../api';
   import type { PageData } from './$types';
-  import type { ComponentRecord } from '$lib/api';
 
   /** Route type (plural) → design badge (singular). */
   const TYPE_LABELS: Record<string, string> = {
@@ -85,7 +85,7 @@
   >
     <div class="tw_flex tw_items-center tw_gap-2">
       <a
-        href="/custom-components"
+        href="/editor/components/{data.tabId}"
         class="tw_no-underline tw_text-base tw_text-gray-500 hover:tw_text-gray-700"
         aria-label="Back to Journey Components"
       >
@@ -157,13 +157,13 @@
       />
     </label>
   </div>
-  <label class="tw_flex tw_flex-col tw_gap-1 tw_text-xs tw_font-semibold tw_text-gray-500">
-    <span class="tw_sr-only">Source</span>
-    <textarea
-      class="tw_w-full tw_font-mono tw_text-[0.8125rem] tw_leading-relaxed tw_p-3 tw_border tw_border-slate-200 tw_rounded-md tw_resize-y"
-      bind:value={src}
-      rows="24"
-      spellcheck="false"
-    ></textarea>
-  </label>
+  {#await import('../../editor-placeholder.svelte')}
+    <div
+      class="tw_w-full tw_h-[38rem] tw_border tw_border-slate-200 tw_rounded-md tw_bg-slate-50 tw_animate-pulse"
+      role="status"
+      aria-label="Loading source editor"
+    ></div>
+  {:then { default: SourceTextarea }}
+    <SourceTextarea bind:value={src} />
+  {/await}
 </div>

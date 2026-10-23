@@ -28,17 +28,6 @@ export default defineConfig(
     },
     server: {
       host: '0.0.0.0',
-      // Dev-only: serve the editor app (experimental/editor-app) at its
-      // production URLs, /custom-components*
-      ...(mode === 'development' && {
-        proxy: {
-          '/custom-components': {
-            target: process.env.EDITOR_APP_URL || 'http://localhost:5174',
-            changeOrigin: true,
-            secure: false,
-          },
-        },
-      }),
       cors: {
         // Use if SvelteKit server needs to support external apps
         // origin: //'https://react.crbrl.ngrok.io',

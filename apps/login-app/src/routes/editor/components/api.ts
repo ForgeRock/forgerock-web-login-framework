@@ -9,10 +9,9 @@
 
 /**
  * Component API client — the editor calls the Component API directly from the
- * browser (GET/PUT/POST/DELETE), same-origin in dev via login-app's
- * /custom-components proxy and from the AIC admin UI in production. Relative
- * /api base keeps the same code working in both worlds. DOM-free: operations
- * return results, views decide how to render them.
+ * browser (GET/PUT/POST/DELETE), same-origin with the SvelteKit routes. Relative
+ * /api base keeps the same code working in any hosting context. DOM-free:
+ * operations return results, views decide how to render them.
  */
 
 /** A component record as returned by the Component API. */
