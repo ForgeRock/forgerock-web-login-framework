@@ -8,11 +8,13 @@
     "build": "vite build",
     "preview": "vite preview",
     "check:svelte": "svelte-check --tsconfig ./tsconfig.json --threshold=warning",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:metrics-shutdown": "node --test tests/metrics-shutdown.test.mjs"
   },
   "dependencies": {
     "@forgerock/login-widget": "workspace:*",
-    "@forgerock/sdk-logger": "^2.1.1"
+    "@forgerock/sdk-logger": "^2.1.1",
+    "prom-client": "^15.1.3"
   },
   "devDependencies": {
     "@effect/vitest": "^0.26.0",
