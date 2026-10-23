@@ -114,8 +114,8 @@ describe('Login2 realm paths', () => {
   });
 
   it('rejects path traversal and falls back for malformed overrides', () => {
-    expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root/realms/alpha');
-    expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root/realms/alpha');
+    expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root');
+    expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root');
   });
 });
 
