@@ -39,9 +39,13 @@ export interface ApiFailure {
 
 export type ApiResult<T> = { ok: true; data: T } | ApiFailure;
 
-const request = async <T>(path: string, init?: RequestInit): Promise<ApiResult<T>> => {
+const request = async <T>(
+  segments: readonly [string, ...string[]],
+  init?: RequestInit,
+): Promise<ApiResult<T>> => {
+  let response: Response | undefined;
   try {
-    const response = await fetch(`/api${path}`, init);
+    response = await fetch(`/api/components/${segments.map(encodeURIComponent).join('/')}`, init);
     if (!response.ok) {
       return { ok: false, status: response.status, message: await response.text() };
     }
@@ -49,26 +53,14 @@ const request = async <T>(path: string, init?: RequestInit): Promise<ApiResult<T
     const text = await response.text();
     return { ok: true, data: (text === '' ? null : JSON.parse(text)) as T };
   } catch (error) {
+    // status 0 is the Fetch spec's value for a network error:
+    // https://fetch.spec.whatwg.org/#concept-network-error
     return {
       ok: false,
-      status: 0,
+      status: response?.status ?? 0,
       message: error instanceof Error ? error.message : String(error),
     };
   }
-};
-
-/** Lists all records of one type. A missing records directory (404) is an empty list. */
-export const listRecords = async (type: string): Promise<ApiResult<ComponentRecord[]>> => {
-  const result = await request<ComponentRecord[]>(`/components/${type}`);
-  if (result.ok) {
-    return result;
-  }
-  return result.status === 404 ? { ok: true, data: [] } : result;
-};
-
-/** Fetches one record. A 404 becomes a failure with the API's status. */
-export const getRecord = async (type: string, id: string): Promise<ApiResult<ComponentRecord>> => {
-  return request<ComponentRecord>(`/components/${type}/${id}`);
 };
 
 /** Creates a record; returns the created record with server-owned id and dates. */
@@ -76,21 +68,21 @@ export const createRecord = async (
   type: string,
   body: { src: string; meta: Omit<ComponentRecord['meta'], 'createdDate' | 'modifiedDate'> },
 ): Promise<ApiResult<ComponentRecord>> => {
-  return request<ComponentRecord>(`/components/${type}`, {
+  return request<ComponentRecord>([type], {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify(body),
   });
 };
 
-/** Saves the edited record (server-owned dates are rejected by the API). */
-export const saveRecord = async (
+/** Updates the record (server-owned dates are rejected by the API). */
+export const updateRecord = async (
   type: string,
   id: string,
   body: { src: string; meta: ComponentRecord['meta'] },
 ): Promise<ApiResult<ComponentRecord>> => {
   const { createdDate: _created, modifiedDate: _modified, ...clientMeta } = body.meta;
-  return request<ComponentRecord>(`/components/${type}/${id}`, {
+  return request<ComponentRecord>([type, id], {
     method: 'PUT',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ src: body.src, meta: clientMeta }),
@@ -99,12 +91,12 @@ export const saveRecord = async (
 
 /** Deletes a record. */
 export const deleteRecord = async (type: string, id: string): Promise<ApiResult<null>> => {
-  return request<null>(`/components/${type}/${id}`, { method: 'DELETE' });
+  return request<null>([type, id], { method: 'DELETE' });
 };
 
 /** Publishes one global bundle of component source code. */
 export const publishBundle = async (code: string): Promise<ApiResult<null>> => {
-  return request<null>('/components/publish', {
+  return request<null>(['publish'], {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ code }),

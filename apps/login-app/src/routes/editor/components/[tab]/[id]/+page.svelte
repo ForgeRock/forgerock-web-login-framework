@@ -9,9 +9,9 @@
 
 <!-- Editor view — top bar (back | name + badge | Reset + Save), file tab, source pane (IAM-12074). -->
 <script lang="ts">
-  import { saveRecord } from '../../api';
+  import { updateRecord } from '../../api-client';
 
-  import type { ComponentRecord } from '../../api';
+  import type { ComponentRecord } from '../../api-client';
   import type { PageData } from './$types';
 
   /** Route type (plural) → design badge (singular). */
@@ -49,7 +49,7 @@
   async function save(): Promise<void> {
     status = 'Saving…';
     error = '';
-    const result = await saveRecord(data.type, data.id, {
+    const result = await updateRecord(data.type, data.id, {
       src,
       meta: { ...record.meta, name, displayName },
     });

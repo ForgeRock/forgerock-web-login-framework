@@ -25,7 +25,17 @@ export const load: PageLoad = async ({ params, fetch: eventFetch }) => {
   // The editor needs the concrete API type; for layout tabs the id exists in
   // exactly one of the tab's types — resolve by fetching until found.
   for (const type of tab.types) {
-    const response = await eventFetch(`/api/components/${type}/${params.id}`);
+    let response: Response;
+    try {
+      response = await eventFetch(`/api/components/${type}/${params.id}`);
+    } catch (cause) {
+      throw error(
+        502,
+        `Failed to reach the Component API: ${
+          cause instanceof Error ? cause.message : String(cause)
+        }`,
+      );
+    }
     if (response.status === 404) {
       continue;
     }
