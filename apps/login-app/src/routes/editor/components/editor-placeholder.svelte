@@ -10,7 +10,7 @@
 <!-- Client-only editor stand-in: a plain textarea until the real code editor
      (Monaco) lands via SDKS-5259, at which point this file is replaced. -->
 <script lang="ts">
-  let { value = $bindable('') }: { value?: string } = $props();
+  export let value = '';
 </script>
 
 <label class="tw_flex tw_flex-col tw_gap-1 tw_text-xs tw_font-semibold tw_text-gray-500">

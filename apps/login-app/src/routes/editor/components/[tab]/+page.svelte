@@ -9,8 +9,10 @@
 
 <!-- Journey Components list — tabs, table, global publish, per-row delete (IAM-12074). -->
 <script lang="ts">
+  import { isHttpError } from '@sveltejs/kit';
+
   import { goto } from '$app/navigation';
-  import { createRecord, deleteRecord, publishBundle } from '../api-client';
+  import { createRecord, deleteRecord, publishBundle } from '../commands.remote';
 
   import type { PageData } from './$types';
 
@@ -31,46 +33,41 @@
     callback: 'Create Callback Component',
   };
 
-  let { data }: { data: PageData } = $props();
+  export let data: PageData;
 
-  let searchTerm = $state<string>('');
-  let confirmingId = $state<string>('');
-  let publishing = $state<boolean>(false);
-  let publishResult = $state<string>('');
+  let searchTerm = '';
+  let confirmingId = '';
+  let publishing = false;
+  let publishResult = '';
 
   // Create dialog state (the design funnels create through a modal into the editor).
-  let creating = $state<boolean>(false);
-  let createName = $state<string>('');
-  let createDisplayName = $state<string>('');
-  let createError = $state<string>('');
-  let createBusy = $state<boolean>(false);
+  let creating = false;
+  let createName = '';
+  let createDisplayName = '';
+  let createError = '';
+  let createBusy = false;
 
-  const createType = $derived(data.tabTypes[0]);
+  $: createType = data.tabTypes[0];
 
-  let entries = $derived(data.entries);
+  let entries: typeof data.entries = data.entries;
 
-  const visibleEntries = $derived(
-    entries.filter((entry) => {
-      const needle = searchTerm.trim().toLowerCase();
-      if (needle === '') {
-        return true;
-      }
-      return (
-        entry.record.meta.displayName.toLowerCase().includes(needle) ||
-        entry.record.meta.name.toLowerCase().includes(needle)
-      );
-    }),
-  );
+  $: visibleEntries = entries.filter((entry) => {
+    const needle = searchTerm.trim().toLowerCase();
+    if (needle === '') {
+      return true;
+    }
+    return (
+      entry.record.meta.displayName.toLowerCase().includes(needle) ||
+      entry.record.meta.name.toLowerCase().includes(needle)
+    );
+  });
 
   // Publishing is one global command: the bundle ships every component's source.
-  const bundleCode = $derived(
-    entries
-      .map(
-        (entry) =>
-          `/* ${entry.type}/${entry.record.meta.name || 'unnamed'} */\n${entry.record.src}`,
-      )
-      .join('\n\n'),
-  );
+  $: bundleCode = entries
+    .map(
+      (entry) => `/* ${entry.type}/${entry.record.meta.name || 'unnamed'} */\n${entry.record.src}`,
+    )
+    .join('\n\n');
 
   const formatDate = (isoDate: string): string =>
     new Date(isoDate).toLocaleDateString('en-US', {
@@ -89,8 +86,9 @@
       }
       return;
     }
-    const result = await deleteRecord(type, id);
-    if (!result.ok) {
+    try {
+      await deleteRecord({ type, id });
+    } catch {
       return;
     }
     entries = entries.filter((candidate) => candidate.record.id !== id);
@@ -99,9 +97,13 @@
 
   async function publish(): Promise<void> {
     publishing = true;
-    const result = await publishBundle(bundleCode);
+    try {
+      await publishBundle(bundleCode);
+      publishResult = 'Published ✓';
+    } catch {
+      publishResult = '';
+    }
     publishing = false;
-    publishResult = result.ok ? 'Published ✓' : '';
   }
 
   async function create(): Promise<void> {
@@ -111,25 +113,29 @@
     }
     createBusy = true;
     createError = '';
-    const result = await createRecord(createType, {
-      src: `<!--\n@component\nType: ${
-        createType === 'stages' ? 'stage' : 'callback'
-      }\nName: \n-->\n`,
-      meta: {
-        name: createName.trim(),
-        displayName: createDisplayName.trim(),
-        publish: false,
-        fromComponent: '',
-        fromJson: '',
-      },
-    });
-    createBusy = false;
-    if (!result.ok) {
-      createError = result.message;
+    let created: { id: string };
+    try {
+      created = await createRecord({
+        type: createType,
+        src: `<!--\n@component\nType: ${
+          createType === 'stages' ? 'stage' : 'callback'
+        }\nName: \n-->\n`,
+        meta: {
+          name: createName.trim(),
+          displayName: createDisplayName.trim(),
+          publish: false,
+          fromComponent: '',
+          fromJson: '',
+        },
+      });
+    } catch (cause) {
+      createBusy = false;
+      createError = isHttpError(cause) ? cause.body.message : 'Failed to create component';
       return;
     }
+    createBusy = false;
     creating = false;
-    await goto(`/editor/components/${data.tabId}/${result.data.id}`);
+    await goto(`/editor/components/${data.tabId}/${created.id}`);
   }
 </script>
 
@@ -150,7 +156,7 @@
       <button
         class="tw_text-xs tw_text-white tw_bg-primary-light hover:tw_bg-slate-700 tw_px-5 tw_py-2 tw_rounded-full tw_font-semibold tw_whitespace-nowrap disabled:tw_opacity-50 disabled:tw_cursor-not-allowed"
         type="button"
-        onclick={publish}
+        on:click={publish}
         disabled={publishing || entries.length === 0}
       >
         {publishing ? 'Publishing…' : 'Publish'}
@@ -180,7 +186,7 @@
       <button
         class="tw_text-xs tw_text-white tw_bg-primary-light hover:tw_bg-slate-700 tw_px-4 tw_py-2 tw_rounded-full tw_font-semibold tw_whitespace-nowrap"
         type="button"
-        onclick={() => (creating = true)}
+        on:click={() => (creating = true)}
       >
         + {CREATE_LABELS[data.tabId]}
       </button>
@@ -270,7 +276,7 @@
                     type="button"
                     class="tw_text-left tw_text-xs tw_px-2.5 tw_py-1.5 tw_border-0 tw_bg-transparent tw_rounded-md tw_cursor-pointer tw_text-error-dark hover:tw_bg-sky-50"
                     data-delete={entry.record.id}
-                    onclick={() => remove(entry.type, entry.record.id)}
+                    on:click={() => remove(entry.type, entry.record.id)}
                   >
                     {confirmingId === entry.record.id ? 'Confirm delete?' : 'Delete'}
                   </button>
@@ -301,7 +307,7 @@
             class="tw_text-xl tw_leading-none tw_text-gray-500 tw_bg-transparent tw_border-0 tw_cursor-pointer"
             type="button"
             aria-label="Close"
-            onclick={() => (creating = false)}
+            on:click={() => (creating = false)}
           >
             ×
           </button>
@@ -337,14 +343,14 @@
           <button
             class="tw_text-xs tw_text-gray-700 tw_bg-transparent tw_border tw_border-slate-400 tw_rounded-full tw_px-4 tw_py-2 tw_cursor-pointer"
             type="button"
-            onclick={() => (creating = false)}
+            on:click={() => (creating = false)}
           >
             Cancel
           </button>
           <button
             class="tw_text-xs tw_text-white tw_bg-primary-light hover:tw_bg-slate-700 tw_px-4 tw_py-2 tw_rounded-full tw_font-semibold tw_whitespace-nowrap disabled:tw_opacity-50"
             type="button"
-            onclick={create}
+            on:click={create}
             disabled={createBusy}
           >
             {createBusy ? 'Creating…' : 'Create Component'}

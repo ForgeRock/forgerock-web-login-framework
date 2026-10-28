@@ -8,23 +8,19 @@
  * */
 
 import { error } from '@sveltejs/kit';
+import { Effect } from 'effect';
 
+import { listComponents } from '$lib/server/custom-components/api/api';
+import { ComponentApiLive } from '$lib/server/custom-components/runtime';
 import { findTab } from '../tabs';
 
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
+import type { ComponentRecordSchema } from '$lib/server/custom-components/api/api.schemas';
 
 /** A list entry: the record plus the type it was listed under. */
 interface Entry {
   type: string;
-  record: {
-    id: string;
-    src: string;
-    meta: {
-      name: string;
-      displayName: string;
-      modifiedDate: string;
-    };
-  };
+  record: typeof ComponentRecordSchema.Type;
 }
 
 /**
@@ -32,22 +28,23 @@ interface Entry {
  *   tabId = 'stage'   →  loads stages only
  * Unknown tab segments 404 — a path names a resource, it cannot default.
  */
-export const load: PageLoad = async ({ params, fetch: eventFetch }) => {
+export const load: PageServerLoad = async ({ params, request }) => {
   const tab = findTab(params.tab);
   if (!tab) {
     throw error(404, `Unknown component tab: ${params.tab}`);
   }
 
-  // Same-origin: pass SvelteKit's fetch so relative /api URLs work server- and client-side.
   const results = await Promise.allSettled(
     tab.types.map(async (type) => {
-      const response = await eventFetch(`/api/components/${type}`);
+      const response = await Effect.runPromise(
+        Effect.provide(listComponents(request, type), ComponentApiLive),
+      );
       // A type with no records directory yet 404s — an empty list, not a failure.
       if (response.status === 404) {
         return [] as Entry[];
       }
       if (!response.ok) {
-        throw new Error(`Failed to load ${type}`);
+        throw new Error(`Failed to load ${type}: ${await response.text()}`);
       }
       const records = (await response.json()) as Entry['record'][];
       return records.map((record): Entry => ({ type, record }));

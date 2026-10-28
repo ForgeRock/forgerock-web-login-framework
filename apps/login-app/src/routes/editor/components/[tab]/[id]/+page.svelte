@@ -9,9 +9,11 @@
 
 <!-- Editor view — top bar (back | name + badge | Reset + Save), file tab, source pane (IAM-12074). -->
 <script lang="ts">
-  import { updateRecord } from '../../api-client';
+  import { isHttpError } from '@sveltejs/kit';
 
-  import type { ComponentRecord } from '../../api-client';
+  import { updateRecord } from '../../commands.remote';
+
+  import type { ComponentRecord } from '../../commands.remote';
   import type { PageData } from './$types';
 
   /** Route type (plural) → design badge (singular). */
@@ -23,44 +25,42 @@
     footers: 'Layout Component',
   };
 
-  let { data }: { data: PageData } = $props();
+  export let data: PageData;
 
   // Initialize editable state from the loaded record once; the load re-runs on
   // navigation, remounting this view with fresh data.
-  // svelte-ignore state_referenced_locally
-  let record = $state<ComponentRecord>(data.record);
-  // svelte-ignore state_referenced_locally
-  let savedRecord = $state<ComponentRecord>(data.record);
-  // svelte-ignore state_referenced_locally
-  let src = $state<string>(data.record.src);
-  // svelte-ignore state_referenced_locally
-  let name = $state<string>(data.record.meta.name);
-  // svelte-ignore state_referenced_locally
-  let displayName = $state<string>(data.record.meta.displayName);
-  let status = $state<string>('');
-  let error = $state<string>('');
+  let record: ComponentRecord = data.record;
+  let savedRecord: ComponentRecord = data.record;
+  let src = data.record.src;
+  let name = data.record.meta.name;
+  let displayName = data.record.meta.displayName;
+  let status = '';
+  let error = '';
 
-  const dirty = $derived(
+  $: dirty =
     src !== savedRecord.src ||
-      name !== savedRecord.meta.name ||
-      displayName !== savedRecord.meta.displayName,
-  );
+    name !== savedRecord.meta.name ||
+    displayName !== savedRecord.meta.displayName;
 
   async function save(): Promise<void> {
     status = 'Saving…';
     error = '';
-    const result = await updateRecord(data.type, data.id, {
-      src,
-      meta: { ...record.meta, name, displayName },
-    });
-    if (!result.ok) {
+    let updated: ComponentRecord;
+    try {
+      updated = await updateRecord({
+        type: data.type,
+        id: data.id,
+        src,
+        meta: { ...record.meta, name, displayName },
+      });
+    } catch (cause) {
       status = '';
-      error = result.message;
+      error = isHttpError(cause) ? cause.body.message : 'Failed to save component';
       return;
     }
-    record = result.data;
-    savedRecord = result.data;
-    status = `Saved ✓ ${new Date(result.data.meta.modifiedDate).toLocaleTimeString('en-US', {
+    record = updated;
+    savedRecord = updated;
+    status = `Saved ✓ ${new Date(updated.meta.modifiedDate).toLocaleTimeString('en-US', {
       hour: '2-digit',
       minute: '2-digit',
     })}`;
@@ -106,7 +106,7 @@
       <button
         class="tw_text-xs tw_text-gray-500 tw_bg-transparent tw_border-0 tw_cursor-pointer tw_font-semibold disabled:tw_opacity-50 disabled:tw_cursor-not-allowed hover:tw_text-gray-700"
         type="button"
-        onclick={reset}
+        on:click={reset}
         disabled={!dirty}
       >
         Reset
@@ -114,7 +114,7 @@
       <button
         class="tw_text-xs tw_text-white tw_bg-primary-light hover:tw_bg-slate-700 tw_px-5 tw_py-2 tw_border-0 tw_rounded-full tw_font-semibold tw_cursor-pointer"
         type="button"
-        onclick={save}
+        on:click={save}
       >
         Save
       </button>
