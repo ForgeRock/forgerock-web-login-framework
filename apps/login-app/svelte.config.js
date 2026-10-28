@@ -17,6 +17,11 @@ const config = {
   },
   kit: {
     adapter: process.env.PREVIEW ? node() : auto(),
+    // Kit RPC for the editor's *.remote.ts functions: editor pages call the Component
+    // API handlers in-process instead of over /api/components HTTP
+    experimental: {
+      remoteFunctions: true,
+    },
     // $lib now defaults to SvelteKit's standard src/lib/ — the app's own code
     alias: {
       $core: path.resolve('../../core'),

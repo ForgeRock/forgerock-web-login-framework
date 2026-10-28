@@ -8,16 +8,19 @@
  * */
 
 import { error } from '@sveltejs/kit';
+import { Effect } from 'effect';
 
+import { getComponent } from '$lib/server/custom-components/api/api';
+import { ComponentApiLive } from '$lib/server/custom-components/runtime';
 import { findTab } from '../../tabs';
 
-import type { PageLoad } from './$types';
+import type { PageServerLoad } from './$types';
 
 /**
- * Loads the record to edit. The [tab] segment selects the record type the tab
- * shows; the record's own id picks the entry. Unknown tab or failed fetch → error.
+ * Loads the record to edit. The [tab] segment selects the record type the tab shows;
+ * the record's own id picks the entry. Unknown tab or failed fetch → error.
  */
-export const load: PageLoad = async ({ params, fetch: eventFetch }) => {
+export const load: PageServerLoad = async ({ params, request }) => {
   const tab = findTab(params.tab);
   if (!tab) {
     throw error(404, `Unknown component tab: ${params.tab}`);
@@ -25,17 +28,9 @@ export const load: PageLoad = async ({ params, fetch: eventFetch }) => {
   // The editor needs the concrete API type; for layout tabs the id exists in
   // exactly one of the tab's types — resolve by fetching until found.
   for (const type of tab.types) {
-    let response: Response;
-    try {
-      response = await eventFetch(`/api/components/${type}/${params.id}`);
-    } catch (cause) {
-      throw error(
-        502,
-        `Failed to reach the Component API: ${
-          cause instanceof Error ? cause.message : String(cause)
-        }`,
-      );
-    }
+    const response = await Effect.runPromise(
+      Effect.provide(getComponent(request, type, params.id), ComponentApiLive),
+    );
     if (response.status === 404) {
       continue;
     }
