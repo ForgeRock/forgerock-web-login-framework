@@ -10,7 +10,7 @@
 <!-- Journey Components list — tabs, table, global publish, per-row delete (IAM-12074). -->
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { createRecord, deleteRecord, publishBundle } from '../api';
+  import { createRecord, deleteRecord, publishBundle } from '../api-client';
 
   import type { PageData } from './$types';
 

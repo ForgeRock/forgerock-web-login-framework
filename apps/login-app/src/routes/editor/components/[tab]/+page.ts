@@ -39,7 +39,7 @@ export const load: PageLoad = async ({ params, fetch: eventFetch }) => {
   }
 
   // Same-origin: pass SvelteKit's fetch so relative /api URLs work server- and client-side.
-  const lists = await Promise.all(
+  const results = await Promise.allSettled(
     tab.types.map(async (type) => {
       const response = await eventFetch(`/api/components/${type}`);
       // A type with no records directory yet 404s — an empty list, not a failure.
@@ -47,16 +47,16 @@ export const load: PageLoad = async ({ params, fetch: eventFetch }) => {
         return [] as Entry[];
       }
       if (!response.ok) {
-        return 'error' as const;
+        throw new Error(`Failed to load ${type}`);
       }
       const records = (await response.json()) as Entry['record'][];
       return records.map((record): Entry => ({ type, record }));
     }),
   );
 
-  const failed = lists.some((list) => list === 'error');
+  const failed = results.some((result) => result.status === 'rejected');
   const entries: Entry[] = failed
     ? []
-    : lists.filter((list): list is Entry[] => list !== 'error').flat();
+    : results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []));
   return { tabId: tab.id, tabTypes: tab.types, entries, failed };
 };
