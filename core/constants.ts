@@ -22,13 +22,20 @@ if (!building) {
   }
 }
 
-const realmPath =
-  env.FR_REALM_PATH && env.FR_REALM_PATH !== 'root' ? `realms/${env.FR_REALM_PATH}` : '';
+// FR_REALM_PATH:       'alpha'              '/'        'root'       absent
+// configuredRealm      'alpha'              '/'        'root'       'root' (??)
+// trimmedRealm         'alpha'              ''         'root'       'root'
+// realmName            'alpha'              'root'     'root'       'root' (||)
+// realmSuffix          '/realms/alpha'      ''         ''           ''
+const configuredRealm = env.FR_REALM_PATH ?? 'root';
+const trimmedRealm = configuredRealm.replace(/^\/+/, '').replace(/\/+$/, '');
+const realmName = trimmedRealm || 'root';
+const realmSuffix = realmName === 'root' ? '' : `/realms/${realmName}`;
 
 /** Full AM base URL (e.g. https://host.example.com/am) */
 export const AM_DOMAIN_PATH = env.FR_AM_URL ?? '';
 export const AM_COOKIE_NAME = env.FR_AM_COOKIE_NAME ?? '';
 /** Extracted hostname from AM URL (e.g. host.example.com) */
 export const AM_DOMAIN = env.FR_AM_URL ? extractDomainFromUrl(env.FR_AM_URL) : '';
-export const JSON_REALM_PATH = `/json/realms/root/${realmPath}`;
-export const OAUTH_REALM_PATH = `/oauth2/realms/root/${realmPath}`;
+export const JSON_REALM_PATH = `/json/realms/root${realmSuffix}`;
+export const OAUTH_REALM_PATH = `/oauth2/realms/root${realmSuffix}`;

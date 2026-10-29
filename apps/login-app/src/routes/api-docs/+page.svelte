@@ -13,7 +13,7 @@
 
   import type { PageData } from './$types';
 
-  let { data }: { data: PageData } = $props();
+  export let data: PageData;
 
   onMount(async () => {
     if (!data.enabled) {
