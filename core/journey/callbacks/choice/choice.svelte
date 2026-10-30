@@ -76,25 +76,29 @@
   }
 </script>
 
-{#if callbackMetadata?.platform?.displayType === 'radio'}
-  <Radio
-    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    defaultOption={defaultChoice}
-    isRequired={false}
-    key={inputName}
-    groupLabel={prompt}
-    onChange={setValue}
-    name={inputName}
-    options={choiceOptions}
-  />
-{:else}
-  <Select
-    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    defaultOption={defaultChoice}
-    isRequired={false}
-    key={inputName}
-    {label}
-    onChange={setValue}
-    options={choiceOptions}
-  />
-{/if}
+<!-- Re-render on every new callback: a reused select keeps the previous step's
+     user selection when consecutive callbacks share the same defaultChoice. -->
+{#key callback}
+  {#if callbackMetadata?.platform?.displayType === 'radio'}
+    <Radio
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      defaultOption={defaultChoice}
+      isRequired={false}
+      key={inputName}
+      groupLabel={prompt}
+      onChange={setValue}
+      name={inputName}
+      options={choiceOptions}
+    />
+  {:else}
+    <Select
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      defaultOption={defaultChoice}
+      isRequired={false}
+      key={inputName}
+      {label}
+      onChange={setValue}
+      options={choiceOptions}
+    />
+  {/if}
+{/key}
