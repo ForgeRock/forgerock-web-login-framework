@@ -48,26 +48,50 @@ export function getAmCookie(cookies: Cookies): string {
 
 /**
  * Stores the AM session cookie as a host-only cookie, leaving out the upstream
- * Domain attribute so it stays scoped to the tenant's browser.
+ * Domain attribute so it stays scoped to the tenant's browser. Persistence
+ * attributes (Max-Age, falling back to Expires per RFC 6265 section 4.1.2) are
+ * forwarded so the browser retains the session for as long as AM intends;
+ * malformed attributes fall back to a session cookie.
  */
 export function setAmCookie(cookies: Cookies, setCookie: string): void {
   const prefix = `${AM_COOKIE_NAME}=`;
   const cookiePart = setCookie
     .split(/,(?=\s*[^;=,\s]+=[^;]+)/)
-    .map((part) => part.trim().split(';')[0])
+    .map((part) => part.trim())
     .find((part) => part?.startsWith(prefix));
   if (!cookiePart) return;
-  const value = cookiePart.slice(prefix.length);
+
+  const [pair, ...attributes] = cookiePart.split(';').map((attribute) => attribute.trim());
+  const value = pair?.slice(prefix.length);
   if (!value) {
     clearAmCookie(cookies);
     return;
   }
+
+  const parseDate = (raw: string | undefined): Date | undefined => {
+    if (!raw) return undefined;
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  };
+  const parseMaxAge = (raw: string | undefined): number | undefined => {
+    if (!raw || !/^-?\d+$/.test(raw.trim())) return undefined;
+    return Number(raw.trim());
+  };
+
+  const maxAge = parseMaxAge(
+    attributes.find((attribute) => /^Max-Age\s*=/i.test(attribute))?.split('=')[1],
+  );
+  const expires = parseDate(
+    attributes.find((attribute) => /^Expires\s*=/i.test(attribute))?.split('=')[1],
+  );
 
   cookies.set(AM_COOKIE_NAME, value, {
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
     path: '/',
+    ...(maxAge !== undefined ? { maxAge } : {}),
+    ...(expires !== undefined && maxAge === undefined ? { expires } : {}),
   });
 }
 

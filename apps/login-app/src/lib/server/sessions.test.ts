@@ -81,6 +81,72 @@ describe('Login2 session cookie forwarding', () => {
     });
   });
 
+  it('forwards Max-Age from the upstream cookie without Domain or Expires', () => {
+    const target = cookies();
+
+    setAmCookie(
+      target,
+      'iPlanetDirectoryPro=session-token; Path=/; Max-Age=1800; Domain=am.example.com; Secure; HttpOnly',
+    );
+
+    expect(target.set.mock.calls[0]).toEqual([
+      'iPlanetDirectoryPro',
+      'session-token',
+      { httpOnly: true, sameSite: 'lax', secure: true, path: '/', maxAge: 1800 },
+    ]);
+  });
+
+  it('forwards Expires as a Date when Max-Age is absent', () => {
+    const target = cookies();
+
+    setAmCookie(
+      target,
+      'iPlanetDirectoryPro=session-token; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; Secure; HttpOnly',
+    );
+
+    expect(target.set.mock.calls[0]).toEqual([
+      'iPlanetDirectoryPro',
+      'session-token',
+      {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: true,
+        path: '/',
+        expires: new Date('Wed, 21 Oct 2026 07:28:00 GMT'),
+      },
+    ]);
+  });
+
+  it('prefers Max-Age over Expires when both attributes are present', () => {
+    const target = cookies();
+
+    setAmCookie(
+      target,
+      'iPlanetDirectoryPro=session-token; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; Max-Age=1800',
+    );
+
+    expect(target.set.mock.calls[0]).toEqual([
+      'iPlanetDirectoryPro',
+      'session-token',
+      { httpOnly: true, sameSite: 'lax', secure: true, path: '/', maxAge: 1800 },
+    ]);
+  });
+
+  it('falls back to a session cookie when persistence attributes are malformed', () => {
+    const target = cookies();
+
+    setAmCookie(
+      target,
+      'iPlanetDirectoryPro=session-token; Path=/; Max-Age=abc; Expires=not-a-date; Secure; HttpOnly',
+    );
+
+    expect(target.set.mock.calls[0]).toEqual([
+      'iPlanetDirectoryPro',
+      'session-token',
+      { httpOnly: true, sameSite: 'lax', secure: true, path: '/' },
+    ]);
+  });
+
   it('reads the AM cookie out of a multi-cookie header with Expires dates', () => {
     const target = cookies();
 
@@ -89,12 +155,17 @@ describe('Login2 session cookie forwarding', () => {
       'other=abc; Expires=Wed, 21 Oct 2026 07:28:00 GMT, iPlanetDirectoryPro=session-token; Path=/; Expires=Thu, 22 Oct 2026 07:28:00 GMT',
     );
 
-    expect(target.set).toHaveBeenCalledWith('iPlanetDirectoryPro', 'session-token', {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: true,
-      path: '/',
-    });
+    expect(target.set.mock.calls[0]).toEqual([
+      'iPlanetDirectoryPro',
+      'session-token',
+      {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: true,
+        path: '/',
+        expires: new Date('Thu, 22 Oct 2026 07:28:00 GMT'),
+      },
+    ]);
   });
 });
 
