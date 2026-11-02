@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { resolveOAuthRealmPath } from '$server/sessions';
+import { fetchAm, resolveOAuthRealmPath } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -16,12 +16,12 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
-  const response = await fetch(`${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/userinfo`, {
+  const response = await fetchAm(`${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/userinfo`, {
     method: 'POST',
     headers: {
       authorization: event.request.headers.get('authorization') || '',
     },
-  });
+  }).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
 
   const resBody = await response.text();
 

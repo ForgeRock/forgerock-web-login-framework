@@ -18,6 +18,26 @@ import type { TokenId } from '$server/schemas';
 const AM_TIMEOUT_MS = 2000;
 
 /**
+ * @function fetchAm - fetch against AM with the shared request timeout. Rejects
+ * (typically with an abort error) when AM does not answer within `AM_TIMEOUT_MS`,
+ * so every proxy route fails fast instead of pinning the SvelteKit request open
+ * on a hung AM connection. Callers translate the rejection into an upstream error
+ * response; everything else passes the raw `Response` through untouched.
+ * @param {string} url - The absolute AM endpoint URL.
+ * @param {RequestInit} [init] - Standard fetch init; `signal` is supplied here.
+ * @returns {Promise<Response>} The upstream response.
+ */
+export async function fetchAm(url: string, init: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
  * Builds the AM session cookie header from the browser-owned cookie.
  * Kept stateless, since requests can land on any replica.
  */

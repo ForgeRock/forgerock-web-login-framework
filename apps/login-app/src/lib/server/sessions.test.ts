@@ -20,6 +20,7 @@ vi.mock('$env/dynamic/private', () => ({
 
 import {
   amFetchRequest,
+  fetchAm,
   getAmCookie,
   resolveJsonRealmPath,
   resolveOAuthRealmPath,
@@ -116,6 +117,61 @@ describe('Login2 realm paths', () => {
   it('rejects path traversal and falls back for malformed overrides', () => {
     expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root/realms/alpha');
     expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root/realms/alpha');
+  });
+});
+
+describe('Login2 AM fetch transport', () => {
+  it('forwards the URL and init to fetch and passes the response through', async () => {
+    const upstream = new Response('{"ok":true}', { status: 200 });
+    const fetch = vi.fn().mockResolvedValue(upstream);
+    vi.stubGlobal('fetch', fetch);
+
+    const response = await fetchAm('https://am.example.com/am/json/ping', {
+      method: 'POST',
+      headers: { accept: 'application/json' },
+      body: 'payload',
+    });
+
+    expect(response).toBe(upstream);
+    expect(fetch.mock.calls[0][0]).toBe('https://am.example.com/am/json/ping');
+    expect(fetch.mock.calls[0][1]).toMatchObject({
+      method: 'POST',
+      headers: { accept: 'application/json' },
+      body: 'payload',
+    });
+    expect((fetch.mock.calls[0][1] as RequestInit).signal).toBeInstanceOf(AbortSignal);
+  });
+
+  it('aborts the request after the AM timeout', async () => {
+    vi.useFakeTimers();
+    const fetch = vi.fn(
+      (_url: string, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+        }),
+    );
+    vi.stubGlobal('fetch', fetch);
+
+    // Attach the rejection assertion before the timer fires so the rejection is
+    // never unhandled while fake timers advance.
+    const pending = expect(fetchAm('https://am.example.com/am/json/ping')).rejects.toThrow(
+      'aborted',
+    );
+    await vi.advanceTimersByTimeAsync(2000);
+    await pending;
+    vi.useRealTimers();
+  });
+
+  it('clears the timeout once the response settles', async () => {
+    vi.useFakeTimers();
+    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 200 })));
+
+    await fetchAm('https://am.example.com/am/json/ping');
+
+    expect(clearTimeoutSpy).toHaveBeenCalled();
+    clearTimeoutSpy.mockRestore();
+    vi.useRealTimers();
   });
 });
 

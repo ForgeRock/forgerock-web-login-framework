@@ -8,7 +8,7 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
+import { fetchAm, getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -17,7 +17,7 @@ import type { RequestHandler } from './$types';
 export const POST: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
   const body = await event.request.text();
-  const response = await fetch(
+  const response = await fetchAm(
     `${AM_DOMAIN_PATH}${resolveJsonRealmPath(
       realm,
     )}/authenticate?authIndexType=service&authIndexValue=Login`,
@@ -31,7 +31,7 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
       },
       body,
     },
-  );
+  ).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
 
   const responseHeaders = new Headers();
   const contentType = response.headers.get('content-type');

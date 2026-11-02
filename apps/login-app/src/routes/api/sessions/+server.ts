@@ -10,6 +10,7 @@
 import { AM_DOMAIN_PATH } from '$core/constants';
 import {
   clearAmCookie,
+  fetchAm,
   getAmCookie,
   resolveJsonRealmPath,
   resolveUpstreamQuery,
@@ -21,7 +22,7 @@ import type { RequestHandler } from './$types';
 
 export const POST: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
-  const response = await fetch(
+  const response = await fetchAm(
     `${AM_DOMAIN_PATH}${resolveJsonRealmPath(realm)}/sessions${resolveUpstreamQuery(event.url)}`,
     {
       method: 'POST',
@@ -32,7 +33,7 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
         cookie: getAmCookie(event.cookies),
       },
     },
-  );
+  ).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
 
   if (event.url.searchParams.get('_action') === 'logout' && response.ok) {
     clearAmCookie(event.cookies);
