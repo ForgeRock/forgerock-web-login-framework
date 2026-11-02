@@ -23,7 +23,12 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
     },
   }).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
 
-  const resBody = await response.text();
+  const responseHeaders = new Headers();
+  const contentType = response.headers.get('content-type');
+  if (contentType) responseHeaders.set('content-type', contentType);
 
-  return new Response(resBody);
+  return new Response(await response.text(), {
+    status: response.status,
+    headers: responseHeaders,
+  });
 };

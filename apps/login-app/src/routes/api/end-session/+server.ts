@@ -37,7 +37,12 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
 
   if (response.ok) clearAmCookie(event.cookies);
 
-  const resBody = await response.text();
+  const responseHeaders = new Headers();
+  const contentType = response.headers.get('content-type');
+  if (contentType) responseHeaders.set('content-type', contentType);
 
-  return new Response(resBody);
+  return new Response(await response.text(), {
+    status: response.status,
+    headers: responseHeaders,
+  });
 };

@@ -40,7 +40,11 @@
    */
   import type { CustomWrapperProps } from '$login-framework';
 
-  /** The one prop the framework passes: the active journey name (`''` = default). */
+  /** The one prop the framework passes: the active journey name (`''` = default).
+   * The default markup is an empty placeholder, so the prop reads as unused
+   * until a customer branches on it; ignore the compiler warning here.
+   */
+  // svelte-ignore export_let_unused
   export let journeyName: CustomWrapperProps['journeyName'] = '';
 </script>
 
