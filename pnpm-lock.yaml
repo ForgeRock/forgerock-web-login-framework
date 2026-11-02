@@ -5,8 +5,6 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  '@forgerock/journey-client': https://pkg.pr.new/@forgerock/journey-client@762
-  '@forgerock/oidc-client': https://pkg.pr.new/@forgerock/oidc-client@762
   picomatch@2: 2.3.2
   picomatch@4: 4.0.4
   uuid: ^14.0.0
@@ -43,17 +41,17 @@ importers:
         specifier: ^9.39.2
         version: 9.39.3
       '@forgerock/journey-client':
-        specifier: https://pkg.pr.new/@forgerock/journey-client@762
-        version: https://pkg.pr.new/@forgerock/journey-client@762(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react@19.2.4)
       '@forgerock/oidc-client':
-        specifier: https://pkg.pr.new/@forgerock/oidc-client@762
-        version: https://pkg.pr.new/@forgerock/oidc-client@762(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react@19.2.4)
       '@forgerock/protect':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       '@forgerock/storage':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       '@storybook/addon-a11y':
         specifier: ^10.1.11
         version: 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
@@ -75,6 +73,9 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^4.0.0
         version: 4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.0.0)(terser@5.48.0))
+      '@types/qrcode':
+        specifier: 1.5.5
+        version: 1.5.5
       '@vueless/storybook-dark-mode':
         specifier: ^10.0.4
         version: 10.0.7(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
@@ -178,8 +179,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/login-widget
       '@forgerock/sdk-logger':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
     devDependencies:
       '@effect/vitest':
         specifier: ^0.26.0
@@ -266,17 +267,17 @@ importers:
   packages/login-widget:
     dependencies:
       '@forgerock/journey-client':
-        specifier: https://pkg.pr.new/@forgerock/journey-client@762
-        version: https://pkg.pr.new/@forgerock/journey-client@762(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react@19.2.4)
       '@forgerock/oidc-client':
-        specifier: https://pkg.pr.new/@forgerock/oidc-client@762
-        version: https://pkg.pr.new/@forgerock/oidc-client@762(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react@19.2.4)
       '@forgerock/protect':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       '@forgerock/storage':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       qrcode:
         specifier: 1.5.3
         version: 1.5.3
@@ -1167,53 +1168,35 @@ packages:
     resolution: {integrity: sha512-1B1VkCq6FuUNlQvlBYb+1jDu/gV297TIs/OeiaSR9l1H27SVW55ONE1e1Vp16NqP683+xEGzxYtv4XCiDPaQiw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@forgerock/iframe-manager@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/iframe-manager@b4b6408':
-    resolution: {tarball: https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/iframe-manager@b4b6408}
-    version: 2.1.1
+  '@forgerock/iframe-manager@2.3.1':
+    resolution: {integrity: sha512-A2bm9mbLgHRvntGZ6KvIkseOgT2CYOwh20/aD4d7tELdGw1/jhWoTV44CZjfxT3vIKRAtuKaqpTb/BDwi82EnA==}
 
-  '@forgerock/journey-client@https://pkg.pr.new/@forgerock/journey-client@762':
-    resolution: {tarball: https://pkg.pr.new/@forgerock/journey-client@762}
-    version: 2.1.1
+  '@forgerock/journey-client@2.3.1':
+    resolution: {integrity: sha512-QUy3e0XvnZx3Dwfy2eGQmOk5rZHvbSFqVP2bm1H1mnv0K2qUI+DqqfyNITyJVOT5VR3wAeI/knGAzanp8KOZAw==}
 
-  '@forgerock/oidc-client@https://pkg.pr.new/@forgerock/oidc-client@762':
-    resolution: {tarball: https://pkg.pr.new/@forgerock/oidc-client@762}
-    version: 2.1.1
+  '@forgerock/oidc-client@2.3.1':
+    resolution: {integrity: sha512-6mgYumppzrhd6oh77HlCSy0fTZ7WC3RYLObAOBkkdaNf/CCo9FgM5l34XsuCgbwnA83wn9f+S7BoC/1XjcrCcw==}
 
-  '@forgerock/protect@2.1.1':
-    resolution: {integrity: sha512-Z4c/BmXPn3uK95KV2l8ve8ys6rrkGTC0t/XTMFr98ZfEAXfdV2+XDnGwtwUA4prmlzGrDcevm7EEY6AG//E1Zg==}
+  '@forgerock/protect@2.3.1':
+    resolution: {integrity: sha512-UAOZ6/zLKs0sa8TXEMcEVXixYB10ztUeDriVwhWurDKveyF06krnvvvI2/ZvqwodT08XDoam13Tv5tez2e8zEg==}
 
-  '@forgerock/sdk-logger@2.1.1':
-    resolution: {integrity: sha512-V9r9eyUR+/3rWg/tznKFHyxQ7GGwWiezBSVmE8TN9vZ9oX4AYBlVzyp/3HOEmg4OI4Vja38J9W1+673IdnGTQQ==}
+  '@forgerock/sdk-logger@2.3.1':
+    resolution: {integrity: sha512-KOoPugEFQgWozccUkR8bKOvhDJviwavCe6hLNC8RJsbEF60NRZvxVZHEiwpkTHJY5C0sVsi9+85Avqlvfz2v8Q==}
 
-  '@forgerock/sdk-logger@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-logger@b4b6408':
-    resolution: {tarball: https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-logger@b4b6408}
-    version: 2.1.1
+  '@forgerock/sdk-oidc@2.3.1':
+    resolution: {integrity: sha512-xuOlWT65FGtqeFtSc+I4w6mLf1rJ+HTDL4nO7j3uyQoWLXcfsZ1BD/QUKAzNdFp9grSkbSGWuASao53zN03pKQ==}
 
-  '@forgerock/sdk-oidc@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-oidc@b4b6408':
-    resolution: {tarball: https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-oidc@b4b6408}
-    version: 2.1.1
+  '@forgerock/sdk-request-middleware@2.3.1':
+    resolution: {integrity: sha512-gUZFWIsHetCJp2S1a7aIVxqhJIEjNgtePYTUTM7+WcJPQ3JKo41tqE/VWeKGM5dgWXCKkyv78XkqimpsIgf5Bg==}
 
-  '@forgerock/sdk-request-middleware@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-request-middleware@b4b6408':
-    resolution: {tarball: https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-request-middleware@b4b6408}
-    version: 2.1.1
+  '@forgerock/sdk-types@2.3.1':
+    resolution: {integrity: sha512-ZSC++93RRX22SCPlN3c2zjAk/B7TUtH3g424AzdVyaQPfA8WMzZs1dwEz5iHAwSUAUcFEPdLBmWM2ShMwtZTfg==}
 
-  '@forgerock/sdk-types@2.1.1':
-    resolution: {integrity: sha512-OQCVap7e2P22lyuLPQawgmfJk7gpmubeF3hYqWEyrc4XhSJqnTvUxN9w1trmvyw7i7wnowwnU+wOfNzTRfzUww==}
+  '@forgerock/sdk-utilities@2.3.1':
+    resolution: {integrity: sha512-f3M8VSo9lcOuMUAIY/iyMwR2QuwOeBhTHXNEZnYUXcLqVNcZluzOLMZ92gqCUsgdJIldsVT85W7rZqry+CkP9A==}
 
-  '@forgerock/sdk-types@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408':
-    resolution: {tarball: https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408}
-    version: 2.1.1
-
-  '@forgerock/sdk-utilities@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-utilities@b4b6408':
-    resolution: {tarball: https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-utilities@b4b6408}
-    version: 2.1.1
-
-  '@forgerock/storage@2.1.1':
-    resolution: {integrity: sha512-nrUCiQoDJcu80v9PjBNRysFJmoBy9XggzsQVPD0+3M97hX2qyFPrhbppAOffqycNabbkg13UWCwb5L0ddfPcxQ==}
-
-  '@forgerock/storage@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/storage@b4b6408':
-    resolution: {tarball: https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/storage@b4b6408}
-    version: 2.1.1
+  '@forgerock/storage@2.3.1':
+    resolution: {integrity: sha512-4BK0B1pY6EuqWpcYZnGfaw1pIDFCoPCXBJeM3KmpNrSlN5oPDGNur7XiB8aWK+ix+DVZ4B/GWsFfd1Z9tNJUiQ==}
 
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
@@ -7174,16 +7157,16 @@ snapshots:
 
   '@eslint/js@9.39.3': {}
 
-  '@forgerock/iframe-manager@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/iframe-manager@b4b6408': {}
+  '@forgerock/iframe-manager@2.3.1': {}
 
-  '@forgerock/journey-client@https://pkg.pr.new/@forgerock/journey-client@762(react@19.2.4)':
+  '@forgerock/journey-client@2.3.1(react@19.2.4)':
     dependencies:
-      '@forgerock/sdk-logger': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-logger@b4b6408
-      '@forgerock/sdk-oidc': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-oidc@b4b6408
-      '@forgerock/sdk-request-middleware': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-request-middleware@b4b6408(react@19.2.4)
-      '@forgerock/sdk-types': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408
-      '@forgerock/sdk-utilities': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-utilities@b4b6408
-      '@forgerock/storage': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/storage@b4b6408
+      '@forgerock/sdk-logger': 2.3.1
+      '@forgerock/sdk-oidc': 2.3.1
+      '@forgerock/sdk-request-middleware': 2.3.1(react@19.2.4)
+      '@forgerock/sdk-types': 2.3.1
+      '@forgerock/sdk-utilities': 2.3.1
+      '@forgerock/storage': 2.3.1
       '@reduxjs/toolkit': 2.11.2(react@19.2.4)
       effect: 3.21.0
       tslib: 2.8.1
@@ -7191,15 +7174,15 @@ snapshots:
       - react
       - react-redux
 
-  '@forgerock/oidc-client@https://pkg.pr.new/@forgerock/oidc-client@762(react@19.2.4)':
+  '@forgerock/oidc-client@2.3.1(react@19.2.4)':
     dependencies:
-      '@forgerock/iframe-manager': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/iframe-manager@b4b6408
-      '@forgerock/sdk-logger': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-logger@b4b6408
-      '@forgerock/sdk-oidc': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-oidc@b4b6408
-      '@forgerock/sdk-request-middleware': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-request-middleware@b4b6408(react@19.2.4)
-      '@forgerock/sdk-types': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408
-      '@forgerock/sdk-utilities': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-utilities@b4b6408
-      '@forgerock/storage': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/storage@b4b6408
+      '@forgerock/iframe-manager': 2.3.1
+      '@forgerock/sdk-logger': 2.3.1
+      '@forgerock/sdk-oidc': 2.3.1
+      '@forgerock/sdk-request-middleware': 2.3.1(react@19.2.4)
+      '@forgerock/sdk-types': 2.3.1
+      '@forgerock/sdk-utilities': 2.3.1
+      '@forgerock/storage': 2.3.1
       '@reduxjs/toolkit': 2.11.2(react@19.2.4)
       effect: 3.21.0
       jose: 6.2.4
@@ -7207,44 +7190,34 @@ snapshots:
       - react
       - react-redux
 
-  '@forgerock/protect@2.1.1': {}
+  '@forgerock/protect@2.3.1': {}
 
-  '@forgerock/sdk-logger@2.1.1':
+  '@forgerock/sdk-logger@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': 2.1.1
+      '@forgerock/sdk-types': 2.3.1
 
-  '@forgerock/sdk-logger@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-logger@b4b6408':
+  '@forgerock/sdk-oidc@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408
+      '@forgerock/sdk-types': 2.3.1
+      '@forgerock/sdk-utilities': 2.3.1
 
-  '@forgerock/sdk-oidc@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-oidc@b4b6408':
-    dependencies:
-      '@forgerock/sdk-types': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408
-      '@forgerock/sdk-utilities': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-utilities@b4b6408
-
-  '@forgerock/sdk-request-middleware@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-request-middleware@b4b6408(react@19.2.4)':
+  '@forgerock/sdk-request-middleware@2.3.1(react@19.2.4)':
     dependencies:
       '@reduxjs/toolkit': 2.11.2(react@19.2.4)
     transitivePeerDependencies:
       - react
       - react-redux
 
-  '@forgerock/sdk-types@2.1.1': {}
+  '@forgerock/sdk-types@2.3.1': {}
 
-  '@forgerock/sdk-types@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408': {}
-
-  '@forgerock/sdk-utilities@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-utilities@b4b6408':
+  '@forgerock/sdk-utilities@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408
+      '@forgerock/sdk-types': 2.3.1
       effect: 3.21.0
 
-  '@forgerock/storage@2.1.1':
+  '@forgerock/storage@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': 2.1.1
-
-  '@forgerock/storage@https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/storage@b4b6408':
-    dependencies:
-      '@forgerock/sdk-types': https://pkg.pr.new/ForgeRock/ping-javascript-sdk/@forgerock/sdk-types@b4b6408
+      '@forgerock/sdk-types': 2.3.1
 
   '@hapi/hoek@9.3.0': {}
 
@@ -8378,7 +8351,7 @@ snapshots:
 
   '@types/qrcode@1.5.5':
     dependencies:
-      '@types/node': 25.3.0
+      '@types/node': 26.0.0
 
   '@types/react@19.2.14':
     dependencies:
