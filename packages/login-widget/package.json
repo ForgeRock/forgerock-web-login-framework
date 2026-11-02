@@ -33,10 +33,10 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@forgerock/journey-client": "^2.1.1",
-    "@forgerock/oidc-client": "^2.1.1",
-    "@forgerock/protect": "^2.1.1",
-    "@forgerock/storage": "^2.1.1",
+    "@forgerock/journey-client": "^2.3.1",
+    "@forgerock/oidc-client": "^2.3.1",
+    "@forgerock/protect": "^2.3.1",
+    "@forgerock/storage": "^2.3.1",
     "qrcode": "1.5.3",
     "xss": "^1.0.15",
     "zod": "^4.6.7"
