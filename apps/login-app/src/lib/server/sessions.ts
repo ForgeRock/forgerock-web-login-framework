@@ -10,6 +10,7 @@
 import { z } from 'zod';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
+import { log } from '$server/logger.effects';
 
 import type { Cookies } from '@sveltejs/kit';
 
@@ -17,24 +18,106 @@ import type { TokenId } from '$server/schemas';
 
 const AM_TIMEOUT_MS = 2000;
 
+/** AM answered completely: headers captured, body already consumed. */
+export interface AmUpstreamResponse {
+  readonly kind: 'response';
+  readonly status: number;
+  readonly ok: boolean;
+  readonly headers: Headers;
+  readonly body: string;
+}
+
+/** Why the exchange failed: our timer fired, or the connection died first. */
+export type AmUpstreamFailureReason = 'timeout' | 'network';
+
+export interface AmUpstreamFailure {
+  readonly kind: 'failure';
+  readonly reason: AmUpstreamFailureReason;
+  readonly error: Error;
+}
+
+export type AmUpstream = AmUpstreamResponse | AmUpstreamFailure;
+
 /**
- * @function fetchAm - fetch against AM with the shared request timeout. Rejects
- * (typically with an abort error) when AM does not answer within `AM_TIMEOUT_MS`,
- * so every proxy route fails fast instead of pinning the SvelteKit request open
- * on a hung AM connection. Callers translate the rejection into an upstream error
- * response; everything else passes the raw `Response` through untouched.
+ * @function fetchAm - fetch against AM and read the full response under the
+ * shared 2s timeout. The abort timer stays armed until the body is consumed,
+ * so a stalled body (not just stalled headers) fails fast instead of pinning
+ * the SvelteKit request open. Returns a buffered record rather than a Response
+ * so callers cannot re-introduce an un-timed body read; intended for the AM
+ * proxy's small JSON payloads, never for streaming downloads.
+ *
+ * Failures are encoded in the return type, never thrown: `reason: 'timeout'`
+ * means this function's own signal aborted; `reason: 'network'` means DNS,
+ * refused connection, TLS, or a mid-body reset. Any caller-provided
+ * `init.signal` is ignored; this function owns the signal.
  * @param {string} url - The absolute AM endpoint URL.
  * @param {RequestInit} [init] - Standard fetch init; `signal` is supplied here.
- * @returns {Promise<Response>} The upstream response.
+ * @returns {Promise<AmUpstream>} The buffered upstream exchange or a classified failure.
  */
-export async function fetchAm(url: string, init: RequestInit = {}): Promise<Response> {
+export async function fetchAm(url: string, init: RequestInit = {}): Promise<AmUpstream> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
-    return await fetch(url, { ...init, signal: controller.signal });
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    const body = await response.text();
+    return {
+      kind: 'response',
+      status: response.status,
+      ok: response.ok,
+      headers: new Headers(response.headers),
+      body,
+    };
+  } catch (error) {
+    const normalized = error instanceof Error ? error : new Error(String(error));
+    // Classify by our own signal, not by error.name: every fetch implementation
+    // surfaces abort differently (AbortError, TypeError "terminated" with an
+    // AbortError cause), but signal.aborted is unambiguous and only this
+    // function's timer can trip it.
+    if (controller.signal.aborted) {
+      log.warn('[sessions] AM upstream timed out', normalized);
+      return { kind: 'failure', reason: 'timeout', error: normalized };
+    }
+    log.error('[sessions] AM upstream request failed', normalized);
+    return { kind: 'failure', reason: 'network', error: normalized };
   } finally {
     clearTimeout(timeout);
   }
+}
+
+/**
+ * @function upstreamFailureResponse - folds a transport failure into the proxy's
+ * error Response: 504 when this server's timeout fired, 502 when AM was
+ * unreachable (DNS, refused connection, TLS). Pure; the failure was already
+ * logged by `fetchAm`.
+ * @param {AmUpstreamFailure} failure - The classified transport failure.
+ * @returns {Response} A JSON error response carrying a content-type header.
+ */
+export function upstreamFailureResponse(failure: AmUpstreamFailure): Response {
+  return new Response(
+    JSON.stringify({
+      error: failure.reason === 'timeout' ? 'upstream_timeout' : 'upstream_unavailable',
+    }),
+    {
+      status: failure.reason === 'timeout' ? 504 : 502,
+      headers: { 'content-type': 'application/json' },
+    },
+  );
+}
+
+/**
+ * @function pickUpstreamHeaders - copies the named headers into a fresh Headers
+ * instance for the proxied response. Pure.
+ * @param {Headers} headers - The upstream response headers.
+ * @param {readonly string[]} names - Header names to relay.
+ * @returns {Headers} A new Headers instance with only the picked headers.
+ */
+export function pickUpstreamHeaders(headers: Headers, names: readonly string[]): Headers {
+  const picked: [string, string][] = [];
+  for (const name of names) {
+    const value = headers.get(name);
+    if (value) picked.push([name, value]);
+  }
+  return new Headers(picked);
 }
 
 /**

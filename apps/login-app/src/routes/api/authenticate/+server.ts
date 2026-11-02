@@ -8,7 +8,14 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { fetchAm, getAmCookie, resolveJsonRealmPath, setAmCookie } from '$server/sessions';
+import {
+  fetchAm,
+  getAmCookie,
+  pickUpstreamHeaders,
+  resolveJsonRealmPath,
+  setAmCookie,
+  upstreamFailureResponse,
+} from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -31,17 +38,18 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
       },
       body,
     },
-  ).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
+  );
+  if (response.kind === 'failure') return upstreamFailureResponse(response);
 
-  const responseHeaders = new Headers();
-  const contentType = response.headers.get('content-type');
-  if (contentType) responseHeaders.set('content-type', contentType);
-
+  // Deliberate: the AM session cookie is stored only after the full upstream
+  // exchange succeeds, so a timed-out or reset mid-body exchange leaves no
+  // partial login state. Client-invisible: SvelteKit flushes cookies when the
+  // handler returns, which now always happens within the 2s budget.
   const setCookie = response.headers.get('set-cookie');
   if (setCookie) setAmCookie(event.cookies, setCookie);
 
-  return new Response(await response.text(), {
+  return new Response(response.body, {
     status: response.status,
-    headers: responseHeaders,
+    headers: pickUpstreamHeaders(response.headers, ['content-type']),
   });
 };

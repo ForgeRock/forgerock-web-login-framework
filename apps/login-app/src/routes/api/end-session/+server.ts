@@ -12,8 +12,10 @@ import {
   clearAmCookie,
   fetchAm,
   getAmCookie,
+  pickUpstreamHeaders,
   resolveOAuthRealmPath,
   resolveUpstreamQuery,
+  upstreamFailureResponse,
 } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
@@ -33,16 +35,13 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
         cookie: getAmCookie(event.cookies),
       },
     },
-  ).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
+  );
+  if (response.kind === 'failure') return upstreamFailureResponse(response);
 
   if (response.ok) clearAmCookie(event.cookies);
 
-  const responseHeaders = new Headers();
-  const contentType = response.headers.get('content-type');
-  if (contentType) responseHeaders.set('content-type', contentType);
-
-  return new Response(await response.text(), {
+  return new Response(response.body, {
     status: response.status,
-    headers: responseHeaders,
+    headers: pickUpstreamHeaders(response.headers, ['content-type']),
   });
 };

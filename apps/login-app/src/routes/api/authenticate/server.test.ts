@@ -35,7 +35,10 @@ function mockEvent(body = '') {
 }
 
 describe('api/authenticate upstream timeout', () => {
-  afterEach(() => vi.unstubAllGlobals());
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
 
   it('passes the timeout signal to the AM fetch', async () => {
     const fetch = vi.fn().mockResolvedValue(Response.json({ authId: 'abc' }));
@@ -66,7 +69,7 @@ describe('api/authenticate upstream timeout', () => {
     const response = await pending;
 
     expect(response.status).toBe(504);
+    expect(response.headers.get('content-type')).toBe('application/json');
     expect(JSON.parse(await response.text())).toEqual({ error: 'upstream_timeout' });
-    vi.useRealTimers();
   });
 });

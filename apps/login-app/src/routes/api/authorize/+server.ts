@@ -11,8 +11,10 @@ import { AM_DOMAIN_PATH } from '$core/constants';
 import {
   fetchAm,
   getAmCookie,
+  pickUpstreamHeaders,
   resolveOAuthRealmPath,
   resolveUpstreamQuery,
+  upstreamFailureResponse,
 } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
@@ -30,14 +32,11 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
       },
       redirect: 'manual',
     },
-  ).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
+  );
+  if (response.kind === 'failure') return upstreamFailureResponse(response);
 
-  const headers = new Headers();
-  const location = response.headers.get('location');
-  if (location) headers.set('location', location);
-
-  return new Response(undefined, {
+  return new Response(response.body, {
     status: response.status,
-    headers,
+    headers: pickUpstreamHeaders(response.headers, ['location']),
   });
 };

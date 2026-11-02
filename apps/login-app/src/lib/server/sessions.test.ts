@@ -25,9 +25,13 @@ import {
   resolveJsonRealmPath,
   resolveOAuthRealmPath,
   setAmCookie,
+  upstreamFailureResponse,
 } from './sessions';
 
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
 
 function cookies(values: Record<string, string> = {}) {
   return {
@@ -192,18 +196,24 @@ describe('Login2 realm paths', () => {
 });
 
 describe('Login2 AM fetch transport', () => {
-  it('forwards the URL and init to fetch and passes the response through', async () => {
-    const upstream = new Response('{"ok":true}', { status: 200 });
-    const fetch = vi.fn().mockResolvedValue(upstream);
+  it('forwards the URL and init to fetch and returns the buffered upstream exchange', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValue(new Response('{"ok":true}', { status: 200, statusText: 'OK' }));
     vi.stubGlobal('fetch', fetch);
 
-    const response = await fetchAm('https://am.example.com/am/json/ping', {
+    const upstream = await fetchAm('https://am.example.com/am/json/ping', {
       method: 'POST',
       headers: { accept: 'application/json' },
       body: 'payload',
     });
 
-    expect(response).toBe(upstream);
+    expect(upstream.kind).toBe('response');
+    if (upstream.kind !== 'response') return;
+    expect(upstream.status).toBe(200);
+    expect(upstream.ok).toBe(true);
+    expect(upstream.body).toBe('{"ok":true}');
+    expect(upstream.headers.get('content-type')).toContain('text/plain');
     expect(fetch.mock.calls[0][0]).toBe('https://am.example.com/am/json/ping');
     expect(fetch.mock.calls[0][1]).toMatchObject({
       method: 'POST',
@@ -225,24 +235,79 @@ describe('Login2 AM fetch transport', () => {
 
     // Attach the rejection assertion before the timer fires so the rejection is
     // never unhandled while fake timers advance.
-    const pending = expect(fetchAm('https://am.example.com/am/json/ping')).rejects.toThrow(
-      'aborted',
-    );
+    const pending = fetchAm('https://am.example.com/am/json/ping');
     await vi.advanceTimersByTimeAsync(2000);
-    await pending;
-    vi.useRealTimers();
+    const upstream = await pending;
+
+    expect(upstream.kind).toBe('failure');
+    if (upstream.kind !== 'failure') return;
+    expect(upstream.reason).toBe('timeout');
   });
 
-  it('clears the timeout once the response settles', async () => {
+  it('classifies a connection refusal as a network failure, not a timeout', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new TypeError('fetch failed: ECONNREFUSED')));
+
+    const upstream = await fetchAm('https://am.example.com/am/json/ping');
+
+    expect(upstream.kind).toBe('failure');
+    if (upstream.kind !== 'failure') return;
+    expect(upstream.reason).toBe('network');
+    expect(upstream.error).toBeInstanceOf(Error);
+  });
+
+  it('aborts a stalled response body even when the headers arrive in time', async () => {
     vi.useFakeTimers();
-    const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('{}', { status: 200 })));
+    // Headers resolve immediately, but the body stream never delivers a chunk:
+    // with the timer disarmed at headers this would pin the request open.
+    // A real undici fetch terminates the body when its signal aborts, so the
+    // mock mirrors that contract: the stream's pull rejects on abort.
+    let onAbort: (() => void) | undefined;
+    const stalledBody = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('{"partial":'));
+        onAbort = () => controller.error(new Error('The operation was aborted'));
+      },
+    });
+    const fetch = vi.fn((_url: string, init?: RequestInit) => {
+      init?.signal?.addEventListener('abort', () => onAbort?.(), { once: true });
+      return Promise.resolve(
+        new Response(stalledBody, {
+          status: 200,
+          headers: { 'content-type': 'application/json' },
+        }),
+      );
+    });
+    vi.stubGlobal('fetch', fetch);
 
-    await fetchAm('https://am.example.com/am/json/ping');
+    const pending = fetchAm('https://am.example.com/am/json/ping');
+    await vi.advanceTimersByTimeAsync(2000);
+    const upstream = await pending;
 
-    expect(clearTimeoutSpy).toHaveBeenCalled();
-    clearTimeoutSpy.mockRestore();
-    vi.useRealTimers();
+    expect(upstream.kind).toBe('failure');
+    if (upstream.kind !== 'failure') return;
+    expect(upstream.reason).toBe('timeout');
+  });
+
+  it('maps a timeout failure to a 504 with a JSON upstream_timeout body', () => {
+    const response = upstreamFailureResponse({
+      kind: 'failure',
+      reason: 'timeout',
+      error: new Error('aborted'),
+    });
+
+    expect(response.status).toBe(504);
+    expect(response.headers.get('content-type')).toBe('application/json');
+  });
+
+  it('maps a network failure to a 502 with a JSON upstream_unavailable body', () => {
+    const response = upstreamFailureResponse({
+      kind: 'failure',
+      reason: 'network',
+      error: new TypeError('fetch failed: ECONNREFUSED'),
+    });
+
+    expect(response.status).toBe(502);
+    expect(response.headers.get('content-type')).toBe('application/json');
   });
 });
 

@@ -8,7 +8,12 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { fetchAm, resolveOAuthRealmPath } from '$server/sessions';
+import {
+  fetchAm,
+  pickUpstreamHeaders,
+  resolveOAuthRealmPath,
+  upstreamFailureResponse,
+} from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -21,14 +26,11 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
     headers: {
       authorization: event.request.headers.get('authorization') || '',
     },
-  }).catch(() => new Response(JSON.stringify({ error: 'upstream_timeout' }), { status: 504 }));
+  });
+  if (response.kind === 'failure') return upstreamFailureResponse(response);
 
-  const responseHeaders = new Headers();
-  const contentType = response.headers.get('content-type');
-  if (contentType) responseHeaders.set('content-type', contentType);
-
-  return new Response(await response.text(), {
+  return new Response(response.body, {
     status: response.status,
-    headers: responseHeaders,
+    headers: pickUpstreamHeaders(response.headers, ['content-type']),
   });
 };
