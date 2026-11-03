@@ -12,6 +12,8 @@ This directory contains fully commented reference implementations of custom stag
    - `callbacks/custom-name/` — callback override (replaces a single input renderer)
    - `header/` — branded page header (worked example for the wrapper)
    - `footer/` — branded page footer (worked example for the wrapper)
+   - `header/league-header.svelte` — multi-league header (NBA/WNBA/team brands per journey)
+   - `footer/league-footer.svelte` — multi-league footer (NBA/WNBA/team brands per journey)
 
 2. Copy the directory into the correct scanned location:
 
@@ -57,11 +59,17 @@ demo/
 ├── header/
 │   ├── branded-header.svelte        # branded header example (branches on journeyName)
 │   ├── branded-header.story.svelte  # Storybook wrapper with store initialization
-│   └── branded-header.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
+│   ├── branded-header.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
+│   ├── league-header.svelte         # multi-league header (NBA/WNBA/teams, brand colors per journey)
+│   ├── league-header.story.svelte   # Storybook wrapper with store initialization
+│   └── league-header.stories.js     # CSF 3 stories (default + one per league/team, Interaction)
 └── footer/
     ├── branded-footer.svelte        # branded footer example (branches on journeyName)
     ├── branded-footer.story.svelte  # Storybook wrapper with store initialization
-    └── branded-footer.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
+    ├── branded-footer.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
+    ├── league-footer.svelte         # multi-league footer (NBA/WNBA/teams, brand colors per journey)
+    ├── league-footer.story.svelte   # Storybook wrapper with store initialization
+    └── league-footer.stories.js     # CSF 3 stories (default + one per league/team, Interaction)
 ```
 
 > **Note:** Files under `demo/` are committed to the repository as reference material.

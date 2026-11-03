@@ -14,7 +14,7 @@
   /**
    * Initialize the style store with framework defaults (empty object).
    * Pass your own token overrides here to test branded appearances:
-   *   initializeStyles({ logoUrl: '/logo.svg', labels: 'floating' })
+   *   initializeStyles({ logo: { light: '/logo.svg' }, labels: 'floating' })
    */
   initializeStyles({});
 
