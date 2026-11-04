@@ -8,7 +8,14 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { getAmCookie, resolveOAuthRealmPath, resolveUpstreamQuery } from '$server/sessions';
+import {
+  fetchAm,
+  getAmCookie,
+  pickUpstreamHeaders,
+  resolveOAuthRealmPath,
+  resolveUpstreamQuery,
+  upstreamFailureResponse,
+} from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -16,7 +23,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
-  const response = await fetch(
+  const response = await fetchAm(
     `${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/authorize${resolveUpstreamQuery(event.url)}`,
     {
       method: 'GET',
@@ -26,13 +33,10 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
       redirect: 'manual',
     },
   );
+  if (response.kind === 'failure') return upstreamFailureResponse(response);
 
-  const headers = new Headers();
-  const location = response.headers.get('location');
-  if (location) headers.set('location', location);
-
-  return new Response(undefined, {
+  return new Response(response.body, {
     status: response.status,
-    headers,
+    headers: pickUpstreamHeaders(response.headers, ['location']),
   });
 };

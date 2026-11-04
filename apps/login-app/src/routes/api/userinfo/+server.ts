@@ -8,7 +8,12 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$core/constants';
-import { resolveOAuthRealmPath } from '$server/sessions';
+import {
+  fetchAm,
+  pickUpstreamHeaders,
+  resolveOAuthRealmPath,
+  upstreamFailureResponse,
+} from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -16,14 +21,16 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
-  const response = await fetch(`${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/userinfo`, {
+  const response = await fetchAm(`${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/userinfo`, {
     method: 'POST',
     headers: {
       authorization: event.request.headers.get('authorization') || '',
     },
   });
+  if (response.kind === 'failure') return upstreamFailureResponse(response);
 
-  const resBody = await response.text();
-
-  return new Response(resBody);
+  return new Response(response.body, {
+    status: response.status,
+    headers: pickUpstreamHeaders(response.headers, ['content-type']),
+  });
 };

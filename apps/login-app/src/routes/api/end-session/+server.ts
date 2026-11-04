@@ -10,9 +10,12 @@
 import { AM_DOMAIN_PATH } from '$core/constants';
 import {
   clearAmCookie,
+  fetchAm,
   getAmCookie,
+  pickUpstreamHeaders,
   resolveOAuthRealmPath,
   resolveUpstreamQuery,
+  upstreamFailureResponse,
 } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
@@ -21,7 +24,7 @@ import type { RequestHandler } from './$types';
 
 export const GET: RequestHandler = async (event: RequestEvent) => {
   const realm = event.url.searchParams.get('realm') ?? undefined;
-  const response = await fetch(
+  const response = await fetchAm(
     `${AM_DOMAIN_PATH}${resolveOAuthRealmPath(realm)}/connect/endSession${resolveUpstreamQuery(
       event.url,
     )}`,
@@ -33,10 +36,12 @@ export const GET: RequestHandler = async (event: RequestEvent) => {
       },
     },
   );
+  if (response.kind === 'failure') return upstreamFailureResponse(response);
 
   if (response.ok) clearAmCookie(event.cookies);
 
-  const resBody = await response.text();
-
-  return new Response(resBody);
+  return new Response(response.body, {
+    status: response.status,
+    headers: pickUpstreamHeaders(response.headers, ['content-type']),
+  });
 };
