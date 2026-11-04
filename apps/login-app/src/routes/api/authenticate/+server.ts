@@ -45,8 +45,7 @@ export const POST: RequestHandler = async (event: RequestEvent) => {
   // exchange succeeds, so a timed-out or reset mid-body exchange leaves no
   // partial login state. Client-invisible: SvelteKit flushes cookies when the
   // handler returns, which now always happens within the 2s budget.
-  const setCookie = response.headers.get('set-cookie');
-  if (setCookie) setAmCookie(event.cookies, setCookie);
+  setAmCookie(event.cookies, response.headers);
 
   return new Response(response.body, {
     status: response.status,

@@ -50,6 +50,12 @@ function cookies(values: Record<string, string> = {}) {
 }
 
 describe('Login2 session cookie forwarding', () => {
+  function headersWith(setCookies: string[]): Headers {
+    const headers = new Headers();
+    for (const cookie of setCookies) headers.append('set-cookie', cookie);
+    return headers;
+  }
+
   it('forwards only the configured AM cookie', () => {
     expect(getAmCookie(cookies({ iPlanetDirectoryPro: 'session-token', other: 'ignored' }))).toBe(
       'iPlanetDirectoryPro=session-token',
@@ -61,7 +67,9 @@ describe('Login2 session cookie forwarding', () => {
 
     setAmCookie(
       target,
-      'iPlanetDirectoryPro=session-token; Path=/; Domain=am.example.com; Secure; HttpOnly',
+      headersWith([
+        'iPlanetDirectoryPro=session-token; Path=/; Domain=am.example.com; Secure; HttpOnly',
+      ]),
     );
 
     expect(target.set).toHaveBeenCalledWith('iPlanetDirectoryPro', 'session-token', {
@@ -75,7 +83,7 @@ describe('Login2 session cookie forwarding', () => {
   it('clears an upstream AM cookie with an empty value', () => {
     const target = cookies();
 
-    setAmCookie(target, 'iPlanetDirectoryPro=; Path=/; Max-Age=0');
+    setAmCookie(target, headersWith(['iPlanetDirectoryPro=; Path=/; Max-Age=0']));
 
     expect(target.delete).toHaveBeenCalledWith('iPlanetDirectoryPro', {
       httpOnly: true,
@@ -90,7 +98,9 @@ describe('Login2 session cookie forwarding', () => {
 
     setAmCookie(
       target,
-      'iPlanetDirectoryPro=session-token; Path=/; Max-Age=1800; Domain=am.example.com; Secure; HttpOnly',
+      headersWith([
+        'iPlanetDirectoryPro=session-token; Path=/; Max-Age=1800; Domain=am.example.com; Secure; HttpOnly',
+      ]),
     );
 
     expect(target.set.mock.calls[0]).toEqual([
@@ -105,7 +115,9 @@ describe('Login2 session cookie forwarding', () => {
 
     setAmCookie(
       target,
-      'iPlanetDirectoryPro=session-token; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; Secure; HttpOnly',
+      headersWith([
+        'iPlanetDirectoryPro=session-token; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; Secure; HttpOnly',
+      ]),
     );
 
     expect(target.set.mock.calls[0]).toEqual([
@@ -126,7 +138,9 @@ describe('Login2 session cookie forwarding', () => {
 
     setAmCookie(
       target,
-      'iPlanetDirectoryPro=session-token; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; Max-Age=1800',
+      headersWith([
+        'iPlanetDirectoryPro=session-token; Path=/; Expires=Wed, 21 Oct 2026 07:28:00 GMT; Max-Age=1800',
+      ]),
     );
 
     expect(target.set.mock.calls[0]).toEqual([
@@ -141,7 +155,9 @@ describe('Login2 session cookie forwarding', () => {
 
     setAmCookie(
       target,
-      'iPlanetDirectoryPro=session-token; Path=/; Max-Age=abc; Expires=not-a-date; Secure; HttpOnly',
+      headersWith([
+        'iPlanetDirectoryPro=session-token; Path=/; Max-Age=abc; Expires=not-a-date; Secure; HttpOnly',
+      ]),
     );
 
     expect(target.set.mock.calls[0]).toEqual([
@@ -151,12 +167,15 @@ describe('Login2 session cookie forwarding', () => {
     ]);
   });
 
-  it('reads the AM cookie out of a multi-cookie header with Expires dates', () => {
+  it('reads the AM cookie out of separate Set-Cookie headers with Expires dates', () => {
     const target = cookies();
 
     setAmCookie(
       target,
-      'other=abc; Expires=Wed, 21 Oct 2026 07:28:00 GMT, iPlanetDirectoryPro=session-token; Path=/; Expires=Thu, 22 Oct 2026 07:28:00 GMT',
+      headersWith([
+        'other=abc; Expires=Wed, 21 Oct 2026 07:28:00 GMT',
+        'iPlanetDirectoryPro=session-token; Path=/; Expires=Thu, 22 Oct 2026 07:28:00 GMT',
+      ]),
     );
 
     expect(target.set.mock.calls[0]).toEqual([
@@ -170,6 +189,15 @@ describe('Login2 session cookie forwarding', () => {
         expires: new Date('Thu, 22 Oct 2026 07:28:00 GMT'),
       },
     ]);
+  });
+
+  it('ignores upstream headers without the AM cookie', () => {
+    const target = cookies();
+
+    setAmCookie(target, headersWith(['other=abc; Path=/']));
+
+    expect(target.set).not.toHaveBeenCalled();
+    expect(target.delete).not.toHaveBeenCalled();
   });
 });
 

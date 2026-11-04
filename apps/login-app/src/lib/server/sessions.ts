@@ -147,14 +147,17 @@ export function getAmCookie(cookies: Cookies): string {
  * Domain attribute so it stays scoped to the tenant's browser. Persistence
  * attributes (Max-Age, falling back to Expires per RFC 6265 section 4.1.2) are
  * forwarded so the browser retains the session for as long as AM intends;
- * malformed attributes fall back to a session cookie.
+ * malformed attributes fall back to a session cookie. Cookie boundaries come
+ * from Headers.getSetCookie(), so multiple Set-Cookie headers (and runtimes
+ * that fold them into one comma-joined value) are handled by the platform
+ * instead of a regex.
  */
-export function setAmCookie(cookies: Cookies, setCookie: string): void {
+export function setAmCookie(cookies: Cookies, headers: Headers): void {
   const prefix = `${AM_COOKIE_NAME}=`;
-  const cookiePart = setCookie
-    .split(/,(?=\s*[^;=,\s]+=[^;]+)/)
-    .map((part) => part.trim())
-    .find((part) => part?.startsWith(prefix));
+  const cookiePart = headers
+    .getSetCookie()
+    .map((setCookie) => setCookie.trim())
+    .find((setCookie) => setCookie.startsWith(prefix));
   if (!cookiePart) return;
 
   const [pair, ...attributes] = cookiePart.split(';').map((attribute) => attribute.trim());
