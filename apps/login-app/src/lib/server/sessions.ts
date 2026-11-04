@@ -290,12 +290,9 @@ export async function getUserRolesFromSession(
 ): Promise<AmSession> {
   // AIC blocks /users?_action=idFromSession (403). Use sessions validate instead,
   // which returns uid = the username string on AIC.
-  const realmPath = resolveJsonRealmPath(realm);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
-  let userId: string | null;
-  try {
-    const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
+  const response = await fetchAm(
+    `${AM_DOMAIN_PATH}${resolveJsonRealmPath(realm)}/sessions?_action=validate`,
+    {
       method: 'POST',
       headers: {
         accept: 'application/json',
@@ -304,21 +301,26 @@ export async function getUserRolesFromSession(
         cookie: `${AM_COOKIE_NAME}=${tokenId}`,
       },
       body: JSON.stringify({ tokenId }),
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        return { userId: null, roles: [], unreachable: false };
-      }
-      return { userId: null, roles: [], unreachable: true };
+    },
+  );
+  if (response.kind === 'failure') return { userId: null, roles: [], unreachable: true };
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      return { userId: null, roles: [], unreachable: false };
     }
-    const data = await response.json();
-    const parsed = z.object({ valid: z.boolean(), uid: z.string().optional() }).safeParse(data);
-    userId = parsed.success && parsed.data.valid ? parsed.data.uid ?? null : null;
-  } catch {
     return { userId: null, roles: [], unreachable: true };
-  } finally {
-    clearTimeout(timeout);
+  }
+  let userId: string | null = null;
+  try {
+    const parsed = z
+      .object({ valid: z.boolean(), uid: z.string().optional() })
+      .safeParse(JSON.parse(response.body) as unknown);
+    if (parsed.success && parsed.data.valid) userId = parsed.data.uid ?? null;
+  } catch {
+    // AM answered 200 with a body we cannot read as JSON: report it as an AM
+    // outage, the same treatment a transport failure gets, rather than as an
+    // invalid session.
+    return { userId: null, roles: [], unreachable: true };
   }
   if (userId === null) {
     return { userId: null, roles: [], unreachable: false };
@@ -361,26 +363,20 @@ export async function amFetchRequest(
     endpoint === '/users?_action=validateGoto' && realmPath === '/json/realms/root'
       ? '/json'
       : realmPath;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
+  const response = await fetchAm(`${AM_DOMAIN_PATH}${requestRealmPath}${endpoint}`, {
+    method,
+    headers: {
+      accept: 'application/json',
+      'Accept-API-Version': 'protocol=2.1,resource=3.0',
+      'Content-Type': 'application/json',
+      cookie: `${AM_COOKIE_NAME}=${tokenId}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (response.kind === 'failure' || !response.ok) return null;
   try {
-    const response = await fetch(`${AM_DOMAIN_PATH}${requestRealmPath}${endpoint}`, {
-      method,
-      headers: {
-        accept: 'application/json',
-        'Accept-API-Version': 'protocol=2.1,resource=3.0',
-        'Content-Type': 'application/json',
-        cookie: `${AM_COOKIE_NAME}=${tokenId}`,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
-    });
-
-    if (!response.ok) return null;
-    return await response.json();
+    return JSON.parse(response.body) as unknown;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timeout);
   }
 }
