@@ -223,6 +223,50 @@ describe('Login2 AM fetch transport', () => {
     expect((fetch.mock.calls[0][1] as RequestInit).signal).toBeInstanceOf(AbortSignal);
   });
 
+  it('returns a null body for bodyless statuses so the proxy can rebuild the Response', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async () => new Response(null, { status: 204 })),
+    );
+
+    const upstream = await fetchAm('https://am.example.com/am/json/ping');
+
+    expect(upstream.kind).toBe('response');
+    if (upstream.kind !== 'response') return;
+    expect(upstream.status).toBe(204);
+    expect(upstream.ok).toBe(true);
+    expect(upstream.body).toBeNull();
+    // The proxy pattern must not throw: the Response constructor rejects a
+    // non-null body for 204/205/304.
+    expect(() => new Response(upstream.body, { status: upstream.status })).not.toThrow();
+  });
+
+  it.each([205, 304])('maps status %i to a null body as well', async (status) => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async () => new Response(null, { status })),
+    );
+
+    const upstream = await fetchAm('https://am.example.com/am/json/ping');
+
+    expect(upstream.kind).toBe('response');
+    if (upstream.kind !== 'response') return;
+    expect(upstream.body).toBeNull();
+  });
+
+  it('keeps an empty string body for statuses that allow one', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation(async () => new Response('', { status: 200 })),
+    );
+
+    const upstream = await fetchAm('https://am.example.com/am/json/ping');
+
+    expect(upstream.kind).toBe('response');
+    if (upstream.kind !== 'response') return;
+    expect(upstream.body).toBe('');
+  });
+
   it('aborts the request after the AM timeout', async () => {
     vi.useFakeTimers();
     const fetch = vi.fn(

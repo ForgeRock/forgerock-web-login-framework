@@ -24,7 +24,12 @@ export interface AmUpstreamResponse {
   readonly status: number;
   readonly ok: boolean;
   readonly headers: Headers;
-  readonly body: string;
+  /**
+   * The buffered body. `null` for bodyless statuses (204, 205, 304) so callers
+   * can rebuild a valid Response; the Response constructor rejects non-null
+   * bodies for those statuses.
+   */
+  readonly body: string | null;
 }
 
 /** Why the exchange failed: our timer fired, or the connection died first. */
@@ -59,7 +64,15 @@ export async function fetchAm(url: string, init: RequestInit = {}): Promise<AmUp
   const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
     const response = await fetch(url, { ...init, signal: controller.signal });
-    const body = await response.text();
+    const rawBody = await response.text();
+    // response.text() yields '' when the body is null, but the Response
+    // constructor rejects a non-null body for statuses that must not have one
+    // (204, 205, 304). Preserve null so the proxy can rebuild a valid Response.
+    const body =
+      (response.status === 204 || response.status === 205 || response.status === 304) &&
+      rawBody === ''
+        ? null
+        : rawBody;
     return {
       kind: 'response',
       status: response.status,
@@ -312,9 +325,12 @@ export async function getUserRolesFromSession(
   }
   let userId: string | null = null;
   try {
+    // A 200 validate response always carries a JSON body; a null body cannot
+    // occur here (bodyless statuses are non-2xx or 204-class), but JSON.parse
+    // demands string, so failure paths already returned above.
     const parsed = z
       .object({ valid: z.boolean(), uid: z.string().optional() })
-      .safeParse(JSON.parse(response.body) as unknown);
+      .safeParse(JSON.parse(response.body ?? '') as unknown);
     if (parsed.success && parsed.data.valid) userId = parsed.data.uid ?? null;
   } catch {
     // AM answered 200 with a body we cannot read as JSON: report it as an AM
@@ -375,7 +391,9 @@ export async function amFetchRequest(
   });
   if (response.kind === 'failure' || !response.ok) return null;
   try {
-    return JSON.parse(response.body) as unknown;
+    // A 2xx AM JSON response always carries a body; the null-body contract
+    // (204/205/304) cannot occur on the success paths that reach here.
+    return JSON.parse(response.body ?? '') as unknown;
   } catch {
     return null;
   }
