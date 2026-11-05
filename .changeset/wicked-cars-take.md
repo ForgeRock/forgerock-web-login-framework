@@ -2,4 +2,4 @@
 '@forgerock/login-widget': patch
 ---
 
-Fix Choice callback keeping previous step's selection across consecutive Choice steps.
+Clear stale selection for choice, kba, confirmation, terms-conditions callbacks between consecutive steps

@@ -76,8 +76,6 @@
   }
 </script>
 
-<!-- Re-render on every new callback: a reused select keeps the previous step's
-     user selection when consecutive callbacks share the same defaultChoice. -->
 {#key callback}
   {#if callbackMetadata?.platform?.displayType === 'radio'}
     <Radio
