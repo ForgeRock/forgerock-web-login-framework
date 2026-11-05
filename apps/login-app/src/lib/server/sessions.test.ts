@@ -10,13 +10,15 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('$app/environment', () => ({ building: false }));
-vi.mock('$env/dynamic/private', () => ({
-  env: {
-    FR_AM_URL: 'https://am.example.com/am',
-    FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
-    FR_REALM_PATH: 'alpha',
-  },
-}));
+const mockEnv = vi.hoisted(
+  () =>
+    ({
+      FR_AM_URL: 'https://am.example.com/am',
+      FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
+      FR_REALM_PATH: 'alpha',
+    }) as Record<string, string | undefined>,
+);
+vi.mock('$env/dynamic/private', () => ({ env: mockEnv }));
 
 import {
   amFetchRequest,
@@ -31,6 +33,7 @@ import {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
+  vi.resetAllMocks();
 });
 
 function cookies(values: Record<string, string> = {}) {

@@ -9,8 +9,8 @@
 
 import { z } from 'zod';
 
-import { AM_DOMAIN_PATH } from '$core/constants';
 import { env } from '$env/dynamic/private';
+import { AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
 import {
   amFetchRequest,
@@ -21,8 +21,9 @@ import {
 } from '$server/sessions';
 import {
   describeRedirectTarget,
+  normalizeRealm,
   parseRedirectForm,
-  resolveRealmFromUrl,
+  resolveRequestedRealm,
 } from './redirect.utilities';
 
 import type { RequestEvent } from '@sveltejs/kit';
@@ -40,7 +41,7 @@ const REDIRECT_QUERY_PARAMS = 'redirect_query_params';
 export function storeRedirectParams(event: RequestEvent): RedirectParams {
   const goto = event.url.searchParams.get('goto') || undefined;
   const gotoOnFail = event.url.searchParams.get('gotoOnFail') || undefined;
-  const realm = resolveRealmFromUrl(event.url);
+  const realm = resolveRequestedRealm(event.url, env.FR_REALM_PATH);
 
   if (!goto && !gotoOnFail) {
     return { goto, gotoOnFail, realm };
@@ -69,11 +70,16 @@ export async function createRedirectContext(
   formData: FormData,
   cookie: RedirectParams,
 ): Promise<RedirectData> {
-  const { loginResult, tokenId, journeyStepUrl } = parseRedirectForm(formData);
-
+  const { loginResult, tokenId, journeyStepUrl, realm: formRealm } = parseRedirectForm(formData);
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
-  const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'root';
+  /**
+   * formRealm here represents the realm that the DOM in page.svelte file holds.
+   * The realm must be stored somewhere (query param ?? env), but the cookie is
+   * only written when goto/gotoOnFail query params exist
+   * We check if formRealm exists, if not, we use the realm from cookie or env
+   */
+  const realm = formRealm ?? cookie.realm ?? normalizeRealm(env.FR_REALM_PATH);
   const successUrl = gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
   const roles = tokenId ? (await getUserRolesFromSession(tokenId, realm)).roles : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;

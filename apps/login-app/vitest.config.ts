@@ -1,4 +1,4 @@
-import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { sveltekit } from '@sveltejs/kit/vite';
 import { resolve } from 'path';
 import { defineConfig } from 'vitest/config';
 
@@ -16,10 +16,7 @@ export default defineConfig({
       $server: resolve('./src/lib/server'),
     },
   },
-  plugins: [
-    customRegistry({ projectRoot: resolve('../..') }),
-    svelte({ hot: !process.env.VITEST }),
-  ],
+  plugins: [customRegistry({ projectRoot: resolve('../..') }), sveltekit()],
   test: {
     include: [resolve('./src/**/*.test.ts')],
     exclude: ['node_modules', 'dist'],

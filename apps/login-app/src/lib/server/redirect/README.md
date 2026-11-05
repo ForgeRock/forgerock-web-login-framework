@@ -113,14 +113,14 @@ In these flows:
 
 ## Deployment notes: same-host deployment (standard)
 
-In the standard PingOne AIC deployment the login app and platform-ui share the same FQDN. HAProxy routes traffic based on path prefix:
+In the standard PingOne AIC deployment the login app and platform-ui share the same host. HAProxy routes traffic based on path prefix:
 
 - `/login/*` → `be_aic_login2` (aic-login2)
 - `/am/XUI/*` → 301 redirect to `/login/?[query]` when `ENABLE_AIC_LOGIN2=true`
 - `/enduser/*` → `be_platform-ui` (platform-ui SPA, never touches aic-login2)
 - `/platform/*` → `be_platform-ui`
 
-`/enduser/` bypasses aic-login2 entirely, so post-login role-based redirects to `https://<fqdn>/enduser/?realm=/<realm>#/` are safe and route directly to the platform-ui SPA.
+`/enduser/` bypasses aic-login2 entirely, so post-login role-based redirects to `https://<host>/enduser/?realm=/<realm>#/` are safe and route directly to the platform-ui SPA.
 
 ### OAuth token refresh (SPA iframe PKCE)
 

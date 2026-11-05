@@ -10,7 +10,8 @@
 import { isRedirect, redirect, type RequestEvent } from '@sveltejs/kit';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
-import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
+import { env } from '$env/dynamic/private';
+import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
 import {
   createRedirectContext,
@@ -22,8 +23,8 @@ import {
   buildRoleUrl,
   describeRedirectTarget,
   isOAuthAuthorizePath,
-  resolveRealmFromUrl,
   resolveRedirect,
+  resolveRequestedRealm,
 } from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
 import { getHttpCookie, getUserRolesFromSession } from '$server/sessions';
@@ -33,7 +34,7 @@ import type { z } from 'zod';
 import type { PageServerLoad } from './$types';
 import type { stringsSchema } from '$core/locale.store';
 
-export const load: PageServerLoad = async (event: RequestEvent) => {
+export const load: PageServerLoad = async (event) => {
   // Pre-flight: if the user already has a valid AM session, skip the login form
   // and send them straight to their portal. Skip this when a specific journey or
   // authIndexValue is requested, since the user may be intentionally headed to a
@@ -47,14 +48,15 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
   const tokenId = parsedTokenId?.success ? parsedTokenId.data : undefined;
   if (tokenId) {
     try {
-      const amOrigin = new URL(AM_DOMAIN_PATH).origin;
-      const realm = resolveRealmFromUrl(event.url);
+      const realm = resolveRequestedRealm(event.url, env.FR_REALM_PATH);
 
       // Validate the session is live before acting on it.
       const session = await getUserRolesFromSession(tokenId, realm);
       if (session.userId === null || session.unreachable) {
         throw new Error('Session invalid or expired');
       }
+
+      const amOrigin = new URL(AM_DOMAIN_PATH).origin;
 
       // If goto targets AM's OAuth authorize endpoint, let AM validate it
       // (validateGoto) and only follow the successUrl AM returns, so the SPA's
@@ -63,7 +65,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
       const goto = event.url.searchParams.get('goto');
       if (goto) {
         const gotoUrl = new URL(goto, amOrigin);
-        if (gotoUrl.origin === amOrigin && isOAuthAuthorizePath(gotoUrl.href)) {
+        if (isOAuthAuthorizePath(gotoUrl.href)) {
           const successUrl = await validateUrl(tokenId, gotoUrl.href, realm);
           // validateGoto echoes a trusted goto back unchanged; any other value
           // (e.g. a substituted default success URL) means AM did not trust the
