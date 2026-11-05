@@ -51,20 +51,22 @@
   }
 </script>
 
-{#if $linksStore?.termsAndConditions}
-  <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
-    {interpolate('termsAndConditionsLinkText')}
-  </Link>
-  <Checkbox
-    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    key={inputName}
-    onChange={setValue}
-    value={false}
-  >
-    <T key="termsAndConditions" />
-  </Checkbox>
-{:else}
-  <p class=" tw_text-error-dark dark:tw_text-error-light tw_input-spacing">
-    Error: Configuration is missing <code>termsAndConditions</code> URL.
-  </p>
-{/if}
+{#key callback}
+  {#if $linksStore?.termsAndConditions}
+    <Link classes="tw_block tw_mb-4" href={$linksStore?.termsAndConditions} target="_blank">
+      {interpolate('termsAndConditionsLinkText')}
+    </Link>
+    <Checkbox
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      key={inputName}
+      onChange={setValue}
+      value={false}
+    >
+      <T key="termsAndConditions" />
+    </Checkbox>
+  {:else}
+    <p class=" tw_text-error-dark dark:tw_text-error-light tw_input-spacing">
+      Error: Configuration is missing <code>termsAndConditions</code> URL.
+    </p>
+  {/if}
+{/key}
