@@ -9,7 +9,14 @@
 
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockEnv = vi.hoisted(() => ({}) as Record<string, string | undefined>);
+const mockEnv = vi.hoisted(
+  () =>
+    ({
+      FR_AM_URL: 'https://am.example.com/am',
+      FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
+      FR_REALM_PATH: 'alpha',
+    }) as Record<string, string | undefined>,
+);
 
 vi.mock('$env/dynamic/private', () => ({ env: mockEnv }));
 
@@ -41,6 +48,7 @@ describe('hooks.server handle', () => {
       delete mockEnv[key];
     }
     mockEnv.FR_AM_URL = 'https://openam.example.com/am';
+    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
     mockEnv.FR_REALM_PATH = 'root';
   });
 

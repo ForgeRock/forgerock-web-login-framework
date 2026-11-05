@@ -51,6 +51,34 @@ export default defineConfig(
     preview: {
       host: '0.0.0.0',
       port: 3000,
+      // FQDN emulation by default: the proxy presents the tenant's own Host so
+      // AM's serverinfo answers '/'. With PREVIEW_ALIAS_HOST set to a registered
+      // custom-domain alias (e.g. id.petrov.ca), AM answers that alias's realm —
+      // the custom-domain journey. /enduser and /openidm are proxied for the
+      // full hosts-file flow (see the PR notes' "Testing the redirect").
+      proxy: {
+        '/am': {
+          target: 'https://openam-sdks.forgeblocks.com',
+          changeOrigin: !process.env.PREVIEW_ALIAS_HOST,
+          headers: process.env.PREVIEW_ALIAS_HOST
+            ? { host: process.env.PREVIEW_ALIAS_HOST }
+            : undefined,
+        },
+        '/enduser': {
+          target: 'https://openam-sdks.forgeblocks.com',
+          changeOrigin: false,
+          headers: process.env.PREVIEW_ALIAS_HOST
+            ? { host: process.env.PREVIEW_ALIAS_HOST }
+            : undefined,
+        },
+        '/openidm': {
+          target: 'https://openam-sdks.forgeblocks.com',
+          changeOrigin: false,
+          headers: process.env.PREVIEW_ALIAS_HOST
+            ? { host: process.env.PREVIEW_ALIAS_HOST }
+            : undefined,
+        },
+      },
     },
   }),
 );

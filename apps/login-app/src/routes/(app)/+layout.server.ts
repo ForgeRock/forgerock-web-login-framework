@@ -11,16 +11,17 @@ import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
-import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
+import { normalizeRealm, resolveRequestedRealm } from '$server/redirect/redirect.utilities';
+import { fetchServerInfoRealm, resolveOAuthRealmPath } from '$server/sessions';
 
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url }) => {
   const amUrl = env.FR_AM_URL;
-  const wellknownUrl = env.FR_AM_WELLKNOWN_URL;
+  const configuredWellknownUrl = env.FR_AM_WELLKNOWN_URL;
   const idmBaseUrl = env.FR_IDM_URL ?? amUrl;
 
-  if (!amUrl || !wellknownUrl) {
+  if (!amUrl || !configuredWellknownUrl) {
     throw error(
       500,
       'Login App is not configured. Ensure the required environment variables FR_AM_URL, FR_AM_COOKIE_NAME, FR_REALM_PATH, and FR_AM_WELLKNOWN_URL are set before starting the app.',
@@ -37,22 +38,37 @@ export const load: LayoutServerLoad = async ({ url }) => {
   }
 
   // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
-  const realmPath = resolveRealmFromUrl(url);
+  const requestedRealm = resolveRequestedRealm(url, env.FR_REALM_PATH);
 
-  // Use the configured discovery endpoint for the deployment's default realm.
-  // Derive a sibling endpoint only when the request explicitly selects another realm.
-  // A relative FR_AM_WELLKNOWN_URL resolves against the request origin so the
-  // browser fetches discovery from whichever host the user came in on (tenant
-  // FQDN or custom domain) instead of a hard-coded AM FQDN.
-  const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
-  const wellknown = new URL(
-    realmPath === configuredRealm
-      ? wellknownUrl
-      : realmPath === 'root'
-      ? `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`
-      : `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
-    url.origin,
-  ).toString();
+  // serverinfo answers what realm the arrival host resolves to:
+  //   host = the tenant's own AM hostname (e.g. openam-sdks.forgeblocks.com)
+  //          → root — the deployment hostname belongs to the top-level realm
+  //   host = custom domain (e.g. id.petrov.ca)
+  //          → its alias realm (alpha)
+  const hostRealm = await fetchServerInfoRealm(amUrl, url.host);
+
+  const configuredRealm = normalizeRealm(env.FR_REALM_PATH);
+  const amOrigin = new URL(amUrl).origin;
+
+  // The OIDC wellknown url resolved per request; the
+  // configured URL above is only one of its three possible forms.
+  let requestedWellknownUrl: string;
+  if (hostRealm === requestedRealm) {
+    // Arrival host serves the requested realm → its native realm-less form.
+    requestedWellknownUrl = new URL(
+      `${amBasePath}/oauth2/.well-known/openid-configuration`,
+      url.origin,
+    ).toString();
+  } else if (requestedRealm === configuredRealm) {
+    requestedWellknownUrl = new URL(configuredWellknownUrl, url.origin).toString();
+  } else {
+    // Realm-qualified discovery is only valid on the AM FQDN origin; root
+    // needs no realm suffix — hence resolveOAuthRealmPath.
+    requestedWellknownUrl = new URL(
+      `${amBasePath}${resolveOAuthRealmPath(requestedRealm)}/.well-known/openid-configuration`,
+      amOrigin,
+    ).toString();
+  }
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {
@@ -60,7 +76,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     themeCatalog,
     backgroundImageUrl,
   } = idmBaseUrl
-    ? await fetchIdmTheme(idmBaseUrl, realmPath, journeyName)
+    ? await fetchIdmTheme(idmBaseUrl, requestedRealm, journeyName)
     : { theme: undefined, themeCatalog: {}, backgroundImageUrl: undefined };
 
   return {
@@ -68,8 +84,8 @@ export const load: LayoutServerLoad = async ({ url }) => {
     backgroundImageUrl,
     idmTheme,
     themeCatalog,
-    realmPath,
-    wellknown,
+    realmPath: requestedRealm,
+    wellknown: requestedWellknownUrl,
     fallbackJourney: env.FR_AM_JOURNEY_LOGIN ?? null,
   };
 };

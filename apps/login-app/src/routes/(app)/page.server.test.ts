@@ -35,10 +35,7 @@ const logMock = vi.hoisted(() => ({
 vi.mock('$server/logger.effects', () => ({ log: logMock }));
 
 const validateUrlMock = vi.hoisted(() => vi.fn());
-vi.mock('$server/redirect/redirect.effects', async (importOriginal) => {
-  const actual = (await importOriginal()) as typeof redirectEffects;
-  return { ...actual, validateUrl: (...args: unknown[]) => validateUrlMock(...args) };
-});
+const fetchServerInfoRealmMock = vi.hoisted(() => vi.fn());
 
 // #592 moves the AM session helpers from $server/sessions to $server/am-session;
 // mock both so the suite passes at either stack position (the am-session mock is
@@ -47,10 +44,19 @@ const { getUserRolesFromSessionMock, getHttpCookieMock } = vi.hoisted(() => ({
   getUserRolesFromSessionMock: vi.fn(),
   getHttpCookieMock: vi.fn(() => 'token-123'),
 }));
-vi.mock('$server/sessions', () => ({
-  getHttpCookie: getHttpCookieMock,
-  getUserRolesFromSession: (...args: unknown[]) => getUserRolesFromSessionMock(...args),
-}));
+vi.mock('$server/sessions', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getHttpCookie: getHttpCookieMock,
+    getUserRolesFromSession: (...args: unknown[]) => getUserRolesFromSessionMock(...args),
+    fetchServerInfoRealm: (...args: unknown[]) => fetchServerInfoRealmMock(...args),
+  };
+});
+vi.mock('$server/redirect/redirect.effects', async (importOriginal) => {
+  const actual = (await importOriginal()) as typeof redirectEffects;
+  return { ...actual, validateUrl: (...args: unknown[]) => validateUrlMock(...args) };
+});
 vi.mock('$server/am-session', () => ({
   getHttpCookie: getHttpCookieMock,
   getUserRolesFromSession: (...args: unknown[]) => getUserRolesFromSessionMock(...args),
@@ -60,10 +66,14 @@ import { load } from './+page.server';
 
 const AM_ORIGIN = 'https://openam.example.com';
 
-function makeEvent(query = '') {
+function makeEvent(
+  query = '',
+  { matched = false, arrivalOrigin = 'https://login.example.com' } = {},
+) {
   return {
-    url: new URL(`https://login.example.com/login${query}`),
+    url: new URL(`${arrivalOrigin}/login${query}`),
     request: { headers: new Headers({ 'accept-language': 'en-US' }) },
+    parent: async () => ({ matched }),
     cookies: {
       get: () => undefined,
       set: () => {},
@@ -77,6 +87,14 @@ function makeEvent(query = '') {
 describe('(app)/+page.server.ts pre-flight redirect', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Defaults: live session, no alias answer (amOrigin falls back to the
+    // configured AM origin; custom-domain tests override the probe).
+    getUserRolesFromSessionMock.mockResolvedValue({
+      userId: 'uid-1',
+      roles: [],
+      unreachable: false,
+    });
+    fetchServerInfoRealmMock.mockResolvedValue(null);
   });
 
   it('follows the successUrl AM returns for a trusted authorize goto', async () => {
@@ -99,11 +117,6 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
   });
 
   it('falls through to the role redirect when AM substitutes the default success URL', async () => {
-    getUserRolesFromSessionMock.mockResolvedValue({
-      userId: 'uid-1',
-      roles: ['di-admin'],
-      unreachable: false,
-    });
     const authorizeUrl = `${AM_ORIGIN}/am/oauth2/realms/root/authorize?client_id=enduser`;
     validateUrlMock.mockResolvedValue(`${AM_ORIGIN}/am/ui-runtime/Realm/alpha/Console`);
 
@@ -124,11 +137,6 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
   });
 
   it('falls through to the role redirect when AM rejects the goto (null successUrl)', async () => {
-    getUserRolesFromSessionMock.mockResolvedValue({
-      userId: 'uid-1',
-      roles: ['di-admin'],
-      unreachable: false,
-    });
     const authorizeUrl = `${AM_ORIGIN}/am/oauth2/realms/root/authorize?client_id=enduser`;
     validateUrlMock.mockResolvedValue(null);
 
@@ -140,33 +148,74 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     expect(logMock.warn).not.toHaveBeenCalled();
   });
 
-  it('never redirects to a cross-origin goto even when it looks like an authorize URL', async () => {
-    getUserRolesFromSessionMock.mockResolvedValue({
-      userId: 'uid-1',
-      roles: ['di-admin'],
-      unreachable: false,
-    });
-    const evilUrl = 'https://evil.example.com/am/oauth2/realms/root/authorize';
-    validateUrlMock.mockResolvedValue(evilUrl);
+  it('defers to AM when the goto is authorize-shaped on a non-AM origin', async () => {
+    // Origin trust is AM's redirect-validation registry (as in platform-login's
+    // verifyGotoUrlAndRedirect): the gate sends any authorize-shaped URL to
+    // validateGoto and follows it only when AM echoes it back unchanged.
+    const crossOriginAuthorize = 'https://sso.partner.example/am/oauth2/authorize';
+    validateUrlMock.mockResolvedValue(`${crossOriginAuthorize}#substituted`);
 
-    await expect(load(makeEvent(`?goto=${encodeURIComponent(evilUrl)}`))).rejects.toMatchObject({
+    await expect(
+      load(makeEvent(`?goto=${encodeURIComponent(crossOriginAuthorize)}`)),
+    ).rejects.toMatchObject({
       location: expect.stringContaining('/enduser/'),
     });
-    expect(validateUrlMock).not.toHaveBeenCalled();
+    expect(validateUrlMock).toHaveBeenCalledWith('token-123', crossOriginAuthorize, 'alpha');
+    expect(logMock.warn).toHaveBeenCalledTimes(1);
   });
 
   it('falls through to the role redirect for a non-authorize same-origin goto', async () => {
-    getUserRolesFromSessionMock.mockResolvedValue({
-      userId: 'uid-1',
-      roles: ['di-admin'],
-      unreachable: false,
-    });
-
     await expect(
       load(makeEvent(`?goto=${encodeURIComponent('/platform/profile')}`)),
     ).rejects.toMatchObject({
       location: expect.stringContaining('/enduser/'),
     });
     expect(validateUrlMock).not.toHaveBeenCalled();
+  });
+
+  it('follows an FQDN-form authorize goto that arrives on a custom domain (alias match)', async () => {
+    // id.petrov.ca aliases to alpha, so resolveRedirectOrigin returns the
+    // custom-domain origin — the OAuth gate must still accept the FQDN-form
+    // goto, or SP-initiated OAuth breaks on custom domains (IAM-12293).
+    fetchServerInfoRealmMock.mockResolvedValue('alpha');
+    const authorizeUrl = `${AM_ORIGIN}/am/oauth2/realms/root/authorize?client_id=enduser`;
+    validateUrlMock.mockResolvedValue(authorizeUrl);
+
+    await expect(
+      load(makeEvent(`?goto=${encodeURIComponent(authorizeUrl)}`)),
+    ).rejects.toMatchObject({ location: authorizeUrl });
+    expect(validateUrlMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
+  });
+
+  it('follows a custom-domain-form authorize goto that arrives on the custom domain', async () => {
+    // AM's per-domain discovery issuer names the custom domain, so RPs
+    // integrated through it produce CD-form gotos.
+    fetchServerInfoRealmMock.mockResolvedValue('alpha');
+    const cdAuthorizeUrl = 'https://id.petrov.ca/am/oauth2/authorize?client_id=enduser';
+    validateUrlMock.mockResolvedValue(cdAuthorizeUrl);
+
+    await expect(
+      load(
+        makeEvent(`?goto=${encodeURIComponent(cdAuthorizeUrl)}`, {
+          arrivalOrigin: 'https://id.petrov.ca',
+        }),
+      ),
+    ).rejects.toMatchObject({ location: cdAuthorizeUrl });
+  });
+
+  it('falls through to the console when AM refuses an authorize-shaped goto on another host', async () => {
+    // AM returns null (or a substituted default) for URLs outside its
+    // redirect-validation registry — the echo check then fails and the user
+    // takes the console redirect instead.
+    fetchServerInfoRealmMock.mockResolvedValue('alpha');
+    const unregisteredAuthorize = 'https://unregistered.example.com/am/oauth2/authorize';
+    validateUrlMock.mockResolvedValue(null);
+
+    await expect(
+      load(makeEvent(`?goto=${encodeURIComponent(unregisteredAuthorize)}`)),
+    ).rejects.toMatchObject({
+      location: expect.stringContaining('/enduser/'),
+    });
+    expect(validateUrlMock).toHaveBeenCalledWith('token-123', unregisteredAuthorize, 'alpha');
   });
 });

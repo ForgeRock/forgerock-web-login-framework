@@ -54,3 +54,4 @@ packages/login-widget/tmp/
 .playwright-mcp/
 
 .polaris/
+*.pem

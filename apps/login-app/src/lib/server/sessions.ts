@@ -7,16 +7,22 @@
  *
  **/
 
+import { request as httpsRequest } from 'node:https';
+import { text as readBody } from 'node:stream/consumers';
 import { z } from 'zod';
 
-import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
+import { env } from '$env/dynamic/private';
+import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
+import { isValidRealm, normalizeRealm } from '$server/redirect/redirect.utilities';
 
 import type { Cookies } from '@sveltejs/kit';
+import type { IncomingMessage } from 'node:http';
 
 import type { TokenId } from '$server/schemas';
 
 const AM_TIMEOUT_MS = 2000;
+const serverInfoRealmCache = new Map<string, string>();
 
 /** AM answered completely: headers captured, body already consumed. */
 export interface AmUpstreamResponse {
@@ -94,6 +100,64 @@ export async function fetchAm(url: string, init: RequestInit = {}): Promise<AmUp
     return { kind: 'failure', reason: 'network', error: normalized };
   } finally {
     clearTimeout(timeout);
+  }
+}
+
+/**
+ * @function fetchServerInfoRealm - asks AM which realm a hostname belongs to.
+ * The hostname goes in the Host header of a request to the AM origin (fetch
+ * drops that header, hence node:https), so the answer comes from AM's own
+ * domain registry — never from the host itself.
+ *   amUrl = 'https://openam.example.com/am', host = 'id.petrov.ca'    →  'alpha'
+ *   amUrl = 'https://openam.example.com/am', host = 'attacker.example' →  null (AM rejects it)
+ * @param {string} amUrl - The configured AM base URL.
+ * @param {string} host - The hostname to ask about.
+ * @returns {Promise<string | null>} The realm name, or null when AM rejects, times out, or answers non-JSON.
+ */
+export async function fetchServerInfoRealm(amUrl: string, host: string): Promise<string | null> {
+  const hostHeader = env.PREVIEW_ALIAS_HOST || host;
+  const cacheKey = `${amUrl}::${hostHeader}`;
+  const cached = serverInfoRealmCache.get(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
+  try {
+    const url = new URL(amUrl);
+    const response = await new Promise<IncomingMessage>((resolve, reject) => {
+      const request = httpsRequest(
+        {
+          hostname: url.hostname,
+          port: url.port || 443,
+          path: `${url.pathname.replace(/\/+$/, '')}/json/serverinfo/*`,
+          method: 'GET',
+          servername: url.hostname, // validate TLS against the AM cert, not the host header
+          headers: { accept: 'application/json', host: hostHeader },
+          timeout: AM_TIMEOUT_MS,
+        },
+        resolve,
+      );
+      // node fires 'timeout' without ending the request — destroy makes it error out.
+      request.on('timeout', () => request.destroy(new Error('timed out')));
+      request.on('error', reject);
+      request.end();
+    });
+    const body = await readBody(response);
+    if (response.statusCode !== 200) {
+      log.warn('[sessions] serverinfo answered non-200', {
+        status: response.statusCode,
+        host: hostHeader,
+      });
+      return null;
+    }
+    const { realm } = z.object({ realm: z.string() }).parse(JSON.parse(body));
+    const resolved = normalizeRealm(realm);
+    serverInfoRealmCache.set(cacheKey, resolved);
+    return resolved;
+  } catch (error) {
+    const normalized = error instanceof Error ? error : new Error(String(error));
+    log.error('[sessions] serverinfo probe failed', normalized);
+    return null;
   }
 }
 
@@ -253,8 +317,6 @@ export function removeHttpCookie(cookies: Cookies, name: string): void {
   });
 }
 
-const VALID_REALM = /^[A-Za-z0-9_-]+$/;
-
 /**
  * @function resolveJsonRealmPath - builds the AM JSON realm path segment for a given realm override.
  * @param {string} [realm] - Realm override; uses the configured realm when omitted.
@@ -262,16 +324,17 @@ const VALID_REALM = /^[A-Za-z0-9_-]+$/;
  */
 export function resolveJsonRealmPath(realm?: string): string {
   if (realm === undefined) return JSON_REALM_PATH;
-  const normalizedRealm = realm.replace(/^\/+/, '');
-  if (normalizedRealm === 'root' || !VALID_REALM.test(normalizedRealm)) {
+
+  const normalizedRealm = normalizeRealm(realm);
+  if (normalizedRealm === 'root' || !isValidRealm(normalizedRealm)) {
     return '/json/realms/root';
   }
+
   return `/json/realms/root/realms/${normalizedRealm}`;
 }
 
 export function resolveOAuthRealmPath(realm?: string): string {
-  const jsonRealmPath = resolveJsonRealmPath(realm);
-  return jsonRealmPath.replace('/json/', '/oauth2/');
+  return resolveJsonRealmPath(realm).replace('/json/', '/oauth2/');
 }
 
 /**
