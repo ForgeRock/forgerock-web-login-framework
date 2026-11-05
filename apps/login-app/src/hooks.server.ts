@@ -13,6 +13,15 @@ import { buildLoginCspHeaders, isHtmlResponse } from '$server/csp.utilities';
 import type { Handle } from '@sveltejs/kit';
 
 export const handle: Handle = async ({ event, resolve }) => {
+  const REQUIRED_ENV = ['FR_AM_URL', 'FR_AM_COOKIE_NAME', 'FR_REALM_PATH'] as const;
+  const missing = REQUIRED_ENV.filter((key) => !env[key]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}. ` +
+        'Copy .env.example to .env and fill in your AM connection details.',
+    );
+  }
+
   const response = await resolve(event);
 
   if (!isHtmlResponse(response)) {

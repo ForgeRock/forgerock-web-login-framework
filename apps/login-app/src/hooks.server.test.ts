@@ -41,6 +41,7 @@ describe('hooks.server handle', () => {
       delete mockEnv[key];
     }
     mockEnv.FR_AM_URL = 'https://openam.example.com/am';
+    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
     mockEnv.FR_REALM_PATH = 'root';
   });
 

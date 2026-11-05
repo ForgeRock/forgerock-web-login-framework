@@ -37,6 +37,26 @@ describe('parseRedirectForm', () => {
     });
   });
 
+  it('parses the realm form field', () => {
+    const formData = new FormData();
+    formData.append('loginResult', 'success');
+    formData.append('tokenId', 'abc123');
+    formData.append('journeyStepUrl', '');
+    formData.append('realm', 'alpha');
+
+    expect(parseRedirectForm(formData).realm).toBe('alpha');
+  });
+
+  it('drops an invalid realm form field instead of passing it downstream', () => {
+    const formData = new FormData();
+    formData.append('loginResult', 'success');
+    formData.append('tokenId', 'abc123');
+    formData.append('journeyStepUrl', '');
+    formData.append('realm', 'alpha/../beta');
+
+    expect(parseRedirectForm(formData).realm).toBeUndefined();
+  });
+
   it('defaults loginResult to failure when invalid', () => {
     const formData = new FormData();
     formData.append('loginResult', 'nope');

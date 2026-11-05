@@ -10,7 +10,8 @@
 import { isRedirect, redirect, type RequestEvent } from '@sveltejs/kit';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
-import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
+import { env } from '$env/dynamic/private';
+import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
 import {
   createRedirectContext,
@@ -22,8 +23,8 @@ import {
   buildRoleUrl,
   describeRedirectTarget,
   isOAuthAuthorizePath,
-  resolveRealmFromUrl,
   resolveRedirect,
+  resolveRequestedRealm,
 } from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
 import { getHttpCookie, getUserRolesFromSession } from '$server/sessions';
@@ -48,7 +49,7 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
   if (tokenId) {
     try {
       const amOrigin = new URL(AM_DOMAIN_PATH).origin;
-      const realm = resolveRealmFromUrl(event.url);
+      const realm = resolveRequestedRealm(event.url, env.FR_REALM_PATH);
 
       // Validate the session is live before acting on it.
       const session = await getUserRolesFromSession(tokenId, realm);

@@ -51,6 +51,16 @@ export default defineConfig(
     preview: {
       host: '0.0.0.0',
       port: 3000,
+      // FQDN emulation; PREVIEW_ALIAS_HOST switches to that alias (custom-domain e2e).
+      proxy: {
+        '/am': {
+          target: 'https://openam-sdks.forgeblocks.com',
+          changeOrigin: !process.env.PREVIEW_ALIAS_HOST,
+          headers: process.env.PREVIEW_ALIAS_HOST
+            ? { host: process.env.PREVIEW_ALIAS_HOST }
+            : undefined,
+        },
+      },
     },
   }),
 );

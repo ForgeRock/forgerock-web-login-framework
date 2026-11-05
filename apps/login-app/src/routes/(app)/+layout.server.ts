@@ -11,7 +11,7 @@ import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
-import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
+import { normalizeRealm, resolveRequestedRealm } from '$server/redirect/redirect.utilities';
 
 import type { LayoutServerLoad } from './$types';
 
@@ -37,22 +37,34 @@ export const load: LayoutServerLoad = async ({ url }) => {
   }
 
   // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
-  const realmPath = resolveRealmFromUrl(url);
+  const realmPath = resolveRequestedRealm(url, env.FR_REALM_PATH);
 
-  // Use the configured discovery endpoint for the deployment's default realm.
-  // Derive a sibling endpoint only when the request explicitly selects another realm.
-  // A relative FR_AM_WELLKNOWN_URL resolves against the request origin so the
-  // browser fetches discovery from whichever host the user came in on (tenant
-  // FQDN or custom domain) instead of a hard-coded AM FQDN.
-  const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
-  const wellknown = new URL(
-    realmPath === configuredRealm
-      ? wellknownUrl
-      : realmPath === 'root'
-      ? `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`
-      : `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
-    url.origin,
-  ).toString();
+  // serverinfo resolves the realm the arrival host aliases to. When it carries
+  // the requested realm, the URL must stay realm-less — a realm-qualified path
+  // double-references the realm and journey-client resolves root (IAM-12293).
+  let aliasedRealm: string | null = null;
+  try {
+    const response = await fetch(new URL(`${amBasePath}/json/serverinfo/*`, url.origin));
+    const body = (await response.json()) as { realm?: unknown };
+    if (typeof body.realm === 'string') {
+      aliasedRealm = normalizeRealm(body.realm);
+    }
+  } catch {
+    // No alias answer: keep the realm-qualified form below.
+  }
+
+  const configuredRealm = normalizeRealm(env.FR_REALM_PATH);
+  const wellknown =
+    aliasedRealm !== null && aliasedRealm === realmPath
+      ? new URL(`${amBasePath}/oauth2/.well-known/openid-configuration`, url.origin).toString()
+      : new URL(
+          realmPath === configuredRealm
+            ? wellknownUrl
+            : realmPath === 'root'
+            ? `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`
+            : `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
+          url.origin,
+        ).toString();
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {

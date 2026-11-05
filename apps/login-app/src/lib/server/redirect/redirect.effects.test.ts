@@ -14,7 +14,7 @@ vi.mock('$env/dynamic/private', () => ({
   env: {
     FR_AM_URL: 'https://openam.example.com/am',
     FR_AM_COOKIE_NAME: 'am-cookie',
-    // Leading slash on purpose: resolveRealmFromUrl must normalize this the
+    // Leading slash on purpose: resolveRequestedRealm must normalize this the
     // same way it normalizes a `?realm=` param, or callers see "/alpha" instead
     // of "alpha" whenever they fall back to the configured realm.
     FR_REALM_PATH: '/alpha',
@@ -22,36 +22,48 @@ vi.mock('$env/dynamic/private', () => ({
 }));
 
 import { createRedirectContext, validateUrl } from './redirect.effects';
-import { resolveRealmFromUrl, resolveRedirect } from './redirect.utilities';
+import { resolveRedirect, resolveRequestedRealm } from './redirect.utilities';
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('resolveRealmFromUrl', () => {
-  it('falls back to the configured FR_REALM_PATH when no realm param is present', () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/'))).toBe('alpha');
+describe('resolveRequestedRealm', () => {
+  it('falls back to the configured realm when no realm param is present', () => {
+    expect(resolveRequestedRealm(new URL('https://login.example.com/'), '/alpha')).toBe('alpha');
   });
 
   it('normalizes a leading-slash realm param', () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm=/bravo'))).toBe('bravo');
+    expect(
+      resolveRequestedRealm(new URL('https://login.example.com/?realm=/bravo'), '/alpha'),
+    ).toBe('bravo');
   });
 
   it("resolves an empty or root-only realm param to 'root'", () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm=/'))).toBe('root');
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm='))).toBe('root');
+    expect(resolveRequestedRealm(new URL('https://login.example.com/?realm=/'), '/alpha')).toBe(
+      'root',
+    );
+    expect(resolveRequestedRealm(new URL('https://login.example.com/?realm='), '/alpha')).toBe(
+      'root',
+    );
   });
 
   it('falls back to the configured realm when the realm param contains path traversal', () => {
     expect(
-      resolveRealmFromUrl(new URL('https://login.example.com/?realm=../../../../global-config')),
+      resolveRequestedRealm(
+        new URL('https://login.example.com/?realm=../../../../global-config'),
+        '/alpha',
+      ),
     ).toBe('alpha');
   });
 
   it('falls back to the configured realm when the realm param contains other unsafe characters', () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm=alpha/../beta'))).toBe(
-      'alpha',
-    );
     expect(
-      resolveRealmFromUrl(new URL('https://login.example.com/?realm=' + encodeURIComponent('a b'))),
+      resolveRequestedRealm(new URL('https://login.example.com/?realm=alpha/../beta'), '/alpha'),
+    ).toBe('alpha');
+    expect(
+      resolveRequestedRealm(
+        new URL('https://login.example.com/?realm=' + encodeURIComponent('a b')),
+        '/alpha',
+      ),
     ).toBe('alpha');
   });
 });
@@ -86,6 +98,23 @@ describe('AM redirect validation', () => {
     expect(resolveRedirect(context)).toBe(goto);
     expect(fetch.mock.calls[0][0]).toBe(
       'https://openam.example.com/am/json/users?_action=validateGoto',
+    );
+  });
+
+  it('prefers the journey realm from the form over the cookie realm', async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ roles: [] }));
+    vi.stubGlobal('fetch', fetch);
+    const form = new FormData();
+    form.set('loginResult', 'success');
+    form.set('tokenId', 'abc123');
+    form.set('journeyStepUrl', '');
+    form.set('realm', 'bravo');
+
+    const context = await createRedirectContext(form, { realm: 'alpha' });
+
+    expect(context.realm).toBe('bravo');
+    expect(fetch.mock.calls[0][0]).toBe(
+      'https://openam.example.com/am/json/realms/root/realms/bravo/sessions?_action=validate',
     );
   });
 
