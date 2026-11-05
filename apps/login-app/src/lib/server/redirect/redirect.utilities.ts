@@ -9,24 +9,35 @@
 
 import { z } from 'zod';
 
-import { env } from '$env/dynamic/private';
 import { tokenIdSchema } from '$server/schemas';
 import { type RedirectData, type RedirectFormValue, type Resolver } from './redirect.types';
 
 const VALID_REALM = /^[A-Za-z0-9_-]+$/;
 
 /**
- * Resolves a realm from a `?realm=` query parameter, falling back to the configured realm.
+ *   value = '/alpha'     →  returns 'alpha'
+ *   value = '/'          →  returns 'root'
+ *   value = undefined    →  returns 'root'
  */
-export function resolveRealmFromUrl(url: URL): string {
-  const configuredRealm = (env.FR_REALM_PATH || 'root').replace(/^\/+/, '') || 'root';
+export function normalizeRealm(value?: string | null): string {
+  const normalized = (value ?? '').replace(/^\/+/, '');
+  return normalized || 'root';
+}
+
+export function isValidRealm(realm: string): boolean {
+  return VALID_REALM.test(realm);
+}
+
+/**
+ * Resolves the requested realm for a login arrival: the `?realm=` param when
+ * present and safe, otherwise the configured realm (undefined → 'root').
+ */
+export function resolveRequestedRealm(url: URL, configuredRealm?: string): string {
+  const configured = normalizeRealm(configuredRealm);
   const realmParam = url.searchParams.get('realm');
-  if (realmParam != null) {
-    const realm = realmParam.replace(/^\/+/, '');
-    if (!realm) return 'root';
-    return VALID_REALM.test(realm) ? realm : configuredRealm;
-  }
-  return configuredRealm;
+  if (realmParam === null) return configured;
+  const realm = normalizeRealm(realmParam);
+  return isValidRealm(realm) ? realm : configured;
 }
 
 /**
@@ -91,12 +102,17 @@ export function parseRedirectForm(formData: FormData): RedirectFormValue {
     loginResult: str.pipe(z.enum(['success', 'failure']).catch('failure')),
     tokenId: str.pipe(tokenIdSchema),
     journeyStepUrl: str,
+    realm: z.preprocess(
+      (v) => (typeof v === 'string' && isValidRealm(v) ? v : undefined),
+      z.string().optional(),
+    ),
   });
 
   return formSchema.parse({
     loginResult: formData.get('loginResult'),
     tokenId: formData.get('tokenId'),
     journeyStepUrl: formData.get('journeyStepUrl'),
+    realm: formData.get('realm'),
   });
 }
 

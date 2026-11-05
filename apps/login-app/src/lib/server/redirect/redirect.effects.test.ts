@@ -14,45 +14,110 @@ vi.mock('$env/dynamic/private', () => ({
   env: {
     FR_AM_URL: 'https://openam.example.com/am',
     FR_AM_COOKIE_NAME: 'am-cookie',
-    // Leading slash on purpose: resolveRealmFromUrl must normalize this the
+    // Leading slash on purpose: resolveRequestedRealm must normalize this the
     // same way it normalizes a `?realm=` param, or callers see "/alpha" instead
     // of "alpha" whenever they fall back to the configured realm.
     FR_REALM_PATH: '/alpha',
   },
 }));
 
-import { createRedirectContext, validateUrl } from './redirect.effects';
-import { resolveRealmFromUrl, resolveRedirect } from './redirect.utilities';
+import { createRedirectContext, resolveRedirectOrigin, validateUrl } from './redirect.effects';
+import { resolveRedirect, resolveRequestedRealm } from './redirect.utilities';
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe('resolveRealmFromUrl', () => {
-  it('falls back to the configured FR_REALM_PATH when no realm param is present', () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/'))).toBe('alpha');
+describe('resolveRequestedRealm', () => {
+  it('falls back to the configured realm when no realm param is present', () => {
+    expect(resolveRequestedRealm(new URL('https://login.example.com/'), '/alpha')).toBe('alpha');
   });
 
   it('normalizes a leading-slash realm param', () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm=/bravo'))).toBe('bravo');
+    expect(
+      resolveRequestedRealm(new URL('https://login.example.com/?realm=/bravo'), '/alpha'),
+    ).toBe('bravo');
   });
 
   it("resolves an empty or root-only realm param to 'root'", () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm=/'))).toBe('root');
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm='))).toBe('root');
+    expect(resolveRequestedRealm(new URL('https://login.example.com/?realm=/'), '/alpha')).toBe(
+      'root',
+    );
+    expect(resolveRequestedRealm(new URL('https://login.example.com/?realm='), '/alpha')).toBe(
+      'root',
+    );
   });
 
   it('falls back to the configured realm when the realm param contains path traversal', () => {
     expect(
-      resolveRealmFromUrl(new URL('https://login.example.com/?realm=../../../../global-config')),
+      resolveRequestedRealm(
+        new URL('https://login.example.com/?realm=../../../../global-config'),
+        '/alpha',
+      ),
     ).toBe('alpha');
   });
 
   it('falls back to the configured realm when the realm param contains other unsafe characters', () => {
-    expect(resolveRealmFromUrl(new URL('https://login.example.com/?realm=alpha/../beta'))).toBe(
-      'alpha',
-    );
     expect(
-      resolveRealmFromUrl(new URL('https://login.example.com/?realm=' + encodeURIComponent('a b'))),
+      resolveRequestedRealm(new URL('https://login.example.com/?realm=alpha/../beta'), '/alpha'),
     ).toBe('alpha');
+    expect(
+      resolveRequestedRealm(
+        new URL('https://login.example.com/?realm=' + encodeURIComponent('a b')),
+        '/alpha',
+      ),
+    ).toBe('alpha');
+  });
+});
+
+describe('resolveRedirectOrigin', () => {
+  const serverinfoResponse = (realm: string) =>
+    Promise.resolve(new Response(JSON.stringify({ realm })));
+
+  it('stays on the arrival origin when its serverinfo aliases to the requested realm (custom domain)', async () => {
+    const fetch = vi.fn((input: string) => {
+      if (input.includes('/json/serverinfo/*')) {
+        return serverinfoResponse('/alpha');
+      }
+      throw new Error(`unexpected fetch: ${input}`);
+    });
+    vi.stubGlobal('fetch', fetch);
+
+    const origin = await resolveRedirectOrigin('https://id.petrov.ca', 'alpha');
+
+    expect(origin).toBe('https://id.petrov.ca');
+    expect(fetch.mock.calls[0][0]).toBe('https://id.petrov.ca/am/json/serverinfo/*');
+  });
+
+  it('falls back to the configured AM origin when the arrival host is not AM-served (separate-origin app)', async () => {
+    const fetch = vi.fn(() => Promise.resolve(new Response('<html>404</html>')));
+    vi.stubGlobal('fetch', fetch);
+
+    const origin = await resolveRedirectOrigin('https://app.example.com', 'alpha');
+
+    expect(origin).toBe('https://openam.example.com');
+  });
+
+  it('falls back to the configured AM origin when the arrival alias differs from the requested realm', async () => {
+    const fetch = vi.fn((input: string) => {
+      if (input.includes('/json/serverinfo/*')) {
+        return serverinfoResponse('/');
+      }
+      throw new Error(`unexpected fetch: ${input}`);
+    });
+    vi.stubGlobal('fetch', fetch);
+
+    const origin = await resolveRedirectOrigin('https://tenant.example.com', 'alpha');
+
+    expect(origin).toBe('https://openam.example.com');
+  });
+
+  it('returns the AM origin without probing when arrival already is the AM origin', async () => {
+    const fetch = vi.fn();
+    vi.stubGlobal('fetch', fetch);
+
+    const origin = await resolveRedirectOrigin('https://openam.example.com', 'alpha');
+
+    expect(origin).toBe('https://openam.example.com');
+    expect(fetch).not.toHaveBeenCalled();
   });
 });
 
@@ -80,12 +145,37 @@ describe('AM redirect validation', () => {
     form.set('tokenId', 'abc123');
     form.set('journeyStepUrl', goto);
 
-    const context = await createRedirectContext(form, { goto, realm: 'root' });
+    const context = await createRedirectContext(
+      form,
+      { goto, realm: 'root' },
+      'https://login.example.com',
+    );
 
     expect(context.successUrl).toBe(goto);
     expect(resolveRedirect(context)).toBe(goto);
     expect(fetch.mock.calls[0][0]).toBe(
       'https://openam.example.com/am/json/users?_action=validateGoto',
+    );
+  });
+
+  it('prefers the journey realm from the form over the cookie realm', async () => {
+    const fetch = vi.fn().mockResolvedValue(Response.json({ roles: [] }));
+    vi.stubGlobal('fetch', fetch);
+    const form = new FormData();
+    form.set('loginResult', 'success');
+    form.set('tokenId', 'abc123');
+    form.set('journeyStepUrl', '');
+    form.set('realm', 'bravo');
+
+    const context = await createRedirectContext(
+      form,
+      { realm: 'alpha' },
+      'https://login.example.com',
+    );
+
+    expect(context.realm).toBe('bravo');
+    expect(fetch.mock.calls[0][0]).toBe(
+      'https://openam.example.com/am/json/realms/root/realms/bravo/sessions?_action=validate',
     );
   });
 

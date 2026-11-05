@@ -30,6 +30,7 @@ export type RedirectFormValue = {
   loginResult: 'success' | 'failure';
   tokenId: TokenId;
   journeyStepUrl: string;
+  realm?: string;
 };
 
 export type Resolver = (redirectContext: RedirectData) => string | null;

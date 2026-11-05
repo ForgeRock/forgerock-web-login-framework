@@ -47,10 +47,14 @@ const { getUserRolesFromSessionMock, getHttpCookieMock } = vi.hoisted(() => ({
   getUserRolesFromSessionMock: vi.fn(),
   getHttpCookieMock: vi.fn(() => 'token-123'),
 }));
-vi.mock('$server/sessions', () => ({
-  getHttpCookie: getHttpCookieMock,
-  getUserRolesFromSession: (...args: unknown[]) => getUserRolesFromSessionMock(...args),
-}));
+vi.mock('$server/sessions', async (importOriginal) => {
+  const actual = (await importOriginal()) as Record<string, unknown>;
+  return {
+    ...actual,
+    getHttpCookie: getHttpCookieMock,
+    getUserRolesFromSession: (...args: unknown[]) => getUserRolesFromSessionMock(...args),
+  };
+});
 vi.mock('$server/am-session', () => ({
   getHttpCookie: getHttpCookieMock,
   getUserRolesFromSession: (...args: unknown[]) => getUserRolesFromSessionMock(...args),
@@ -60,10 +64,11 @@ import { load } from './+page.server';
 
 const AM_ORIGIN = 'https://openam.example.com';
 
-function makeEvent(query = '') {
+function makeEvent(query = '', { matched = false }: { matched?: boolean } = {}) {
   return {
     url: new URL(`https://login.example.com/login${query}`),
     request: { headers: new Headers({ 'accept-language': 'en-US' }) },
+    parent: async () => ({ matched }),
     cookies: {
       get: () => undefined,
       set: () => {},
