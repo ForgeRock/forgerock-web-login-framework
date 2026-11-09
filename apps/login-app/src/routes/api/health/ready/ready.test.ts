@@ -7,10 +7,21 @@
  *
  **/
 
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockEnv = vi.hoisted(() => ({}) as Record<string, string | undefined>);
+// core/constants.ts (imported transitively through sessions.ts) throws at
+// module load when these are missing, so the mock factory must provide them;
+// the per-test values below then drive discoveryUrl().
+const mockEnv = vi.hoisted(
+  () =>
+    ({
+      FR_AM_URL: 'https://openam.example.com/am',
+      FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
+      FR_REALM_PATH: 'root',
+    }) as Record<string, string | undefined>,
+);
 
+vi.mock('$app/environment', () => ({ building: false }));
 vi.mock('$env/dynamic/private', () => ({ env: mockEnv }));
 
 import { GET } from './+server';
@@ -21,6 +32,62 @@ const noEvent = undefined as unknown as Parameters<typeof GET>[0];
 function mockFetchOnce(status: number) {
   return vi.fn(async () => new Response('{}', { status }));
 }
+
+describe('api/health/ready upstream probe', () => {
+  beforeEach(() => {
+    mockEnv.FR_AM_URL = 'https://openam.example.com/am';
+    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
+    mockEnv.FR_REALM_PATH = 'root';
+    mockEnv.FR_AM_WELLKNOWN_URL =
+      'https://openam.example.com/am/oauth2/realms/root/.well-known/openid-configuration';
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.unstubAllEnvs();
+    vi.useRealTimers();
+  });
+
+  it('reports ready when AM answers OK', async () => {
+    vi.stubGlobal('fetch', mockFetchOnce(200));
+
+    const response = await GET(noEvent);
+
+    expect(response.status).toBe(200);
+    expect(JSON.parse(await response.text())).toEqual({ status: 'ready' });
+  });
+
+  it('reports not-ready when AM answers non-OK', async () => {
+    vi.stubGlobal('fetch', mockFetchOnce(500));
+
+    const response = await GET(noEvent);
+
+    expect(response.status).toBe(503);
+    expect(JSON.parse(await response.text())).toEqual({ status: 'not-ready' });
+  });
+
+  it('reports not-ready when AM does not answer before the timeout', async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        (_url: string, init?: RequestInit) =>
+          new Promise<Response>((_resolve, reject) => {
+            init?.signal?.addEventListener('abort', () => reject(new Error('aborted')));
+          }),
+      ),
+    );
+
+    // Attach the assertion before the timer fires so the rejection is never
+    // unhandled while fake timers advance.
+    const pending = GET(noEvent);
+    await vi.advanceTimersByTimeAsync(2000);
+    const response = await pending;
+
+    expect(response.status).toBe(503);
+    expect(JSON.parse(await response.text())).toEqual({ status: 'not-ready' });
+  });
+});
 
 describe('api/health/ready discovery URL resolution', () => {
   afterEach(() => {

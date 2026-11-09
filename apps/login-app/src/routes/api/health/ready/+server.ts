@@ -8,10 +8,9 @@
  **/
 
 import { env } from '$env/dynamic/private';
+import { fetchAm } from '$server/sessions';
 
 import type { RequestHandler } from './$types';
-
-const AM_TIMEOUT_MS = 2000;
 
 function discoveryUrl(): string | null {
   if (!env.FR_AM_WELLKNOWN_URL || !env.FR_AM_COOKIE_NAME || !env.FR_REALM_PATH) return null;
@@ -36,30 +35,21 @@ export const GET: RequestHandler = async () => {
     });
   }
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
-  try {
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: { accept: 'application/json' },
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      return new Response(JSON.stringify({ status: 'not-ready' }), {
-        status: 503,
-        headers: { 'content-type': 'application/json' },
-      });
-    }
-
-    return new Response(JSON.stringify({ status: 'ready' }), {
-      headers: { 'content-type': 'application/json' },
-    });
-  } catch {
+  // fetchAm owns the 2s timeout, failure classification, and logging; the probe
+  // only folds any upstream outcome (transport failure or non-OK status) into
+  // its 503 not-ready answer. The body is never read.
+  const response = await fetchAm(url, {
+    method: 'GET',
+    headers: { accept: 'application/json' },
+  });
+  if (response.kind === 'failure' || !response.ok) {
     return new Response(JSON.stringify({ status: 'not-ready' }), {
       status: 503,
       headers: { 'content-type': 'application/json' },
     });
-  } finally {
-    clearTimeout(timeout);
   }
+
+  return new Response(JSON.stringify({ status: 'ready' }), {
+    headers: { 'content-type': 'application/json' },
+  });
 };

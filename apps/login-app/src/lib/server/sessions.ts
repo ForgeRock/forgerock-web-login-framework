@@ -10,12 +10,128 @@
 import { z } from 'zod';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
+import { log } from '$server/logger.effects';
 
 import type { Cookies } from '@sveltejs/kit';
 
 import type { TokenId } from '$server/schemas';
 
 const AM_TIMEOUT_MS = 2000;
+
+/** AM answered completely: headers captured, body already consumed. */
+export interface AmUpstreamResponse {
+  readonly kind: 'response';
+  readonly status: number;
+  readonly ok: boolean;
+  readonly headers: Headers;
+  /**
+   * The buffered body. `null` for bodyless statuses (204, 205, 304) so callers
+   * can rebuild a valid Response; the Response constructor rejects non-null
+   * bodies for those statuses.
+   */
+  readonly body: string | null;
+}
+
+/** Why the exchange failed: our timer fired, or the connection died first. */
+export type AmUpstreamFailureReason = 'timeout' | 'network';
+
+export interface AmUpstreamFailure {
+  readonly kind: 'failure';
+  readonly reason: AmUpstreamFailureReason;
+  readonly error: Error;
+}
+
+export type AmUpstream = AmUpstreamResponse | AmUpstreamFailure;
+
+/**
+ * @function fetchAm - fetch against AM and read the full response under the
+ * shared 2s timeout. The abort timer stays armed until the body is consumed,
+ * so a stalled body (not just stalled headers) fails fast instead of pinning
+ * the SvelteKit request open. Returns a buffered record rather than a Response
+ * so callers cannot re-introduce an un-timed body read; intended for the AM
+ * proxy's small JSON payloads, never for streaming downloads.
+ *
+ * Failures are encoded in the return type, never thrown: `reason: 'timeout'`
+ * means this function's own signal aborted; `reason: 'network'` means DNS,
+ * refused connection, TLS, or a mid-body reset. Any caller-provided
+ * `init.signal` is ignored; this function owns the signal.
+ * @param {string} url - The absolute AM endpoint URL.
+ * @param {RequestInit} [init] - Standard fetch init; `signal` is supplied here.
+ * @returns {Promise<AmUpstream>} The buffered upstream exchange or a classified failure.
+ */
+export async function fetchAm(url: string, init: RequestInit = {}): Promise<AmUpstream> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
+  try {
+    const response = await fetch(url, { ...init, signal: controller.signal });
+    const rawBody = await response.text();
+    // response.text() yields '' when the body is null, but the Response
+    // constructor rejects a non-null body for statuses that must not have one
+    // (204, 205, 304). Preserve null so the proxy can rebuild a valid Response.
+    const body =
+      (response.status === 204 || response.status === 205 || response.status === 304) &&
+      rawBody === ''
+        ? null
+        : rawBody;
+    return {
+      kind: 'response',
+      status: response.status,
+      ok: response.ok,
+      headers: new Headers(response.headers),
+      body,
+    };
+  } catch (error) {
+    const normalized = error instanceof Error ? error : new Error(String(error));
+    // Classify by our own signal, not by error.name: every fetch implementation
+    // surfaces abort differently (AbortError, TypeError "terminated" with an
+    // AbortError cause), but signal.aborted is unambiguous and only this
+    // function's timer can trip it.
+    if (controller.signal.aborted) {
+      log.warn('[sessions] AM upstream timed out', normalized);
+      return { kind: 'failure', reason: 'timeout', error: normalized };
+    }
+    log.error('[sessions] AM upstream request failed', normalized);
+    return { kind: 'failure', reason: 'network', error: normalized };
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+/**
+ * @function upstreamFailureResponse - folds a transport failure into the proxy's
+ * error Response: 504 when this server's timeout fired, 502 when AM was
+ * unreachable (DNS, refused connection, TLS). Pure; the failure was already
+ * logged by `fetchAm`.
+ * @param {AmUpstreamFailure} failure - The classified transport failure.
+ * @returns {Response} A JSON error response carrying a content-type header.
+ */
+export function upstreamFailureResponse(failure: AmUpstreamFailure): Response {
+  return new Response(
+    JSON.stringify({
+      error: failure.reason === 'timeout' ? 'upstream_timeout' : 'upstream_unavailable',
+    }),
+    {
+      status: failure.reason === 'timeout' ? 504 : 502,
+      headers: { 'content-type': 'application/json' },
+    },
+  );
+}
+
+/**
+ * @function pickUpstreamHeaders - copies the named headers into a fresh Headers
+ * instance for the proxied response. Pure.
+ * @param {Headers} headers - The upstream response headers.
+ * @param {readonly string[]} names - Header names to relay.
+ * @returns {Headers} A new Headers instance with only the picked headers.
+ */
+export function pickUpstreamHeaders(headers: Headers, names: readonly string[]): Headers {
+  const picked: [string, string][] = [];
+  for (const name of names) {
+    const value = headers.get(name);
+    if (value) picked.push([name, value]);
+  }
+  return new Headers(picked);
+}
 
 /**
  * Builds the AM session cookie header from the browser-owned cookie.
@@ -28,26 +144,53 @@ export function getAmCookie(cookies: Cookies): string {
 
 /**
  * Stores the AM session cookie as a host-only cookie, leaving out the upstream
- * Domain attribute so it stays scoped to the tenant's browser.
+ * Domain attribute so it stays scoped to the tenant's browser. Persistence
+ * attributes (Max-Age, falling back to Expires per RFC 6265 section 4.1.2) are
+ * forwarded so the browser retains the session for as long as AM intends;
+ * malformed attributes fall back to a session cookie. Cookie boundaries come
+ * from Headers.getSetCookie(), so multiple Set-Cookie headers (and runtimes
+ * that fold them into one comma-joined value) are handled by the platform
+ * instead of a regex.
  */
-export function setAmCookie(cookies: Cookies, setCookie: string): void {
+export function setAmCookie(cookies: Cookies, headers: Headers): void {
   const prefix = `${AM_COOKIE_NAME}=`;
-  const cookiePart = setCookie
-    .split(/,(?=\s*[^;=,\s]+=[^;]+)/)
-    .map((part) => part.trim().split(';')[0])
-    .find((part) => part?.startsWith(prefix));
+  const cookiePart = headers
+    .getSetCookie()
+    .map((setCookie) => setCookie.trim())
+    .find((setCookie) => setCookie.startsWith(prefix));
   if (!cookiePart) return;
-  const value = cookiePart.slice(prefix.length);
+
+  const [pair, ...attributes] = cookiePart.split(';').map((attribute) => attribute.trim());
+  const value = pair?.slice(prefix.length);
   if (!value) {
     clearAmCookie(cookies);
     return;
   }
+
+  const parseDate = (raw: string | undefined): Date | undefined => {
+    if (!raw) return undefined;
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime()) ? undefined : parsed;
+  };
+  const parseMaxAge = (raw: string | undefined): number | undefined => {
+    if (!raw || !/^-?\d+$/.test(raw.trim())) return undefined;
+    return Number(raw.trim());
+  };
+
+  const maxAge = parseMaxAge(
+    attributes.find((attribute) => /^Max-Age\s*=/i.test(attribute))?.split('=')[1],
+  );
+  const expires = parseDate(
+    attributes.find((attribute) => /^Expires\s*=/i.test(attribute))?.split('=')[1],
+  );
 
   cookies.set(AM_COOKIE_NAME, value, {
     httpOnly: true,
     sameSite: 'lax',
     secure: true,
     path: '/',
+    ...(maxAge !== undefined ? { maxAge } : {}),
+    ...(expires !== undefined && maxAge === undefined ? { expires } : {}),
   });
 }
 
@@ -163,12 +306,9 @@ export async function getUserRolesFromSession(
 ): Promise<AmSession> {
   // AIC blocks /users?_action=idFromSession (403). Use sessions validate instead,
   // which returns uid = the username string on AIC.
-  const realmPath = resolveJsonRealmPath(realm);
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
-  let userId: string | null;
-  try {
-    const response = await fetch(`${AM_DOMAIN_PATH}${realmPath}/sessions?_action=validate`, {
+  const response = await fetchAm(
+    `${AM_DOMAIN_PATH}${resolveJsonRealmPath(realm)}/sessions?_action=validate`,
+    {
       method: 'POST',
       headers: {
         accept: 'application/json',
@@ -177,21 +317,29 @@ export async function getUserRolesFromSession(
         cookie: `${AM_COOKIE_NAME}=${tokenId}`,
       },
       body: JSON.stringify({ tokenId }),
-      signal: controller.signal,
-    });
-    if (!response.ok) {
-      if (response.status === 401 || response.status === 403) {
-        return { userId: null, roles: [], unreachable: false };
-      }
-      return { userId: null, roles: [], unreachable: true };
+    },
+  );
+  if (response.kind === 'failure') return { userId: null, roles: [], unreachable: true };
+  if (!response.ok) {
+    if (response.status === 401 || response.status === 403) {
+      return { userId: null, roles: [], unreachable: false };
     }
-    const data = await response.json();
-    const parsed = z.object({ valid: z.boolean(), uid: z.string().optional() }).safeParse(data);
-    userId = parsed.success && parsed.data.valid ? parsed.data.uid ?? null : null;
-  } catch {
     return { userId: null, roles: [], unreachable: true };
-  } finally {
-    clearTimeout(timeout);
+  }
+  let userId: string | null = null;
+  try {
+    // A 200 validate response always carries a JSON body; a null body cannot
+    // occur here (bodyless statuses are non-2xx or 204-class), but JSON.parse
+    // demands string, so failure paths already returned above.
+    const parsed = z
+      .object({ valid: z.boolean(), uid: z.string().optional() })
+      .safeParse(JSON.parse(response.body ?? '') as unknown);
+    if (parsed.success && parsed.data.valid) userId = parsed.data.uid ?? null;
+  } catch {
+    // AM answered 200 with a body we cannot read as JSON: report it as an AM
+    // outage, the same treatment a transport failure gets, rather than as an
+    // invalid session.
+    return { userId: null, roles: [], unreachable: true };
   }
   if (userId === null) {
     return { userId: null, roles: [], unreachable: false };
@@ -234,26 +382,22 @@ export async function amFetchRequest(
     endpoint === '/users?_action=validateGoto' && realmPath === '/json/realms/root'
       ? '/json'
       : realmPath;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
+  const response = await fetchAm(`${AM_DOMAIN_PATH}${requestRealmPath}${endpoint}`, {
+    method,
+    headers: {
+      accept: 'application/json',
+      'Accept-API-Version': 'protocol=2.1,resource=3.0',
+      'Content-Type': 'application/json',
+      cookie: `${AM_COOKIE_NAME}=${tokenId}`,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  if (response.kind === 'failure' || !response.ok) return null;
   try {
-    const response = await fetch(`${AM_DOMAIN_PATH}${requestRealmPath}${endpoint}`, {
-      method,
-      headers: {
-        accept: 'application/json',
-        'Accept-API-Version': 'protocol=2.1,resource=3.0',
-        'Content-Type': 'application/json',
-        cookie: `${AM_COOKIE_NAME}=${tokenId}`,
-      },
-      body: body ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
-    });
-
-    if (!response.ok) return null;
-    return await response.json();
+    // A 2xx AM JSON response always carries a body; the null-body contract
+    // (204/205/304) cannot occur on the success paths that reach here.
+    return JSON.parse(response.body ?? '') as unknown;
   } catch {
     return null;
-  } finally {
-    clearTimeout(timeout);
   }
 }
