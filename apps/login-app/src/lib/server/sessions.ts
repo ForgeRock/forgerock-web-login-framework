@@ -11,6 +11,7 @@ import { z } from 'zod';
 
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
 import { log } from '$server/logger.effects';
+import { amEndpointLabel, recordAmRequest } from '$server/metrics';
 
 import type { Cookies } from '@sveltejs/kit';
 
@@ -60,11 +61,14 @@ export type AmUpstream = AmUpstreamResponse | AmUpstreamFailure;
  * @returns {Promise<AmUpstream>} The buffered upstream exchange or a classified failure.
  */
 export async function fetchAm(url: string, init: RequestInit = {}): Promise<AmUpstream> {
+  const endpoint = amEndpointLabel(new URL(url).pathname);
+  const start = performance.now();
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), AM_TIMEOUT_MS);
   try {
     const response = await fetch(url, { ...init, signal: controller.signal });
     const rawBody = await response.text();
+    recordAmRequest(endpoint, response.status, (performance.now() - start) / 1000);
     // response.text() yields '' when the body is null, but the Response
     // constructor rejects a non-null body for statuses that must not have one
     // (204, 205, 304). Preserve null so the proxy can rebuild a valid Response.
@@ -81,6 +85,7 @@ export async function fetchAm(url: string, init: RequestInit = {}): Promise<AmUp
       body,
     };
   } catch (error) {
+    recordAmRequest(endpoint, undefined, (performance.now() - start) / 1000);
     const normalized = error instanceof Error ? error : new Error(String(error));
     // Classify by our own signal, not by error.name: every fetch implementation
     // surfaces abort differently (AbortError, TypeError "terminated" with an

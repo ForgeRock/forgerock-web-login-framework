@@ -79,6 +79,9 @@ jobs:
           name: widget-dist
           path: packages/login-widget/dist
       - run: pnpm --filter @forgerock/login-app run build
+      - name: Check metrics-enabled graceful shutdown
+        if: matrix.shardIndex == 1
+        run: pnpm --filter @forgerock/login-app run test:metrics-shutdown
       - name: e2e
         run: pnpm --filter @forgerock/login-widget-e2e exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
       - name: Upload blob report to GitHub Actions Artifacts
