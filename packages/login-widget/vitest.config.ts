@@ -25,7 +25,10 @@ export default defineConfig({
       resolve('../../themes/**/*.test.ts'),
       resolve('./src/**/*.test.ts'),
     ],
-    exclude: ['node_modules', 'dist'],
+    // Absolute globs: core/ is a workspace package with its own
+    // node_modules, and picomatch `**` does not match `../..`, so bare
+    // 'node_modules' misses core/node_modules (zod's own tests get picked up).
+    exclude: [resolve('../../**/node_modules/**'), resolve('../../**/dist/**')],
     typecheck: {
       tsconfig: './tsconfig.json',
     },

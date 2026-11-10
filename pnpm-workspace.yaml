@@ -4,6 +4,7 @@ packages:
   - 'e2e'
   - 'themes'
   - 'tools/*'
+  - 'core'
 
 overrides:
   vite>rollup: 'npm:@rollup/wasm-node'

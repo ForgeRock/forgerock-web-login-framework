@@ -1,0 +1,17 @@
+{
+  "name": "login-framework",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Shared login framework: components, stores, journey logic and locales. Built once and consumed by login-widget, login-app and (later) the Custom Components editor. Not published to npm.",
+  "dependencies": {
+    "@forgerock/journey-client": "^2.1.1",
+    "@forgerock/oidc-client": "^2.1.1",
+    "@forgerock/protect": "^2.1.1",
+    "@forgerock/storage": "^2.1.1",
+    "qrcode": "1.5.3",
+    "svelte": "5.53.7",
+    "xss": "^1.0.15",
+    "zod": "^4.6.7"
+  }
+}
