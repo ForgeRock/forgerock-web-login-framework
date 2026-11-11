@@ -38,7 +38,7 @@
     "@forgerock/protect": "^2.1.1",
     "@forgerock/storage": "^2.1.1",
     "qrcode": "1.5.3",
-    "svelte": "^5.53.7",
+    "svelte": "^5.55.7",
     "xss": "^1.0.15",
     "zod": "^4.6.7"
   },

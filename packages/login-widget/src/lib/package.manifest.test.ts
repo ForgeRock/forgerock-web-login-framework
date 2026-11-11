@@ -12,7 +12,7 @@ const packageManifest = JSON.parse(
 
 describe('@forgerock/login-widget package manifest', () => {
   it('installs Svelte for framework-agnostic TypeScript consumers', () => {
-    expect(packageManifest.dependencies?.svelte).toBeDefined();
+    expect(packageManifest.dependencies?.svelte).toBe('^5.55.7');
     expect(packageManifest.devDependencies?.svelte).toBeUndefined();
   });
 });
