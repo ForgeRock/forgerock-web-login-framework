@@ -38,6 +38,7 @@
     "@forgerock/protect": "^2.1.1",
     "@forgerock/storage": "^2.1.1",
     "qrcode": "1.5.3",
+    "svelte": "^5.55.7",
     "xss": "^1.0.15",
     "zod": "^4.6.7"
   },
@@ -66,7 +67,6 @@
     "postcss-import": "^15.0.0",
     "rollup-plugin-visualizer": "^7.0.1",
     "storybook": "^10.1.11",
-    "svelte": "^5.53.7",
     "svelte-check": "^4.4.5",
     "svelte-loader": "^3.2.4",
     "svelte-preprocess": "^6.0.3",
