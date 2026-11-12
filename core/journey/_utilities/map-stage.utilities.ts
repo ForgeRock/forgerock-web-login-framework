@@ -20,8 +20,8 @@ import QrCode from '$journey/stages/qr-code.svelte';
 import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
 import Registration from '$journey/stages/registration.svelte';
 import WebAuthnStage from '$journey/stages/webauthn.svelte';
-import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
 import { customStageRegistry } from './registry/custom-registry';
+import { isMixedLoginWebAuthnStep } from './webauthn.utilities';
 
 import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
 

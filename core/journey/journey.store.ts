@@ -21,7 +21,7 @@ import {
   initCheckValidation,
   shouldPopulateWithPreviousCallbacks,
   shouldRedirectFromStep,
-} from './stages/_utilities/step.utilities';
+} from './_utilities/step.utilities';
 
 import type {
   BaseCallback,

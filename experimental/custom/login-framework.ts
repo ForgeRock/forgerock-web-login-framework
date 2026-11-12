@@ -142,7 +142,7 @@ export { textToKey } from '$core/_utilities/i18n.utilities';
  * Converts an arbitrary string to a normalized camelCase key.
  * Useful for building input `name` / `id` attributes from AM-supplied labels.
  */
-export { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
+export { convertStringToKey } from '$journey/_utilities/step.utilities';
 
 /**
  * Scans anchor elements rendered inside a stage and wires their `href` clicks
@@ -217,7 +217,7 @@ export { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/me
  * Returns a no-op `checkValidation` function suitable for `buildCallbackMetadata`
  * inside Storybook (where there is no real journey to validate against).
  */
-export { initCheckValidation } from '$journey/stages/_utilities/step.utilities';
+export { initCheckValidation } from '$journey/_utilities/step.utilities';
 
 /** Initialise the in-page links store. Call inside a story before rendering a stage. */
 export { initialize as initializeLinks } from '$core/links.store';

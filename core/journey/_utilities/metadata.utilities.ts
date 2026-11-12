@@ -7,7 +7,6 @@
  *
  **/
 
-import { getAutocompleteValues } from '../stages/_utilities/webauthn.utilities';
 import {
   canForceUserInputOptionality,
   isCbReadyByDefault,
@@ -16,6 +15,7 @@ import {
   isUserInputOptional,
   requiresUserInput,
 } from './data-analysis.utilities';
+import { getAutocompleteValues } from './webauthn.utilities';
 
 import type { BaseCallback, JourneyStep } from '@forgerock/journey-client/types';
 import type { FullAutoFill } from 'svelte/elements';

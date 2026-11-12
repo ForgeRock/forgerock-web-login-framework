@@ -19,10 +19,7 @@
   import { interpolate } from '$core/_utilities/i18n.utilities';
   import { styleStore } from '$core/style.store';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
-  import {
-    convertStringToKey,
-    shouldRedirectFromStep,
-  } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey, shouldRedirectFromStep } from '$journey/_utilities/step.utilities';
   import BackTo from './_utilities/back-to.svelte';
   import { captureLinks } from './_utilities/stage.utilities';
 

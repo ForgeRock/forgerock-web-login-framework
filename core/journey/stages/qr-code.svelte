@@ -25,9 +25,9 @@
   import { interpolate } from '$core/_utilities/i18n.utilities';
   import { styleStore as style } from '$core/style.store';
   import CallbackMapper from '$journey/_utilities/callback-mapper.svelte';
+  import { convertStringToKey } from '$journey/_utilities/step.utilities';
   // Import callback components
   import PollingWait from '$journey/callbacks/polling-wait/polling-wait.svelte';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
 
   import type {
     BaseCallback,
