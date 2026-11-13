@@ -33,11 +33,9 @@ ENV PREVIEW="true"
 RUN pnpm run build && \
     pnpm --filter @forgerock/login-app deploy --prod --legacy /runtime
 
-FROM ${BASE_IMAGE} AS deploy
+FROM ${BASE_IMAGE} AS runtime-base
 
 WORKDIR /app
-ENV NODE_ENV=production
-ENV PREVIEW="true"
 
 # Package managers are only needed by the builder.
 RUN rm -rf /usr/local/lib/node_modules /opt/yarn-* /root/.cache/node/corepack && \
@@ -45,6 +43,17 @@ RUN rm -rf /usr/local/lib/node_modules /opt/yarn-* /root/.cache/node/corepack &&
     /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
     groupadd --gid 11111 app && \
     useradd --uid 11111 --gid 11111 --no-create-home app
+
+# Keep the cleaned Debian runtime intact without inheriting package-manager layers.
+FROM scratch AS deploy
+# hadolint ignore=DL3067
+COPY --from=runtime-base / /
+
+WORKDIR /app
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV NODE_ENV=production
+ENV PREVIEW="true"
+ENTRYPOINT ["docker-entrypoint.sh"]
 
 COPY --from=app-build --chown=11111:11111 /runtime/build ./apps/login-app/build
 COPY --from=app-build --chown=11111:11111 /runtime/node_modules ./apps/login-app/node_modules

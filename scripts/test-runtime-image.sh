@@ -3,6 +3,43 @@ set -euo pipefail
 
 image=${1:?Usage: scripts/test-runtime-image.sh IMAGE}
 
+python3 - "$image" <<'PY_LAYERS'
+import json
+import subprocess
+import sys
+import tarfile
+import tempfile
+from pathlib import PurePosixPath
+
+tools = {"go", "gofmt", "npm", "npx", "corepack", "pnpm", "pnpx", "yarn", "yarnpkg", "esbuild"}
+packages = {"npm", "corepack", "pnpm", "yarn", "esbuild", "vite", "typescript", "playwright", "@playwright/test"}
+layers = 0
+with tempfile.TemporaryFile() as image:
+    subprocess.run(["docker", "image", "save", sys.argv[1]], stdout=image, check=True)
+    image.seek(0)
+    with tarfile.open(fileobj=image) as archive:
+        manifests = json.load(archive.extractfile("manifest.json"))
+        for manifest in manifests:
+            for name in manifest["Layers"]:
+                layers += 1
+                with tarfile.open(fileobj=archive.extractfile(name), mode="r|*") as layer:
+                    for entry in layer:
+                        path = PurePosixPath(entry.name.lstrip("./"))
+                        parts = path.parts
+                        forbidden = (
+                            parts[:4] == ("usr", "local", "lib", "node_modules")
+                            or parts[:3] == ("root", ".cache", "node")
+                            or len(parts) > 1 and parts[0] == "opt" and parts[1].startswith("yarn-")
+                            or (entry.isfile() or entry.issym() or entry.islnk()) and path.name in tools
+                        )
+                        if entry.isfile() and path.name == "package.json":
+                            package = json.load(layer.extractfile(entry))
+                            forbidden |= package.get("name") in packages
+                        if forbidden:
+                            raise SystemExit(f"Unexpected build tool in image layer: {path}")
+print(f"Inspected {layers} image layers: no targeted package managers or build tools.")
+PY_LAYERS
+
 docker run --rm --read-only --network none --user 0 --entrypoint sh "$image" -ec '
   test "$PWD" = /app
   test "$(id -un 11111)" = app
