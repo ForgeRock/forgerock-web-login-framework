@@ -15,7 +15,7 @@ dist
 .svelte-kit
 
 # e2e test files included for the e2e Docker stage
-# (deploy stage is unaffected — same builder layer)
+# (the deploy stage copies only the app build and production dependencies)
 .github
 .storybook
 .changeset
