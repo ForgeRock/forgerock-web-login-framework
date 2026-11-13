@@ -320,6 +320,9 @@ importers:
       '@forgerock/storage':
         specifier: ^2.1.1
         version: 2.1.1
+      login-framework:
+        specifier: workspace:*
+        version: link:../../core
       qrcode:
         specifier: 1.5.3
         version: 1.5.3

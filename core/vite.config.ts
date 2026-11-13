@@ -17,6 +17,7 @@ const EXCLUDED_DIRS = new Set([
 const EXCLUDED_FILES = new Set([
   'constants.ts', // SvelteKit $app/$env
   'vite.config.ts', // this build config — must never be part of its own build graph
+  'vite-plugin-dist.ts', // consumer-side resolver for dist, build tooling
   'style.stories.js',
   'style.story.svelte',
   join('journey', '_utilities', 'registry', 'vite-plugin.ts'), // build tooling
