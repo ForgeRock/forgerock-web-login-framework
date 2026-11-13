@@ -24,27 +24,37 @@ RUN pnpm install --frozen-lockfile
 
 COPY . .
 
-FROM builder AS deploy
+FROM builder AS app-build
 
-WORKDIR /usr/src/app
 ENV NODE_ENV=production
 # PREVIEW enables adapter-node in svelte.config.js
 ENV PREVIEW="true"
 
-RUN ["pnpm", "run", "build"]
+RUN pnpm run build && \
+    pnpm --filter @forgerock/login-app deploy --prod --legacy /runtime
 
-# UID 11111 matches saas's Kubernetes security standard (base image default is 1000).
-RUN groupadd --gid 11111 forgerock && \
-    useradd --uid 11111 --gid 11111 --no-create-home --shell /bin/bash forgerock
+FROM ${BASE_IMAGE} AS deploy
 
-# Only chown the build output — avoids duplicating the entire node_modules layer
-RUN chown -R forgerock:forgerock apps/login-app/build
-USER forgerock
+WORKDIR /app
+ENV NODE_ENV=production
+ENV PREVIEW="true"
+
+# Package managers are only needed by the builder.
+RUN rm -rf /usr/local/lib/node_modules /opt/yarn-* /root/.cache/node/corepack && \
+    rm -f /usr/local/bin/npm /usr/local/bin/npx /usr/local/bin/corepack \
+    /usr/local/bin/pnpm /usr/local/bin/pnpx /usr/local/bin/yarn /usr/local/bin/yarnpkg && \
+    groupadd --gid 11111 app && \
+    useradd --uid 11111 --gid 11111 --no-create-home app
+
+COPY --from=app-build --chown=11111:11111 /runtime/build ./apps/login-app/build
+COPY --from=app-build --chown=11111:11111 /runtime/node_modules ./apps/login-app/node_modules
+COPY --from=app-build --chown=11111:11111 /runtime/package.json ./apps/login-app/package.json
+USER 11111:11111
 
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD node -e "fetch('http://localhost:3000/api/health/live').then(r => { if (!r.ok) throw 1 })"
+    CMD ["node", "-e", "fetch('http://localhost:3000/api/health/live').then(r => { if (!r.ok) throw 1 })"]
 
 CMD ["node", "apps/login-app/build"]
 
