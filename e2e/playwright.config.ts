@@ -10,6 +10,7 @@ const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 const configErrorUrl = 'http://localhost:3100';
 const idmThemeUrl = 'http://localhost:3300';
 const defaultJourneyUrl = 'http://localhost:5829';
+const customDomainUrl = 'http://localhost:5173';
 // Shared location for the Component API file e2e tests; the tests wipe it per run.
 export const componentsRepoDir = join(tmpdir(), 'login-app-components-e2e');
 export const componentsApiUrl = `${url.replace(/\/$/, '')}/api/components`;
@@ -110,8 +111,24 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_AM_JOURNEY_LOGIN: 'TEST_ThemeE2E',
         },
       },
+      // Custom-domain arrival: /am/* is proxied with Host: id.petrov.ca so
+      // AM answers the alias realm; port 5173 is in that domain's CORS allowlist
+      // and kept clear of the dev server's port (8443).
+      {
+        command:
+          'PREVIEW_ALIAS_HOST=id.petrov.ca pnpm --filter @forgerock/login-app run preview --host=localhost --port=5173',
+        cwd: '..',
+        url: customDomainUrl,
+        ignoreHTTPSErrors: true,
+        reuseExistingServer: true,
+        env: {
+          FR_AM_URL: AM_URL,
+          FR_AM_COOKIE_NAME: AM_COOKIE_NAME,
+          FR_REALM_PATH: AM_REALM,
+          FR_AM_WELLKNOWN_URL: `${AM_URL}/oauth2/${AM_REALM}/.well-known/openid-configuration`,
+        },
+      },
     ];
-
 export default defineConfig({
   webServer,
   use: {
@@ -138,7 +155,7 @@ export default defineConfig({
     {
       name: 'chromium',
       grepInvert: /webauthn/,
-      testIgnore: /config-error|idm-theme|default-journey|component-api-disabled/,
+      testIgnore: /config-error|idm-theme|default-journey|component-api-disabled|custom-domain/,
       use: {
         ...devices['Desktop Chrome'],
         // ...devices['Desktop Edge'],
@@ -166,6 +183,14 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: `${defaultJourneyUrl}/e2e/`,
+      },
+    },
+    {
+      name: 'custom-domain',
+      testMatch: /custom-domain/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `${customDomainUrl}/`,
       },
     },
     // {

@@ -14,9 +14,9 @@ import { ConfigProvider, Effect, Layer, Option } from 'effect';
 import { describe, expect, vi } from 'vitest';
 
 vi.mock('$app/environment', () => ({ building: false }));
-vi.mock('$core/constants', () => ({ AM_COOKIE_NAME: 'iPlanetDirectoryPro' }));
+vi.mock('$server/constants', () => ({ AM_COOKIE_NAME: 'iPlanetDirectoryPro' }));
 
-import { AM_COOKIE_NAME } from '$core/constants';
+import { AM_COOKIE_NAME } from '$server/constants';
 import { Auth, AuthLive, extractSessionToken } from './auth';
 
 import type { AuthUser } from './auth';

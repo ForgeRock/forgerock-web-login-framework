@@ -11,7 +11,8 @@ import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
-import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
+import { normalizeRealm, resolveRequestedRealm } from '$server/redirect/redirect.utilities';
+import { fetchAm } from '$server/sessions';
 
 import type { LayoutServerLoad } from './$types';
 
@@ -37,22 +38,49 @@ export const load: LayoutServerLoad = async ({ url }) => {
   }
 
   // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
-  const realmPath = resolveRealmFromUrl(url);
+  const realmPath = resolveRequestedRealm(url, env.FR_REALM_PATH);
 
-  // Use the configured discovery endpoint for the deployment's default realm.
-  // Derive a sibling endpoint only when the request explicitly selects another realm.
-  // A relative FR_AM_WELLKNOWN_URL resolves against the request origin so the
-  // browser fetches discovery from whichever host the user came in on (tenant
-  // FQDN or custom domain) instead of a hard-coded AM FQDN.
-  const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
-  const wellknown = new URL(
-    realmPath === configuredRealm
-      ? wellknownUrl
+  // serverinfo answers what realm the arrival host resolves to:
+  //   host = the tenant's own AM hostname (e.g. openam-sdks.forgeblocks.com)
+  //          → root — the deployment hostname belongs to the top-level realm
+  //   host = custom domain (e.g. id.petrov.ca)
+  //          → its alias realm (alpha)
+  // Any failure (timeout, network, unusable body) leaves aliasedRealm null → realm-qualified below.
+  let aliasedRealm: string | null = null;
+  const upstream = await fetchAm(new URL(`${amBasePath}/json/serverinfo/*`, url.origin).href, {
+    headers: { accept: 'application/json' },
+  });
+  if (upstream.kind === 'response') {
+    try {
+      const body = JSON.parse(upstream.body ?? '') as { realm?: unknown };
+      if (typeof body.realm === 'string') {
+        aliasedRealm = normalizeRealm(body.realm);
+      }
+    } catch {
+      // Body isn't JSON (e.g. a 404 HTML page) — treated as no answer.
+    }
+  }
+
+  const configuredRealm = normalizeRealm(env.FR_REALM_PATH);
+  const amOrigin = new URL(amUrl).origin;
+  // A custom domain belongs to one realm (its alias), so discovery is always
+  // realm-less on it — see the custom-domain docs' discovery endpoint
+  // section. Realm-qualified discovery URLs are only valid on the AM FQDN,
+  // so they are built on the FR_AM_URL origin, never the arrival origin.
+  const wellknown =
+    aliasedRealm === realmPath
+      ? new URL(`${amBasePath}/oauth2/.well-known/openid-configuration`, url.origin).toString()
+      : realmPath === configuredRealm
+      ? new URL(wellknownUrl, url.origin).toString()
       : realmPath === 'root'
-      ? `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`
-      : `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
-    url.origin,
-  ).toString();
+      ? new URL(
+          `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`,
+          amOrigin,
+        ).toString()
+      : new URL(
+          `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
+          amOrigin,
+        ).toString();
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {

@@ -9,11 +9,12 @@
 
 import { z } from 'zod';
 
-import { AM_DOMAIN_PATH } from '$core/constants';
 import { env } from '$env/dynamic/private';
+import { AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
 import {
   amFetchRequest,
+  fetchAm,
   getHttpCookie,
   getUserRolesFromSession,
   removeHttpCookie,
@@ -21,8 +22,9 @@ import {
 } from '$server/sessions';
 import {
   describeRedirectTarget,
+  normalizeRealm,
   parseRedirectForm,
-  resolveRealmFromUrl,
+  resolveRequestedRealm,
 } from './redirect.utilities';
 
 import type { RequestEvent } from '@sveltejs/kit';
@@ -40,7 +42,7 @@ const REDIRECT_QUERY_PARAMS = 'redirect_query_params';
 export function storeRedirectParams(event: RequestEvent): RedirectParams {
   const goto = event.url.searchParams.get('goto') || undefined;
   const gotoOnFail = event.url.searchParams.get('gotoOnFail') || undefined;
-  const realm = resolveRealmFromUrl(event.url);
+  const realm = resolveRequestedRealm(event.url, env.FR_REALM_PATH);
 
   if (!goto && !gotoOnFail) {
     return { goto, gotoOnFail, realm };
@@ -63,20 +65,27 @@ export function storeRedirectParams(event: RequestEvent): RedirectParams {
  * @function createRedirectContext - Builds the redirect context from the request event, parsing form and cookie data and validating the redirect URL.
  * @param {FormData} formData - The submitted redirect form data.
  * @param {RedirectParams} cookie - Parsed redirect cookie values.
+ * @param {string} arrivalOrigin - The origin the user arrived on (event.url.origin).
  * @returns {Promise<RedirectData>} The constructed redirect context.
  */
 export async function createRedirectContext(
   formData: FormData,
   cookie: RedirectParams,
+  arrivalOrigin: string,
 ): Promise<RedirectData> {
-  const { loginResult, tokenId, journeyStepUrl } = parseRedirectForm(formData);
-
+  const { loginResult, tokenId, journeyStepUrl, realm: formRealm } = parseRedirectForm(formData);
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
-  const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'root';
+  /**
+   * formRealm here represents the realm that the DOM in page.svelte file holds.
+   * The realm must be stored somewhere (query param ?? env), but the cookie is
+   * only written when goto/gotoOnFail query params exist
+   * We check if formRealm exists, if not, we use the realm from cookie or env
+   */
+  const realm = formRealm ?? cookie.realm ?? normalizeRealm(env.FR_REALM_PATH);
   const successUrl = gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
   const roles = tokenId ? (await getUserRolesFromSession(tokenId, realm)).roles : [];
-  const amOrigin = new URL(AM_DOMAIN_PATH).origin;
+  const amOrigin = await resolveRedirectOrigin(arrivalOrigin, realm);
 
   return {
     tokenId,
@@ -88,6 +97,40 @@ export async function createRedirectContext(
     realm,
     amOrigin,
   };
+}
+
+/**
+ * @function resolveRedirectOrigin - Resolves the origin post-login redirects should target: the arrival origin when the user arrived on an AM-served host, otherwise the configured AM origin.
+ *   arrivalOrigin = 'https://id.petrov.ca',   realm = 'alpha', serverinfo /alpha → returns 'https://id.petrov.ca'
+ *   arrivalOrigin = 'https://app.example.com', realm = 'alpha', serverinfo 404   → returns the configured AM origin
+ * @param {string} arrivalOrigin - The origin the user arrived on (event.url.origin).
+ * @param {string} realm - The requested realm.
+ * @returns {Promise<string>} The origin post-login redirects should target.
+ */
+export async function resolveRedirectOrigin(arrivalOrigin: string, realm: string): Promise<string> {
+  const amOrigin = new URL(AM_DOMAIN_PATH).origin;
+  if (new URL(arrivalOrigin).host === new URL(amOrigin).host) {
+    return amOrigin;
+  }
+  try {
+    const amBasePath = new URL(AM_DOMAIN_PATH).pathname.replace(/\/+$/, '');
+    const upstream = await fetchAm(new URL(`${amBasePath}/json/serverinfo/*`, arrivalOrigin).href, {
+      headers: { accept: 'application/json' },
+    });
+    if (upstream.kind === 'response') {
+      try {
+        const body = JSON.parse(upstream.body ?? '') as { realm?: unknown };
+        if (typeof body.realm === 'string' && normalizeRealm(body.realm) === realm) {
+          return arrivalOrigin;
+        }
+      } catch {
+        // Body isn't JSON (e.g. a 404 HTML page) — not an AM-served host.
+      }
+    }
+  } catch {
+    // Transport failure — not an AM-served host.
+  }
+  return amOrigin;
 }
 
 /**

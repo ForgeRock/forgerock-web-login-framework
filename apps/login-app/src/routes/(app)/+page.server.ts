@@ -10,11 +10,13 @@
 import { isRedirect, redirect, type RequestEvent } from '@sveltejs/kit';
 
 import { getLocale } from '$core/_utilities/i18n.utilities';
-import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$core/constants';
+import { env } from '$env/dynamic/private';
+import { AM_COOKIE_NAME } from '$server/constants';
 import { log } from '$server/logger.effects';
 import {
   createRedirectContext,
   readAndClearRedirectCookie,
+  resolveRedirectOrigin,
   storeRedirectParams,
   validateUrl,
 } from '$server/redirect/redirect.effects';
@@ -22,8 +24,8 @@ import {
   buildRoleUrl,
   describeRedirectTarget,
   isOAuthAuthorizePath,
-  resolveRealmFromUrl,
   resolveRedirect,
+  resolveRequestedRealm,
 } from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
 import { getHttpCookie, getUserRolesFromSession } from '$server/sessions';
@@ -33,7 +35,7 @@ import type { z } from 'zod';
 import type { PageServerLoad } from './$types';
 import type { stringsSchema } from '$core/locale.store';
 
-export const load: PageServerLoad = async (event: RequestEvent) => {
+export const load: PageServerLoad = async (event) => {
   // Pre-flight: if the user already has a valid AM session, skip the login form
   // and send them straight to their portal. Skip this when a specific journey or
   // authIndexValue is requested, since the user may be intentionally headed to a
@@ -47,8 +49,8 @@ export const load: PageServerLoad = async (event: RequestEvent) => {
   const tokenId = parsedTokenId?.success ? parsedTokenId.data : undefined;
   if (tokenId) {
     try {
-      const amOrigin = new URL(AM_DOMAIN_PATH).origin;
-      const realm = resolveRealmFromUrl(event.url);
+      const realm = resolveRequestedRealm(event.url, env.FR_REALM_PATH);
+      const amOrigin = await resolveRedirectOrigin(event.url.origin, realm);
 
       // Validate the session is live before acting on it.
       const session = await getUserRolesFromSession(tokenId, realm);
@@ -117,7 +119,7 @@ export const actions = {
   default: async (event: RequestEvent) => {
     const formData = await event.request.formData();
     const cookie = readAndClearRedirectCookie(event);
-    const redirectContext = await createRedirectContext(formData, cookie);
+    const redirectContext = await createRedirectContext(formData, cookie, event.url.origin);
     const url = resolveRedirect(redirectContext);
     redirect(303, url);
   },
