@@ -234,7 +234,12 @@
     ...props,
     callback: _KbaCreateCallback,
   }}
-  <KbaCreate {...newProps} />
+  <!-- Keyed here, not inside the component: a prop change alone never recreates the
+       instance, so KbaCreate's user input state (answer store, custom-question flag)
+       would leak into the next step. Remounting resets it by construction. -->
+  {#key props.callback}
+    <KbaCreate {...newProps} />
+  {/key}
 {:else if cbType === callbackType.NameCallback}
   {@const newProps = {
     ...props,
