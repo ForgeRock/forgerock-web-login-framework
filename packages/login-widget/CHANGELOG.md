@@ -1,5 +1,11 @@
 # [1.3.0](https://github.com/forgerock/forgerock-web-login-framework/compare/v1.2.1...v1.3.0) (2024-06-05)
 
+## 2.2.1
+
+### Patch Changes
+
+- [#613](https://github.com/ForgeRock/forgerock-web-login-framework/pull/613) [`e936345`](https://github.com/ForgeRock/forgerock-web-login-framework/commit/e9363457981f2ee070731778bbb46449b76f0560) Thanks [@vatsalparikh](https://github.com/vatsalparikh)! - Clear stale selection for choice, kba, confirmation, terms-conditions callbacks between consecutive steps
+
 ## 2.2.0
 
 ### Minor Changes
