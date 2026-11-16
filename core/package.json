@@ -15,7 +15,8 @@
     "zod": "^4.6.7"
   },
   "scripts": {
-    "build": "vite build && vite build --config vite.config.server.ts"
+    "build": "vite build && vite build --config vite.config.server.ts",
+    "check:surface": "pnpm --filter @forgerock/login-widget exec vitest run login-framework-surface"
   },
   "exports": {
     "./dist/*": "./dist/*",
