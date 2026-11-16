@@ -25,10 +25,19 @@ test('IDM theme is injected into .theme-root as inline CSS vars on SSR', async (
   const themeRoot = page.locator('.theme-root');
   const style = await themeRoot.getAttribute('style');
 
+  // Whitespace-normalized: the SSR attribute string and the hydrated
+  // serialization differ in `name:value` vs `name: value` spacing (hydration
+  // re-applies vars through CSSOM `setProperty`, which canonicalizes the
+  // serialization). Only the declaration set is contractual.
+  const declarations = (style ?? '')
+    .split(';')
+    .map((declaration) => declaration.trim().replace(/\s*:\s*/, ':'))
+    .filter((declaration) => declaration.length > 0);
+
   // TEST_ThemeE2E's theme: primaryColor #FD0000 -> hsl(0, 100%, 49.6%)
-  expect(style).toContain('--tw-colors-primary-dark-hs:0, 100%');
-  expect(style).toContain('--tw-colors-primary-dark-l:49.6%');
-  expect(style).toContain(
+  expect(declarations).toContain('--tw-colors-primary-dark-hs:0, 100%');
+  expect(declarations).toContain('--tw-colors-primary-dark-l:49.6%');
+  expect(declarations).toContain(
     '--fr-page-bg-image:url("https://qa65.lplbusinesssolutions.com/content/dam/lpl-www/lplbusinesssolutions/images/GettyImages-996615754.jpg")',
   );
 });

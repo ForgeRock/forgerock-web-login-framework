@@ -183,6 +183,9 @@ importers:
       '@forgerock/sdk-logger':
         specifier: ^2.1.1
         version: 2.1.1
+      login-framework:
+        specifier: workspace:*
+        version: link:../../core
     devDependencies:
       '@effect/vitest':
         specifier: ^0.26.0

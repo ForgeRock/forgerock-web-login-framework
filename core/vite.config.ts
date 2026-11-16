@@ -1,60 +1,8 @@
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { readdirSync, statSync } from 'fs';
-import { join, relative, resolve } from 'path';
+import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
-const ROOT = import.meta.dirname;
-
-/**
- * Directories and files excluded from the shared surface.
- */
-const EXCLUDED_DIRS = new Set([
-  'node_modules',
-  'dist',
-  'server', // SvelteKit-only: feeds constants.ts, login-app server code only
-  join('journey', '_utilities', 'registry', 'wrapper-templates'), // registry seeding source
-]);
-const EXCLUDED_FILES = new Set([
-  'constants.ts', // SvelteKit $app/$env
-  'vite.config.ts', // this build config — must never be part of its own build graph
-  'vite-plugin-dist.ts', // consumer-side resolver for dist, build tooling
-  'style.stories.js',
-  'style.story.svelte',
-  join('journey', '_utilities', 'registry', 'vite-plugin.ts'), // build tooling
-  join('journey', '_utilities', 'registry', 'registry.ts'), // Node-only registry script
-]);
-
-function isRuntimeModule(file) {
-  if (!/\.(ts|svelte)$/.test(file)) {
-    return false;
-  }
-  if (file.endsWith('.test.ts') || file.endsWith('.d.ts')) {
-    return false;
-  }
-  if (file.endsWith('.stories.js') || file.endsWith('.story.svelte')) {
-    return false;
-  }
-  if (EXCLUDED_FILES.has(file)) {
-    return false;
-  }
-  const pathParts = file.split('/');
-  return !pathParts.some((part, index) =>
-    EXCLUDED_DIRS.has(pathParts.slice(0, index + 1).join('/')),
-  );
-}
-
-function collectRuntimeModules(dir) {
-  return readdirSync(dir).flatMap((name) => {
-    const full = join(dir, name);
-    const rel = relative(ROOT, full).split('\\').join('/');
-    if (statSync(full).isDirectory()) {
-      return collectRuntimeModules(full);
-    }
-    return isRuntimeModule(rel) ? [full] : [];
-  });
-}
-
-const entries = collectRuntimeModules(ROOT);
+import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entries';
 
 export default defineConfig({
   plugins: [

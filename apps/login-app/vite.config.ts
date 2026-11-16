@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+import { loginFrameworkDist } from '../../core/vite-plugin-dist';
 
 import type { UserConfig } from 'vite';
 
@@ -11,6 +12,7 @@ export default defineConfig(
   ({ mode }): UserConfig => ({
     envDir: resolve('../..'),
     plugins: [
+      loginFrameworkDist({ packageDir: resolve('../../core') }),
       customRegistry({ projectRoot: resolve('../..') }),
       // Only use SSL plugin in development mode, not production/preview
       ...(mode === 'development' ? [basicSsl()] : []),
@@ -19,7 +21,13 @@ export default defineConfig(
     resolve: {
       alias: {
         '$app-locales': resolve('./src/locales'),
-        $locales: resolve('../../core/locales'),
+        // Server-only SvelteKit modules, deliberately excluded from the
+        // login-framework package build ($app/$env imports; server/ holds
+        // SvelteKit-only utilities); resolved from source. All other
+        // $core/$components/$journey/$locales imports map onto the package's
+        // built dist via the loginFrameworkDist plugin.
+        '$core/constants': resolve('../../core/constants.ts'),
+        '$core/server': resolve('../../core/server'),
         $package: resolve('../../packages/login-widget/dist'),
         '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
         $custom: resolve('../../experimental/custom'),

@@ -1,0 +1,70 @@
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { resolve } from 'path';
+import { defineConfig } from 'vite';
+
+import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entries';
+
+/**
+ * SSR (server-condition) build for the `login-framework` package.
+ *
+ * Compiles the same runtime surface as `vite.config.ts`, but with Svelte's
+ * server compilation (`build.ssr: true`): components emit server render
+ * functions that never touch `document` at module scope, so SvelteKit can
+ * server-render pages importing them. The client build (`vite.config.ts`)
+ * stays the tree for browser bundles; the consumer-side resolver plugin
+ * (`vite-plugin-dist.ts`) picks this tree when it sees an SSR resolution
+ * (`options.ssr`).
+ */
+export default defineConfig({
+  plugins: [
+    svelte({
+      compilerOptions: {
+        dev: false,
+        // Svelte 5 compatibility - maintains new Widget({ target }) pattern
+        compatibility: {
+          componentApi: 4,
+        },
+      },
+      // Same rationale as the client build: the package ships no CSS and
+      // must not run the consumers' PostCSS config (Tailwind).
+      postcss: false,
+      configFile: false,
+    }),
+  ],
+  resolve: {
+    alias: {
+      $core: resolve(ROOT),
+      $components: resolve(ROOT, 'components'),
+      $journey: resolve(ROOT, 'journey'),
+      $locales: resolve(ROOT, 'locales'),
+    },
+  },
+  css: {
+    postcss: { plugins: [] },
+  },
+  build: {
+    // Svelte server compilation: components emit SSR render functions.
+    ssr: true,
+    outDir: 'dist-server',
+    emptyOutDir: true,
+    sourcemap: true,
+    minify: false,
+    lib: {
+      entry: entries,
+      formats: ['es'],
+    },
+    rollupOptions: {
+      external: [/^svelte(\/|$)/, /^@forgerock\//, /^zod/, /^qrcode/, /^xss/],
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: ROOT,
+        entryFileNames: (chunkInfo) => {
+          // Same rename as the client build: emitted components must not be
+          // named `*.svelte.js` (vite-plugin-svelte re-compiles those as
+          // runes source in a consumer's dev server).
+          return chunkInfo.name.replace(/\.svelte$/, '.component') + '.js';
+        },
+      },
+    },
+  },
+});
