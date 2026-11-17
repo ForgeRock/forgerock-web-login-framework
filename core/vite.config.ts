@@ -3,23 +3,12 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entries';
+import { packageCssConfig, packageSveltePluginOptions } from './vite-shared';
 
 export default defineConfig({
   plugins: [
     svelte({
-      compilerOptions: {
-        dev: false,
-        // Svelte 5 compatibility - maintains new Widget({ target }) pattern
-        compatibility: {
-          componentApi: 4,
-        },
-      },
-      // The package compiles the same way as the widget build; core/ has no
-      // svelte.config.js of its own. No postcss: the package ships no CSS
-      // (no Tailwind directives in core sources), and auto-loading the
-      // consumers' PostCSS config (Tailwind) here fails without their config.
-      postcss: false,
-      configFile: false,
+      ...packageSveltePluginOptions(),
     }),
   ],
   resolve: {
@@ -30,12 +19,7 @@ export default defineConfig({
       $locales: resolve(ROOT, 'locales'),
     },
   },
-  css: {
-    // The package ships no CSS and must not run the repo-root PostCSS config
-    // (Tailwind): the walk-up autodetect from core/ finds the root
-    // postcss.config.cjs and Tailwind fails without its own content config.
-    postcss: { plugins: [] },
-  },
+  css: packageCssConfig,
   build: {
     outDir: 'dist',
     emptyOutDir: true,

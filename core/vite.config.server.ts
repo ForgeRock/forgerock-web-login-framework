@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entries';
+import { packageCssConfig, packageSveltePluginOptions } from './vite-shared';
 
 /**
  * SSR (server-condition) build for the `login-framework` package.
@@ -16,21 +17,7 @@ import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entrie
  * (`options.ssr`).
  */
 export default defineConfig({
-  plugins: [
-    svelte({
-      compilerOptions: {
-        dev: false,
-        // Svelte 5 compatibility - maintains new Widget({ target }) pattern
-        compatibility: {
-          componentApi: 4,
-        },
-      },
-      // Same rationale as the client build: the package ships no CSS and
-      // must not run the consumers' PostCSS config (Tailwind).
-      postcss: false,
-      configFile: false,
-    }),
-  ],
+  plugins: [svelte({ ...packageSveltePluginOptions() })],
   resolve: {
     alias: {
       $core: resolve(ROOT),
@@ -39,9 +26,7 @@ export default defineConfig({
       $locales: resolve(ROOT, 'locales'),
     },
   },
-  css: {
-    postcss: { plugins: [] },
-  },
+  css: packageCssConfig,
   build: {
     // Svelte server compilation: components emit SSR render functions.
     ssr: true,

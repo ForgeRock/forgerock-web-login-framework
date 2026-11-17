@@ -33,6 +33,8 @@ const EXCLUDED_FILES = new Set([
   'vite.config.server.ts', // SSR build config
   'vite-plugin-dist.ts', // consumer-side resolver for dist, build tooling
   'vite-plugin-dist.test.ts', // tests excluded from the build surface
+  'vite-shared.ts', // shared options for this package's two Vite builds, build tooling
+  'vite-config.test.ts', // tests excluded from the build surface
   'login-framework-surface.ts', // import-surface parity checker, build tooling
   'login-framework-surface.test.ts', // its tests
   'collect-entries.ts', // this helper, build tooling
