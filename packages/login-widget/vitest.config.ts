@@ -24,6 +24,7 @@ export default defineConfig({
       resolve('../../experimental/custom/**/*.test.ts'),
       resolve('../../themes/**/*.test.ts'),
       resolve('./src/**/*.test.ts'),
+      resolve('./*.test.ts'),
     ],
     // Absolute globs: core/ is a workspace package with its own
     // node_modules, and picomatch `**` does not match `../..`, so bare
