@@ -81,7 +81,7 @@ const coreFilesToCopy = [
 
 const coreDir = join(repoRoot, 'core');
 let coreCopiedCount = 0;
-let coreSkippedCount = 0;
+const missingCoreFiles = [];
 
 for (const relPath of coreFilesToCopy) {
   const srcPath = join(coreDir, relPath);
@@ -98,9 +98,21 @@ for (const relPath of coreFilesToCopy) {
     console.log(`✓ Copied core/${relPath} → dist/core/${relPath}`);
     coreCopiedCount++;
   } else {
-    console.warn(`⚠ Skipped core/${relPath} (not found)`);
-    coreSkippedCount++;
+    console.error(
+      `❌ Missing core declaration: core/${relPath} not found. ` +
+        `Published types reference ./core/${relPath} via dist/index.d.ts; ` +
+        `copying a partial set would publish unresolvable imports (TS2307). ` +
+        `Run the declaration build first: pnpm --filter login-framework run build:types`,
+    );
+    missingCoreFiles.push(relPath);
   }
 }
 
-console.log(`Core type copying: ${coreCopiedCount} copied, ${coreSkippedCount} skipped`);
+console.log(`Core type copying: ${coreCopiedCount} copied, ${missingCoreFiles.length} missing`);
+
+// A missing core declaration file must fail the release build: the published
+// tarball's dist/index.d.ts imports ./core/* unconditionally, so a skipped
+// file silently ships unresolvable type imports to npm consumers.
+if (missingCoreFiles.length > 0) {
+  process.exit(1);
+}

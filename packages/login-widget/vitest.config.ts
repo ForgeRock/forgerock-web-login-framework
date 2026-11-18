@@ -24,6 +24,7 @@ export default defineConfig({
       resolve('../../experimental/custom/**/*.test.ts'),
       resolve('../../themes/**/*.test.ts'),
       resolve('./src/**/*.test.ts'),
+      resolve('./scripts/**/*.test.mjs'),
       resolve('./*.test.ts'),
     ],
     // Absolute globs: core/ is a workspace package with its own

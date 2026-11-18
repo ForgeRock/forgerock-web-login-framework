@@ -16,6 +16,7 @@
   },
   "scripts": {
     "build": "vite build && vite build --config vite.config.server.ts",
+    "build:types": "tsc -p tsconfig.declarations.json",
     "check:surface": "pnpm --filter @forgerock/login-widget exec vitest run login-framework-surface"
   },
   "exports": {
