@@ -10,7 +10,11 @@
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('$env/dynamic/private', () => ({
-  env: { FR_REALM_PATH: 'alpha' },
+  env: {
+    FR_AM_URL: 'https://openam.example.com/am',
+    FR_AM_COOKIE_NAME: 'am-cookie',
+    FR_REALM_PATH: 'alpha',
+  },
 }));
 
 import {
@@ -35,6 +39,26 @@ describe('parseRedirectForm', () => {
       tokenId: 'abc123',
       journeyStepUrl: '/am/json/realms/root/authenticate',
     });
+  });
+
+  it('parses the realm form field', () => {
+    const formData = new FormData();
+    formData.append('loginResult', 'success');
+    formData.append('tokenId', 'abc123');
+    formData.append('journeyStepUrl', '');
+    formData.append('realm', 'alpha');
+
+    expect(parseRedirectForm(formData).realm).toBe('alpha');
+  });
+
+  it('drops an invalid realm form field instead of passing it downstream', () => {
+    const formData = new FormData();
+    formData.append('loginResult', 'success');
+    formData.append('tokenId', 'abc123');
+    formData.append('journeyStepUrl', '');
+    formData.append('realm', 'alpha/../beta');
+
+    expect(parseRedirectForm(formData).realm).toBeUndefined();
   });
 
   it('defaults loginResult to failure when invalid', () => {
@@ -131,17 +155,15 @@ describe('resolveRedirect', () => {
   });
 
   it.each([
+    // relative default: AM substituted its default console path
     {
       gotoUrl: 'https://openam.example.com/am/oauth2/authorize?state=original',
       successUrl: '/am/console',
     },
+    // absolute but different: AM rewrote the URL (e.g. appended state)
     {
       gotoUrl: 'https://openam.example.com/am/oauth2/authorize?state=original',
       successUrl: 'https://openam.example.com/am/oauth2/authorize?state=changed',
-    },
-    {
-      gotoUrl: 'https://untrusted.example.com/oauth2/authorize',
-      successUrl: 'https://untrusted.example.com/oauth2/authorize',
     },
   ])('does not continue an OAuth URL AM did not validate for this request: %j', (urls) => {
     expect(
@@ -154,6 +176,24 @@ describe('resolveRedirect', () => {
         }),
       ),
     ).toBe('https://openam.example.com/platform/?realm=/');
+  });
+
+  it('continues an authorize URL AM validated even on an origin the app does not serve', () => {
+    // Origin trust is AM's redirect-validation registry: an unchanged echo
+    // means AM blessed this exact URL for this request, so the app follows it
+    // regardless of which origin it points at.
+    const partnerAuthorize = 'https://sso.partner.example/oauth2/authorize?state=original';
+    expect(
+      resolveRedirect(
+        makeContext({
+          tokenId: 'abc123' as RedirectData['tokenId'],
+          roles: ['ui-global-admin'],
+          gotoUrl: partnerAuthorize,
+          successUrl: partnerAuthorize,
+          journeyStepUrl: partnerAuthorize,
+        }),
+      ),
+    ).toBe(partnerAuthorize);
   });
 
   it.each([

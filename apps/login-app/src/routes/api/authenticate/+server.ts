@@ -7,7 +7,7 @@
  *
  **/
 
-import { AM_DOMAIN_PATH } from '$core/constants';
+import { AM_DOMAIN_PATH } from '$server/constants';
 import {
   fetchAm,
   getAmCookie,

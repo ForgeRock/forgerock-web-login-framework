@@ -9,18 +9,27 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import type { request as httpsRequest } from 'node:https';
+import type { RequestOptions } from 'node:https';
+
 vi.mock('$app/environment', () => ({ building: false }));
-vi.mock('$env/dynamic/private', () => ({
-  env: {
-    FR_AM_URL: 'https://am.example.com/am',
-    FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
-    FR_REALM_PATH: 'alpha',
-  },
-}));
+const mockEnv = vi.hoisted(
+  () =>
+    ({
+      FR_AM_URL: 'https://am.example.com/am',
+      FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
+      FR_REALM_PATH: 'alpha',
+    }) as Record<string, string | undefined>,
+);
+vi.mock('$env/dynamic/private', () => ({ env: mockEnv }));
+
+const httpsRequestMock = vi.hoisted(() => vi.fn());
+vi.mock('node:https', () => ({ request: httpsRequestMock }));
 
 import {
   amFetchRequest,
   fetchAm,
+  fetchServerInfoRealm,
   getAmCookie,
   resolveJsonRealmPath,
   resolveOAuthRealmPath,
@@ -31,6 +40,8 @@ import {
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
+  vi.resetAllMocks();
+  delete mockEnv.PREVIEW_ALIAS_HOST;
 });
 
 function cookies(values: Record<string, string> = {}) {
@@ -220,6 +231,153 @@ describe('Login2 realm paths', () => {
   it('rejects path traversal and falls back for malformed overrides', () => {
     expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root');
     expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root');
+  });
+});
+
+describe('fetchServerInfoRealm', () => {
+  interface CapturedRequest {
+    options: RequestOptions;
+    respond: (response: { statusCode: number; body: string }) => void;
+    fail: (error: Error) => void;
+  }
+
+  // Shapes each httpsRequestMock call after node's API: the callback receives
+  // the response stream (async-iterable, like a real IncomingMessage), and
+  // request.on() registers event listeners. respond() resolves the promise
+  // with that stream; fail() emits 'error'.
+  const captureRequests = (): CapturedRequest[] => {
+    const requests: CapturedRequest[] = [];
+    const implementation = (options: RequestOptions, callback?: (response: unknown) => void) => {
+      const handlers: Record<string, ((arg: never) => void)[]> = {};
+      const request = {
+        on: (event: string, listener: (arg: never) => void) => {
+          (handlers[event] ??= []).push(listener);
+          return request;
+        },
+        end: () => {},
+        destroy: (error?: Error) => {
+          if (error) {
+            for (const listener of handlers['error'] ?? []) listener(error as never);
+          }
+        },
+      };
+      const stream = (response: { statusCode: number; body: string }) => ({
+        statusCode: response.statusCode,
+        on: (event: string, listener: (chunk?: string) => void) => {
+          if (event === 'data') listener(response.body);
+          if (event === 'end') listener();
+          return stream(response);
+        },
+        async *[Symbol.asyncIterator]() {
+          yield response.body;
+        },
+      });
+      requests.push({
+        options,
+        respond: (response) => callback?.(stream(response)),
+        fail: (error) => {
+          for (const listener of handlers['error'] ?? []) listener(error as never);
+        },
+      });
+      return request;
+    };
+    httpsRequestMock.mockImplementation(implementation as unknown as typeof httpsRequest);
+    return requests;
+  };
+
+  it('connects only to the AM origin — the arrival host is a header, never a destination', async () => {
+    const requests = captureRequests();
+
+    const pending = fetchServerInfoRealm('https://am-header.example.com/am', 'id.petrov.ca');
+    requests[0].respond({ statusCode: 200, body: JSON.stringify({ realm: '/alpha' }) });
+
+    expect(requests[0].options.hostname).toBe('am-header.example.com');
+    expect(requests[0].options.servername).toBe('am-header.example.com');
+    expect(requests[0].options.path).toBe('/am/json/serverinfo/*');
+    expect(requests[0].options.headers).toMatchObject({
+      accept: 'application/json',
+      host: 'id.petrov.ca',
+    });
+    await expect(pending).resolves.toBe('alpha');
+  });
+
+  it('caches a successful answer by amUrl + effective Host header', async () => {
+    const requests = captureRequests();
+
+    const first = fetchServerInfoRealm('https://am-cache.example.com/am', 'id.petrov.ca');
+    requests[0].respond({ statusCode: 200, body: JSON.stringify({ realm: '/alpha' }) });
+    await expect(first).resolves.toBe('alpha');
+
+    const second = await fetchServerInfoRealm('https://am-cache.example.com/am', 'id.petrov.ca');
+
+    expect(second).toBe('alpha');
+    expect(requests).toHaveLength(1); // second call served from cache, no network
+  });
+
+  it('does not cache null, so a rejected host is re-asked on the next call', async () => {
+    const requests = captureRequests();
+
+    const rejected = fetchServerInfoRealm('https://am-reject.example.com/am', 'id.petrov.ca');
+    requests[0].respond({ statusCode: 400, body: 'FQDN not valid' });
+    await expect(rejected).resolves.toBeNull();
+
+    const retry = fetchServerInfoRealm('https://am-reject.example.com/am', 'id.petrov.ca');
+    requests[1].respond({ statusCode: 200, body: JSON.stringify({ realm: '/alpha' }) });
+
+    await expect(retry).resolves.toBe('alpha'); // went back to AM, not the failed lookup
+    expect(requests).toHaveLength(2);
+  });
+
+  it('returns null when the AM edge rejects the host (unregistered FQDN)', async () => {
+    const requests = captureRequests();
+
+    const pending = fetchServerInfoRealm('https://am.example.com/am', 'attacker.example');
+    requests[0].respond({
+      statusCode: 400,
+      body: JSON.stringify({ code: 400, message: 'FQDN "attacker.example" is not valid.' }),
+    });
+
+    await expect(pending).resolves.toBeNull();
+  });
+
+  it.each([
+    ['a non-JSON body', 200, '<html>404</html>'],
+    ['a JSON body without a realm', 200, '{"_id":"*"}'],
+    ['a non-200 status', 503, 'unavailable'],
+  ])('returns null on %s', async (_label, statusCode, body) => {
+    const requests = captureRequests();
+
+    const pending = fetchServerInfoRealm(
+      `https://am-null-${statusCode}-${_label.length}.example.com/am`,
+      'tenant.example.com',
+    );
+    requests[0].respond({ statusCode, body });
+
+    await expect(pending).resolves.toBeNull();
+  });
+
+  it('returns null on a transport error and never rejects', async () => {
+    const requests = captureRequests();
+
+    const pending = fetchServerInfoRealm('https://am.example.com/am', 'tenant.example.com');
+    requests[0].fail(new Error('ECONNRESET'));
+
+    await expect(pending).resolves.toBeNull();
+  });
+
+  it('returns null (never throws) for a malformed amUrl', async () => {
+    await expect(fetchServerInfoRealm('not-a-url', 'tenant.example.com')).resolves.toBeNull();
+  });
+
+  it('substitutes PREVIEW_ALIAS_HOST for the arrival host in preview', async () => {
+    mockEnv.PREVIEW_ALIAS_HOST = 'id.petrov.ca';
+    const requests = captureRequests();
+
+    const pending = fetchServerInfoRealm('https://am-preview.example.com/am', 'localhost');
+    requests[0].respond({ statusCode: 200, body: JSON.stringify({ realm: '/alpha' }) });
+
+    await expect(pending).resolves.toBe('alpha');
+    expect(requests[0].options.headers).toMatchObject({ host: 'id.petrov.ca' });
   });
 });
 
