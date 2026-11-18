@@ -78,6 +78,10 @@ jobs:
         with:
           name: widget-dist
           path: packages/login-widget/dist
+      # login-app resolves $core/* through the built package dist; build it
+      # before the app (the widget build job already built it upstream, but
+      # core/dist is not part of the uploaded artifact).
+      - run: pnpm run build:framework
       - run: pnpm --filter @forgerock/login-app run build
       - name: e2e
         run: pnpm --filter @forgerock/login-widget-e2e exec playwright test --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}

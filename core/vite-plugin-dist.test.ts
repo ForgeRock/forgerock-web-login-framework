@@ -7,16 +7,49 @@
  *
  **/
 
-import { resolve } from 'path';
-import { describe, expect, it } from 'vitest';
+import { mkdirSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join, resolve } from 'path';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 import { loginFrameworkDist } from './vite-plugin-dist';
 
-const packageDir = resolve(import.meta.dirname);
-const distDir = resolve(packageDir, 'dist');
-const serverDistDir = resolve(packageDir, 'dist-server');
+/**
+ * The plugin only checks file existence on the mapped dist paths, so the
+ * resolver contract is tested against a sandbox fixture tree instead of the
+ * real build output. This keeps the tests independent of whether `core/`
+ * has been built (fresh checkouts, CI test jobs) while still exercising
+ * the emitted-name reconciliation rules (.ts → .js, .svelte →
+ * .component.js, .json → .json.js) against real files.
+ */
+const sandboxRoot = join(tmpdir(), 'login-framework-dist-fixture');
 
-const plugin = loginFrameworkDist({ packageDir });
+const distDir = join(sandboxRoot, 'dist');
+const serverDistDir = join(sandboxRoot, 'dist-server');
+
+/** Empty file paths that mirror the real build's emitted names. */
+const fixtureFiles = [
+  'dist/_utilities/i18n.utilities.js',
+  'dist/components/primitives/text/text.component.js',
+  'dist/locales/us/en/index.json.js',
+  'dist-server/_utilities/i18n.utilities.js',
+  'dist-server/components/primitives/text/text.component.js',
+];
+
+beforeAll(() => {
+  rmSync(sandboxRoot, { recursive: true, force: true });
+  for (const relativePath of fixtureFiles) {
+    const absolutePath = join(sandboxRoot, relativePath);
+    mkdirSync(join(absolutePath, '..'), { recursive: true });
+    writeFileSync(absolutePath, '');
+  }
+});
+
+afterAll(() => {
+  rmSync(sandboxRoot, { recursive: true, force: true });
+});
+
+const plugin = loginFrameworkDist({ packageDir: sandboxRoot });
 const resolveId = (source: string) => plugin.resolveId.call({}, source);
 const resolveIdSsr = (source: string) =>
   plugin.resolveId.call({}, source, undefined, { ssr: true });
