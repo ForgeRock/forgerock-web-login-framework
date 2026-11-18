@@ -68,7 +68,6 @@ describe('checkSurface', () => {
     '$core/style.store',
     '$components/stacked.svelte',
   ]);
-  const resolveSource = (source: string) => (source === '$core/interfaces' ? '/src/i.ts' : null);
 
   it('passes a surface that re-exports package and type-only contract modules', () => {
     const violations = checkSurface({
@@ -78,7 +77,6 @@ export { default as Stacked } from '$components/stacked.svelte';
 export interface Wrapper { name: string }
 `),
       runtimeModules,
-      resolveSource,
     });
     expect(violations).toEqual([]);
   });
@@ -87,7 +85,6 @@ export interface Wrapper { name: string }
     const [violation] = checkSurface({
       surface: parseSurface(`export * from '$components/primitives';`),
       runtimeModules,
-      resolveSource,
     });
     expect(violation?.kind).toBe('wildcard-export');
   });
@@ -96,7 +93,6 @@ export interface Wrapper { name: string }
     const violations = checkSurface({
       surface: parseSurface(`export { default as Stacked } from '$components/stacked.svelte';`),
       runtimeModules,
-      resolveSource,
     });
     expect(violations).toEqual([]);
   });
@@ -105,7 +101,6 @@ export interface Wrapper { name: string }
     const [violation] = checkSurface({
       surface: parseSurface(`export { styleStore } from 'svelte/store';`),
       runtimeModules,
-      resolveSource,
     });
     expect(violation?.kind).toBe('forbidden-external');
   });
@@ -114,7 +109,6 @@ export interface Wrapper { name: string }
     const violations = checkSurface({
       surface: parseSurface(`export type { JourneyStep } from '@forgerock/journey-client/types';`),
       runtimeModules,
-      resolveSource,
     });
     expect(violations).toEqual([]);
   });
@@ -123,7 +117,6 @@ export interface Wrapper { name: string }
     const [violation] = checkSurface({
       surface: parseSurface(`export type { X } from '$core/constants';`),
       runtimeModules,
-      resolveSource,
     });
     expect(violation?.kind).toBe('source-outside-surface');
   });
@@ -148,7 +141,21 @@ describe('surfaceViolations (real surface file)', () => {
     const violations = checkSurface({
       surface: parseSurface(`export type { AppConfig } from '$core/constants';`),
       runtimeModules: collectRuntimeModules(packageRoot),
-      resolveSource: () => null,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('source-outside-surface');
+  });
+
+  it('flags an excluded runtime file even when it exists on disk (no resolver fallback)', () => {
+    // The real resolver resolves any existing file under the alias roots, so
+    // a drifted surface re-exporting `$core/constants` (excluded from the
+    // package build but present on disk) must still fail: the runtime module
+    // set is the single allowlist, and a source that exists on disk proves
+    // nothing about being part of the built surface. `constants.ts` is a
+    // real file at the alias, so the "exists on disk" condition is live.
+    const violations = checkSurface({
+      surface: parseSurface(`export { AppConfig } from '$core/constants';`),
+      runtimeModules: collectRuntimeModules(packageRoot),
     });
     expect(violations).toHaveLength(1);
     expect(violations[0]?.kind).toBe('source-outside-surface');

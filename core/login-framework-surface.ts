@@ -7,8 +7,7 @@
  *
  **/
 
-import { existsSync, readFileSync } from 'fs';
-import { resolve } from 'path';
+import { readFileSync } from 'fs';
 
 import { runtimeEntries } from './collect-entries';
 
@@ -139,17 +138,13 @@ export const parseSurface = (sourceText: string): SurfaceModule => {
  * @param surface parsed surface exports
  * @param runtimeModules alias specifiers (e.g. `$core/style.store`) the
  *   package build compiles, per `collect-entries.ts`
- * @param resolveSource maps an alias specifier to an absolute source path,
- *   or `null` when it does not point at an existing source file
  */
 export const checkSurface = ({
   surface,
   runtimeModules,
-  resolveSource,
 }: {
   surface: SurfaceModule;
   runtimeModules: ReadonlySet<string>;
-  resolveSource: (source: string) => string | null;
 }): readonly SurfaceViolation[] =>
   surface.flatMap((surfaceExport): SurfaceViolation[] => {
     if (surfaceExport.source !== null && surfaceExport.names.length === 0) {
@@ -176,8 +171,10 @@ export const checkSurface = ({
     }
     // Package sources: the re-export must point at a module the package
     // build compiles (the collector's exclusions already keep out tests,
-    // stories, tooling, `server/` and `constants.ts`).
-    if (!runtimeModules.has(surfaceExport.source) && resolveSource(surfaceExport.source) === null) {
+    // stories, tooling, `server/` and `constants.ts`). The runtime module
+    // set is the single allowlist: a file's existence on disk proves
+    // nothing — excluded sources (`constants.ts`, `server/`) also exist.
+    if (!runtimeModules.has(surfaceExport.source)) {
       return [
         {
           kind: 'source-outside-surface',
@@ -188,31 +185,6 @@ export const checkSurface = ({
     }
     return [];
   });
-
-/** Alias roots with their absolute directories, for source resolution. */
-const absoluteAliasRoots = (
-  packageRoot: string,
-): ReadonlyArray<readonly [prefix: string, dir: string]> =>
-  ALIAS_ROOTS.map(([prefix, subPath]) => [prefix, resolve(packageRoot, subPath)] as const);
-
-/** Maps an alias specifier to an existing absolute source path, or null. */
-const sourceResolver =
-  (packageRoot: string) =>
-  (source: string): string | null => {
-    const match = absoluteAliasRoots(packageRoot).find(
-      ([prefix]) => source === prefix || source.startsWith(`${prefix}/`),
-    );
-    if (match === undefined) {
-      return null;
-    }
-    const [prefix, dir] = match;
-    const rest = source.slice(prefix.length).replace(/^\//, '');
-    const candidates = rest ? [`${rest}.ts`, `${rest}.svelte`, rest] : ['index.ts'];
-    const found = candidates
-      .map((candidate) => resolve(dir, candidate))
-      .find((candidate) => existsSync(candidate));
-    return found ?? null;
-  };
 
 /** Maps an absolute runtime-entry path to its package alias specifier. */
 const aliasSpecifier = (absolutePath: string, packageRoot: string): string => {
@@ -255,6 +227,5 @@ export const surfaceViolations = (
   return checkSurface({
     surface: parseSurface(surfaceText),
     runtimeModules: collectRuntimeModules(packageRoot),
-    resolveSource: sourceResolver(packageRoot),
   });
 };
