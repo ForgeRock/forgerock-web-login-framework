@@ -7,10 +7,34 @@
  *
  **/
 
+import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { join, relative, resolve } from 'path';
+import { build } from 'vite';
 import { describe, expect, it } from 'vitest';
 
-import { runtimeEntries } from './collect-entries';
+import { packageRoot, runtimeEntries } from './collect-entries';
 import { packageCssConfig, packageSveltePluginOptions } from './vite-shared';
+
+const centeredSource = resolve(packageRoot, 'components/primitives/box/centered.svelte');
+
+/** Output files of a one-component build with the package's own plugin and CSS config. */
+const buildCentered = async (ssr: boolean) => {
+  const result = await build({
+    configFile: false,
+    logLevel: 'silent',
+    plugins: [svelte(packageSveltePluginOptions())],
+    css: packageCssConfig,
+    build: {
+      write: false,
+      ssr,
+      minify: false,
+      lib: { entry: centeredSource, formats: ['es'], fileName: 'centered' },
+      rollupOptions: { external: [/^svelte(\/|$)/] },
+    },
+  });
+  const outputs = Array.isArray(result) ? result : [result];
+  return outputs.flatMap((output) => ('output' in output ? output.output : []));
+};
 
 /**
  * The package's two Vite builds (client tree, SSR tree) share one Svelte
@@ -40,10 +64,34 @@ describe('package Vite build options', () => {
     expect(packageCssConfig).toEqual({ postcss: { plugins: [] } });
   });
 
+  it.each([
+    ['client', false],
+    ['SSR', true],
+  ])(
+    'a component <style> block stays in the %s build output (self-contained, no consumer CSS import)',
+    async (_label, ssr) => {
+      const files = await buildCentered(ssr);
+      const code = files.flatMap((file) => (file.type === 'chunk' ? [file.code] : []));
+      const stylesheets = files.filter((file) => file.fileName.endsWith('.css'));
+      expect(stylesheets).toEqual([]);
+      expect(code.join('\n')).toContain('--fr-page-bg-image');
+    },
+  );
+
   it('build tooling modules are not part of the package build surface', () => {
     const entries = runtimeEntries.map((entry) => entry.split('/').slice(-1)[0]);
     for (const toolingModule of ['vite-shared.ts', 'vite-config.test.ts']) {
       expect(entries).not.toContain(toolingModule);
     }
+  });
+
+  it('test fixtures and the preset catalog built on them are not part of the package build surface', () => {
+    const entries = runtimeEntries.map((entry) => relative(packageRoot, entry));
+    const fixtureEntries = entries.filter(
+      (entry) =>
+        /\.mock\.(ts|js)$/.test(entry) ||
+        entry === join('journey', 'callbacks', '_utilities', 'callback-presets.ts'),
+    );
+    expect(fixtureEntries).toEqual([join('journey', '_utilities', 'step.mock.ts')]);
   });
 });

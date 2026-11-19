@@ -28,6 +28,10 @@ import type { CSSOptions } from 'vite';
 export const packageSveltePluginOptions = (): SveltePluginOptions => ({
   compilerOptions: {
     dev: false,
+    // Component styles travel inside the compiled JS (client: appended on
+    // mount; SSR: rendered into the page head). Nothing is extracted, so
+    // consumers need no stylesheet import to get a component's styles.
+    css: 'injected',
     // Svelte 5 compatibility - maintains new Widget({ target }) pattern
     compatibility: {
       componentApi: 4,
@@ -37,7 +41,8 @@ export const packageSveltePluginOptions = (): SveltePluginOptions => ({
 });
 
 /**
- * Vite `css` config for both package builds. The package ships no CSS (no
+ * Vite `css` config for both package builds. The package emits no stylesheet
+ * (component styles are injected, see {@link packageSveltePluginOptions}; no
  * Tailwind directives in core sources) and must not run the repo-root
  * PostCSS config (Tailwind): the walk-up autodetect from core/ finds the
  * root `postcss.config.cjs` and Tailwind fails without its own content
