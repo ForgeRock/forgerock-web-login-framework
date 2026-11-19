@@ -12,7 +12,11 @@
 
   import type { ThemeObject } from '$core/style.store';
 
-  export let data: { idmTheme?: ThemeObject; backgroundImageUrl?: string };
+  export let data: {
+    idmTheme?: ThemeObject;
+    backgroundImageUrl?: string;
+    componentBundleUrl?: string | null;
+  };
 
   $: themeStyle = [
     ...(data.idmTheme ? buildThemeVarsEntries(data.idmTheme) : []),
@@ -35,6 +39,10 @@
     href="/open-sans/open-sans-v29-latin-regular.woff2"
     crossorigin="anonymous"
   />
+
+  {#if data.componentBundleUrl}
+    <link rel="modulepreload" href={data.componentBundleUrl} />
+  {/if}
 
   <meta charset="utf-8" />
   <title>Login Application</title>

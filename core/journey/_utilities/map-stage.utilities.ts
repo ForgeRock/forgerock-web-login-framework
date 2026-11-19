@@ -25,17 +25,20 @@ import { customStageRegistry } from './registry/custom-registry';
 
 import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
 
+import type { CustomRegistryEntry } from './registry/registry.interfaces';
 import type { StageComponent, StageRegistryEntry, StepTypes } from '$journey/journey.interfaces';
 
 /**
  * @function mapStepToStage - Maps the current step to the proper stage component.
  * @param {object} currentStep - The current step to check
  * @param {object} externalStages - Optional map of externally-provided stage names to registry entries with detect functions
+ * @param {object} runtimeStages - Optional map of stages from a runtime-loaded Custom Component bundle; checked before all other sources
  * @returns {StageComponent} - The resolved Svelte stage component
  */
 export function mapStepToStage(
   currentStep: StepTypes,
   externalStages: Record<string, StageRegistryEntry> = {},
+  runtimeStages: Record<string, CustomRegistryEntry> = {},
 ): StageComponent {
   // Handle unlikely error state
   if (!currentStep || currentStep.type !== 'Step') {
@@ -44,7 +47,11 @@ export function mapStepToStage(
 
   const stageName = currentStep?.getStage?.()?.trim();
 
-  // Check custom registry first — handles both overrides of known stages
+  if (stageName && runtimeStages[stageName]) {
+    return runtimeStages[stageName].component as unknown as StageComponent;
+  }
+
+  // Check custom registry next — handles both overrides of known stages
   // (e.g. DefaultLogin) and brand-new stage names for custom AM nodes.
   if (stageName && customStageRegistry[stageName]) {
     // custom-registry.ts is auto-generated and types component as Svelte 5 Component;

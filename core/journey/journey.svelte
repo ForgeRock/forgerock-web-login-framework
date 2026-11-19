@@ -16,6 +16,7 @@
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   import { setupPasskeyAutofill } from '$core/journey/stages/_effects/webauthn.effects';
   import { mapStepToStage } from '$journey/_utilities/map-stage.utilities';
+  import { runtimeRegistryStore } from '$journey/_utilities/registry/runtime-registry.store';
   import { stack } from '$journey/journey.store';
 
   import type { SvelteComponent } from 'svelte';
@@ -74,7 +75,11 @@
     </div>
   {:else if $journeyStore.step?.type === 'Step'}
     <svelte:component
-      this={mapStepToStage($journeyStore.step, externalStages) as typeof SvelteComponent}
+      this={mapStepToStage(
+        $journeyStore.step,
+        externalStages,
+        $runtimeRegistryStore.stages,
+      ) as typeof SvelteComponent}
       bind:formEl
       {componentStyle}
       form={{
