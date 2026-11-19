@@ -19,9 +19,16 @@ export default defineConfig(
       sveltekit(),
     ],
     resolve: {
-      // One Svelte runtime: core/dist imports `svelte/*` and must not resolve
-      // a second copy from core/node_modules.
-      dedupe: ['svelte'],
+      // One Svelte runtime and one copy of each @forgerock runtime dep:
+      // core/dist imports `svelte/*` and `@forgerock/*`, which must not
+      // resolve a second copy from core/node_modules.
+      dedupe: [
+        'svelte',
+        '@forgerock/journey-client',
+        '@forgerock/oidc-client',
+        '@forgerock/protect',
+        '@forgerock/storage',
+      ],
       alias: {
         '$app-locales': resolve('./src/locales'),
         // Server-only SvelteKit modules, deliberately excluded from the

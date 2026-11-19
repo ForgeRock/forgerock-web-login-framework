@@ -58,7 +58,33 @@ describe('widget runtime dependencies', () => {
   });
 });
 
-describe('svelte single runtime', () => {
+/**
+ * Dependencies shared between the `login-framework` package (core/) and the
+ * widget (and, for the first five, the login-app). Core's built dist imports
+ * them, and both consumers inline that dist, so any version split between
+ * the importers bundles two copies — for `svelte` two runtimes, for the
+ * `@forgerock/*` clients two module-state singletons (e.g. `callbackType`
+ * enum identity). The dedupe arrays in the three consumer configs and the
+ * lockfile tests below guard all of these.
+ */
+const SHARED_DEPS = [
+  'svelte',
+  '@forgerock/journey-client',
+  '@forgerock/oidc-client',
+  '@forgerock/protect',
+  '@forgerock/storage',
+] as const;
+
+/** Specifiers in the consumer manifests for the shared deps. */
+const SHARED_SPECIFIERS: Readonly<Record<(typeof SHARED_DEPS)[number], string>> = {
+  svelte: '^5.53.7',
+  '@forgerock/journey-client': '^2.1.1',
+  '@forgerock/oidc-client': '^2.1.1',
+  '@forgerock/protect': '^2.1.1',
+  '@forgerock/storage': '^2.1.1',
+};
+
+describe('single runtime, one copy per shared dependency', () => {
   const repoRoot = resolve(import.meta.dirname, '../..');
   const lockfile = readFileSync(resolve(repoRoot, 'pnpm-lock.yaml'), 'utf8');
 
@@ -71,33 +97,59 @@ describe('svelte single runtime', () => {
   const resolveConfig = async (config: UserConfigExport) =>
     typeof config === 'function' ? config({ command: 'build', mode: 'production' }) : config;
 
-  it('dedupes svelte in the widget ESM config', () => {
-    expect(esmConfig.resolve?.dedupe).toContain('svelte');
+  // pnpm lockfile v9 nests every importer dependency at the same 6/8-space
+  // indentation, so one pattern per shared dep covers all workspaces. The
+  // lookbehind plus exact indent anchors the key at line start, so `svelte`
+  // does not also match `eslint-plugin-svelte`; scoped names need quotes in
+  // the YAML, bare names do not.
+  const importerPattern = (dep: string): RegExp =>
+    new RegExp(
+      `(?<=\\n)      ${dep.startsWith('@') ? "'" : ''}${dep}${
+        dep.startsWith('@') ? "'" : ''
+      }:\\n {8}specifier: (.+)\\n {8}version: (\\S+)`,
+      'g',
+    );
+
+  it.each(SHARED_DEPS)(`dedupes %s in the widget ESM config`, (dep) => {
+    expect(esmConfig.resolve?.dedupe).toContain(dep);
   });
 
-  it('dedupes svelte in the widget IIFE config', () => {
-    expect(iifeConfig.resolve?.dedupe).toContain('svelte');
+  it.each(SHARED_DEPS)(`dedupes %s in the widget IIFE config`, (dep) => {
+    expect(iifeConfig.resolve?.dedupe).toContain(dep);
   });
 
-  it('dedupes svelte in the login-app config', async () => {
+  it.each(SHARED_DEPS)(`dedupes %s in the login-app config`, async (dep) => {
     const appResolved = await resolveConfig(appConfig);
-    expect(appResolved.resolve?.dedupe).toContain('svelte');
+    expect(appResolved.resolve?.dedupe).toContain(dep);
   });
 
-  it('resolves one svelte version across every lockfile importer', () => {
+  it.each(SHARED_DEPS)('locks one %s specifier and version across every importer', (dep) => {
     const importers = lockfileSection('\nimporters:', '\npackages:');
+    const pairs = Array.from(importers.matchAll(importerPattern(dep)), (m) => `${m[1]} -> ${m[2]}`);
+    expect(Array.from(new Set(pairs))).toHaveLength(1);
+  });
+
+  it.each(SHARED_DEPS)('locks a single %s package version', (dep) => {
+    const packages = lockfileSection('\npackages:', '\nsnapshots:');
+    // Scoped keys are quoted in the YAML with the quote before the closing
+    // colon (`'@forgerock/x@1.2.3':`), so the capture spans the version plus
+    // a possible trailing quote and is stripped after the match; bare keys
+    // have no quote.
     expect(
-      uniqueMatches(importers, /\n {6}svelte:\n {8}specifier: .+\n {8}version: (\S+)/g),
+      uniqueMatches(
+        packages,
+        new RegExp(
+          `\\n {2}${dep.startsWith('@') ? "'" : ''}${dep.replace('/', '\\/')}@([^:]+):\\n`,
+          'g',
+        ),
+      ).map((version) => version.replace(/'$/, '')),
     ).toHaveLength(1);
   });
 
-  it('declares the same svelte specifier in every workspace manifest', () => {
+  it('declares the shared specifier in every workspace manifest', () => {
     const importers = lockfileSection('\nimporters:', '\npackages:');
-    expect(uniqueMatches(importers, /\n {6}svelte:\n {8}specifier: (.+)\n/g)).toHaveLength(1);
-  });
-
-  it('locks a single svelte package version', () => {
-    const packages = lockfileSection('\npackages:', '\nsnapshots:');
-    expect(uniqueMatches(packages, /\n {2}svelte@(\S+):\n/g)).toHaveLength(1);
+    for (const dep of SHARED_DEPS) {
+      expect(uniqueMatches(importers, importerPattern(dep))).toEqual([SHARED_SPECIFIERS[dep]]);
+    }
   });
 });
