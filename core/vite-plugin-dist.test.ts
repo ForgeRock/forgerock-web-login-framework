@@ -50,9 +50,8 @@ afterAll(() => {
 });
 
 const plugin = loginFrameworkDist({ packageDir: sandboxRoot });
-const resolveId = (source: string) => plugin.resolveId.call({}, source);
-const resolveIdSsr = (source: string) =>
-  plugin.resolveId.call({}, source, undefined, { ssr: true });
+const resolveId = (source: string) => plugin.resolveId(source, undefined);
+const resolveIdSsr = (source: string) => plugin.resolveId(source, undefined, { ssr: true });
 
 describe('loginFrameworkDist', () => {
   it('maps an extensionless TS module onto its dist JS file', () => {
@@ -79,6 +78,67 @@ describe('loginFrameworkDist', () => {
   it('returns null for sources outside the package aliases', () => {
     expect(resolveId('./sibling.svelte')).toBeNull();
     expect(resolveId('$app-locales/us/en')).toBeNull();
+  });
+
+  describe('missing build output', () => {
+    const unbuiltRoot = join(tmpdir(), 'login-framework-dist-unbuilt');
+    const unbuiltPlugin = loginFrameworkDist({ packageDir: unbuiltRoot });
+
+    // Only the client tree exists, so SSR resolutions find no server tree.
+    const clientOnlyRoot = join(tmpdir(), 'login-framework-dist-client-only');
+    const clientOnlyPlugin = loginFrameworkDist({ packageDir: clientOnlyRoot });
+
+    beforeAll(() => {
+      rmSync(unbuiltRoot, { recursive: true, force: true });
+      rmSync(clientOnlyRoot, { recursive: true, force: true });
+      mkdirSync(join(clientOnlyRoot, 'dist'), { recursive: true });
+    });
+
+    afterAll(() => {
+      rmSync(unbuiltRoot, { recursive: true, force: true });
+      rmSync(clientOnlyRoot, { recursive: true, force: true });
+    });
+
+    it.each([
+      '$core/style.store',
+      '$components/primitives/text/text.svelte',
+      '$journey/journey.store',
+      '$locales/us/en/index.json',
+      '$core',
+    ])(
+      'tells the user to run pnpm build:framework when %s is imported and dist is absent',
+      (source) => {
+        expect(() => unbuiltPlugin.resolveId(source, undefined)).toThrow(/pnpm build:framework/);
+        expect(() => unbuiltPlugin.resolveId(source, undefined)).toThrow(
+          new RegExp(source.replace(/[$.]/g, '\\$&')),
+        );
+      },
+    );
+
+    it('names the missing tree in the message', () => {
+      expect(() => unbuiltPlugin.resolveId('$core/style.store', undefined)).toThrow(
+        resolve(unbuiltRoot, 'dist'),
+      );
+    });
+
+    it('requires dist-server for SSR resolutions', () => {
+      expect(() => unbuiltPlugin.resolveId('$core/style.store', undefined, { ssr: true })).toThrow(
+        resolve(unbuiltRoot, 'dist-server'),
+      );
+      expect(() =>
+        clientOnlyPlugin.resolveId('$core/style.store', undefined, { ssr: true }),
+      ).toThrow(/pnpm build:framework/);
+    });
+
+    it('does not throw for the client tree when only dist-server is missing', () => {
+      expect(clientOnlyPlugin.resolveId('$core/constants', undefined)).toBeNull();
+    });
+
+    it('does not throw for sources outside the package aliases', () => {
+      expect(unbuiltPlugin.resolveId('./sibling.svelte', undefined)).toBeNull();
+      expect(unbuiltPlugin.resolveId('svelte/store', undefined)).toBeNull();
+      expect(unbuiltPlugin.resolveId('\0virtual:module', undefined)).toBeNull();
+    });
   });
 
   describe('SSR resolution', () => {

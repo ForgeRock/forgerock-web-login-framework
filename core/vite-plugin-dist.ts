@@ -5,8 +5,8 @@ import { resolve } from 'path';
 interface LoginFrameworkDistOptions {
   /**
    * Absolute path to the `core/` package directory (consumers pass
-   * `resolve('../../core')`). Used to verify that the mapped dist file
-   * exists; resolution itself goes through the package specifier.
+   * `resolve('../../core')`). Used to locate the built trees and verify that
+   * the mapped dist file exists.
    */
   packageDir: string;
 }
@@ -45,9 +45,11 @@ interface DistResolverPlugin {
  *      `index.json.js` (Rollup turns JSON imports into JS modules).
  *   3. TypeScript sources: `foo.ts` is emitted as `foo.js`.
  *
- * Sources with nothing built (e.g. `$core/constants`, excluded from the
- * package build) resolve to `null`, so the consumer's own alias or module
- * resolution applies.
+ * Sources with nothing built inside an existing tree (e.g. `$core/constants`,
+ * excluded from the package build) resolve to `null`, so the consumer's own
+ * alias or module resolution applies. When the tree itself is missing (the
+ * package was never built), resolution throws with a `pnpm build:framework`
+ * hint instead.
  *
  * The plugin never touches resolution of the package's own dependencies
  * (`svelte`, `@forgerock/*`, ...), which stay external to the package and
@@ -111,6 +113,16 @@ export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): D
       // server-compiled tree; everything else the client one. The alias's
       // sub-path applies inside whichever tree is selected.
       const treeRoot = options?.ssr ? serverDistDir : distDir;
+
+      // The tree itself is absent: the package was never built. Fail with the
+      // fix instead of returning null, which surfaces as Vite's opaque
+      // "Failed to resolve import" error.
+      if (!existsSync(treeRoot)) {
+        throw new Error(
+          `login-framework build output not found at ${treeRoot}, needed to resolve "${source}". ` +
+            'Run "pnpm build:framework" from the repository root.',
+        );
+      }
       const treePrefix = resolve(treeRoot, match.subPath);
       const rest = source.slice(match.prefix.length).replace(/^\//, '');
       const absolute = rest ? resolve(treePrefix, rest) : treePrefix;
