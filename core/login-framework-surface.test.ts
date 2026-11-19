@@ -60,6 +60,69 @@ export type { StyleObject } from '$core/style.store';
     const surface = parseSurface(`export * from '$components/primitives';`);
     expect(surface[0]).toEqual({ names: [], source: '$components/primitives', typeOnly: false });
   });
+
+  it('resolves a locally exported import binding to its import source', () => {
+    const surface = parseSurface(`
+import { styleStore } from 'svelte/store';
+export { styleStore };
+`);
+    expect(surface).toEqual([{ names: ['styleStore'], source: 'svelte/store', typeOnly: false }]);
+  });
+
+  it('resolves default, namespace and renamed import bindings', () => {
+    const surface = parseSurface(`
+import Stacked from '$components/stacked.svelte';
+import * as stores from 'svelte/store';
+import { writable as makeWritable } from 'svelte/store';
+export { Stacked, stores, makeWritable as create };
+`);
+    expect(surface).toEqual([
+      { names: ['Stacked'], source: '$components/stacked.svelte', typeOnly: false },
+      { names: ['stores'], source: 'svelte/store', typeOnly: false },
+      { names: ['create'], source: 'svelte/store', typeOnly: false },
+    ]);
+  });
+
+  it('keeps a type-only import binding type-only when exported locally', () => {
+    const surface = parseSurface(`
+import type { JourneyStep } from '@forgerock/journey-client/types';
+import { type Maybe } from '$core/interfaces';
+export type { JourneyStep };
+export { Maybe };
+`);
+    expect(surface).toEqual([
+      { names: ['JourneyStep'], source: '@forgerock/journey-client/types', typeOnly: true },
+      { names: ['Maybe'], source: '$core/interfaces', typeOnly: true },
+    ]);
+  });
+
+  it('keeps a locally declared name exported without an import as a local export', () => {
+    const surface = parseSurface(`
+const answer = 42;
+export { answer };
+`);
+    expect(surface).toEqual([{ names: ['answer'], source: null, typeOnly: false }]);
+  });
+
+  it('ignores export statements inside block and JSDoc comments', () => {
+    const surface = parseSurface(`
+/**
+ * Example:
+ * export { AppConfig } from '$core/constants';
+ */
+/* export * from '$core/constants'; */
+export type { Maybe } from '$core/interfaces'; // export { x } from 'y';
+`);
+    expect(surface).toEqual([{ names: ['Maybe'], source: '$core/interfaces', typeOnly: true }]);
+  });
+
+  it('keeps code after a line comment that mentions a block comment opener', () => {
+    const surface = parseSurface(`
+// see /* the docs
+export type { Maybe } from '$core/interfaces';
+`);
+    expect(surface).toEqual([{ names: ['Maybe'], source: '$core/interfaces', typeOnly: true }]);
+  });
 });
 
 describe('checkSurface', () => {
@@ -113,6 +176,64 @@ export interface Wrapper { name: string }
     expect(violations).toEqual([]);
   });
 
+  it('fails an imported external binding re-exported without a from clause', () => {
+    const [violation] = checkSurface({
+      surface: parseSurface(`
+import { styleStore } from 'svelte/store';
+export { styleStore };
+`),
+      runtimeModules,
+    });
+    expect(violation).toEqual({
+      kind: 'forbidden-external',
+      names: ['styleStore'],
+      source: 'svelte/store',
+    });
+  });
+
+  it('fails an imported binding from an excluded package module re-exported locally', () => {
+    const [violation] = checkSurface({
+      surface: parseSurface(`
+import { AppConfig } from '$core/constants';
+export { AppConfig };
+`),
+      runtimeModules,
+    });
+    expect(violation?.kind).toBe('source-outside-surface');
+  });
+
+  it('allows a type-only journey-client import re-exported locally', () => {
+    const violations = checkSurface({
+      surface: parseSurface(`
+import type { JourneyStep } from '@forgerock/journey-client/types';
+export type { JourneyStep };
+`),
+      runtimeModules,
+    });
+    expect(violations).toEqual([]);
+  });
+
+  it('judges a $locales re-export by the allowlist, not as an external package', () => {
+    const [violation] = checkSurface({
+      surface: parseSurface(`export { messages } from '$locales/us/en';`),
+      runtimeModules,
+    });
+    expect(violation?.kind).toBe('source-outside-surface');
+  });
+
+  it('does not report an export that only appears inside a block comment', () => {
+    const violations = checkSurface({
+      surface: parseSurface(`
+/**
+ * export { AppConfig } from '$core/constants';
+ */
+export type { Maybe } from '$core/interfaces';
+`),
+      runtimeModules,
+    });
+    expect(violations).toEqual([]);
+  });
+
   it('fails a source outside the package runtime surface', () => {
     const [violation] = checkSurface({
       surface: parseSurface(`export type { X } from '$core/constants';`),
@@ -132,9 +253,10 @@ describe('surfaceViolations (real surface file)', () => {
     // 59 reviewed export statements in login-framework.ts (2026-11-16):
     // compositions, primitives, icons, T, CallbackMapper, runtime
     // utilities, type re-exports, CustomWrapperProps, storybook helpers.
-    // Multi-name statements collapse to one entry each, so the parsed
-    // entry count equals the statement count.
-    expect(parseSurface(surfaceText).length).toBeGreaterThanOrEqual(59);
+    // Multi-name `from` statements collapse to one entry each, so the parsed
+    // entry count equals the statement count. Exact, so a statement the
+    // parser misses (or an unreviewed addition) fails here.
+    expect(parseSurface(surfaceText)).toHaveLength(59);
   });
 
   it('flags an export pointing outside the package surface in a drifted file', () => {

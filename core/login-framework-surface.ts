@@ -75,10 +75,15 @@ const ALIAS_ROOTS: ReadonlyArray<readonly [prefix: string, subPath: string]> = [
   ['$core', ''],
   ['$components', 'components'],
   ['$journey', 'journey'],
+  ['$locales', 'locales'],
 ];
 
-/** Strips line comments so commented-out examples are not parsed. */
-const stripLineComments = (text: string): string => text.replace(/\/\/.*$/gm, '');
+/**
+ * Strips block, JSDoc and line comments so commented-out examples are not
+ * parsed. One alternation pass, so a `/*` inside a line comment cannot
+ * swallow the code that follows it.
+ */
+const stripComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
 
 /**
  * Matches one export statement of the surface file's reviewed forms:
@@ -88,48 +93,130 @@ const stripLineComments = (text: string): string => text.replace(/\/\/.*$/gm, ''
 const EXPORT_STATEMENT =
   /export\s+(type\s+)?(\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s*(?:from\s*['"]([^'"]+)['"])?;?|export\s+(?:interface|type)\s+(\w+)/g;
 
+/**
+ * Matches one import statement with bindings: `import [type] [Default]
+ * [, { named } | * as ns] from 'source'`. Side-effect imports bind nothing
+ * and are not matched.
+ */
+const IMPORT_STATEMENT =
+  /import\s+(type\s+)?([\w$]+)?\s*,?\s*(\{[^}]*\}|\*\s+as\s+[\w$]+)?\s*from\s*['"]([^'"]+)['"]/g;
+
+/**
+ * One `{ [type] name [as alias] }` entry of an import or export clause.
+ * `alias` is the name the entry introduces: the local binding for an import,
+ * the exported name for an export. It equals `name` when there is no `as`.
+ */
+interface ClauseEntry {
+  readonly name: string;
+  readonly alias: string;
+  readonly typeOnly: boolean;
+}
+
+/** Where a locally bound name was imported from. */
+interface ImportBinding {
+  readonly source: string;
+  readonly typeOnly: boolean;
+}
+
+/** Parses the entries of a `{ ... }` clause. */
+const parseClauseEntries = (clause: string): readonly ClauseEntry[] =>
+  clause
+    .slice(1, -1)
+    .split(',')
+    .flatMap((entry): ClauseEntry[] => {
+      const match = entry.trim().match(/^(type\s+)?([\w$]+)(?:\s+as\s+([\w$]+))?$/);
+      return match?.[2] === undefined
+        ? []
+        : [{ name: match[2], alias: match[3] ?? match[2], typeOnly: match[1] !== undefined }];
+    });
+
 /** Extracts the exported identifiers from a `{ ... }` clause. */
 const parseExportNames = (clause: string): readonly string[] =>
-  [...clause.matchAll(/(?:as\s+)?(\w+)\s*[,}]/g)].map((match) => match[1] ?? '');
+  parseClauseEntries(clause).map((entry) => entry.alias);
+
+/** Maps every locally bound import name to its import source. */
+const parseImportBindings = (text: string): ReadonlyMap<string, ImportBinding> =>
+  new Map(
+    [...text.matchAll(IMPORT_STATEMENT)].flatMap(
+      ([, typeKeyword, defaultName, clause, source]): ReadonlyArray<[string, ImportBinding]> => {
+        const importTypeOnly = typeKeyword !== undefined;
+        const defaultBinding: ReadonlyArray<[string, ImportBinding]> =
+          defaultName === undefined || source === undefined
+            ? []
+            : [[defaultName, { source, typeOnly: importTypeOnly }]];
+        const clauseBindings: ReadonlyArray<[string, ImportBinding]> =
+          clause === undefined || source === undefined
+            ? []
+            : clause.startsWith('{')
+            ? parseClauseEntries(clause).map((entry): [string, ImportBinding] => [
+                entry.alias,
+                { source, typeOnly: importTypeOnly || entry.typeOnly },
+              ])
+            : [[clause.replace(/^\*\s+as\s+/, ''), { source, typeOnly: importTypeOnly }]];
+        return [...defaultBinding, ...clauseBindings];
+      },
+    ),
+  );
+
+/**
+ * Expands a local `export { ... }` clause (no `from`) into one export per
+ * name. A name bound by an import takes that import's source, so
+ * `import { x } from 'pkg'; export { x }` is judged like
+ * `export { x } from 'pkg'`; a name declared in the file stays local.
+ */
+const resolveLocalClause = ({
+  clause,
+  exportTypeOnly,
+  importBindings,
+}: {
+  clause: string;
+  exportTypeOnly: boolean;
+  importBindings: ReadonlyMap<string, ImportBinding>;
+}): readonly SurfaceExport[] =>
+  parseClauseEntries(clause).map((entry): SurfaceExport => {
+    const binding = importBindings.get(entry.name);
+    return {
+      names: [entry.alias],
+      source: binding?.source ?? null,
+      typeOnly: exportTypeOnly || entry.typeOnly || (binding?.typeOnly ?? false),
+    };
+  });
 
 /**
  * Parses the export statements of a surface file into typed exports.
  *
  * Pure text analysis of the curated-surface file's reviewed statement
- * forms only. The file is lint-formatted and reviewed, so a statement
+ * forms only. Comments are stripped first, and a local `export { x }` of
+ * an imported name resolves to that import's source so it cannot bypass
+ * the allowlist. The file is lint-formatted and reviewed, so a statement
  * this parser misses stays invisible here; the real-file test guards
  * against drift by asserting the parsed export count stays at the
  * reviewed baseline.
  */
 export const parseSurface = (sourceText: string): SurfaceModule => {
-  const withoutComments = stripLineComments(sourceText);
+  const withoutComments = stripComments(sourceText);
+  const importBindings = parseImportBindings(withoutComments);
 
-  const exports: SurfaceExport[] = [];
-  for (const match of withoutComments.matchAll(EXPORT_STATEMENT)) {
-    const [, typeKeyword, clause, source, localName] = match;
-    if (localName !== undefined) {
-      exports.push({ names: [localName], source: null, typeOnly: true });
-      continue;
-    }
-    if (clause === undefined) {
-      continue;
-    }
-    if (clause.startsWith('*')) {
-      exports.push({
-        names: [],
-        source: source ?? null,
-        typeOnly: typeKeyword !== undefined,
-      });
-      continue;
-    }
-    exports.push({
-      names: parseExportNames(clause),
-      source: source ?? null,
-      typeOnly: typeKeyword !== undefined,
-    });
-  }
-
-  return exports;
+  return [...withoutComments.matchAll(EXPORT_STATEMENT)].flatMap(
+    ([, typeKeyword, clause, source, localName]): readonly SurfaceExport[] => {
+      if (localName !== undefined) {
+        return [{ names: [localName], source: null, typeOnly: true }];
+      }
+      if (clause === undefined) {
+        return [];
+      }
+      if (clause.startsWith('*')) {
+        return [{ names: [], source: source ?? null, typeOnly: typeKeyword !== undefined }];
+      }
+      return source === undefined
+        ? resolveLocalClause({
+            clause,
+            exportTypeOnly: typeKeyword !== undefined,
+            importBindings,
+          })
+        : [{ names: parseExportNames(clause), source, typeOnly: typeKeyword !== undefined }];
+    },
+  );
 };
 
 /**
