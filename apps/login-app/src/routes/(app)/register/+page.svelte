@@ -15,6 +15,7 @@
   import { initialize as initializeContent } from '$core/locale.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
+  import { configureCustomBundle } from '$lib/custom-bundle/configure-custom-bundle.effects';
   import { loginAppStages } from '$lib/stages';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
@@ -35,6 +36,7 @@
 
   // Use if not initializing journey in a "context module"
   onMount(async () => {
+    await configureCustomBundle();
     journeyStore.start({ journey: 'Registration' });
   });
 

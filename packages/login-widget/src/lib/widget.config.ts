@@ -69,3 +69,10 @@ export const storageConfigSchema = z.discriminatedUnion('type', [
     }),
   }),
 ]);
+
+export const customComponentsConfigSchema = z
+  .object({
+    /** URL of the Custom Component bundle's ES module, fetched and registered at configure time. */
+    url: z.string().url({ message: 'customComponents.url must be a full URL' }),
+  })
+  .strict();

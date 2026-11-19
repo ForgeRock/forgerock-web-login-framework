@@ -515,6 +515,53 @@ describe('widgetApiFactory', () => {
     });
   });
 
+  describe('configure() — customComponents bundle', () => {
+    it('loads the bundle from the configured url', async () => {
+      const loadBundleMock = vi.fn(async () => ({ callbacks: {} }));
+      vi.doMock('$journey/_utilities/registry/load-custom-bundle.effects', () => ({
+        loadCustomBundle: loadBundleMock,
+      }));
+
+      try {
+        const api = await importSubject();
+        await api.configure({
+          serverConfig: validServerConfig,
+          customComponents: { url: 'https://host/custom/bundle.js' },
+        });
+
+        expect(loadBundleMock).toHaveBeenCalledWith('https://host/custom/bundle.js');
+      } finally {
+        vi.doUnmock('$journey/_utilities/registry/load-custom-bundle.effects');
+      }
+    });
+
+    it('a failed bundle load logs but still resolves configure()', async () => {
+      vi.doMock('$journey/_utilities/registry/load-custom-bundle.effects', () => ({
+        loadCustomBundle: vi.fn(async () => {
+          throw new Error('Failed to load Custom Component bundle from "https://x/b.js": 404');
+        }),
+      }));
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      try {
+        const api = await importSubject();
+        await expect(
+          api.configure({
+            serverConfig: validServerConfig,
+            customComponents: { url: 'https://host/missing/bundle.js' },
+          }),
+        ).resolves.toBeUndefined();
+
+        expect(consoleError).toHaveBeenCalledWith(
+          expect.stringContaining('Failed to load Custom Component bundle'),
+        );
+      } finally {
+        vi.doUnmock('$journey/_utilities/registry/load-custom-bundle.effects');
+        consoleError.mockRestore();
+      }
+    });
+  });
+
   /**
    * Unlike the mocked suites above, this block runs the REAL SDK (journey-client's
    * logger) to prove the boundary the mocks stop at: the widget's top-level

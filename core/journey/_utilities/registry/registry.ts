@@ -286,13 +286,11 @@ export function buildRegistryContent(
         ` * Source: /experimental/custom/{stages,callbacks}/`,
         ` */`,
         ``,
-        `import type { Component } from 'svelte';`,
+        // The entry type is hand-written and re-exported for existing
+        // consumers; importing it here keeps a single definition.
+        `import type { CustomRegistryEntry } from './registry.interfaces';`,
         ``,
-        `export interface CustomRegistryEntry {`,
-        `  component: Component;`,
-        `  /** Props declared via \`export let\` in the component — only these are forwarded by the mapper. */`,
-        `  acceptedProps: string[];`,
-        `}`,
+        `export type { CustomRegistryEntry };`,
         ``,
       ],
       ...importLines(`// Stage overrides / extensions`, stageEntries),

@@ -24,6 +24,14 @@ import { step1, step3 } from './step.mock';
 
 import type { Step } from '@forgerock/journey-client/types';
 
+import type { CustomRegistryEntry } from './registry/registry.interfaces';
+
+// Typed as the entry's component shape: a test fake only needs to be
+// callable, and a bare `function Foo() {}` does not satisfy Svelte's
+// Component type.
+const fakeRuntimeComponent = (name: string) =>
+  ({ [name]: function FakeRuntimeStage() {} })[name] as unknown as CustomRegistryEntry['component'];
+
 describe('Test mapping of step to stage', () => {
   it('should map to a given stage for a known step', () => {
     const result = mapStepToStage(step3);
@@ -43,6 +51,51 @@ describe('Test mapping of step to stage', () => {
     const mixedWithoutStage = createJourneyStep(payloadWithoutStage as Step);
 
     const result = mapStepToStage(mixedWithoutStage);
+    expect(result).toStrictEqual(Login);
+  });
+
+  it('maps a runtime bundle stage by stage name', () => {
+    const runtimeComponent = fakeRuntimeComponent('RuntimeStage');
+    const runtimeStage = mapStepToStage(
+      step3,
+      {},
+      {
+        DefaultLogin: { component: runtimeComponent, acceptedProps: [] },
+      },
+    );
+
+    expect(runtimeStage).toBe(runtimeComponent);
+  });
+
+  it('prefers a runtime bundle stage over a compile-time registry stage with the same name', () => {
+    const runtimeComponent = fakeRuntimeComponent('RuntimeDefaultLogin');
+    const runtimeStage = mapStepToStage(
+      step3,
+      {},
+      {
+        DefaultLogin: { component: runtimeComponent, acceptedProps: [] },
+      },
+    );
+
+    expect(runtimeStage).toBe(runtimeComponent);
+  });
+
+  it('ignores an empty runtime registry (default behavior)', () => {
+    const result = mapStepToStage(step3, {}, {});
+
+    expect(result).toStrictEqual(Login);
+  });
+
+  it('ignores a runtime stage whose name does not match', () => {
+    const runtimeComponent = fakeRuntimeComponent('OtherStage');
+    const result = mapStepToStage(
+      step3,
+      {},
+      {
+        Unrelated: { component: runtimeComponent, acceptedProps: [] },
+      },
+    );
+
     expect(result).toStrictEqual(Login);
   });
 });

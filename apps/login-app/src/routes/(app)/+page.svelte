@@ -22,6 +22,7 @@
   import Footer from '$custom/footer/footer.svelte';
   import Header from '$custom/header/header.svelte';
   import { deriveJourneyName } from '$journey/_utilities/journey-name.utilities';
+  import { runtimeRegistryStore } from '$journey/_utilities/registry/runtime-registry.store';
   import {
     autoRestartStore,
     fallbackJourneyStore,
@@ -29,6 +30,7 @@
     stack,
   } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
+  import { configureCustomBundle } from '$lib/custom-bundle/configure-custom-bundle.effects';
   import { loginAppStages } from '$lib/stages';
   import {
     attachLegacyHashListener,
@@ -126,6 +128,8 @@
   // `#/service/FRForgotUsername`). Resume takes precedence; hash only
   // drives the start path. No window reads outside onMount/onDestroy.
   onMount(async () => {
+    await configureCustomBundle();
+
     if (suspendedIdParam) {
       legacyResumeInProgress = true;
     }
@@ -218,7 +222,11 @@
 <div bind:this={journeyRootEl} class="tw_h-full tw_flex tw_flex-col">
   {#if wrappersVisible}
     <div class="tw_shrink-0" data-journey-name={journeyName}>
-      <Header {journeyName} />
+      {#if $runtimeRegistryStore.header}
+        <svelte:component this={$runtimeRegistryStore.header.component} {journeyName} />
+      {:else}
+        <Header {journeyName} />
+      {/if}
     </div>
   {/if}
 
@@ -248,7 +256,11 @@
 
   {#if wrappersVisible}
     <div class="tw_shrink-0" data-journey-name={journeyName}>
-      <Footer {journeyName} />
+      {#if $runtimeRegistryStore.footer}
+        <svelte:component this={$runtimeRegistryStore.footer.component} {journeyName} />
+      {:else}
+        <Footer {journeyName} />
+      {/if}
     </div>
   {/if}
 </div>

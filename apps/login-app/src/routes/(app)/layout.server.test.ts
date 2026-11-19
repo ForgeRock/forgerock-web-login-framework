@@ -12,6 +12,7 @@ import { describe, expect, it, vi } from 'vitest';
 const mockEnv = vi.hoisted(() => ({}) as Record<string, string | undefined>);
 
 vi.mock('$env/dynamic/private', () => ({ env: mockEnv }));
+vi.mock('$env/dynamic/public', () => ({ env: mockEnv }));
 vi.mock('$server/idm-theme.effects', () => ({
   fetchIdmTheme: vi.fn(async () => ({
     theme: undefined,
@@ -87,5 +88,31 @@ describe('(app)/+layout.server.ts wellknown resolution', () => {
       status: 500,
       body: { message: expect.stringContaining('FR_AM_URL must be an absolute URL') },
     });
+  });
+});
+
+describe('(app)/+layout.server.ts component bundle URL passthrough', () => {
+  it('passes PUBLIC_COMPONENT_BUNDLE_URL through for the modulepreload hint', async () => {
+    mockEnv.FR_AM_URL = 'https://openam.example.com/am';
+    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
+    mockEnv.FR_REALM_PATH = 'root';
+    mockEnv.FR_AM_WELLKNOWN_URL = 'https://openam.example.com/am/.well-known/openid-configuration';
+    mockEnv.PUBLIC_COMPONENT_BUNDLE_URL = '/custom-components/bundle.js';
+
+    const result = await loadFrom('https://tenant.example.com/login/');
+
+    expect(result.componentBundleUrl).toBe('/custom-components/bundle.js');
+  });
+
+  it('exposes null when no bundle URL is configured', async () => {
+    mockEnv.FR_AM_URL = 'https://openam.example.com/am';
+    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
+    mockEnv.FR_REALM_PATH = 'root';
+    mockEnv.FR_AM_WELLKNOWN_URL = 'https://openam.example.com/am/.well-known/openid-configuration';
+    delete mockEnv.PUBLIC_COMPONENT_BUNDLE_URL;
+
+    const result = await loadFrom('https://tenant.example.com/login/');
+
+    expect(result.componentBundleUrl).toBeNull();
   });
 });
