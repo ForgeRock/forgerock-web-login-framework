@@ -7,11 +7,13 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
+
 export const PingProtectInitializeData = {
   authid: 'foo',
   callbacks: [
     {
-      type: 'PingOneProtectInitializeCallback',
+      type: callbackType.PingOneProtectInitializeCallback,
       output: [
         {
           name: 'envid',

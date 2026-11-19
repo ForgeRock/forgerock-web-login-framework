@@ -7,11 +7,13 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
+
 export const pingProtectEvaluate = {
   authId: 'foo',
   callbacks: [
     {
-      type: 'PingOneProtectEvaluationCallback',
+      type: callbackType.PingOneProtectEvaluationCallback,
       output: [
         {
           name: 'pauseBehavioralData',

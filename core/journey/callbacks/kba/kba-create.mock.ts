@@ -47,7 +47,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'KbaCreateCallback',
+  type: callbackType.KbaCreateCallback,
   output: [
     {
       name: 'prompt',

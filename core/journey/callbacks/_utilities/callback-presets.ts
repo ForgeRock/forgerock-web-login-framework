@@ -55,14 +55,14 @@ import type { CallbackType as JourneyClientCallbackType } from '@forgerock/journ
 
 /** One raw AM callback payload entry. */
 interface CallbackPayload {
-  readonly type: JourneyClientCallbackType | string;
+  readonly type: JourneyClientCallbackType;
   readonly output?: ReadonlyArray<{ readonly name: string; readonly value: unknown }>;
   readonly input?: ReadonlyArray<{ readonly name: string; readonly value: unknown }>;
 }
 
 /** A preset: the raw payload for one renderable callback type. */
 export interface CallbackPreset {
-  readonly type: string;
+  readonly type: JourneyClientCallbackType;
   readonly callbacks: readonly CallbackPayload[];
 }
 

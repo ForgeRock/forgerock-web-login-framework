@@ -7,6 +7,7 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
 import { describe, expect, it } from 'vitest';
@@ -20,19 +21,22 @@ import {
 
 const packageRoot = resolve(import.meta.dirname, '../../..');
 
+const mapperSource = readFileSync(
+  resolve(packageRoot, 'journey/_utilities/callback-mapper.svelte'),
+  'utf8',
+);
+const enumTypes = Object.values(callbackType);
+
 describe('RENDERABLE_CALLBACK_TYPES', () => {
   it('contains every callback type the mapper switches on (one to one)', () => {
-    const mapperSource = readFileSync(
-      resolve(packageRoot, 'journey/_utilities/callback-mapper.svelte'),
-      'utf8',
-    );
-    const caseTypes = [...mapperSource.matchAll(/case callbackType\.(\w+):/g)].map(
-      (match) => match[1] ?? '',
-    );
-    expect(mapperCallbackTypes(mapperSource).slice().sort()).toEqual(
-      [...new Set(caseTypes)].sort(),
-    );
-    expect([...RENDERABLE_CALLBACK_TYPES].sort()).toEqual([...new Set(caseTypes)].sort());
+    const mapperTypes = mapperCallbackTypes(mapperSource);
+    expect(mapperTypes.length).toBeGreaterThan(0);
+    expect([...RENDERABLE_CALLBACK_TYPES].sort()).toEqual([...mapperTypes].sort());
+  });
+
+  it('only lists types that exist in the journey-client callbackType enum', () => {
+    const unknownTypes = RENDERABLE_CALLBACK_TYPES.filter((type) => !enumTypes.includes(type));
+    expect(unknownTypes).toEqual([]);
   });
 });
 
@@ -56,8 +60,38 @@ describe('callbackPresets', () => {
   });
 });
 
+describe('checkCallbackPresets against the real catalog', () => {
+  it('reports no violations for the real presets, enum and mapper source', () => {
+    expect(
+      checkCallbackPresets({
+        enumTypes,
+        mapperCases: mapperCallbackTypes(mapperSource),
+        presets: callbackPresets,
+      }),
+    ).toEqual([]);
+  });
+
+  it('reports the missing preset when one is deleted from a clone of the real catalog', () => {
+    const catalogWithoutName = Object.fromEntries(
+      Object.entries(callbackPresets).filter(([type]) => type !== 'NameCallback'),
+    );
+    expect(
+      checkCallbackPresets({
+        enumTypes,
+        mapperCases: mapperCallbackTypes(mapperSource),
+        presets: catalogWithoutName,
+      }),
+    ).toEqual([
+      {
+        kind: 'missing-preset',
+        detail: 'NameCallback is rendered by the mapper but has no preset payload',
+      },
+    ]);
+  });
+});
+
 describe('checkCallbackPresets', () => {
-  const enumTypes = [
+  const syntheticEnumTypes = [
     'NameCallback',
     'PasswordCallback',
     'NumberAttributeInputCallback',
@@ -67,7 +101,7 @@ describe('checkCallbackPresets', () => {
 
   it('passes when renderable types, presets and mapper cases align', () => {
     const violations = checkCallbackPresets({
-      enumTypes,
+      enumTypes: syntheticEnumTypes,
       mapperCases,
       presets: {
         NameCallback: { type: 'NameCallback', callbacks: [] },
@@ -79,7 +113,7 @@ describe('checkCallbackPresets', () => {
 
   it('fails a mapper case with no preset (newly added callback type)', () => {
     const violations = checkCallbackPresets({
-      enumTypes,
+      enumTypes: syntheticEnumTypes,
       mapperCases: [...mapperCases, 'RedirectCallback'],
       presets: {
         NameCallback: { type: 'NameCallback', callbacks: [] },
@@ -96,7 +130,7 @@ describe('checkCallbackPresets', () => {
 
   it('fails a preset whose type the mapper never renders', () => {
     const violations = checkCallbackPresets({
-      enumTypes,
+      enumTypes: syntheticEnumTypes,
       mapperCases,
       presets: {
         NameCallback: { type: 'NameCallback', callbacks: [] },
@@ -112,7 +146,7 @@ describe('checkCallbackPresets', () => {
 
   it('flags a mapper case that is not a known enum type', () => {
     const violations = checkCallbackPresets({
-      enumTypes,
+      enumTypes: syntheticEnumTypes,
       mapperCases: [...mapperCases, 'ConsentMappingCallback'],
       presets: {
         NameCallback: { type: 'NameCallback', callbacks: [] },
@@ -128,7 +162,7 @@ describe('checkCallbackPresets', () => {
 
   it('does not flag a non-renderable enum type without a preset', () => {
     const violations = checkCallbackPresets({
-      enumTypes,
+      enumTypes: syntheticEnumTypes,
       mapperCases,
       presets: {
         NameCallback: { type: 'NameCallback', callbacks: [] },

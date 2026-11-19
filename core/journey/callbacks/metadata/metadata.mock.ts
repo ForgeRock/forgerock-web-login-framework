@@ -7,8 +7,10 @@
  *
  **/
 
+import { callbackType } from '@forgerock/journey-client';
+
 export const docsExample = {
-  type: 'MetadataCallback',
+  type: callbackType.MetadataCallback,
   output: [
     {
       name: 'data',

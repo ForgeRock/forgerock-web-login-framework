@@ -209,7 +209,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'ValidatedCreatePasswordCallback',
+  type: callbackType.ValidatedCreatePasswordCallback,
   output: [
     {
       name: 'echoOn',

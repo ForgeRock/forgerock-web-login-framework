@@ -53,7 +53,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'BooleanAttributeInputCallback',
+  type: callbackType.BooleanAttributeInputCallback,
   output: [
     {
       name: 'name',

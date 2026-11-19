@@ -29,7 +29,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'NameCallback',
+  type: callbackType.NameCallback,
   output: [
     {
       name: 'prompt',

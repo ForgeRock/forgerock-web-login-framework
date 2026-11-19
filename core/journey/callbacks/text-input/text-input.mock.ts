@@ -31,7 +31,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'TextInputCallback',
+  type: callbackType.TextInputCallback,
   output: [{ name: 'prompt', value: 'Security answer' }],
   input: [{ name: 'IDToken1', value: '' }],
 };

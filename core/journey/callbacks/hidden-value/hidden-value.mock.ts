@@ -38,7 +38,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'HiddenValueCallback',
+  type: callbackType.HiddenValueCallback,
   output: [
     {
       name: 'value',

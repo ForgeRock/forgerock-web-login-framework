@@ -37,7 +37,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'PollingWaitCallback',
+  type: callbackType.PollingWaitCallback,
   output: [
     {
       name: 'waitTime',

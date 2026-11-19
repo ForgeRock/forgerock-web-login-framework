@@ -170,7 +170,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'ValidatedCreateUsernameCallback',
+  type: callbackType.ValidatedCreateUsernameCallback,
   output: [
     {
       name: 'policies',
