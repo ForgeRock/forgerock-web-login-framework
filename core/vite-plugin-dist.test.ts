@@ -34,6 +34,7 @@ const fixtureFiles = [
   'dist/locales/us/en/index.json.js',
   'dist-server/_utilities/i18n.utilities.js',
   'dist-server/components/primitives/text/text.component.js',
+  'journey/_utilities/registry/custom-registry.ts',
 ];
 
 beforeAll(() => {
@@ -154,6 +155,71 @@ describe('loginFrameworkDist', () => {
 
     it('returns null for a source module that is not part of the package build', () => {
       expect(resolveIdSsr('$core/constants')).toBeNull();
+    });
+  });
+
+  describe('custom registry specifier', () => {
+    const registrySpecifier = '$journey/_utilities/registry/custom-registry';
+    const registrySource = resolve(sandboxRoot, 'journey/_utilities/registry/custom-registry.ts');
+
+    // Neither tree exists and no registry file was generated.
+    const registryMissingRoot = join(tmpdir(), 'login-framework-dist-registry-missing');
+    const registryMissingPlugin = loginFrameworkDist({ packageDir: registryMissingRoot });
+
+    beforeAll(() => {
+      rmSync(registryMissingRoot, { recursive: true, force: true });
+    });
+
+    it('maps the registry specifier onto the source file for client resolutions', () => {
+      expect(resolveId(registrySpecifier)).toBe(registrySource);
+    });
+
+    it('maps the registry specifier onto the source file for SSR resolutions', () => {
+      expect(resolveIdSsr(registrySpecifier)).toBe(registrySource);
+    });
+
+    it('resolves the registry from source even when the built trees are absent', () => {
+      const sourceOnlyRoot = join(tmpdir(), 'login-framework-dist-source-only');
+      const registryFile = join(sourceOnlyRoot, 'journey/_utilities/registry/custom-registry.ts');
+      rmSync(sourceOnlyRoot, { recursive: true, force: true });
+      mkdirSync(join(registryFile, '..'), { recursive: true });
+      writeFileSync(registryFile, '');
+      const sourceOnlyPlugin = loginFrameworkDist({ packageDir: sourceOnlyRoot });
+      try {
+        expect(sourceOnlyPlugin.resolveId(registrySpecifier, undefined)).toBe(
+          resolve(sourceOnlyRoot, 'journey/_utilities/registry/custom-registry.ts'),
+        );
+        expect(sourceOnlyPlugin.resolveId(registrySpecifier, undefined, { ssr: true })).toBe(
+          resolve(sourceOnlyRoot, 'journey/_utilities/registry/custom-registry.ts'),
+        );
+      } finally {
+        rmSync(sourceOnlyRoot, { recursive: true, force: true });
+      }
+    });
+
+    it.each([
+      ['client', undefined],
+      ['SSR', { ssr: true }],
+    ])('names the customRegistry plugin when the file is absent (%s)', (_label, options) => {
+      expect(() => registryMissingPlugin.resolveId(registrySpecifier, undefined, options)).toThrow(
+        /customRegistry/,
+      );
+      expect(() => registryMissingPlugin.resolveId(registrySpecifier, undefined, options)).toThrow(
+        resolve(registryMissingRoot, 'journey/_utilities/registry/custom-registry.ts'),
+      );
+      expect(() =>
+        registryMissingPlugin.resolveId(registrySpecifier, undefined, options),
+      ).not.toThrow(/pnpm build:framework/);
+    });
+
+    it('does not treat a specifier that merely shares the registry prefix as the registry', () => {
+      expect(resolveId('$journey/_utilities/registry/custom-registry-extra')).toBeNull();
+    });
+
+    it('keeps mapping every other alias onto dist', () => {
+      expect(resolveId('$core/_utilities/i18n.utilities')).toBe(
+        resolve(distDir, '_utilities/i18n.utilities.js'),
+      );
     });
   });
 });

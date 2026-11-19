@@ -12,8 +12,12 @@ import { join, relative, resolve } from 'path';
 import { build } from 'vite';
 import { describe, expect, it } from 'vitest';
 
-import { packageRoot, runtimeEntries } from './collect-entries';
+import { isRuntimeModule, packageRoot, runtimeEntries } from './collect-entries';
+import clientConfig from './vite.config';
+import serverConfig from './vite.config.server';
 import { packageCssConfig, packageSveltePluginOptions } from './vite-shared';
+
+import type { UserConfig } from 'vite';
 
 const centeredSource = resolve(packageRoot, 'components/primitives/box/centered.svelte');
 
@@ -94,4 +98,57 @@ describe('package Vite build options', () => {
     );
     expect(fixtureEntries).toEqual([join('journey', '_utilities', 'step.mock.ts')]);
   });
+
+  it('the generated custom registry is never a runtime module (consumer-owned, source-resolved)', () => {
+    expect(isRuntimeModule('journey/_utilities/registry/custom-registry.ts')).toBe(false);
+    const entries = runtimeEntries.map((entry) =>
+      relative(packageRoot, entry).replaceAll('\\', '/'),
+    );
+    expect(entries).not.toContain('journey/_utilities/registry/custom-registry.ts');
+  });
+});
+
+/**
+ * Builds the two modules that import the registry with each tree's real
+ * config (plugins, aliases, externals), swapping only the entry list, so the
+ * test stays small while the externalization under test is the shipped one.
+ */
+const buildRegistryImporters = async (config: UserConfig) => {
+  const result = await build({
+    ...config,
+    configFile: false,
+    logLevel: 'silent',
+    build: {
+      ...config.build,
+      write: false,
+      lib: {
+        entry: [
+          resolve(packageRoot, 'journey/_utilities/map-stage.utilities.ts'),
+          resolve(packageRoot, 'journey/_utilities/callback-mapper.svelte'),
+        ],
+        formats: ['es'],
+      },
+    },
+  });
+  const outputs = Array.isArray(result) ? result : [result];
+  return outputs.flatMap((output) => ('output' in output ? output.output : []));
+};
+
+describe('custom registry in the package builds', () => {
+  it.each([
+    ['client', clientConfig],
+    ['SSR', serverConfig],
+  ])(
+    'the %s tree imports the registry bare and emits no registry module',
+    async (_label, config) => {
+      const files = await buildRegistryImporters(config);
+      const code = files.flatMap((file) => (file.type === 'chunk' ? [file.code] : []));
+      expect(
+        files.map((file) => file.fileName).filter((name) => /custom-registry/.test(name)),
+      ).toEqual([]);
+      const bareImport = /from\s*['"]\$journey\/_utilities\/registry\/custom-registry['"]/;
+      expect(code.filter((chunk) => bareImport.test(chunk))).toHaveLength(2);
+    },
+    120_000,
+  );
 });

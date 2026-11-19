@@ -18,6 +18,7 @@
 
   import { callbackType } from '@forgerock/journey-client';
 
+  import { customCallbackRegistry } from '$journey/_utilities/registry/custom-registry';
   // Callback handler components
   import Boolean from '$journey/callbacks/boolean/boolean.svelte';
   import Choice from '$journey/callbacks/choice/choice.svelte';
@@ -42,7 +43,6 @@
   import Unknown from '$journey/callbacks/unknown/unknown.svelte';
   import Name from '$journey/callbacks/username/name.svelte';
   import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
-  import { customCallbackRegistry } from './registry/custom-registry';
 
   import type {
     AttributeInputCallback,
@@ -72,9 +72,9 @@
   import type { WebAuthnStepType } from '@forgerock/journey-client/webauthn';
   import type { z } from 'zod';
 
-  import type { CustomRegistryEntry } from './registry/custom-registry';
   import type { Maybe } from '$core/interfaces';
   import type { styleSchema } from '$core/style.store';
+  import type { CustomRegistryEntry } from '$journey/_utilities/registry/custom-registry';
   import type {
     CallbackMetadata,
     SelfSubmitFunction,

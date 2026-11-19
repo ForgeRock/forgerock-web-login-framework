@@ -15,6 +15,8 @@
 import { readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
 
+import { customRegistrySourcePath } from './vite-shared';
+
 const ROOT = import.meta.dirname;
 
 /**
@@ -43,6 +45,7 @@ const EXCLUDED_FILES = new Set([
   join('journey', '_utilities', 'registry', 'vite-plugin.ts'), // build tooling
   join('journey', '_utilities', 'registry', 'registry.ts'), // Node-only registry script
   join('journey', 'callbacks', '_utilities', 'callback-presets.ts'), // imports test mocks, consumed by tests only
+  customRegistrySourcePath, // generated per consumer build, resolved from source by vite-plugin-dist
 ]);
 
 /**
@@ -53,7 +56,7 @@ const SHIPPED_MOCKS = new Set([
   join('journey', '_utilities', 'step.mock.ts'), // createJourneyStep, re-exported by login-framework.ts
 ]);
 
-function isRuntimeModule(file: string): boolean {
+export function isRuntimeModule(file: string): boolean {
   if (!/\.(ts|svelte)$/.test(file)) {
     return false;
   }

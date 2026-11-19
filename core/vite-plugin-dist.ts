@@ -1,6 +1,8 @@
 import { existsSync } from 'fs';
 import { resolve } from 'path';
 
+import { customRegistrySourcePath, customRegistrySpecifier } from './vite-shared';
+
 /** Options for {@link loginFrameworkDist}. */
 interface LoginFrameworkDistOptions {
   /**
@@ -51,6 +53,11 @@ interface DistResolverPlugin {
  * package was never built), resolution throws with a `pnpm build:framework`
  * hint instead.
  *
+ * One specifier is the exception: the custom registry import
+ * (`customRegistrySpecifier`) resolves to the generated SOURCE file for both
+ * trees, because the package builds leave it external and each consumer's
+ * `customRegistry` plugin generates it. A missing file throws with a hint.
+ *
  * The plugin never touches resolution of the package's own dependencies
  * (`svelte`, `@forgerock/*`, ...), which stay external to the package and
  * resolve from the consumer's install.
@@ -58,6 +65,7 @@ interface DistResolverPlugin {
 export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): DistResolverPlugin {
   const distDir = resolve(packageDir, 'dist');
   const serverDistDir = resolve(packageDir, 'dist-server');
+  const registrySource = resolve(packageDir, customRegistrySourcePath);
 
   const aliasRoots = [
     { prefix: '$core', subPath: '' },
@@ -102,6 +110,18 @@ export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): D
       if (source.startsWith('\0')) {
         return null;
       }
+
+      // Consumer-owned: the consumer's `customRegistry` plugin generates this file.
+      if (source === customRegistrySpecifier) {
+        if (!existsSync(registrySource)) {
+          throw new Error(
+            `Custom component registry not found at ${registrySource}, needed to resolve "${source}". ` +
+              'Add the customRegistry Vite plugin (core/journey/_utilities/registry/vite-plugin.ts) to this build; it generates the file at buildStart.',
+          );
+        }
+        return registrySource;
+      }
+
       const match = aliasRoots.find(
         ({ prefix }) => source === prefix || source.startsWith(`${prefix}/`),
       );

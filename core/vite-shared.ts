@@ -49,3 +49,24 @@ export const packageSveltePluginOptions = (): SveltePluginOptions => ({
  * config. An empty plugin pipeline disables that autodetect.
  */
 export const packageCssConfig: CSSOptions = { postcss: { plugins: [] } };
+
+/**
+ * Specifier core code uses to import the generated custom-component registry.
+ * Both builds leave it external and the consumer-side resolver
+ * (`vite-plugin-dist.ts`) maps it to the source file, so the registry the
+ * consumer's `customRegistry` plugin generates is the one that ships.
+ */
+export const customRegistrySpecifier = '$journey/_utilities/registry/custom-registry';
+
+/** The generated registry's path relative to the package root. */
+export const customRegistrySourcePath = 'journey/_utilities/registry/custom-registry.ts';
+
+/** Rollup `external` list for both package builds. */
+export const packageExternal: Array<string | RegExp> = [
+  /^svelte(\/|$)/,
+  /^@forgerock\//,
+  /^zod/,
+  /^qrcode/,
+  /^xss/,
+  customRegistrySpecifier,
+];

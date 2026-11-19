@@ -3,7 +3,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entries';
-import { packageCssConfig, packageSveltePluginOptions } from './vite-shared';
+import { packageCssConfig, packageExternal, packageSveltePluginOptions } from './vite-shared';
 
 /**
  * SSR (server-condition) build for the `login-framework` package.
@@ -39,7 +39,7 @@ export default defineConfig({
       formats: ['es'],
     },
     rollupOptions: {
-      external: [/^svelte(\/|$)/, /^@forgerock\//, /^zod/, /^qrcode/, /^xss/],
+      external: packageExternal,
       output: {
         preserveModules: true,
         preserveModulesRoot: ROOT,
