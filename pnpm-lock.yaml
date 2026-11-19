@@ -275,7 +275,7 @@ importers:
         specifier: 1.5.3
         version: 1.5.3
       svelte:
-        specifier: 5.53.7
+        specifier: ^5.53.7
         version: 5.53.7
       xss:
         specifier: ^1.0.15

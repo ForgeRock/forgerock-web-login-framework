@@ -19,6 +19,9 @@ export default defineConfig(
       sveltekit(),
     ],
     resolve: {
+      // One Svelte runtime: core/dist imports `svelte/*` and must not resolve
+      // a second copy from core/node_modules.
+      dedupe: ['svelte'],
       alias: {
         '$app-locales': resolve('./src/locales'),
         // Server-only SvelteKit modules, deliberately excluded from the

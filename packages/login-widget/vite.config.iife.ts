@@ -61,6 +61,9 @@ export default defineConfig({
     }),
   ],
   resolve: {
+    // One Svelte runtime in the bundle: core/dist imports `svelte/*` and must
+    // not resolve a second copy from core/node_modules.
+    dedupe: ['svelte'],
     // $core/$components/$journey/$locales are mapped onto the package's
     // built dist by the loginFrameworkDist plugin above; only the
     // curated custom-component surface stays aliased to source. The IIFE
