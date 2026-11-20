@@ -32,6 +32,21 @@ jobs:
           name: widget-dist
           path: packages/login-widget/dist/*
 
+  runtime-image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          target: deploy
+          load: true
+          tags: login2-runtime:test
+          cache-from: type=gha,scope=runtime-image
+          cache-to: type=gha,mode=max,scope=runtime-image
+      - run: scripts/test-runtime-image.sh login2-runtime:test
+
   e2e:
     needs: [build]
     strategy:
