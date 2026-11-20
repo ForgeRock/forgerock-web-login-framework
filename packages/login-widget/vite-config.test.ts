@@ -98,11 +98,11 @@ const SHARED_DEPS = [
 
 /** Specifiers in the consumer manifests for the shared deps. */
 const SHARED_SPECIFIERS: Readonly<Record<(typeof SHARED_DEPS)[number], string>> = {
-  svelte: '^5.53.7',
-  '@forgerock/journey-client': '^2.1.1',
-  '@forgerock/oidc-client': '^2.1.1',
-  '@forgerock/protect': '^2.1.1',
-  '@forgerock/storage': '^2.1.1',
+  svelte: '^5.55.7',
+  '@forgerock/journey-client': '^2.3.1',
+  '@forgerock/oidc-client': '^2.3.1',
+  '@forgerock/protect': '^2.3.1',
+  '@forgerock/storage': '^2.3.1',
 };
 
 describe('single runtime, one copy per shared dependency', () => {
