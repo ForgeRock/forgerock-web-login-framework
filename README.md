@@ -160,4 +160,4 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-&copy; Copyright 2022-2025 Ping Identity Corporation. All Rights Reserved.
+&copy; Copyright 2022-2026 Ping Identity Corporation. All Rights Reserved.
