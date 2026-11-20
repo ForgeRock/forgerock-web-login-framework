@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "@forgerock/login-widget": "workspace:*",
-    "@forgerock/sdk-logger": "^2.1.1"
+    "@forgerock/sdk-logger": "^2.3.1"
   },
   "devDependencies": {
     "@effect/vitest": "^0.26.0",

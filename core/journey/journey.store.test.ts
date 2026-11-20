@@ -69,7 +69,8 @@ describe('journey.store (Journey Client configuration)', () => {
       },
     });
 
-    expect(config?.serverConfig.wellknown).toBe(
+    expect(config?.serverConfig).toHaveProperty(
+      'wellknown',
       'https://example.com/.well-known/openid-configuration',
     );
   });
@@ -87,7 +88,8 @@ describe('journey.store (Journey Client configuration)', () => {
       },
     });
     const reused = setJourneyClientConfig();
-    expect(reused?.serverConfig.wellknown).toBe(
+    expect(reused?.serverConfig).toHaveProperty(
+      'wellknown',
       'https://example.com/.well-known/openid-configuration',
     );
   });

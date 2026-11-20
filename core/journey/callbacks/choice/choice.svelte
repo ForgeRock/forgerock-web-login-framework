@@ -76,25 +76,27 @@
   }
 </script>
 
-{#if callbackMetadata?.platform?.displayType === 'radio'}
-  <Radio
-    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    defaultOption={defaultChoice}
-    isRequired={false}
-    key={inputName}
-    groupLabel={prompt}
-    onChange={setValue}
-    name={inputName}
-    options={choiceOptions}
-  />
-{:else}
-  <Select
-    isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
-    defaultOption={defaultChoice}
-    isRequired={false}
-    key={inputName}
-    {label}
-    onChange={setValue}
-    options={choiceOptions}
-  />
-{/if}
+{#key callback}
+  {#if callbackMetadata?.platform?.displayType === 'radio'}
+    <Radio
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      defaultOption={defaultChoice}
+      isRequired={false}
+      key={inputName}
+      groupLabel={prompt}
+      onChange={setValue}
+      name={inputName}
+      options={choiceOptions}
+    />
+  {:else}
+    <Select
+      isFirstInvalidInput={callbackMetadata?.derived.isFirstInvalidInput || false}
+      defaultOption={defaultChoice}
+      isRequired={false}
+      key={inputName}
+      {label}
+      onChange={setValue}
+      options={choiceOptions}
+    />
+  {/if}
+{/key}

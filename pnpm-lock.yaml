@@ -43,17 +43,17 @@ importers:
         specifier: ^9.39.2
         version: 9.39.3
       '@forgerock/journey-client':
-        specifier: ^2.1.1
-        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/oidc-client':
-        specifier: ^2.1.1
-        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/protect':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       '@forgerock/storage':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       '@storybook/addon-a11y':
         specifier: ^10.1.11
         version: 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
@@ -181,8 +181,8 @@ importers:
         specifier: workspace:*
         version: link:../../packages/login-widget
       '@forgerock/sdk-logger':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
     devDependencies:
       '@effect/vitest':
         specifier: ^0.26.0
@@ -315,20 +315,23 @@ importers:
   packages/login-widget:
     dependencies:
       '@forgerock/journey-client':
-        specifier: ^2.1.1
-        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/oidc-client':
-        specifier: ^2.1.1
-        version: 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
+        specifier: ^2.3.1
+        version: 2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       '@forgerock/protect':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       '@forgerock/storage':
-        specifier: ^2.1.1
-        version: 2.1.1
+        specifier: ^2.3.1
+        version: 2.3.1
       qrcode:
         specifier: 1.5.3
         version: 1.5.3
+      svelte:
+        specifier: ^5.55.7
+        version: 5.57.3(@typescript-eslint/types@8.56.1)
       xss:
         specifier: ^1.0.15
         version: 1.0.15
@@ -353,19 +356,19 @@ importers:
         version: 10.2.12(react@19.2.4)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       '@storybook/svelte':
         specifier: ^10.1.11
-        version: 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)
+        version: 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))
       '@storybook/sveltekit':
         specifier: ^10.1.11
-        version: 10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
+        version: 10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
       '@storybook/test-runner':
         specifier: ^0.24.2
         version: 0.24.2(@types/node@26.6.3)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))
       '@sveltejs/package':
         specifier: ^2.5.7
-        version: 2.5.7(svelte@5.53.7)(typescript@5.9.3)
+        version: 2.5.7(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3)
       '@sveltejs/vite-plugin-svelte':
         specifier: ^4.0.4
-        version: 4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
+        version: 4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
       '@types/qrcode':
         specifier: 1.5.5
         version: 1.5.5
@@ -408,18 +411,15 @@ importers:
       storybook:
         specifier: ^10.1.11
         version: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      svelte:
-        specifier: ^5.53.7
-        version: 5.53.7
       svelte-check:
         specifier: ^4.4.5
-        version: 4.4.5(picomatch@4.0.4)(svelte@5.53.7)(typescript@5.9.3)
+        version: 4.4.5(picomatch@4.0.4)(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3)
       svelte-loader:
         specifier: ^3.2.4
-        version: 3.2.4(svelte@5.53.7)
+        version: 3.2.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))
       svelte-preprocess:
         specifier: ^6.0.3
-        version: 6.0.3(@babel/core@7.29.7)(postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.28)(yaml@2.8.3))(postcss@8.5.28)(svelte@5.53.7)(typescript@5.9.3)
+        version: 6.0.3(@babel/core@7.29.7)(postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.28)(yaml@2.8.3))(postcss@8.5.28)(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3)
       tailwindcss:
         specifier: ^3.3.3
         version: 3.4.19(yaml@2.8.3)
@@ -1216,35 +1216,35 @@ packages:
     resolution: {integrity: sha512-1B1VkCq6FuUNlQvlBYb+1jDu/gV297TIs/OeiaSR9l1H27SVW55ONE1e1Vp16NqP683+xEGzxYtv4XCiDPaQiw==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@forgerock/iframe-manager@2.1.1':
-    resolution: {integrity: sha512-Ig3ulte4KBqi4OdHM32ZG1s65OjilDuD7mbxlXfnIfOLLYrzFXLclevh5zpwYJh7o+UCsSKKIUHbNv7DzEs2hA==}
+  '@forgerock/iframe-manager@2.3.1':
+    resolution: {integrity: sha512-A2bm9mbLgHRvntGZ6KvIkseOgT2CYOwh20/aD4d7tELdGw1/jhWoTV44CZjfxT3vIKRAtuKaqpTb/BDwi82EnA==}
 
-  '@forgerock/journey-client@2.1.1':
-    resolution: {integrity: sha512-Mt1kniTZZgUh2HSH1DS897m4vrVTnJtshVUh2PIJPAEwCSI1+28h/DIPY1nDmQzqjkHcvkXNIbBOcRInA5BXPw==}
+  '@forgerock/journey-client@2.3.1':
+    resolution: {integrity: sha512-QUy3e0XvnZx3Dwfy2eGQmOk5rZHvbSFqVP2bm1H1mnv0K2qUI+DqqfyNITyJVOT5VR3wAeI/knGAzanp8KOZAw==}
 
-  '@forgerock/oidc-client@2.1.1':
-    resolution: {integrity: sha512-i88KRAGOwwbUorGF9gvAiZYYC23dQKN2zUSDa38o6uH541DQeQtYRZq1nGlSBDy+3Y3qKbgrEUf4+OOzr5KBUw==}
+  '@forgerock/oidc-client@2.3.1':
+    resolution: {integrity: sha512-6mgYumppzrhd6oh77HlCSy0fTZ7WC3RYLObAOBkkdaNf/CCo9FgM5l34XsuCgbwnA83wn9f+S7BoC/1XjcrCcw==}
 
-  '@forgerock/protect@2.1.1':
-    resolution: {integrity: sha512-Z4c/BmXPn3uK95KV2l8ve8ys6rrkGTC0t/XTMFr98ZfEAXfdV2+XDnGwtwUA4prmlzGrDcevm7EEY6AG//E1Zg==}
+  '@forgerock/protect@2.3.1':
+    resolution: {integrity: sha512-UAOZ6/zLKs0sa8TXEMcEVXixYB10ztUeDriVwhWurDKveyF06krnvvvI2/ZvqwodT08XDoam13Tv5tez2e8zEg==}
 
-  '@forgerock/sdk-logger@2.1.1':
-    resolution: {integrity: sha512-V9r9eyUR+/3rWg/tznKFHyxQ7GGwWiezBSVmE8TN9vZ9oX4AYBlVzyp/3HOEmg4OI4Vja38J9W1+673IdnGTQQ==}
+  '@forgerock/sdk-logger@2.3.1':
+    resolution: {integrity: sha512-KOoPugEFQgWozccUkR8bKOvhDJviwavCe6hLNC8RJsbEF60NRZvxVZHEiwpkTHJY5C0sVsi9+85Avqlvfz2v8Q==}
 
-  '@forgerock/sdk-oidc@2.1.1':
-    resolution: {integrity: sha512-IXtcxXI4AGafaGfVtbqTyGIpR/gqAVtYNZXhZir5bpYgy83NbnVsLEA2d82gF064GiqEPVlDs8IRNv0ZVU8FLQ==}
+  '@forgerock/sdk-oidc@2.3.1':
+    resolution: {integrity: sha512-xuOlWT65FGtqeFtSc+I4w6mLf1rJ+HTDL4nO7j3uyQoWLXcfsZ1BD/QUKAzNdFp9grSkbSGWuASao53zN03pKQ==}
 
-  '@forgerock/sdk-request-middleware@2.1.1':
-    resolution: {integrity: sha512-emve+vtI1DkgoMiZCT8CgqfwLsJ3p3TWgMSnyOb3VafRTwne4beDtejn0yro/DwUOnMhjvcopSOrWJZmMCDMUg==}
+  '@forgerock/sdk-request-middleware@2.3.1':
+    resolution: {integrity: sha512-gUZFWIsHetCJp2S1a7aIVxqhJIEjNgtePYTUTM7+WcJPQ3JKo41tqE/VWeKGM5dgWXCKkyv78XkqimpsIgf5Bg==}
 
-  '@forgerock/sdk-types@2.1.1':
-    resolution: {integrity: sha512-OQCVap7e2P22lyuLPQawgmfJk7gpmubeF3hYqWEyrc4XhSJqnTvUxN9w1trmvyw7i7wnowwnU+wOfNzTRfzUww==}
+  '@forgerock/sdk-types@2.3.1':
+    resolution: {integrity: sha512-ZSC++93RRX22SCPlN3c2zjAk/B7TUtH3g424AzdVyaQPfA8WMzZs1dwEz5iHAwSUAUcFEPdLBmWM2ShMwtZTfg==}
 
-  '@forgerock/sdk-utilities@2.1.1':
-    resolution: {integrity: sha512-Pb/XWK6n7+BgWuYqBk+ZbW4tOUtYbzW3MmSDzvJXiZWMduNCdJJ9C/uAHoP/rXSYmMPAMEBUDGGwdE3yQFsKPw==}
+  '@forgerock/sdk-utilities@2.3.1':
+    resolution: {integrity: sha512-f3M8VSo9lcOuMUAIY/iyMwR2QuwOeBhTHXNEZnYUXcLqVNcZluzOLMZ92gqCUsgdJIldsVT85W7rZqry+CkP9A==}
 
-  '@forgerock/storage@2.1.1':
-    resolution: {integrity: sha512-nrUCiQoDJcu80v9PjBNRysFJmoBy9XggzsQVPD0+3M97hX2qyFPrhbppAOffqycNabbkg13UWCwb5L0ddfPcxQ==}
+  '@forgerock/storage@2.3.1':
+    resolution: {integrity: sha512-4BK0B1pY6EuqWpcYZnGfaw1pIDFCoPCXBJeM3KmpNrSlN5oPDGNur7XiB8aWK+ix+DVZ4B/GWsFfd1Z9tNJUiQ==}
 
   '@hapi/hoek@9.3.0':
     resolution: {integrity: sha512-/c6rf4UJlmHlC9b5BaNvzAcFv7HZ2QHaV0D4/HNlBdvFnvQq8RI4kYdhyPCl7Xj+oWvTWQ8ujhqS53LIgAe6KQ==}
@@ -1394,6 +1394,9 @@ packages:
 
   '@jridgewell/sourcemap-codec@1.5.5':
     resolution: {integrity: sha512-cYQ9310grqxueWbl+WuIUIaiUaDcj7WOq5fVhEljNVgRfOUhY9fy2zTvfoqWsnebh8Sl70VScFbICvJnLKB0Og==}
+
+  '@jridgewell/sourcemap-codec@1.6.0':
+    resolution: {integrity: sha512-T7jf+5zgsZHwNJ4lvQ7/aezbyk0nNX+zJVWpmHA7VYsEx7a7qr5Rg5IbtJFqkgze5Y2sruq1RUY8Q837Od7iFw==}
 
   '@jridgewell/trace-mapping@0.3.31':
     resolution: {integrity: sha512-zzNR+SdQSDJzc8joaeP8QQoCQr8NuYx2dIIytl1QeBEZHJ9uW6hebsrYgbz8hJwUQao3TWCMtmfV8Nu1twOLAw==}
@@ -1966,6 +1969,11 @@ packages:
     hasBin: true
     peerDependencies:
       storybook: ^0.0.0-0 || ^10.0.0 || ^10.0.0-0 || ^10.1.0-0 || ^10.2.0-0 || ^10.3.0-0
+
+  '@sveltejs/acorn-typescript@1.0.13':
+    resolution: {integrity: sha512-wgKggnhZVL9Bfx1OaKKTrYY9BFRk6C8UAkQNUcIv1+llzYrIqy+RZm5HPKzn0NpEBvTVhTqB4kQyllZywsRBRQ==}
+    peerDependencies:
+      acorn: ^8.9.0
 
   '@sveltejs/acorn-typescript@1.0.9':
     resolution: {integrity: sha512-lVJX6qEgs/4DOcRTpo56tmKzVPtoWAaVbL4hfO7t7NVwl9AAXzQR6cihesW1BmNMPl+bK6dreu2sOKBP2Q9CIA==}
@@ -3554,6 +3562,14 @@ packages:
 
   esrap@2.2.3:
     resolution: {integrity: sha512-8fOS+GIGCQZl/ZIlhl59htOlms6U8NvX6ZYgYHpRU/b6tVSh3uHkOHZikl3D4cMbYM0JlpBe+p/BkZEi8J9XIQ==}
+
+  esrap@2.4.0:
+    resolution: {integrity: sha512-CQPcneEHw/czj32uwQC52nYnax8H4SXt25FCM+LIwGZ49cMIxpOj3bP8wmzcI+Z0HIy5KkClaPhRLfCySzwHPA==}
+    peerDependencies:
+      '@typescript-eslint/types': ^8.2.0
+    peerDependenciesMeta:
+      '@typescript-eslint/types':
+        optional: true
 
   esrecurse@4.3.0:
     resolution: {integrity: sha512-KmfKL3b6G+RXvP8N1vr3Tq1kL/oCFgn2NYXEtqP8/L3pKapUA4G8cFVaoF3SU323CD4XypR/ffioHmkti6/Tag==}
@@ -5866,6 +5882,10 @@ packages:
     resolution: {integrity: sha512-uxck1KI7JWtlfP3H6HOWi/94soAl23jsGJkBzN2BAWcQng0+lTrRNhxActFqORgnO9BHVd1hKJhG+ljRuIUWfQ==}
     engines: {node: '>=18'}
 
+  svelte@5.57.3:
+    resolution: {integrity: sha512-5mAftM3SoDV9X0zdF386F9p2pv8iKOwi/KfBS1XnBAkVCKFzVOLHUoa8iGWAt4buoicLmyWVRpuuD5wplXOQsg==}
+    engines: {node: '>=18'}
+
   swagger-ui-dist@5.33.1:
     resolution: {integrity: sha512-H872wWkA53bFIsGgi7OWgmq+CRWw3nFQGdJWRqOB9wNwTm6e5ol34+qPDkV4AJlK+gglM2EsJiOOzsGsEGbluA==}
 
@@ -7207,16 +7227,16 @@ snapshots:
 
   '@eslint/js@9.39.3': {}
 
-  '@forgerock/iframe-manager@2.1.1': {}
+  '@forgerock/iframe-manager@2.3.1': {}
 
-  '@forgerock/journey-client@2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
+  '@forgerock/journey-client@2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
     dependencies:
-      '@forgerock/sdk-logger': 2.1.1
-      '@forgerock/sdk-oidc': 2.1.1
-      '@forgerock/sdk-request-middleware': 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
-      '@forgerock/sdk-types': 2.1.1
-      '@forgerock/sdk-utilities': 2.1.1
-      '@forgerock/storage': 2.1.1
+      '@forgerock/sdk-logger': 2.3.1
+      '@forgerock/sdk-oidc': 2.3.1
+      '@forgerock/sdk-request-middleware': 2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
+      '@forgerock/sdk-types': 2.3.1
+      '@forgerock/sdk-utilities': 2.3.1
+      '@forgerock/storage': 2.3.1
       '@reduxjs/toolkit': 2.11.2(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       effect: 3.22.4
       tslib: 2.8.1
@@ -7224,15 +7244,15 @@ snapshots:
       - react
       - react-redux
 
-  '@forgerock/oidc-client@2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
+  '@forgerock/oidc-client@2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
     dependencies:
-      '@forgerock/iframe-manager': 2.1.1
-      '@forgerock/sdk-logger': 2.1.1
-      '@forgerock/sdk-oidc': 2.1.1
-      '@forgerock/sdk-request-middleware': 2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
-      '@forgerock/sdk-types': 2.1.1
-      '@forgerock/sdk-utilities': 2.1.1
-      '@forgerock/storage': 2.1.1
+      '@forgerock/iframe-manager': 2.3.1
+      '@forgerock/sdk-logger': 2.3.1
+      '@forgerock/sdk-oidc': 2.3.1
+      '@forgerock/sdk-request-middleware': 2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
+      '@forgerock/sdk-types': 2.3.1
+      '@forgerock/sdk-utilities': 2.3.1
+      '@forgerock/storage': 2.3.1
       '@reduxjs/toolkit': 2.11.2(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
       effect: 3.22.4
       jose: 6.2.4
@@ -7240,34 +7260,34 @@ snapshots:
       - react
       - react-redux
 
-  '@forgerock/protect@2.1.1': {}
+  '@forgerock/protect@2.3.1': {}
 
-  '@forgerock/sdk-logger@2.1.1':
+  '@forgerock/sdk-logger@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': 2.1.1
+      '@forgerock/sdk-types': 2.3.1
 
-  '@forgerock/sdk-oidc@2.1.1':
+  '@forgerock/sdk-oidc@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': 2.1.1
-      '@forgerock/sdk-utilities': 2.1.1
+      '@forgerock/sdk-types': 2.3.1
+      '@forgerock/sdk-utilities': 2.3.1
 
-  '@forgerock/sdk-request-middleware@2.1.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
+  '@forgerock/sdk-request-middleware@2.3.1(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)':
     dependencies:
       '@reduxjs/toolkit': 2.11.2(react-redux@9.3.0(@types/react@19.2.14)(react@19.2.4)(redux@5.0.1))(react@19.2.4)
     transitivePeerDependencies:
       - react
       - react-redux
 
-  '@forgerock/sdk-types@2.1.1': {}
+  '@forgerock/sdk-types@2.3.1': {}
 
-  '@forgerock/sdk-utilities@2.1.1':
+  '@forgerock/sdk-utilities@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': 2.1.1
+      '@forgerock/sdk-types': 2.3.1
       effect: 3.22.4
 
-  '@forgerock/storage@2.1.1':
+  '@forgerock/storage@2.3.1':
     dependencies:
-      '@forgerock/sdk-types': 2.1.1
+      '@forgerock/sdk-types': 2.3.1
 
   '@hapi/hoek@9.3.0': {}
 
@@ -7520,6 +7540,8 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/sourcemap-codec@1.5.5': {}
+
+  '@jridgewell/sourcemap-codec@1.6.0': {}
 
   '@jridgewell/trace-mapping@0.3.31':
     dependencies:
@@ -7982,22 +8004,6 @@ snapshots:
       react-dom: 19.2.4(react@19.2.4)
       storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
 
-  '@storybook/svelte-vite@10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))':
-    dependencies:
-      '@storybook/builder-vite': 10.2.12(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
-      '@storybook/svelte': 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)
-      '@sveltejs/vite-plugin-svelte': 4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
-      magic-string: 0.30.21
-      storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      svelte: 5.53.7
-      svelte2tsx: 0.7.51(svelte@5.53.7)(typescript@5.9.3)
-      typescript: 5.9.3
-      vite: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
-    transitivePeerDependencies:
-      - esbuild
-      - rollup
-      - webpack
-
   '@storybook/svelte-vite@10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))':
     dependencies:
       '@storybook/builder-vite': 10.2.12(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))
@@ -8014,6 +8020,22 @@ snapshots:
       - rollup
       - webpack
 
+  '@storybook/svelte-vite@10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))':
+    dependencies:
+      '@storybook/builder-vite': 10.2.12(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
+      '@storybook/svelte': 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))
+      '@sveltejs/vite-plugin-svelte': 4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
+      magic-string: 0.30.21
+      storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
+      svelte2tsx: 0.7.51(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3)
+      typescript: 5.9.3
+      vite: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
+    transitivePeerDependencies:
+      - esbuild
+      - rollup
+      - webpack
+
   '@storybook/svelte@10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)':
     dependencies:
       storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -8021,11 +8043,18 @@ snapshots:
       ts-dedent: 2.2.0
       type-fest: 2.19.0
 
-  '@storybook/sveltekit@10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))':
+  '@storybook/svelte@10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))':
     dependencies:
-      '@storybook/builder-vite': 10.2.12(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
+      storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
+      ts-dedent: 2.2.0
+      type-fest: 2.19.0
+
+  '@storybook/sveltekit@10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))':
+    dependencies:
+      '@storybook/builder-vite': 10.2.12(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))
       '@storybook/svelte': 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)
-      '@storybook/svelte-vite': 10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
+      '@storybook/svelte-vite': 10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))
       storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       svelte: 5.53.7
       vite: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
@@ -8035,13 +8064,13 @@ snapshots:
       - rollup
       - webpack
 
-  '@storybook/sveltekit@10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))':
+  '@storybook/sveltekit@10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))':
     dependencies:
-      '@storybook/builder-vite': 10.2.12(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))
-      '@storybook/svelte': 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)
-      '@storybook/svelte-vite': 10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(esbuild@0.27.3)(postcss@8.5.28))
+      '@storybook/builder-vite': 10.2.12(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
+      '@storybook/svelte': 10.2.12(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))
+      '@storybook/svelte-vite': 10.2.12(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(esbuild@0.27.3)(rollup@4.60.1)(storybook@10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))(webpack@5.105.2(@swc/core@1.15.13)(esbuild@0.27.3)(postcss@8.5.28))
       storybook: 10.2.12(@testing-library/dom@10.4.1)(prettier@3.0.3)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      svelte: 5.53.7
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
       vite: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
     transitivePeerDependencies:
       - '@sveltejs/vite-plugin-svelte'
@@ -8083,6 +8112,10 @@ snapshots:
       - supports-color
       - ts-node
 
+  '@sveltejs/acorn-typescript@1.0.13(acorn@8.18.0)':
+    dependencies:
+      acorn: 8.18.0
+
   '@sveltejs/acorn-typescript@1.0.9(acorn@8.16.0)':
     dependencies:
       acorn: 8.16.0
@@ -8123,14 +8156,14 @@ snapshots:
     optionalDependencies:
       typescript: 5.9.3
 
-  '@sveltejs/package@2.5.7(svelte@5.53.7)(typescript@5.9.3)':
+  '@sveltejs/package@2.5.7(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3)':
     dependencies:
       chokidar: 5.0.0
       kleur: 4.1.5
       sade: 1.8.1
       semver: 7.7.4
-      svelte: 5.53.7
-      svelte2tsx: 0.7.51(svelte@5.53.7)(typescript@5.9.3)
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
+      svelte2tsx: 0.7.51(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3)
     transitivePeerDependencies:
       - typescript
 
@@ -8143,6 +8176,15 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
+  '@sveltejs/vite-plugin-svelte-inspector@3.0.1(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte': 4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
+      debug: 4.4.3
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
+      vite: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
+    transitivePeerDependencies:
+      - supports-color
+
   '@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))':
     dependencies:
       '@sveltejs/vite-plugin-svelte-inspector': 3.0.1(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
@@ -8151,6 +8193,19 @@ snapshots:
       kleur: 4.1.5
       magic-string: 0.30.21
       svelte: 5.53.7
+      vite: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
+      vitefu: 1.1.2(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
+    transitivePeerDependencies:
+      - supports-color
+
+  '@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))':
+    dependencies:
+      '@sveltejs/vite-plugin-svelte-inspector': 3.0.1(@sveltejs/vite-plugin-svelte@4.0.4(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2)))(svelte@5.57.3(@typescript-eslint/types@8.56.1))(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
+      debug: 4.4.3
+      deepmerge: 4.3.1
+      kleur: 4.1.5
+      magic-string: 0.30.21
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
       vite: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
       vitefu: 1.1.2(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
     transitivePeerDependencies:
@@ -9865,6 +9920,12 @@ snapshots:
   esrap@2.2.3:
     dependencies:
       '@jridgewell/sourcemap-codec': 1.5.5
+
+  esrap@2.4.0(@typescript-eslint/types@8.56.1):
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.6.0
+    optionalDependencies:
+      '@typescript-eslint/types': 8.56.1
 
   esrecurse@4.3.0:
     dependencies:
@@ -12410,6 +12471,18 @@ snapshots:
     transitivePeerDependencies:
       - picomatch
 
+  svelte-check@4.4.5(picomatch@4.0.4)(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3):
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      chokidar: 4.0.3
+      fdir: 6.5.0(picomatch@4.0.4)
+      picocolors: 1.1.1
+      sade: 1.8.1
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
+      typescript: 5.9.3
+    transitivePeerDependencies:
+      - picomatch
+
   svelte-dev-helper@1.1.9: {}
 
   svelte-eslint-parser@1.5.1(svelte@5.53.7):
@@ -12424,16 +12497,16 @@ snapshots:
     optionalDependencies:
       svelte: 5.53.7
 
-  svelte-hmr@0.14.12(svelte@5.53.7):
+  svelte-hmr@0.14.12(svelte@5.57.3(@typescript-eslint/types@8.56.1)):
     dependencies:
-      svelte: 5.53.7
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
 
-  svelte-loader@3.2.4(svelte@5.53.7):
+  svelte-loader@3.2.4(svelte@5.57.3(@typescript-eslint/types@8.56.1)):
     dependencies:
       loader-utils: 2.0.4
-      svelte: 5.53.7
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
       svelte-dev-helper: 1.1.9
-      svelte-hmr: 0.14.12(svelte@5.53.7)
+      svelte-hmr: 0.14.12(svelte@5.57.3(@typescript-eslint/types@8.56.1))
 
   svelte-preprocess@6.0.3(@babel/core@7.29.7)(postcss-load-config@6.0.1(jiti@1.21.7)(postcss@8.5.28)(yaml@2.8.3))(postcss@8.5.28)(svelte@5.53.7)(typescript@5.9.3):
     dependencies:
@@ -12444,9 +12517,9 @@ snapshots:
       postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.28)(yaml@2.8.3)
       typescript: 5.9.3
 
-  svelte-preprocess@6.0.3(@babel/core@7.29.7)(postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.28)(yaml@2.8.3))(postcss@8.5.28)(svelte@5.53.7)(typescript@5.9.3):
+  svelte-preprocess@6.0.3(@babel/core@7.29.7)(postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.28)(yaml@2.8.3))(postcss@8.5.28)(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3):
     dependencies:
-      svelte: 5.53.7
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
     optionalDependencies:
       '@babel/core': 7.29.7
       postcss: 8.5.28
@@ -12458,6 +12531,13 @@ snapshots:
       dedent-js: 1.0.1
       scule: 1.3.0
       svelte: 5.53.7
+      typescript: 5.9.3
+
+  svelte2tsx@0.7.51(svelte@5.57.3(@typescript-eslint/types@8.56.1))(typescript@5.9.3):
+    dependencies:
+      dedent-js: 1.0.1
+      scule: 1.3.0
+      svelte: 5.57.3(@typescript-eslint/types@8.56.1)
       typescript: 5.9.3
 
   svelte@5.53.7:
@@ -12478,6 +12558,26 @@ snapshots:
       locate-character: 3.0.0
       magic-string: 0.30.21
       zimmerframe: 1.1.4
+
+  svelte@5.57.3(@typescript-eslint/types@8.56.1):
+    dependencies:
+      '@jridgewell/remapping': 2.3.5
+      '@jridgewell/sourcemap-codec': 1.6.0
+      '@sveltejs/acorn-typescript': 1.0.13(acorn@8.18.0)
+      '@types/estree': 1.0.9
+      acorn: 8.18.0
+      aria-query: 5.3.1
+      axobject-query: 4.1.0
+      clsx: 2.1.1
+      devalue: 6.0.2
+      esm-env: 1.2.2
+      esrap: 2.4.0(@typescript-eslint/types@8.56.1)
+      is-reference: 3.0.3
+      locate-character: 3.0.0
+      magic-string: 0.30.21
+      zimmerframe: 1.1.4
+    transitivePeerDependencies:
+      - '@typescript-eslint/types'
 
   swagger-ui-dist@5.33.1:
     dependencies:
