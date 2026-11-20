@@ -20,7 +20,7 @@ a standalone IIFE script-tag bundle, or via typed bindings.
 ## Monorepo Layout
 
 A **pnpm** monorepo (`pnpm@10.6.0`). Workspaces: `packages/*`, `apps/*`, `e2e`,
-`themes`, `tools/*`.
+`core`, `themes`, `tools/*`.
 
 - `packages/login-widget` — `@forgerock/login-widget`, the published npm package
 - `apps/login-app` — SvelteKit dev/docs host app
@@ -222,7 +222,7 @@ swap point if storage ever moves off the filesystem.
 ## Project Structure
 
 ```
-core/                          # Shared logic — NOT a workspace, compiled per consumer
+core/                          # login-framework private workspace package, built to dist/ and dist-server/
 ├── *.store.ts                 # Singleton Svelte stores (style, locale, links, component)
 ├── *.config.ts                # Config parsers (captcha.config.ts)
 ├── interfaces.ts              # Shared type contracts
