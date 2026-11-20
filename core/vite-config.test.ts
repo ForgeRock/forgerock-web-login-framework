@@ -99,6 +99,21 @@ describe('package Vite build options', () => {
     expect(fixtureEntries).toEqual([join('journey', '_utilities', 'step.mock.ts')]);
   });
 
+  it('exclusions match forward-slash paths (Windows-safe, no path.join separators)', () => {
+    // collect-entries normalises collected paths to `/`, so exclusion
+    // entries must be `/`-separated literals. A `path.join` entry
+    // (backslash on win32) would fail to match and compile Node-only
+    // tooling, tests and fixtures into the package build on Windows.
+    // CI is macOS and Linux only, so this contract needs an explicit test.
+    expect(isRuntimeModule('journey/_utilities/registry/wrapper-templates/footer.svelte')).toBe(
+      false,
+    );
+    expect(isRuntimeModule('journey/_utilities/registry/vite-plugin.ts')).toBe(false);
+    expect(isRuntimeModule('journey/_utilities/registry/registry.ts')).toBe(false);
+    expect(isRuntimeModule('journey/callbacks/_utilities/callback-presets.ts')).toBe(false);
+    expect(isRuntimeModule('journey/_utilities/step.mock.ts')).toBe(true);
+  });
+
   it('the generated custom registry is never a runtime module (consumer-owned, source-resolved)', () => {
     expect(isRuntimeModule('journey/_utilities/registry/custom-registry.ts')).toBe(false);
     const entries = runtimeEntries.map((entry) =>

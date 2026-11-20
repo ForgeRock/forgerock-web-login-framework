@@ -21,13 +21,14 @@ const ROOT = import.meta.dirname;
 
 /**
  * Directories and files excluded from the shared surface.
+ * Entries are `/`-separated literals (candidates are normalized to `/`).
  */
 const EXCLUDED_DIRS = new Set([
   'node_modules',
   'dist',
   'dist-server', // SSR build output of this package
   'server', // SvelteKit-only: feeds constants.ts, login-app server code only
-  join('journey', '_utilities', 'registry', 'wrapper-templates'), // registry seeding source
+  'journey/_utilities/registry/wrapper-templates', // registry seeding source
 ]);
 const EXCLUDED_FILES = new Set([
   'constants.ts', // SvelteKit $app/$env
@@ -42,9 +43,9 @@ const EXCLUDED_FILES = new Set([
   'collect-entries.ts', // this helper, build tooling
   'style.stories.js',
   'style.story.svelte',
-  join('journey', '_utilities', 'registry', 'vite-plugin.ts'), // build tooling
-  join('journey', '_utilities', 'registry', 'registry.ts'), // Node-only registry script
-  join('journey', 'callbacks', '_utilities', 'callback-presets.ts'), // imports test mocks, consumed by tests only
+  'journey/_utilities/registry/vite-plugin.ts', // build tooling
+  'journey/_utilities/registry/registry.ts', // Node-only registry script
+  'journey/callbacks/_utilities/callback-presets.ts', // imports test mocks, consumed by tests only
   customRegistrySourcePath, // generated per consumer build, resolved from source by vite-plugin-dist
 ]);
 
@@ -53,7 +54,7 @@ const EXCLUDED_FILES = new Set([
  * re-exports for consumers' own stories and mocks.
  */
 const SHIPPED_MOCKS = new Set([
-  join('journey', '_utilities', 'step.mock.ts'), // createJourneyStep, re-exported by login-framework.ts
+  'journey/_utilities/step.mock.ts', // createJourneyStep, re-exported by login-framework.ts
 ]);
 
 export function isRuntimeModule(file: string): boolean {

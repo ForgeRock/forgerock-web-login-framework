@@ -33,13 +33,20 @@ export type { Maybe } from '$core/interfaces';
       names: ['Stacked'],
       source: '$components/compositions/input-stacked/stacked-label.svelte',
       typeOnly: false,
+      unsupported: false,
     });
     expect(surface[1]).toEqual({
       names: ['interpolate', 'textToKey'],
       source: '$core/_utilities/i18n.utilities',
       typeOnly: false,
+      unsupported: false,
     });
-    expect(surface[2]).toEqual({ names: ['Maybe'], source: '$core/interfaces', typeOnly: true });
+    expect(surface[2]).toEqual({
+      names: ['Maybe'],
+      source: '$core/interfaces',
+      typeOnly: true,
+      unsupported: false,
+    });
   });
 
   it('parses local declarations as type-only or runtime exports', () => {
@@ -53,12 +60,18 @@ export type { StyleObject } from '$core/style.store';
       names: ['CustomWrapperProps'],
       source: null,
       typeOnly: true,
+      unsupported: false,
     });
   });
 
   it('captures a wildcard re-export with no names', () => {
     const surface = parseSurface(`export * from '$components/primitives';`);
-    expect(surface[0]).toEqual({ names: [], source: '$components/primitives', typeOnly: false });
+    expect(surface[0]).toEqual({
+      names: [],
+      source: '$components/primitives',
+      typeOnly: false,
+      unsupported: false,
+    });
   });
 
   it('resolves a locally exported import binding to its import source', () => {
@@ -66,7 +79,9 @@ export type { StyleObject } from '$core/style.store';
 import { styleStore } from 'svelte/store';
 export { styleStore };
 `);
-    expect(surface).toEqual([{ names: ['styleStore'], source: 'svelte/store', typeOnly: false }]);
+    expect(surface).toEqual([
+      { names: ['styleStore'], source: 'svelte/store', typeOnly: false, unsupported: false },
+    ]);
   });
 
   it('resolves default, namespace and renamed import bindings', () => {
@@ -77,9 +92,14 @@ import { writable as makeWritable } from 'svelte/store';
 export { Stacked, stores, makeWritable as create };
 `);
     expect(surface).toEqual([
-      { names: ['Stacked'], source: '$components/stacked.svelte', typeOnly: false },
-      { names: ['stores'], source: 'svelte/store', typeOnly: false },
-      { names: ['create'], source: 'svelte/store', typeOnly: false },
+      {
+        names: ['Stacked'],
+        source: '$components/stacked.svelte',
+        typeOnly: false,
+        unsupported: false,
+      },
+      { names: ['stores'], source: 'svelte/store', typeOnly: false, unsupported: false },
+      { names: ['create'], source: 'svelte/store', typeOnly: false, unsupported: false },
     ]);
   });
 
@@ -91,8 +111,13 @@ export type { JourneyStep };
 export { Maybe };
 `);
     expect(surface).toEqual([
-      { names: ['JourneyStep'], source: '@forgerock/journey-client/types', typeOnly: true },
-      { names: ['Maybe'], source: '$core/interfaces', typeOnly: true },
+      {
+        names: ['JourneyStep'],
+        source: '@forgerock/journey-client/types',
+        typeOnly: true,
+        unsupported: false,
+      },
+      { names: ['Maybe'], source: '$core/interfaces', typeOnly: true, unsupported: false },
     ]);
   });
 
@@ -101,7 +126,9 @@ export { Maybe };
 const answer = 42;
 export { answer };
 `);
-    expect(surface).toEqual([{ names: ['answer'], source: null, typeOnly: false }]);
+    expect(surface).toEqual([
+      { names: ['answer'], source: null, typeOnly: false, unsupported: false },
+    ]);
   });
 
   it('ignores export statements inside block and JSDoc comments', () => {
@@ -113,7 +140,9 @@ export { answer };
 /* export * from '$core/constants'; */
 export type { Maybe } from '$core/interfaces'; // export { x } from 'y';
 `);
-    expect(surface).toEqual([{ names: ['Maybe'], source: '$core/interfaces', typeOnly: true }]);
+    expect(surface).toEqual([
+      { names: ['Maybe'], source: '$core/interfaces', typeOnly: true, unsupported: false },
+    ]);
   });
 
   it('keeps code after a line comment that mentions a block comment opener', () => {
@@ -121,7 +150,41 @@ export type { Maybe } from '$core/interfaces'; // export { x } from 'y';
 // see /* the docs
 export type { Maybe } from '$core/interfaces';
 `);
-    expect(surface).toEqual([{ names: ['Maybe'], source: '$core/interfaces', typeOnly: true }]);
+    expect(surface).toEqual([
+      { names: ['Maybe'], source: '$core/interfaces', typeOnly: true, unsupported: false },
+    ]);
+  });
+
+  it('parses an inline `export { type X } from` modifier in the first position', () => {
+    const surface = parseSurface(`export { type Maybe } from '$core/interfaces';`);
+    expect(surface).toEqual([
+      { names: ['Maybe'], source: '$core/interfaces', typeOnly: true, unsupported: false },
+    ]);
+  });
+
+  it('parses an inline type modifier with a rename', () => {
+    const surface = parseSurface(`export { type Maybe as Possibly } from '$core/interfaces';`);
+    expect(surface).toEqual([
+      { names: ['Possibly'], source: '$core/interfaces', typeOnly: true, unsupported: false },
+    ]);
+  });
+});
+
+describe('parseSurface (unparsed statement forms fail closed)', () => {
+  it.each([
+    ['export const', `export const styleStore = getStore();`],
+    ['export function', `export function initializeStyles() {}`],
+    ['export class', `export class Widget {}`],
+    ['export let', `export let count = 1;`],
+    ['export default', `export default {};`],
+  ])('flags a %s declaration instead of staying invisible', (label, sourceText) => {
+    const surface = parseSurface(sourceText);
+    // A declaration form the reviewed surface never uses must not parse as
+    // an invisible no-op. It parses as an explicit, unresolvable export
+    // (source null on a runtime declaration, or absent-but-counted), so the
+    // baseline count and the check both react to its appearance.
+    expect(surface.length, `${label} must produce one parsed entry`).toBe(1);
+    expect(surface[0]?.names).toEqual([]);
   });
 });
 
@@ -219,6 +282,25 @@ export type { JourneyStep };
       runtimeModules,
     });
     expect(violation?.kind).toBe('source-outside-surface');
+  });
+
+  it('matches a $locales re-export against the runtime allowlist via its locales mapping', () => {
+    // The collector maps `locales/...` sources to `$core/locales/...`, so a
+    // `$locales/...` re-export must be normalised to that mapped specifier
+    // before the allowlist lookup; a bare `$locales/...` key would never
+    // match and the `$locales` alias root would be dead (always fails as
+    // source-outside-surface). The alias form must behave exactly like its
+    // mapped `$core/locales` twin.
+    const viaAlias = checkSurface({
+      surface: parseSurface(`export { messages } from '$locales/us/en';`),
+      runtimeModules: new Set(['$core/locales/us/en']),
+    });
+    const viaMapped = checkSurface({
+      surface: parseSurface(`export { messages } from '$core/locales/us/en';`),
+      runtimeModules: new Set(['$core/locales/us/en']),
+    });
+    expect(viaAlias).toEqual([]);
+    expect(viaMapped).toEqual([]);
   });
 
   it('does not report an export that only appears inside a block comment', () => {

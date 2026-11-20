@@ -1,4 +1,13 @@
-import { existsSync } from 'fs';
+/**
+ *
+ * Copyright © 2026 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+
+import { existsSync, statSync } from 'fs';
 import { resolve } from 'path';
 
 import { customRegistrySourcePath, customRegistrySpecifier } from './vite-shared';
@@ -28,8 +37,8 @@ interface DistResolverPlugin {
  * Maps the source-tree aliases (`$core`, `$components`, `$journey`,
  * `$locales`) onto the package's BUILT output, so consumers import the
  * compiled modules instead of re-compiling the sources. Returns the
- * absolute dist path, so builds can externalize them (ESM) or bundle them
- * (IIFE) with a plain path-prefix regex.
+ * absolute dist path; both consumers (widget ESM and IIFE, login-app)
+ * bundle the returned files into their own output.
  *
  * Two built trees exist, one per Svelte compile condition:
  *   - `dist/`     client compilation — browser bundles and client hydration
@@ -74,33 +83,55 @@ export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): D
     { prefix: '$locales', subPath: 'locales' },
   ];
 
-  const emittedPath = (absolute: string): string => {
+  /**
+   * True only for a regular file. A directory (e.g. `dist/components`)
+   * must not resolve as a module: handing Rollup a directory path fails
+   * opaquely, while returning null lets the consumer's own resolution (or
+   * a clear bare-specifier error) apply.
+   */
+  const isFile = (absolute: string): boolean => {
+    try {
+      return statSync(absolute).isFile();
+    } catch {
+      return false;
+    }
+  };
+
+  const emittedPath = (absolute: string): string | null => {
+    // An explicit `.ts` specifier (e.g. `$core/foo.ts`) never resolves to a
+    // `.ts` file and never falls back to source: the dist tree holds only
+    // emitted JS, so a `.ts` path in dist is not an emitted artifact. It
+    // maps onto the emitted `.js` twin when that exists, otherwise null.
+    if (absolute.endsWith('.ts')) {
+      const jsModule = `${absolute.slice(0, -'.ts'.length)}.js`;
+      return isFile(jsModule) ? jsModule : null;
+    }
     // Already points at an emitted file (e.g. `.js`).
-    if (existsSync(absolute)) {
+    if (isFile(absolute)) {
       return absolute;
     }
     // Extensionless TS source: `foo` → `foo.js`.
     if (!/\.[jt]s$/.test(absolute) && !absolute.endsWith('.json')) {
       const jsModule = `${absolute}.js`;
-      if (existsSync(jsModule)) {
+      if (isFile(jsModule)) {
         return jsModule;
       }
     }
     // Compiled component: `foo.svelte` → `foo.component.js`.
     if (absolute.endsWith('.svelte')) {
       const component = absolute.replace(/\.svelte$/, '.component.js');
-      if (existsSync(component)) {
+      if (isFile(component)) {
         return component;
       }
     }
     // JSON catalog: `index.json` → `index.json.js`.
     if (absolute.endsWith('.json')) {
       const jsonModule = `${absolute}.js`;
-      if (existsSync(jsonModule)) {
+      if (isFile(jsonModule)) {
         return jsonModule;
       }
     }
-    return absolute;
+    return null;
   };
 
   return {
@@ -148,15 +179,16 @@ export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): D
       const absolute = rest ? resolve(treePrefix, rest) : treePrefix;
       const emitted = emittedPath(absolute);
 
-      // Nothing built at that path (e.g. `$core/constants`, excluded from the
-      // package build): return null so the consumer's own resolution
-      // (alias or bare-specifier failure) applies.
-      if (!existsSync(emitted)) {
+      // Nothing built at that path (e.g. `$core/constants`, excluded from
+      // the package build, or a directory inside the dist tree): return
+      // null so the consumer's own resolution (alias or bare-specifier
+      // failure) applies.
+      if (emitted === null) {
         return null;
       }
 
-      // Return the resolved absolute dist path. Consumers externalize with a
-      // regex over this path prefix (ESM) or bundle it (IIFE).
+      // Return the resolved absolute dist path. Both consumers bundle the
+      // returned files into their own output.
       return emitted;
     },
   };

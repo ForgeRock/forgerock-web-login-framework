@@ -76,6 +76,27 @@ describe('loginFrameworkDist', () => {
     expect(resolveId('$core/constants')).toBeNull();
   });
 
+  it('returns null for an alias pointing at a directory in dist', () => {
+    // A directory (e.g. `dist/components`) exists on disk but is not a
+    // module: resolving it would hand Rollup a directory path and fail
+    // opaquely. The plugin must return null so the consumer's own
+    // resolution (or a clear bare-specifier error) applies.
+    mkdirSync(join(distDir, 'some-dir'), { recursive: true });
+    expect(resolveId('$core/some-dir')).toBeNull();
+  });
+
+  it('resolves an explicit .ts specifier only when its emitted .js exists', () => {
+    // A specifier that already ends in `.ts` (e.g. `$core/foo.ts`) must not
+    // silently fall back to source: the fallback would compile the source
+    // file a second time alongside the dist module (duplicate module
+    // state). Without an emitted JS file it returns null; with one it maps
+    // onto the emitted file.
+    writeFileSync(join(distDir, 'typed-module.ts'), '');
+    expect(resolveId('$core/typed-module.ts')).toBeNull();
+    writeFileSync(join(distDir, 'typed-module.js'), '');
+    expect(resolveId('$core/typed-module.ts')).toBe(resolve(distDir, 'typed-module.js'));
+  });
+
   it('returns null for sources outside the package aliases', () => {
     expect(resolveId('./sibling.svelte')).toBeNull();
     expect(resolveId('$app-locales/us/en')).toBeNull();

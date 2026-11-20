@@ -7,7 +7,7 @@
  *
  **/
 
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync } from 'fs';
 import { resolve } from 'path';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -55,6 +55,27 @@ describe('widget runtime dependencies', () => {
     const manifest = readPackageManifest();
     expect(Object.keys(manifest.dependencies ?? {})).not.toContain('login-framework');
     expect(Object.keys(manifest.peerDependencies ?? {})).not.toContain('login-framework');
+  });
+
+  it('built ESM artifact holds zero login-framework specifiers (post-build guard)', () => {
+    // Config-level checks above prove intent; this proves the artifact.
+    // dist/index.js is gitignored build output: skipped when unbuilt (fresh
+    // checkouts, the CI test job). The CI build job runs build:release but
+    // not the vitest suite, so the guard bites on local and release builds
+    // run via `pnpm test` after a build, not in CI. `login-framework` is a
+    // private workspace package; a single emitted specifier would be
+    // unresolvable on an npm consumer's machine (F1's original defect).
+    const artifact = resolve(import.meta.dirname, 'dist/index.js');
+    if (!existsSync(artifact)) {
+      return;
+    }
+    const code = readFileSync(artifact, 'utf8');
+    // Specifier boundary: a quote or the start of `login-framework/dist/`
+    // or `login-framework/...` import paths. `login-framework-surface` as a
+    // substring of an unrelated identifier would not be a module specifier.
+    expect(
+      code.match(/['"]login-framework\//) ?? code.match(/^import\s+['"]login-framework['"]/m),
+    ).toBeNull();
   });
 });
 

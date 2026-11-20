@@ -37,22 +37,39 @@ import { runtimeEntries } from './collect-entries';
 
 /** One re-export (or local declaration) found in a surface file. */
 export interface SurfaceExport {
-  /** Exported names; empty for a wildcard re-export. */
+  /** Exported names; empty for a wildcard re-export or a sentinel. */
   readonly names: readonly string[];
   /**
    * Module the names come from: an alias specifier, a bare package
-   * specifier, or `null` for a local declaration.
+   * specifier, or `null` for a local declaration or a sentinel.
    */
   readonly source: string | null;
   /** `true` for `export type { ... }` and `export interface/type`. */
   readonly typeOnly: boolean;
+  /**
+   * `true` when the statement form is outside the parser's reviewed
+   * grammar (see {@link UNSUPPORTED_EXPORT}). Such entries are fail-closed
+   * sentinels: `checkSurface` always rejects them, even though `source`
+   * is null.
+   */
+  readonly unsupported: boolean;
 }
 
-/** Why a surface export fails the parity check. */
+/**
+ * Why a surface export fails the parity check.
+ *
+ * `unsupported-export` marks a statement form outside the parser's reviewed
+ * grammar (`export const/function/class/let/default` and any other
+ * unrecognized `export`). The curated surface never uses them, so the parse
+ * emits an explicit violation sentinel instead of silently ignoring the
+ * statement (fail closed): the check fails whenever the reviewed file
+ * drifts into an unreviewed form.
+ */
 export type SurfaceViolationKind =
   | 'wildcard-export'
   | 'forbidden-external'
-  | 'source-outside-surface';
+  | 'source-outside-surface'
+  | 'unsupported-export';
 
 /** A parity-check failure, with the offending export names. */
 export interface SurfaceViolation {
@@ -89,9 +106,34 @@ const stripComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/|\
  * Matches one export statement of the surface file's reviewed forms:
  * `export [type] { names } from 'source'`, `export * [as name] from
  * 'source'`, and local `export interface Name` / `export type Name`.
+ *
+ * The pattern is also the grammar's boundary: `export const`, `export
+ * function`, `export class`, `export let`, `export default` and any other
+ * form match NONE of its alternatives. `parseSurface` detects such
+ * statements with {@link UNSUPPORTED_EXPORT} and emits a violation
+ * sentinel, so an unreviewed statement form fails the check instead of
+ * staying invisible.
  */
 const EXPORT_STATEMENT =
   /export\s+(type\s+)?(\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s*(?:from\s*['"]([^'"]+)['"])?;?|export\s+(?:interface|type)\s+(\w+)/g;
+
+/**
+ * Catches `export` statements the reviewed grammar does not cover: any
+ * `export` keyword at statement position (line start, or after `;`, `}`
+ * or a newline) not followed by the grammar's allowed continuations
+ * (`type`, `{`, `*`, `interface`). Uses negative lookaheads so every
+ * unsupported form (const, function, class, let, default, ...) matches;
+ * `parseSurface` turns each match into one violation sentinel.
+ *
+ * The statement anchor plus `(?![\w$.])` keep identifiers, property
+ * accesses and strings that merely contain `export` (`exportType`,
+ * `obj.export`, `'export const fake'`) out of the sentinel set. A false
+ * sentinel is fail-closed (loud, not silent), but its empty names/source
+ * carry no diagnostic, so avoid emitting them for non-statement
+ * occurrences.
+ */
+const UNSUPPORTED_EXPORT =
+  /(?:^|[;}\n])\s*export(?![\w$.])(?!\s*(?:type\s|interface\s|\{|\*))(?:\s+(?:const|function|class|let|var|default|abstract|async|enum|declare)\b)?[^\n;{*(]*/g;
 
 /**
  * Matches one import statement with bindings: `import [type] [Default]
@@ -133,6 +175,10 @@ const parseClauseEntries = (clause: string): readonly ClauseEntry[] =>
 /** Extracts the exported identifiers from a `{ ... }` clause. */
 const parseExportNames = (clause: string): readonly string[] =>
   parseClauseEntries(clause).map((entry) => entry.alias);
+
+/** True when any `{ ... }` clause entry carries the inline `type` modifier. */
+const clauseHasInlineType = (clause: string): boolean =>
+  parseClauseEntries(clause).some((entry) => entry.typeOnly);
 
 /** Maps every locally bound import name to its import source. */
 const parseImportBindings = (text: string): ReadonlyMap<string, ImportBinding> =>
@@ -179,6 +225,7 @@ const resolveLocalClause = ({
       names: [entry.alias],
       source: binding?.source ?? null,
       typeOnly: exportTypeOnly || entry.typeOnly || (binding?.typeOnly ?? false),
+      unsupported: false,
     };
   });
 
@@ -188,25 +235,45 @@ const resolveLocalClause = ({
  * Pure text analysis of the curated-surface file's reviewed statement
  * forms only. Comments are stripped first, and a local `export { x }` of
  * an imported name resolves to that import's source so it cannot bypass
- * the allowlist. The file is lint-formatted and reviewed, so a statement
- * this parser misses stays invisible here; the real-file test guards
- * against drift by asserting the parsed export count stays at the
- * reviewed baseline.
+ * the allowlist. Statements outside the reviewed grammar (`export const`,
+ * `export function`, `export default`, ...) are caught by
+ * {@link UNSUPPORTED_EXPORT} and emitted as a fail-closed sentinel export
+ * (`names: []`, `source: null`, `unsupported: true`) that `checkSurface`
+ * always rejects, so the file is lint-formatted and reviewed, and a
+ * statement the parser misses surfaces as a violation rather than staying
+ * invisible; the real-file test guards against drift by asserting the
+ * parsed export count stays at the reviewed baseline.
  */
 export const parseSurface = (sourceText: string): SurfaceModule => {
   const withoutComments = stripComments(sourceText);
   const importBindings = parseImportBindings(withoutComments);
 
-  return [...withoutComments.matchAll(EXPORT_STATEMENT)].flatMap(
+  const unsupported = [...withoutComments.matchAll(UNSUPPORTED_EXPORT)].map(
+    (): SurfaceExport => ({
+      names: [],
+      source: null,
+      typeOnly: false,
+      unsupported: true,
+    }),
+  );
+
+  const parsed = [...withoutComments.matchAll(EXPORT_STATEMENT)].flatMap(
     ([, typeKeyword, clause, source, localName]): readonly SurfaceExport[] => {
       if (localName !== undefined) {
-        return [{ names: [localName], source: null, typeOnly: true }];
+        return [{ names: [localName], source: null, typeOnly: true, unsupported: false }];
       }
       if (clause === undefined) {
         return [];
       }
       if (clause.startsWith('*')) {
-        return [{ names: [], source: source ?? null, typeOnly: typeKeyword !== undefined }];
+        return [
+          {
+            names: [],
+            source: source ?? null,
+            typeOnly: typeKeyword !== undefined,
+            unsupported: false,
+          },
+        ];
       }
       return source === undefined
         ? resolveLocalClause({
@@ -214,9 +281,18 @@ export const parseSurface = (sourceText: string): SurfaceModule => {
             exportTypeOnly: typeKeyword !== undefined,
             importBindings,
           })
-        : [{ names: parseExportNames(clause), source, typeOnly: typeKeyword !== undefined }];
+        : [
+            {
+              names: parseExportNames(clause),
+              source,
+              typeOnly: typeKeyword !== undefined || clauseHasInlineType(clause),
+              unsupported: false,
+            },
+          ];
     },
   );
+
+  return [...unsupported, ...parsed];
 };
 
 /**
@@ -234,6 +310,9 @@ export const checkSurface = ({
   runtimeModules: ReadonlySet<string>;
 }): readonly SurfaceViolation[] =>
   surface.flatMap((surfaceExport): SurfaceViolation[] => {
+    if (surfaceExport.unsupported) {
+      return [{ kind: 'unsupported-export', names: [], source: null }];
+    }
     if (surfaceExport.source !== null && surfaceExport.names.length === 0) {
       return [{ kind: 'wildcard-export', names: [], source: surfaceExport.source }];
     }
@@ -261,7 +340,11 @@ export const checkSurface = ({
     // stories, tooling, `server/` and `constants.ts`). The runtime module
     // set is the single allowlist: a file's existence on disk proves
     // nothing — excluded sources (`constants.ts`, `server/`) also exist.
-    if (!runtimeModules.has(surfaceExport.source)) {
+    // The collector maps `locales/...` sources to `$core/locales/...`, so a
+    // `$locales/...` re-export is normalised to its mapped twin before the
+    // lookup; without this the `$locales` alias root could never match.
+    const source = surfaceExport.source.replace(/^\$locales(?:\/|$)/, '$core/locales/');
+    if (!runtimeModules.has(surfaceExport.source) && !runtimeModules.has(source)) {
       return [
         {
           kind: 'source-outside-surface',

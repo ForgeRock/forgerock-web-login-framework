@@ -183,9 +183,6 @@ importers:
       '@forgerock/sdk-logger':
         specifier: ^2.1.1
         version: 2.1.1
-      login-framework:
-        specifier: workspace:*
-        version: link:../../core
     devDependencies:
       '@effect/vitest':
         specifier: ^0.26.0
@@ -287,12 +284,18 @@ importers:
       '@sveltejs/vite-plugin-svelte':
         specifier: ^4.0.4
         version: 4.0.4(svelte@5.53.7)(vite@5.4.21(@types/node@26.6.3)(terser@5.51.2))
-      svelte-preprocess:
-        specifier: ^6.0.3
-        version: 6.0.3(@babel/core@7.29.7)(postcss-load-config@6.0.1(jiti@2.6.1)(postcss@8.5.28)(yaml@2.8.3))(postcss@8.5.28)(svelte@5.53.7)(typescript@5.9.3)
+      '@types/node':
+        specifier: ^26.6.3
+        version: 26.6.3
+      typescript:
+        specifier: ^5.2.2
+        version: 5.9.3
       vite:
         specifier: ^5.4.21
         version: 5.4.21(@types/node@26.6.3)(terser@5.51.2)
+      vitest:
+        specifier: ^3.2.6
+        version: 3.2.6(@types/node@26.6.3)(@vitest/ui@3.2.4)(terser@5.51.2)
 
   e2e:
     devDependencies:
