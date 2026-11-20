@@ -31,7 +31,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'RedirectCallback',
+  type: callbackType.RedirectCallback,
   output: [
     {
       name: 'redirectUrl',

@@ -18,7 +18,7 @@
   import Form from '$components/primitives/form/form.svelte';
   import Text from '$components/primitives/text/text.svelte';
   import { interpolate } from '$core/_utilities/i18n.utilities';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey } from '$journey/_utilities/step.utilities';
 
   import type {
     ConfirmationCallback,

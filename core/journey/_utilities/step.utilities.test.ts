@@ -10,7 +10,10 @@
 import { callbackType } from '@forgerock/journey-client';
 import { describe, expect, it } from 'vitest';
 
-import { previousRegistrationStep, restartedRegistrationStep } from './step.mock';
+import {
+  previousRegistrationStep,
+  restartedRegistrationStep,
+} from '$journey/stages/_utilities/step.mock';
 import {
   convertStringToKey,
   initCheckValidation,

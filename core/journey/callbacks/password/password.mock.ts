@@ -29,7 +29,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'PasswordCallback',
+  type: callbackType.PasswordCallback,
   output: [
     {
       name: 'prompt',

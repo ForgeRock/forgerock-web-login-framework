@@ -7,7 +7,7 @@
   import { initialize as initializeLinks } from '$core/links.store';
   import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
-  import { initCheckValidation } from '$journey/stages/_utilities/step.utilities';
+  import { initCheckValidation } from '$journey/_utilities/step.utilities';
   import CustomLogin from './custom-login.svelte';
 
   import type { JourneyStep } from '@forgerock/journey-client/types';

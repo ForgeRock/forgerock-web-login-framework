@@ -112,7 +112,7 @@ export const docsBaseExample = {
 };
 
 export const docsSuspendedExample = {
-  type: 'SuspendedTextOutputCallback',
+  type: callbackType.SuspendedTextOutputCallback,
   output: [
     {
       name: 'message',

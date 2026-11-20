@@ -42,7 +42,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'ChoiceCallback',
+  type: callbackType.ChoiceCallback,
   output: [
     {
       name: 'prompt',

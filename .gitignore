@@ -11,6 +11,10 @@ apps/login-app/build/
 packages/login-widget/dist/
 packages/login-widget/svelte-package/
 
+# Shared framework package build output
+core/dist/
+core/dist-server/
+
 # CLI build output
 tools/cli/dist/
 

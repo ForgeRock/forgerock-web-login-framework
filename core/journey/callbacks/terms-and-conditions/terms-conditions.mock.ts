@@ -33,7 +33,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'TermsAndConditionsCallback',
+  type: callbackType.TermsAndConditionsCallback,
   output: [
     {
       name: 'version',

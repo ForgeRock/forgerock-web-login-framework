@@ -155,7 +155,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'StringAttributeInputCallback',
+  type: callbackType.StringAttributeInputCallback,
   output: [
     {
       name: 'name',

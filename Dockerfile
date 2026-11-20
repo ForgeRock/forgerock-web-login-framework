@@ -14,6 +14,10 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 # Copy workspace configuration and all package.json files for install
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .npmrc ./
+# core is a workspace package (pnpm-workspace.yaml includes it, the lockfile
+# has a core importer) — its manifest must exist before the frozen-lockfile
+# install resolves the workspace.
+COPY core/package.json core/
 COPY packages/login-widget/package.json packages/login-widget/
 COPY apps/login-app/package.json apps/login-app/
 COPY e2e/package.json e2e/

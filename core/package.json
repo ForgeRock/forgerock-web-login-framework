@@ -1,0 +1,38 @@
+{
+  "name": "login-framework",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Shared login framework: components, stores, journey logic and locales. Built once and consumed by login-widget, login-app and (later) the Custom Components editor. Not published to npm.",
+  "dependencies": {
+    "@forgerock/journey-client": "^2.3.1",
+    "@forgerock/oidc-client": "^2.3.1",
+    "@forgerock/protect": "^2.3.1",
+    "@forgerock/storage": "^2.3.1",
+    "qrcode": "1.5.3",
+    "svelte": "^5.55.7",
+    "xss": "^1.0.15",
+    "zod": "^4.6.7"
+  },
+  "scripts": {
+    "build": "vite build && vite build --config vite.config.server.ts",
+    "dev:client": "vite build --watch --emptyOutDir false",
+    "dev:server": "vite build --watch --config vite.config.server.ts --emptyOutDir false",
+    "build:types": "tsc -p tsconfig.declarations.json",
+    "check:surface": "pnpm --filter @forgerock/login-widget exec vitest run login-framework-surface"
+  },
+  "exports": {
+    "./dist/*": "./dist/*",
+    "./dist-server/*": "./dist-server/*"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.3",
+    "@sveltejs/vite-plugin-svelte": "^4.0.4",
+    "typescript": "^5.2.2",
+    "vite": "^5.4.21",
+    "vitest": "^3.2.6"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  }
+}

@@ -21,7 +21,7 @@
   import Text from '$components/primitives/text/text.svelte';
   import { interpolate } from '$core/_utilities/i18n.utilities';
   import { styleStore } from '$core/style.store';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey } from '$journey/_utilities/step.utilities';
 
   import type { HiddenValueCallback, JourneyStep } from '@forgerock/journey-client/types';
 

@@ -143,7 +143,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'ConfirmationCallback',
+  type: callbackType.ConfirmationCallback,
   output: [
     {
       name: 'prompt',

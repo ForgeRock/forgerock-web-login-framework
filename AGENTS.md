@@ -20,19 +20,24 @@ a standalone IIFE script-tag bundle, or via typed bindings.
 ## Monorepo Layout
 
 A **pnpm** monorepo (`pnpm@10.6.0`). Workspaces: `packages/*`, `apps/*`, `e2e`,
-`themes`, `tools/*`.
+`core`, `themes`, `tools/*`.
 
 - `packages/login-widget` — `@forgerock/login-widget`, the published npm package
 - `apps/login-app` — SvelteKit dev/docs host app
 - `e2e` — Playwright E2E test workspace
-- `core/` — shared stores, components, journey logic, locales (**not** a
-  workspace)
+- `core/` — private workspace package `login-framework` (shared stores,
+  components, journey logic, locales; built to `dist/` and `dist-server/`)
 
 ### The `core/` Directory
 
-`core/` is intentionally **not** a workspace — it has no `package.json` and no
-build step of its own. It is imported via path aliases and compiled as part of
-each consumer's build.
+`core/` is the private workspace package `login-framework` (never published to
+npm). It has its own Vite library build producing `dist/` (client) and
+`dist-server/` (SSR), and is consumed through those built outputs: the widget
+and the app bundle the compiled `core/dist` code into their own outputs, while
+the `login-framework/dist/...` import specifier remains the contract surface
+for custom components and the future editor. The `$core`/`$components`/
+`$journey`/`$locales` path aliases still exist for building `core/` itself and
+resolving its type sources.
 
 **Path aliases** (defined in `core/tsconfig.json`, mirrored in each consumer's
 Vite config):
@@ -44,14 +49,15 @@ Vite config):
 | `$journey`    | `core/journey/`    |
 | `$locales`    | `core/locales/`    |
 
-**Dependency hoisting:** `core/`'s runtime deps (e.g.
-`@forgerock/protect`, `xss`, `zod`, `qrcode`) are declared in
-`packages/login-widget/package.json`. Some also appear as root devDependencies
-or in the declaring workspace of whichever app compiles `core/` (for example
-`@forgerock/journey-client` is imported directly by `apps/login-app` stages and
-declared there). `public-hoist-pattern` rules in `.npmrc` cover only `effect`
-and `@effect/*`. **When adding a new dependency that `core/` imports, declare it
-in every workspace that compiles the importing `core/` code.**
+**Dependency hoisting:** `core/package.json` declares the runtime deps
+`core/` imports (e.g. `@forgerock/protect`, `xss`, `zod`, `qrcode`), pinned at
+the versions the package builds against. Some also appear as root
+devDependencies or in the declaring workspace of whichever app compiles
+`core/` (for example `@forgerock/journey-client` is imported directly by
+`apps/login-app` stages and declared there). `public-hoist-pattern` rules in
+`.npmrc` cover only `effect` and `@effect/*`. **When adding a new dependency
+that `core/` imports, declare it in `core/package.json` and in every workspace
+that compiles the importing `core/` code.**
 
 ### Public API
 
@@ -74,29 +80,32 @@ awaited at boot before any other API call), `journey`, `user`, `component`, and
   `new Widget({ target })` instantiation pattern for consumers.
 - **Bundled runtime deps:** both builds inline all runtime dependencies —
   `@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
-  `qrcode`, `xss`, `zod`. Neither `vite.config.ts` (ES) nor
-  `vite.config.iife.ts` (IIFE, `external: []`) externalizes them; Vite library
-  mode bundles dependencies unless a `rollupOptions.external` list opts them out.
+  `qrcode`, `xss`, `zod` — and the compiled `login-framework` (core `dist`)
+  code. Neither `vite.config.ts` (ES) nor `vite.config.iife.ts` (IIFE,
+  `external: []`) externalizes them; Vite library mode bundles dependencies
+  unless a `rollupOptions.external` list opts them out. The published widget
+  output has no runtime dependency on the private package.
 
 ## Commands
 
 Run from the repository root.
 
-| Command               | Description                                                  |
-| --------------------- | ------------------------------------------------------------ |
-| `pnpm dev`            | Build widget, then start the SvelteKit dev app               |
-| `pnpm build:widget`   | Build the widget package only                                |
-| `pnpm build:app`      | Build widget + SvelteKit app                                 |
-| `pnpm build:release`  | Full release build (widget + IIFE + types)                   |
-| `pnpm test`           | Run Vitest unit tests (watch mode)                           |
-| `pnpm test -- --run`  | Run unit tests once (CI mode)                                |
-| `pnpm storybook`      | Launch Storybook on port 6006                                |
-| `pnpm test:storybook` | Run Storybook interaction tests (requires running Storybook) |
-| `pnpm check:lint`     | Prettier + ESLint check                                      |
-| `pnpm check:svelte`   | Run svelte-check on the login-app                            |
-| `pnpm format`         | Auto-format with Prettier                                    |
-| `pnpm ci:e2e`         | Run Playwright E2E tests                                     |
-| `pnpm changeset`      | Create a changeset for release management                    |
+| Command                | Description                                                      |
+| ---------------------- | ---------------------------------------------------------------- |
+| `pnpm dev`             | Build widget, then start the SvelteKit dev app + framework watch |
+| `pnpm build:widget`    | Build the framework package, then the widget package             |
+| `pnpm build:app`       | Build widget + SvelteKit app                                     |
+| `pnpm build:framework` | Build the `login-framework` package (dist + dist-server)         |
+| `pnpm build:release`   | Full release build (framework + widget + IIFE + types)           |
+| `pnpm test`            | Run Vitest unit tests (watch mode)                               |
+| `pnpm test -- --run`   | Run unit tests once (CI mode)                                    |
+| `pnpm storybook`       | Launch Storybook on port 6006                                    |
+| `pnpm test:storybook`  | Run Storybook interaction tests (requires running Storybook)     |
+| `pnpm check:lint`      | Prettier + ESLint check                                          |
+| `pnpm check:svelte`    | Run svelte-check on the login-app                                |
+| `pnpm format`          | Auto-format with Prettier                                        |
+| `pnpm ci:e2e`          | Run Playwright E2E tests                                         |
+| `pnpm changeset`       | Create a changeset for release management                        |
 
 ### Running a Single Test
 
@@ -213,7 +222,7 @@ swap point if storage ever moves off the filesystem.
 ## Project Structure
 
 ```
-core/                          # Shared logic — NOT a workspace, compiled per consumer
+core/                          # login-framework private workspace package, built to dist/ and dist-server/
 ├── *.store.ts                 # Singleton Svelte stores (style, locale, links, component)
 ├── *.config.ts                # Config parsers (captcha.config.ts)
 ├── interfaces.ts              # Shared type contracts

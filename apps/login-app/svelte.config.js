@@ -24,16 +24,15 @@ const config = {
     },
     // $lib now defaults to SvelteKit's standard src/lib/ — the app's own code
     alias: {
-      $core: path.resolve('../../core'),
-      '$core/*': path.resolve('../../core/*'),
-      $components: path.resolve('../../core/components'),
-      '$components/*': path.resolve('../../core/components/*'),
-      $journey: path.resolve('../../core/journey'),
-      '$journey/*': path.resolve('../../core/journey/*'),
+      // Server-only SvelteKit modules, deliberately excluded from the
+      // login-framework package build ($app/$env imports; server/ holds
+      // SvelteKit-only utilities); resolved from source. All other
+      // $core/$components/$journey/$locales imports map onto the package's
+      // built dist via the loginFrameworkDist Vite plugin in vite.config.ts.
+      '$core/constants': path.resolve('../../core/constants.ts'),
+      '$core/server': path.resolve('../../core/server'),
       '$app-locales': path.resolve('./src/locales'),
       '$app-locales/*': path.resolve('./src/locales/*'),
-      $locales: path.resolve('../../core/locales'),
-      '$locales/*': path.resolve('../../core/locales/*'),
       $package: path.resolve('../../packages/login-widget/dist'),
       '$package/*': path.resolve('../../packages/login-widget/dist/*'),
       // Server utilities live in the app, not the widget

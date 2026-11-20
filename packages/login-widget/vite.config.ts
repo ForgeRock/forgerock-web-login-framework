@@ -8,6 +8,7 @@ import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+import { loginFrameworkDist } from '../../core/vite-plugin-dist';
 
 export default defineConfig({
   // Isolated tsconfig for esbuild — avoids dependency on .svelte-kit/tsconfig.json.
@@ -29,6 +30,7 @@ export default defineConfig({
     }),
   },
   plugins: [
+    loginFrameworkDist({ packageDir: resolve('../../core') }),
     customRegistry({ projectRoot: resolve('../..') }),
     visualizer({ open: false, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }),
     svelte({
@@ -50,11 +52,20 @@ export default defineConfig({
     }),
   ],
   resolve: {
+    // One Svelte runtime and one copy of each @forgerock runtime dep in the
+    // bundle: core/dist imports `svelte/*` and `@forgerock/*`, which must
+    // not resolve a second copy from core/node_modules.
+    dedupe: [
+      'svelte',
+      '@forgerock/journey-client',
+      '@forgerock/oidc-client',
+      '@forgerock/protect',
+      '@forgerock/storage',
+    ],
+    // $core/$components/$journey/$locales are mapped onto the package's
+    // built dist by the loginFrameworkDist plugin above; only the
+    // curated custom-component surface stays aliased to source.
     alias: {
-      $core: resolve('../../core'),
-      $components: resolve('../../core/components'),
-      $journey: resolve('../../core/journey'),
-      $locales: resolve('../../core/locales'),
       '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
     },
   },
