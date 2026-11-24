@@ -8,6 +8,7 @@
  **/
 
 import { readFileSync } from 'fs';
+import * as ts from 'typescript';
 
 import { runtimeEntries } from './collect-entries';
 
@@ -31,6 +32,10 @@ import { runtimeEntries } from './collect-entries';
  * are the supported primitives; the surface never reaches outside the
  * package for runtime values.
  *
+ * The file is parsed with the TypeScript compiler API: the parser walks
+ * real AST nodes, so statement forms are classified by the compiler instead
+ * of by hand-written patterns.
+ *
  * Build tooling, colocated with `vite-plugin-dist.ts` and excluded from the
  * package build by `collect-entries.ts`.
  */
@@ -47,10 +52,9 @@ export interface SurfaceExport {
   /** `true` for `export type { ... }` and `export interface/type`. */
   readonly typeOnly: boolean;
   /**
-   * `true` when the statement form is outside the parser's reviewed
-   * grammar (see {@link UNSUPPORTED_EXPORT}). Such entries are fail-closed
-   * sentinels: `checkSurface` always rejects them, even though `source`
-   * is null.
+   * `true` for statement forms outside the surface grammar. Such entries
+   * are fail-closed sentinels: `checkSurface` always rejects them, even
+   * though `source` is null.
    */
   readonly unsupported: boolean;
 }
@@ -58,12 +62,12 @@ export interface SurfaceExport {
 /**
  * Why a surface export fails the parity check.
  *
- * `unsupported-export` marks a statement form outside the parser's reviewed
- * grammar (`export const/function/class/let/default` and any other
- * unrecognized `export`). The curated surface never uses them, so the parse
- * emits an explicit violation sentinel instead of silently ignoring the
- * statement (fail closed): the check fails whenever the reviewed file
- * drifts into an unreviewed form.
+ * `unsupported-export` marks a statement form outside the surface grammar
+ * (`export const/function/class/let/default` and any other unreviewed
+ * `export`). The curated surface never uses them, so the parse emits an
+ * explicit violation sentinel instead of silently ignoring the statement
+ * (fail closed): the check fails whenever the reviewed file drifts into an
+ * unreviewed form.
  */
 export type SurfaceViolationKind =
   | 'wildcard-export'
@@ -96,54 +100,6 @@ const ALIAS_ROOTS: ReadonlyArray<readonly [prefix: string, subPath: string]> = [
 ];
 
 /**
- * Strips block, JSDoc and line comments so commented-out examples are not
- * parsed. One alternation pass, so a `/*` inside a line comment cannot
- * swallow the code that follows it.
- */
-const stripComments = (text: string): string => text.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
-
-/**
- * Matches one export statement of the surface file's reviewed forms:
- * `export [type] { names } from 'source'`, `export * [as name] from
- * 'source'`, and local `export interface Name` / `export type Name`.
- *
- * The pattern is also the grammar's boundary: `export const`, `export
- * function`, `export class`, `export let`, `export default` and any other
- * form match NONE of its alternatives. `parseSurface` detects such
- * statements with {@link UNSUPPORTED_EXPORT} and emits a violation
- * sentinel, so an unreviewed statement form fails the check instead of
- * staying invisible.
- */
-const EXPORT_STATEMENT =
-  /export\s+(type\s+)?(\{[^}]*\}|\*(?:\s+as\s+\w+)?)\s*(?:from\s*['"]([^'"]+)['"])?;?|export\s+(?:interface|type)\s+(\w+)/g;
-
-/**
- * Catches `export` statements the reviewed grammar does not cover: any
- * `export` keyword at statement position (line start, or after `;`, `}`
- * or a newline) not followed by the grammar's allowed continuations
- * (`type`, `{`, `*`, `interface`). Uses negative lookaheads so every
- * unsupported form (const, function, class, let, default, ...) matches;
- * `parseSurface` turns each match into one violation sentinel.
- *
- * The statement anchor plus `(?![\w$.])` keep identifiers, property
- * accesses and strings that merely contain `export` (`exportType`,
- * `obj.export`, `'export const fake'`) out of the sentinel set. A false
- * sentinel is fail-closed (loud, not silent), but its empty names/source
- * carry no diagnostic, so avoid emitting them for non-statement
- * occurrences.
- */
-const UNSUPPORTED_EXPORT =
-  /(?:^|[;}\n])\s*export(?![\w$.])(?!\s*(?:type\s|interface\s|\{|\*))(?:\s+(?:const|function|class|let|var|default|abstract|async|enum|declare)\b)?[^\n;{*(]*/g;
-
-/**
- * Matches one import statement with bindings: `import [type] [Default]
- * [, { named } | * as ns] from 'source'`. Side-effect imports bind nothing
- * and are not matched.
- */
-const IMPORT_STATEMENT =
-  /import\s+(type\s+)?([\w$]+)?\s*,?\s*(\{[^}]*\}|\*\s+as\s+[\w$]+)?\s*from\s*['"]([^'"]+)['"]/g;
-
-/**
  * One `{ [type] name [as alias] }` entry of an import or export clause.
  * `alias` is the name the entry introduces: the local binding for an import,
  * the exported name for an export. It equals `name` when there is no `as`.
@@ -160,49 +116,92 @@ interface ImportBinding {
   readonly typeOnly: boolean;
 }
 
-/** Parses the entries of a `{ ... }` clause. */
-const parseClauseEntries = (clause: string): readonly ClauseEntry[] =>
-  clause
-    .slice(1, -1)
-    .split(',')
-    .flatMap((entry): ClauseEntry[] => {
-      const match = entry.trim().match(/^(type\s+)?([\w$]+)(?:\s+as\s+([\w$]+))?$/);
-      return match?.[2] === undefined
-        ? []
-        : [{ name: match[2], alias: match[3] ?? match[2], typeOnly: match[1] !== undefined }];
-    });
+/**
+ * The identifier text of an import/export clause specifier. The compiler
+ * gives `name` (the bound name, before `as`) and `propertyName` (the
+ * original name after `as`); a bare `name` specifier has no property name.
+ */
+const specifierName = (element: ts.ImportOrExportSpecifier): string =>
+  element.propertyName?.getText() ?? element.name.getText();
 
-/** Extracts the exported identifiers from a `{ ... }` clause. */
-const parseExportNames = (clause: string): readonly string[] =>
-  parseClauseEntries(clause).map((entry) => entry.alias);
+/** True when a clause specifier carries the inline `type` modifier. */
+const isTypeOnlySpecifier = (element: ts.ImportOrExportSpecifier): boolean => element.isTypeOnly;
 
-/** True when any `{ ... }` clause entry carries the inline `type` modifier. */
-const clauseHasInlineType = (clause: string): boolean =>
-  parseClauseEntries(clause).some((entry) => entry.typeOnly);
+/** Parses the entries of an import/export `{ ... }` clause. */
+const parseClauseEntries = (clause: ts.NamedImportsOrExports): readonly ClauseEntry[] =>
+  clause.elements.map((element): ClauseEntry => {
+    const name = specifierName(element);
+    return {
+      name,
+      alias: element.propertyName === undefined ? name : element.name.getText(),
+      typeOnly: isTypeOnlySpecifier(element),
+    };
+  });
 
-/** Maps every locally bound import name to its import source. */
-const parseImportBindings = (text: string): ReadonlyMap<string, ImportBinding> =>
-  new Map(
-    [...text.matchAll(IMPORT_STATEMENT)].flatMap(
-      ([, typeKeyword, defaultName, clause, source]): ReadonlyArray<[string, ImportBinding]> => {
-        const importTypeOnly = typeKeyword !== undefined;
-        const defaultBinding: ReadonlyArray<[string, ImportBinding]> =
-          defaultName === undefined || source === undefined
-            ? []
-            : [[defaultName, { source, typeOnly: importTypeOnly }]];
-        const clauseBindings: ReadonlyArray<[string, ImportBinding]> =
-          clause === undefined || source === undefined
-            ? []
-            : clause.startsWith('{')
-            ? parseClauseEntries(clause).map((entry): [string, ImportBinding] => [
-                entry.alias,
-                { source, typeOnly: importTypeOnly || entry.typeOnly },
-              ])
-            : [[clause.replace(/^\*\s+as\s+/, ''), { source, typeOnly: importTypeOnly }]];
-        return [...defaultBinding, ...clauseBindings];
-      },
-    ),
-  );
+/** Extracts the exported identifiers from an export `{ ... }` clause. */
+const parseExportNames = (clause: ts.NamedExports): readonly string[] =>
+  clause.elements.map((element) => element.name.getText());
+
+/** True when any export `{ ... }` clause entry carries the inline `type` modifier. */
+const clauseHasInlineType = (clause: ts.NamedExports): boolean =>
+  clause.elements.some((element) => isTypeOnlySpecifier(element));
+
+/** Module specifier text of an import/export declaration, when it has one. */
+const moduleSpecifierOf = (node: ts.Node): string | undefined => {
+  if (
+    (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) &&
+    node.moduleSpecifier !== undefined &&
+    ts.isStringLiteral(node.moduleSpecifier)
+  ) {
+    return node.moduleSpecifier.text;
+  }
+  return undefined;
+};
+
+/** Type-only flag of an import/export declaration plus its inline modifiers. */
+const typeOnlyOf = (declaration: ts.ImportDeclaration | ts.ExportDeclaration): boolean =>
+  declaration.isTypeOnly;
+
+/**
+ * Maps every locally bound import name to its import source.
+ *
+ * Walks import declarations of the parsed source: each `import type` (or
+ * inline-type clause specifier) binds its names type-only, default and
+ * namespace imports carry their source, and named imports map each alias to
+ * it. So a local `export { x }` of an imported name resolves to that
+ * import's source and cannot bypass the allowlist.
+ */
+const parseImportBindings = (sourceFile: ts.SourceFile): ReadonlyMap<string, ImportBinding> => {
+  const bindings = new Map<string, ImportBinding>();
+  for (const statement of sourceFile.statements) {
+    if (!ts.isImportDeclaration(statement) || statement.importClause === undefined) {
+      continue;
+    }
+    const source = moduleSpecifierOf(statement);
+    if (source === undefined) {
+      continue;
+    }
+    const { importClause } = statement;
+    const importTypeOnly = importClause.isTypeOnly;
+    if (importClause.name !== undefined) {
+      bindings.set(importClause.name.getText(), { source, typeOnly: importTypeOnly });
+    }
+    const named = importClause.namedBindings;
+    if (named !== undefined) {
+      if (ts.isNamespaceImport(named)) {
+        bindings.set(named.name.getText(), { source, typeOnly: importTypeOnly });
+      } else {
+        for (const entry of parseClauseEntries(named)) {
+          bindings.set(entry.alias, {
+            source,
+            typeOnly: importTypeOnly || entry.typeOnly,
+          });
+        }
+      }
+    }
+  }
+  return bindings;
+};
 
 /**
  * Expands a local `export { ... }` clause (no `from`) into one export per
@@ -215,85 +214,107 @@ const resolveLocalClause = ({
   exportTypeOnly,
   importBindings,
 }: {
-  clause: string;
+  clause: ts.NamedExports;
   exportTypeOnly: boolean;
   importBindings: ReadonlyMap<string, ImportBinding>;
 }): readonly SurfaceExport[] =>
-  parseClauseEntries(clause).map((entry): SurfaceExport => {
-    const binding = importBindings.get(entry.name);
+  clause.elements.map((element): SurfaceExport => {
+    const name = specifierName(element);
+    const binding = importBindings.get(name);
     return {
-      names: [entry.alias],
+      names: [element.name.getText()],
       source: binding?.source ?? null,
-      typeOnly: exportTypeOnly || entry.typeOnly || (binding?.typeOnly ?? false),
+      typeOnly: exportTypeOnly || isTypeOnlySpecifier(element) || (binding?.typeOnly ?? false),
       unsupported: false,
     };
   });
 
+/** Local declaration exports (`export interface X`, `export type X`). */
+const unsupportedSentinel = (): SurfaceExport => ({
+  names: [],
+  source: null,
+  typeOnly: false,
+  unsupported: true,
+});
+
 /**
  * Parses the export statements of a surface file into typed exports.
  *
- * Pure text analysis of the curated-surface file's reviewed statement
- * forms only. Comments are stripped first, and a local `export { x }` of
- * an imported name resolves to that import's source so it cannot bypass
- * the allowlist. Statements outside the reviewed grammar (`export const`,
- * `export function`, `export default`, ...) are caught by
- * {@link UNSUPPORTED_EXPORT} and emitted as a fail-closed sentinel export
- * (`names: []`, `source: null`, `unsupported: true`) that `checkSurface`
- * always rejects, so the file is lint-formatted and reviewed, and a
- * statement the parser misses surfaces as a violation rather than staying
- * invisible; the real-file test guards against drift by asserting the
- * parsed export count stays at the reviewed baseline.
+ * Pure compiler-API analysis of the curated-surface file. Statement forms
+ * the surface grammar reviews are: `export [type] { names } [from
+ * 'source']`, `export [type] * [as name] [from 'source']`, and local
+ * `export interface/type` declarations. Any other `export` statement form
+ * (`export const`, `export function`, `export default`, ...) is emitted as
+ * a fail-closed sentinel export (`names: []`, `source: null`,
+ * `unsupported: true`) that `checkSurface` always rejects, so the file is
+ * lint-formatted and reviewed, and a statement the grammar does not cover
+ * surfaces as a violation rather than staying invisible; the real-file test
+ * guards against drift by asserting the parsed export count stays at the
+ * reviewed baseline.
  */
 export const parseSurface = (sourceText: string): SurfaceModule => {
-  const withoutComments = stripComments(sourceText);
-  const importBindings = parseImportBindings(withoutComments);
+  const sourceFile = ts.createSourceFile('surface.ts', sourceText, ts.ScriptTarget.Latest, true);
 
-  const unsupported = [...withoutComments.matchAll(UNSUPPORTED_EXPORT)].map(
-    (): SurfaceExport => ({
-      names: [],
-      source: null,
-      typeOnly: false,
-      unsupported: true,
-    }),
-  );
+  const unsupported: SurfaceExport[] = [];
+  const parsed: SurfaceExport[] = [];
 
-  const parsed = [...withoutComments.matchAll(EXPORT_STATEMENT)].flatMap(
-    ([, typeKeyword, clause, source, localName]): readonly SurfaceExport[] => {
-      if (localName !== undefined) {
-        return [{ names: [localName], source: null, typeOnly: true, unsupported: false }];
-      }
-      if (clause === undefined) {
-        return [];
-      }
-      if (clause.startsWith('*')) {
-        return [
-          {
-            names: [],
-            source: source ?? null,
-            typeOnly: typeKeyword !== undefined,
+  for (const statement of sourceFile.statements) {
+    if (ts.isExportDeclaration(statement)) {
+      const source = moduleSpecifierOf(statement);
+      const typeOnly = typeOnlyOf(statement);
+      const { exportClause } = statement;
+      if (exportClause === undefined) {
+        // `export * from 'source'` (with or without `as name`): a wildcard
+        // re-export has no explicit names, so it parses with none and the
+        // check rejects it.
+        parsed.push({ names: [], source: source ?? null, typeOnly, unsupported: false });
+      } else if (ts.isNamedExports(exportClause)) {
+        if (source === undefined) {
+          parsed.push(
+            ...resolveLocalClause({
+              clause: exportClause,
+              exportTypeOnly: typeOnly,
+              importBindings: parseImportBindings(sourceFile),
+            }),
+          );
+        } else {
+          parsed.push({
+            names: parseExportNames(exportClause),
+            source,
+            typeOnly: typeOnly || clauseHasInlineType(exportClause),
             unsupported: false,
-          },
-        ];
+          });
+        }
+      } else {
+        unsupported.push(unsupportedSentinel());
       }
-      return source === undefined
-        ? resolveLocalClause({
-            clause,
-            exportTypeOnly: typeKeyword !== undefined,
-            importBindings,
-          })
-        : [
-            {
-              names: parseExportNames(clause),
-              source,
-              typeOnly: typeKeyword !== undefined || clauseHasInlineType(clause),
-              unsupported: false,
-            },
-          ];
-    },
-  );
+    } else if (ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)) {
+      // `export interface X {}` / `export type X = ...`: local declarations,
+      // type-only by construction, allowed.
+      parsed.push({
+        names: [statement.name.getText()],
+        source: null,
+        typeOnly: true,
+        unsupported: false,
+      });
+    } else if (hasExportModifier(statement)) {
+      // `export const/function/class/let/...`: an unreviewed statement form.
+      // Fail closed with a sentinel.
+      unsupported.push(unsupportedSentinel());
+    } else if (ts.isExportAssignment(statement)) {
+      // `export default ...`: an unreviewed statement form (no export
+      // modifier to catch above). Fail closed with a sentinel.
+      unsupported.push(unsupportedSentinel());
+    }
+  }
 
   return [...unsupported, ...parsed];
 };
+
+/** True when a statement carries an `export` modifier (local declaration exported). */
+const hasExportModifier = (statement: ts.Node): boolean =>
+  ts.canHaveModifiers(statement) &&
+  (statement.modifiers ?? []).some((modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword);
 
 /**
  * Checks a parsed surface against the package's runtime module set. Pure.
