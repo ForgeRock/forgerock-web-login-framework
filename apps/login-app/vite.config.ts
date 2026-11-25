@@ -33,7 +33,7 @@ export default defineConfig(
         '$core/constants': resolve('../../core/constants.ts'),
         '$core/server': resolve('../../core/server'),
         $package: resolve('../../packages/login-widget/dist'),
-        '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
+        '$login-framework': resolve('../../custom/components/login-framework.ts'),
         $custom: resolve('../../custom/components'),
         '$custom/*': resolve('../../custom/components/*'),
       },

@@ -70,7 +70,7 @@ export default defineConfig({
     // curated custom-component surface stays aliased to source. The IIFE
     // bundles the framework (self-contained script tag, `external: []`).
     alias: {
-      '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
+      '$login-framework': resolve('../../custom/components/login-framework.ts'),
     },
   },
   css: {

@@ -59,7 +59,7 @@ The IIFE widget bundle inlines the built core. The ES widget bundle inlines it t
 
 ## Custom Component Surface
 
-Custom components import from the curated `$login-framework` module (`experimental/custom/login-framework.ts`) and must not reach into core directly. `login-framework-surface.ts` checks that every re-export in that file is explicitly named, points inside the package's runtime modules, and uses only the reviewed external type imports. Run `check:surface` after changing the surface file.
+Custom components import from the curated `$login-framework` module (`custom/components/login-framework.ts`) and must not reach into core directly. `login-framework-surface.ts` checks that every re-export in that file is explicitly named, points inside the package's runtime modules, and uses only the reviewed external type imports. Run `check:surface` after changing the surface file.
 
 ## Key Modules
 

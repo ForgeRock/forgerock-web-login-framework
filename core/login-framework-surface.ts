@@ -14,7 +14,7 @@ import { runtimeEntries } from './collect-entries';
 
 /**
  * Import-surface parity check for the curated custom-component surface
- * (`experimental/custom/login-framework.ts`), per the Custom Components
+ * (`custom/components/login-framework.ts`), per the Custom Components
  * public API contract ("Prohibited imports"):
  *
  *   Customer components must not import `$core`, `$journey`, `$components`,
@@ -407,7 +407,7 @@ export { collectRuntimeModules };
  * the package's runtime module set, and returns every violation. The
  * imperative shell; `parseSurface` and `checkSurface` stay pure.
  *
- * @param surfaceFile absolute path to `experimental/custom/login-framework.ts`
+ * @param surfaceFile absolute path to `custom/components/login-framework.ts`
  * @param packageRoot absolute path to the `core/` package directory
  */
 export const surfaceViolations = (

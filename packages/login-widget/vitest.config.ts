@@ -11,7 +11,7 @@ export default defineConfig({
       $components: resolve('../../core/components'),
       $journey: resolve('../../core/journey'),
       $locales: resolve('../../core/locales'),
-      '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
+      '$login-framework': resolve('../../custom/components/login-framework.ts'),
     },
   },
   plugins: [

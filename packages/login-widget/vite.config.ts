@@ -60,7 +60,7 @@ export default defineConfig({
     // built dist by the frameworkCoreDist plugin above; only the
     // curated custom-component surface stays aliased to source.
     alias: {
-      '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
+      '$login-framework': resolve('../../custom/components/login-framework.ts'),
     },
   },
   css: {

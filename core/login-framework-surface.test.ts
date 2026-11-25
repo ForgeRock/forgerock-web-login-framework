@@ -19,7 +19,7 @@ import {
 } from './login-framework-surface';
 
 const packageRoot = resolve(import.meta.dirname);
-const surfaceFile = resolve(packageRoot, '../experimental/custom/login-framework.ts');
+const surfaceFile = resolve(packageRoot, '../custom/components/login-framework.ts');
 
 describe('parseSurface', () => {
   it('parses every named export with its source', () => {
@@ -326,7 +326,7 @@ export type { Maybe } from '$core/interfaces';
 });
 
 describe('surfaceViolations (real surface file)', () => {
-  it('finds zero violations in experimental/custom/login-framework.ts', () => {
+  it('finds zero violations in custom/components/login-framework.ts', () => {
     expect(surfaceViolations(surfaceFile, packageRoot)).toEqual([]);
   });
 
