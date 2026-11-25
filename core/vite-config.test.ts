@@ -96,7 +96,7 @@ describe('package Vite build options', () => {
         /\.mock\.(ts|js)$/.test(entry) ||
         entry === join('journey', 'callbacks', '_utilities', 'callback-presets.ts'),
     );
-    expect(fixtureEntries).toEqual([join('journey', '_utilities', 'step.mock.ts')]);
+    expect(fixtureEntries).toEqual([]);
   });
 
   it('exclusions match forward-slash paths (Windows-safe, no path.join separators)', () => {
@@ -111,7 +111,8 @@ describe('package Vite build options', () => {
     expect(isRuntimeModule('journey/_utilities/registry/vite-plugin.ts')).toBe(false);
     expect(isRuntimeModule('journey/_utilities/registry/registry.ts')).toBe(false);
     expect(isRuntimeModule('journey/callbacks/_utilities/callback-presets.ts')).toBe(false);
-    expect(isRuntimeModule('journey/_utilities/step.mock.ts')).toBe(true);
+    expect(isRuntimeModule('journey/_utilities/step.mock.ts')).toBe(false);
+    expect(isRuntimeModule('journey/_utilities/step.utilities.ts')).toBe(true);
   });
 
   it('the generated custom registry is never a runtime module (consumer-owned, source-resolved)', () => {

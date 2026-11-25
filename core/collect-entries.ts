@@ -50,13 +50,9 @@ const EXCLUDED_FILES = new Set([
 ]);
 
 /**
- * Test fixtures (`*.mock.ts`) never ship, except the ones the public surface
- * re-exports for consumers' own stories and mocks.
+ * Test fixtures (`*.mock.ts`) never ship. Runtime helpers consumers need
+ * live in `*.utilities.ts` files, which always ship.
  */
-const SHIPPED_MOCKS = new Set([
-  'journey/_utilities/step.mock.ts', // createJourneyStep, re-exported by login-framework.ts
-]);
-
 export function isRuntimeModule(file: string): boolean {
   if (!/\.(ts|svelte)$/.test(file)) {
     return false;
@@ -64,7 +60,7 @@ export function isRuntimeModule(file: string): boolean {
   if (file.endsWith('.test.ts') || file.endsWith('.d.ts')) {
     return false;
   }
-  if (file.endsWith('.mock.ts') && !SHIPPED_MOCKS.has(file)) {
+  if (file.endsWith('.mock.ts')) {
     return false;
   }
   if (file.endsWith('.stories.js') || file.endsWith('.story.svelte')) {

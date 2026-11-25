@@ -8,48 +8,8 @@
  **/
 
 import { callbackType } from '@forgerock/journey-client';
-import { createCallback } from '@forgerock/journey-client/types';
 
-import type {
-  BaseCallback,
-  CallbackType as JourneyClientCallbackType,
-  JourneyStep,
-  Step,
-} from '@forgerock/journey-client/types';
-
-export function createJourneyStep(payload: Step): JourneyStep {
-  const callbacks = (payload.callbacks ?? []).map(createCallback);
-
-  return {
-    payload,
-    callbacks,
-    type: 'Step' as JourneyStep['type'],
-    getCallbackOfType: <T extends BaseCallback>(type: JourneyClientCallbackType) => {
-      const callbacksOfType = callbacks.filter((x) => x.getType() === type);
-      if (callbacksOfType.length !== 1) {
-        throw new Error(
-          `Expected 1 callback of type "${type}", but found ${callbacksOfType.length}`,
-        );
-      }
-      return callbacksOfType[0] as T;
-    },
-    getCallbacksOfType: <T extends BaseCallback>(type: JourneyClientCallbackType) => {
-      return callbacks.filter((x) => x.getType() === type) as T[];
-    },
-    setCallbackValue: (type: JourneyClientCallbackType, value: unknown) => {
-      const callbacksToUpdate = callbacks.filter((x) => x.getType() === type);
-      if (callbacksToUpdate.length !== 1) {
-        throw new Error(
-          `Expected 1 callback of type "${type}", but found ${callbacksToUpdate.length}`,
-        );
-      }
-      callbacksToUpdate[0].setInputValue(value);
-    },
-    getDescription: () => payload.description,
-    getHeader: () => payload.header,
-    getStage: () => payload.stage,
-  };
-}
+import { createJourneyStep } from './step.utilities';
 
 export const step1 = createJourneyStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',

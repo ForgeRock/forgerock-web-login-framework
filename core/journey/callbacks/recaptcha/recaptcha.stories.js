@@ -10,7 +10,7 @@
 import { callbackType } from '@forgerock/journey-client';
 import { expect } from 'storybook/test';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import { invisibleGrecaptcha, visibleGrecaptcha, visibleHcaptcha } from './recaptcha.mock';
 import Recaptcha from './recaptcha.story.svelte';
 

@@ -12,7 +12,7 @@ import { expect, fn } from 'storybook/test';
 import { fireEvent, userEvent, waitFor, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import {
   multipleProvidersLocalAuthFormStep,
   multipleProvidersLocalAuthNoFormStep,

@@ -10,7 +10,7 @@
 import { expect, fireEvent, fn, userEvent, waitFor, within } from 'storybook/test';
 import { writable } from 'svelte/store';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import { initialize } from '$journey/config.store';
 import {
   adminRegInvalidInviteStep,

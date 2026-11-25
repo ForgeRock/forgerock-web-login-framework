@@ -205,7 +205,7 @@ export interface CustomWrapperProps {
  * Builds a `JourneyStep` from a raw AM `Step` payload. Use inside `.mock.ts`
  * files to produce the `step` value passed to a custom callback or stage story.
  */
-export { createJourneyStep } from '$journey/_utilities/step.mock';
+export { createJourneyStep } from '$journey/_utilities/step.utilities';
 
 /**
  * Builds the per-callback metadata array a stage component expects. Pair with
