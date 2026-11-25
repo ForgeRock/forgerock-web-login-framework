@@ -5,7 +5,7 @@
 
   DEMO COMPONENT
   ──────────────
-  Copy this file into experimental/custom/callbacks/<your-name>/ to create your
+  Copy this file into custom/components/callbacks/<your-name>/ to create your
   own callback override or extension, then rebuild with `pnpm build:widget`.
 
   HOW OVERRIDES WORK
@@ -28,7 +28,7 @@
    * exports for custom components. No need to reach into internal aliases like
    * $core, $components, or $journey directly.
    *
-   * Available exports (see experimental/custom/login-framework.ts for the full list):
+   * Available exports (see custom/components/login-framework.ts for the full list):
    */
   import { interpolate, Stacked, textToKey } from '$login-framework';
 

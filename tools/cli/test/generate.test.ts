@@ -29,8 +29,8 @@ async function createMinimalProject(dir: string): Promise<void> {
     'utf8',
   );
   // empty custom component dirs (scaffoldComponent scans these)
-  await mkdir(join(dir, 'experimental', 'custom', 'callbacks'), { recursive: true });
-  await mkdir(join(dir, 'experimental', 'custom', 'stages'), { recursive: true });
+  await mkdir(join(dir, 'custom', 'components', 'callbacks'), { recursive: true });
+  await mkdir(join(dir, 'custom', 'components', 'stages'), { recursive: true });
   // registry output dir (the framework's Vite plugin writes custom-registry.ts here)
   await mkdir(join(dir, 'core', 'journey', '_utilities', 'registry'), { recursive: true });
 }
@@ -60,8 +60,8 @@ describe('scaffoldComponent — template substitution', () => {
 
     const componentFile = join(
       tmpDir,
-      'experimental',
       'custom',
+      'components',
       'callbacks',
       'my-callback',
       'my-callback.svelte',
@@ -79,8 +79,8 @@ describe('scaffoldComponent — template substitution', () => {
 
     const componentFile = join(
       tmpDir,
-      'experimental',
       'custom',
+      'components',
       'stages',
       'my-login-stage',
       'my-login-stage.svelte',
@@ -89,8 +89,8 @@ describe('scaffoldComponent — template substitution', () => {
     const utilityContent = await readFile(
       join(
         tmpDir,
-        'experimental',
         'custom',
+        'components',
         'stages',
         'my-login-stage',
         'my-login-stage.utilities.ts',
@@ -109,16 +109,16 @@ describe('scaffoldComponent — template substitution', () => {
 
     const utilsFile = join(
       tmpDir,
-      'experimental',
       'custom',
+      'components',
       'callbacks',
       'jwt-login',
       'jwt-login.utilities.ts',
     );
     const testFile = join(
       tmpDir,
-      'experimental',
       'custom',
+      'components',
       'callbacks',
       'jwt-login',
       'jwt-login.utilities.test.ts',

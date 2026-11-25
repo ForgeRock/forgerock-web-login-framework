@@ -6,7 +6,7 @@ import { runRegistryScript, seedMissingWrappers } from './registry';
 
 interface CustomRegistryPluginOptions {
   /**
-   * Absolute path to the project root that contains `experimental/custom/` and
+   * Absolute path to the project root that contains `custom/components/` and
    * `core/`. Both consumer Vite configs (login-widget, login-app) live two
    * directories deep, so they pass `resolve('../..')`.
    */
@@ -29,16 +29,16 @@ const STALE_REGISTRY_NOTE =
 
 /**
  * Regenerates `core/journey/_utilities/registry/custom-registry.ts` by scanning
- * `experimental/custom/{stages,callbacks}/` for `@component`-annotated
+ * `custom/components/{stages,callbacks}/` for `@component`-annotated
  * Svelte files, and seeds the page header/footer wrapper files into
- * `experimental/custom/{header,footer}/` when absent. Both run at
+ * `custom/components/{header,footer}/` when absent. Both run at
  * `buildStart`; in dev, the watcher also picks up adds/removals so scaffolding
  * a new component via `ping-lf generate` needs no server restart.
  */
 export function customRegistry({ projectRoot }: CustomRegistryPluginOptions) {
   const watchedDirs = [
-    path.join(projectRoot, 'experimental', 'custom', 'callbacks'),
-    path.join(projectRoot, 'experimental', 'custom', 'stages'),
+    path.join(projectRoot, 'custom', 'components', 'callbacks'),
+    path.join(projectRoot, 'custom', 'components', 'stages'),
   ];
 
   const regenerate = () =>

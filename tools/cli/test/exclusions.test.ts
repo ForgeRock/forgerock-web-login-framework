@@ -69,7 +69,7 @@ describe('isExcluded', () => {
   it('does not exclude normal source files', () => {
     expect(isExcluded('packages/login-widget/src/lib/index.svelte')).toBe(false);
     expect(isExcluded('core/journey/_utilities/map-stage.utilities.ts')).toBe(false);
-    expect(isExcluded('experimental/custom/README.md')).toBe(false);
+    expect(isExcluded('custom/components/README.md')).toBe(false);
     expect(isExcluded('README.md')).toBe(false);
   });
 });

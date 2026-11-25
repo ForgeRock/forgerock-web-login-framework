@@ -18,7 +18,7 @@ const wrapFsCall =
 
 /**
  * Returns true if the given directory looks like an initialized framework
- * project. Checks for `package.json` combined with either an `experimental/`
+ * project. Checks for `package.json` combined with either a `custom/`
  * subdirectory or a `pnpm-workspace.yaml` file — both are reliable indicators
  * that the directory was created by `ping-lf init`.
  */
@@ -26,12 +26,12 @@ export const isFrameworkDirectory = Effect.fnUntraced(function* (dir: string) {
   const fs = yield* FileSystem.FileSystem;
   const check = (p: string) => fs.exists(path.join(dir, p)).pipe(Effect.orElseSucceed(() => false));
   const hasPkgJson = yield* check('package.json');
-  const hasExperimental = yield* check('experimental');
+  const hasCustom = yield* check('custom');
   const hasPnpmWorkspace = yield* check('pnpm-workspace.yaml');
-  return hasPkgJson && (hasExperimental || hasPnpmWorkspace);
+  return hasPkgJson && (hasCustom || hasPnpmWorkspace);
 });
 
-const PROTECTED_DIRS = ['experimental/custom/callbacks/', 'experimental/custom/stages/'] as const;
+const PROTECTED_DIRS = ['custom/components/callbacks/', 'custom/components/stages/'] as const;
 
 /**
  * Framework-shipped custom wrapper files. Each is a fixed, user-editable file
@@ -42,15 +42,15 @@ const PROTECTED_DIRS = ['experimental/custom/callbacks/', 'experimental/custom/s
  * a framework version whose app imports the wrappers still gets the defaults.
  */
 export const CUSTOM_WRAPPER_FILES = [
-  'experimental/custom/header/header.svelte',
-  'experimental/custom/footer/footer.svelte',
+  'custom/components/header/header.svelte',
+  'custom/components/footer/footer.svelte',
 ] as const;
 
 /**
  * The page elements that ship a wrapper file. `copyWrapperFiles` copies
  * `templates/wrapper/<element>.svelte` (the CLI's own shipped templates,
  * resolved like the callback/stage scaffold templates) into
- * `experimental/custom/<element>/<element>.svelte`.
+ * `custom/components/<element>/<element>.svelte`.
  *
  * The CLI never reads the framework's `core/` tree — build-time vs. runtime
  * boundary — so it owns copies of the wrapper templates instead of importing

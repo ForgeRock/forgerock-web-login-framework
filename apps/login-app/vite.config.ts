@@ -34,8 +34,8 @@ export default defineConfig(
         '$core/server': resolve('../../core/server'),
         $package: resolve('../../packages/login-widget/dist'),
         '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
-        $custom: resolve('../../experimental/custom'),
-        '$custom/*': resolve('../../experimental/custom/*'),
+        $custom: resolve('../../custom/components'),
+        '$custom/*': resolve('../../custom/components/*'),
       },
     },
     server: {
@@ -46,8 +46,8 @@ export default defineConfig(
         // credentials: true
       },
       fs: {
-        // Allow serving files from the core, widget, and experimental custom-component directories.
-        allow: ['../../core', '../../packages/login-widget', '../../experimental'],
+        // Allow serving files from the core, widget, and custom component directories.
+        allow: ['../../core', '../../packages/login-widget', '../../custom'],
       },
       hmr: {
         // Use if tunneling through Ngrok

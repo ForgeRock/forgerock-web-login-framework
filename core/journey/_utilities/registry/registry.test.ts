@@ -207,7 +207,7 @@ describe('buildRegistryContent', () => {
       registryDir,
       [
         {
-          filePath: '/repo/experimental/custom/stages/my-stage/my-stage.svelte',
+          filePath: '/repo/custom/components/stages/my-stage/my-stage.svelte',
           name: 'My Stage',
           type: 'stage',
           acceptedProps: ['callback', 'style'],
@@ -215,7 +215,7 @@ describe('buildRegistryContent', () => {
       ],
       [
         {
-          filePath: '/repo/experimental/custom/callbacks/my-cb/my-cb.svelte',
+          filePath: '/repo/custom/components/callbacks/my-cb/my-cb.svelte',
           name: 'MyCb',
           type: 'callback',
           acceptedProps: ['callback'],
@@ -224,10 +224,10 @@ describe('buildRegistryContent', () => {
     );
 
     expect(output).toContain(
-      `import StageMyStage from '../../../../experimental/custom/stages/my-stage/my-stage.svelte';`,
+      `import StageMyStage from '../../../../custom/components/stages/my-stage/my-stage.svelte';`,
     );
     expect(output).toContain(
-      `import CallbackMyCb from '../../../../experimental/custom/callbacks/my-cb/my-cb.svelte';`,
+      `import CallbackMyCb from '../../../../custom/components/callbacks/my-cb/my-cb.svelte';`,
     );
     expect(output).toContain(
       `"My Stage": { get component() { return StageMyStage; }, acceptedProps: ["callback","style"] },`,
@@ -243,7 +243,7 @@ describe('buildRegistryContent', () => {
       registryDir,
       [
         {
-          filePath: '/repo/experimental/custom/stages/foo/foo.svelte',
+          filePath: '/repo/custom/components/stages/foo/foo.svelte',
           name: 'My Login Stage',
           type: 'stage',
           acceptedProps: [],
@@ -266,13 +266,13 @@ describe('buildRegistryContent', () => {
       registryDir,
       [
         {
-          filePath: '/repo/experimental/custom/stages/a/login.svelte',
+          filePath: '/repo/custom/components/stages/a/login.svelte',
           name: 'Login',
           type: 'stage',
           acceptedProps: [],
         },
         {
-          filePath: '/repo/experimental/custom/stages/b/login.svelte',
+          filePath: '/repo/custom/components/stages/b/login.svelte',
           name: 'Login',
           type: 'stage',
           acceptedProps: [],
@@ -291,13 +291,13 @@ describe('buildRegistryContent', () => {
       registryDir,
       [
         {
-          filePath: '/repo/experimental/custom/stages/my-login/login.svelte',
+          filePath: '/repo/custom/components/stages/my-login/login.svelte',
           name: 'My Login',
           type: 'stage',
           acceptedProps: [],
         },
         {
-          filePath: '/repo/experimental/custom/stages/mylogin/login.svelte',
+          filePath: '/repo/custom/components/stages/mylogin/login.svelte',
           name: 'MyLogin',
           type: 'stage',
           acceptedProps: [],
@@ -319,13 +319,13 @@ describe('buildRegistryContent', () => {
       registryDir,
       [
         {
-          filePath: '/repo/experimental/custom/stages/a/login.svelte',
+          filePath: '/repo/custom/components/stages/a/login.svelte',
           name: 'Login',
           type: 'stage',
           acceptedProps: [],
         },
         {
-          filePath: '/repo/experimental/custom/stages/b/login.svelte',
+          filePath: '/repo/custom/components/stages/b/login.svelte',
           name: 'Login',
           type: 'stage',
           acceptedProps: [],
@@ -333,13 +333,13 @@ describe('buildRegistryContent', () => {
       ],
       [
         {
-          filePath: '/repo/experimental/custom/callbacks/x/logout.svelte',
+          filePath: '/repo/custom/components/callbacks/x/logout.svelte',
           name: 'Logout',
           type: 'callback',
           acceptedProps: [],
         },
         {
-          filePath: '/repo/experimental/custom/callbacks/y/logout.svelte',
+          filePath: '/repo/custom/components/callbacks/y/logout.svelte',
           name: 'Logout',
           type: 'callback',
           acceptedProps: [],
@@ -358,7 +358,7 @@ describe('buildRegistryContent', () => {
       registryDir,
       [
         {
-          filePath: '/repo/experimental/custom/stages/foo/foo.svelte',
+          filePath: '/repo/custom/components/stages/foo/foo.svelte',
           name: 'Foo',
           type: 'stage',
           acceptedProps: [],
@@ -366,7 +366,7 @@ describe('buildRegistryContent', () => {
       ],
       [
         {
-          filePath: '/repo/experimental/custom/callbacks/foo/foo.svelte',
+          filePath: '/repo/custom/components/callbacks/foo/foo.svelte',
           name: 'StageFoo',
           type: 'callback',
           acceptedProps: [],
@@ -398,7 +398,7 @@ describe('runRegistryScript', () => {
     type: string,
     enabled: boolean = true,
   ) => {
-    const dir = join(tmpDir, 'experimental', 'custom', kind, dirName);
+    const dir = join(tmpDir, 'custom', 'components', kind, dirName);
     await mkdir(dir, { recursive: true });
     await writeFile(
       join(dir, fileName),
@@ -432,14 +432,14 @@ describe('runRegistryScript', () => {
 
   it('ignores header and footer directories even when populated (removed types)', async () => {
     await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
-    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'brand');
+    const headerDir = join(tmpDir, 'custom', 'components', 'headers', 'brand');
     await mkdir(headerDir, { recursive: true });
     await writeFile(
       join(headerDir, 'brand.svelte'),
       '<!--\n   @component\n   Type: header\n   Name: Brand\n   Enabled: true\n   -->\n<div></div>',
       'utf8',
     );
-    const footerDir = join(tmpDir, 'experimental', 'custom', 'footers', 'legal');
+    const footerDir = join(tmpDir, 'custom', 'components', 'footers', 'legal');
     await mkdir(footerDir, { recursive: true });
     await writeFile(
       join(footerDir, 'legal.svelte'),
@@ -467,7 +467,7 @@ describe('runRegistryScript', () => {
   });
 
   it('bundles a stage file with a stray Enabled: line (tolerance, never enforced on stages)', async () => {
-    const strayDir = join(tmpDir, 'experimental', 'custom', 'stages', 'stray');
+    const strayDir = join(tmpDir, 'custom', 'components', 'stages', 'stray');
     await mkdir(strayDir, { recursive: true });
     await writeFile(
       join(strayDir, 'stray.svelte'),
@@ -512,7 +512,7 @@ describe('seedMissingWrappers', () => {
     seedMissingWrappers(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
 
   const seedPath = (element: 'header' | 'footer') =>
-    join(tmpDir, 'experimental', 'custom', element, `${element}.svelte`);
+    join(tmpDir, 'custom', 'components', element, `${element}.svelte`);
 
   const readSeed = async (element: 'header' | 'footer') => readFile(seedPath(element), 'utf8');
 
@@ -526,7 +526,7 @@ describe('seedMissingWrappers', () => {
 
   it('skips writing when a wrapper already exists (never overwrites)', async () => {
     await writeTemplates();
-    const customDir = join(tmpDir, 'experimental', 'custom', 'header');
+    const customDir = join(tmpDir, 'custom', 'components', 'header');
     await mkdir(customDir, { recursive: true });
     await writeFile(seedPath('header'), '<!-- customer-edited header -->', 'utf8');
     await run();
@@ -536,7 +536,7 @@ describe('seedMissingWrappers', () => {
 
   it('seeds the missing element while leaving the present one untouched (per-file fill-if-absent)', async () => {
     await writeTemplates();
-    const customDir = join(tmpDir, 'experimental', 'custom', 'footer');
+    const customDir = join(tmpDir, 'custom', 'components', 'footer');
     await mkdir(customDir, { recursive: true });
     await writeFile(seedPath('footer'), '<!-- customer footer -->', 'utf8');
     await run();
@@ -547,7 +547,7 @@ describe('seedMissingWrappers', () => {
 
   it('creates the element directories recursively when they were deleted entirely', async () => {
     await writeTemplates();
-    // No experimental/custom tree exists at all in tmpDir.
+    // No custom/components tree exists at all in tmpDir.
     await run();
 
     expect(await readSeed('header')).toBe('<!-- template header -->');
@@ -622,7 +622,7 @@ describe('customRegistry vite plugin', () => {
     const { customRegistry } = await import('./vite-plugin.js');
     await writePluginTemplates();
 
-    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    const stageDir = join(tmpDir, 'custom', 'components', 'stages', 'brand');
     await mkdir(stageDir, { recursive: true });
     await writeFile(
       join(stageDir, 'brand.svelte'),
@@ -635,7 +635,7 @@ describe('customRegistry vite plugin', () => {
 
     // Wrappers seeded by buildStart from the templates.
     const seededHeader = await readFile(
-      join(tmpDir, 'experimental', 'custom', 'header', 'header.svelte'),
+      join(tmpDir, 'custom', 'components', 'header', 'header.svelte'),
       'utf8',
     );
     expect(seededHeader).toBe('<!-- template header -->');
@@ -652,7 +652,7 @@ describe('customRegistry vite plugin', () => {
     expect(server.watcher.on).toHaveBeenCalledWith('all', expect.any(Function));
 
     // Add a stage component and fire the add event through the watcher listener.
-    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    const stageDir = join(tmpDir, 'custom', 'components', 'stages', 'brand');
     await mkdir(stageDir, { recursive: true });
     await writeFile(
       join(stageDir, 'brand.svelte'),
@@ -683,7 +683,7 @@ describe('customRegistry vite plugin', () => {
     (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
 
     // Add a stage file OUTSIDE the watched dirs and fire the event.
-    const outsideDir = join(tmpDir, 'experimental', 'elsewhere');
+    const outsideDir = join(tmpDir, 'custom', 'elsewhere');
     await mkdir(outsideDir, { recursive: true });
     await writeFile(
       join(outsideDir, 'stray.svelte'),
@@ -716,14 +716,14 @@ describe('customRegistry vite plugin', () => {
     // for a header file — headers/footers are no longer watched (wrappers render
     // client-side, not via the registry), so the event must NOT trigger a
     // regeneration that would pick up the stage.
-    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    const stageDir = join(tmpDir, 'custom', 'components', 'stages', 'brand');
     await mkdir(stageDir, { recursive: true });
     await writeFile(
       join(stageDir, 'brand.svelte'),
       '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
       'utf8',
     );
-    const headerDir = join(tmpDir, 'experimental', 'custom', 'headers', 'legacy');
+    const headerDir = join(tmpDir, 'custom', 'components', 'headers', 'legacy');
     await mkdir(headerDir, { recursive: true });
     await writeFile(
       join(headerDir, 'legacy.svelte'),
@@ -746,7 +746,7 @@ describe('customRegistry vite plugin', () => {
     const plugin = customRegistry({ projectRoot: tmpDir });
 
     // Seed a valid registry with one stage.
-    const stageDir = join(tmpDir, 'experimental', 'custom', 'stages', 'brand');
+    const stageDir = join(tmpDir, 'custom', 'components', 'stages', 'brand');
     await mkdir(stageDir, { recursive: true });
     await writeFile(
       join(stageDir, 'brand.svelte'),
@@ -757,7 +757,7 @@ describe('customRegistry vite plugin', () => {
     const baseline = await readFile(registryPath(), 'utf8');
 
     // Introduce a second stage with the SAME Name: — the regeneration collides.
-    const collidingDir = join(tmpDir, 'experimental', 'custom', 'stages', 'other');
+    const collidingDir = join(tmpDir, 'custom', 'components', 'stages', 'other');
     await mkdir(collidingDir, { recursive: true });
     await writeFile(
       join(collidingDir, 'other.svelte'),

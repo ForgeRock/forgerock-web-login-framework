@@ -17,12 +17,12 @@ This directory contains fully commented reference implementations of custom stag
 
    ```sh
    # Stage override
-   cp -r experimental/custom/demo/stages/custom-login \
-         experimental/custom/stages/my-login
+   cp -r custom/components/demo/stages/custom-login \
+         custom/components/stages/my-login
 
    # Callback override
-   cp -r experimental/custom/demo/callbacks/custom-name \
-         experimental/custom/callbacks/my-name
+   cp -r custom/components/demo/callbacks/custom-name \
+         custom/components/callbacks/my-name
    ```
 
 3. Update the `@component` header in the `.svelte` file (stages and callbacks only):
@@ -36,7 +36,7 @@ This directory contains fully commented reference implementations of custom stag
    pnpm build:widget   # or start pnpm dev
    ```
 
-> **Page headers and footers are different.** They are not registry components. Edit the fixed wrapper files directly at `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte`. The `header/` and `footer/` demos here are not copy-and-register templates — copy their markup and styles **into** the wrapper files, then verify with `pnpm dev` or by adding your own stories in the wrapper folders (they are yours, like `stages/` and `callbacks/`).
+> **Page headers and footers are different.** They are not registry components. Edit the fixed wrapper files directly at `custom/components/header/header.svelte` and `custom/components/footer/footer.svelte`. The `header/` and `footer/` demos here are not copy-and-register templates — copy their markup and styles **into** the wrapper files, then verify with `pnpm dev` or by adding your own stories in the wrapper folders (they are yours, like `stages/` and `callbacks/`).
 
 ## Directory layout
 
@@ -66,5 +66,5 @@ demo/
 
 > **Note:** Files under `demo/` are committed to the repository as reference material.
 > They are **not** scanned by the framework's Vite plugin and are **not** registered in
-> `custom-registry.ts`. Only files under `experimental/custom/stages/` and
-> `experimental/custom/callbacks/` are picked up by the build.
+> `custom-registry.ts`. Only files under `custom/components/stages/` and
+> `custom/components/callbacks/` are picked up by the build.

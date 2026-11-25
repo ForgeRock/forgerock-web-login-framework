@@ -85,6 +85,6 @@ export const updateCommand = Command.make(
   updateProject,
 ).pipe(
   Command.withDescription(
-    'Fetch the latest (or a specified) framework version and overwrite core files while preserving experimental/custom/.',
+    'Fetch the latest (or a specified) framework version and overwrite core files while preserving custom/components/.',
   ),
 );

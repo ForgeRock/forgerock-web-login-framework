@@ -41,8 +41,8 @@ const config = {
       // Curated public surface for custom components (stage/callback/header/footer)
       '$login-framework': path.resolve('../../experimental/custom/login-framework.ts'),
       // Fixed tracked wrapper components (header/footer) — one file per element
-      $custom: path.resolve('../../experimental/custom'),
-      '$custom/*': path.resolve('../../experimental/custom/*'),
+      $custom: path.resolve('../../custom/components'),
+      '$custom/*': path.resolve('../../custom/components/*'),
     },
   },
   server: {

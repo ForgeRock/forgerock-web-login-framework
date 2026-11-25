@@ -43,7 +43,7 @@ To scaffold your first custom component:
   ping-lf generate callback MyCallback
   ping-lf generate stage MyStage
 
-Read the authoring guide: experimental/custom/README.md
+Read the authoring guide: custom/components/README.md
 `;
 
 export interface InitProjectOptions {
@@ -102,8 +102,8 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     // ── 3. Write pnpm-workspace.yaml (omits tools/ present in upstream) ────
     yield* fs.writeFileString(path.join(resolvedDir, 'pnpm-workspace.yaml'), PNPM_WORKSPACE);
 
-    // ── 4. Scaffold experimental/custom/ ──────────────────────────────────
-    // copyWithExclusions already copies experimental/custom/demo/,
+    // ── 4. Scaffold custom/components/ ────────────────────────────────────
+    // copyWithExclusions already copies custom/components/demo/,
     // login-framework.ts, README.md, and tsconfig.json from the source.
     // Only the custom component dirs are protected (they hold user components).
     // Create them as empty dirs with .gitkeep — components come via `ping-lf generate`.
@@ -112,7 +112,7 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
       CUSTOM_COMPONENT_DIRS,
       (dir) =>
         Effect.gen(function* () {
-          const customDir = path.join(resolvedDir, 'experimental', 'custom', dir);
+          const customDir = path.join(resolvedDir, 'custom', 'components', dir);
           yield* fs.makeDirectory(customDir, { recursive: true });
           yield* fs.writeFileString(path.join(customDir, '.gitkeep'), '');
         }),

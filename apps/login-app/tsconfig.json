@@ -17,8 +17,8 @@
       "$server": ["./src/lib/server"],
       "$server/*": ["./src/lib/server/*"],
       "$login-framework": ["../../experimental/custom/login-framework.ts"],
-      "$custom": ["../../experimental/custom"],
-      "$custom/*": ["../../experimental/custom/*"],
+      "$custom": ["../../custom/components"],
+      "$custom/*": ["../../custom/components/*"],
       "$lib": ["./src/lib"],
       "$lib/*": ["./src/lib/*"]
     },

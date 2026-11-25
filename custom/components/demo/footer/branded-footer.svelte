@@ -4,14 +4,14 @@
   DEMO COMPONENT
   Page headers and footers are NOT registry components — there is no @component
   header here and none is needed. The framework renders the fixed wrapper files
-  (experimental/custom/header/header.svelte and experimental/custom/footer/footer.svelte)
+  (custom/components/header/header.svelte and custom/components/footer/footer.svelte)
   above and below the journey container. This demo shows what a branded footer
   inside that wrapper can look like.
 
   HOW TO USE
   ──────────
   Copy the markup and styles you like into
-  experimental/custom/footer/footer.svelte (the wrapper the framework renders),
+  custom/components/footer/footer.svelte (the wrapper the framework renders),
   or use this file as a visual reference in Storybook. The wrapper is the only
   file the framework renders; this demo is the worked example of what to put in it.
 

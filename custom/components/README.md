@@ -1,13 +1,11 @@
-# Custom Components (`/experimental/custom`)
-
-> 🧪 **Experimental feature.** Custom components are an early-access feature — the API may change between releases as we refine it.
+# Custom Components (`/custom/components`)
 
 This directory is the entry point for your custom journey components. Files you create here are **never overwritten by upstream framework updates** — this is where your customizations live.
 
 ## Directory structure
 
 ```
-experimental/custom/
+custom/components/
 ├── stages/
 │   └── <your-stage-name>/
 │       ├── <component>.svelte       # required
@@ -166,7 +164,7 @@ import {
 } from '$login-framework';
 ```
 
-`$login-framework` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`experimental/custom/login-framework.ts`](./login-framework.ts).
+`$login-framework` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`login-framework.ts`](./login-framework.ts).
 
 Journey Client types (callback classes, `JourneyStep`, etc.) are imported directly from `@forgerock/journey-client/types`:
 
@@ -176,7 +174,7 @@ import type { NameCallback, JourneyStep } from '@forgerock/journey-client/types'
 
 ## Hot module reloading note
 
-The framework's Vite plugin watches `experimental/custom/{stages,callbacks}/`
+The framework's Vite plugin watches `custom/components/{stages,callbacks}/`
 during `pnpm dev` and regenerates `custom-registry.ts` automatically when you
 add, remove, or rename a component file. The plugin is also loaded by
 Storybook (`.storybook/main.js`), so generating a component while only

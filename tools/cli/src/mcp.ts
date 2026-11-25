@@ -105,7 +105,7 @@ const directoryParam = Schema.optional(Schema.String).annotations({
 
 const GenerateCallbackTool = Tool.make('generate_callback', {
   description:
-    'Scaffold a new custom callback component under experimental/custom/callbacks/. Run from an initialized project root.',
+    'Scaffold a new custom callback component under custom/components/callbacks/. Run from an initialized project root.',
   parameters: {
     name: Schema.String.annotations({
       description:
@@ -122,7 +122,7 @@ const GenerateCallbackTool = Tool.make('generate_callback', {
 
 const GenerateStageTool = Tool.make('generate_stage', {
   description:
-    'Scaffold a new custom stage component under experimental/custom/stages/. Run from an initialized project root.',
+    'Scaffold a new custom stage component under custom/components/stages/. Run from an initialized project root.',
   parameters: {
     name: Schema.String.annotations({
       description:
@@ -139,7 +139,7 @@ const GenerateStageTool = Tool.make('generate_stage', {
 
 const UpdateTool = Tool.make('update', {
   description:
-    'Fetch the latest (or specified) framework version and overwrite core files while preserving experimental/custom/. Run from an initialized project root.',
+    'Fetch the latest (or specified) framework version and overwrite core files while preserving custom/components/. Run from an initialized project root.',
   parameters: {
     directory: directoryParam,
     version: Schema.optional(Schema.String).annotations({

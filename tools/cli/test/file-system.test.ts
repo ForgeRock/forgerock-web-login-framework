@@ -60,10 +60,10 @@ describe('copyWithExclusions — protected custom component paths', () => {
       // copied over customer content
       yield* Effect.promise(() =>
         Promise.all([
-          mkdir(join(sourceDir, 'experimental', 'custom', 'callbacks'), { recursive: true }),
-          mkdir(join(sourceDir, 'experimental', 'custom', 'stages'), { recursive: true }),
-          mkdir(join(sourceDir, 'experimental', 'custom', 'header'), { recursive: true }),
-          mkdir(join(sourceDir, 'experimental', 'custom', 'footer'), { recursive: true }),
+          mkdir(join(sourceDir, 'custom', 'components', 'callbacks'), { recursive: true }),
+          mkdir(join(sourceDir, 'custom', 'components', 'stages'), { recursive: true }),
+          mkdir(join(sourceDir, 'custom', 'components', 'header'), { recursive: true }),
+          mkdir(join(sourceDir, 'custom', 'components', 'footer'), { recursive: true }),
         ]),
       );
       // Framework content that IS copied (files after their dirs exist)
@@ -72,22 +72,22 @@ describe('copyWithExclusions — protected custom component paths', () => {
           writeFile(join(sourceDir, 'package.json'), '{}', 'utf8'),
           writeFile(join(sourceDir, 'README.md'), '# framework', 'utf8'),
           writeFile(
-            join(sourceDir, 'experimental', 'custom', 'callbacks', 'framework-callback.svelte'),
+            join(sourceDir, 'custom', 'components', 'callbacks', 'framework-callback.svelte'),
             '<!-- framework -->',
             'utf8',
           ),
           writeFile(
-            join(sourceDir, 'experimental', 'custom', 'stages', 'framework-stage.svelte'),
+            join(sourceDir, 'custom', 'components', 'stages', 'framework-stage.svelte'),
             '<!-- framework -->',
             'utf8',
           ),
           writeFile(
-            join(sourceDir, 'experimental', 'custom', 'header', 'header.svelte'),
+            join(sourceDir, 'custom', 'components', 'header', 'header.svelte'),
             '<!-- framework header -->',
             'utf8',
           ),
           writeFile(
-            join(sourceDir, 'experimental', 'custom', 'footer', 'footer.svelte'),
+            join(sourceDir, 'custom', 'components', 'footer', 'footer.svelte'),
             '<!-- framework footer -->',
             'utf8',
           ),
@@ -102,25 +102,25 @@ describe('copyWithExclusions — protected custom component paths', () => {
       // Customer content already in the target (what a customer project owns)
       yield* Effect.promise(() =>
         Promise.all([
-          mkdir(join(targetDir, 'experimental', 'custom', 'callbacks'), { recursive: true }),
-          mkdir(join(targetDir, 'experimental', 'custom', 'stages'), { recursive: true }),
-          mkdir(join(targetDir, 'experimental', 'custom', 'header'), { recursive: true }),
+          mkdir(join(targetDir, 'custom', 'components', 'callbacks'), { recursive: true }),
+          mkdir(join(targetDir, 'custom', 'components', 'stages'), { recursive: true }),
+          mkdir(join(targetDir, 'custom', 'components', 'header'), { recursive: true }),
         ]),
       );
       yield* Effect.promise(() =>
         Promise.all([
           writeFile(
-            join(targetDir, 'experimental', 'custom', 'callbacks', 'customer-callback.svelte'),
+            join(targetDir, 'custom', 'components', 'callbacks', 'customer-callback.svelte'),
             '<!-- customer -->',
             'utf8',
           ),
           writeFile(
-            join(targetDir, 'experimental', 'custom', 'stages', 'customer-stage.svelte'),
+            join(targetDir, 'custom', 'components', 'stages', 'customer-stage.svelte'),
             '<!-- customer -->',
             'utf8',
           ),
           writeFile(
-            join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'),
+            join(targetDir, 'custom', 'components', 'header', 'header.svelte'),
             '<!-- customer header -->',
             'utf8',
           ),
@@ -133,14 +133,14 @@ describe('copyWithExclusions — protected custom component paths', () => {
 
       // Customer-edited wrapper file survives untouched
       const customerHeader = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
       );
       expect(customerHeader).toBe('<!-- customer header -->');
 
       // None of the framework's protected-dir components landed: each read rejects
       const frameworkFiles = [
-        join(targetDir, 'experimental', 'custom', 'callbacks', 'framework-callback.svelte'),
-        join(targetDir, 'experimental', 'custom', 'stages', 'framework-stage.svelte'),
+        join(targetDir, 'custom', 'components', 'callbacks', 'framework-callback.svelte'),
+        join(targetDir, 'custom', 'components', 'stages', 'framework-stage.svelte'),
       ];
       for (const file of frameworkFiles) {
         const exit = yield* Effect.exit(Effect.promise(() => readFile(file, 'utf8')));
@@ -151,7 +151,7 @@ describe('copyWithExclusions — protected custom component paths', () => {
       // Backfilling absent wrappers is copyWrapperFiles' job, not the copy guard's.
       const footerExit = yield* Effect.exit(
         Effect.promise(() =>
-          readFile(join(targetDir, 'experimental', 'custom', 'footer', 'footer.svelte'), 'utf8'),
+          readFile(join(targetDir, 'custom', 'components', 'footer', 'footer.svelte'), 'utf8'),
         ),
       );
       expect(Exit.isFailure(footerExit)).toBe(true);
@@ -208,10 +208,10 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
       yield* copyWrapperFiles(targetDir, templatesDir).pipe(Effect.provide(NodeContext.layer));
 
       const header = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
       );
       const footer = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'experimental', 'custom', 'footer', 'footer.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'footer', 'footer.svelte'), 'utf8'),
       );
       expect(header).toBe('<!-- framework header -->');
       expect(footer).toBe('<!-- framework footer -->');
@@ -223,11 +223,11 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
       yield* seedWrapperTemplates();
 
       yield* Effect.promise(() =>
-        mkdir(join(targetDir, 'experimental', 'custom', 'header'), { recursive: true }),
+        mkdir(join(targetDir, 'custom', 'components', 'header'), { recursive: true }),
       );
       yield* Effect.promise(() =>
         writeFile(
-          join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'),
+          join(targetDir, 'custom', 'components', 'header', 'header.svelte'),
           '<!-- customer header -->',
           'utf8',
         ),
@@ -236,10 +236,10 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
       yield* copyWrapperFiles(targetDir, templatesDir).pipe(Effect.provide(NodeContext.layer));
 
       const header = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
       );
       const footer = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'experimental', 'custom', 'footer', 'footer.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'footer', 'footer.svelte'), 'utf8'),
       );
       expect(header).toBe('<!-- customer header -->');
       expect(footer).toBe('<!-- framework footer -->');
@@ -256,7 +256,7 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
 
       const headerExit = yield* Effect.exit(
         Effect.promise(() =>
-          readFile(join(targetDir, 'experimental', 'custom', 'header', 'header.svelte'), 'utf8'),
+          readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
         ),
       );
       expect(Exit.isFailure(headerExit)).toBe(true);
@@ -272,8 +272,8 @@ describe('init scaffold + update guard coverage', () => {
     // can never overwrite customer edits to them.
     expect([...CUSTOM_COMPONENT_DIRS]).toEqual(['callbacks', 'stages']);
     expect([...CUSTOM_WRAPPER_FILES]).toEqual([
-      'experimental/custom/header/header.svelte',
-      'experimental/custom/footer/footer.svelte',
+      'custom/components/header/header.svelte',
+      'custom/components/footer/footer.svelte',
     ]);
   });
 
@@ -283,8 +283,8 @@ describe('init scaffold + update guard coverage', () => {
     // path: tools/cli cannot depend on core/.
     expect([...WRAPPER_TEMPLATE_ELEMENTS]).toEqual(['header', 'footer']);
     expect([...CUSTOM_WRAPPER_FILES]).toEqual([
-      'experimental/custom/header/header.svelte',
-      'experimental/custom/footer/footer.svelte',
+      'custom/components/header/header.svelte',
+      'custom/components/footer/footer.svelte',
     ]);
   });
 });

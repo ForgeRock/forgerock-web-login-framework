@@ -7,7 +7,7 @@ module.exports = {
     '../../core/dist/**/*.js',
     '!../../core/node_modules/**',
     '../../packages/login-widget/src/**/*.{html,js,svelte,ts}',
-    '../../experimental/custom/**/*.{html,js,svelte,ts}',
+    '../../custom/components/**/*.{html,js,svelte,ts}',
   ],
   darkMode: 'class',
   presets: [require('../../themes/default/config.cjs')],

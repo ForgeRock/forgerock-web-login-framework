@@ -10,7 +10,7 @@ import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../error
 import { expandTilde } from '../services/file-system.js';
 import { toPascalCase } from '../utils.js';
 
-const CUSTOM_DIR = 'experimental/custom';
+const CUSTOM_DIR = 'custom/components';
 
 /**
  * Converts a PascalCase name to a kebab-case slug.
@@ -173,7 +173,7 @@ const generateCallbackCommand = Command.make(
   ({ name }) => scaffoldComponent('callback', name),
 ).pipe(
   Command.withDescription(
-    'Scaffold a new custom callback component under experimental/custom/callbacks/.',
+    'Scaffold a new custom callback component under custom/components/callbacks/.',
   ),
 );
 
@@ -188,9 +188,7 @@ const generateStageCommand = Command.make(
   },
   ({ name }) => scaffoldComponent('stage', name),
 ).pipe(
-  Command.withDescription(
-    'Scaffold a new custom stage component under experimental/custom/stages/.',
-  ),
+  Command.withDescription('Scaffold a new custom stage component under custom/components/stages/.'),
 );
 
 export const generateCommand = Command.make('generate', {}, () =>

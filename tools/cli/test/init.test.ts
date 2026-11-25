@@ -40,9 +40,9 @@ afterEach(async () => {
 });
 
 describe('isFrameworkDirectory', () => {
-  it('returns true for a dir with package.json + experimental/', async () => {
+  it('returns true for a dir with package.json + custom/', async () => {
     await writeFile(join(tmpDir, 'package.json'), JSON.stringify({ name: 'my-project' }));
-    await mkdir(join(tmpDir, 'experimental'), { recursive: true });
+    await mkdir(join(tmpDir, 'custom'), { recursive: true });
 
     const result = await provide(isFrameworkDirectory(tmpDir));
     expect(result).toBe(true);
@@ -58,7 +58,7 @@ describe('isFrameworkDirectory', () => {
 
   it('returns true for a dir with all three indicators', async () => {
     await writeFile(join(tmpDir, 'package.json'), JSON.stringify({ name: 'my-project' }));
-    await mkdir(join(tmpDir, 'experimental'), { recursive: true });
+    await mkdir(join(tmpDir, 'custom'), { recursive: true });
     await writeFile(join(tmpDir, 'pnpm-workspace.yaml'), "packages:\n  - 'packages/*'\n");
 
     const result = await provide(isFrameworkDirectory(tmpDir));
@@ -77,8 +77,8 @@ describe('isFrameworkDirectory', () => {
     expect(result).toBe(false);
   });
 
-  it('returns false for experimental/ present but no package.json', async () => {
-    await mkdir(join(tmpDir, 'experimental'), { recursive: true });
+  it('returns false for custom/ present but no package.json', async () => {
+    await mkdir(join(tmpDir, 'custom'), { recursive: true });
 
     const result = await provide(isFrameworkDirectory(tmpDir));
     expect(result).toBe(false);
@@ -114,8 +114,8 @@ describe('initProject — wrapper files + scaffold dirs', () => {
 
   const seedFrameworkSource = async () => {
     await writeFile(join(sourceDir, 'package.json'), '{}', 'utf8');
-    await mkdir(join(sourceDir, 'experimental', 'custom', 'callbacks'), { recursive: true });
-    await mkdir(join(sourceDir, 'experimental', 'custom', 'stages'), { recursive: true });
+    await mkdir(join(sourceDir, 'custom', 'components', 'callbacks'), { recursive: true });
+    await mkdir(join(sourceDir, 'custom', 'components', 'stages'), { recursive: true });
     // Wrapper content comes from the CLI's own templates/wrapper/ dir (resolved
     // inside the CLI, not from the framework source tree) — no core/ stub needed.
   };
@@ -130,16 +130,16 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     // callbacks/stages scaffolded with .gitkeep
     for (const dir of ['callbacks', 'stages']) {
       await expect(
-        readFile(join(targetDir, 'experimental', 'custom', dir, '.gitkeep'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', dir, '.gitkeep'), 'utf8'),
       ).resolves.toBe('');
     }
     // headers/ and footers/ (registry-era dirs) are NOT scaffolded
-    await expect(access(join(targetDir, 'experimental', 'custom', 'headers'))).rejects.toThrow();
-    await expect(access(join(targetDir, 'experimental', 'custom', 'footers'))).rejects.toThrow();
+    await expect(access(join(targetDir, 'custom', 'components', 'headers'))).rejects.toThrow();
+    await expect(access(join(targetDir, 'custom', 'components', 'footers'))).rejects.toThrow();
     // wrapper files placed from the CLI's own wrapper templates
     for (const element of ['header', 'footer']) {
       const wrapper = await readFile(
-        join(targetDir, 'experimental', 'custom', element, `${element}.svelte`),
+        join(targetDir, 'custom', 'components', element, `${element}.svelte`),
         'utf8',
       );
       expect(wrapper.length).toBeGreaterThan(0);
