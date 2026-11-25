@@ -33,6 +33,7 @@ describe('runtime registry store', () => {
 
   it('starts empty', () => {
     expect(get(runtimeRegistryStore)).toEqual({
+      status: 'idle',
       stages: {},
       callbacks: {},
       header: null,
@@ -64,6 +65,7 @@ describe('runtime registry store', () => {
     setRuntimeRegistries({ stages: { Login: entry() }, header: entry() });
 
     expect(get(runtimeRegistryStore)).toEqual({
+      status: 'loaded',
       stages: { Login: entry() },
       callbacks: {},
       header: entry(),
@@ -76,6 +78,7 @@ describe('runtime registry store', () => {
     resetRuntimeRegistries();
 
     expect(get(runtimeRegistryStore)).toEqual({
+      status: 'idle',
       stages: {},
       callbacks: {},
       header: null,

@@ -37,6 +37,7 @@ describe('loadCustomBundle', () => {
 
     expect(returned).toEqual({ ...bundle, header: undefined, footer: undefined });
     expect(getRuntimeRegistries()).toEqual({
+      status: 'loaded',
       ...bundle,
       header: null,
       footer: null,
@@ -58,6 +59,7 @@ describe('loadCustomBundle', () => {
     );
 
     expect(getRuntimeRegistries()).toEqual({
+      status: 'idle',
       stages: {},
       callbacks: {},
       header: null,

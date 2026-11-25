@@ -516,10 +516,10 @@ describe('widgetApiFactory', () => {
   });
 
   describe('configure() — customComponents bundle', () => {
-    it('loads the bundle from the configured url', async () => {
+    it('kicks the bundle load from the configured url without awaiting it', async () => {
       const loadBundleMock = vi.fn(async () => ({ callbacks: {} }));
-      vi.doMock('$journey/_utilities/registry/load-custom-bundle.effects', () => ({
-        loadCustomBundle: loadBundleMock,
+      vi.doMock('./configure-custom-bundle.effects', () => ({
+        configureCustomBundle: loadBundleMock,
       }));
 
       try {
@@ -529,19 +529,20 @@ describe('widgetApiFactory', () => {
           customComponents: { url: 'https://host/custom/bundle.js' },
         });
 
-        expect(loadBundleMock).toHaveBeenCalledWith('https://host/custom/bundle.js');
+        expect(loadBundleMock).toHaveBeenCalledWith({
+          url: 'https://host/custom/bundle.js',
+        });
       } finally {
-        vi.doUnmock('$journey/_utilities/registry/load-custom-bundle.effects');
+        vi.doUnmock('./configure-custom-bundle.effects');
       }
     });
 
-    it('a failed bundle load logs but still resolves configure()', async () => {
-      vi.doMock('$journey/_utilities/registry/load-custom-bundle.effects', () => ({
-        loadCustomBundle: vi.fn(async () => {
+    it('a failed bundle load does not block configure()', async () => {
+      vi.doMock('./configure-custom-bundle.effects', () => ({
+        configureCustomBundle: vi.fn(async () => {
           throw new Error('Failed to load Custom Component bundle from "https://x/b.js": 404');
         }),
       }));
-      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
 
       try {
         const api = await importSubject();
@@ -551,13 +552,8 @@ describe('widgetApiFactory', () => {
             customComponents: { url: 'https://host/missing/bundle.js' },
           }),
         ).resolves.toBeUndefined();
-
-        expect(consoleError).toHaveBeenCalledWith(
-          expect.stringContaining('Failed to load Custom Component bundle'),
-        );
       } finally {
-        vi.doUnmock('$journey/_utilities/registry/load-custom-bundle.effects');
-        consoleError.mockRestore();
+        vi.doUnmock('./configure-custom-bundle.effects');
       }
     });
   });

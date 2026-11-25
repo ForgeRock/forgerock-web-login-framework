@@ -5,5 +5,8 @@ packages:
   - 'themes'
   - 'tools/*'
 
+catalog:
+  svelte: ^5.57.3
+
 overrides:
   vite>rollup: 'npm:@rollup/wasm-node'

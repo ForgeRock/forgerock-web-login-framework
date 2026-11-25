@@ -151,11 +151,35 @@ describe('widget.config — customComponentsConfigSchema', () => {
     });
   });
 
+  it('parses a manifest URL', () => {
+    expect(
+      customComponentsConfigSchema.parse({ manifest: 'https://host/api/components/manifest' }),
+    ).toEqual({
+      manifest: 'https://host/api/components/manifest',
+    });
+  });
+
+  it('parses url and manifest together', () => {
+    expect(
+      customComponentsConfigSchema.parse({
+        url: 'https://host/custom/bundle.js',
+        manifest: 'https://host/api/components/manifest',
+      }),
+    ).toEqual({
+      url: 'https://host/custom/bundle.js',
+      manifest: 'https://host/api/components/manifest',
+    });
+  });
+
   it('rejects a non-URL', () => {
     expect(() => customComponentsConfigSchema.parse({ url: 'not-a-url' })).toThrow();
   });
 
-  it('rejects a missing url', () => {
+  it('rejects a non-URL manifest', () => {
+    expect(() => customComponentsConfigSchema.parse({ manifest: 'not-a-url' })).toThrow();
+  });
+
+  it('rejects a config with neither url nor manifest', () => {
     expect(() => customComponentsConfigSchema.parse({})).toThrow();
   });
 

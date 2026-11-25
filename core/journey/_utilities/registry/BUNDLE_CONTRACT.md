@@ -113,7 +113,7 @@ the map to redirect.
 | Built by          | The host app's own Vite config                                        | Publish pipeline (Component API `publish`)                                              |
 | Framework imports | Shared with the host (same Rollup invocation)                         | `external: [/^svelte/, /^@forgerock/]` → bare specifiers + import map                   |
 | Deployed as       | Static file served by the app                                         | `{commitSha}.bundle.js` beside component records (see the IAM-12142 traceability spike) |
-| Consumed via      | `PUBLIC_COMPONENT_BUNDLE_URL` (app) / `customComponents.url` (widget) | Same option, URL points at the served artifact                                          |
+| Consumed via      | `customComponents.url` (widget) / the app's manifest resolution (app) | Same option, URL points at the served artifact                                          |
 
 Naming: the publish pipeline writes `bundle.js` today; the traceability
 decision (IAM-12142) is `{commitSha}.bundle.js` so a deployment can be traced
@@ -125,9 +125,13 @@ to the commit that produced it.
   fetched and registered during `configure()`, before any journey starts. A
   failed load is **non-fatal**: it is logged to `console.error` and the
   journey proceeds on core (and compile-time custom) components.
-- **Login App** — `PUBLIC_COMPONENT_BUNDLE_URL` env var. Each page loads the
-  bundle once before starting a journey (login, register). Same non-fatal
-  behavior; a load failure never blocks login.
+- **Login App** — the bundle URL is resolved at runtime from the app's
+  `/api/components/manifest` endpoint (no env var), so a publish is picked up
+  on the next page load with no restart. Each page loads the bundle once
+  before starting a journey (login, register); the load is fire-and-forget and
+  gated reactively on the store's `status` lifecycle (`idle` → `loading` →
+  `loaded`/`failed`). Same non-fatal behavior; a load failure never blocks
+  login — the journey renders core components.
 
 ## Precedence
 

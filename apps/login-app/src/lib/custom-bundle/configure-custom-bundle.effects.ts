@@ -7,31 +7,53 @@
  *
  * **/
 
-import { env } from '$env/dynamic/public';
+import { get } from 'svelte/store';
+
 import { loadCustomBundle } from '$journey/_utilities/registry/load-custom-bundle.effects';
+import {
+  failBundleLoad,
+  runtimeRegistryStore,
+  startBundleLoad,
+} from '$journey/_utilities/registry/runtime-registry.store';
 
-import type { CustomComponentBundle } from '$journey/_utilities/registry/registry.interfaces';
-
-let loadPromise: Promise<CustomComponentBundle | null> | null = null;
+/** The manifest endpoint that publishes the latest bundle URL. Always same-origin. */
+const MANIFEST_PATH = '/api/components/manifest';
 
 /**
- * Loads the configured Custom Component bundle exactly once per page session,
- * before a journey starts. A failed load must not block login: the journey
- * renders core components and the error is logged for the operator.
+ * Loads the latest published Custom Component bundle exactly once per page
+ * session, before a journey starts. Fire-and-forget: the store transition IS
+ * the observer notification — `setRuntimeRegistries` flips the lifecycle to
+ * `'loaded'`, `failBundleLoad` to `'failed'`, and pages react via
+ * `bundleSettled`. A failed load must not block login: the journey renders
+ * core components and the error is logged for the operator.
  *
- *   PUBLIC_COMPONENT_BUNDLE_URL unset          →  returns null (nothing loaded)
- *   bundle loads and validates                 →  returns the bundle contents
- *   fetch or validation fails                  →  logs, returns null
+ *   store status 'idle'    →  starts the load
+ *   store status otherwise →  no-op (in flight or settled)
  */
-export function configureCustomBundle(): Promise<CustomComponentBundle | null> {
-  const url = env.PUBLIC_COMPONENT_BUNDLE_URL;
-  if (!url) {
-    return Promise.resolve(null);
+export function configureCustomBundle(): void {
+  if (get(runtimeRegistryStore).status !== 'idle') {
+    return;
   }
-  loadPromise ??= loadCustomBundle(url).catch((cause: unknown) => {
+  startBundleLoad();
+  void settleBundle();
+}
+
+async function settleBundle(): Promise<void> {
+  try {
+    const response = await fetch(MANIFEST_PATH);
+    if (!response.ok) {
+      failBundleLoad();
+      return;
+    }
+    const manifest: { componentsBundle?: string } = await response.json();
+    const url = manifest.componentsBundle;
+    if (!url) {
+      failBundleLoad();
+      return;
+    }
+    await loadCustomBundle(url);
+  } catch (cause: unknown) {
     console.error(`[login-app] ${String(cause)}`);
-    loadPromise = null;
-    return null;
-  });
-  return loadPromise;
+    failBundleLoad();
+  }
 }

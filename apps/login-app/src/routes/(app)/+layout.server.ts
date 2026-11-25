@@ -9,17 +9,17 @@
 
 import { error } from '@sveltejs/kit';
 
-import { env as privateEnv } from '$env/dynamic/private';
-import { env as publicEnv } from '$env/dynamic/public';
+import { env } from '$env/dynamic/private';
+import { getComponentBundleImportMap } from '$server/component-bundle-import-map.effects';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
 import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
 
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url }) => {
-  const amUrl = privateEnv.FR_AM_URL;
-  const wellknownUrl = privateEnv.FR_AM_WELLKNOWN_URL;
-  const idmBaseUrl = privateEnv.FR_IDM_URL ?? amUrl;
+  const amUrl = env.FR_AM_URL;
+  const wellknownUrl = env.FR_AM_WELLKNOWN_URL;
+  const idmBaseUrl = env.FR_IDM_URL ?? amUrl;
 
   if (!amUrl || !wellknownUrl) {
     throw error(
@@ -45,7 +45,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
   // A relative FR_AM_WELLKNOWN_URL resolves against the request origin so the
   // browser fetches discovery from whichever host the user came in on (tenant
   // FQDN or custom domain) instead of a hard-coded AM FQDN.
-  const configuredRealm = (privateEnv.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
+  const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
   const wellknown = new URL(
     realmPath === configuredRealm
       ? wellknownUrl
@@ -55,7 +55,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     url.origin,
   ).toString();
 
-  const journeyName = url.searchParams.get('journey') ?? privateEnv.FR_AM_JOURNEY_LOGIN ?? null;
+  const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {
     theme: idmTheme,
     themeCatalog,
@@ -71,7 +71,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     themeCatalog,
     realmPath,
     wellknown,
-    fallbackJourney: privateEnv.FR_AM_JOURNEY_LOGIN ?? null,
-    componentBundleUrl: publicEnv.PUBLIC_COMPONENT_BUNDLE_URL ?? null,
+    fallbackJourney: env.FR_AM_JOURNEY_LOGIN ?? null,
+    bundleImportMap: getComponentBundleImportMap(),
   };
 };

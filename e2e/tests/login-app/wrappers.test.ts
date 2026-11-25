@@ -12,8 +12,8 @@ import { expect, test } from '@playwright/test';
 import { password, username } from '../utilities/demo-user.js';
 
 /**
- * SDKS-5236: the login-app renders two fixed, user-editable wrapper files
- * (experimental/custom/header/header.svelte + footer/footer.svelte) around the
+ * SDKS-5236: the login-app renders two fixed wrapper components
+ * (core/components/wrappers/header.svelte + footer.svelte) around the
  * journey container in (app)/+page.svelte. The wrappers mount client-side only:
  * the first journey step latches `wrappersVisible`, and they then stay mounted
  * through step nulling, journey switches, and the completion redirect state.
@@ -24,13 +24,14 @@ import { password, username } from '../utilities/demo-user.js';
  * not the honest contract. journeyName is observed on the framework-owned
  * container attribute `data-journey-name`, which binds the same reactive
  * variable passed as the wrapper prop — user wrapper markup is free to change,
- * so the test must not depend on it.
+ * so the test must not depend on it. A Custom Component bundle entry
+ * ('header'/'footer') replaces the default wrapper at render time.
  *
  * Selector: div.tw_shrink-0 is the wrapper container (exactly two instances on
  * the (app) route, above/below <main>). Bare header/footer selectors collide
  * with stage-internal <header id="genericStepHeader"> elements, and role-based
- * banner/contentinfo selectors break legitimately if a customer replaces the
- * seed files with non-header/footer markup.
+ * banner/contentinfo selectors break legitimately if a bundle replaces the
+ * wrapper with non-header/footer markup.
  *
  * This file runs on the shared chromium project (port 3000): the filename must
  * avoid config-error|idm-theme|default-journey, and test titles must avoid

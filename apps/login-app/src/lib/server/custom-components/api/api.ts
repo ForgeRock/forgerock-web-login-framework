@@ -7,14 +7,17 @@
  *
  * */
 
-import { Effect } from 'effect';
+import { FileSystem, Path } from '@effect/platform';
+import { Effect, Schema } from 'effect';
 
 import { pickFields } from '../fields.utilities';
 import { type ComponentLogger, Log } from '../log';
-import { BUNDLE_ENTRY_PATH, Publish } from '../publish/publish';
+import { BUNDLE_ENTRY_PATH, BUNDLE_MANIFEST_PATH, Publish } from '../publish/publish';
+import { componentConfigDir } from '../settings';
 import { Store } from '../store/store';
 import { auditMutation, guardRequest, readBody } from './api.effects';
 import {
+  BundleManifestSchema,
   CreateComponentRequestSchema,
   HttpError,
   PublishRequestSchema,
@@ -225,5 +228,42 @@ export const publishComponent = (
           return new Response(null, { status: 204 });
         }),
       );
+    }),
+  );
+
+/**
+ * Returns the runtime resource manifest: the URL a host imports for the latest bundle,
+ * as committed by the last publish.
+ *
+ * @returns 200 with the manifest JSON, 404 when disabled or nothing is published.
+ */
+export const getBundleManifest = (): Effect.Effect<
+  Response,
+  never,
+  FileSystem.FileSystem | Path.Path
+> =>
+  toResponse(
+    Effect.gen(function* () {
+      const configDir = yield* componentConfigDir;
+      const fileSystem = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const pointer = yield* fileSystem
+        .readFileString(path.join(configDir, BUNDLE_MANIFEST_PATH))
+        .pipe(
+          Effect.mapError(
+            (cause) =>
+              new HttpError({ status: 404, message: 'No published component bundle', cause }),
+          ),
+          Effect.flatMap((text) =>
+            Effect.mapError(
+              Schema.decodeUnknown(Schema.parseJson(BundleManifestSchema))(text),
+              () => new HttpError({ status: 500, message: 'Published bundle manifest is invalid' }),
+            ),
+          ),
+        );
+      const manifest = Schema.encodeSync(BundleManifestSchema)(pointer);
+      return Response.json(manifest, {
+        headers: { 'cache-control': 'no-cache' },
+      });
     }),
   );

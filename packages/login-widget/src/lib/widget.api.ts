@@ -20,9 +20,9 @@ import { createOidcClientStore } from '$core/oidc/oidc.store';
 import { protectStore } from '$core/protect/protect.store';
 import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
-import { loadCustomBundle } from '$journey/_utilities/registry/load-custom-bundle.effects';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
+import { configureCustomBundle } from './configure-custom-bundle.effects';
 import {
   customComponentsConfigSchema,
   loggerConfigSchema,
@@ -93,11 +93,7 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
       options.customComponents && customComponentsConfigSchema.parse(options.customComponents);
 
     if (customComponents) {
-      try {
-        await loadCustomBundle(customComponents.url);
-      } catch (cause) {
-        console.error(`[login-widget] ${String(cause)}`);
-      }
+      configureCustomBundle(customComponents);
     }
 
     // initialize journey client

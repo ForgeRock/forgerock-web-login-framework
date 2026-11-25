@@ -7,89 +7,152 @@
  *
  * **/
 
+import { get } from 'svelte/store';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const resetRuntimeRegistry = async () => {
-  const { resetRuntimeRegistries } = await import(
-    '$journey/_utilities/registry/runtime-registry.store'
-  );
-  resetRuntimeRegistries();
-};
-
-const loadModule = async (publicEnv: Record<string, string>, loader: object) => {
-  vi.doMock('$env/dynamic/public', () => ({ env: publicEnv }));
-  vi.doMock('$env/dynamic/private', () => ({ env: publicEnv }));
+const loadModule = async (manifestResponse: Response | null, loader: object) => {
+  // A Response body can only be read once, so each fetch call gets a fresh Response.
+  const makeResponse = (): Promise<Response | null> =>
+    manifestResponse === null
+      ? Promise.resolve(null)
+      : manifestResponse
+          .clone()
+          .text()
+          .then((text) => new Response(text, { status: manifestResponse.status }));
+  const fetchMock = vi.fn(async () => {
+    const response = await makeResponse();
+    if (response === null) {
+      throw new TypeError('Network error');
+    }
+    return response;
+  });
+  vi.stubGlobal('fetch', fetchMock);
   vi.doMock('$journey/_utilities/registry/load-custom-bundle.effects', () => loader);
   try {
-    return await import('./configure-custom-bundle.effects');
+    const effects = await import('./configure-custom-bundle.effects');
+    const store = await import('$journey/_utilities/registry/runtime-registry.store');
+    store.resetRuntimeRegistries();
+    return {
+      ...effects,
+      resetRuntimeRegistries: store.resetRuntimeRegistries,
+      registryState: () => get(store.runtimeRegistryStore),
+      fetchMock,
+    };
   } finally {
-    vi.doUnmock('$env/dynamic/public');
-    vi.doUnmock('$env/dynamic/private');
     vi.doUnmock('$journey/_utilities/registry/load-custom-bundle.effects');
   }
 };
 
 describe('configureCustomBundle', () => {
-  beforeEach(async () => {
-    // Clear the cached module instance so each test's doMock of the env and
-    // loader applies to a fresh import.
+  beforeEach(() => {
+    // Clear the cached module instance so each test's doMock of the loader applies
+    // to a fresh import, and start every test from a clean fetch/registry state
+    // (the reset itself runs on the per-test store instance inside loadModule).
     vi.resetModules();
-    await resetRuntimeRegistry();
+    vi.unstubAllGlobals();
   });
 
-  it('returns null and loads nothing when the env var is unset', async () => {
+  it('lands on failed and loads nothing when the manifest is unreachable', async () => {
     const loader = { loadCustomBundle: vi.fn() };
-    const { configureCustomBundle: load } = await loadModule({}, loader);
+    const {
+      configureCustomBundle: configure,
+      registryState,
+      fetchMock,
+    } = await loadModule(null, loader);
 
-    await expect(load()).resolves.toBeNull();
+    configure();
+    await vi.waitFor(() => expect(registryState().status).toBe('failed'));
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/components/manifest');
     expect(loader.loadCustomBundle).not.toHaveBeenCalled();
   });
 
-  it('loads the bundle from the env URL', async () => {
+  it('lands on failed and loads nothing when the manifest reports the API disabled', async () => {
+    const loader = { loadCustomBundle: vi.fn() };
+    const { configureCustomBundle: configure, registryState } = await loadModule(
+      new Response(JSON.stringify({ error: 'Not found' }), { status: 404 }),
+      loader,
+    );
+
+    configure();
+    await vi.waitFor(() => expect(registryState().status).toBe('failed'));
+    expect(loader.loadCustomBundle).not.toHaveBeenCalled();
+  });
+
+  it('resolves the bundle URL from the manifest, loads it, and lands on loaded', async () => {
     const bundle = { callbacks: {} };
-    const loader = { loadCustomBundle: vi.fn(async () => bundle) };
-    const { configureCustomBundle: load } = await loadModule(
-      { PUBLIC_COMPONENT_BUNDLE_URL: 'https://host/custom/bundle.js' },
+    // Mirrors the real loader's contract: a successful load registers the bundle.
+    const loader = {
+      loadCustomBundle: vi.fn(async () => {
+        const store = await import('$journey/_utilities/registry/runtime-registry.store');
+        store.setRuntimeRegistries(bundle);
+        return bundle;
+      }),
+    };
+    const { configureCustomBundle: configure, registryState } = await loadModule(
+      new Response(JSON.stringify({ componentsBundle: '/api/components/bundle' }), { status: 200 }),
       loader,
     );
 
-    await expect(load()).resolves.toBe(bundle);
-    expect(loader.loadCustomBundle).toHaveBeenCalledWith('https://host/custom/bundle.js');
+    configure();
+    await vi.waitFor(() => expect(registryState().status).toBe('loaded'));
+
+    expect(loader.loadCustomBundle).toHaveBeenCalledWith('/api/components/bundle');
   });
 
-  it('loads only once per page session (subsequent calls reuse the promise)', async () => {
-    const loader = {
-      loadCustomBundle: vi.fn(async () => ({ callbacks: {} })),
-    };
-    const { configureCustomBundle: load } = await loadModule(
-      { PUBLIC_COMPONENT_BUNDLE_URL: 'https://host/custom/bundle.js' },
+  it('lands on failed when the manifest has no componentsBundle key', async () => {
+    const loader = { loadCustomBundle: vi.fn() };
+    const { configureCustomBundle: configure, registryState } = await loadModule(
+      new Response(JSON.stringify({ unrelated: 'key' }), { status: 200 }),
       loader,
     );
 
-    await load();
-    await load();
-
-    expect(loader.loadCustomBundle).toHaveBeenCalledTimes(1);
+    configure();
+    await vi.waitFor(() => expect(registryState().status).toBe('failed'));
+    expect(loader.loadCustomBundle).not.toHaveBeenCalled();
   });
 
-  it('logs a failed load, returns null, and retries on the next call', async () => {
-    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+  it('loads only once per page session (subsequent calls are no-ops)', async () => {
     const loader = {
-      loadCustomBundle: vi
-        .fn()
-        .mockRejectedValueOnce(new Error('Failed to load Custom Component bundle'))
-        .mockResolvedValueOnce({ callbacks: {} }),
+      loadCustomBundle: vi.fn(async () => {
+        const store = await import('$journey/_utilities/registry/runtime-registry.store');
+        store.setRuntimeRegistries({ callbacks: {} });
+        return { callbacks: {} };
+      }),
     };
-    const { configureCustomBundle: load } = await loadModule(
-      { PUBLIC_COMPONENT_BUNDLE_URL: 'https://host/custom/bundle.js' },
+    const { configureCustomBundle: configure } = await loadModule(
+      new Response(JSON.stringify({ componentsBundle: '/api/components/bundle' }), { status: 200 }),
       loader,
     );
 
-    await expect(load()).resolves.toBeNull();
-    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('Failed to load'));
-    expect(consoleError).toHaveBeenCalledWith(expect.stringContaining('[login-app]'));
+    configure();
+    configure();
+    configure();
 
-    await expect(load()).resolves.toEqual({ callbacks: {} });
-    consoleError.mockRestore();
+    await vi.waitFor(() => expect(loader.loadCustomBundle).toHaveBeenCalledTimes(1));
+  });
+
+  it('stays loading while the bundle load is pending and settles to loaded once it resolves', async () => {
+    let releaseLoad!: () => void;
+    const loadPromise = new Promise<void>((resolve) => {
+      releaseLoad = resolve;
+    });
+    const loader = {
+      loadCustomBundle: vi.fn(async () => {
+        await loadPromise;
+        const store = await import('$journey/_utilities/registry/runtime-registry.store');
+        store.setRuntimeRegistries({ callbacks: {} });
+      }),
+    };
+    const { configureCustomBundle: configure, registryState } = await loadModule(
+      new Response(JSON.stringify({ componentsBundle: '/api/components/bundle' }), { status: 200 }),
+      loader,
+    );
+
+    configure();
+    expect(registryState().status).toBe('loading');
+
+    releaseLoad();
+    await vi.waitFor(() => expect(registryState().status).toBe('loaded'));
   });
 });

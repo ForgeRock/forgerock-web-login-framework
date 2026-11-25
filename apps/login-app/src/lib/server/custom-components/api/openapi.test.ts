@@ -35,6 +35,7 @@ const DOCUMENTED_ROUTES = [
   'components/[type]/+server.ts',
   'components/[type]/[id]/+server.ts',
   'components/publish/+server.ts',
+  'components/manifest/+server.ts',
   'health/live/+server.ts',
 ] as const;
 
@@ -79,9 +80,10 @@ describe('openApiSpec', () => {
       openApiSpec.paths['/api/components/{type}'],
       openApiSpec.paths['/api/components/{type}/{id}'],
       openApiSpec.paths['/api/components/publish'],
+      openApiSpec.paths['/api/components/manifest'],
     ];
 
-    expect(componentPaths).toHaveLength(3);
+    expect(componentPaths).toHaveLength(4);
     expect(Object.keys(openApiSpec.paths['/api/components/{type}'].get.responses)).toEqual([
       '200',
       '400',
@@ -140,6 +142,11 @@ describe('openApiSpec', () => {
       '415',
       '500',
       '503',
+    ]);
+    expect(Object.keys(openApiSpec.paths['/api/components/manifest'].get.responses)).toEqual([
+      '200',
+      '404',
+      '500',
     ]);
   });
 
