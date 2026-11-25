@@ -117,7 +117,7 @@ const main = () => {
         `❌ Missing core declaration: core/${relPath} not found. ` +
           `Published types reference ./core/${relPath} via dist/index.d.ts; ` +
           `copying a partial set would publish unresolvable imports (TS2307). ` +
-          `Run the declaration build first: pnpm --filter login-framework run build:types`,
+          `Run the declaration build first: pnpm --filter framework-core run build:types`,
       );
       missingCoreFiles.push(relPath);
     }

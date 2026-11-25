@@ -36,7 +36,7 @@ yarn.lock
 # Generated type declarations (core/ has no compiled JS — TS reads .ts source directly)
 core/**/*.d.ts
 
-# Auto-generated custom component registry (produced by the login-framework Vite plugin)
+# Auto-generated custom component registry (produced by the framework-core Vite plugin)
 core/journey/_utilities/registry/custom-registry.ts
 
 # Custom component implementations (developer-authored; gitignored so customer forks don't conflict)

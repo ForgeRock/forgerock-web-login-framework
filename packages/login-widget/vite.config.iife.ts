@@ -15,7 +15,7 @@ import { loginFrameworkDist } from '../../core/vite-plugin-dist';
  * Key differences from the ESM config (vite.config.ts):
  *   - formats: ['iife'] with global name `ForgeRockLoginWidget`
  *   - external: [] — every dependency is inlined, npm packages and the
- *     login-framework modules the loginFrameworkDist plugin resolves into
+ *     framework-core modules the loginFrameworkDist plugin resolves into
  *     the package's built dist alike (the ESM bundle now also inlines the
  *     framework; this build additionally inlines the npm dependencies)
  *   - emptyOutDir: false — preserves ESM output from the prior build step

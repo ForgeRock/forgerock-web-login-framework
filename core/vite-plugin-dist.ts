@@ -32,7 +32,7 @@ interface DistResolverPlugin {
 }
 
 /**
- * Vite plugin for consumers of the `login-framework` package (`core/`).
+ * Vite plugin for consumers of the `framework-core` package (`core/`).
  *
  * Maps the source-tree aliases (`$core`, `$components`, `$journey`,
  * `$locales`) onto the package's BUILT output, so consumers import the
@@ -135,7 +135,7 @@ export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): D
   };
 
   return {
-    name: 'login-framework-dist-resolver',
+    name: 'framework-core-dist-resolver',
     enforce: 'pre',
     resolveId(source: string, _importer: unknown, options?: { ssr?: boolean }) {
       if (source.startsWith('\0')) {
@@ -170,7 +170,7 @@ export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): D
       // "Failed to resolve import" error.
       if (!existsSync(treeRoot)) {
         throw new Error(
-          `login-framework build output not found at ${treeRoot}, needed to resolve "${source}". ` +
+          `framework-core build output not found at ${treeRoot}, needed to resolve "${source}". ` +
             'Run "pnpm build:framework" from the repository root.',
         );
       }

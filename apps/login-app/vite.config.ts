@@ -32,7 +32,7 @@ export default defineConfig(
       alias: {
         '$app-locales': resolve('./src/locales'),
         // Server-only SvelteKit modules, deliberately excluded from the
-        // login-framework package build ($app/$env imports; server/ holds
+        // framework-core package build ($app/$env imports; server/ holds
         // SvelteKit-only utilities); resolved from source. All other
         // $core/$components/$journey/$locales imports map onto the package's
         // built dist via the loginFrameworkDist plugin.

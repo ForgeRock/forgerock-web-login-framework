@@ -25,16 +25,16 @@ A **pnpm** monorepo (`pnpm@10.6.0`). Workspaces: `packages/*`, `apps/*`, `e2e`,
 - `packages/login-widget` — `@forgerock/login-widget`, the published npm package
 - `apps/login-app` — SvelteKit dev/docs host app
 - `e2e` — Playwright E2E test workspace
-- `core/` — private workspace package `login-framework` (shared stores,
+- `core/` — private workspace package `framework-core` (shared stores,
   components, journey logic, locales; built to `dist/` and `dist-server/`)
 
 ### The `core/` Directory
 
-`core/` is the private workspace package `login-framework` (never published to
+`core/` is the private workspace package `framework-core` (never published to
 npm). It has its own Vite library build producing `dist/` (client) and
 `dist-server/` (SSR), and is consumed through those built outputs: the widget
 and the app bundle the compiled `core/dist` code into their own outputs, while
-the `login-framework/dist/...` import specifier remains the contract surface
+the `framework-core/dist/...` import specifier remains the contract surface
 for custom components and the future editor. The `$core`/`$components`/
 `$journey`/`$locales` path aliases still exist for building `core/` itself and
 resolving its type sources.
@@ -80,7 +80,7 @@ awaited at boot before any other API call), `journey`, `user`, `component`, and
   `new Widget({ target })` instantiation pattern for consumers.
 - **Bundled runtime deps:** both builds inline all runtime dependencies —
   `@forgerock/journey-client`, `@forgerock/oidc-client`, `@forgerock/protect`,
-  `qrcode`, `xss`, `zod` — and the compiled `login-framework` (core `dist`)
+  `qrcode`, `xss`, `zod` — and the compiled `framework-core` (core `dist`)
   code. Neither `vite.config.ts` (ES) nor `vite.config.iife.ts` (IIFE,
   `external: []`) externalizes them; Vite library mode bundles dependencies
   unless a `rollupOptions.external` list opts them out. The published widget
@@ -95,7 +95,7 @@ Run from the repository root.
 | `pnpm dev`             | Build widget, then start the SvelteKit dev app + framework watch |
 | `pnpm build:widget`    | Build the framework package, then the widget package             |
 | `pnpm build:app`       | Build widget + SvelteKit app                                     |
-| `pnpm build:framework` | Build the `login-framework` package (dist + dist-server)         |
+| `pnpm build:framework` | Build the `framework-core` package (dist + dist-server)          |
 | `pnpm build:release`   | Full release build (framework + widget + IIFE + types)           |
 | `pnpm test`            | Run Vitest unit tests (watch mode)                               |
 | `pnpm test -- --run`   | Run unit tests once (CI mode)                                    |
@@ -222,7 +222,7 @@ swap point if storage ever moves off the filesystem.
 ## Project Structure
 
 ```
-core/                          # login-framework private workspace package, built to dist/ and dist-server/
+core/                          # framework-core private workspace package, built to dist/ and dist-server/
 ├── *.store.ts                 # Singleton Svelte stores (style, locale, links, component)
 ├── *.config.ts                # Config parsers (captcha.config.ts)
 ├── interfaces.ts              # Shared type contracts

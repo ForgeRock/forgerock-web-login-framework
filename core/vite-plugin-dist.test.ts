@@ -22,7 +22,7 @@ import { loginFrameworkDist } from './vite-plugin-dist';
  * the emitted-name reconciliation rules (.ts → .js, .svelte →
  * .component.js, .json → .json.js) against real files.
  */
-const sandboxRoot = join(tmpdir(), 'login-framework-dist-fixture');
+const sandboxRoot = join(tmpdir(), 'framework-core-dist-fixture');
 
 const distDir = join(sandboxRoot, 'dist');
 const serverDistDir = join(sandboxRoot, 'dist-server');
@@ -103,11 +103,11 @@ describe('loginFrameworkDist', () => {
   });
 
   describe('missing build output', () => {
-    const unbuiltRoot = join(tmpdir(), 'login-framework-dist-unbuilt');
+    const unbuiltRoot = join(tmpdir(), 'framework-core-dist-unbuilt');
     const unbuiltPlugin = loginFrameworkDist({ packageDir: unbuiltRoot });
 
     // Only the client tree exists, so SSR resolutions find no server tree.
-    const clientOnlyRoot = join(tmpdir(), 'login-framework-dist-client-only');
+    const clientOnlyRoot = join(tmpdir(), 'framework-core-dist-client-only');
     const clientOnlyPlugin = loginFrameworkDist({ packageDir: clientOnlyRoot });
 
     beforeAll(() => {
@@ -184,7 +184,7 @@ describe('loginFrameworkDist', () => {
     const registrySource = resolve(sandboxRoot, 'journey/_utilities/registry/custom-registry.ts');
 
     // Neither tree exists and no registry file was generated.
-    const registryMissingRoot = join(tmpdir(), 'login-framework-dist-registry-missing');
+    const registryMissingRoot = join(tmpdir(), 'framework-core-dist-registry-missing');
     const registryMissingPlugin = loginFrameworkDist({ packageDir: registryMissingRoot });
 
     beforeAll(() => {
@@ -200,7 +200,7 @@ describe('loginFrameworkDist', () => {
     });
 
     it('resolves the registry from source even when the built trees are absent', () => {
-      const sourceOnlyRoot = join(tmpdir(), 'login-framework-dist-source-only');
+      const sourceOnlyRoot = join(tmpdir(), 'framework-core-dist-source-only');
       const registryFile = join(sourceOnlyRoot, 'journey/_utilities/registry/custom-registry.ts');
       rmSync(sourceOnlyRoot, { recursive: true, force: true });
       mkdirSync(join(registryFile, '..'), { recursive: true });

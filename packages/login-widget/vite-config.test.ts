@@ -31,14 +31,14 @@ describe('widget ESM build bundling', () => {
     ? rollupOptions?.output[0]
     : rollupOptions?.output;
 
-  it('bundles the login-framework dist into the widget output (no external)', () => {
-    // `login-framework` is a private workspace package that is never published:
-    // emitted `login-framework/dist/...` imports could not resolve on an npm
+  it('bundles the framework-core dist into the widget output (no external)', () => {
+    // `framework-core` is a private workspace package that is never published:
+    // emitted `framework-core/dist/...` imports could not resolve on an npm
     // consumer's machine, so the ESM build must inline the framework.
     expect(rollupOptions?.external).toBeUndefined();
   });
 
-  it('emits no login-framework specifier rewrite (output paths absent)', () => {
+  it('emits no framework-core specifier rewrite (output paths absent)', () => {
     expect(output?.paths).toBeUndefined();
   });
 });
@@ -51,18 +51,18 @@ describe('widget runtime dependencies', () => {
     return JSON.parse(readFileSync(resolve(import.meta.dirname, 'package.json'), 'utf8'));
   }
 
-  it('declares no login-framework dependency (private package, bundled)', () => {
+  it('declares no framework-core dependency (private package, bundled)', () => {
     const manifest = readPackageManifest();
-    expect(Object.keys(manifest.dependencies ?? {})).not.toContain('login-framework');
-    expect(Object.keys(manifest.peerDependencies ?? {})).not.toContain('login-framework');
+    expect(Object.keys(manifest.dependencies ?? {})).not.toContain('framework-core');
+    expect(Object.keys(manifest.peerDependencies ?? {})).not.toContain('framework-core');
   });
 
-  it('built ESM artifact holds zero login-framework specifiers (post-build guard)', () => {
+  it('built ESM artifact holds zero framework-core specifiers (post-build guard)', () => {
     // Config-level checks above prove intent; this proves the artifact.
     // dist/index.js is gitignored build output: skipped when unbuilt (fresh
     // checkouts, the CI test job). The CI build job runs build:release but
     // not the vitest suite, so the guard bites on local and release builds
-    // run via `pnpm test` after a build, not in CI. `login-framework` is a
+    // run via `pnpm test` after a build, not in CI. `framework-core` is a
     // private workspace package; a single emitted specifier would be
     // unresolvable on an npm consumer's machine (F1's original defect).
     const artifact = resolve(import.meta.dirname, 'dist/index.js');
@@ -70,17 +70,17 @@ describe('widget runtime dependencies', () => {
       return;
     }
     const code = readFileSync(artifact, 'utf8');
-    // Specifier boundary: a quote or the start of `login-framework/dist/`
-    // or `login-framework/...` import paths. `login-framework-surface` as a
+    // Specifier boundary: a quote or the start of `framework-core/dist/`
+    // or `framework-core/...` import paths. `framework-core-surface` as a
     // substring of an unrelated identifier would not be a module specifier.
     expect(
-      code.match(/['"]login-framework\//) ?? code.match(/^import\s+['"]login-framework['"]/m),
+      code.match(/['"]framework-core\//) ?? code.match(/^import\s+['"]framework-core['"]/m),
     ).toBeNull();
   });
 });
 
 /**
- * Dependencies shared between the `login-framework` package (core/) and the
+ * Dependencies shared between the `framework-core` package (core/) and the
  * widget (and, for the first five, the login-app). Core's built dist imports
  * them, and both consumers inline that dist, so any version split between
  * the importers bundles two copies — for `svelte` two runtimes, for the

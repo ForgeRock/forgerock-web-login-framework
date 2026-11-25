@@ -1,6 +1,6 @@
 # Core
 
-`login-framework` is the shared package behind the widget and the login app: stores, journey logic, callbacks, stages, UI components, OAuth/OIDC, and i18n locales. It is a private pnpm workspace package (`core/package.json`) and is never published to npm. `packages/login-widget` and `apps/login-app` consume its built output, and it is the intended shared base for the Custom Components editor.
+`framework-core` is the shared package behind the widget and the login app: stores, journey logic, callbacks, stages, UI components, OAuth/OIDC, and i18n locales. It is a private pnpm workspace package (`core/package.json`) and is never published to npm. `packages/login-widget` and `apps/login-app` consume its built output, and it is the intended shared base for the Custom Components editor.
 
 ## Why a Workspace?
 
@@ -31,12 +31,12 @@ Excluded from both builds and never shipped: tests (`*.test.ts`), Storybook file
 
 Run from the repository root unless noted.
 
-| Command                                           | Description                                                                     |
-| ------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `pnpm build:framework`                            | Build `dist/` and `dist-server/`                                                |
-| `pnpm dev:framework`                              | Rebuild both trees on change (`dev:client` and `dev:server` in watch mode)      |
-| `pnpm --filter login-framework run build:types`   | Emit `.d.ts` declarations next to the sources (git-ignored)                     |
-| `pnpm --filter login-framework run check:surface` | Check the custom-component import surface against the package's runtime modules |
+| Command                                          | Description                                                                     |
+| ------------------------------------------------ | ------------------------------------------------------------------------------- |
+| `pnpm build:framework`                           | Build `dist/` and `dist-server/`                                                |
+| `pnpm dev:framework`                             | Rebuild both trees on change (`dev:client` and `dev:server` in watch mode)      |
+| `pnpm --filter framework-core run build:types`   | Emit `.d.ts` declarations next to the sources (git-ignored)                     |
+| `pnpm --filter framework-core run check:surface` | Check the custom-component import surface against the package's runtime modules |
 
 `pnpm build:widget`, `pnpm build:app`, and `pnpm build:release` run `build:framework` first. `pnpm dev` runs `dev:framework` alongside the login app. The release chain runs `build:types` through the widget's `build:types` script, and `scripts/copyTypes.mjs` copies the declarations into the published `dist/core/`.
 

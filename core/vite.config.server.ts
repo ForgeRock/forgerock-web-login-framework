@@ -15,7 +15,7 @@ import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entrie
 import { packageCssConfig, packageExternal, packageSveltePluginOptions } from './vite-shared';
 
 /**
- * SSR (server-condition) build for the `login-framework` package.
+ * SSR (server-condition) build for the `framework-core` package.
  *
  * Compiles the same runtime surface as `vite.config.ts`, but with Svelte's
  * server compilation (`build.ssr: true`): components emit server render

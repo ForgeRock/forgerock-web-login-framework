@@ -8,7 +8,7 @@
  **/
 
 /**
- * Shared Vite build options for the `login-framework` package's two builds:
+ * Shared Vite build options for the `framework-core` package's two builds:
  * `vite.config.ts` (client tree) and `vite.config.server.ts` (SSR tree).
  * Both compile the same surface the same way, so the Svelte plugin options
  * and the CSS config live here once.

@@ -50,7 +50,7 @@ export function customRegistry({ projectRoot }: CustomRegistryPluginOptions) {
   const buildStart = () => seed().then(regenerate);
 
   return {
-    name: 'login-framework:custom-registry',
+    name: 'framework-core:custom-registry',
     buildStart,
     configureServer(server: ViteDevServer) {
       server.watcher.on('all', (_event, filePath) => {
