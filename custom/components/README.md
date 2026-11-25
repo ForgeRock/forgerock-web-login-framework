@@ -16,11 +16,10 @@ custom/components/
 ├── callbacks/
 │   └── <your-callback-name>/
 │       └── (same structure as above)
-├── header/
-│   ├── header.svelte                # page header wrapper — generated on first build, edit freely
-│   ├── header.stories.js            # optional (Storybook)
-│   └── header.story.svelte          # optional (Storybook)
-└── footer/
+└── layout/
+    ├── header.svelte                # page header wrapper — generated on first build, edit freely
+    ├── header.stories.js            # optional (Storybook)
+    ├── header.story.svelte          # optional (Storybook)
     ├── footer.svelte                # page footer wrapper — generated on first build, edit freely
     ├── footer.stories.js            # optional (Storybook)
     └── footer.story.svelte          # optional (Storybook)
@@ -73,8 +72,8 @@ footer are not registry components — they are fixed wrapper files.
 
 The login app renders two fixed wrapper files around the journey container:
 
-- `header/header.svelte` — rendered above the journey
-- `footer/footer.svelte` — rendered below the journey
+- `layout/header.svelte` — rendered above the journey
+- `layout/footer.svelte` — rendered below the journey
 
 Unlike stages and callbacks, there is exactly **one** wrapper per element and no
 registry lookup, `@component` header, or selection step.

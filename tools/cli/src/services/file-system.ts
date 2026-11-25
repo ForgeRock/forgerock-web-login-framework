@@ -42,15 +42,15 @@ const PROTECTED_DIRS = ['custom/components/callbacks/', 'custom/components/stage
  * a framework version whose app imports the wrappers still gets the defaults.
  */
 export const CUSTOM_WRAPPER_FILES = [
-  'custom/components/header/header.svelte',
-  'custom/components/footer/footer.svelte',
+  'custom/components/layout/header.svelte',
+  'custom/components/layout/footer.svelte',
 ] as const;
 
 /**
  * The page elements that ship a wrapper file. `copyWrapperFiles` copies
  * `templates/wrapper/<element>.svelte` (the CLI's own shipped templates,
  * resolved like the callback/stage scaffold templates) into
- * `custom/components/<element>/<element>.svelte`.
+ * `custom/components/layout/<element>.svelte`.
  *
  * The CLI never reads the framework's `core/` tree — build-time vs. runtime
  * boundary — so it owns copies of the wrapper templates instead of importing

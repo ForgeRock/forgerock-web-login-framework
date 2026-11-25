@@ -57,16 +57,15 @@ describe('updateProject — wrapper file preservation', () => {
       JSON.stringify({ version: '1.0.0', generatedAt: new Date().toISOString() }) + '\n',
       'utf8',
     );
-    await mkdir(join(projectDir, 'custom', 'components', 'header'), { recursive: true });
+    await mkdir(join(projectDir, 'custom', 'components', 'layout'), { recursive: true });
     await writeFile(
-      join(projectDir, 'custom', 'components', 'header', 'header.svelte'),
+      join(projectDir, 'custom', 'components', 'layout', 'header.svelte'),
       overrides.header ?? '<!-- customer header -->',
       'utf8',
     );
     if (overrides.footerPresent) {
-      await mkdir(join(projectDir, 'custom', 'components', 'footer'), { recursive: true });
       await writeFile(
-        join(projectDir, 'custom', 'components', 'footer', 'footer.svelte'),
+        join(projectDir, 'custom', 'components', 'layout', 'footer.svelte'),
         '<!-- customer footer -->',
         'utf8',
       );
@@ -86,11 +85,11 @@ describe('updateProject — wrapper file preservation', () => {
     );
 
     const header = await readFile(
-      join(projectDir, 'custom', 'components', 'header', 'header.svelte'),
+      join(projectDir, 'custom', 'components', 'layout', 'header.svelte'),
       'utf8',
     );
     const footer = await readFile(
-      join(projectDir, 'custom', 'components', 'footer', 'footer.svelte'),
+      join(projectDir, 'custom', 'components', 'layout', 'footer.svelte'),
       'utf8',
     );
     expect(header).toBe('<!-- customer header -->');
@@ -113,11 +112,11 @@ describe('updateProject — wrapper file preservation', () => {
     // header preserved (customer edit), footer backfilled from the CLI's
     // own wrapper template (content = the shipped template bytes)
     const header = await readFile(
-      join(projectDir, 'custom', 'components', 'header', 'header.svelte'),
+      join(projectDir, 'custom', 'components', 'layout', 'header.svelte'),
       'utf8',
     );
     const footer = await readFile(
-      join(projectDir, 'custom', 'components', 'footer', 'footer.svelte'),
+      join(projectDir, 'custom', 'components', 'layout', 'footer.svelte'),
       'utf8',
     );
     expect(header).toBe('<!-- customer header -->');

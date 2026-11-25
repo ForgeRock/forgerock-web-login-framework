@@ -19,8 +19,8 @@
   import { resolvePageTheme } from '$core/_utilities/theme.utilities';
   import { initialize as initializeContent } from '$core/locale.store';
   import { styleStore } from '$core/style.store';
-  import Footer from '$custom/footer/footer.svelte';
-  import Header from '$custom/header/header.svelte';
+  import Footer from '$custom/layout/footer.svelte';
+  import Header from '$custom/layout/header.svelte';
   import { deriveJourneyName } from '$journey/_utilities/journey-name.utilities';
   import {
     autoRestartStore,

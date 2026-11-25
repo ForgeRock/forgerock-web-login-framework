@@ -13,7 +13,7 @@ import { password, username } from '../utilities/demo-user.js';
 
 /**
  * SDKS-5236: the login-app renders two fixed, user-editable wrapper files
- * (custom/components/header/header.svelte + footer/footer.svelte) around the
+ * (custom/components/layout/header.svelte + footer.svelte) around the
  * journey container in (app)/+page.svelte. The wrappers mount client-side only:
  * the first journey step latches `wrappersVisible`, and they then stay mounted
  * through step nulling, journey switches, and the completion redirect state.

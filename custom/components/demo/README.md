@@ -1,8 +1,6 @@
 # Demo Components
 
-> 🧪 **Experimental feature.** These demos are part of an early-access feature that is actively evolving.
-
-This directory contains fully commented reference implementations of custom stage and callback components. Use them as templates when building your own.
+This directory contains fully commented reference implementations of custom stage, callback, and layout wrapper components. Use them as templates when building your own.
 
 ## How to use
 
@@ -10,8 +8,7 @@ This directory contains fully commented reference implementations of custom stag
 
    - `stages/custom-login/` — stage override (replaces an entire form layout)
    - `callbacks/custom-name/` — callback override (replaces a single input renderer)
-   - `header/` — branded page header (worked example for the wrapper)
-   - `footer/` — branded page footer (worked example for the wrapper)
+   - `layout/` — branded page header and footer examples (worked examples for the wrappers)
 
 2. Copy the directory into the correct scanned location:
 
@@ -36,7 +33,7 @@ This directory contains fully commented reference implementations of custom stag
    pnpm build:widget   # or start pnpm dev
    ```
 
-> **Page headers and footers are different.** They are not registry components. Edit the fixed wrapper files directly at `custom/components/header/header.svelte` and `custom/components/footer/footer.svelte`. The `header/` and `footer/` demos here are not copy-and-register templates — copy their markup and styles **into** the wrapper files, then verify with `pnpm dev` or by adding your own stories in the wrapper folders (they are yours, like `stages/` and `callbacks/`).
+> **Page headers and footers are different.** They are not registry components. Edit the fixed wrapper files directly at `custom/components/layout/header.svelte` and `custom/components/layout/footer.svelte`. The `layout/` demos here are not copy-and-register templates — copy their markup and styles **into** the wrapper files, then verify with `pnpm dev` or by adding your own stories next to the wrappers in `layout/` (they are yours, like `stages/` and `callbacks/`).
 
 ## Directory layout
 
@@ -54,14 +51,13 @@ demo/
 │       ├── custom-name.mock.ts        # mock AM response for Storybook / tests
 │       ├── custom-name.story.svelte   # Storybook wrapper with metadata stubs
 │       └── custom-name.stories.js    # CSF 3 stories (Base, Interaction)
-├── header/
+├── layout/
 │   ├── branded-header.svelte        # branded header example (branches on journeyName)
 │   ├── branded-header.story.svelte  # Storybook wrapper with store initialization
-│   └── branded-header.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
-└── footer/
-    ├── branded-footer.svelte        # branded footer example (branches on journeyName)
-    ├── branded-footer.story.svelte  # Storybook wrapper with store initialization
-    └── branded-footer.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
+│   ├── branded-header.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
+│   ├── branded-footer.svelte        # branded footer example (branches on journeyName)
+│   ├── branded-footer.story.svelte  # Storybook wrapper with store initialization
+│   └── branded-footer.stories.js    # CSF 3 stories (Default, Named, Register, Interaction)
 ```
 
 > **Note:** Files under `demo/` are committed to the repository as reference material.

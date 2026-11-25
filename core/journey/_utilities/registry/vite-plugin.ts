@@ -31,7 +31,7 @@ const STALE_REGISTRY_NOTE =
  * Regenerates `core/journey/_utilities/registry/custom-registry.ts` by scanning
  * `custom/components/{stages,callbacks}/` for `@component`-annotated
  * Svelte files, and seeds the page header/footer wrapper files into
- * `custom/components/{header,footer}/` when absent. Both run at
+ * `custom/components/layout/` when absent. Both run at
  * `buildStart`; in dev, the watcher also picks up adds/removals so scaffolding
  * a new component via `ping-lf generate` needs no server restart.
  */

@@ -8,7 +8,7 @@
  **/
 
 /**
- * Storybook story file for the branded-footer demo component.
+ * Storybook story file for the branded-header demo component.
  *
  * This file uses Component Story Format (CSF 3). It has two parts:
  *
@@ -23,7 +23,7 @@
 
 import { expect, within } from 'storybook/test';
 
-import Story from './branded-footer.story.svelte';
+import Story from './branded-header.story.svelte';
 
 // ─── Default export — story metadata ────────────────────────────────────────
 export default {
@@ -37,7 +37,7 @@ export default {
   /**
    * parameters — global rendering options.
    * layout: 'fullscreen' disables Storybook's default canvas padding so the
-   * footer can pin to the bottom edge as it does on the real login page.
+   * header can stretch edge-to-edge as it does on the real login page.
    */
   parameters: {
     layout: 'fullscreen',
@@ -47,10 +47,10 @@ export default {
    * title — the sidebar path for this component's stories.
    * Segments separated by '/' create nested groups in the sidebar.
    * Convention for custom components: 'Custom/<Type>/<ComponentName>'.
-   * Footers are not registry components, but the same title convention keeps
+   * Headers are not registry components, but the same title convention keeps
    * the sidebar organized.
    */
-  title: 'Custom/Footer/BrandedFooter',
+  title: 'Custom/Layout/BrandedHeader',
 };
 
 // ─── Default journey story ───────────────────────────────────────────────────
@@ -58,7 +58,7 @@ export default {
  * DefaultJourney — `journeyName` is `''`: the AM default journey, the one the
  * tenant serves when the URL names no journey. The wrapper's contract says it
  * must still render its default-journey view (never blank), so this story
- * shows the branded bar with the standard legal line and links.
+ * shows the branded bar with the default tagline.
  */
 export const DefaultJourney = {
   args: {
@@ -80,8 +80,8 @@ export const NamedJourney = {
 
 // ─── Register journey story ──────────────────────────────────────────────────
 /**
- * RegisterJourney — a journey the demo branches on explicitly. The link list
- * gains an "Acceptable Use" entry, showing how the same wrapper renders a
+ * RegisterJourney — a journey the demo branches on explicitly. The tagline
+ * switches to the registration copy, showing how the same wrapper renders a
  * per-journey view when the journey stack changes (latest entry wins).
  */
 export const RegisterJourney = {
@@ -95,9 +95,8 @@ export const RegisterJourney = {
  * Interaction — runs an automated interaction test in the Storybook canvas.
  *
  * The `play` function is executed by Storybook's test runner after the story
- * mounts. It asserts the branded footer content is present and switches with
- * the journey: the Register story must include the extra "Acceptable Use"
- * link.
+ * mounts. It asserts the branded header content is present and switches with
+ * the journey: the Register story must show the registration tagline.
  *
  * Run interaction tests with: pnpm test:storybook (requires Storybook running).
  */
@@ -106,12 +105,10 @@ export const Interaction = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // The demo branches on 'Register': the extra link must render.
-    expect(canvas.getByText('Acceptable Use')).toBeTruthy();
+    // The demo branches on 'Register': the registration tagline must render.
+    expect(canvas.getByText('Create your Acme account')).toBeTruthy();
 
-    // The legal line and the standard links are present in every view.
-    expect(canvas.getByText('© 2026 Acme Corporation. All rights reserved.')).toBeTruthy();
-    expect(canvas.getByText('Privacy')).toBeTruthy();
-    expect(canvas.getByText('Terms')).toBeTruthy();
+    // The brand line is present in every view.
+    expect(canvas.getByText('Acme Identity')).toBeTruthy();
   },
 };

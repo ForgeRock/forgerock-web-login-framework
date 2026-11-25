@@ -62,8 +62,7 @@ describe('copyWithExclusions — protected custom component paths', () => {
         Promise.all([
           mkdir(join(sourceDir, 'custom', 'components', 'callbacks'), { recursive: true }),
           mkdir(join(sourceDir, 'custom', 'components', 'stages'), { recursive: true }),
-          mkdir(join(sourceDir, 'custom', 'components', 'header'), { recursive: true }),
-          mkdir(join(sourceDir, 'custom', 'components', 'footer'), { recursive: true }),
+          mkdir(join(sourceDir, 'custom', 'components', 'layout'), { recursive: true }),
         ]),
       );
       // Framework content that IS copied (files after their dirs exist)
@@ -82,12 +81,12 @@ describe('copyWithExclusions — protected custom component paths', () => {
             'utf8',
           ),
           writeFile(
-            join(sourceDir, 'custom', 'components', 'header', 'header.svelte'),
+            join(sourceDir, 'custom', 'components', 'layout', 'header.svelte'),
             '<!-- framework header -->',
             'utf8',
           ),
           writeFile(
-            join(sourceDir, 'custom', 'components', 'footer', 'footer.svelte'),
+            join(sourceDir, 'custom', 'components', 'layout', 'footer.svelte'),
             '<!-- framework footer -->',
             'utf8',
           ),
@@ -104,7 +103,7 @@ describe('copyWithExclusions — protected custom component paths', () => {
         Promise.all([
           mkdir(join(targetDir, 'custom', 'components', 'callbacks'), { recursive: true }),
           mkdir(join(targetDir, 'custom', 'components', 'stages'), { recursive: true }),
-          mkdir(join(targetDir, 'custom', 'components', 'header'), { recursive: true }),
+          mkdir(join(targetDir, 'custom', 'components', 'layout'), { recursive: true }),
         ]),
       );
       yield* Effect.promise(() =>
@@ -120,7 +119,7 @@ describe('copyWithExclusions — protected custom component paths', () => {
             'utf8',
           ),
           writeFile(
-            join(targetDir, 'custom', 'components', 'header', 'header.svelte'),
+            join(targetDir, 'custom', 'components', 'layout', 'header.svelte'),
             '<!-- customer header -->',
             'utf8',
           ),
@@ -133,7 +132,7 @@ describe('copyWithExclusions — protected custom component paths', () => {
 
       // Customer-edited wrapper file survives untouched
       const customerHeader = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'layout', 'header.svelte'), 'utf8'),
       );
       expect(customerHeader).toBe('<!-- customer header -->');
 
@@ -151,7 +150,7 @@ describe('copyWithExclusions — protected custom component paths', () => {
       // Backfilling absent wrappers is copyWrapperFiles' job, not the copy guard's.
       const footerExit = yield* Effect.exit(
         Effect.promise(() =>
-          readFile(join(targetDir, 'custom', 'components', 'footer', 'footer.svelte'), 'utf8'),
+          readFile(join(targetDir, 'custom', 'components', 'layout', 'footer.svelte'), 'utf8'),
         ),
       );
       expect(Exit.isFailure(footerExit)).toBe(true);
@@ -208,10 +207,10 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
       yield* copyWrapperFiles(targetDir, templatesDir).pipe(Effect.provide(NodeContext.layer));
 
       const header = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'layout', 'header.svelte'), 'utf8'),
       );
       const footer = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'custom', 'components', 'footer', 'footer.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'layout', 'footer.svelte'), 'utf8'),
       );
       expect(header).toBe('<!-- framework header -->');
       expect(footer).toBe('<!-- framework footer -->');
@@ -223,11 +222,11 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
       yield* seedWrapperTemplates();
 
       yield* Effect.promise(() =>
-        mkdir(join(targetDir, 'custom', 'components', 'header'), { recursive: true }),
+        mkdir(join(targetDir, 'custom', 'components', 'layout'), { recursive: true }),
       );
       yield* Effect.promise(() =>
         writeFile(
-          join(targetDir, 'custom', 'components', 'header', 'header.svelte'),
+          join(targetDir, 'custom', 'components', 'layout', 'header.svelte'),
           '<!-- customer header -->',
           'utf8',
         ),
@@ -236,10 +235,10 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
       yield* copyWrapperFiles(targetDir, templatesDir).pipe(Effect.provide(NodeContext.layer));
 
       const header = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'layout', 'header.svelte'), 'utf8'),
       );
       const footer = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'custom', 'components', 'footer', 'footer.svelte'), 'utf8'),
+        readFile(join(targetDir, 'custom', 'components', 'layout', 'footer.svelte'), 'utf8'),
       );
       expect(header).toBe('<!-- customer header -->');
       expect(footer).toBe('<!-- framework footer -->');
@@ -256,7 +255,7 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
 
       const headerExit = yield* Effect.exit(
         Effect.promise(() =>
-          readFile(join(targetDir, 'custom', 'components', 'header', 'header.svelte'), 'utf8'),
+          readFile(join(targetDir, 'custom', 'components', 'layout', 'header.svelte'), 'utf8'),
         ),
       );
       expect(Exit.isFailure(headerExit)).toBe(true);
@@ -272,8 +271,8 @@ describe('init scaffold + update guard coverage', () => {
     // can never overwrite customer edits to them.
     expect([...CUSTOM_COMPONENT_DIRS]).toEqual(['callbacks', 'stages']);
     expect([...CUSTOM_WRAPPER_FILES]).toEqual([
-      'custom/components/header/header.svelte',
-      'custom/components/footer/footer.svelte',
+      'custom/components/layout/header.svelte',
+      'custom/components/layout/footer.svelte',
     ]);
   });
 
@@ -283,8 +282,8 @@ describe('init scaffold + update guard coverage', () => {
     // path: tools/cli cannot depend on core/.
     expect([...WRAPPER_TEMPLATE_ELEMENTS]).toEqual(['header', 'footer']);
     expect([...CUSTOM_WRAPPER_FILES]).toEqual([
-      'custom/components/header/header.svelte',
-      'custom/components/footer/footer.svelte',
+      'custom/components/layout/header.svelte',
+      'custom/components/layout/footer.svelte',
     ]);
   });
 });

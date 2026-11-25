@@ -512,7 +512,7 @@ describe('seedMissingWrappers', () => {
     seedMissingWrappers(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
 
   const seedPath = (element: 'header' | 'footer') =>
-    join(tmpDir, 'custom', 'components', element, `${element}.svelte`);
+    join(tmpDir, 'custom', 'components', 'layout', `${element}.svelte`);
 
   const readSeed = async (element: 'header' | 'footer') => readFile(seedPath(element), 'utf8');
 
@@ -526,8 +526,8 @@ describe('seedMissingWrappers', () => {
 
   it('skips writing when a wrapper already exists (never overwrites)', async () => {
     await writeTemplates();
-    const customDir = join(tmpDir, 'custom', 'components', 'header');
-    await mkdir(customDir, { recursive: true });
+    const layoutDir = join(tmpDir, 'custom', 'components', 'layout');
+    await mkdir(layoutDir, { recursive: true });
     await writeFile(seedPath('header'), '<!-- customer-edited header -->', 'utf8');
     await run();
 
@@ -536,8 +536,8 @@ describe('seedMissingWrappers', () => {
 
   it('seeds the missing element while leaving the present one untouched (per-file fill-if-absent)', async () => {
     await writeTemplates();
-    const customDir = join(tmpDir, 'custom', 'components', 'footer');
-    await mkdir(customDir, { recursive: true });
+    const layoutDir = join(tmpDir, 'custom', 'components', 'layout');
+    await mkdir(layoutDir, { recursive: true });
     await writeFile(seedPath('footer'), '<!-- customer footer -->', 'utf8');
     await run();
 
@@ -635,7 +635,7 @@ describe('customRegistry vite plugin', () => {
 
     // Wrappers seeded by buildStart from the templates.
     const seededHeader = await readFile(
-      join(tmpDir, 'custom', 'components', 'header', 'header.svelte'),
+      join(tmpDir, 'custom', 'components', 'layout', 'header.svelte'),
       'utf8',
     );
     expect(seededHeader).toBe('<!-- template header -->');

@@ -136,10 +136,10 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     // headers/ and footers/ (registry-era dirs) are NOT scaffolded
     await expect(access(join(targetDir, 'custom', 'components', 'headers'))).rejects.toThrow();
     await expect(access(join(targetDir, 'custom', 'components', 'footers'))).rejects.toThrow();
-    // wrapper files placed from the CLI's own wrapper templates
+    // wrapper files placed from the CLI's own wrapper templates into layout/
     for (const element of ['header', 'footer']) {
       const wrapper = await readFile(
-        join(targetDir, 'custom', 'components', element, `${element}.svelte`),
+        join(targetDir, 'custom', 'components', 'layout', `${element}.svelte`),
         'utf8',
       );
       expect(wrapper.length).toBeGreaterThan(0);

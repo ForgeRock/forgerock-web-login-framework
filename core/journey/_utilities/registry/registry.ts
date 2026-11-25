@@ -348,7 +348,7 @@ const WRAPPER_ELEMENTS = ['header', 'footer'] as const;
 
 /**
  * Seeds the page header/footer wrapper files into
- * `custom/components/{header,footer}/<element>.svelte` when they are absent,
+ * `custom/components/layout/<element>.svelte` when they are absent,
  * copying from the tracked `wrapper-templates/` directory that lives next to
  * this module. Fill-if-absent: a wrapper that already exists (customer-edited
  * or previously seeded) is never overwritten, and each element is handled
@@ -373,7 +373,7 @@ export const seedMissingWrappers = (projectDir: string) =>
           projectDir,
           'custom',
           'components',
-          element,
+          'layout',
           `${element}.svelte`,
         );
         if (yield* fs.exists(seedPath)) {
