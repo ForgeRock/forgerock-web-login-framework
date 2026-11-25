@@ -9,6 +9,16 @@ A stage controls the layout and submission behaviour of an entire authentication
 step (page node). It receives the full JourneyStep, maps each callback to its
 component via CallbackMapper, and renders the form chrome (header, alerts,
 submit button, links).
+
+PROP RULES (Custom Components public API contract)
+──────────────────────────────────────────────────
+The framework passes exactly the props declared below and nothing else.
+Do not add required props of your own — they will arrive undefined.
+Submit through `form.submit()` — never call the journey store or reimplement
+submission; the runtime owns duplicate-submission protection, validation,
+and error handling. Treat `journey.loading` as authoritative: block
+conflicting actions while it is true. Render feedback from `form.status`
+and `form.message`; do not render unsafe AM-derived HTML.
 -->
 
 <script lang="ts">

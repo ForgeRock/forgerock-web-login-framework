@@ -7,6 +7,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect } from 'vitest';
 
+// Test-only cross-package import: the boundary checker that compiles the
+// customer source is the same checker the scaffolded output must pass.
+// Relative source path (not the workspace package export) so the CLI test run
+// does not depend on build:framework having produced core/dist. Excluded from
+// the published package (files: ["dist"]) and from tsc (tsconfig include: src).
+import { scanCustomComponents } from '../../../core/custom-imports.js';
 import {
   CallbackNameSchema,
   scaffoldComponent,
@@ -133,6 +139,147 @@ describe('scaffoldComponent — template substitution', () => {
     expect(utils).toContain('formatJWTLoginLabel');
     expect(test).not.toContain('__COMPONENT_NAME_PASCAL__');
     expect(test).toContain('formatJWTLoginLabel');
+  });
+});
+
+// ── SDKS-5510 boundary + prop-rule tests ─────────────────────────────────────
+//
+// The scaffolded component source is customer source: it must pass the
+// forbidden-import boundary checker exactly like any other file under
+// custom/components/, and its prop guidance must match the SDKS-5510 public
+// contract (documented props only; runtime commands, not store internals).
+
+describe('scaffoldComponent — SDKS-5510 boundary compliance', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    tmpDir = await mkdtemp(join(tmpdir(), 'ping-lf-gen-boundary-'));
+    await createMinimalProject(tmpDir);
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('scaffolded callback passes the forbidden-import boundary check', async () => {
+    await runEffect(scaffoldComponent('callback', 'MyCallback', tmpDir));
+
+    const violations = scanCustomComponents(tmpDir);
+    expect(violations).toEqual([]);
+  });
+
+  it('scaffolded stage passes the forbidden-import boundary check', async () => {
+    await runEffect(scaffoldComponent('stage', 'My Login Stage', tmpDir));
+
+    const violations = scanCustomComponents(tmpDir);
+    expect(violations).toEqual([]);
+  });
+
+  it('boundary check catches a forbidden import in the same tmp tree (sanity)', async () => {
+    await runEffect(scaffoldComponent('callback', 'MyCallback', tmpDir));
+
+    const badFile = join(
+      tmpDir,
+      'custom',
+      'components',
+      'callbacks',
+      'my-callback',
+      'my-callback.svelte',
+    );
+    await writeFile(badFile, `import { styleStore } from '$core/style.store';\n`, 'utf8');
+
+    const violations = scanCustomComponents(tmpDir);
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.violations[0]?.kind).toBe('forbidden-alias');
+  });
+});
+
+describe('scaffoldComponent — SDKS-5510 prop rules in generated templates', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    tmpDir = await mkdtemp(join(tmpdir(), 'ping-lf-gen-props-'));
+    await createMinimalProject(tmpDir);
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('callback template documents the documented-prop contract, not SDK internals', async () => {
+    await runEffect(scaffoldComponent('callback', 'MyCallback', tmpDir));
+
+    const content = await readFile(
+      join(tmpDir, 'custom', 'components', 'callbacks', 'my-callback', 'my-callback.svelte'),
+      'utf8',
+    );
+    // Prop rules: read/write values through the documented callback accessors.
+    expect(content).toContain('getInputValue');
+    expect(content).toContain('setInputValue');
+    // No guidance toward prohibited surfaces.
+    expect(content).not.toMatch(/\$core|\$journey|\$components/);
+  });
+
+  it('stage template directs submission through form.submit, not store internals', async () => {
+    await runEffect(scaffoldComponent('stage', 'My Login Stage', tmpDir));
+
+    const content = await readFile(
+      join(tmpDir, 'custom', 'components', 'stages', 'my-login-stage', 'my-login-stage.svelte'),
+      'utf8',
+    );
+    // Prop rules: submit via the documented form prop; no journeyStore access.
+    expect(content).toContain('form?.submit');
+    expect(content).not.toContain('journeyStore');
+    // No guidance toward prohibited surfaces.
+    expect(content).not.toMatch(/\$core|\$journey|\$components/);
+  });
+
+  it('stage template documents the SDKS-5510 prop rules', async () => {
+    await runEffect(scaffoldComponent('stage', 'My Login Stage', tmpDir));
+
+    const content = await readFile(
+      join(tmpDir, 'custom', 'components', 'stages', 'my-login-stage', 'my-login-stage.svelte'),
+      'utf8',
+    );
+    // Documented props only: the framework passes exactly the declared props.
+    expect(content).toContain('Do not add required props of your own');
+    // Submission goes through the documented command, never the journey store.
+    expect(content).toContain('form.submit()');
+    // journey.loading is authoritative for blocking conflicting actions.
+    expect(content).toContain('journey.loading');
+  });
+
+  it('callback template documents the SDKS-5510 prop rules', async () => {
+    await runEffect(scaffoldComponent('callback', 'MyCallback', tmpDir));
+
+    const content = await readFile(
+      join(tmpDir, 'custom', 'components', 'callbacks', 'my-callback', 'my-callback.svelte'),
+      'utf8',
+    );
+    // Documented props only: the framework passes exactly the declared props.
+    expect(content).toContain('Do not add required props of your own');
+    // Values flow through the documented callback accessors.
+    expect(content).toContain('getInputValue');
+    expect(content).toContain('setInputValue');
+  });
+
+  it('templates do not embed framework-internal alias specifiers', async () => {
+    await runEffect(scaffoldComponent('callback', 'MyCallback', tmpDir));
+    await runEffect(scaffoldComponent('stage', 'My Login Stage', tmpDir));
+
+    const componentDirs = [
+      join(tmpDir, 'custom', 'components', 'callbacks', 'my-callback'),
+      join(tmpDir, 'custom', 'components', 'stages', 'my-login-stage'),
+    ];
+    for (const componentDir of componentDirs) {
+      const files = await import('node:fs/promises').then((fs) => fs.readdir(componentDir));
+      for (const file of files) {
+        const content = await readFile(join(componentDir, file), 'utf8');
+        expect(content).not.toMatch(/['"]\$core|['"]\$journey|['"]\$components|['"]\$locales/);
+      }
+    }
   });
 });
 
