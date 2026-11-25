@@ -40,7 +40,7 @@ describe('expandTilde', () => {
   });
 });
 
-describe('copyWithExclusions — protected custom component paths', () => {
+describe('copyWithExclusions — sandbox semantics (custom/ is customer-owned)', () => {
   let sourceDir: string;
   let targetDir: string;
 
@@ -54,22 +54,38 @@ describe('copyWithExclusions — protected custom component paths', () => {
     await rm(targetDir, { recursive: true, force: true });
   });
 
-  const seedSource = () =>
+  /**
+   * Seeds the framework source with files across the whole custom/ tree,
+   * including files no current guard mentions (a new framework file dropped
+   * under custom/components/ in a future release). The default-deny sandbox
+   * must skip all of them; only `includeSandbox: true` copies them.
+   */
+  const seedFrameworkSource = () =>
     Effect.gen(function* () {
-      // Protected custom component dirs and wrapper files that must NOT be
-      // copied over customer content
       yield* Effect.promise(() =>
         Promise.all([
           mkdir(join(sourceDir, 'custom', 'components', 'callbacks'), { recursive: true }),
           mkdir(join(sourceDir, 'custom', 'components', 'stages'), { recursive: true }),
           mkdir(join(sourceDir, 'custom', 'components', 'layout'), { recursive: true }),
+          mkdir(join(sourceDir, 'custom', 'components', 'demo', 'stages', 'custom-login'), {
+            recursive: true,
+          }),
         ]),
       );
-      // Framework content that IS copied (files after their dirs exist)
       yield* Effect.promise(() =>
         Promise.all([
           writeFile(join(sourceDir, 'package.json'), '{}', 'utf8'),
           writeFile(join(sourceDir, 'README.md'), '# framework', 'utf8'),
+          writeFile(
+            join(sourceDir, 'custom', 'components', 'README.md'),
+            '# framework custom readme',
+            'utf8',
+          ),
+          writeFile(
+            join(sourceDir, 'custom', 'components', 'login-framework.ts'),
+            '// framework surface',
+            'utf8',
+          ),
           writeFile(
             join(sourceDir, 'custom', 'components', 'callbacks', 'framework-callback.svelte'),
             '<!-- framework -->',
@@ -90,76 +106,105 @@ describe('copyWithExclusions — protected custom component paths', () => {
             '<!-- framework footer -->',
             'utf8',
           ),
+          writeFile(
+            join(
+              sourceDir,
+              'custom',
+              'components',
+              'demo',
+              'stages',
+              'custom-login',
+              'custom-login.svelte',
+            ),
+            '<!-- framework demo -->',
+            'utf8',
+          ),
+          // A framework file under custom/ no guard knows about: the future-release case.
+          writeFile(
+            join(sourceDir, 'custom', 'components', 'new-thing.txt'),
+            '<!-- framework new thing -->',
+            'utf8',
+          ),
         ]),
       );
     });
 
-  it.effect('does not copy framework component dirs or wrapper files over customer content', () =>
+  /** Every framework file the source seeds under custom/ — none may land in the target by default. */
+  const sandboxFiles = [
+    'custom/components/README.md',
+    'custom/components/login-framework.ts',
+    'custom/components/callbacks/framework-callback.svelte',
+    'custom/components/stages/framework-stage.svelte',
+    'custom/components/layout/header.svelte',
+    'custom/components/layout/footer.svelte',
+    'custom/components/demo/stages/custom-login/custom-login.svelte',
+    'custom/components/new-thing.txt',
+  ];
+
+  it.effect('default copy skips the entire custom/ tree', () =>
     Effect.gen(function* () {
-      yield* seedSource();
+      yield* seedFrameworkSource();
 
-      // Customer content already in the target (what a customer project owns)
-      yield* Effect.promise(() =>
-        Promise.all([
-          mkdir(join(targetDir, 'custom', 'components', 'callbacks'), { recursive: true }),
-          mkdir(join(targetDir, 'custom', 'components', 'stages'), { recursive: true }),
-          mkdir(join(targetDir, 'custom', 'components', 'layout'), { recursive: true }),
-        ]),
-      );
-      yield* Effect.promise(() =>
-        Promise.all([
-          writeFile(
-            join(targetDir, 'custom', 'components', 'callbacks', 'customer-callback.svelte'),
-            '<!-- customer -->',
-            'utf8',
-          ),
-          writeFile(
-            join(targetDir, 'custom', 'components', 'stages', 'customer-stage.svelte'),
-            '<!-- customer -->',
-            'utf8',
-          ),
-          writeFile(
-            join(targetDir, 'custom', 'components', 'layout', 'header.svelte'),
-            '<!-- customer header -->',
-            'utf8',
-          ),
-        ]),
-      );
-
-      // it.effect's default runtime has no platform services; NodeContext
-      // supplies the real Node FileSystem/Path that copyWithExclusions needs.
       yield* copyWithExclusions(sourceDir, targetDir).pipe(Effect.provide(NodeContext.layer));
 
-      // Customer-edited wrapper file survives untouched
-      const customerHeader = yield* Effect.promise(() =>
-        readFile(join(targetDir, 'custom', 'components', 'layout', 'header.svelte'), 'utf8'),
-      );
-      expect(customerHeader).toBe('<!-- customer header -->');
-
-      // None of the framework's protected-dir components landed: each read rejects
-      const frameworkFiles = [
-        join(targetDir, 'custom', 'components', 'callbacks', 'framework-callback.svelte'),
-        join(targetDir, 'custom', 'components', 'stages', 'framework-stage.svelte'),
-      ];
-      for (const file of frameworkFiles) {
-        const exit = yield* Effect.exit(Effect.promise(() => readFile(file, 'utf8')));
-        expect(Exit.isFailure(exit)).toBe(true);
+      for (const relativePath of sandboxFiles) {
+        const exit = yield* Effect.exit(
+          Effect.promise(() => readFile(join(targetDir, relativePath), 'utf8')),
+        );
+        expect(Exit.isFailure(exit), `${relativePath} must not be copied`).toBe(true);
       }
-
-      // The wrapper file the target lacks is NOT created by the bulk copy.
-      // Backfilling absent wrappers is copyWrapperFiles' job, not the copy guard's.
-      const footerExit = yield* Effect.exit(
-        Effect.promise(() =>
-          readFile(join(targetDir, 'custom', 'components', 'layout', 'footer.svelte'), 'utf8'),
-        ),
-      );
-      expect(Exit.isFailure(footerExit)).toBe(true);
 
       // Unprotected framework content still copied
       const packageJson = yield* Effect.promise(() =>
         readFile(join(targetDir, 'package.json'), 'utf8'),
       );
       expect(packageJson).toBe('{}');
+      const readme = yield* Effect.promise(() => readFile(join(targetDir, 'README.md'), 'utf8'));
+      expect(readme).toBe('# framework');
+    }),
+  );
+
+  it.effect('includeSandbox: true copies the custom/ tree (init: fresh project)', () =>
+    Effect.gen(function* () {
+      yield* seedFrameworkSource();
+
+      yield* copyWithExclusions(sourceDir, targetDir, { includeSandbox: true }).pipe(
+        Effect.provide(NodeContext.layer),
+      );
+
+      for (const relativePath of sandboxFiles) {
+        const content = yield* Effect.promise(() =>
+          readFile(join(targetDir, relativePath), 'utf8'),
+        );
+        expect(content.length, `${relativePath} must be copied`).toBeGreaterThan(0);
+      }
+    }),
+  );
+
+  it.effect('customer content under custom/ survives a default copy', () =>
+    Effect.gen(function* () {
+      yield* seedFrameworkSource();
+
+      yield* Effect.promise(() =>
+        mkdir(join(targetDir, 'custom', 'components', 'callbacks'), { recursive: true }),
+      );
+      yield* Effect.promise(() =>
+        writeFile(
+          join(targetDir, 'custom', 'components', 'callbacks', 'customer-callback.svelte'),
+          '<!-- customer -->',
+          'utf8',
+        ),
+      );
+
+      yield* copyWithExclusions(sourceDir, targetDir).pipe(Effect.provide(NodeContext.layer));
+
+      const customerCallback = yield* Effect.promise(() =>
+        readFile(
+          join(targetDir, 'custom', 'components', 'callbacks', 'customer-callback.svelte'),
+          'utf8',
+        ),
+      );
+      expect(customerCallback).toBe('<!-- customer -->');
     }),
   );
 });
@@ -263,12 +308,13 @@ describe('copyWrapperFiles — fill-if-absent wrapper backfill from the CLI wrap
   );
 });
 
-describe('init scaffold + update guard coverage', () => {
-  it('scaffolds callbacks/stages only; the wrapper files are the protected file set', () => {
-    // CUSTOM_COMPONENT_DIRS (init scaffold) and the copy guard in
-    // services/file-system must agree: callbacks/stages are dir-protected,
-    // and the framework-shipped wrapper files are file-protected so `update`
-    // can never overwrite customer edits to them.
+describe('init scaffold + sandbox contract', () => {
+  it('scaffolds callbacks/stages; wrapper files are init-placed, update-never-touched', () => {
+    // CUSTOM_COMPONENT_DIRS (init scaffold) and CUSTOM_WRAPPER_FILES (init
+    // wrapper placement) cover everything init writes inside custom/.
+    // `update` writes nothing inside custom/ at all: the default-deny sandbox
+    // skips the whole tree, and absent wrappers are seeded by the framework's
+    // Vite plugin on the project's next build, not by the update copy.
     expect([...CUSTOM_COMPONENT_DIRS]).toEqual(['callbacks', 'stages']);
     expect([...CUSTOM_WRAPPER_FILES]).toEqual([
       'custom/components/layout/header.svelte',
@@ -276,7 +322,7 @@ describe('init scaffold + update guard coverage', () => {
     ]);
   });
 
-  it('wrapper backfill pairs one CLI-shipped template per element', () => {
+  it('wrapper templates pair one CLI-shipped template per element (init only)', () => {
     // The copy source is the CLI's own templates/wrapper/ dir (shipped in
     // dist like the callback/stage templates), one per element, never a core/
     // path: tools/cli cannot depend on core/.

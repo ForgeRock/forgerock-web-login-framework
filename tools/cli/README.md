@@ -172,8 +172,7 @@ ping-lf update --directory /path/to/project  # target a specific project root
 
 **What it preserves**
 
-- `experimental/custom/` — all custom components are untouched
-- The header and footer wrapper files are never overwritten — `update` only backfills ones that are missing, so your edits survive
+- `custom/` — the entire customer sandbox (components, layout wrappers, README, demo) is skipped; an update never writes inside it. A project missing the wrapper files gets them from the framework's Vite plugin on the next build, never from the update copy
 - `pnpm-workspace.yaml` — your workspace config is not overwritten
 - `.env` files — excluded from the copy
 

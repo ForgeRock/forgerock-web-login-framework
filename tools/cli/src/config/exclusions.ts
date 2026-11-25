@@ -49,6 +49,28 @@ const ALLOW_LIST = ['.env.example', '.env.docker.example'] as const;
 
 import { normalizeSeparators } from '../utils.js';
 
+/**
+ * Path prefixes the framework never ships and the CLI copy must never write:
+ * the customer sandbox. Everything under `custom/` is customer-owned code and
+ * docs — components, theme, demo, README. A default-deny prefix (rather than a
+ * deny-list of known subpaths) means a file the framework adds under `custom/`
+ * in a future release is skipped automatically; new sandbox siblings like
+ * `custom/theme/` are covered with no code change. `ping-lf init` is the only
+ * flow allowed to write inside the sandbox (it creates the project and its
+ * initial `custom/` tree from the framework source, via `includeSandbox`).
+ */
+const SANDBOX_PREFIXES = ['custom/'] as const;
+
+/**
+ * True when the given project-relative path lives inside the customer
+ * sandbox. Framework-side flows (`ping-lf update`, MCP `update`) must never
+ * write to a path where this returns true.
+ */
+export function isSandboxPath(relativePath: string): boolean {
+  const normalized = normalizeSeparators(relativePath);
+  return SANDBOX_PREFIXES.some((prefix) => `${normalized}/`.startsWith(prefix));
+}
+
 export function isExcluded(relativePath: string): boolean {
   const normalized = normalizeSeparators(relativePath);
   if (ALLOW_LIST.some((allowed) => normalized === allowed)) {

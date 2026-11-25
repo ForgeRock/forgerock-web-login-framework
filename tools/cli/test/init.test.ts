@@ -116,6 +116,19 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     await writeFile(join(sourceDir, 'package.json'), '{}', 'utf8');
     await mkdir(join(sourceDir, 'custom', 'components', 'callbacks'), { recursive: true });
     await mkdir(join(sourceDir, 'custom', 'components', 'stages'), { recursive: true });
+    // Sandbox framework files (README, demo/) placed in the fresh project —
+    // init is the one flow allowed to write inside custom/.
+    await writeFile(
+      join(sourceDir, 'custom', 'components', 'README.md'),
+      '# framework custom readme',
+      'utf8',
+    );
+    await mkdir(join(sourceDir, 'custom', 'components', 'demo', 'stages'), { recursive: true });
+    await writeFile(
+      join(sourceDir, 'custom', 'components', 'demo', 'stages', 'custom-login.svelte'),
+      '<!-- framework demo -->',
+      'utf8',
+    );
     // Wrapper content comes from the CLI's own templates/wrapper/ dir (resolved
     // inside the CLI, not from the framework source tree) — no core/ stub needed.
   };
@@ -133,6 +146,17 @@ describe('initProject — wrapper files + scaffold dirs', () => {
         readFile(join(targetDir, 'custom', 'components', dir, '.gitkeep'), 'utf8'),
       ).resolves.toBe('');
     }
+    // Sandbox framework files (README, demo/) placed in the fresh project
+    // — init is the one flow allowed to write inside custom/.
+    await expect(
+      readFile(join(targetDir, 'custom', 'components', 'README.md'), 'utf8'),
+    ).resolves.toBe('# framework custom readme');
+    await expect(
+      readFile(
+        join(targetDir, 'custom', 'components', 'demo', 'stages', 'custom-login.svelte'),
+        'utf8',
+      ),
+    ).resolves.toBe('<!-- framework demo -->');
     // headers/ and footers/ (registry-era dirs) are NOT scaffolded
     await expect(access(join(targetDir, 'custom', 'components', 'headers'))).rejects.toThrow();
     await expect(access(join(targetDir, 'custom', 'components', 'footers'))).rejects.toThrow();

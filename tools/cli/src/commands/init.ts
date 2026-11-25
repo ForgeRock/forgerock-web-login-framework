@@ -26,7 +26,9 @@ const PNPM_WORKSPACE = `packages:
 
 /**
  * Custom component directories scaffolded (with .gitkeep) at project init.
- * Protected during `ping-lf update` — see PROTECTED_DIRS in services/file-system.
+ * Never touched by `ping-lf update`: the update copy skips the whole
+ * customer sandbox (custom/) by default — see isSandboxPath in
+ * config/exclusions.
  */
 export const CUSTOM_COMPONENT_DIRS = ['callbacks', 'stages'] as const;
 
@@ -84,15 +86,17 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
         const { sourceDir, resolvedVersion } = yield* resolveSource(local, version, resolvedDir);
 
         // ── 2. Create target directory + copy framework (with exclusions) ──
+        // includeSandbox: init is project bootstrap and owns the initial
+        // custom/ tree — the only flow allowed to write inside the sandbox.
         yield* Console.log('Copying framework files...');
         yield* fs.makeDirectory(resolvedDir, { recursive: true });
-        yield* copyWithExclusions(sourceDir, resolvedDir);
+        yield* copyWithExclusions(sourceDir, resolvedDir, { includeSandbox: true });
 
         // ── 2b. Place the framework-shipped wrapper files ──────────────────
-        // The bulk copy skips them (they are file-protected: customer edits
-        // to them must survive `update`), so init places them explicitly from
-        // the CLI's own wrapper templates. The app's +page.svelte imports them
-        // directly, so a project without them cannot build.
+        // The app's +page.svelte imports them directly, so a project without
+        // them cannot build. They are placed explicitly from the CLI's own
+        // wrapper templates; `update` never rewrites them (sandbox skip +
+        // build-time Vite-plugin seed for projects that predate wrappers).
         yield* copyWrapperFiles(resolvedDir, getTemplatesDir());
 
         return resolvedVersion;
@@ -103,10 +107,10 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     yield* fs.writeFileString(path.join(resolvedDir, 'pnpm-workspace.yaml'), PNPM_WORKSPACE);
 
     // ── 4. Scaffold custom/components/ ────────────────────────────────────
-    // copyWithExclusions already copies custom/components/demo/,
-    // login-framework.ts, README.md, and tsconfig.json from the source.
-    // Only the custom component dirs are protected (they hold user components).
-    // Create them as empty dirs with .gitkeep — components come via `ping-lf generate`.
+    // copyWithExclusions ({ includeSandbox: true }) already copies
+    // custom/components/demo/, login-framework.ts, and README.md from the
+    // source. Create the customer component dirs as empty dirs with .gitkeep
+    // — components come via `ping-lf generate`.
     yield* Console.log('Scaffolding custom component directories...');
     yield* Effect.forEach(
       CUSTOM_COMPONENT_DIRS,

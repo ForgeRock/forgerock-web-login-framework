@@ -3,8 +3,7 @@ import { Console, Effect, Option } from 'effect';
 import nodePath from 'node:path';
 
 import { assertValidProject, writeVersion } from '../config/version.js';
-import { copyWithExclusions, copyWrapperFiles, expandTilde } from '../services/file-system.js';
-import { getTemplatesDir } from './generate.js';
+import { copyWithExclusions, expandTilde } from '../services/file-system.js';
 import { resolveSource } from './source.js';
 
 export interface UpdateProjectOptions {
@@ -25,20 +24,18 @@ export const updateProject = ({ directory, local, tag }: UpdateProjectOptions) =
     // ── 2. Resolve source + copy framework (scoped: temp dir auto-cleaned) ──
     // Effect.scoped closes the Scope that release.fetch opens, triggering
     // automatic removal of the .framework-tmp directory after copying.
+    //
+    // The copy runs with the default-deny sandbox: everything under custom/
+    // (components, wrappers, README, demo) is customer-owned and skipped, so
+    // an update can never write inside it. A project updated from an older
+    // framework version that predates the wrapper files gets them from the
+    // framework's Vite plugin, which seeds missing wrappers on the next
+    // build/dev-server start (fill-if-absent, never overwrites edits).
     const resolvedVersion = yield* Effect.scoped(
       Effect.gen(function* () {
         const { sourceDir, resolvedVersion } = yield* resolveSource(local, tag, cwd);
         yield* Console.log('Copying updated framework files...');
         yield* copyWithExclusions(sourceDir, cwd);
-
-        // ── 2b. Backfill missing wrapper files ─────────────────────────────
-        // The bulk copy skips them (they are file-protected so customer edits
-        // survive), but a project updated from an older framework version may
-        // not have them yet — the app's +page.svelte imports them directly, so
-        // a project missing one cannot build. copyWrapperFiles copies only
-        // absent files, from the CLI's own wrapper templates, never
-        // overwriting customer edits.
-        yield* copyWrapperFiles(cwd, getTemplatesDir());
 
         return resolvedVersion;
       }),

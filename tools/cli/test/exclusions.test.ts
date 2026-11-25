@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isExcluded } from '../src/config/exclusions.js';
+import { isExcluded, isSandboxPath } from '../src/config/exclusions.js';
 
 describe('isExcluded', () => {
   it('excludes known files', () => {
@@ -71,5 +71,31 @@ describe('isExcluded', () => {
     expect(isExcluded('core/journey/_utilities/map-stage.utilities.ts')).toBe(false);
     expect(isExcluded('custom/components/README.md')).toBe(false);
     expect(isExcluded('README.md')).toBe(false);
+  });
+});
+
+describe('isSandboxPath', () => {
+  it('matches the entire custom/ tree, any depth', () => {
+    expect(isSandboxPath('custom')).toBe(true);
+    expect(isSandboxPath('custom/components')).toBe(true);
+    expect(isSandboxPath('custom/components/README.md')).toBe(true);
+    expect(isSandboxPath('custom/components/login-framework.ts')).toBe(true);
+    expect(isSandboxPath('custom/components/demo/stages/custom-login/custom-login.svelte')).toBe(
+      true,
+    );
+    expect(isSandboxPath('custom/components/callbacks/my-callback/my-callback.svelte')).toBe(true);
+    expect(isSandboxPath('custom/components/layout/header.svelte')).toBe(true);
+  });
+
+  it('matches future custom/ siblings (e.g. custom/theme) for free', () => {
+    expect(isSandboxPath('custom/theme')).toBe(true);
+    expect(isSandboxPath('custom/theme/colors.ts')).toBe(true);
+  });
+
+  it('does not match similarly-named paths outside custom/', () => {
+    expect(isSandboxPath('customize')).toBe(false);
+    expect(isSandboxPath('src/custom/helper.ts')).toBe(false);
+    expect(isSandboxPath('core/journey/registry.ts')).toBe(false);
+    expect(isSandboxPath('')).toBe(false);
   });
 });

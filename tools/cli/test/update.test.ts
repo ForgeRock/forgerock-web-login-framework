@@ -1,6 +1,6 @@
 import { NodeContext } from '@effect/platform-node';
 import { Effect, Layer, Option } from 'effect';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -28,7 +28,7 @@ const ReleaseStubLayer = Layer.succeed(Release, {
   fetchBranch: () => Effect.die('Release stub should not be called'),
 });
 
-describe('updateProject — wrapper file preservation', () => {
+describe('updateProject — sandbox semantics', () => {
   let sourceDir: string;
   let projectDir: string;
 
@@ -42,41 +42,86 @@ describe('updateProject — wrapper file preservation', () => {
     await rm(projectDir, { recursive: true, force: true });
   });
 
+  /**
+   * Framework source carrying files across the whole custom/ tree. A real
+   * release tarball contains these; the sandbox must skip every one of them
+   * so the customer's tree under custom/ is never touched by an update.
+   */
   const seedFrameworkSource = async () => {
     await writeFile(join(sourceDir, 'package.json'), '{}', 'utf8');
-    // Wrapper content comes from the CLI's own templates/wrapper/ dir (resolved
-    // inside the CLI, not from the framework source tree) — no core/ stub needed.
+    await writeFile(join(sourceDir, 'README.md'), '# framework', 'utf8');
+    await mkdir(join(sourceDir, 'custom', 'components', 'layout'), { recursive: true });
+    await mkdir(join(sourceDir, 'custom', 'components', 'demo', 'stages', 'custom-login'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(sourceDir, 'custom', 'components', 'README.md'),
+      '# framework custom readme',
+      'utf8',
+    );
+    await writeFile(
+      join(sourceDir, 'custom', 'components', 'login-framework.ts'),
+      '// framework surface',
+      'utf8',
+    );
+    await writeFile(
+      join(sourceDir, 'custom', 'components', 'layout', 'header.svelte'),
+      '<!-- framework header -->',
+      'utf8',
+    );
+    await writeFile(
+      join(sourceDir, 'custom', 'components', 'layout', 'footer.svelte'),
+      '<!-- framework footer -->',
+      'utf8',
+    );
+    await writeFile(
+      join(
+        sourceDir,
+        'custom',
+        'components',
+        'demo',
+        'stages',
+        'custom-login',
+        'custom-login.svelte',
+      ),
+      '<!-- framework demo -->',
+      'utf8',
+    );
   };
 
-  const seedCustomerProject = async (overrides: {
-    readonly header?: string;
-    readonly footerPresent?: boolean;
-  }) => {
+  /** Writes .generator-version so assertValidProject passes, plus customer content. */
+  const seedCustomerProject = async () => {
     await writeFile(
       join(projectDir, '.generator-version'),
       JSON.stringify({ version: '1.0.0', generatedAt: new Date().toISOString() }) + '\n',
       'utf8',
     );
     await mkdir(join(projectDir, 'custom', 'components', 'layout'), { recursive: true });
+    await mkdir(join(projectDir, 'custom', 'components', 'callbacks'), { recursive: true });
     await writeFile(
       join(projectDir, 'custom', 'components', 'layout', 'header.svelte'),
-      overrides.header ?? '<!-- customer header -->',
+      '<!-- customer header -->',
       'utf8',
     );
-    if (overrides.footerPresent) {
-      await writeFile(
-        join(projectDir, 'custom', 'components', 'layout', 'footer.svelte'),
-        '<!-- customer footer -->',
-        'utf8',
-      );
-    }
+    await writeFile(
+      join(projectDir, 'custom', 'components', 'layout', 'footer.svelte'),
+      '<!-- customer footer -->',
+      'utf8',
+    );
+    await writeFile(
+      join(projectDir, 'custom', 'components', 'callbacks', 'customer-callback.svelte'),
+      '<!-- customer callback -->',
+      'utf8',
+    );
+    await writeFile(
+      join(projectDir, 'custom', 'components', 'README.md'),
+      '# customer custom readme',
+      'utf8',
+    );
   };
 
-  it('preserves customer-edited wrapper files on update', async () => {
-    await seedFrameworkSource();
-    await seedCustomerProject({ header: '<!-- customer header -->', footerPresent: true });
-
-    await provide(
+  const runUpdate = () =>
+    provide(
       updateProject({
         directory: Option.some(projectDir),
         local: Option.some(sourceDir),
@@ -84,42 +129,71 @@ describe('updateProject — wrapper file preservation', () => {
       }),
     );
 
-    const header = await readFile(
-      join(projectDir, 'custom', 'components', 'layout', 'header.svelte'),
-      'utf8',
+  const projectPath = (...parts: string[]) => join(projectDir, ...parts);
+
+  it('update copies nothing from custom/ — customer content survives untouched', async () => {
+    await seedFrameworkSource();
+    await seedCustomerProject();
+
+    await runUpdate();
+
+    // Every customer file exactly as it was
+    expect(
+      await readFile(projectPath('custom', 'components', 'layout', 'header.svelte'), 'utf8'),
+    ).toBe('<!-- customer header -->');
+    expect(
+      await readFile(projectPath('custom', 'components', 'layout', 'footer.svelte'), 'utf8'),
+    ).toBe('<!-- customer footer -->');
+    expect(
+      await readFile(
+        projectPath('custom', 'components', 'callbacks', 'customer-callback.svelte'),
+        'utf8',
+      ),
+    ).toBe('<!-- customer callback -->');
+    expect(await readFile(projectPath('custom', 'components', 'README.md'), 'utf8')).toBe(
+      '# customer custom readme',
     );
-    const footer = await readFile(
-      join(projectDir, 'custom', 'components', 'layout', 'footer.svelte'),
-      'utf8',
-    );
-    expect(header).toBe('<!-- customer header -->');
-    expect(footer).toBe('<!-- customer footer -->');
+
+    // Framework custom/ files did not land anywhere
+    for (const relativePath of [
+      join('custom', 'components', 'login-framework.ts'),
+      join('custom', 'components', 'README.md'),
+    ]) {
+      // README.md exists but is the customer's own; check the others are absent
+      if (relativePath.endsWith('README.md')) {
+        continue;
+      }
+      await expect(access(projectPath(relativePath))).rejects.toThrow();
+    }
   });
 
-  it('backfills wrapper files the project is missing', async () => {
+  it('update does not backfill wrapper files — the framework Vite plugin seeds them on next build', async () => {
     await seedFrameworkSource();
-    // Customer project predates the wrappers: header present, footer absent
-    await seedCustomerProject({});
-
-    await provide(
-      updateProject({
-        directory: Option.some(projectDir),
-        local: Option.some(sourceDir),
-        tag: Option.none(),
-      }),
-    );
-
-    // header preserved (customer edit), footer backfilled from the CLI's
-    // own wrapper template (content = the shipped template bytes)
-    const header = await readFile(
-      join(projectDir, 'custom', 'components', 'layout', 'header.svelte'),
+    // Project predates wrappers: layout/ has no files yet
+    await writeFile(
+      join(projectDir, '.generator-version'),
+      JSON.stringify({ version: '1.0.0', generatedAt: new Date().toISOString() }) + '\n',
       'utf8',
     );
-    const footer = await readFile(
-      join(projectDir, 'custom', 'components', 'layout', 'footer.svelte'),
-      'utf8',
-    );
-    expect(header).toBe('<!-- customer header -->');
-    expect(footer).toContain('Custom page footer wrapper');
+    await mkdir(join(projectDir, 'custom', 'components', 'layout'), { recursive: true });
+
+    await runUpdate();
+
+    await expect(
+      access(join(projectDir, 'custom', 'components', 'layout', 'header.svelte')),
+    ).rejects.toThrow();
+    await expect(
+      access(join(projectDir, 'custom', 'components', 'layout', 'footer.svelte')),
+    ).rejects.toThrow();
+  });
+
+  it('update still refreshes framework files outside custom/', async () => {
+    await seedFrameworkSource();
+    await seedCustomerProject();
+
+    await runUpdate();
+
+    expect(await readFile(projectPath('package.json'), 'utf8')).toBe('{}');
+    expect(await readFile(projectPath('README.md'), 'utf8')).toBe('# framework');
   });
 });
