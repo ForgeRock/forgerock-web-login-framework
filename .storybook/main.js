@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { mergeConfig } from 'vite';
 
 import { customRegistry } from '../core/journey/_utilities/registry/vite-plugin.ts';
+import { customImportBoundary } from '../core/vite-plugin-custom-imports.ts';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -34,7 +35,10 @@ export default {
       .flat()
       .some((p) => p && p.name && p.name.startsWith('vite-plugin-svelte'));
 
-    const extraPlugins = [customRegistry({ projectRoot: resolve(__dirname, '..') })];
+    const extraPlugins = [
+      customRegistry({ projectRoot: resolve(__dirname, '..') }),
+      customImportBoundary({ projectRoot: resolve(__dirname, '..') }),
+    ];
     if (!hasSveltePlugin) {
       const { svelte } = await import('@sveltejs/vite-plugin-svelte');
       extraPlugins.push(svelte());

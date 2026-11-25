@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+import { customImportBoundary } from '../../core/vite-plugin-custom-imports';
 import { frameworkCoreDist } from '../../core/vite-plugin-dist';
 import { packageDedupe } from '../../core/vite-shared';
 
@@ -15,6 +16,7 @@ export default defineConfig(
     plugins: [
       frameworkCoreDist({ packageDir: resolve('../../core') }),
       customRegistry({ projectRoot: resolve('../..') }),
+      customImportBoundary({ projectRoot: resolve('../..') }),
       // Only use SSL plugin in development mode, not production/preview
       ...(mode === 'development' ? [basicSsl()] : []),
       sveltekit(),
@@ -28,14 +30,19 @@ export default defineConfig(
         // Server-only SvelteKit modules, deliberately excluded from the
         // framework-core package build ($app/$env imports; server/ holds
         // SvelteKit-only utilities); resolved from source. All other
-        // $core/$components/$journey/$locales imports map onto the package's
-        // built dist via the frameworkCoreDist plugin.
+        // $core/$components/$journey/$locales imports — and the curated
+        // custom-component surface ($login-framework → generated
+        // dist/login-framework.js) — map onto the package's built dist via
+        // the frameworkCoreDist plugin; no alias entry may shadow those
+        // resolutions.
         '$core/constants': resolve('../../core/constants.ts'),
         '$core/server': resolve('../../core/server'),
         $package: resolve('../../packages/login-widget/dist'),
-        '$login-framework': resolve('../../custom/components/login-framework.ts'),
+        // Bare key prefix-matches $custom/<rest> (Vite alias semantics); a
+        // '$custom/*' key would never match (object keys match exactly or by
+        // /-boundary). The frameworkCoreDist plugin resolves $custom onto the
+        // same directory for the published-widget builds too.
         $custom: resolve('../../custom/components'),
-        '$custom/*': resolve('../../custom/components/*'),
       },
     },
     server: {

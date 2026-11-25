@@ -7,8 +7,9 @@ import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+import { customImportBoundary } from '../../core/vite-plugin-custom-imports';
 import { frameworkCoreDist } from '../../core/vite-plugin-dist';
-import { packageDedupe } from '../../core/vite-shared';
+import { packageDedupe, publishedRegistryExcludes } from '../../core/vite-shared';
 
 /**
  * IIFE build config — produces a self-contained bundle for <script> tag usage.
@@ -44,7 +45,13 @@ export default defineConfig({
   },
   plugins: [
     frameworkCoreDist({ packageDir: resolve('../../core') }),
-    customRegistry({ projectRoot: resolve('../..') }),
+    // publishedRegistryExcludes keeps the repo-local e2e canary stage out of
+    // this published bundle (it registers only in login-app/Storybook builds).
+    customRegistry({
+      projectRoot: resolve('../..'),
+      exclude: [...publishedRegistryExcludes],
+    }),
+    customImportBoundary({ projectRoot: resolve('../..') }),
     svelte({
       compilerOptions: {
         dev: false,
@@ -65,13 +72,12 @@ export default defineConfig({
     // One Svelte runtime and one copy of each @forgerock runtime dep in the
     // bundle: the shared list in core/vite-shared.ts is the single source.
     dedupe: [...packageDedupe],
-    // $core/$components/$journey/$locales are mapped onto the package's
-    // built dist by the frameworkCoreDist plugin above; only the
-    // curated custom-component surface stays aliased to source. The IIFE
-    // bundles the framework (self-contained script tag, `external: []`).
-    alias: {
-      '$login-framework': resolve('../../custom/components/login-framework.ts'),
-    },
+    // $core/$components/$journey/$locales and the curated custom-component
+    // surface ($login-framework → generated dist/login-framework.js) are
+    // mapped onto the package's built dist by the frameworkCoreDist plugin
+    // above; no alias entry may shadow those resolutions. The IIFE bundles
+    // the framework (self-contained script tag, `external: []`).
+    alias: {},
   },
   css: {
     postcss: {

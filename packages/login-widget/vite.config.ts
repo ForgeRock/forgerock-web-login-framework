@@ -8,8 +8,9 @@ import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+import { customImportBoundary } from '../../core/vite-plugin-custom-imports';
 import { frameworkCoreDist } from '../../core/vite-plugin-dist';
-import { packageDedupe } from '../../core/vite-shared';
+import { packageDedupe, publishedRegistryExcludes } from '../../core/vite-shared';
 
 export default defineConfig({
   // Isolated tsconfig for esbuild — avoids dependency on .svelte-kit/tsconfig.json.
@@ -32,8 +33,26 @@ export default defineConfig({
   },
   plugins: [
     frameworkCoreDist({ packageDir: resolve('../../core') }),
-    customRegistry({ projectRoot: resolve('../..') }),
-    visualizer({ open: false, filename: 'dist/stats.html', gzipSize: true, brotliSize: true }),
+    // publishedRegistryExcludes keeps the repo-local e2e canary stage out of
+    // this published bundle (it registers only in login-app/Storybook builds).
+    customRegistry({
+      projectRoot: resolve('../..'),
+      exclude: [...publishedRegistryExcludes],
+    }),
+    customImportBoundary({ projectRoot: resolve('../..') }),
+    // Bundle stats are an on-demand developer tool, not a build artifact: the
+    // output goes outside dist/ (which is the npm package's files list) and
+    // the plugin only loads when ANALYZE=1 is set.
+    ...(process.env.ANALYZE === '1'
+      ? [
+          visualizer({
+            open: false,
+            filename: 'stats.html',
+            gzipSize: true,
+            brotliSize: true,
+          }),
+        ]
+      : []),
     svelte({
       compilerOptions: {
         dev: false,
@@ -56,12 +75,11 @@ export default defineConfig({
     // One Svelte runtime and one copy of each @forgerock runtime dep in the
     // bundle: the shared list in core/vite-shared.ts is the single source.
     dedupe: [...packageDedupe],
-    // $core/$components/$journey/$locales are mapped onto the package's
-    // built dist by the frameworkCoreDist plugin above; only the
-    // curated custom-component surface stays aliased to source.
-    alias: {
-      '$login-framework': resolve('../../custom/components/login-framework.ts'),
-    },
+    // $core/$components/$journey/$locales and the curated custom-component
+    // surface ($login-framework → generated dist/login-framework.js) are
+    // mapped onto the package's built dist by the frameworkCoreDist plugin
+    // above; no alias entry may shadow those resolutions.
+    alias: {},
   },
   css: {
     postcss: {

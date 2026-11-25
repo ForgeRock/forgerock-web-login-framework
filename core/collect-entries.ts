@@ -40,6 +40,9 @@ const EXCLUDED_FILES = new Set([
   'vite-config.test.ts', // tests excluded from the build surface
   'login-framework-surface.ts', // import-surface parity checker, build tooling
   'login-framework-surface.test.ts', // its tests
+  'custom-imports.ts', // customer-source import-boundary checker, build tooling
+  'custom-imports.test.ts', // its tests
+  'vite-plugin-custom-imports.ts', // consumer-side boundary plugin, build tooling
   'collect-entries.ts', // this helper, build tooling
   'style.stories.js',
   'style.story.svelte',
