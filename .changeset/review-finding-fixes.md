@@ -1,0 +1,6 @@
+---
+'@forgerock/login-widget': patch
+'@forgerock/login-framework-cli': patch
+---
+
+Hardening from the SDKS-5511 review. The published widget ESM and IIFE builds no longer register or bundle the repo-local e2e canary stage (a new `exclude` option on the `customRegistry` Vite plugin keeps listed subtrees of `custom/components/` out of the generated registry; the npm bundle and `ping-lf init` scaffolds stay clean, while login-app and Storybook builds still register it for the e2e suite). The custom-component import boundary closes three bypasses: Svelte files are reduced to their script blocks with the Svelte compiler before the import scan (markup can no longer desync the parser into missing a forbidden import), `import.meta.glob(...)` and computed dynamic `import(x)` calls fail the build with a `forbidden-dynamic` violation, and `.mjs`/`.mts`/`.jsx`/`.tsx` files are scanned like `.ts`/`.js`/`.svelte`. `ping-lf init` now writes a `pnpm-workspace.yaml` that lists `core` and `themes` so the scaffolded `build:framework` resolves, and the framework copy shipped by `init`/`update` excludes `.env` and `.env.*` files at any depth plus secret file extensions (`.pem`, `.key`, `.p12`, `.pfx`) and `credentials*` files, not just the repo-root ones.
