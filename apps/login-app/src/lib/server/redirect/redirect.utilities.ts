@@ -189,12 +189,12 @@ export function isOAuthAuthorizePath(url: string): boolean {
 }
 
 function getValidatedOAuthRedirect(context: RedirectData): string | null {
-  if (context.isGotoOnFail || !context.tokenId || !context.successUrl || !context.gotoUrl) {
+  if (context.isGotoOnFail || !context.tokenId || !context.validatedUrl || !context.gotoUrl) {
     return null;
   }
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
   try {
-    const validated = new URL(context.successUrl, amOrigin);
+    const validated = new URL(context.validatedUrl, amOrigin);
     const requested = new URL(context.gotoUrl, amOrigin);
     if (validated.href === requested.href && isOAuthAuthorizePath(validated.href)) {
       return validated.href;
@@ -206,24 +206,24 @@ function getValidatedOAuthRedirect(context: RedirectData): string | null {
 }
 
 /**
- * @function getSuccessRedirect - Returns the successUrl if it is not a default path, otherwise null.
+ * @function getSuccessRedirect - Returns the validatedUrl if it is not a default path, otherwise null.
  * @param {RedirectData} redirectContext - The redirect context.
- * @returns {string | null} The success URL or null.
+ * @returns {string | null} The validated URL or null.
  */
 function getSuccessRedirect(redirectContext: RedirectData): string | null {
-  const { successUrl, amOrigin, isGotoOnFail, gotoUrl } = redirectContext;
+  const { validatedUrl, amOrigin, isGotoOnFail, gotoUrl } = redirectContext;
 
-  if (isGotoOnFail && successUrl !== resolveAgainstOrigin(gotoUrl, amOrigin)) {
+  if (isGotoOnFail && validatedUrl !== resolveAgainstOrigin(gotoUrl, amOrigin)) {
     return null;
   }
 
   if (
-    successUrl &&
-    !isDefaultPath(successUrl) &&
-    !isLoginAppPath(successUrl, amOrigin) &&
-    !isOAuthAuthorizePath(successUrl)
+    validatedUrl &&
+    !isDefaultPath(validatedUrl) &&
+    !isLoginAppPath(validatedUrl, amOrigin) &&
+    !isOAuthAuthorizePath(validatedUrl)
   ) {
-    return resolveAgainstOrigin(successUrl, amOrigin);
+    return resolveAgainstOrigin(validatedUrl, amOrigin);
   }
   return null;
 }
@@ -234,10 +234,10 @@ function getSuccessRedirect(redirectContext: RedirectData): string | null {
  * @returns {string | null} The resolved journey step URL or null.
  */
 function getDefaultPathRedirect(redirectContext: RedirectData): string | null {
-  const { successUrl, journeyStepUrl, gotoUrl, amOrigin } = redirectContext;
+  const { validatedUrl, journeyStepUrl, gotoUrl, amOrigin } = redirectContext;
   const isSamlUrl = gotoUrl.includes('/Consumer/metaAlias') || gotoUrl.includes('/saml2');
   if (
-    isDefaultPath(successUrl) &&
+    isDefaultPath(validatedUrl) &&
     journeyStepUrl &&
     !isSamlUrl &&
     !isLoginAppPath(resolveAgainstOrigin(journeyStepUrl, amOrigin), amOrigin) &&
@@ -256,7 +256,7 @@ function getDefaultPathRedirect(redirectContext: RedirectData): string | null {
 function getSamlRedirect(redirectContext: RedirectData): string | null {
   const gotoUrl = redirectContext.gotoUrl;
   const isSamlUrl = gotoUrl.includes('/Consumer/metaAlias') || gotoUrl.includes('/saml2');
-  if (isDefaultPath(redirectContext.successUrl) && isSamlUrl) {
+  if (isDefaultPath(redirectContext.validatedUrl) && isSamlUrl) {
     return resolveAgainstOrigin(gotoUrl, redirectContext.amOrigin);
   }
   return null;

@@ -80,7 +80,7 @@ export async function createRedirectContext(
    * We check if formRealm exists, if not, we use the realm from cookie or env
    */
   const realm = formRealm ?? cookie.realm ?? normalizeRealm(env.FR_REALM_PATH);
-  const successUrl = gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
+  const validatedUrl = gotoUrl ? await validateGoto(tokenId, gotoUrl, realm) : null;
   const roles = tokenId ? (await getUserRolesFromSession(tokenId, realm)).roles : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
 
@@ -89,7 +89,7 @@ export async function createRedirectContext(
     journeyStepUrl,
     isGotoOnFail,
     gotoUrl,
-    successUrl,
+    validatedUrl,
     roles,
     realm,
     amOrigin,
@@ -128,7 +128,7 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
 }
 
 /**
- * @function validateUrl - validates a redirect URL with the AM backend and returns a success URL if valid
+ * @function validateGoto - validates a redirect URL with the AM backend and returns the validated URL
  *
  * AM returns the key as `successURL` (capital URL) — verified against the
  * tenant; parsing lowercase was why this always returned null.
@@ -136,9 +136,9 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
  * @param {string} tokenId - The session token ID
  * @param {string} gotoUrl - The URL to validate
  * @param {string} [realm] - The realm to validate against; uses the configured realm when omitted.
- * @returns {Promise<string|null>} The validated URL or null if invalid
+ * @returns {Promise<string|null>} AM's validated URL, or null when AM returns no usable answer
  */
-export async function validateUrl(
+export async function validateGoto(
   tokenId: TokenId,
   gotoUrl: string,
   realm?: string,
@@ -159,7 +159,7 @@ export async function validateUrl(
     parsed.data.successURL === 'undefined' ||
     parsed.data.successURL === 'null'
   ) {
-    log.warn('[redirect] goto validation returned no usable successUrl', {
+    log.warn('[redirect] goto validation returned no usable validatedUrl', {
       goto: describeRedirectTarget(gotoUrl),
       realm,
     });

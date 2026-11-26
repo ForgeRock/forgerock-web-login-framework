@@ -22,6 +22,8 @@
   }
 
   $: message = getErrorMessage($page.error);
+  $: customDomainUrl = $page.error?.customDomainUrl;
+  $: customDomainRealm = $page.error?.customDomainRealm;
 </script>
 
 <div
@@ -33,5 +35,12 @@
     <h1 class="tw_primary-header dark:tw_primary-header_dark">Configuration error</h1>
     <p class="tw_text-secondary-dark dark:tw_text-secondary-light">{message}</p>
     <p class="tw_text-secondary-dark dark:tw_text-secondary-light">Status: {$page.status}</p>
+    {#if customDomainUrl}
+      <a
+        href={customDomainUrl}
+        class="tw_text-primary dark:tw_text-primary tw_underline tw_font-medium"
+        data-sveltekit-reload>Continue to the {customDomainRealm} realm</a
+      >
+    {/if}
   </div>
 </div>

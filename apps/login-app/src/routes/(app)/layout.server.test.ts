@@ -134,7 +134,7 @@ describe('(app)/+layout.server.ts wellknown resolution', () => {
         status: 404,
         body: {
           message: expect.stringContaining(
-            "Realm 'bravo' is not available on this domain. This domain serves the 'alpha' realm only.",
+            "Realm 'bravo' is not available on this domain. This custom domain is serving the 'alpha' realm.",
           ),
         },
       });

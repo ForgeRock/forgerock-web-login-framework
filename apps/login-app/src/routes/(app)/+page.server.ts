@@ -17,7 +17,7 @@ import {
   createRedirectContext,
   readAndClearRedirectCookie,
   storeRedirectParams,
-  validateUrl,
+  validateGoto,
 } from '$server/redirect/redirect.effects';
 import {
   buildRoleUrl,
@@ -59,22 +59,22 @@ export const load: PageServerLoad = async (event) => {
       const amOrigin = new URL(AM_DOMAIN_PATH).origin;
 
       // If goto targets AM's OAuth authorize endpoint, let AM validate it
-      // (validateGoto) and only follow the successUrl AM returns, so the SPA's
+      // (validateGoto) and only follow the URL AM validates, so the SPA's
       // iframe PKCE mechanism completes without redirecting on an app-side
       // trust decision.
       const goto = event.url.searchParams.get('goto');
       if (goto) {
         const gotoUrl = new URL(goto, amOrigin);
         if (isOAuthAuthorizePath(gotoUrl.href)) {
-          const successUrl = await validateUrl(tokenId, gotoUrl.href, realm);
+          const validatedUrl = await validateGoto(tokenId, gotoUrl.href, realm);
           // validateGoto echoes a trusted goto back unchanged; any other value
           // (e.g. a substituted default success URL) means AM did not trust the
           // goto, so fall through to the role redirect instead of sending the
           // browser to a URL AM did not bless for this request.
-          if (successUrl === gotoUrl.href) {
-            throw redirect(303, successUrl);
+          if (validatedUrl === gotoUrl.href) {
+            throw redirect(303, validatedUrl);
           }
-          if (successUrl !== null) {
+          if (validatedUrl !== null) {
             log.warn('[redirect] AM did not trust goto, using role redirect', {
               goto: describeRedirectTarget(gotoUrl.href),
               realm,

@@ -73,10 +73,19 @@ export const load: LayoutServerLoad = async ({ url }) => {
   // authenticated on it: the journey would run against the configured realm's
   // wellknown and the attempt would fail or land in the wrong realm.
   if (servedRealm !== null && servedRealm !== 'root' && requestedRealm !== servedRealm) {
-    throw error(
-      404,
-      `Realm '${requestedRealm}' is not available on this domain. This domain serves the '${servedRealm}' realm only.`,
-    );
+    // Recovery is only possible when the arrival URL itself carried a realm
+    // param — dropping it then falls back to the domain's realm. Without the
+    // param the mismatch is a deployment misconfiguration with no client fix.
+    let customDomainUrl: URL | undefined;
+    if (url.searchParams.has('realm')) {
+      customDomainUrl = new URL(url.href);
+      customDomainUrl.searchParams.delete('realm');
+    }
+    throw error(404, {
+      message: `Realm '${requestedRealm}' is not available on this domain. This custom domain is serving the '${servedRealm}' realm.`,
+      customDomainUrl: customDomainUrl?.href,
+      customDomainRealm: servedRealm,
+    });
   }
 
   let requestedWellknownUrl: string;
@@ -103,7 +112,6 @@ export const load: LayoutServerLoad = async ({ url }) => {
     backgroundImageUrl,
     idmTheme,
     themeCatalog,
-    realmPath: requestedRealm,
     wellknown: requestedWellknownUrl,
     fallbackJourney: env.FR_AM_JOURNEY_LOGIN ?? null,
   };

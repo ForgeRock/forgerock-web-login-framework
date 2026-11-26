@@ -9,7 +9,7 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { createRedirectContext, validateUrl } from './redirect.effects';
+import { createRedirectContext, validateGoto } from './redirect.effects';
 import { resolveRedirect, resolveRequestedRealm } from './redirect.utilities';
 
 vi.mock('$app/environment', () => ({ building: false }));
@@ -94,7 +94,7 @@ describe('AM redirect validation', () => {
 
     const context = await createRedirectContext(form, { goto, realm: 'root' });
 
-    expect(context.successUrl).toBe(goto);
+    expect(context.validatedUrl).toBe(goto);
     expect(resolveRedirect(context)).toBe(goto);
     expect(fetch.mock.calls[0][0]).toBe(
       'https://openam.example.com/am/json/users?_action=validateGoto',
@@ -147,7 +147,7 @@ describe('AM redirect validation', () => {
     const fetch = vi.fn().mockResolvedValue(Response.json({ successURL: goto }));
     vi.stubGlobal('fetch', fetch);
 
-    expect(await validateUrl('abc123' as Parameters<typeof validateUrl>[0], goto, realm)).toBe(
+    expect(await validateGoto('abc123' as Parameters<typeof validateGoto>[0], goto, realm)).toBe(
       goto,
     );
     expect(fetch.mock.calls[0][0]).toBe(
@@ -159,7 +159,7 @@ describe('AM redirect validation', () => {
     'rejects a missing or malformed AM validation result: %j',
     async (response) => {
       vi.stubGlobal('fetch', vi.fn().mockResolvedValue(Response.json(response)));
-      expect(await validateUrl('abc123' as Parameters<typeof validateUrl>[0], goto, 'root')).toBe(
+      expect(await validateGoto('abc123' as Parameters<typeof validateGoto>[0], goto, 'root')).toBe(
         null,
       );
     },

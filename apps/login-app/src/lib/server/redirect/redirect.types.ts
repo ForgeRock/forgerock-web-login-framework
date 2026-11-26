@@ -14,7 +14,7 @@ export type RedirectData = {
   journeyStepUrl: string;
   isGotoOnFail: boolean;
   gotoUrl: string;
-  successUrl: string | null;
+  validatedUrl: string | null;
   roles: ReadonlyArray<string>;
   realm: string | undefined;
   amOrigin: string;

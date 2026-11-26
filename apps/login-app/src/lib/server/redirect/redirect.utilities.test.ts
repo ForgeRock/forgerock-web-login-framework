@@ -132,7 +132,7 @@ describe('resolveRedirect', () => {
     journeyStepUrl: '',
     isGotoOnFail: false,
     gotoUrl: '',
-    successUrl: null,
+    validatedUrl: null,
     roles: [],
     realm: 'root',
     amOrigin: 'https://openam.example.com',
@@ -147,7 +147,7 @@ describe('resolveRedirect', () => {
         tokenId: 'abc123' as RedirectData['tokenId'],
         roles: ['ui-global-admin'],
         gotoUrl,
-        successUrl: gotoUrl,
+        validatedUrl: gotoUrl,
         journeyStepUrl: gotoUrl,
       }),
     );
@@ -158,12 +158,12 @@ describe('resolveRedirect', () => {
     // relative default: AM substituted its default console path
     {
       gotoUrl: 'https://openam.example.com/am/oauth2/authorize?state=original',
-      successUrl: '/am/console',
+      validatedUrl: '/am/console',
     },
     // absolute but different: AM rewrote the URL (e.g. appended state)
     {
       gotoUrl: 'https://openam.example.com/am/oauth2/authorize?state=original',
-      successUrl: 'https://openam.example.com/am/oauth2/authorize?state=changed',
+      validatedUrl: 'https://openam.example.com/am/oauth2/authorize?state=changed',
     },
   ])('does not continue an OAuth URL AM did not validate for this request: %j', (urls) => {
     expect(
@@ -189,7 +189,7 @@ describe('resolveRedirect', () => {
           tokenId: 'abc123' as RedirectData['tokenId'],
           roles: ['ui-global-admin'],
           gotoUrl: partnerAuthorize,
-          successUrl: partnerAuthorize,
+          validatedUrl: partnerAuthorize,
           journeyStepUrl: partnerAuthorize,
         }),
       ),
@@ -206,7 +206,7 @@ describe('resolveRedirect', () => {
         makeContext({
           roles: ['ui-global-admin'],
           gotoUrl,
-          successUrl: gotoUrl,
+          validatedUrl: gotoUrl,
           journeyStepUrl: gotoUrl,
           ...authentication,
         }),
@@ -218,15 +218,15 @@ describe('resolveRedirect', () => {
     );
   });
 
-  it('uses successUrl when it is provided and not a default path', () => {
-    const url = resolveRedirect(makeContext({ successUrl: '/enduser' }));
+  it('uses validatedUrl when it is provided and not a default path', () => {
+    const url = resolveRedirect(makeContext({ validatedUrl: '/enduser' }));
     expect(url).toBe('https://openam.example.com/enduser');
   });
 
-  it('falls back to journeyStepUrl when successUrl is a default path', () => {
+  it('falls back to journeyStepUrl when validatedUrl is a default path', () => {
     const url = resolveRedirect(
       makeContext({
-        successUrl: '/platform/console',
+        validatedUrl: '/platform/console',
         journeyStepUrl: '/am/json/realms/root/authenticate',
       }),
     );
@@ -236,7 +236,7 @@ describe('resolveRedirect', () => {
   it('uses SAML gotoUrl when the journey step is an AM step', () => {
     const url = resolveRedirect(
       makeContext({
-        successUrl: '/platform/console',
+        validatedUrl: '/platform/console',
         journeyStepUrl: '/am/json/realms/root/authenticate',
         gotoUrl: '/saml2/idp/SSO',
       }),
@@ -244,10 +244,10 @@ describe('resolveRedirect', () => {
     expect(url).toBe('https://openam.example.com/saml2/idp/SSO');
   });
 
-  it('uses SAML gotoUrl when successUrl is a default path and gotoUrl looks like SAML', () => {
+  it('uses SAML gotoUrl when validatedUrl is a default path and gotoUrl looks like SAML', () => {
     const url = resolveRedirect(
       makeContext({
-        successUrl: '/platform/console',
+        validatedUrl: '/platform/console',
         journeyStepUrl: '/platform/console',
         gotoUrl: '/saml2/idp/SSO',
       }),
@@ -258,7 +258,7 @@ describe('resolveRedirect', () => {
   it('uses SAML gotoUrl when it contains /Consumer/metaAlias', () => {
     const url = resolveRedirect(
       makeContext({
-        successUrl: '/platform/console',
+        validatedUrl: '/platform/console',
         journeyStepUrl: '/platform/console',
         gotoUrl: '/Consumer/metaAlias/idp?x=1',
       }),
@@ -304,10 +304,10 @@ describe('resolveRedirect', () => {
     expect(url).toBe('/failure-redirect');
   });
 
-  it('prefers successUrl over role-based redirects when both are eligible', () => {
+  it('prefers validatedUrl over role-based redirects when both are eligible', () => {
     const url = resolveRedirect(
       makeContext({
-        successUrl: '/enduser',
+        validatedUrl: '/enduser',
         tokenId: 'abc123' as RedirectData['tokenId'],
         roles: ['ui-global-admin'],
         realm: 'alpha',
@@ -321,7 +321,7 @@ describe('resolveRedirect', () => {
     expect(url).toBe('/failure-redirect');
   });
 
-  it('on a failure, a validated-but-default successUrl loses to the journey failure URL', () => {
+  it('on a failure, a validated-but-default validatedUrl loses to the journey failure URL', () => {
     // Invalid gotoOnFail (not in the Validation Service): validateGoto falls
     // back to AM's default success URL, which is not a real destination — the
     // payload's node URL wins. (Platform Login intends the same via
@@ -331,7 +331,7 @@ describe('resolveRedirect', () => {
       makeContext({
         isGotoOnFail: true,
         gotoUrl: 'https://www.forgerock.com/',
-        successUrl: '/enduser/?realm=/alpha',
+        validatedUrl: '/enduser/?realm=/alpha',
         journeyStepUrl: 'https://forgerock.github.io/openam-community-edition/',
       }),
     );
@@ -343,7 +343,7 @@ describe('resolveRedirect', () => {
       makeContext({
         isGotoOnFail: true,
         gotoUrl: 'https://www.pingidentity.com/en.html',
-        successUrl: 'https://www.pingidentity.com/en.html',
+        validatedUrl: 'https://www.pingidentity.com/en.html',
         journeyStepUrl: 'https://forgerock.github.io/openam-community-edition/',
       }),
     );

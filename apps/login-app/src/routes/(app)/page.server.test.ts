@@ -34,7 +34,7 @@ const logMock = vi.hoisted(() => ({
 }));
 vi.mock('$server/logger.effects', () => ({ log: logMock }));
 
-const validateUrlMock = vi.hoisted(() => vi.fn());
+const validateGotoMock = vi.hoisted(() => vi.fn());
 
 // #592 moves the AM session helpers from $server/sessions to $server/am-session;
 // mock both so the suite passes at either stack position (the am-session mock is
@@ -53,7 +53,7 @@ vi.mock('$server/sessions', async (importOriginal) => {
 });
 vi.mock('$server/redirect/redirect.effects', async (importOriginal) => {
   const actual = (await importOriginal()) as typeof redirectEffects;
-  return { ...actual, validateUrl: (...args: unknown[]) => validateUrlMock(...args) };
+  return { ...actual, validateGoto: (...args: unknown[]) => validateGotoMock(...args) };
 });
 vi.mock('$server/am-session', () => ({
   getHttpCookie: getHttpCookieMock,
@@ -93,35 +93,35 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     });
   });
 
-  it('follows the successUrl AM returns for a trusted authorize goto', async () => {
+  it('follows the validated URL AM returns for a trusted authorize goto', async () => {
     getUserRolesFromSessionMock.mockResolvedValue({
       userId: 'uid-1',
       roles: ['di-admin'],
       unreachable: false,
     });
     const authorizeUrl = `${AM_ORIGIN}/am/oauth2/realms/root/authorize?client_id=enduser`;
-    validateUrlMock.mockResolvedValue(authorizeUrl);
+    validateGotoMock.mockResolvedValue(authorizeUrl);
 
     try {
       await load(makeEvent(`?goto=${encodeURIComponent(authorizeUrl)}`));
       expect.unreachable('expected a redirect');
     } catch (e) {
       expect((e as { location: string }).location).toBe(authorizeUrl);
-      expect(validateUrlMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
+      expect(validateGotoMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
       expect(logMock.warn).not.toHaveBeenCalled();
     }
   });
 
   it('falls through to the role redirect when AM substitutes the default success URL', async () => {
     const authorizeUrl = `${AM_ORIGIN}/am/oauth2/realms/root/authorize?client_id=enduser`;
-    validateUrlMock.mockResolvedValue(`${AM_ORIGIN}/am/ui-runtime/Realm/alpha/Console`);
+    validateGotoMock.mockResolvedValue(`${AM_ORIGIN}/am/ui-runtime/Realm/alpha/Console`);
 
     await expect(
       load(makeEvent(`?goto=${encodeURIComponent(authorizeUrl)}`)),
     ).rejects.toMatchObject({
       location: expect.stringContaining('/enduser/'),
     });
-    expect(validateUrlMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
+    expect(validateGotoMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
     expect(logMock.warn).toHaveBeenCalledTimes(1);
     expect(logMock.warn).toHaveBeenCalledWith(
       '[redirect] AM did not trust goto, using role redirect',
@@ -132,9 +132,9 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     );
   });
 
-  it('falls through to the role redirect when AM rejects the goto (null successUrl)', async () => {
+  it('falls through to the role redirect when AM rejects the goto (null validatedUrl)', async () => {
     const authorizeUrl = `${AM_ORIGIN}/am/oauth2/realms/root/authorize?client_id=enduser`;
-    validateUrlMock.mockResolvedValue(null);
+    validateGotoMock.mockResolvedValue(null);
 
     await expect(
       load(makeEvent(`?goto=${encodeURIComponent(authorizeUrl)}`)),
@@ -149,14 +149,14 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     // verifyGotoUrlAndRedirect): the gate sends any authorize-shaped URL to
     // validateGoto and follows it only when AM echoes it back unchanged.
     const crossOriginAuthorize = 'https://sso.partner.example/am/oauth2/authorize';
-    validateUrlMock.mockResolvedValue(`${crossOriginAuthorize}#substituted`);
+    validateGotoMock.mockResolvedValue(`${crossOriginAuthorize}#substituted`);
 
     await expect(
       load(makeEvent(`?goto=${encodeURIComponent(crossOriginAuthorize)}`)),
     ).rejects.toMatchObject({
       location: expect.stringContaining('/enduser/'),
     });
-    expect(validateUrlMock).toHaveBeenCalledWith('token-123', crossOriginAuthorize, 'alpha');
+    expect(validateGotoMock).toHaveBeenCalledWith('token-123', crossOriginAuthorize, 'alpha');
     expect(logMock.warn).toHaveBeenCalledTimes(1);
   });
 
@@ -166,19 +166,19 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     ).rejects.toMatchObject({
       location: expect.stringContaining('/enduser/'),
     });
-    expect(validateUrlMock).not.toHaveBeenCalled();
+    expect(validateGotoMock).not.toHaveBeenCalled();
   });
 
   it('follows an absolute-URL authorize goto regardless of the arrival origin', async () => {
     // The OAuth gate trusts AM's redirect-validation registry, not the arrival
     // origin — SP-initiated OAuth keeps working from any configured origin.
     const authorizeUrl = `${AM_ORIGIN}/am/oauth2/realms/root/authorize?client_id=enduser`;
-    validateUrlMock.mockResolvedValue(authorizeUrl);
+    validateGotoMock.mockResolvedValue(authorizeUrl);
 
     await expect(
       load(makeEvent(`?goto=${encodeURIComponent(authorizeUrl)}`)),
     ).rejects.toMatchObject({ location: authorizeUrl });
-    expect(validateUrlMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
+    expect(validateGotoMock).toHaveBeenCalledWith('token-123', authorizeUrl, 'alpha');
   });
 
   it('falls through to the console when AM refuses an authorize-shaped goto on another host', async () => {
@@ -186,13 +186,13 @@ describe('(app)/+page.server.ts pre-flight redirect', () => {
     // redirect-validation registry — the echo check then fails and the user
     // takes the console redirect instead.
     const unregisteredAuthorize = 'https://unregistered.example.com/am/oauth2/authorize';
-    validateUrlMock.mockResolvedValue(null);
+    validateGotoMock.mockResolvedValue(null);
 
     await expect(
       load(makeEvent(`?goto=${encodeURIComponent(unregisteredAuthorize)}`)),
     ).rejects.toMatchObject({
       location: expect.stringContaining('/enduser/'),
     });
-    expect(validateUrlMock).toHaveBeenCalledWith('token-123', unregisteredAuthorize, 'alpha');
+    expect(validateGotoMock).toHaveBeenCalledWith('token-123', unregisteredAuthorize, 'alpha');
   });
 });
