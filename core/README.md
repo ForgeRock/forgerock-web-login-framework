@@ -31,12 +31,13 @@ Excluded from both builds and never shipped: tests (`*.test.ts`), Storybook file
 
 Run from the repository root unless noted.
 
-| Command                                          | Description                                                                     |
-| ------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `pnpm build:framework-core`                      | Build `dist/` and `dist-server/`                                                |
-| `pnpm dev:framework`                             | Rebuild both trees on change (`dev:client` and `dev:server` in watch mode)      |
-| `pnpm --filter framework-core run build:types`   | Emit `.d.ts` declarations next to the sources (git-ignored)                     |
-| `pnpm --filter framework-core run check:surface` | Check the custom-component import surface against the package's runtime modules |
+| Command                                                 | Description                                                                     |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `pnpm build:framework-core`                             | Build `dist/` and `dist-server/`                                                |
+| `pnpm dev:framework`                                    | Rebuild both trees on change (`dev:client` and `dev:server` in watch mode)      |
+| `pnpm --filter framework-core run build:types`          | Emit `.d.ts` declarations next to the sources (git-ignored)                     |
+| `pnpm --filter framework-core run check:surface`        | Check the custom-component import surface against the package's runtime modules |
+| `pnpm --filter framework-core run check:custom-imports` | Sweep `custom/components/` for forbidden imports (the customer-side boundary)   |
 
 `pnpm build:widget`, `pnpm build:app`, and `pnpm build:release` run `build:framework-core` first. `pnpm dev` runs `dev:framework` alongside the login app. The release chain runs `build:types` through the widget's `build:types` script, and `scripts/copyTypes.mjs` copies the declarations into the published `dist/core/`.
 
@@ -60,6 +61,8 @@ The IIFE widget bundle inlines the built core. The ES widget bundle inlines it t
 ## Custom Component Surface
 
 Custom components import from the curated `$login-framework` module (`custom/components/login-framework.ts`) and must not reach into core directly. `login-framework-surface.ts` checks that every re-export in that file is explicitly named, points inside the package's runtime modules, and uses only the reviewed external type imports. Run `check:surface` after changing the surface file.
+
+The reverse side is enforced on customer source: `custom-imports.ts` plus the `customImportBoundary` Vite plugin fail the build when a file under `custom/components/` imports an internal alias (`$core`, `$journey`, `$components`, `$locales`), a runtime `@forgerock/journey-client` module (type-only `/types` imports are allowed), or a path resolving outside the custom tree. Storybook/test/mock files and the surface file itself are exempt. Run `check:custom-imports` after adding imports to a custom component.
 
 ## Key Modules
 

@@ -76,7 +76,7 @@ Component API audit lines have the message `[components] audit`. Each carries `a
 
 Session tokens, cookies, request bodies and component source are never logged. Redirect targets are logged as origin and path only.
 
-Custom page header and footer come from the wrapper files `experimental/custom/header/header.svelte` and `experimental/custom/footer/footer.svelte` (see [custom components](../../experimental/custom/README.md)). The files are generated on the first build and never overwritten once they exist. They render client-side around the journey and are not configured via environment variables.
+Custom page header and footer come from the wrapper files `custom/components/layout/header.svelte` and `custom/components/layout/footer.svelte` (see [custom components](../../custom/components/README.md)). The files are generated on the first build and never overwritten once they exist. They render client-side around the journey and are not configured via environment variables.
 
 ## Type Checking
 

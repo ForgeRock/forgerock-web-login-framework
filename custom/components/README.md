@@ -81,7 +81,9 @@ registry lookup, `@component` header, or selection step.
 The wrapper files are **generated on the first build**: the framework's Vite
 plugin seeds any missing wrapper at build start and never overwrites one that
 exists. `ping-lf init` places them in a new project, and `ping-lf update`
-backfills only wrappers that are absent. They are yours to edit — changes
+never writes inside `custom/` at all — a project updated from an older
+framework version gets any missing wrappers from the same build-time seed on
+its next build. They are yours to edit — changes
 survive framework upgrades, and a deleted wrapper regenerates with the default
 content on the next build or dev-server start. (The framework-shipped files
 around them — this README, `login-framework.ts`, and the `demo/` examples —
@@ -164,6 +166,8 @@ import {
 ```
 
 `$login-framework` re-exports a curated subset of the login framework — you never need to reach into internal aliases like `$core`, `$components`, or `$journey` directly. The full list of available exports is documented in [`login-framework.ts`](./login-framework.ts).
+
+**This is enforced, not just recommended.** The framework's Vite plugin scans every production file under `custom/components/` at build time and fails the build when a file imports an internal alias (`$core`, `$journey`, `$components`, `$locales`), a runtime `@forgerock/journey-client` module (type-only imports from `@forgerock/journey-client/types` are allowed), or anything resolving outside `custom/components/`. Test, mock, and Storybook story files are exempt. If the build fails with a forbidden-import error, switch the import to `$login-framework` — to request a missing export, open a PR adding it to `login-framework.ts`.
 
 Journey Client types (callback classes, `JourneyStep`, etc.) are imported directly from `@forgerock/journey-client/types`:
 

@@ -18,6 +18,16 @@
 
   callback-mapper.svelte checks that registry first, so this component renders
   instead of the core NameCallback input for every step that contains one.
+
+  PROP RULES (Custom Components public API contract)
+  ──────────────────────────────────────────────────
+  The framework passes exactly the props declared below and nothing else.
+  Do not add required props of your own — they will arrive undefined.
+  Read and write values only through the documented accessors
+  (`callback.getInputValue()` / `callback.setInputValue()`); do not reach
+  into journey stores, mappers, or registries — those imports fail the
+  boundary check. Runtime-provided messages are safe to render as text;
+  do not render unsafe AM-derived HTML.
 -->
 
 <script lang="ts">
