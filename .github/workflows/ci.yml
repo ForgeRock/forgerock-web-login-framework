@@ -149,6 +149,9 @@ jobs:
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check:lint
+      # svelte-check gate: without this a contributor who bypasses the husky
+      # pre-commit hook can land --threshold=warning failures on main.
+      - run: pnpm run check:svelte
       - run: pnpm run test
       # The MCP stdio wire test spawns the compiled CLI (tools/cli/dist, gitignored);
       # build it before the CLI suite or the test fails on every fresh checkout.
@@ -177,7 +180,10 @@ jobs:
           node-version: 22.x
           cache: 'pnpm'
       - run: pnpm install --frozen-lockfile
-      - uses: chromaui/action@latest
+      # Pinned major: @latest runs mutable third-party code with
+      # CHROMATIC_PROJECT_TOKEN in env; every other action in this repo is
+      # version-pinned.
+      - uses: chromaui/action@v13
         with:
           onlyChanged: true
           externals: 'themes/default/**'

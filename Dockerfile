@@ -54,9 +54,10 @@ CMD ["node", "apps/login-app/build"]
 
 # ── E2E test stage ──────────────────────────────────────────────────
 # Official Playwright image has Chromium + system deps pre-installed.
-# Image version must match the @playwright/test version in pnpm-lock.yaml.
+# Image version must match the @playwright/test version in pnpm-lock.yaml
+# (currently 1.64.1 — Playwright refuses mismatched browser revisions).
 # Run via: docker compose run --rm e2e
-FROM mcr.microsoft.com/playwright:v1.58.2-noble AS e2e
+FROM mcr.microsoft.com/playwright:v1.64.1-noble AS e2e
 
 # Install pnpm at build time so it's cached — no network needed at runtime
 RUN corepack enable && corepack prepare pnpm@10.6.0 --activate
