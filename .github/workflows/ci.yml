@@ -150,6 +150,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm run check:lint
       - run: pnpm run test
+      # The MCP stdio wire test spawns the compiled CLI (tools/cli/dist, gitignored);
+      # build it before the CLI suite or the test fails on every fresh checkout.
+      - run: pnpm --filter @forgerock/login-framework-cli run build
       - run: pnpm --filter @forgerock/login-framework-cli run test
       - run: pnpm --filter @forgerock/login-app run test
       - name: Install Playwright for Storybook tests
