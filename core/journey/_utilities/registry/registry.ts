@@ -415,15 +415,32 @@ export const seedMissingWrappers = (projectDir: string) =>
  * spawning. Validation errors across multiple components are collected and
  * reported together. Ambiguous output (duplicate names across any type) fails
  * with `RegistryCollisionError` rather than silently picking a winner.
+ *
+ * `options.exclude` names subtrees of `custom/components/` (paths relative to
+ * that root, `/`-separated) that never enter the generated registry. The
+ * published widget builds use it to keep repo-local e2e fixtures out of the
+ * npm bundle while login-app and Storybook (unpublished) still register them.
  */
-export const runRegistryScript = (projectDir: string) =>
+export interface RegistryScanOptions {
+  readonly exclude?: readonly string[];
+}
+
+/** True when a scanned file's `custom/components/`-relative path hits an exclusion prefix. */
+const isExcludedComponentPath = (relativePath: string, exclude: readonly string[]): boolean => {
+  const normalized = relativePath.split('\\').join('/');
+  return exclude.some((prefix) => normalized === prefix || normalized.startsWith(`${prefix}/`));
+};
+
+export const runRegistryScript = (projectDir: string, options: RegistryScanOptions = {}) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const stageDir = path.join(projectDir, 'custom', 'components', 'stages');
     const callbackDir = path.join(projectDir, 'custom', 'components', 'callbacks');
+    const customRoot = path.join(projectDir, 'custom', 'components');
     const registryDir = path.join(projectDir, 'core', 'journey', '_utilities', 'registry');
     const registryPath = path.join(registryDir, 'custom-registry.ts');
+    const exclude = options.exclude ?? [];
 
     // Validate mode across the directory scans: a stage scan error must not
     // mask callback scan errors (and vice versa) — all of them are collected
@@ -436,6 +453,14 @@ export const runRegistryScript = (projectDir: string) =>
       ],
       (scan) => scan,
     ).pipe(
+      Effect.map((components) =>
+        components.map((componentList) =>
+          componentList.filter(
+            (component) =>
+              !isExcludedComponentPath(path.relative(customRoot, component.filePath), exclude),
+          ),
+        ),
+      ),
       Effect.mapError(
         (errors) =>
           new RegistryScanError({

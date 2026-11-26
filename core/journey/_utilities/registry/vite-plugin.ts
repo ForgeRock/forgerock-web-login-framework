@@ -11,6 +11,14 @@ interface CustomRegistryPluginOptions {
    * directories deep, so they pass `resolve('../..')`.
    */
   projectRoot: string;
+  /**
+   * Subtrees of `custom/components/` (paths relative to that root,
+   * `/`-separated) that never enter the generated registry. The published
+   * widget builds (ESM + IIFE) exclude the repo-local e2e canary stage so it
+   * cannot ship in the npm bundle; login-app and Storybook omit this and
+   * register everything.
+   */
+  exclude?: readonly string[];
 }
 
 // Subset of vite's ViteDevServer we use. Declared structurally so core/ doesn't import vite's types.
@@ -35,14 +43,16 @@ const STALE_REGISTRY_NOTE =
  * `buildStart`; in dev, the watcher also picks up adds/removals so scaffolding
  * a new component via `ping-lf generate` needs no server restart.
  */
-export function customRegistry({ projectRoot }: CustomRegistryPluginOptions) {
+export function customRegistry({ projectRoot, exclude }: CustomRegistryPluginOptions) {
   const watchedDirs = [
     path.join(projectRoot, 'custom', 'components', 'callbacks'),
     path.join(projectRoot, 'custom', 'components', 'stages'),
   ];
 
   const regenerate = () =>
-    Effect.runPromise(runRegistryScript(projectRoot).pipe(Effect.provide(NodeContext.layer)));
+    Effect.runPromise(
+      runRegistryScript(projectRoot, { exclude }).pipe(Effect.provide(NodeContext.layer)),
+    );
 
   const seed = () =>
     Effect.runPromise(seedMissingWrappers(projectRoot).pipe(Effect.provide(NodeContext.layer)));

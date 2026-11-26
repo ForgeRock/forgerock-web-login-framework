@@ -466,6 +466,30 @@ describe('runRegistryScript', () => {
     expect(output).toContain('"Two": {');
   });
 
+  it('omits excluded subtrees from the generated registry (published-build canary exclusion)', async () => {
+    // The canary is a tracked repo-local e2e fixture; the published widget
+    // builds pass exclude: ['stages/e2e-canary'] so it never ships in dist.
+    await writeComponent('stages', 'e2e-canary', 'e2e-canary.svelte', 'E2eCanaryStage', 'stage');
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await runRegistryScript(tmpDir, { exclude: ['stages/e2e-canary'] }).pipe(
+      Effect.provide(NodeContext.layer),
+      Effect.runPromise,
+    );
+
+    const output = await readRegistry();
+    expect(output).toContain('StageLogin');
+    expect(output).not.toContain('E2eCanaryStage');
+    expect(output).not.toContain('StageE2eCanaryStage');
+  });
+
+  it('registers excluded subtrees when no exclude option is given (login-app/Storybook behavior)', async () => {
+    await writeComponent('stages', 'e2e-canary', 'e2e-canary.svelte', 'E2eCanaryStage', 'stage');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('StageE2eCanaryStage');
+  });
+
   it('bundles a stage file with a stray Enabled: line (tolerance, never enforced on stages)', async () => {
     const strayDir = join(tmpDir, 'custom', 'components', 'stages', 'stray');
     await mkdir(strayDir, { recursive: true });

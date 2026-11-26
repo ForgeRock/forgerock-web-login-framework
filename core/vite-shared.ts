@@ -79,6 +79,16 @@ export const customRegistrySpecifier = '$journey/_utilities/registry/custom-regi
 /** The generated registry's path relative to the package root. */
 export const customRegistrySourcePath = 'journey/_utilities/registry/custom-registry.ts';
 
+/**
+ * Repo-local subtrees of `custom/components/` that never enter the generated
+ * registry for the PUBLISHED widget builds (ESM + IIFE): the e2e canary stage
+ * is a tracked test fixture for the login-app e2e suite and must not ship in
+ * the npm bundle or be registered on the published public surface. Unpublished
+ * consumers (login-app, Storybook) omit this and register everything, which is
+ * what the canary e2e tests drive.
+ */
+export const publishedRegistryExcludes = ['stages/e2e-canary'] as const;
+
 /** Rollup `external` list for both package builds. */
 export const packageExternal: Array<string | RegExp> = [
   /^svelte(\/|$)/,
