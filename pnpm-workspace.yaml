@@ -5,6 +5,3 @@ packages:
   - 'themes'
   - 'tools/*'
   - 'core'
-
-overrides:
-  vite>rollup: 'npm:@rollup/wasm-node'
