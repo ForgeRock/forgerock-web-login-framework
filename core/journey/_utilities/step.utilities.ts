@@ -26,7 +26,7 @@ export const constrainedViolationMessage = 'constraint violation';
  * Builds a `JourneyStep` from a raw AM `Step` payload, wrapping the payload's
  * callbacks with the Journey Client's callback objects. Convenience helper for
  * consumers' own `.mock.ts` and story files; re-exported by the curated
- * custom-component surface (`experimental/custom/login-framework.ts`).
+ * custom-component surface (`custom/components/login-framework.ts`).
  */
 export function createJourneyStep(payload: Step): JourneyStep {
   const callbacks = (payload.callbacks ?? []).map(createCallback);
