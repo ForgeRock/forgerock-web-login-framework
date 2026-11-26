@@ -132,7 +132,13 @@ export const WriterLive: Layer.Layer<
       return undefined;
     };
 
-    /** Rejects symlink path segments to prevent cloned repositories from escaping the tracked subtree. */
+    /**
+     * Rejects symlink path segments to prevent cloned repositories from escaping the tracked subtree.
+     * A symlink can also be planted between this check and the write (TOCTOU), so the check runs
+     * again after staging; the OS-level rename then only ever replaces a file that was verified
+     * moments before. A symlink cycle surfaces as ELOOP (the platform's `BadResource` reason) on
+     * one of the probes, which maps to the same typed failure instead of a raw error.
+     */
     const ensureNoSymlink = (relPath: string): Effect.Effect<void, ArtifactWriterError> => {
       const probes = relPath
         .split('/')
@@ -155,6 +161,17 @@ export const WriterLive: Layer.Layer<
                 const code = (error.cause as { code?: string } | undefined)?.code;
                 if (code === 'ENOENT' || code === 'EINVAL') {
                   return Effect.void;
+                }
+                // ELOOP: reading a link inside a cycle fails with "too many
+                // levels of symbolic links" — a cycle IS a symlink chain, so
+                // fail with the same typed violation, not a raw error.
+                if (code === 'ELOOP' || (error as { reason?: string }).reason === 'BadResource') {
+                  return Effect.fail(
+                    new ArtifactWriterError({
+                      message: `Component path must not traverse symlinks (link cycle detected): ${probe}`,
+                      cause: error,
+                    }),
+                  );
                 }
                 return Effect.fail(
                   new ArtifactWriterError({
@@ -263,6 +280,13 @@ export const WriterLive: Layer.Layer<
               ),
             ),
           );
+          // Re-check after staging: a symlink planted into the directory
+          // between the pre-write check and the temp write (TOCTOU) would let
+          // the temp content or the rename follow it out of the tracked
+          // subtree. Failing here leaves only dot-tmp files, removed below.
+          yield* Effect.forEach(prepared, ({ normalizedPath }) => ensureNoSymlink(normalizedPath), {
+            discard: true,
+          });
           yield* renameIntoPlace(prepared).pipe(
             Effect.onError(() =>
               Effect.forEach(

@@ -63,7 +63,50 @@ export interface IdmThemeResult {
  * lower it via `FR_IDM_THEME_TIMEOUT_MS`.
  */
 const DEFAULT_IDM_FETCH_TIMEOUT_MS = 1500;
-const themeCache = new Map<string, IdmThemeResult>();
+
+/**
+ * The cache is keyed on unauthenticated request input (`?journey=` reaches
+ * here verbatim), so an attacker can grow it arbitrarily by varying the
+ * parameter unless it is bounded. Entries expire after an idle TTL and the
+ * map holds at most MAX_CACHE_ENTRIES keys, evicting the least-recently-used
+ * (Map iteration order is insertion order; re-setting a key moves it to the
+ * end, giving the LRU behavior for free).
+ */
+const CACHE_TTL_MS = 10 * 60 * 1000;
+const MAX_CACHE_ENTRIES = 64;
+
+interface CacheEntry {
+  readonly result: IdmThemeResult;
+  readonly cachedAt: number;
+}
+
+const themeCache = new Map<string, CacheEntry>();
+
+function cacheGet(key: string): IdmThemeResult | undefined {
+  const entry = themeCache.get(key);
+  if (entry === undefined) {
+    return undefined;
+  }
+  if (Date.now() - entry.cachedAt > CACHE_TTL_MS) {
+    themeCache.delete(key);
+    return undefined;
+  }
+  // Refresh recency: delete + set moves the key to the end of the Map.
+  themeCache.delete(key);
+  themeCache.set(key, entry);
+  return entry.result;
+}
+
+function cacheSet(key: string, result: IdmThemeResult): void {
+  while (themeCache.size >= MAX_CACHE_ENTRIES) {
+    const oldest = themeCache.keys().next().value;
+    if (oldest === undefined) {
+      break;
+    }
+    themeCache.delete(oldest);
+  }
+  themeCache.set(key, { result, cachedAt: Date.now() });
+}
 
 function resolveTimeoutMs(): number {
   const parsed = Number(env.FR_IDM_THEME_TIMEOUT_MS);
@@ -112,7 +155,7 @@ export async function fetchIdmTheme(
 ): Promise<IdmThemeResult> {
   const url = new URL('/openidm/config/ui/themerealm', idmBaseUrl).href;
   const cacheKey = `${realmPath}::${journeyName ?? ''}`;
-  const cached = themeCache.get(cacheKey);
+  const cached = cacheGet(cacheKey);
   const emptyResult: IdmThemeResult = {
     theme: undefined,
     themeCatalog: {},
@@ -169,6 +212,6 @@ export async function fetchIdmTheme(
     backgroundImageUrl,
   };
 
-  themeCache.set(cacheKey, result);
+  cacheSet(cacheKey, result);
   return result;
 }

@@ -335,5 +335,37 @@ describe('fetchIdmTheme', () => {
       expect(loginResult.theme?.primaryColor).toBe('#111111');
       expect(defaultResult.theme?.primaryColor).toBe('#222222');
     });
+
+    it('evicts the least-recently-used entry beyond the cache cap (fallback miss vs hit)', async () => {
+      const cacheRealm = 'realm-lru';
+
+      // The cache is a failure-fallback (every call fetches; only failures
+      // read the cache), so populate by succeeding, then probe through a
+      // rejected fetch.
+      vi.mocked(fetch).mockImplementation(async () =>
+        makeResponse({ realm: { [cacheRealm]: [makeThemeEntry()] } }),
+      );
+      const journeys = Array.from({ length: 80 }, (_, index) => `Journey${index}`);
+      for (const journey of journeys) {
+        await fetchIdmTheme(IDM_URL, cacheRealm, journey);
+      }
+
+      // Re-touch the last 64 keys (the cap) to mark them most-recently used.
+      const retained = journeys.slice(-64);
+      for (const journey of retained) {
+        await fetchIdmTheme(IDM_URL, cacheRealm, journey);
+      }
+
+      // Journey0 was evicted when the cap overflowed: with fetch now failing,
+      // its fallback is the empty result, not a cached theme.
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const evicted = await fetchIdmTheme(IDM_URL, cacheRealm, 'Journey0');
+      expect(evicted.theme).toBeUndefined();
+
+      // A still-cached, recently used key serves the theme from the fallback.
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const cachedHit = await fetchIdmTheme(IDM_URL, cacheRealm, retained[retained.length - 1]);
+      expect(cachedHit.theme?.primaryColor).toBe('#cc0000');
+    });
   });
 });

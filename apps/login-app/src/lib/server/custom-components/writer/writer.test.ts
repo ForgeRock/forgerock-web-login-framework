@@ -7,7 +7,7 @@
  *
  * */
 
-import { Path } from '@effect/platform';
+import { FileSystem, Path } from '@effect/platform';
 import { NodeFileSystem } from '@effect/platform-node';
 import { it } from '@effect/vitest';
 vi.mock('$app/environment', () => ({ building: false }));
@@ -157,6 +157,100 @@ describe('WriterLive', () => {
         throw new Error('Expected the save to fail');
       }
       expect((exit.left as Error).message).toMatch(/symlink/i);
+      const escaped = yield* Effect.either(Effect.promise(() => readFile('/etc/hosts', 'utf8')));
+      expect(escaped._tag).toBe('Right');
+    }),
+  );
+
+  it.scoped('fails with the typed symlink error on a symlink cycle (ELOOP, not a raw error)', () =>
+    Effect.gen(function* () {
+      const repoDir = yield* Effect.promise(makeTemporaryDirectory);
+      const journeysDir = join(repoDir, 'config', 'journeys');
+      yield* Effect.promise(() => mkdir(journeysDir, { recursive: true }));
+      // A cycle: loop → cycle → loop. Reading anything inside fails with
+      // ELOOP ("too many levels of symbolic links"); the writer must map it
+      // to the same typed failure as any other symlink, not leak a raw error.
+      yield* Effect.promise(() => symlink(join(journeysDir, 'cycle'), join(journeysDir, 'loop')));
+      yield* Effect.promise(() => symlink(join(journeysDir, 'loop'), join(journeysDir, 'cycle')));
+      const exit = yield* Effect.either(
+        saveEffect('journeys/cycle/login.json', '{}').pipe(Effect.provide(writerLayer(repoDir))),
+      );
+      if (exit._tag === 'Right') {
+        throw new Error('Expected the save to fail');
+      }
+      expect((exit.left as Error).message).toMatch(/symlink/i);
+    }),
+  );
+
+  it.scoped('re-checks for planted symlinks after staging (TOCTOU window)', () =>
+    Effect.gen(function* () {
+      const repoDir = yield* Effect.promise(makeTemporaryDirectory);
+      yield* Effect.promise(() => mkdir(join(repoDir, 'config', 'journeys'), { recursive: true }));
+      const planted = join(repoDir, 'config', 'journeys', 'planted');
+      // Start clean: prior runs may have created a real directory at the
+      // sabotage target through a successful save.
+      yield* Effect.promise(() => rm(planted, { force: true, recursive: true }));
+
+      // Deterministic race: a sabotaging FileSystem wraps the real one and
+      // re-plants a symlink into the artifact's directory the first time the
+      // writer stages a temp file (between the pre-write probe and the
+      // rename). The writer's post-stage re-check must catch it and fail the
+      // write before the rename.
+      let sabotaged = false;
+
+      const writerLayerWithSabotage = Layer.effect(
+        FileSystem.FileSystem,
+        Effect.gen(function* () {
+          // Resolve the real service through the tag (Layer.build returns the
+          // raw Context wrapper, not the service itself).
+          const realFs = yield* FileSystem.FileSystem.pipe(
+            Effect.provide(NodeFileSystem.layer),
+            Effect.scoped,
+          );
+          // Preserve every real method: only writeFileString is overridden.
+          return {
+            ...realFs,
+            writeFileString: (path: string, data: string) => {
+              if (!sabotaged && path.includes('.tmp')) {
+                sabotaged = true;
+                return Effect.flatMap(realFs.writeFileString(path, data), () =>
+                  Effect.promise(async () => {
+                    await rm(planted, { force: true, recursive: true });
+                    await symlink('/etc/hosts', planted);
+                  }),
+                );
+              }
+              return realFs.writeFileString(path, data);
+            },
+          } as FileSystem.FileSystem;
+        }),
+      );
+
+      // Same as writerLayer, but the sabotaging FileSystem replaces the real
+      // one (Layer.provideMerge would keep the innermost real layer and the
+      // sabotage would never run).
+      const sabotagedWriterLayer = (dir: string) =>
+        WriterLive.pipe(
+          Layer.provide(fileSyncNoop),
+          Layer.provide(writerLayerWithSabotage),
+          Layer.provide(Path.layer),
+          Layer.provide(
+            Layer.setConfigProvider(
+              ConfigProvider.fromMap(new Map([['COMPONENT_CONFIG_DIR', join(dir, 'config')]])),
+            ),
+          ),
+        );
+
+      const exit = yield* Effect.either(
+        saveEffect('journeys/planted/login.json', '{}').pipe(
+          Effect.provide(sabotagedWriterLayer(repoDir)),
+        ),
+      );
+      if (exit._tag === 'Right') {
+        throw new Error('Expected the save to fail when a symlink is planted mid-write');
+      }
+      expect((exit.left as Error).message).toMatch(/symlink/i);
+      // /etc/hosts must be untouched.
       const escaped = yield* Effect.either(Effect.promise(() => readFile('/etc/hosts', 'utf8')));
       expect(escaped._tag).toBe('Right');
     }),
