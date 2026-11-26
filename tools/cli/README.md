@@ -177,7 +177,7 @@ ping-lf update --directory /path/to/project  # target a specific project root
 
 - `custom/` — the entire customer sandbox (components, layout wrappers, README, demo) is skipped; an update never writes inside it. A project missing the wrapper files gets them from the framework's Vite plugin on the next build, never from the update copy
 - `pnpm-workspace.yaml` — your workspace config is not overwritten
-- `.env` files — excluded from the copy
+- `.env` files — excluded from the copy at any depth, along with secret files (`.pem`, `.key`, `.p12`, `.pfx`, `credentials*`)
 
 **After updating**, run `pnpm install` if the framework's package dependencies changed.
 

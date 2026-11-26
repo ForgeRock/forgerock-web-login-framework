@@ -22,6 +22,10 @@ const EXCLUDED_PREFIXES = [
   'docs/',
   'specs/',
   'tools/',
+  // Repo-local e2e fixture inside the sandbox: proves the custom-stage
+  // pipeline in the framework repo's Playwright suite. Never meaningful in a
+  // customer project, and `includeSandbox` (init) would otherwise copy it.
+  'custom/components/stages/e2e-canary/',
 ] as const;
 
 const EXCLUDED_FILES = [
@@ -43,7 +47,17 @@ const EXCLUDED_FILES = [
   'release.tar.gz',
 ] as const;
 
-const EXCLUDED_PATTERNS = [/^\.env\..*/, /\.d\.ts$/] as const;
+const EXCLUDED_PATTERNS = [
+  // Env files at ANY depth, not just the root: `apps/login-app/.env` (and any
+  // nested `.env.*`) carries real AM connection values and must never ship to
+  // a customer project via init or update. Root-anchored patterns
+  // (`/^\.env\..*/`) miss every subdirectory env file.
+  /(^|\/)\.env\..*/,
+  /(^|\/)\.env$/,
+  /\.(pem|key|p12|pfx)$/,
+  /(^|\/)credentials(\..*)?$/,
+  /\.d\.ts$/,
+] as const;
 
 const ALLOW_LIST = ['.env.example', '.env.docker.example'] as const;
 

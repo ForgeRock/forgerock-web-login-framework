@@ -61,6 +61,32 @@ describe('isExcluded', () => {
     expect(isExcluded('packages/login-widget/dist/index.d.ts')).toBe(true);
   });
 
+  it('excludes env files at any depth, not just the root', () => {
+    // Nested env files carry real connection values (apps/login-app/.env is a
+    // tracked-until-ignored example); a root-anchored pattern ships them.
+    expect(isExcluded('apps/login-app/.env')).toBe(true);
+    expect(isExcluded('apps/login-app/.env.local')).toBe(true);
+    expect(isExcluded('packages/foo/.env.production')).toBe(true);
+    expect(isExcluded('deeply/nested/dir/.env')).toBe(true);
+  });
+
+  it('excludes the repo-local e2e canary from customer projects', () => {
+    expect(isExcluded('custom/components/stages/e2e-canary/e2e-canary.svelte')).toBe(true);
+    expect(isSandboxPath('custom/components/stages/e2e-canary/e2e-canary.svelte')).toBe(true);
+    // A customer's own stage is untouched.
+    expect(isExcluded('custom/components/stages/login/login.svelte')).toBe(false);
+  });
+
+  it('excludes secret-bearing files at any depth', () => {
+    expect(isExcluded('certs/server.pem')).toBe(true);
+    expect(isExcluded('certs/server.key')).toBe(true);
+    expect(isExcluded('deploy/keystore.p12')).toBe(true);
+    expect(isExcluded('config/credentials')).toBe(true);
+    expect(isExcluded('config/credentials.json')).toBe(true);
+    expect(isExcluded('.env.example')).toBe(false);
+    expect(isExcluded('.env.docker.example')).toBe(false);
+  });
+
   it('does not exclude files on the allowlist', () => {
     expect(isExcluded('.env.example')).toBe(false);
     expect(isExcluded('.env.docker.example')).toBe(false);

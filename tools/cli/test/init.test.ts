@@ -187,4 +187,23 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     ]);
     expect(parsed.compilerOptions?.paths?.['$custom/*']).toEqual(['./custom/components/*']);
   });
+
+  it('writes a pnpm-workspace.yaml listing core and themes so build:framework resolves', async () => {
+    // `build:framework` in the scaffolded root runs
+    // `pnpm --filter framework-core run build`; with `core` absent from the
+    // workspace glob pnpm resolves no target and the project cannot build.
+    // `themes` carries the app's compiled theme tokens.
+    await seedFrameworkSource();
+
+    await provide(
+      initProject({ directory: targetDir, local: Option.some(sourceDir), version: Option.none() }),
+    );
+
+    const workspace = await readFile(join(targetDir, 'pnpm-workspace.yaml'), 'utf8');
+    const packages = workspace
+      .split('\n')
+      .map((line) => line.trim().replace(/^-\s*/, ''))
+      .filter((line) => line.startsWith("'"));
+    expect(packages).toEqual(["'packages/*'", "'apps/*'", "'e2e'", "'themes'", "'core'"]);
+  });
 });
