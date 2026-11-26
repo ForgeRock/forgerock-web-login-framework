@@ -170,4 +170,21 @@ describe('initProject — wrapper files + scaffold dirs', () => {
       expect(wrapper).toContain('journeyName');
     }
   });
+
+  it('writes the IDE-only tsconfig.json resolving $login-framework and $custom into the sandbox', async () => {
+    await seedFrameworkSource();
+
+    await provide(
+      initProject({ directory: targetDir, local: Option.some(sourceDir), version: Option.none() }),
+    );
+
+    const tsconfig = await readFile(join(targetDir, 'tsconfig.json'), 'utf8');
+    const parsed = JSON.parse(tsconfig) as {
+      compilerOptions?: { paths?: Record<string, string[]> };
+    };
+    expect(parsed.compilerOptions?.paths?.['$login-framework']).toEqual([
+      './custom/components/login-framework.ts',
+    ]);
+    expect(parsed.compilerOptions?.paths?.['$custom/*']).toEqual(['./custom/components/*']);
+  });
 });

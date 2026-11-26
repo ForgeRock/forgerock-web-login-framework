@@ -1,5 +1,5 @@
 {
-  "_comment": "IDE-only tsconfig. See companion file in this directory for details.",
+  "_comment": "IDE-only tsconfig: resolves the customer authoring aliases for type checking in editors. The build (Vite + SvelteKit) resolves these aliases from each consumer config, so this file must not be used for compilation (noEmit is set).",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -11,8 +11,11 @@
     "allowJs": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
     "paths": {
-      "$login-framework": ["../../../custom/components/login-framework.ts"]
+      "$login-framework": ["./custom/components/login-framework.ts"],
+      "$custom": ["./custom/components"],
+      "$custom/*": ["./custom/components/*"]
     }
   },
-  "include": ["**/*.ts", "**/*.svelte"]
+  "include": ["**/*.ts", "**/*.svelte"],
+  "exclude": ["node_modules", "packages/login-widget/dist", "core/dist", "core/dist-server"]
 }

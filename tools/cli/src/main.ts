@@ -107,8 +107,10 @@ const program = isMcpLaunch
       Effect.catchTag('InvalidComponentNameError', (err) =>
         Console.error(
           `\nError: "${err.name}" is not a valid component name.\n` +
-            `  Names must be PascalCase, start with an uppercase letter, and contain only letters and digits.\n` +
-            `  Examples: MyCallback, JWTLogin, DefaultStage\n`,
+            `  Callbacks must be PascalCase, start with an uppercase letter, and contain only letters and digits.\n` +
+            `  Stage names are not constrained to PascalCase: any string with at least one letter, at least 2 characters,\n` +
+            `  and safe as a directory name is accepted.\n` +
+            `  Examples: MyCallback, JWTLogin, DefaultLogin, "My Login Stage"\n`,
         ).pipe(Effect.andThen(Effect.die(err))),
       ),
       Effect.catchTag('ComponentAlreadyExistsError', (err) =>

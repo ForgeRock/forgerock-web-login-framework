@@ -37,8 +37,12 @@ and `form.message`; do not render unsafe AM-derived HTML.
     T,
   } from '$login-framework';
 
-  import type { JourneyStep } from '@forgerock/journey-client/types';
-
+  /**
+   * BaseCallback and JourneyStep are re-exported from the curated surface, so
+   * '$login-framework' stays the only framework import specifier in customer
+   * source.
+   */
+  import type { JourneyStep } from '$login-framework';
   import type {
     CallbackMetadata,
     Maybe,

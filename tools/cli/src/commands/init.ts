@@ -106,6 +106,17 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     // ── 3. Write pnpm-workspace.yaml (omits tools/ present in upstream) ────
     yield* fs.writeFileString(path.join(resolvedDir, 'pnpm-workspace.yaml'), PNPM_WORKSPACE);
 
+    // ── 3b. Write the IDE-only tsconfig.json ───────────────────────────────
+    // The framework copy excludes tsconfig.json (the framework repo's own
+    // config must not leak into the customer project), so init writes the
+    // customer one explicitly from the CLI's template: it resolves the
+    // authoring aliases ($login-framework, $custom) for editors. noEmit is
+    // set — the build resolves aliases from the app/widget Vite configs.
+    yield* Console.log('Writing tsconfig.json...');
+    const tsconfigTemplate = path.join(getTemplatesDir(), 'tsconfig.json');
+    const tsconfigSource = yield* fs.readFileString(tsconfigTemplate);
+    yield* fs.writeFileString(path.join(resolvedDir, 'tsconfig.json'), tsconfigSource);
+
     // ── 4. Scaffold custom/components/ ────────────────────────────────────
     // copyWithExclusions ({ includeSandbox: true }) already copies
     // custom/components/demo/, login-framework.ts, and README.md from the

@@ -76,7 +76,7 @@ describe('scaffoldComponent — template substitution', () => {
 
     expect(content).not.toContain('__COMPONENT_NAME_PASCAL__');
     expect(content).toContain('MyCallback');
-    expect(content).toContain('@forgerock/journey-client/types');
+    expect(content).toContain("from '$login-framework'");
     expect(content).not.toContain('@forgerock/javascript-sdk');
   });
 
@@ -263,6 +263,42 @@ describe('scaffoldComponent — SDKS-5510 prop rules in generated templates', ()
     // Values flow through the documented callback accessors.
     expect(content).toContain('getInputValue');
     expect(content).toContain('setInputValue');
+  });
+
+  it('callback and stage templates import Journey Client types through the curated surface', async () => {
+    await runEffect(scaffoldComponent('callback', 'MyCallback', tmpDir));
+    await runEffect(scaffoldComponent('stage', 'My Login Stage', tmpDir));
+
+    // The curated surface re-exports BaseCallback and JourneyStep; customer
+    // source keeps exactly one framework import specifier.
+    const componentDirs = [
+      join(tmpDir, 'custom', 'components', 'callbacks', 'my-callback'),
+      join(tmpDir, 'custom', 'components', 'stages', 'my-login-stage'),
+    ];
+    for (const componentDir of componentDirs) {
+      const files = await import('node:fs/promises').then((fs) => fs.readdir(componentDir));
+      for (const file of files) {
+        const content = await readFile(join(componentDir, file), 'utf8');
+        if (content.includes('BaseCallback') || content.includes('JourneyStep')) {
+          expect(content).toContain("from '$login-framework'");
+          expect(content).not.toContain("from '@forgerock/journey-client/types'");
+        }
+      }
+    }
+  });
+
+  it('stage stories mock uses the runtime form-status values and full journey mock', async () => {
+    await runEffect(scaffoldComponent('stage', 'My Login Stage', tmpDir));
+
+    const stories = await readFile(
+      join(tmpDir, 'custom', 'components', 'stages', 'my-login-stage', 'my-login-stage.stories.js'),
+      'utf8',
+    );
+    // journey.svelte always sends status 'ok' or 'error' — never ''.
+    expect(stories).toContain("status: 'ok'");
+    expect(stories).not.toContain("status: ''");
+    // StageJourneyObject includes redirect; the mock must carry it.
+    expect(stories).toContain('redirect: fn()');
   });
 
   it('templates do not embed framework-internal alias specifiers', async () => {

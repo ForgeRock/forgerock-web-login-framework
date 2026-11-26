@@ -2,7 +2,9 @@
  * Storybook stories for the __COMPONENT_NAME__ stage.
  *
  * Add additional stories for variants (loading, with form error, etc.) by
- * cloning the `Base` args and overriding the relevant fields.
+ * cloning the `Base` args and overriding the relevant fields — e.g. an error
+ * variant sets `form.status` to `'error'` and `form.message` to a failure
+ * message.
  */
 
 import { fn } from 'storybook/test';
@@ -29,13 +31,14 @@ export const Base = {
     form: {
       icon: true,
       message: '',
-      status: '',
+      status: 'ok',
       submit: fn(),
     },
     journey: {
       loading: false,
       pop: fn(),
       push: fn(),
+      redirect: fn(),
       restart: fn(),
       stack: writable([]),
     },

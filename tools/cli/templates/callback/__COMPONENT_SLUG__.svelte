@@ -17,7 +17,12 @@ do not render unsafe AM-derived HTML.
 -->
 
 <script lang="ts">
-  import type { BaseCallback } from '@forgerock/journey-client/types';
+  /**
+   * BaseCallback and JourneyStep are re-exported from the curated surface, so
+   * '$login-framework' stays the only framework import specifier in customer
+   * source.
+   */
+  import type { BaseCallback } from '$login-framework';
 
   /**
    * The callback instance for this component. Use `callback.getInputValue()`
