@@ -6,7 +6,7 @@
   "packageManager": "pnpm@10.6.0",
   "scripts": {
     "changeset": "changeset",
-    "build:release": "pnpm run build:framework-core && pnpm --filter @forgerock/login-widget run build:release",
+    "build:release": "pnpm run build:framework-core && pnpm --filter @forgerock/login-framework-cli run build && pnpm --filter @forgerock/login-widget run build:release",
     "build:widget": "pnpm run build:framework-core && pnpm --filter @forgerock/login-widget run build",
     "build:app": "pnpm run build:widget && pnpm --filter @forgerock/login-app run build",
     "build:storybook": "storybook build --webpack-stats-json",

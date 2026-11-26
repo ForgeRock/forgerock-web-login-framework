@@ -55,6 +55,7 @@ custom/components/layout/
 .eslintcache
 tools/cli/tmp/
 packages/login-widget/tmp/
+packages/login-widget/stats.html
 .playwright-mcp/
 
 .polaris/

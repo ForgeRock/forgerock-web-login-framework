@@ -60,10 +60,12 @@ Both form factors provide the same authentication, OAuth/OIDC, and user features
 
 ## Requirements
 
-- An ECMAScript module or CommonJS enabled client-side JavaScript app
+- An ECMAScript module client-side JavaScript app, or a CommonJS app loading the bundle dynamically
 - A modern, fully-supported browser: Chrome, Firefox, Safari, or Chromium Edge
 
 **Not supported**: Internet Explorer, Legacy Edge, WebView, Electron, and other modified browser-like environments.
+
+> **Module formats:** as of 2.x the package ships ESM (`@forgerock/login-widget`) and a standalone IIFE script bundle (`@forgerock/login-widget/iife`); the 1.x CommonJS entry (`require('./index.cjs')`) was removed. A CommonJS app should load the ESM entry through dynamic `import()` (returning a promise) or consume the IIFE bundle.
 
 ## Quick Start
 

@@ -67,7 +67,7 @@ const main = () => {
   }
 
   let copiedCount = 0;
-  let skippedCount = 0;
+  const skippedWidgetFiles = [];
 
   for (const { src, dest } of WIDGET_TYPE_FILES) {
     const srcPath = join(sveltePackageDir, src);
@@ -79,14 +79,27 @@ const main = () => {
       copiedCount++;
     } else {
       console.warn(`⚠ Skipped ${src} (not found)`);
-      skippedCount++;
+      skippedWidgetFiles.push(src);
     }
   }
 
-  console.log(`\nWidget type copying: ${copiedCount} copied, ${skippedCount} skipped`);
+  console.log(`\nWidget type copying: ${copiedCount} copied, ${skippedWidgetFiles.length} skipped`);
 
   if (copiedCount === 0) {
     console.error('❌ No type files were copied. Did you run svelte-package first?');
+    return 1;
+  }
+
+  // A partially copied type set must fail the release: every entry in
+  // WIDGET_TYPE_FILES is part of the published surface (index.d.ts is the
+  // entry point; the others are imported by it or by consumers), so a
+  // skipped file silently ships an incomplete type surface to npm.
+  if (skippedWidgetFiles.length > 0) {
+    console.error(
+      `❌ Missing widget declaration(s): ${skippedWidgetFiles.join(', ')}. ` +
+        `A partial type set would publish unresolvable entry-point types (TS2307). ` +
+        `Run svelte-package first and confirm the files exist in svelte-package/.`,
+    );
     return 1;
   }
 

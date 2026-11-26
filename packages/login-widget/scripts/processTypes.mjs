@@ -35,6 +35,7 @@ const distDir = join(importMetaDirectoryPath, '../', 'dist');
 const index = join(distDir, 'index.d.ts');
 const types = join(distDir, 'types.d.ts');
 const interfaces = join(distDir, 'interfaces.d.ts');
+const widgetConfig = join(distDir, 'widget.config.d.ts');
 
 let cleanedCount = 0;
 
@@ -74,6 +75,20 @@ function cleanTypeFile(filePath) {
     console.log(`✓ ${filePath} - no Svelte declare module section found (OK)`);
   }
 
+  // The source entry imports the widget stylesheet, but the published
+  // package ships dist/widget.css (documented in the exports map), not
+  // dist/main.css — leave the side-effect import in place and consumers get
+  // TS2307 on the entry-point types. Drop the line instead.
+  const cssImport = "import './main.css';";
+  if (contents.includes(cssImport)) {
+    contents = contents.replace(
+      cssImport,
+      '// Stylesheet: import "@forgerock/login-widget/widget.css"',
+    );
+    console.log(`✓ ${filePath} - replaced main.css side-effect import with the widget.css pointer`);
+    modified = true;
+  }
+
   // Rewrite alias paths to relative paths pointing into dist/core/
   for (const { pattern, replacement } of widgetAliasReplacements) {
     if (pattern.test(contents)) {
@@ -96,6 +111,10 @@ function cleanTypeFile(filePath) {
 cleanedCount += cleanTypeFile(index) ? 1 : 0;
 cleanedCount += cleanTypeFile(types) ? 1 : 0;
 cleanedCount += cleanTypeFile(interfaces) ? 1 : 0;
+// widget.config.d.ts ships in the published tarball too (copyTypes.mjs copies
+// it), so its $core-style aliases must be rewritten like the others or npm
+// consumers get unresolvable imports (TS2307).
+cleanedCount += cleanTypeFile(widgetConfig) ? 1 : 0;
 
 console.log(`\nWidget type cleaning complete: ${cleanedCount} files modified`);
 
