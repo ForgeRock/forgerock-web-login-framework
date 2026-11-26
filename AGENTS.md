@@ -262,7 +262,31 @@ packages/login-widget/         # @forgerock/login-widget — published package
 apps/login-app/                # SvelteKit dev/docs host app
 │   └── src/lib/server/custom-components/   # Component API (CRUD + publish, admin-only)
 e2e/tests/                     # Playwright suites (widget, login-app, utilities)
+
+custom/                        # Customer-owned sandbox — framework and CLI updates NEVER write here
+└── components/
+    ├── callbacks/             # Customer callback components (one dir per component)
+    ├── stages/                # Customer stage components (one dir per component)
+    ├── layout/                # Page header/footer wrapper files (seeded on first build, customer-edited)
+    ├── demo/                  # Reference implementations (committed, not scanned by the registry)
+    ├── login-framework.ts     # The curated surface customer source imports ($login-framework)
+    └── README.md              # Authoring guide
 ```
+
+**The `custom/` sandbox:** everything under `custom/` is customer-owned code.
+`ping-lf init` creates the initial tree; `ping-lf update` never writes inside
+it, so customer components, wrapper edits, and README changes survive every
+framework upgrade. Customer source may import only:
+
+- the curated surface module (`$login-framework`),
+- relative paths that stay inside `custom/components/` (or `$custom/<path>`),
+- bare npm packages (e.g. `svelte`), and
+- type-only imports from `@forgerock/journey-client/types`.
+
+A build-time boundary plugin (`core/vite-plugin-custom-imports.ts`) fails the
+build on anything else (`$core`, `$journey`, `$components`, `$locales`,
+runtime journey-client imports, paths escaping the sandbox). To add an export
+to the surface, open a PR extending `custom/components/login-framework.ts`.
 
 ## Internal File Conventions
 
