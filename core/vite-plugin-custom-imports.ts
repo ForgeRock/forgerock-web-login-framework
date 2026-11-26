@@ -47,6 +47,14 @@ interface CustomImportBoundaryOptions {
   projectRoot: string;
 }
 
+/**
+ * File extensions the load hook inspects, shared with the tree sweep in
+ * `custom-imports.ts`. Includes the ESM/JSX variants and CommonJS: a
+ * `.mjs`/`.mts`/`.jsx`/`.tsx`/`.cjs`/`.cts` file compiles to the same
+ * bundle, so its imports fail the boundary the same way.
+ */
+const SOURCE_EXTENSION_PATTERN = /\.(ts|js|tsx|jsx|mjs|mts|cjs|cts|svelte)$/;
+
 // Subset of vite's Plugin type this plugin fills in. Declared structurally
 // so core/ doesn't import vite's types (same approach as the registry's
 // customRegistry and loginFrameworkDist plugins).
@@ -87,10 +95,11 @@ const boundaryError = (file: string, violations: readonly ViolationSummary[]): E
       '  - type-only imports from @forgerock/journey-client/types.',
       '',
       'Everything else ($core, $journey, $components, $locales, runtime',
-      'journey-client imports, paths escaping custom/components/) is',
-      'framework-internal and may change across widget upgrades. Import the',
-      'curated surface instead — to request a new export, open a PR adding',
-      'it to custom/components/login-framework.ts.',
+      'journey-client imports, paths escaping custom/components/, computed',
+      'or glob dynamic imports) is framework-internal and may change across',
+      'widget upgrades. Import the curated surface instead — to request a',
+      'new export, open a PR adding it to',
+      'custom/components/login-framework.ts.',
     ].join('\n'),
   );
 
@@ -114,12 +123,14 @@ export function customImportBoundary({ projectRoot }: CustomImportBoundaryOption
       if (isExcludedFromCustomImports(relativeToCustom)) {
         return null;
       }
-      if (!/\.(ts|js|svelte)$/.test(relativeToCustom)) {
+      if (!SOURCE_EXTENSION_PATTERN.test(relativeToCustom)) {
         return null;
       }
       const sourceText = readFileSync(filePath, 'utf8');
       const violations = checkCustomImports({
-        imports: parseCustomImports(sourceText),
+        imports: parseCustomImports(sourceText, {
+          isSvelte: relativeToCustom.endsWith('.svelte'),
+        }),
         importerDir: join(filePath, '..'),
         customRoot,
       });

@@ -8,7 +8,8 @@
  **/
 
 import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { createRequire } from 'node:module';
+import { dirname, join, relative } from 'node:path';
 import * as ts from 'typescript';
 
 import type { SourceFile } from 'typescript';
@@ -60,6 +61,7 @@ type LocatedImport = CustomImport & { readonly line: number };
 export type CustomImportViolationKind =
   | 'forbidden-alias'
   | 'forbidden-external'
+  | 'forbidden-dynamic'
   | 'relative-escape';
 
 /** A boundary-check failure, with the offending specifier and source line. */
@@ -71,13 +73,14 @@ export interface CustomImportViolation {
 }
 
 /**
- * The specifier of a dynamic `import(...)`. The compiler API has no
- * dedicated node type, so model the shape this parser reads: the first
- * argument, when it is a string literal.
+ * A non-analyzable dynamic import: `import(x)`, `import(`${base}/${name}`)`,
+ * or any `import(...)` whose argument is not a plain string literal. A
+ * computed specifier can reach any module at runtime while the static parse
+ * sees nothing, so it fails closed.
  */
 interface DynamicImportCall {
   readonly expression: { readonly kind: number };
-  readonly arguments?: readonly { readonly kind: number; readonly text?: string }[];
+  readonly arguments?: readonly ts.Expression[];
 }
 
 /**
@@ -90,6 +93,13 @@ interface DynamicImportCall {
 
 /** The one curated surface module customer source imports from. */
 const SURFACE_SPECIFIER = '$login-framework';
+
+/**
+ * Placeholder specifier reported for dynamic imports whose argument is not a
+ * plain string literal (`import(x)`, `import(\`${base}/x\`)`). These cannot be
+ * resolved statically, so they fail closed under their own violation kind.
+ */
+const DYNAMIC_SPECIFIER_TEXT = '<dynamic import>';
 
 /** The customer-directory alias, resolving inside `custom/components/`. */
 const CUSTOM_ALIAS = '$custom';
@@ -208,11 +218,47 @@ const collectImports = (sourceFile: SourceFile): readonly LocatedImport[] => {
       return;
     }
     const call = node as unknown as DynamicImportCall;
-    if (call.expression?.kind === ts.SyntaxKind.ImportKeyword && call.arguments?.[0]) {
-      const argument = call.arguments[0];
-      if (argument !== undefined && ts.isStringLiteral(argument as ts.Node)) {
+    if (call.expression?.kind === ts.SyntaxKind.ImportKeyword) {
+      const argument = call.arguments?.[0];
+      if (argument !== undefined && ts.isStringLiteral(argument)) {
         imports.push({
-          specifier: (argument as { readonly text: string }).text,
+          specifier: argument.text,
+          isTypeOnly: false,
+          kind: 'dynamic',
+          line: lineOf(node, sourceFile),
+        });
+      } else {
+        // import(x), import(`${base}/secret`), import(someVar) — a computed
+        // specifier can resolve anything at runtime, so fail closed.
+        imports.push({
+          specifier: DYNAMIC_SPECIFIER_TEXT,
+          isTypeOnly: false,
+          kind: 'dynamic',
+          line: lineOf(node, sourceFile),
+        });
+      }
+      return;
+    }
+    // require('...'): Vite's commonjs plugin turns a CJS require in a
+    // customer source file into a real import in the built bundle, so it
+    // must clear the same boundary. Non-literal require() fails closed.
+    if (
+      ts.isCallExpression(node) &&
+      ts.isIdentifier(node.expression) &&
+      node.expression.text === 'require' &&
+      node.arguments.length === 1
+    ) {
+      const argument = node.arguments[0];
+      if (argument !== undefined && ts.isStringLiteral(argument)) {
+        imports.push({
+          specifier: argument.text,
+          isTypeOnly: false,
+          kind: 'dynamic',
+          line: lineOf(node, sourceFile),
+        });
+      } else {
+        imports.push({
+          specifier: DYNAMIC_SPECIFIER_TEXT,
           isTypeOnly: false,
           kind: 'dynamic',
           line: lineOf(node, sourceFile),
@@ -229,9 +275,199 @@ const collectImports = (sourceFile: SourceFile): readonly LocatedImport[] => {
 /**
  * Parses customer source text into its import records, keeping each import's
  * 1-based line so violations can point at the statement.
+ *
+ * Svelte files are reduced to their `<script>` blocks plus their markup
+ * expression code (via the Svelte compiler's own AST, matching how the
+ * framework actually compiles them): parsing markup as TypeScript desyncs the
+ * parser on markup characters (a lone backtick before the next `<script>` once
+ * swallowed a whole forbidden import). Svelte discrimination is by file
+ * extension, not text inspection: a TS/JS file can legitimately contain a
+ * balanced `<script>...</script>` pair inside a string literal, and routing
+ * such a file through the Svelte extractor would scan only the code inside
+ * the pair while missing a forbidden import outside it (fail-open). A Svelte
+ * file the compiler cannot parse falls back to whole-file parsing — the
+ * compiler itself will fail the real build later, and the boundary check must
+ * not be the thing that hides a syntax error. A UTF-8 BOM is stripped first
+ * so the first import of a BOM-prefixed file is never missed.
  */
-export const parseCustomImports = (sourceText: string): readonly LocatedImport[] =>
-  collectImports(ts.createSourceFile('customer.ts', sourceText, ts.ScriptTarget.Latest, true));
+export const parseCustomImports = (
+  sourceText: string,
+  options: { readonly isSvelte?: boolean } = {},
+): readonly LocatedImport[] => {
+  // The UTF-8 BOM (U+FEFF), built from its char code: a literal in source
+  // trips ESLint's no-irregular-whitespace rule.
+  const bom = String.fromCharCode(0xfeff);
+  const withoutBom = sourceText.startsWith(bom) ? sourceText.slice(1) : sourceText;
+  const scriptBlocks = options.isSvelte ? extractSvelteScriptBlocks(withoutBom) : null;
+  if (!scriptBlocks || scriptBlocks.length === 0) {
+    // Not Svelte, or the compiler rejected it (genuine syntax error — the
+    // consumer build reports it; the sweep degrades, never crashes).
+    return parseAsTypeScript(withoutBom, 1);
+  }
+  // Two-pass scan for a Svelte file, unioned and deduped:
+  //   1. The compiler's view — script blocks + markup expression ranges, so
+  //      hostile markup cannot desync the TS parser (the original bypass).
+  //   2. The whole file as TypeScript — catches import statements the
+  //      extractor does not classify as component code (a bare import outside
+  //      every script/expression range is dead markup text to Svelte but a
+  //      real import to a bundler that ignores markup). The whole-file pass
+  //      can itself desync on hostile markup and MISS some imports, but every
+  //      miss is covered by pass 1, so the union never narrows what the
+  //      pre-fix whole-file parse could see.
+  const svelteView = scriptBlocks.flatMap(({ text, startLine }) => [
+    ...collectImports(ts.createSourceFile('customer.ts', text, ts.ScriptTarget.Latest, true)).map(
+      (importEntry) => ({ ...importEntry, line: importEntry.line + startLine - 1 }),
+    ),
+    ...globViolations(text, startLine),
+  ]);
+  const wholeFileView = parseAsTypeScript(withoutBom, 1);
+  return dedupeImports([...svelteView, ...wholeFileView]);
+};
+
+/** Parses text as TypeScript, mapping violation lines through `startLine`. */
+const parseAsTypeScript = (text: string, startLine: number): readonly LocatedImport[] => [
+  ...collectImports(ts.createSourceFile('customer.ts', text, ts.ScriptTarget.Latest, true)).map(
+    (importEntry) => ({ ...importEntry, line: importEntry.line + startLine - 1 }),
+  ),
+  ...globViolations(text, startLine),
+];
+
+/** Removes duplicate findings across the two Svelte passes (same line + specifier + kind). */
+const dedupeImports = (imports: readonly LocatedImport[]): readonly LocatedImport[] => {
+  const seen = new Set<string>();
+  return imports.filter((importEntry) => {
+    const key = `${importEntry.line}:${importEntry.specifier}:${importEntry.kind}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+};
+
+/** The placeholder specifier reported for `import.meta.glob(...)` usage. */
+const GLOB_SPECIFIER_TEXT = 'import.meta.glob(...)';
+
+/**
+ * Reports one violation per `import.meta.glob` / `import.meta.globEager`
+ * occurrence in the checked text. Vite's glob transform rewrites these calls
+ * into module maps the TS AST never sees as imports, and the glob argument is
+ * dynamic, so the reached modules cannot be verified — fail closed. The scan
+ * runs over the whole text with a whitespace-tolerant pattern, so a call
+ * wrapped across lines (or carrying a TS generic) still matches.
+ */
+const globViolations = (text: string, startLine: number): readonly LocatedImport[] => {
+  const matches: LocatedImport[] = [];
+  const pattern = new RegExp(GLOB_IMPORT_PATTERN.source, 'g');
+  let match = pattern.exec(text);
+  while (match !== null) {
+    matches.push({
+      specifier: GLOB_SPECIFIER_TEXT,
+      isTypeOnly: false,
+      kind: 'dynamic',
+      line: startLine + text.slice(0, match.index).split('\n').length - 1,
+    });
+    match = pattern.exec(text);
+  }
+  return matches;
+};
+
+/**
+ * Matches `import.meta.glob(` / `import.meta.globEager(`, tolerating any
+ * whitespace (including newlines) inside the member expression, a TS generic
+ * argument (one nesting level), and before the call's paren, so multiline or
+ * generic-typed call sites cannot slip through.
+ */
+const GLOB_IMPORT_PATTERN =
+  /import\s*\.\s*(?:meta\s*\.\s*)?(?:glob|globEager)\s*(?:<(?:[^<>]|<[^<>]*>)*>)?\s*\(/;
+
+/**
+ * A script block extracted from a Svelte file, with the 1-based line of the
+ * original file its first content line sits on (for violation reporting).
+ */
+interface ScriptBlock {
+  readonly text: string;
+  readonly startLine: number;
+  /** The half-open byte range this block spans in the original source. */
+  readonly range: { readonly start: number; readonly end: number };
+}
+
+/**
+ * Extracts the import-bearing code from a Svelte file: every `<script>` /
+ * `<script ...>` block (module + instance contexts) plus the compiled
+ * expression code from the markup fragment (`{#await import('...')}`,
+ * `{@const ...}`, attribute expressions — Svelte 5 compiles template
+ * expressions into real runtime imports, so they are part of the boundary).
+ * Uses the Svelte compiler's parse, the same reader the build uses. Returns
+ * `null` when the text is not parseable Svelte (plain TS/JS, or Svelte with a
+ * genuine syntax error — the consumer build reports that itself).
+ */
+const extractSvelteScriptBlocks = (sourceText: string): ScriptBlock[] | null => {
+  try {
+    // Resolved through createRequire from this module's own URL: a bare
+    // `require('svelte/compiler')` call is rewritten by esbuild into Vite's
+    // __require shim when this file lands in an ESM config bundle, and that
+    // shim throws ("Dynamic require of ... is not supported"), silently
+    // degrading the whole boundary check to whole-file parsing. createRequire
+    // survives the ESM bundle and resolves svelte from the workspace install,
+    // the same dependency the consumer build itself compiles with.
+    const require = createRequire(import.meta.url);
+    const { parse } = require('svelte/compiler') as {
+      parse: (source: string) => SvelteParseResult;
+    };
+    const ast = parse(sourceText);
+    const blocks: ScriptBlock[] = [];
+    for (const script of [ast.module, ast.instance]) {
+      if (script?.content) {
+        blocks.push({
+          text: sourceText.slice(script.content.start, script.content.end),
+          startLine: sourceText.slice(0, script.content.start).split('\n').length,
+          range: { start: script.content.start, end: script.content.end },
+        });
+      }
+    }
+    // Markup expressions: walk the fragment and slice out every expression's
+    // code range. Svelte nodes carry start/end offsets into the source, so
+    // each expression compiles exactly the text it spans.
+    const stack: unknown[] = [ast.html];
+    while (stack.length > 0) {
+      const node = stack.pop();
+      if (node === null || typeof node !== 'object') {
+        continue;
+      }
+      const expression = (node as { expression?: { start: number; end: number } }).expression;
+      if (
+        expression &&
+        typeof expression.start === 'number' &&
+        typeof expression.end === 'number'
+      ) {
+        blocks.push({
+          text: sourceText.slice(expression.start, expression.end),
+          startLine: sourceText.slice(0, expression.start).split('\n').length,
+          range: { start: expression.start, end: expression.end },
+        });
+      }
+      for (const value of Object.values(node as Record<string, unknown>)) {
+        if (Array.isArray(value)) {
+          stack.push(...value);
+        } else if (value !== null && typeof value === 'object') {
+          stack.push(value);
+        }
+      }
+    }
+    return blocks;
+  } catch {
+    return null;
+  }
+};
+
+/** The subset of the Svelte AST this extractor reads. */
+interface SvelteParseResult {
+  instance?: { content: { start: number; end: number } } | null;
+  module?: { content: { start: number; end: number } } | null;
+  /** The markup fragment root (Svelte 4/5: `html`, a Fragment node). */
+  html?: unknown;
+}
 
 /**
  * Checks parsed imports against the customer boundary. `importerDir` is the
@@ -253,6 +489,12 @@ export const checkCustomImports = ({
       specifier: importEntry.specifier,
       line: importEntry.line ?? 0,
     });
+    if (
+      importEntry.specifier === DYNAMIC_SPECIFIER_TEXT ||
+      importEntry.specifier === GLOB_SPECIFIER_TEXT
+    ) {
+      return [violation('forbidden-dynamic')];
+    }
     if (isForbiddenAlias(importEntry.specifier)) {
       return [violation('forbidden-alias')];
     }
@@ -294,6 +536,14 @@ export interface CustomImportFileViolations {
 }
 
 /**
+ * File extensions the boundary check reads as source. Includes the ESM/JSX
+ * variants and CommonJS: `.mjs`/`.mts`/`.jsx`/`.tsx`/`.cjs`/`.cts` compile to
+ * the same bundle, so a forbidden import in one must fail the same way (a
+ * `.ts`-only filter would let the import through on the renamed file).
+ */
+const SOURCE_EXTENSION_PATTERN = /\.(ts|js|tsx|jsx|mjs|mts|cjs|cts|svelte)$/;
+
+/**
  * Recursively scans `<projectRoot>/custom/components/` for production files
  * and returns every file with at least one boundary violation. The
  * imperative shell for the CI sweep; the pure check lives in
@@ -316,17 +566,16 @@ export const scanCustomComponents = (
     })
     .filter(
       ({ relativePath }) =>
-        !isExcludedFromCustomImports(relativePath) &&
-        (relativePath.endsWith('.ts') ||
-          relativePath.endsWith('.svelte') ||
-          relativePath.endsWith('.js')),
+        !isExcludedFromCustomImports(relativePath) && SOURCE_EXTENSION_PATTERN.test(relativePath),
     )
     .flatMap(({ full, relativePath }) => {
       const sourceText = readFileSync(full, 'utf8');
-      const imports = parseCustomImports(sourceText);
+      const imports = parseCustomImports(sourceText, {
+        isSvelte: relativePath.endsWith('.svelte'),
+      });
       const violations = checkCustomImports({
         imports,
-        importerDir: full.replace(/\/[^/]*$/, ''),
+        importerDir: dirname(full),
         customRoot,
       });
       return violations.length > 0 ? [{ file: relativePath, violations }] : [];

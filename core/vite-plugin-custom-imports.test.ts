@@ -146,4 +146,90 @@ describe('customImportBoundary (load hook)', () => {
   it('skips ids that do not exist on disk', () => {
     expect(makePlugin().load('/definitely/not/a/real/file.ts')).toBeNull();
   });
+
+  it('catches a forbidden import even when hostile markup precedes the script block', () => {
+    // Reproduced bypass: a lone backtick in markup desynced the old
+    // whole-file TS parse and swallowed the forbidden import entirely.
+    const filePath = join(fixtureRoot, 'custom/components/stages/canary/canary.svelte');
+    writeFileSync(
+      filePath,
+      [
+        '<div>prices start at `99</div>',
+        '<script lang="ts">',
+        "  import { styleStore } from '$core/style.store';",
+        '</script>',
+      ].join('\n'),
+    );
+    expect(() => makePlugin().load(filePath)).toThrow(
+      /forbidden-alias[\s\S]*"\$core\/style\.store"/,
+    );
+  });
+
+  it('catches import.meta.glob (dynamic module map the TS AST never sees)', () => {
+    const filePath = join(fixtureRoot, 'custom/components/stages/canary/canary.svelte');
+    writeFileSync(
+      filePath,
+      [
+        '<script lang="ts">',
+        '  const modules = import.meta.glob("../../core/*.ts");',
+        '</script>',
+      ].join('\n'),
+    );
+    expect(() => makePlugin().load(filePath)).toThrow(/forbidden-dynamic/);
+  });
+
+  it('catches a computed dynamic import (import(x)) as forbidden-dynamic', () => {
+    const filePath = join(fixtureRoot, 'custom/components/stages/canary/dynamic.mts');
+    writeFileSync(filePath, `const mod = await import(basePath + '/core/style.store');\n`);
+    expect(() => makePlugin().load(filePath)).toThrow(/forbidden-dynamic/);
+  });
+
+  it('inspects .mjs and .mts files, not only .ts/.js/.svelte', () => {
+    const mjsPath = join(fixtureRoot, 'custom/components/stages/canary/helper.mjs');
+    writeFileSync(mjsPath, `export { styleStore } from '$core/style.store';\n`);
+    expect(() => makePlugin().load(mjsPath)).toThrow(/forbidden-alias/);
+  });
+
+  it('inspects .cjs files and their require() calls', () => {
+    const cjsPath = join(fixtureRoot, 'custom/components/stages/canary/legacy.cjs');
+    writeFileSync(cjsPath, `const store = require('$core/style.store');\n`);
+    expect(() => makePlugin().load(cjsPath)).toThrow(/forbidden-alias/);
+  });
+
+  it('catches a dynamic import inside a markup expression ({#await import(...)})', () => {
+    // Svelte 5 compiles template expressions into real runtime imports; the
+    // extractor slices expression ranges out of the markup AST.
+    const filePath = join(fixtureRoot, 'custom/components/stages/canary/awaited.svelte');
+    writeFileSync(
+      filePath,
+      [`{#await import('$core/style.store') then mod}`, `  <p>{mod}</p>`, `{/await}`].join('\n'),
+    );
+    expect(() => makePlugin().load(filePath)).toThrow(/forbidden-alias/);
+  });
+
+  it('catches a multiline import.meta.glob call', () => {
+    const filePath = join(fixtureRoot, 'custom/components/stages/canary/glob.svelte');
+    writeFileSync(
+      filePath,
+      ['<script>', 'const m = import.meta.glob(', '  "../../core/*.ts"', ');', '</script>'].join(
+        '\n',
+      ),
+    );
+    expect(() => makePlugin().load(filePath)).toThrow(/forbidden-dynamic/);
+  });
+
+  it('scans a TS file with an embedded <script> string as plain TS, not Svelte', () => {
+    // Completeness-critic regression probe: a text-based Svelte check
+    // misrouted this file through the Svelte extractor, which only scanned
+    // the code inside the string-embedded pair and missed the real import.
+    const filePath = join(fixtureRoot, 'custom/components/stages/canary/embedded.ts');
+    writeFileSync(
+      filePath,
+      [
+        `const html = "<script>const x = 1;</script>";`,
+        `import { styleStore } from '$core/style.store';`,
+      ].join('\n'),
+    );
+    expect(() => makePlugin().load(filePath)).toThrow(/forbidden-alias/);
+  });
 });

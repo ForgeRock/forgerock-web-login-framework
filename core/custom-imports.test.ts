@@ -82,6 +82,37 @@ describe('parseCustomImports', () => {
     ]);
   });
 
+  it('flags a dynamic import with a non-literal argument as a placeholder (fail closed)', () => {
+    const imports = parseCustomImports(
+      `const mod = import(someVariable);\nconst other = import(\`\${base}/x\`);`,
+    );
+    expect(imports).toHaveLength(2);
+    for (const importEntry of imports) {
+      expect(importEntry.kind).toBe('dynamic');
+      expect(importEntry.specifier).toBe('<dynamic import>');
+    }
+    expect(imports[0]?.line).toBe(1);
+    expect(imports[1]?.line).toBe(2);
+  });
+
+  it('flags import.meta.glob as a violation with its source line (Svelte)', () => {
+    const imports = parseCustomImports(
+      ['<script lang="ts">', '  const modules = import.meta.glob("../../*");', '</script>'].join(
+        '\n',
+      ),
+    );
+    expect(imports).toHaveLength(1);
+    expect(imports[0]?.specifier).toBe('import.meta.glob(...)');
+    expect(imports[0]?.kind).toBe('dynamic');
+    expect(imports[0]?.line).toBe(2);
+  });
+
+  it('flags import.meta.glob inside a plain TS file', () => {
+    const imports = parseCustomImports(`const modules = import.meta.globEager('/core/*');`);
+    expect(imports).toHaveLength(1);
+    expect(imports[0]?.specifier).toBe('import.meta.glob(...)');
+  });
+
   it('ignores imports inside block and line comments', () => {
     const imports = parseCustomImports(`
 /**
@@ -105,6 +136,160 @@ import { T } from '$login-framework';
     expect(imports).toEqual([
       { specifier: './theme.css', isTypeOnly: false, kind: 'import', line: 1 },
     ]);
+  });
+
+  it('strips a UTF-8 BOM so the first import is parsed', () => {
+    // Built from its char code: a literal BOM trips ESLint's
+    // no-irregular-whitespace rule.
+    const source = `${String.fromCharCode(0xfeff)}import { X } from '$core/style.store';`;
+    const imports = parseCustomImports(source);
+    expect(imports).toEqual([
+      { specifier: '$core/style.store', isTypeOnly: false, kind: 'import', line: 1 },
+    ]);
+  });
+
+  it('reduces a Svelte file to its script blocks: markup cannot desync the parser', () => {
+    // The reproduced desync: a lone backtick in markup before the script
+    // swallowed the forbidden import when the whole file was parsed as TS.
+    const imports = parseCustomImports(
+      [
+        '<div>markup with a stray ` backtick</div>',
+        '<script lang="ts">',
+        "  import { styleStore } from '$core/style.store';",
+        '</script>',
+      ].join('\n'),
+      { isSvelte: true },
+    );
+    expect(imports).toEqual([
+      { specifier: '$core/style.store', isTypeOnly: false, kind: 'import', line: 3 },
+    ]);
+  });
+
+  it('extracts both module-context and instance script blocks with correct line offsets', () => {
+    const imports = parseCustomImports(
+      [
+        '<script context="module" lang="ts">',
+        "  import { a } from '$core/one';",
+        '</script>',
+        '',
+        '<div>hi</div>',
+        '<script lang="ts">',
+        "  import { b } from '$journey/two';",
+        '</script>',
+      ].join('\n'),
+      { isSvelte: true },
+    );
+    expect(imports.map((importEntry) => importEntry.line)).toEqual([2, 7]);
+  });
+
+  it('falls back to whole-file parsing when the Svelte compiler rejects the text', () => {
+    // A file with a genuine syntax error: the consumer build reports it; the
+    // boundary sweep must still parse what it can (degrade, never crash).
+    const imports = parseCustomImports('<script>\nimport { X } from "svelte";\n', {
+      isSvelte: true,
+    });
+    expect(imports.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('scans markup expressions ({#await import(...)}) with correct line offsets', () => {
+    // Svelte 5 compiles template expressions into real runtime imports; a
+    // dynamic import hiding in a markup expression must not escape the scan.
+    const imports = parseCustomImports(
+      [
+        '<script lang="ts">',
+        "  import { Button } from '$login-framework';",
+        '</script>',
+        '',
+        "{#await import('$core/style.store') then mod}",
+        '  <p>{mod.styleStore}</p>',
+        '{/await}',
+      ].join('\n'),
+      { isSvelte: true },
+    );
+    const dynamic = imports.filter((importEntry) => importEntry.kind === 'dynamic');
+    expect(dynamic).toHaveLength(1);
+    expect(dynamic[0]?.specifier).toBe('$core/style.store');
+    expect(dynamic[0]?.line).toBe(5);
+  });
+
+  it('scans attribute expressions in markup', () => {
+    const imports = parseCustomImports(
+      [
+        '<div',
+        "  on:click={() => import('$journey/journey.store').then(m => m.journeyStore)}",
+        '>',
+        '</div>',
+      ].join('\n'),
+      { isSvelte: true },
+    );
+    const dynamic = imports.filter((importEntry) => importEntry.kind === 'dynamic');
+    expect(dynamic).toHaveLength(1);
+    expect(dynamic[0]?.specifier).toBe('$journey/journey.store');
+    expect(dynamic[0]?.line).toBe(2);
+  });
+
+  it('flags require() of a forbidden module (Vite commonjs converts it to an import)', () => {
+    const imports = parseCustomImports(`const store = require('$core/style.store');`);
+    expect(imports).toHaveLength(1);
+    expect(imports[0]?.specifier).toBe('$core/style.store');
+    expect(imports[0]?.kind).toBe('dynamic');
+  });
+
+  it('flags computed require() as forbidden-dynamic', () => {
+    const violations = checkCustomImports({
+      imports: parseCustomImports(`const store = require(basePath + '/core/store');`),
+      importerDir: resolve(customRoot, 'stages/login'),
+      customRoot,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-dynamic');
+  });
+
+  it('flags a multiline import.meta.glob call', () => {
+    const imports = parseCustomImports(
+      ['const modules = import.meta.glob(', "  '../../core/*.ts'", ');'].join('\n'),
+    );
+    expect(imports).toHaveLength(1);
+    expect(imports[0]?.specifier).toBe('import.meta.glob(...)');
+    expect(imports[0]?.line).toBe(1);
+  });
+
+  it('flags a generic-typed import.meta.glob call', () => {
+    const imports = parseCustomImports(
+      `const modules = import.meta.glob<Record<string, unknown>>('../../core/*.ts');`,
+    );
+    expect(imports).toHaveLength(1);
+    expect(imports[0]?.specifier).toBe('import.meta.glob(...)');
+  });
+
+  it('reports correct line numbers for a glob call on a later line', () => {
+    const imports = parseCustomImports(
+      `const a = 1;\nconst b = 2;\nconst mods = import.meta.glob('../../core/*');`,
+    );
+    expect(imports).toHaveLength(1);
+    expect(imports[0]?.line).toBe(3);
+  });
+
+  it('treats a TS file containing an embedded <script> HTML string as plain TS (extension-gated)', () => {
+    // The fail-open regression the completeness critic proved end-to-end: a
+    // text-based <script> check misrouted this file through the Svelte
+    // extractor, which scanned only the code inside the pair and missed the
+    // forbidden import outside it. Discrimination is now by file extension.
+    const sourceText = [
+      `const html = "<script>const x = 1;</script>";`,
+      `import { styleStore } from '$core/style.store';`,
+    ].join('\n');
+    const asTs = parseCustomImports(sourceText, { isSvelte: false });
+    expect(asTs).toHaveLength(1);
+    expect(asTs[0]?.specifier).toBe('$core/style.store');
+
+    // Same text through the Svelte path: the compiler's view treats the
+    // embedded pair as a real script block, but the whole-file TS pass still
+    // sees the import outside it — fail-closed union, so nothing the pre-fix
+    // parser could see is ever missed.
+    const asSvelte = parseCustomImports(sourceText, { isSvelte: true });
+    expect(asSvelte).toHaveLength(1);
+    expect(asSvelte[0]?.specifier).toBe('$core/style.store');
   });
 });
 
@@ -251,6 +436,28 @@ import { missing } from '$journey/journey.store';
       'forbidden-external',
       'forbidden-alias',
     ]);
+  });
+
+  it('fails a computed dynamic import closed (unresolvable specifier)', () => {
+    const violations = checkCustomImports({
+      imports: parseCustomImports(`const mod = import(basePath + '/core/style.store');`),
+      importerDir: resolve(customRoot, 'stages/login'),
+      customRoot,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-dynamic');
+    expect(violations[0]?.specifier).toBe('<dynamic import>');
+  });
+
+  it('fails import.meta.glob closed', () => {
+    const violations = checkCustomImports({
+      imports: parseCustomImports(`const mods = import.meta.glob('../../core/*.ts');`),
+      importerDir: resolve(customRoot, 'stages/login'),
+      customRoot,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-dynamic');
+    expect(violations[0]?.specifier).toBe('import.meta.glob(...)');
   });
 });
 
