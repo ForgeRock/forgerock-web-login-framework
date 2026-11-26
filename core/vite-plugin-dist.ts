@@ -153,6 +153,22 @@ export function frameworkCoreDist({ packageDir }: FrameworkCoreDistOptions): Dis
         return registrySource;
       }
 
+      // The curated custom-component surface: resolve to the generated
+      // compiled module (written by `vite-plugin-surface-dist.ts` during
+      // the package build). Bundling the surface source instead
+      // miscompiles in SvelteKit builds — see
+      // `login-framework-dist-surface.ts`.
+      if (source === '$login-framework') {
+        const generated = resolve(options?.ssr ? serverDistDir : distDir, 'login-framework.js');
+        if (!existsSync(generated)) {
+          throw new Error(
+            `Compiled curated surface not found at ${generated}, needed to resolve "${source}". ` +
+              'Run "pnpm build:framework" from the repository root.',
+          );
+        }
+        return generated;
+      }
+
       const match = aliasRoots.find(
         ({ prefix }) => source === prefix || source.startsWith(`${prefix}/`),
       );

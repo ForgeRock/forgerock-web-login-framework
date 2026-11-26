@@ -27,8 +27,14 @@ const config = {
       // Server-only SvelteKit modules, deliberately excluded from the
       // framework-core package build ($app/$env imports; server/ holds
       // SvelteKit-only utilities); resolved from source. All other
-      // $core/$components/$journey/$locales imports map onto the package's
-      // built dist via the frameworkCoreDist Vite plugin in vite.config.ts.
+      // $core/$components/$journey/$locales imports — and the curated
+      // custom-component surface ($login-framework → generated
+      // dist/login-framework.js) — map onto the package's built dist via
+      // the frameworkCoreDist Vite plugin in vite.config.ts; no alias
+      // entry may shadow those resolutions. TypeScript keeps resolving the
+      // $login-framework specifier for TYPES through the paths in
+      // tsconfig.json (which mirror these aliases), so editor and
+      // svelte-check type information still come from the source surface.
       '$core/constants': path.resolve('../../core/constants.ts'),
       '$core/server': path.resolve('../../core/server'),
       '$app-locales': path.resolve('./src/locales'),
@@ -38,11 +44,10 @@ const config = {
       // Server utilities live in the app, not the widget
       $server: path.resolve('./src/lib/server'),
       '$server/*': path.resolve('./src/lib/server/*'),
-      // Curated public surface for custom components (stage/callback/header/footer)
-      '$login-framework': path.resolve('../../custom/components/login-framework.ts'),
       // Fixed tracked wrapper components (header/footer) — one file per element
+      // Kit alias keys: the bare key prefix-matches $custom/<rest>; a
+      // '$custom/*' key would never match.
       $custom: path.resolve('../../custom/components'),
-      '$custom/*': path.resolve('../../custom/components/*'),
     },
   },
   server: {

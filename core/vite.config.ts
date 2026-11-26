@@ -8,17 +8,25 @@
  **/
 
 import { svelte } from '@sveltejs/vite-plugin-svelte';
-import { resolve } from 'path';
+import { dirname, resolve } from 'path';
+import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
 
 import { packageRoot as ROOT, runtimeEntries as entries } from './collect-entries';
+import { surfaceDist } from './vite-plugin-surface-dist';
 import { packageCssConfig, packageExternal, packageSveltePluginOptions } from './vite-shared';
+
+const packageDir = dirname(fileURLToPath(import.meta.url));
+const surfaceFile = resolve(packageDir, '../custom/components/login-framework.ts');
 
 export default defineConfig({
   plugins: [
     svelte({
       ...packageSveltePluginOptions(),
     }),
+    // Writes the compiled curated-surface module (dist/login-framework.js)
+    // after the client tree is emitted.
+    surfaceDist({ packageRoot: packageDir, tree: 'client', surfaceFile }),
   ],
   resolve: {
     alias: {
