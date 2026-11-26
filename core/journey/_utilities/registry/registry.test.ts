@@ -1,7 +1,7 @@
 import { Path } from '@effect/platform';
 import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -127,6 +127,19 @@ describe('parseComponentHeader', () => {
       );
       expect(String(err.cause)).toContain('Reserved key "constructor"');
     });
+
+    it('fails when Name is empty after trimming', () => {
+      const err = decodeError('test.svelte', `<!-- @component\n   Type: stage\n   Name:    -->`);
+      expect(String(err.cause)).toContain('must not be empty');
+    });
+
+    it('fails when Name contains control characters (generated-file and terminal injection)', () => {
+      const err = decodeError(
+        'test.svelte',
+        '<!-- @component\n   Type: stage\n   Name: Bad\x1b[31mName -->',
+      );
+      expect(String(err.cause)).toContain('control characters');
+    });
   });
 });
 
@@ -224,10 +237,10 @@ describe('buildRegistryContent', () => {
     );
 
     expect(output).toContain(
-      `import StageMyStage from '../../../../custom/components/stages/my-stage/my-stage.svelte';`,
+      `import StageMyStage from "../../../../custom/components/stages/my-stage/my-stage.svelte";`,
     );
     expect(output).toContain(
-      `import CallbackMyCb from '../../../../custom/components/callbacks/my-cb/my-cb.svelte';`,
+      `import CallbackMyCb from "../../../../custom/components/callbacks/my-cb/my-cb.svelte";`,
     );
     expect(output).toContain(
       `"My Stage": { get component() { return StageMyStage; }, acceptedProps: ["callback","style"] },`,
@@ -428,6 +441,17 @@ describe('runRegistryScript', () => {
     expect(output).toContain('customCallbackRegistry');
     expect(output).toContain('StageLogin');
     expect(output).toContain('CallbackName');
+  });
+
+  it('leaves no temp file behind after a successful regeneration (atomic temp+rename)', async () => {
+    // The registry write must go through temp+rename (same pattern as the
+    // wrapper seed): concurrent consumers read the file, and a direct write
+    // would expose a truncated registry between truncation and write.
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await run();
+
+    const dir = await readdir(join(tmpDir, 'core', 'journey', '_utilities', 'registry'));
+    expect(dir).toEqual(['custom-registry.ts']);
   });
 
   it('ignores header and footer directories even when populated (removed types)', async () => {
@@ -722,6 +746,36 @@ describe('customRegistry vite plugin', () => {
     const after = await readFile(registryPath(), 'utf8');
     expect(after).toBe(baseline);
     expect(after).not.toContain('StageStray');
+  });
+
+  it('ignores sibling directories whose name merely extends a watched name (exact boundary)', async () => {
+    // A prefix check alone matches custom/components/stages-backup/ (it
+    // starts with custom/components/stages); the watcher needs the exact
+    // directory or a path separator at the boundary.
+    const { customRegistry } = await import('./vite-plugin.js');
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    await runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise);
+    const baseline = await readFile(registryPath(), 'utf8');
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+
+    const siblingDir = join(tmpDir, 'custom', 'components', 'stages-backup', 'brand');
+    await mkdir(siblingDir, { recursive: true });
+    await writeFile(
+      join(siblingDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Backup\n   -->\n<div></div>',
+      'utf8',
+    );
+    for (const listener of listeners) {
+      listener('add', join(siblingDir, 'brand.svelte'));
+    }
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    const after = await readFile(registryPath(), 'utf8');
+    expect(after).toBe(baseline);
+    expect(after).not.toContain('StageBackup');
   });
 
   it('ignores header and footer component events — wrappers render client-side, not via the registry', async () => {

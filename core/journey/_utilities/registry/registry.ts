@@ -77,6 +77,20 @@ export function toPascalCase(str: string): string {
     .replace(/^(.)/, (_, chr: string) => chr.toUpperCase());
 }
 
+/**
+ * Makes a component name safe for terminal output: control characters (which
+ * the header parser already rejects) are rendered as visible escapes, so a
+ * name read from a hostile file cannot move the cursor, clear lines, or
+ * inject ANSI sequences into the scan summary.
+ */
+const CONTROL_CHARACTER_PATTERN = /[\u0000-\u001f\u007f]/g; // eslint-disable-line no-control-regex
+
+const safeNameForOutput = (name: string): string =>
+  name.replace(
+    CONTROL_CHARACTER_PATTERN,
+    (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, '0')}`,
+  );
+
 /** Parses and validates the leading `<!-- @component -->` block from a Svelte file. */
 export const parseComponentHeader = (
   filePath: string,
@@ -114,6 +128,9 @@ export const parseComponentHeader = (
   }
 
   const name = nameMatch[1].trim();
+  if (name.length === 0) {
+    return fail('Invalid Name: the @component Name must not be empty.');
+  }
   // "__proto__" as an object-literal key sets the prototype instead of defining
   // an own property, so the generated Record would silently lose the entry;
   // "constructor" is inherited-but-shadowable and kept reserved for symmetry.
@@ -121,6 +138,16 @@ export const parseComponentHeader = (
     return fail(
       `Reserved key "${name}" cannot be used as a Name. The generated registry is an ` +
         `object literal, and this key would corrupt the Record instead of registering the component.`,
+    );
+  }
+  // Control characters (including ANSI escapes) cannot appear in a legitimate
+  // component name but would inject into the generated registry file and the
+  // terminal summary the scan prints. Fail with an actionable message.
+  // eslint-disable-next-line no-control-regex -- intentional: detecting hostile control characters
+  if (/[\u0000-\u001f\u007f]/.test(name)) {
+    return fail(
+      `Invalid Name: the @component Name must not contain control characters ` +
+        `(received a character in the U+0000-U+001F or U+007F range).`,
     );
   }
 
@@ -256,7 +283,12 @@ export function buildRegistryContent(
       ? []
       : [
           comment,
-          ...entries.map(({ varName, importPath }) => `import ${varName} from '${importPath}';`),
+          // JSON.stringify the path: the import path is derived from the file
+          // system, but quoting it properly means a path containing a quote
+          // cannot break out of the module specifier and inject code.
+          ...entries.map(
+            ({ varName, importPath }) => `import ${varName} from ${JSON.stringify(importPath)};`,
+          ),
           ``,
         ];
 
@@ -480,18 +512,28 @@ export const runRegistryScript = (projectDir: string, options: RegistryScanOptio
     yield* fs
       .makeDirectory(registryDir, { recursive: true })
       .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: registryDir, cause })));
+    // Write to a temp sibling then rename: the plugin runs in every consumer
+    // (dev server, widget build, app build, vitest), so two processes can
+    // regenerate concurrently. A direct write would let a reader see a
+    // truncated registry between the truncation and the write; rename is
+    // atomic on the same filesystem, so every reader sees either the whole
+    // old file or the whole new one. Same pattern as seedMissingWrappers.
+    const tempPath = `${registryPath}.regen-tmp`;
     yield* fs
-      .writeFileString(registryPath, content)
+      .writeFileString(tempPath, content)
+      .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: tempPath, cause })));
+    yield* fs
+      .rename(tempPath, registryPath)
       .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: registryPath, cause })));
 
     const summaryLines = [
       stageComponents.length > 0 &&
         `  Stages    (${stageComponents.length}): ${stageComponents
-          .map((stageComponent) => stageComponent.name)
+          .map((stageComponent) => safeNameForOutput(stageComponent.name))
           .join(', ')}`,
       callbackComponents.length > 0 &&
         `  Callbacks (${callbackComponents.length}): ${callbackComponents
-          .map((callbackComponent) => callbackComponent.name)
+          .map((callbackComponent) => safeNameForOutput(callbackComponent.name))
           .join(', ')}`,
     ].filter((line): line is string => line !== false);
 

@@ -67,7 +67,9 @@ export function customRegistry({ projectRoot, exclude }: CustomRegistryPluginOpt
         if (
           !filePath.endsWith('.svelte') ||
           filePath.endsWith('.story.svelte') ||
-          !watchedDirs.some((dir) => filePath.startsWith(dir))
+          // Exact boundary: a prefix check alone would pick up a sibling
+          // directory like custom/components2/ or stages-backup/.
+          !watchedDirs.some((dir) => filePath === dir || filePath.startsWith(`${dir}${path.sep}`))
         ) {
           return;
         }
