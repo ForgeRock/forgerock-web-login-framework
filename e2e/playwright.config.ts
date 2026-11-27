@@ -10,6 +10,9 @@ const url = process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:3000';
 const configErrorUrl = 'http://localhost:3100';
 const idmThemeUrl = 'http://localhost:3300';
 const defaultJourneyUrl = 'http://localhost:5829';
+// FR_AM_URL set to the custom domain itself — separate server because the env
+// differs from the shared default-domain server, not for CORS.
+const customDomainConfiguredUrl = 'http://localhost:4200';
 // Shared location for the Component API file e2e tests; the tests wipe it per run.
 export const componentsRepoDir = join(tmpdir(), 'login-app-components-e2e');
 export const componentsApiUrl = `${url.replace(/\/$/, '')}/api/components`;
@@ -110,8 +113,21 @@ const webServer = process.env.PLAYWRIGHT_TEST_BASE_URL
           FR_AM_JOURNEY_LOGIN: 'TEST_ThemeE2E',
         },
       },
+      // /am/* is proxied with the CD origin's Host so AM answers as the alias.
+      {
+        command: 'pnpm --filter @forgerock/login-app run preview --host=localhost --port=4200',
+        cwd: '..',
+        url: customDomainConfiguredUrl,
+        ignoreHTTPSErrors: true,
+        reuseExistingServer: true,
+        env: {
+          FR_AM_URL: 'https://id.petrov.ca/am',
+          FR_AM_COOKIE_NAME: AM_COOKIE_NAME,
+          FR_REALM_PATH: AM_REALM,
+          FR_AM_WELLKNOWN_URL: `https://id.petrov.ca/am/oauth2/${AM_REALM}/.well-known/openid-configuration`,
+        },
+      },
     ];
-
 export default defineConfig({
   webServer,
   use: {
@@ -138,10 +154,18 @@ export default defineConfig({
     {
       name: 'chromium',
       grepInvert: /webauthn/,
-      testIgnore: /config-error|idm-theme|default-journey|component-api-disabled/,
+      testIgnore: /config-error|idm-theme|default-journey|component-api-disabled|custom-domain/,
       use: {
         ...devices['Desktop Chrome'],
         // ...devices['Desktop Edge'],
+      },
+    },
+    {
+      name: 'custom-domain',
+      testMatch: /custom-domain/,
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: `${customDomainConfiguredUrl}/`,
       },
     },
     {

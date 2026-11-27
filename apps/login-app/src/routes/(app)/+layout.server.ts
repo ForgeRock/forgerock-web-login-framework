@@ -11,48 +11,34 @@ import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
-import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
+import { resolveRealm } from '$server/realm/realm.effects';
 
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = async ({ url }) => {
   const amUrl = env.FR_AM_URL;
-  const wellknownUrl = env.FR_AM_WELLKNOWN_URL;
+  const configuredWellknownUrl = env.FR_AM_WELLKNOWN_URL;
   const idmBaseUrl = env.FR_IDM_URL ?? amUrl;
 
-  if (!amUrl || !wellknownUrl) {
+  if (!amUrl || !configuredWellknownUrl) {
     throw error(
       500,
       'Login App is not configured. Ensure the required environment variables FR_AM_URL, FR_AM_COOKIE_NAME, FR_REALM_PATH, and FR_AM_WELLKNOWN_URL are set before starting the app.',
     );
   }
 
-  // Deriving the sibling well-known paths takes the URL's path, so a malformed
-  // FR_AM_URL is a configuration error, not a per-request crash.
-  let amBasePath: string;
   try {
-    amBasePath = new URL(amUrl).pathname.replace(/\/+$/, '');
+    new URL(amUrl);
   } catch {
     throw error(500, 'Login App is not configured: FR_AM_URL must be an absolute URL.');
   }
 
-  // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
-  const realmPath = resolveRealmFromUrl(url);
-
-  // Use the configured discovery endpoint for the deployment's default realm.
-  // Derive a sibling endpoint only when the request explicitly selects another realm.
-  // A relative FR_AM_WELLKNOWN_URL resolves against the request origin so the
-  // browser fetches discovery from whichever host the user came in on (tenant
-  // FQDN or custom domain) instead of a hard-coded AM FQDN.
-  const configuredRealm = (env.FR_REALM_PATH ?? 'root').replace(/^\/+/, '');
-  const wellknown = new URL(
-    realmPath === configuredRealm
-      ? wellknownUrl
-      : realmPath === 'root'
-      ? `${amBasePath}/oauth2/realms/root/.well-known/openid-configuration`
-      : `${amBasePath}/oauth2/realms/root/realms/${realmPath}/.well-known/openid-configuration`,
-    url.origin,
-  ).toString();
+  const realmResolution = await resolveRealm(url, {
+    amUrl,
+    configuredRealmPath: env.FR_REALM_PATH,
+    configuredWellknownUrl,
+  });
+  if (realmResolution.kind === 'conflict') throw error(404, realmResolution.conflict);
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {
@@ -60,7 +46,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     themeCatalog,
     backgroundImageUrl,
   } = idmBaseUrl
-    ? await fetchIdmTheme(idmBaseUrl, realmPath, journeyName)
+    ? await fetchIdmTheme(idmBaseUrl, realmResolution.requestedRealm, journeyName)
     : { theme: undefined, themeCatalog: {}, backgroundImageUrl: undefined };
 
   return {
@@ -68,8 +54,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     backgroundImageUrl,
     idmTheme,
     themeCatalog,
-    realmPath,
-    wellknown,
+    wellknown: realmResolution.wellknown,
     fallbackJourney: env.FR_AM_JOURNEY_LOGIN ?? null,
   };
 };

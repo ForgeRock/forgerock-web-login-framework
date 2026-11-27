@@ -14,7 +14,7 @@ export type RedirectData = {
   journeyStepUrl: string;
   isGotoOnFail: boolean;
   gotoUrl: string;
-  successUrl: string | null;
+  validatedUrl: string | null;
   roles: ReadonlyArray<string>;
   realm: string | undefined;
   amOrigin: string;
@@ -30,6 +30,7 @@ export type RedirectFormValue = {
   loginResult: 'success' | 'failure';
   tokenId: TokenId;
   journeyStepUrl: string;
+  realm?: string;
 };
 
 export type Resolver = (redirectContext: RedirectData) => string | null;

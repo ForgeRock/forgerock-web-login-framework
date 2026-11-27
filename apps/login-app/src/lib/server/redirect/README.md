@@ -45,7 +45,7 @@ Redirect URLs can come from multiple places:
 2. Select a possible `gotoUrl`:
    - If `isGotoOnFail=true`: prefer cookie `gotoOnFail`.
    - If `isGotoOnFail=false`: prefer cookie `goto`, otherwise use the client-provided URL (typically from the journey success step).
-3. Call `validateGoto(authorization, gotoUrl)` in AM. AM may return a `successUrl` even when the input is invalid. It will fall back to the default success URL.
+3. Call `validateGoto(authorization, gotoUrl)` in AM. AM may return a `successURL` even when the input is invalid. It will fall back to the default success URL.
 4. If there is no usable `gotoUrl`, compute a default redirect, which redirects to either admin or end user.
 5. Final fallback:
 
@@ -90,7 +90,7 @@ the fallback properly by comparing the validated URL against the param.)
 ### SAML URLs
 
 If `validateGoto` falls back to a console URL but the original `goto` looks like SAML, return the original `goto`.
-For example, when `validateGoto` endpoint returns '/am/console' as successUrl and the corresponding `goto` query param is 'https://default.iam.example.com/am/Consumer/metaAlias/avsp', SAML condition becomes true and the `goto` URL is returned
+For example, when `validateGoto` endpoint returns '/am/console' as successURL and the corresponding `goto` query param is 'https://default.iam.example.com/am/Consumer/metaAlias/avsp', SAML condition becomes true and the `goto` URL is returned
 
 ### Admin vs end user default
 
@@ -113,14 +113,14 @@ In these flows:
 
 ## Deployment notes: same-host deployment (standard)
 
-In the standard PingOne AIC deployment the login app and platform-ui share the same FQDN. HAProxy routes traffic based on path prefix:
+In the standard PingOne AIC deployment the login app and platform-ui share the same host. HAProxy routes traffic based on path prefix:
 
 - `/login/*` → `be_aic_login2` (aic-login2)
 - `/am/XUI/*` → 301 redirect to `/login/?[query]` when `ENABLE_AIC_LOGIN2=true`
 - `/enduser/*` → `be_platform-ui` (platform-ui SPA, never touches aic-login2)
 - `/platform/*` → `be_platform-ui`
 
-`/enduser/` bypasses aic-login2 entirely, so post-login role-based redirects to `https://<fqdn>/enduser/?realm=/<realm>#/` are safe and route directly to the platform-ui SPA.
+`/enduser/` bypasses aic-login2 entirely, so post-login role-based redirects to `https://<host>/enduser/?realm=/<realm>#/` are safe and route directly to the platform-ui SPA.
 
 ### OAuth token refresh (SPA iframe PKCE)
 

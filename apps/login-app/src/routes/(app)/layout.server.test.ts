@@ -7,9 +7,22 @@
  *
  **/
 
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockEnv = vi.hoisted(() => ({}) as Record<string, string | undefined>);
+import { load } from './+layout.server';
+
+import type { RealmResolution } from '$server/realm/realm.types';
+
+// Seeded: importing the layout now pulls in $server/sessions → constants.ts,
+// whose module-init env check runs before beforeEach can set values.
+const mockEnv = vi.hoisted(
+  () =>
+    ({
+      FR_AM_URL: 'https://openam.example.com/am',
+      FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
+      FR_REALM_PATH: 'root',
+    }) as Record<string, string | undefined>,
+);
 
 vi.mock('$env/dynamic/private', () => ({ env: mockEnv }));
 vi.mock('$server/idm-theme.effects', () => ({
@@ -20,68 +33,80 @@ vi.mock('$server/idm-theme.effects', () => ({
   })),
 }));
 
-import { load } from './+layout.server';
+// The layout delegates the whole realm pipeline (requested realm, serverinfo
+// probe, conflict check, wellknown resolution) to resolveRealm.
+const resolveRealm = vi.hoisted(() => vi.fn<() => Promise<RealmResolution>>());
+vi.mock('$server/realm/realm.effects', () => ({ resolveRealm }));
 
-// The load reads only `url` from the event; tests drive it through this helper.
-// The declared LayoutServerLoad type includes a void arm (loads may throw), so the
-// awaited result is narrowed to its data side for property assertions.
-const loadEvent = (requestUrl: string) =>
-  ({ url: new URL(requestUrl) }) as unknown as Parameters<typeof load>[0];
+type LayoutLoad = typeof load;
 
-type LoadResult = Exclude<Awaited<ReturnType<typeof load>>, void>;
+const loadEvent = (requestUrl: string): Parameters<LayoutLoad>[0] =>
+  ({ url: new URL(requestUrl) }) as Parameters<LayoutLoad>[0];
+
+type LoadResult = Exclude<Awaited<ReturnType<LayoutLoad>>, void>;
 
 async function loadFrom(requestUrl: string): Promise<LoadResult> {
   return (await load(loadEvent(requestUrl))) as LoadResult;
 }
 
-describe('(app)/+layout.server.ts wellknown resolution', () => {
-  it('resolves a relative FR_AM_WELLKNOWN_URL against the request origin', async () => {
+describe('(app)/+layout.server.ts', () => {
+  beforeEach(() => {
     mockEnv.FR_AM_URL = 'https://openam.example.com/am';
     mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
     mockEnv.FR_REALM_PATH = 'root';
     mockEnv.FR_AM_WELLKNOWN_URL = '/am/oauth2/realms/root/.well-known/openid-configuration';
+    resolveRealm.mockResolvedValue({
+      kind: 'ok',
+      requestedRealm: 'root',
+      wellknown:
+        'https://tenant.example.com/am/oauth2/realms/root/.well-known/openid-configuration',
+    });
+  });
 
+  it('returns the resolved arrival with the theme payload', async () => {
     const result = await loadFrom('https://tenant.example.com/login/');
 
-    // The discovery URL carries the host the user came in on, so custom domains
-    // and root-realm tenants never bounce to the AM FQDN.
     expect(result.wellknown).toBe(
       'https://tenant.example.com/am/oauth2/realms/root/.well-known/openid-configuration',
     );
+    expect(result.amUrl).toBe('https://openam.example.com/am');
+    expect(result.fallbackJourney).toBeNull();
   });
 
-  it('keeps an absolute FR_AM_WELLKNOWN_URL as-is', async () => {
-    mockEnv.FR_AM_URL = 'https://openam.example.com/am';
-    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
-    mockEnv.FR_REALM_PATH = 'root';
-    mockEnv.FR_AM_WELLKNOWN_URL =
-      'https://openam.example.com/am/oauth2/realms/root/.well-known/openid-configuration';
+  it('surfaces a realm conflict as a 404 with the payload intact', async () => {
+    resolveRealm.mockResolvedValue({
+      kind: 'conflict',
+      conflict: {
+        message:
+          "Realm 'bravo' is not available on this domain. This custom domain is serving the 'alpha' realm.",
+        customDomainUrl: 'https://id.petrov.ca/login/',
+        customDomainRealm: 'alpha',
+      },
+    });
 
-    const result = await loadFrom('https://tenant.example.com/login/');
-
-    expect(result.wellknown).toBe(
-      'https://openam.example.com/am/oauth2/realms/root/.well-known/openid-configuration',
-    );
+    await expect(loadFrom('https://id.petrov.ca/login/?realm=bravo')).rejects.toMatchObject({
+      status: 404,
+      body: {
+        message: expect.stringContaining(
+          "Realm 'bravo' is not available on this domain. This custom domain is serving the 'alpha' realm.",
+        ),
+        customDomainUrl: 'https://id.petrov.ca/login/',
+        customDomainRealm: 'alpha',
+      },
+    });
   });
 
-  it('derives a sibling-realm discovery URL on the request origin', async () => {
-    mockEnv.FR_AM_URL = 'https://openam.example.com/am';
-    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
-    mockEnv.FR_REALM_PATH = 'root';
-    mockEnv.FR_AM_WELLKNOWN_URL = '/am/oauth2/realms/root/.well-known/openid-configuration';
+  it('rejects missing configuration with the setup error', async () => {
+    mockEnv.FR_AM_URL = '';
 
-    const result = await loadFrom('https://tenant.example.com/login/?realm=/alpha');
-
-    expect(result.wellknown).toBe(
-      'https://tenant.example.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration',
-    );
+    await expect(loadFrom('https://tenant.example.com/login/')).rejects.toMatchObject({
+      status: 500,
+      body: { message: expect.stringContaining('Login App is not configured') },
+    });
   });
 
   it('rejects a malformed FR_AM_URL with the configuration error', async () => {
     mockEnv.FR_AM_URL = 'not-a-url';
-    mockEnv.FR_AM_COOKIE_NAME = 'iPlanetDirectoryPro';
-    mockEnv.FR_REALM_PATH = 'root';
-    mockEnv.FR_AM_WELLKNOWN_URL = '/am/oauth2/realms/root/.well-known/openid-configuration';
 
     await expect(loadFrom('https://tenant.example.com/login/')).rejects.toMatchObject({
       status: 500,

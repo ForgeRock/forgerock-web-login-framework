@@ -41,7 +41,7 @@
   export let data: {
     wellknown: string;
     fallbackJourney?: string | null;
-    redirectParams?: { goto?: string; gotoOnFail?: string };
+    redirectParams?: { goto?: string; gotoOnFail?: string; realm?: string };
     content: Record<string, string>;
   };
 
@@ -228,6 +228,7 @@
         <input type="hidden" name="loginResult" value={loginResult} />
         <input type="hidden" name="tokenId" value={tokenId} />
         <input type="hidden" name="journeyStepUrl" value={journeyStepUrl} />
+        <input type="hidden" name="realm" value={data.redirectParams?.realm} />
       </form>
 
       {#if legacyResumeFailed}

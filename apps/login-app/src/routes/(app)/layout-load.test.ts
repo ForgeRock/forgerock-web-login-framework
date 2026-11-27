@@ -44,7 +44,6 @@ describe('(app)/+layout.ts load', () => {
       themeCatalog: {
         'theme-page-node': { logo: 'https://cdn.example.com/logo.svg', logoHeight: 100 },
       },
-      realmPath: 'alpha',
       wellknown: 'https://openam.example.com/am/oauth2/alpha/.well-known/openid-configuration',
     };
 

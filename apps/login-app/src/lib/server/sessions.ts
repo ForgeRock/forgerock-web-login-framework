@@ -9,8 +9,9 @@
 
 import { z } from 'zod';
 
-import { AM_COOKIE_NAME, AM_DOMAIN_PATH, JSON_REALM_PATH } from '$core/constants';
+import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
+import { resolveJsonRealmPath } from '$server/realm/realm.utilities';
 
 import type { Cookies } from '@sveltejs/kit';
 
@@ -251,27 +252,6 @@ export function removeHttpCookie(cookies: Cookies, name: string): void {
     maxAge: 300,
     path: '/',
   });
-}
-
-const VALID_REALM = /^[A-Za-z0-9_-]+$/;
-
-/**
- * @function resolveJsonRealmPath - builds the AM JSON realm path segment for a given realm override.
- * @param {string} [realm] - Realm override; uses the configured realm when omitted.
- * @returns {string} The AM JSON realm path (e.g. '/json/realms/root/realms/alpha').
- */
-export function resolveJsonRealmPath(realm?: string): string {
-  if (realm === undefined) return JSON_REALM_PATH;
-  const normalizedRealm = realm.replace(/^\/+/, '');
-  if (normalizedRealm === 'root' || !VALID_REALM.test(normalizedRealm)) {
-    return '/json/realms/root';
-  }
-  return `/json/realms/root/realms/${normalizedRealm}`;
-}
-
-export function resolveOAuthRealmPath(realm?: string): string {
-  const jsonRealmPath = resolveJsonRealmPath(realm);
-  return jsonRealmPath.replace('/json/', '/oauth2/');
 }
 
 /**

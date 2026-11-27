@@ -10,7 +10,7 @@
 import { Cookies } from '@effect/platform';
 import { Config, Context, Data, Effect, Layer, Match, Option } from 'effect';
 
-import { AM_COOKIE_NAME } from '$core/constants';
+import { AM_COOKIE_NAME } from '$server/constants';
 import { tokenIdSchema } from '$server/schemas';
 
 import type { TokenId } from '$server/schemas';

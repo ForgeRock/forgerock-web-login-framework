@@ -7,13 +7,9 @@
  *
  **/
 
-import { AM_DOMAIN_PATH } from '$core/constants';
-import {
-  fetchAm,
-  pickUpstreamHeaders,
-  resolveOAuthRealmPath,
-  upstreamFailureResponse,
-} from '$server/sessions';
+import { AM_DOMAIN_PATH } from '$server/constants';
+import { resolveOAuthRealmPath } from '$server/realm/realm.utilities';
+import { fetchAm, pickUpstreamHeaders, upstreamFailureResponse } from '$server/sessions';
 
 import type { RequestEvent } from '@sveltejs/kit';
 

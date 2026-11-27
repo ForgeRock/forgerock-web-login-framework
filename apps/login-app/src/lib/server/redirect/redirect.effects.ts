@@ -9,9 +9,10 @@
 
 import { z } from 'zod';
 
-import { AM_DOMAIN_PATH } from '$core/constants';
 import { env } from '$env/dynamic/private';
+import { AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
+import { normalizeRealm, resolveRequestedRealm } from '$server/realm/realm.utilities';
 import {
   amFetchRequest,
   getHttpCookie,
@@ -19,11 +20,7 @@ import {
   removeHttpCookie,
   setHttpCookie,
 } from '$server/sessions';
-import {
-  describeRedirectTarget,
-  parseRedirectForm,
-  resolveRealmFromUrl,
-} from './redirect.utilities';
+import { describeRedirectTarget, parseRedirectForm } from './redirect.utilities';
 
 import type { RequestEvent } from '@sveltejs/kit';
 
@@ -40,7 +37,7 @@ const REDIRECT_QUERY_PARAMS = 'redirect_query_params';
 export function storeRedirectParams(event: RequestEvent): RedirectParams {
   const goto = event.url.searchParams.get('goto') || undefined;
   const gotoOnFail = event.url.searchParams.get('gotoOnFail') || undefined;
-  const realm = resolveRealmFromUrl(event.url);
+  const realm = resolveRequestedRealm(event.url, env.FR_REALM_PATH);
 
   if (!goto && !gotoOnFail) {
     return { goto, gotoOnFail, realm };
@@ -69,12 +66,17 @@ export async function createRedirectContext(
   formData: FormData,
   cookie: RedirectParams,
 ): Promise<RedirectData> {
-  const { loginResult, tokenId, journeyStepUrl } = parseRedirectForm(formData);
-
+  const { loginResult, tokenId, journeyStepUrl, realm: formRealm } = parseRedirectForm(formData);
   const isGotoOnFail = loginResult !== 'success';
   const gotoUrl = isGotoOnFail ? cookie.gotoOnFail ?? '' : cookie.goto ?? journeyStepUrl;
-  const realm = cookie.realm ?? env.FR_REALM_PATH ?? 'root';
-  const successUrl = gotoUrl ? await validateUrl(tokenId, gotoUrl, realm) : null;
+  /**
+   * formRealm here represents the realm that the DOM in page.svelte file holds.
+   * The realm must be stored somewhere (query param ?? env), but the cookie is
+   * only written when goto/gotoOnFail query params exist
+   * We check if formRealm exists, if not, we use the realm from cookie or env
+   */
+  const realm = formRealm ?? cookie.realm ?? normalizeRealm(env.FR_REALM_PATH);
+  const validatedUrl = gotoUrl ? await validateGoto(tokenId, gotoUrl, realm) : null;
   const roles = tokenId ? (await getUserRolesFromSession(tokenId, realm)).roles : [];
   const amOrigin = new URL(AM_DOMAIN_PATH).origin;
 
@@ -83,7 +85,7 @@ export async function createRedirectContext(
     journeyStepUrl,
     isGotoOnFail,
     gotoUrl,
-    successUrl,
+    validatedUrl,
     roles,
     realm,
     amOrigin,
@@ -122,7 +124,7 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
 }
 
 /**
- * @function validateUrl - validates a redirect URL with the AM backend and returns a success URL if valid
+ * @function validateGoto - validates a redirect URL with the AM backend and returns the validated URL
  *
  * AM returns the key as `successURL` (capital URL) — verified against the
  * tenant; parsing lowercase was why this always returned null.
@@ -130,9 +132,9 @@ export function readAndClearRedirectCookie(event: RequestEvent): RedirectParams 
  * @param {string} tokenId - The session token ID
  * @param {string} gotoUrl - The URL to validate
  * @param {string} [realm] - The realm to validate against; uses the configured realm when omitted.
- * @returns {Promise<string|null>} The validated URL or null if invalid
+ * @returns {Promise<string|null>} AM's validated URL, or null when AM returns no usable answer
  */
-export async function validateUrl(
+export async function validateGoto(
   tokenId: TokenId,
   gotoUrl: string,
   realm?: string,
@@ -153,7 +155,7 @@ export async function validateUrl(
     parsed.data.successURL === 'undefined' ||
     parsed.data.successURL === 'null'
   ) {
-    log.warn('[redirect] goto validation returned no usable successUrl', {
+    log.warn('[redirect] goto validation returned no usable validatedUrl', {
       goto: describeRedirectTarget(gotoUrl),
       realm,
     });

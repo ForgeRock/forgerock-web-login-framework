@@ -1,0 +1,26 @@
+/**
+ *
+ * Copyright © 2025-2026 Ping Identity Corporation. All right reserved.
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license. See the LICENSE file for details.
+ *
+ **/
+
+import { building } from '$app/environment';
+import { env } from '$env/dynamic/private';
+
+if (!building) {
+  const REQUIRED_ENV = ['FR_AM_URL', 'FR_AM_COOKIE_NAME', 'FR_REALM_PATH'] as const;
+  const missing = REQUIRED_ENV.filter((key) => !env[key]);
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(', ')}. ` +
+        'Copy .env.example to .env and fill in your AM connection details.',
+    );
+  }
+}
+
+/** Full AM base URL (e.g. https://host.example.com/am) */
+export const AM_DOMAIN_PATH = env.FR_AM_URL ?? '';
+export const AM_COOKIE_NAME = env.FR_AM_COOKIE_NAME ?? '';

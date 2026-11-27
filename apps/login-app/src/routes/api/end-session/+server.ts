@@ -7,13 +7,13 @@
  *
  **/
 
-import { AM_DOMAIN_PATH } from '$core/constants';
+import { AM_DOMAIN_PATH } from '$server/constants';
+import { resolveOAuthRealmPath } from '$server/realm/realm.utilities';
 import {
   clearAmCookie,
   fetchAm,
   getAmCookie,
   pickUpstreamHeaders,
-  resolveOAuthRealmPath,
   resolveUpstreamQuery,
   upstreamFailureResponse,
 } from '$server/sessions';

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 
+import { resolveRequestedRealm } from '$server/realm/realm.utilities';
 import {
   buildLoginCspHeaders,
   DEFAULT_CSP_ENFORCED,
   DEFAULT_CSP_REPORT_ONLY,
-  getRealmFromLoginUrl,
   isHtmlResponse,
 } from './csp.utilities';
 
 describe('Login CSP utilities', () => {
   it('uses root as the default realm', () => {
-    const realm = getRealmFromLoginUrl(new URL('https://example.com/login'));
+    const realm = resolveRequestedRealm(new URL('https://example.com/login'), undefined);
 
     expect(realm).toBe('root');
   });
