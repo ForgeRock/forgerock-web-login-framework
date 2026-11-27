@@ -12,6 +12,10 @@ export default defineConfig({
       $journey: resolve('../../core/journey'),
       $locales: resolve('../../core/locales'),
       '$login-framework': resolve('../../custom/components/login-framework.ts'),
+      // Unit tests importing customer components resolve the sandbox from the
+      // source tree, the same directory the frameworkCoreDist plugin maps
+      // $custom onto in the consumer builds.
+      $custom: resolve('../../custom/components'),
     },
   },
   plugins: [

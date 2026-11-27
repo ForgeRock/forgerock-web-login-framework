@@ -163,6 +163,16 @@ describe('frameworkCoreDist', () => {
       expect(unbuiltPlugin.resolveId('svelte/store', undefined)).toBeNull();
       expect(unbuiltPlugin.resolveId('\0virtual:module', undefined)).toBeNull();
     });
+
+    it('resolves the custom alias without requiring the package build', () => {
+      // Customer components live in the repo's source tree, not the package
+      // dist: resolving $custom must never depend on a built framework-core.
+      const unbuiltDir = join(tmpdir(), 'framework-core-dist-unbuilt');
+      const unbuiltCustomPlugin = frameworkCoreDist({ packageDir: unbuiltDir });
+      expect(unbuiltCustomPlugin.resolveId('$custom/stages/demo/demo.svelte', undefined)).toBe(
+        resolve(unbuiltDir, '../custom/components/stages/demo/demo.svelte'),
+      );
+    });
   });
 
   describe('SSR resolution', () => {
@@ -243,6 +253,60 @@ describe('frameworkCoreDist', () => {
       expect(resolveId('$core/_utilities/i18n.utilities')).toBe(
         resolve(distDir, '_utilities/i18n.utilities.js'),
       );
+    });
+  });
+
+  describe('custom alias', () => {
+    // The plugin receives packageDir (`<repoRoot>/core` in every consumer);
+    // the customer sandbox is the sibling `custom/components` directory.
+    const customRoot = resolve(sandboxRoot, '../custom/components');
+
+    beforeAll(() => {
+      mkdirSync(join(customRoot, 'components/stages/demo'), { recursive: true });
+      writeFileSync(join(customRoot, 'components/stages/demo/demo.svelte'), '');
+    });
+
+    afterAll(() => {
+      rmSync(resolve(sandboxRoot, '../custom'), { recursive: true, force: true });
+    });
+
+    it('resolves a $custom/<rest> specifier onto the source tree', () => {
+      expect(resolveId('$custom/components/stages/demo/demo.svelte')).toBe(
+        resolve(customRoot, 'components/stages/demo/demo.svelte'),
+      );
+    });
+
+    it('resolves the bare $custom specifier onto the custom root directory', () => {
+      // Alias semantics: the bare alias maps to the directory itself. No
+      // existence check applies (a directory is not a module); the consumer's
+      // own resolution (index lookup or a clear error) handles the rest.
+      expect(resolveId('$custom')).toBe(customRoot);
+    });
+
+    it('resolves $custom without touching the package build output', () => {
+      // Customer source resolves from the repo tree even when no dist exists:
+      // alias semantics, no dist lookup, no build hint.
+      const customOnlyRoot = join(tmpdir(), 'framework-core-dist-custom-only');
+      const customOnlyPlugin = frameworkCoreDist({ packageDir: customOnlyRoot });
+      try {
+        expect(customOnlyPlugin.resolveId('$custom/components/demo/demo.svelte', undefined)).toBe(
+          resolve(customOnlyRoot, '../custom/components/components/demo/demo.svelte'),
+        );
+      } finally {
+        rmSync(resolve(customOnlyRoot, '../custom'), { recursive: true, force: true });
+      }
+    });
+
+    it('does not treat a specifier that merely shares the prefix as $custom', () => {
+      // `$customary/...` starts with "$custom" but is a different specifier:
+      // the boundary check must not catch it and the plugin must not map it.
+      expect(resolveId('$customary/thing')).toBeNull();
+    });
+
+    it('returns null for $custom paths like the other aliases when unmatched forms appear', () => {
+      // `$custom/` with a trailing slash and no rest: normalized to the bare
+      // alias, which resolves to the directory.
+      expect(resolveId('$custom/')).toBe(customRoot);
     });
   });
 });

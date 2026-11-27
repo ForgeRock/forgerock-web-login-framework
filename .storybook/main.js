@@ -53,8 +53,9 @@ export default {
           $journey: resolve(__dirname, '../core/journey'),
           $locales: resolve(__dirname, '../core/locales'),
           '$login-framework': resolve(__dirname, '../custom/components/login-framework.ts'),
+          // Bare key prefix-matches $custom/<rest>; a '$custom/*' key would
+          // never match (Vite alias object keys match exactly or by /-boundary).
           $custom: resolve(__dirname, '../custom/components'),
-          '$custom/*': resolve(__dirname, '../custom/components/*'),
           $lib: resolve(__dirname, '../apps/login-app/src/lib'),
         },
       },

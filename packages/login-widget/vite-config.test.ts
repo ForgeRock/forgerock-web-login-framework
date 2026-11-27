@@ -7,16 +7,34 @@
  *
  **/
 
-import { existsSync, readFileSync } from 'fs';
-import { resolve } from 'path';
-import { describe, expect, it, vi } from 'vitest';
+import { existsSync, mkdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join, resolve } from 'path';
+import { build as viteBuild } from 'vite';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
 import appConfig from '../../apps/login-app/vite.config';
+import { customImportBoundary } from '../../core/vite-plugin-custom-imports';
 import { packageDedupe } from '../../core/vite-shared';
 import esmConfig from './vite.config';
 import iifeConfig from './vite.config.iife';
 
-import type { UserConfigExport } from 'vite';
+import type { Plugin, UserConfigExport } from 'vite';
+
+// Captures the options each consumer config passes to customRegistry, so the
+// wiring test can assert the widget configs exclude the e2e canary without
+// depending on the plugin's internals. The mock stands in for the real
+// plugin: nothing here runs a build that would regenerate the registry.
+const { customRegistryCalls } = vi.hoisted(() => ({
+  customRegistryCalls: [] as Array<{ projectRoot: string; exclude?: readonly string[] }>,
+}));
+
+vi.mock('../../core/journey/_utilities/registry/vite-plugin', () => ({
+  customRegistry: (options: { projectRoot: string; exclude?: readonly string[] }) => {
+    customRegistryCalls.push(options);
+    return { name: 'framework-core:custom-registry', buildStart: () => undefined };
+  },
+}));
 
 // sveltekit() loads the app's svelte.config.js, which pulls a second copy of
 // svelte-preprocess into the process; the dedupe assertion needs only the config shape.
@@ -25,6 +43,16 @@ import type { UserConfigExport } from 'vite';
 vi.mock('../../apps/login-app/node_modules/@sveltejs/kit/src/exports/vite/index.js', () => ({
   sveltekit: () => [],
 }));
+
+/** Flattens a config's plugin list (plugins may nest) into plugin objects. */
+const flattenPlugins = (config: UserConfigExport): readonly Plugin[] => {
+  const resolved =
+    typeof config === 'function' ? config({ command: 'build', mode: 'production' }) : config;
+  const plugins = resolved.plugins ?? [];
+  return plugins
+    .flat()
+    .filter((plugin): plugin is Plugin => plugin !== null && typeof plugin === 'object');
+};
 
 describe('widget ESM build bundling', () => {
   const rollupOptions = esmConfig.build?.rollupOptions;
@@ -78,6 +106,129 @@ describe('widget runtime dependencies', () => {
       code.match(/['"]framework-core\//) ?? code.match(/^import\s+['"]framework-core['"]/m),
     ).toBeNull();
   });
+});
+
+describe('widget build wiring (F71 guard)', () => {
+  // Both published builds must enforce the customer import boundary and pass
+  // the published registry excludes to customRegistry: deleting either from
+  // one config would ship framework internals or the e2e canary stage with
+  // CI green.
+  const BOUNDARY_PLUGIN_NAME = 'framework-core:custom-import-boundary';
+
+  // Exactly three configs are imported at the top of this file, each calling
+  // customRegistry once (two widget configs, the login-app), so the captured
+  // options are countable and unambiguous without module re-import games.
+  const excludingCalls = () =>
+    customRegistryCalls.filter((options) => (options.exclude ?? []).includes('stages/e2e-canary'));
+
+  it.each([
+    ['ESM', esmConfig],
+    ['IIFE', iifeConfig],
+  ])('the %s config installs the customImportBoundary plugin', (_label, config) => {
+    expect(flattenPlugins(config).some((plugin) => plugin.name === BOUNDARY_PLUGIN_NAME)).toBe(
+      true,
+    );
+  });
+
+  it('both widget configs pass the published excludes to customRegistry', () => {
+    expect(excludingCalls()).toHaveLength(2);
+    expect(excludingCalls()[0]?.exclude).toContain('stages/e2e-canary');
+    expect(excludingCalls()[1]?.exclude).toContain('stages/e2e-canary');
+  });
+
+  it('the login-app config registers every custom component (no published excludes)', async () => {
+    // Contrast case: the app (and Storybook) register the canary so its e2e
+    // suite can drive it; only the published widget builds exclude it. The
+    // app config is a function, so its customRegistry call fires on
+    // resolution; the delta around this invocation isolates this config's
+    // call from any other config's (test order must not matter).
+    const callsBefore = customRegistryCalls.length;
+    const resolvedAppConfig =
+      typeof appConfig === 'function'
+        ? appConfig({ command: 'build', mode: 'production' })
+        : appConfig;
+    expect(resolvedAppConfig).toBeDefined();
+    expect(customRegistryCalls.slice(callsBefore)).toEqual([
+      { projectRoot: resolve(import.meta.dirname, '../..') },
+    ]);
+  });
+});
+
+describe('published dist artifact guard (F71)', () => {
+  // dist/ is gitignored build output: the assertions run only when the build
+  // exists (CI's test job runs this file after build:widget, so the guard
+  // bites there). Guards against the registry exclude or the boundary plugin
+  // being dropped from a widget config without a test noticing.
+  const distDir = resolve(import.meta.dirname, 'dist');
+  const artifacts = ['index.js', 'widget.iife.js'] as const;
+
+  it.each(artifacts)('dist/%s is built without the E2eCanaryStage canary', (artifactName) => {
+    const artifact = resolve(distDir, artifactName);
+    if (!existsSync(artifact)) {
+      return;
+    }
+    expect(readFileSync(artifact, 'utf8')).not.toContain('E2eCanaryStage');
+  });
+});
+
+describe('custom import boundary rejects a forbidden import in a real Vite build', () => {
+  // A minimal fixture project built with the actual plugin: an entry that
+  // imports a customer file importing `$core`, which the boundary must fail.
+  // The fixture is plain JS with a local `$core` alias stub, so without the
+  // plugin the build SUCCEEDS (the assertion then fails, proving the test
+  // bites) and with the plugin it throws naming the file and the specifier.
+  // No Svelte plugin: a .svelte fixture could not compile at all, and the
+  // build would fail for the wrong reason (vacuous pass).
+  const fixtureBase = join(tmpdir(), 'login-widget-boundary-fixture');
+  let fixtureRoot = '';
+
+  beforeAll(() => {
+    rmSync(fixtureBase, { recursive: true, force: true });
+    mkdirSync(fixtureBase, { recursive: true });
+    // macOS exposes tmpdir as a /var -> /private/var symlink, and Vite
+    // resolves module ids through realpath: the projectRoot handed to the
+    // plugin must be the real path, or the boundary would classify every
+    // fixture file as outside custom/components and never check it.
+    fixtureRoot = realpathSync(fixtureBase);
+    const frameworkStub = join(fixtureRoot, 'framework/style.store.js');
+    mkdirSync(join(frameworkStub, '..'), { recursive: true });
+    writeFileSync(frameworkStub, 'export default "style";\n');
+    const customerFile = join(fixtureRoot, 'custom/components/stages/violating/violating.js');
+    mkdirSync(join(customerFile, '..'), { recursive: true });
+    writeFileSync(
+      customerFile,
+      'import style from "$core/style.store";\n\nexport default style;\n',
+    );
+    writeFileSync(
+      join(fixtureRoot, 'entry.js'),
+      'export { default } from "./custom/components/stages/violating/violating.js";\n',
+    );
+  });
+
+  afterAll(() => {
+    rmSync(fixtureBase, { recursive: true, force: true });
+  });
+
+  const buildFixture = () =>
+    viteBuild({
+      configFile: false,
+      root: fixtureRoot,
+      logLevel: 'silent',
+      plugins: [customImportBoundary({ projectRoot: fixtureRoot })],
+      resolve: {
+        alias: { $core: join(fixtureRoot, 'framework') },
+      },
+      build: {
+        write: false,
+        rollupOptions: { input: join(fixtureRoot, 'entry.js') },
+      },
+    });
+
+  it('fails the build naming the violating file and specifier', async () => {
+    const buildPromise = buildFixture();
+    await expect(buildPromise).rejects.toThrow(/violating\.js/);
+    await expect(buildPromise).rejects.toThrow(/\$core\/style\.store/);
+  }, 30_000);
 });
 
 /**

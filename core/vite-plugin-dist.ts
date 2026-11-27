@@ -40,6 +40,12 @@ interface DistResolverPlugin {
  * absolute dist path; both consumers (widget ESM and IIFE, login-app)
  * bundle the returned files into their own output.
  *
+ * One alias is not a package alias: `$custom` (`$custom/<rest>`) resolves
+ * onto the repo's customer sandbox `<repoRoot>/custom/components` with plain
+ * alias semantics (no dist lookup, no existence check), so customer source
+ * importing `$custom/...` builds identically in the published-widget, app
+ * and Storybook builds.
+ *
  * Two built trees exist, one per Svelte compile condition:
  *   - `dist/`     client compilation — browser bundles and client hydration
  *   - `dist-server/` SSR compilation — SvelteKit's server bundle picks these
@@ -75,6 +81,10 @@ export function frameworkCoreDist({ packageDir }: FrameworkCoreDistOptions): Dis
   const distDir = resolve(packageDir, 'dist');
   const serverDistDir = resolve(packageDir, 'dist-server');
   const registrySource = resolve(packageDir, customRegistrySourcePath);
+  // The customer sandbox is the sibling of the core package directory, so a
+  // consumer passing `resolve('../../core')` resolves
+  // `<repoRoot>/custom/components` here.
+  const customRoot = resolve(packageDir, '../custom/components');
 
   const aliasRoots = [
     { prefix: '$core', subPath: '' },
@@ -172,6 +182,18 @@ export function frameworkCoreDist({ packageDir }: FrameworkCoreDistOptions): Dis
       const match = aliasRoots.find(
         ({ prefix }) => source === prefix || source.startsWith(`${prefix}/`),
       );
+
+      // The customer sandbox resolves from the repo's source tree (alias
+      // semantics, like the consumer configs' `$custom` key): no dist lookup,
+      // no existence check, and no dependency on a built framework-core.
+      // Everything that is exactly `$custom` or starts `$custom/` maps here;
+      // a specifier that merely shares the prefix (e.g. `$customary`) is not
+      // this alias and falls through to the consumer's own resolution.
+      if (source === '$custom' || source.startsWith('$custom/')) {
+        const customRest = source.slice('$custom'.length).replace(/^\//, '');
+        return customRest ? resolve(customRoot, customRest) : customRoot;
+      }
+
       if (!match) {
         return null;
       }

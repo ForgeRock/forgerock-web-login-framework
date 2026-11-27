@@ -161,6 +161,9 @@ jobs:
       # core/dist and packages/login-widget/dist for the later app tests and
       # the Storybook build in this job.
       - run: pnpm run build:widget
+      # Run the widget vite-config suite with dist present: its artifact
+      # assertions only bite when the built ESM/IIFE bundles exist.
+      - run: pnpm --filter @forgerock/login-widget exec vitest run 'vite-config'
       - run: pnpm run check:svelte
       - run: pnpm run test
       # The MCP stdio wire test spawns the compiled CLI (tools/cli/dist, gitignored);
