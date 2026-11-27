@@ -1,6 +1,9 @@
 import { McpServer, Tool, Toolkit } from '@effect/ai';
+import * as McpServerModule from '@effect/ai/McpServer';
 import { Command } from '@effect/cli';
 import { NodeContext, NodeSink, NodeStream } from '@effect/platform-node';
+import * as RpcSerialization from '@effect/rpc/RpcSerialization';
+import * as RpcServer from '@effect/rpc/RpcServer';
 import { Cause, Console, Effect, Either, Layer, Logger, Option, Schema } from 'effect';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
@@ -12,7 +15,10 @@ import { updateProject } from './commands/update.js';
 import { parseComponentName, safeNameForTerminal } from './component-name.utilities.js';
 import { GithubReleaseLayer, Release } from './services/release.js';
 
+import type { McpServerClient } from '@effect/ai/McpSchema';
+import type { McpServer as McpServerInterface } from '@effect/ai/McpServer';
 import type { FileSystem, Path } from '@effect/platform';
+import type * as RpcMessageModule from '@effect/rpc/RpcMessage';
 
 // Resolve package.json from either dist/src/ (compiled) or src/ (Vitest).
 const __dir = dirname(fileURLToPath(import.meta.url));
@@ -336,20 +342,145 @@ export const handlerLayer = mcpToolkit.toLayer({
     ),
 });
 
+// ── Stdio protocol resilience (F78) ──────────────────────────────────────────
+
+/**
+ * One warning line per malformed stdin line, written straight to stderr. The
+ * MCP stdio transport owns stdout for JSON-RPC only, so diagnostics can never
+ * go there; stderr is the diagnostics channel for every MCP client.
+ */
+const warnMalformedLine = (line: string, detail: string): void => {
+  const excerpt = line.length > 120 ? `${line.slice(0, 120)}...` : line;
+  process.stderr.write(
+    `[ping-lf mcp] discarding malformed stdin line (not valid JSON-RPC): ${detail} | ${excerpt}\n`,
+  );
+};
+
+/**
+ * Wraps the stock ndJsonRpc parser so a malformed stdin line (not valid JSON,
+ * or not shaped like a JSON-RPC message) cannot wedge the server. The stock
+ * parser throws mid-decode and the stdio read loop dies with it: after that,
+ * every later request goes unanswered while the process stays alive.
+ *
+ * The wrapper's decode:
+ * - buffers an unterminated trailing frame across decode() calls, exactly
+ *   like the stock ndjson parser does (RpcServer.makeProtocolStdio feeds raw
+ *   read chunks, and a frame can arrive split at the pipe boundary; dropping
+ *   it would silently lose requests larger than the pipe buffer),
+ * - parses each complete frame with its own stock parser instance, so a
+ *   failed frame cannot poison the next one (the stock parser keeps its
+ *   internal buffer, and reusing it after a throw would prefix every later
+ *   line with the garbage),
+ * - on a decode failure, warns on stderr and keeps the read loop alive so
+ *   later lines are still served.
+ */
+export const resilientNdJsonRpcSerialization: RpcSerialization.RpcSerialization['Type'] =
+  RpcSerialization.RpcSerialization.of({
+    contentType: RpcSerialization.ndJsonRpc().contentType,
+    includesFraming: true,
+    unsafeMake: () => {
+      // A fresh stock parser per frame. The stock ndjson parser is newline-
+      // terminated and stateful: on a JSON.parse failure it throws mid-loop
+      // while its internal buffer still holds the bad text, so reusing that
+      // parser afterwards would poison every later line with the garbage
+      // prefix. Parsing each complete frame with its own parser instance
+      // keeps the frames independent.
+      const decodeFrame = (frame: string): Either.Either<ReadonlyArray<unknown>, string> => {
+        try {
+          return Either.right(RpcSerialization.ndJsonRpc().unsafeMake().decode(`${frame}\n`));
+        } catch (error) {
+          return Either.left(
+            error instanceof Error ? error.message : 'stdin line is not valid JSON-RPC',
+          );
+        }
+      };
+      // Frames can arrive split across read chunks (the 64KB pipe boundary in
+      // Node streams): keep the unterminated tail here until its newline
+      // arrives, mirroring the stock ndjson parser's buffer.
+      let partialFrame = '';
+      return {
+        decode: (data) => {
+          const text = typeof data === 'string' ? data : new TextDecoder().decode(data);
+          const buffered = partialFrame + text;
+          partialFrame = '';
+          const lines = buffered.split('\n');
+          // The segment after the last newline has no terminator yet: it is
+          // either a partial frame still arriving or an empty string. Buffer
+          // it for the next decode call.
+          const trailing = lines.pop() ?? '';
+          partialFrame = trailing;
+          const frames = lines.filter((frame) => frame.trim().length > 0);
+          if (frames.length === 0) {
+            return [];
+          }
+          const initial: ReadonlyArray<
+            RpcMessageModule.FromClientEncoded | RpcMessageModule.FromServerEncoded
+          > = [];
+          const messages = frames.reduce<ReadonlyArray<unknown>>(
+            (acc, frame) =>
+              Either.match(decodeFrame(frame), {
+                onRight: (messagesFromFrame) => [...acc, ...messagesFromFrame],
+                onLeft: (detail) => {
+                  warnMalformedLine(frame, detail);
+                  return acc;
+                },
+              }),
+            initial,
+          );
+          return messages;
+        },
+        // Encoding single responses is stateless in the stock serializer (the
+        // batch map is only populated for array requests), so a dedicated
+        // parser instance can own the encode direction.
+        encode: RpcSerialization.ndJsonRpc().unsafeMake().encode,
+      };
+    },
+  });
+
+/**
+ * The resilient stdio protocol wiring. McpServer.layerStdio hardcodes the
+ * stock ndJsonRpc serialization, so the same composition is rebuilt here from
+ * its public parts (RpcServer.layerProtocolStdio + a serialization layer) with
+ * the resilient parser in place: malformed stdin then degrades to per-line
+ * error responses instead of a dead read loop.
+ */
+const resilientStdioLayer = (options: {
+  readonly name: string;
+  readonly version: string;
+}): Layer.Layer<McpServerInterface | McpServerClient, never, never> =>
+  McpServerModule.layer({ name: options.name, version: options.version }).pipe(
+    Layer.provide(
+      RpcServer.layerProtocolStdio({
+        stdin: NodeStream.stdin,
+        stdout: NodeSink.stdout,
+      }),
+    ),
+    Layer.provide(
+      Layer.succeed(RpcSerialization.RpcSerialization, resilientNdJsonRpcSerialization),
+    ),
+    // Same logger removals the stock McpServer.layerStdio applies: without
+    // them NodeRuntime.runMain's addPrettyLogger keeps prettyLoggerDefault
+    // (console.log, i.e. stdout) mounted, and any Effect.log outside the
+    // Console.withConsole scope would corrupt the JSON-RPC stream.
+    Layer.provideMerge(Logger.remove(Logger.defaultLogger)),
+    Layer.provideMerge(Logger.remove(Logger.prettyLoggerDefault)),
+  );
+
 // ── Server layer ──────────────────────────────────────────────────────────────
 
 const ServerLayer = McpServer.toolkit(mcpToolkit).pipe(
   Layer.provide(handlerLayer),
   Layer.provide(
     Layer.mergeAll(
-      McpServer.layerStdio({
-        name: 'ping-lf',
-        version,
-        stdin: NodeStream.stdin,
-        stdout: NodeSink.stdout,
-      }),
+      // Resilient stdio wiring instead of McpServer.layerStdio (F78): same
+      // composition, but a malformed stdin line degrades to a per-line error
+      // response instead of wedging the read loop.
+      resilientStdioLayer({ name: 'ping-lf', version }),
       NodeContext.layer,
-      Logger.add(Logger.prettyLogger({ stderr: true })),
+      // Logger.replace, not Logger.add: the default logger writes
+      // timestamp=... level=INFO to stdout, which would corrupt the JSON-RPC
+      // stream. replace unmounts it so no Effect.log can ever reach stdout.
+      Logger.replace(Logger.defaultLogger, Logger.prettyLogger({ stderr: true })),
     ),
   ),
 );
