@@ -22,7 +22,6 @@
  *            the story mounts. Used for automated accessibility + behaviour checks.
  */
 
-import { callbackType } from '@forgerock/journey-client';
 import { userEvent, within } from 'storybook/test';
 import { expect } from 'storybook/test';
 
@@ -78,7 +77,7 @@ export default {
  */
 export const Base = {
   args: {
-    callback: step.getCallbackOfType(callbackType.NameCallback),
+    callback: step.getCallbackOfType('NameCallback'),
   },
 };
 
@@ -100,7 +99,7 @@ export const Interaction = {
 
     // Re-extract the callback so we can assert against the same instance that
     // the story mounted with (step is module-level, so it's the same object).
-    const cb = step.getCallbackOfType(callbackType.NameCallback);
+    const cb = step.getCallbackOfType('NameCallback');
 
     // Find the text input by its implicit ARIA role.
     const element = canvas.getByRole('textbox');

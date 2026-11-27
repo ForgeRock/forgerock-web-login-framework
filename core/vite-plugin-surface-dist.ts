@@ -18,13 +18,19 @@ import { surfaceDistModule } from './login-framework-dist-surface';
  * the tree being built, right after the build output is complete. The
  * generated module re-exports the package's emitted modules, so consumers
  * resolve `$login-framework` to compiled dist code instead of bundling the
- * surface source (which SvelteKit's build pipeline miscompiles — see
+ * surface source (which SvelteKit's build pipeline miscompiles, see
  * `login-framework-dist-surface.ts`).
  *
  * Installed once per tree in `vite.config.ts` (client → `dist/`) and
- * `vite.config.server.ts` (server → `dist-server/`). Runs at `closeBundle`
- * so the generated re-export targets exist by the time the file is
- * written; the file itself is plain generated JS (no bundler involvement).
+ * `vite.config.server.ts` (server → `dist-server/`). The write happens in
+ * `writeBundle`, which Rollup runs only after every output file of a
+ * successful write has landed on disk. It deliberately does not write from
+ * `closeBundle`: Rollup calls `closeBundle` even when the build fails (with
+ * the build error as the hook argument when `rollup()` itself rejects, and
+ * with no arguments on the later `close()` when the render phase failed), so
+ * writing there would leave a lone `login-framework.js` in a broken dist
+ * tree, and downstream `existsSync` checks would then pass and hide the real
+ * build error.
  *
  * Build tooling, colocated with the other package-side plugins and
  * excluded from the package build by `collect-entries.ts`.
@@ -48,10 +54,13 @@ interface SurfaceDistOptions {
 
 // Subset of vite's Plugin type this plugin fills in. Declared structurally
 // so core/ doesn't import vite's types (same approach as vite-plugin-dist.ts).
+// writeBundle receives (options, bundle) on success only, per Rollup's build
+// flow; the plugin ignores both arguments.
 interface SurfaceDistPlugin {
   name: string;
   apply: 'build';
-  closeBundle(): void;
+  writeBundle(options: unknown, bundle: unknown): void;
+  closeBundle(error?: unknown): void;
 }
 
 export function surfaceDist({
@@ -62,34 +71,50 @@ export function surfaceDist({
   const outDir = resolve(packageRoot, tree === 'client' ? 'dist' : 'dist-server');
   const outFile = join(outDir, 'login-framework.js');
 
+  /** Reads the curated surface and writes the generated module. Both hooks share it. */
+  const writeSurfaceModule = (): void => {
+    // The curated surface is framework-owned and lives inside the customer
+    // sandbox, so a project can lose it: it was initialized before the
+    // sandbox existed, or a copy predating the surface file ran. Fail with
+    // the restore instructions instead of a raw ENOENT; the generated
+    // module is the only thing `$login-framework` resolves to in dist, so
+    // the build cannot proceed without it.
+    if (!existsSync(surfaceFile)) {
+      throw new Error(
+        `The curated surface file is missing: ${surfaceFile}. ` +
+          'Custom components import the framework through it, and this build cannot ' +
+          'generate the compiled surface module without it. ' +
+          'Restore it by running "ping-lf update" in the project root, ' +
+          'or re-copy custom/components/login-framework.ts from the framework repository.',
+      );
+    }
+    const surfaceText = readFileSync(surfaceFile, 'utf8');
+    const generated = surfaceDistModule(surfaceText, tree);
+    mkdirSync(outDir, { recursive: true });
+    // Atomic pattern used across this repo's build outputs: write to a
+    // temp file, then rename over the target.
+    const tempPath = `${outFile}.tmp`;
+    writeFileSync(tempPath, generated);
+    // Sync rename within the same directory is atomic on macOS and Linux.
+    renameSync(tempPath, outFile);
+  };
+
   return {
     name: 'framework-core:surface-dist',
     apply: 'build',
-    closeBundle() {
-      // The curated surface is framework-owned and lives inside the customer
-      // sandbox, so a project can lose it: it was initialized before the
-      // sandbox existed, or a copy predating the surface file ran. Fail with
-      // the restore instructions instead of a raw ENOENT; the generated
-      // module is the only thing `$login-framework` resolves to in dist, so
-      // the build cannot proceed without it.
-      if (!existsSync(surfaceFile)) {
-        throw new Error(
-          `The curated surface file is missing: ${surfaceFile}. ` +
-            'Custom components import the framework through it, and this build cannot ' +
-            'generate the compiled surface module without it. ' +
-            'Restore it by running "ping-lf update" in the project root, ' +
-            'or re-copy custom/components/login-framework.ts from the framework repository.',
-        );
-      }
-      const surfaceText = readFileSync(surfaceFile, 'utf8');
-      const generated = surfaceDistModule(surfaceText, tree);
-      mkdirSync(outDir, { recursive: true });
-      // Atomic pattern used across this repo's build outputs: write to a
-      // temp file, then rename over the target.
-      const tempPath = `${outFile}.tmp`;
-      writeFileSync(tempPath, generated);
-      // Sync rename within the same directory is atomic on macOS and Linux.
-      renameSync(tempPath, outFile);
+    writeBundle() {
+      // Runs only after a fully successful write phase: Rollup invokes
+      // writeBundle once, after all output files were flushed to disk, and
+      // never reaches it when the build or the render phase failed.
+      writeSurfaceModule();
+    },
+    closeBundle(_error?: unknown) {
+      // Rollup calls closeBundle on failed builds too (with the build error
+      // as the argument when rollup() rejects; without arguments on the
+      // close() after a failed render phase). Writing here would seed a
+      // broken dist tree with the surface file and mask the original error,
+      // so this hook is intentionally a no-op: on a failed build writeBundle
+      // never ran and the dist tree stays free of the generated module.
     },
   };
 }

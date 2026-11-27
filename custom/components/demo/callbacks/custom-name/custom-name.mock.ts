@@ -7,9 +7,7 @@
  *
  **/
 
-import { callbackType } from '@forgerock/journey-client';
-
-import { createJourneyStep } from '$journey/_utilities/step.utilities';
+import { createJourneyStep } from '$login-framework';
 
 /**
  * Mock AM response — a minimal step payload containing a single NameCallback.
@@ -34,8 +32,8 @@ export default createJourneyStep({
     'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJhdXRoSW5kZXhWYWx1ZSI6IkxvZ2luIiwib3RrIjoiY3VzdG9tLW5hbWUtZGVtbyIsImF1dGhJbmRleFR5cGUiOiJzZXJ2aWNlIiwicmVhbG0iOiIvYWxwaGEifQ.demo',
   callbacks: [
     {
-      // callbackType.NameCallback === 'NameCallback'
-      type: callbackType.NameCallback,
+      // The AM callback type string, as the runtime `callbackType` enum spells it.
+      type: 'NameCallback',
       // output carries data FROM the server (the visible label for this field).
       output: [{ name: 'prompt', value: 'User Name' }],
       // input is the slot the client fills in before submitting the step.

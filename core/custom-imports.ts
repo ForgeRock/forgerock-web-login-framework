@@ -31,8 +31,10 @@ import type { SourceFile } from 'typescript';
  *   - the Journey Client **type-only** contract (`@forgerock/journey-client/types`).
  *
  * Everything else fails: internal `$`-aliases (fail closed, including
- * unknown ones), the Journey Client package at runtime, and relative paths
- * escaping `custom/components/`. Story, mock, and test files are exempt
+ * unknown ones), the private `framework-core` package (runtime and type
+ * imports: it is the framework's internal compile contract, never published),
+ * the Journey Client package at runtime, and relative paths escaping
+ * `custom/components/`. Story, mock, and test files are exempt
  * (they compile only inside Storybook / Vitest), the same exclusion set
  * `collect-entries.ts` uses for the package build surface.
  *
@@ -61,6 +63,7 @@ type LocatedImport = CustomImport & { readonly line: number };
 export type CustomImportViolationKind =
   | 'forbidden-alias'
   | 'forbidden-external'
+  | 'forbidden-internal-package'
   | 'forbidden-dynamic'
   | 'forbidden-exempt-import'
   | 'relative-escape';
@@ -115,6 +118,17 @@ const JOURNEY_CLIENT_PACKAGE = '@forgerock/journey-client';
 const JOURNEY_CLIENT_TYPES_SUBPATH = `${JOURNEY_CLIENT_PACKAGE}/types`;
 
 /**
+ * The framework's own private package name (the compiled `core/` workspace
+ * package, never published to npm). A specifier of exactly this name or any
+ * subpath of it reaches the framework's internal dist contract, which the
+ * customer's allowlist never names: customer code imports the curated
+ * `$login-framework` surface instead. Runtime AND type-only imports are
+ * forbidden, because the package is private and both forms break on every
+ * framework upgrade.
+ */
+const FRAMEWORK_CORE_PACKAGE = 'framework-core';
+
+/**
  * True when a specifier is one of the internal `$`-aliases (or any unknown
  * `$`-alias, fail closed). `$login-framework` and `$custom` (with a
  * subpath) are the customer's two allowed `$` forms.
@@ -133,6 +147,15 @@ const isForbiddenJourneyClient = (specifier: string, isTypeOnly: boolean): boole
   }
   return !isTypeOnly || specifier !== JOURNEY_CLIENT_TYPES_SUBPATH;
 };
+
+/**
+ * True when a specifier is the private framework package or a subpath of it.
+ * The package is never published, so the runtime and type forms are both
+ * outside the customer contract (no `isTypeOnly` exception, unlike the
+ * Journey Client types subpath).
+ */
+const isForbiddenFrameworkCore = (specifier: string): boolean =>
+  specifier === FRAMEWORK_CORE_PACKAGE || specifier.startsWith(`${FRAMEWORK_CORE_PACKAGE}/`);
 
 /**
  * Normalizes a path for segment resolution: to `/` separators, no trailing
@@ -357,20 +380,27 @@ const collectImports = (sourceFile: SourceFile): readonly LocatedImport[] => {
  * compiler itself will fail the real build later, and the boundary check must
  * not be the thing that hides a syntax error. A UTF-8 BOM is stripped first
  * so the first import of a BOM-prefixed file is never missed.
+ *
+ * `.tsx` / `.jsx` files are parsed with the TSX script kind (`isJsx`), the
+ * same way the bundler compiles them: the non-JSX parse reads JSX text and
+ * elements as plain TypeScript, where a stray `<` or backtick desyncs the
+ * parser and can swallow a following import (the same fail-open shape the
+ * Svelte path guards against).
  */
 export const parseCustomImports = (
   sourceText: string,
-  options: { readonly isSvelte?: boolean } = {},
+  options: { readonly isSvelte?: boolean; readonly isJsx?: boolean } = {},
 ): readonly LocatedImport[] => {
   // The UTF-8 BOM (U+FEFF), built from its char code: a literal in source
   // trips ESLint's no-irregular-whitespace rule.
   const bom = String.fromCharCode(0xfeff);
   const withoutBom = sourceText.startsWith(bom) ? sourceText.slice(1) : sourceText;
+  const scriptKind = options.isJsx ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
   const scriptBlocks = options.isSvelte ? extractSvelteScriptBlocks(withoutBom) : null;
   if (!scriptBlocks || scriptBlocks.length === 0) {
     // Not Svelte, or the compiler rejected it (genuine syntax error: the
     // consumer build reports it; the sweep degrades, never crashes).
-    return parseAsTypeScript(withoutBom, 1);
+    return parseAsTypeScript(withoutBom, 1, scriptKind);
   }
   // Two-pass scan for a Svelte file, unioned and deduped:
   //   1. The compiler's view: script blocks + markup expression ranges, so
@@ -383,20 +413,27 @@ export const parseCustomImports = (
   //      miss is covered by pass 1, so the union never narrows what the
   //      pre-fix whole-file parse could see.
   const svelteView = scriptBlocks.flatMap(({ text, startLine }) => [
-    ...collectImports(ts.createSourceFile('customer.ts', text, ts.ScriptTarget.Latest, true)).map(
-      (importEntry) => ({ ...importEntry, line: importEntry.line + startLine - 1 }),
-    ),
+    ...collectImports(
+      ts.createSourceFile('customer.ts', text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS),
+    ).map((importEntry) => ({ ...importEntry, line: importEntry.line + startLine - 1 })),
     ...globViolations(text, startLine),
   ]);
-  const wholeFileView = parseAsTypeScript(withoutBom, 1);
+  const wholeFileView = parseAsTypeScript(withoutBom, 1, scriptKind);
   return dedupeImports([...svelteView, ...wholeFileView]);
 };
 
-/** Parses text as TypeScript, mapping violation lines through `startLine`. */
-const parseAsTypeScript = (text: string, startLine: number): readonly LocatedImport[] => [
-  ...collectImports(ts.createSourceFile('customer.ts', text, ts.ScriptTarget.Latest, true)).map(
-    (importEntry) => ({ ...importEntry, line: importEntry.line + startLine - 1 }),
-  ),
+/**
+ * Parses text as TypeScript (or TSX for `.tsx`/`.jsx` sources, per
+ * `scriptKind`), mapping violation lines through `startLine`.
+ */
+const parseAsTypeScript = (
+  text: string,
+  startLine: number,
+  scriptKind: ts.ScriptKind,
+): readonly LocatedImport[] => [
+  ...collectImports(
+    ts.createSourceFile('customer.tsx', text, ts.ScriptTarget.Latest, true, scriptKind),
+  ).map((importEntry) => ({ ...importEntry, line: importEntry.line + startLine - 1 })),
   ...globViolations(text, startLine),
 ];
 
@@ -537,6 +574,15 @@ interface SvelteParseResult {
   html?: unknown;
 }
 
+/** Builds one violation record for an import entry. Hoisted out of the flatMap. */
+const violationOf =
+  (importEntry: CustomImport & { readonly line?: number }) =>
+  (kind: CustomImportViolationKind): CustomImportViolation => ({
+    kind,
+    specifier: importEntry.specifier,
+    line: importEntry.line ?? 0,
+  });
+
 /**
  * Checks parsed imports against the customer boundary. `importerDir` is the
  * absolute directory of the file being checked; `customRoot` the absolute
@@ -552,11 +598,7 @@ export const checkCustomImports = ({
   readonly customRoot: string;
 }): readonly CustomImportViolation[] =>
   imports.flatMap((importEntry) => {
-    const violation = (kind: CustomImportViolationKind): CustomImportViolation => ({
-      kind,
-      specifier: importEntry.specifier,
-      line: importEntry.line ?? 0,
-    });
+    const violation = violationOf(importEntry);
     if (
       importEntry.specifier === DYNAMIC_SPECIFIER_TEXT ||
       importEntry.specifier === GLOB_SPECIFIER_TEXT
@@ -565,6 +607,9 @@ export const checkCustomImports = ({
     }
     if (isForbiddenAlias(importEntry.specifier)) {
       return [violation('forbidden-alias')];
+    }
+    if (isForbiddenFrameworkCore(importEntry.specifier)) {
+      return [violation('forbidden-internal-package')];
     }
     if (isForbiddenJourneyClient(importEntry.specifier, importEntry.isTypeOnly)) {
       return [violation('forbidden-external')];
@@ -710,6 +755,7 @@ export const scanCustomComponents = (
       const sourceText = readFileSync(full, 'utf8');
       const imports = parseCustomImports(sourceText, {
         isSvelte: relativePath.endsWith('.svelte'),
+        isJsx: relativePath.endsWith('.tsx') || relativePath.endsWith('.jsx'),
       });
       const violations = checkCustomImports({
         imports,

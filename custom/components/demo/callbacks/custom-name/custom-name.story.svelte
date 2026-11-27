@@ -8,7 +8,7 @@
    * and vertically inside a constrained box. Used here so the component
    * renders at a predictable size in the Storybook canvas.
    */
-  import Centered from '$components/primitives/box/centered.svelte';
+  import { Centered } from '$login-framework';
   import CustomName from './custom-name.svelte';
 
   import type { NameCallback } from '@forgerock/journey-client/types';

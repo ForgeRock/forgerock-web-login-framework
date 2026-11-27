@@ -7,8 +7,7 @@
 -->
 
 <script lang="ts">
-  import Centered from '$components/primitives/box/centered.svelte';
-  import { initialize as initializeStyles } from '$core/style.store';
+  import { Centered, initializeStyles } from '$login-framework';
   import BrandedFooter from './branded-footer.svelte';
 
   /**

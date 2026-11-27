@@ -3,16 +3,18 @@
 -->
 
 <script lang="ts">
-  import Centered from '$components/primitives/box/centered.svelte';
-  import { initialize as initializeLinks } from '$core/links.store';
-  import { initialize as initializeStyles } from '$core/style.store';
-  import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
-  import { initCheckValidation } from '$journey/_utilities/step.utilities';
+  import {
+    buildCallbackMetadata,
+    buildStepMetadata,
+    Centered,
+    initCheckValidation,
+    initializeLinks,
+    initializeStyles,
+    type JourneyStep,
+    type StageFormObject,
+    type StageJourneyObject,
+  } from '$login-framework';
   import CustomLogin from './custom-login.svelte';
-
-  import type { JourneyStep } from '@forgerock/journey-client/types';
-
-  import type { StageFormObject, StageJourneyObject } from '$journey/journey.interfaces';
 
   // ─── Props from Storybook args ────────────────────────────────────────────
   /** form — submission helpers; varies per story (Base, WithError, Loading). */

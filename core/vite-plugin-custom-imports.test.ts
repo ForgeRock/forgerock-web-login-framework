@@ -251,4 +251,30 @@ describe('customImportBoundary (load hook)', () => {
     // The mock file itself still loads without a boundary error.
     expect(makePlugin().load(mockPath)).toBeNull();
   });
+
+  it('catches a forbidden import in a .tsx file whose JSX text would desync a plain TS parse', () => {
+    // The load hook routes .tsx/.jsx through the TSX script kind, matching
+    // how the bundler compiles them.
+    const tsxPath = join(fixtureRoot, 'custom/components/stages/canary/canary.tsx');
+    writeFileSync(
+      tsxPath,
+      [
+        'const Page = () => (',
+        '  <div>prices start at `99</div>',
+        ');',
+        "import { styleStore } from '$core/style.store';",
+      ].join('\n'),
+    );
+    expect(() => makePlugin().load(tsxPath)).toThrow(
+      /forbidden-alias[\s\S]*"\$core\/style\.store"/,
+    );
+  });
+
+  it('fails a .tsx file importing the private framework-core package', () => {
+    const tsxPath = join(fixtureRoot, 'custom/components/stages/canary/internal.tsx');
+    writeFileSync(tsxPath, `import { styleStore } from 'framework-core/dist/style.store';\n`);
+    expect(() => makePlugin().load(tsxPath)).toThrow(
+      /forbidden-internal-package[\s\S]*"framework-core\/dist\/style\.store"/,
+    );
+  });
 });

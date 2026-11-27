@@ -7,8 +7,6 @@
  *
  **/
 
-import { callbackType } from '@forgerock/journey-client';
-
 import type { Step } from '@forgerock/journey-client/types';
 
 /**
@@ -35,7 +33,9 @@ export const customLoginStep: Step = {
   callbacks: [
     {
       // First callback: username field.
-      type: callbackType.NameCallback,
+      // The type fields hold the AM callback type strings, as the runtime
+      // `callbackType` enum spells them.
+      type: 'NameCallback',
       output: [{ name: 'prompt', value: 'Username' }],
       input: [{ name: 'IDToken1', value: '' }],
       _id: 0,
@@ -44,7 +44,7 @@ export const customLoginStep: Step = {
       // Second callback: password field.
       // PasswordCallback works identically to NameCallback; the renderer
       // switches to type="password" automatically.
-      type: callbackType.PasswordCallback,
+      type: 'PasswordCallback',
       output: [{ name: 'prompt', value: 'Password' }],
       input: [{ name: 'IDToken2', value: '' }],
       _id: 1,

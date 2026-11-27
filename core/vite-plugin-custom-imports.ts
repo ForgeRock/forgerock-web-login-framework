@@ -94,10 +94,11 @@ const boundaryError = (file: string, violations: readonly ViolationSummary[]): E
       '  - bare npm packages (e.g. svelte), and',
       '  - type-only imports from @forgerock/journey-client/types.',
       '',
-      'Everything else ($core, $journey, $components, $locales, runtime',
-      'journey-client imports, paths escaping custom/components/, computed',
-      'or glob dynamic imports) is framework-internal and may change across',
-      'widget upgrades. forbidden-exempt-import: production code must not',
+      'Everything else ($core, $journey, $components, $locales, the private',
+      'framework-core package, runtime journey-client imports, paths escaping',
+      'custom/components/, computed or glob dynamic imports) is',
+      'framework-internal and may change across widget upgrades.',
+      'forbidden-exempt-import: production code must not',
       'import test, mock, story, or declaration files, or the curated',
       'surface file itself, because those are never boundary-checked.',
       'Import the curated surface instead. To request a',
@@ -133,6 +134,7 @@ export function customImportBoundary({ projectRoot }: CustomImportBoundaryOption
       const violations = checkCustomImports({
         imports: parseCustomImports(sourceText, {
           isSvelte: relativeToCustom.endsWith('.svelte'),
+          isJsx: relativeToCustom.endsWith('.tsx') || relativeToCustom.endsWith('.jsx'),
         }),
         importerDir: join(filePath, '..'),
         customRoot,

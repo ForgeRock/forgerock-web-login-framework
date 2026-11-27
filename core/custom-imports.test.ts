@@ -270,6 +270,49 @@ import { T } from '$login-framework';
     expect(imports[0]?.line).toBe(3);
   });
 
+  it('parses a .tsx file as JSX-aware TypeScript: markup text cannot desync the parser', () => {
+    // The .tsx twin of the Svelte desync: parsed as plain TypeScript, a lone
+    // backtick in JSX text opens a template literal that swallows the next
+    // import statement entirely (0 imports found, fail-open).
+    const sourceText = [
+      'const Page = () => (',
+      '  <div>prices start at `99</div>',
+      ');',
+      "import { styleStore } from '$core/style.store';",
+    ].join('\n');
+    const imports = parseCustomImports(sourceText, { isJsx: true });
+    expect(imports).toContainEqual({
+      specifier: '$core/style.store',
+      isTypeOnly: false,
+      kind: 'import',
+      line: 4,
+    });
+  });
+
+  it('parses a dynamic import inside JSX markup', () => {
+    // A dynamic import sits inside JSX expression syntax, which the plain
+    // TS parse reads as type arguments or unterminated markup and misses.
+    const sourceText = ["const Page = () => <div>{import('$core/style.store')}</div>;"].join('\n');
+    const imports = parseCustomImports(sourceText, { isJsx: true });
+    expect(imports).toContainEqual({
+      specifier: '$core/style.store',
+      isTypeOnly: false,
+      kind: 'dynamic',
+      line: 1,
+    });
+  });
+
+  it('parses a clean .tsx file without inventing imports', () => {
+    const sourceText = [
+      "import { Button } from '$login-framework';",
+      'export const Page = () => <Button label="hi" />;',
+    ].join('\n');
+    const imports = parseCustomImports(sourceText, { isJsx: true });
+    expect(imports).toEqual([
+      { specifier: '$login-framework', isTypeOnly: false, kind: 'import', line: 1 },
+    ]);
+  });
+
   it('treats a TS file containing an embedded <script> HTML string as plain TS (extension-gated)', () => {
     // The fail-open regression the completeness critic proved end-to-end: a
     // text-based <script> check misrouted this file through the Svelte
@@ -381,6 +424,61 @@ describe('checkCustomImports (journey-client contract)', () => {
       customRoot,
     });
     expect(violations[0]?.kind).toBe('forbidden-external');
+  });
+});
+
+describe('checkCustomImports (internal framework-core package)', () => {
+  it('fails a bare subpath import of the private framework package', () => {
+    // framework-core is the framework's internal compile contract (the dist
+    // trees the package build emits), not a customer surface: customer source
+    // imports the curated $login-framework module instead.
+    const violations = checkOne('framework-core/dist/journey/journey.store.js', 'stages/login');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-internal-package');
+    expect(violations[0]?.specifier).toBe('framework-core/dist/journey/journey.store.js');
+  });
+
+  it('fails a bare import of the package root', () => {
+    const violations = checkOne('framework-core', 'layout');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-internal-package');
+  });
+
+  it('fails a type-only import of the private package the same way', () => {
+    // The package is private (never published), so even its types are not a
+    // customer contract.
+    expect(checkOne('framework-core/dist/journey/journey.store.js', 'layout', true)[0]?.kind).toBe(
+      'forbidden-internal-package',
+    );
+    expect(checkOne('framework-core', 'layout', true)[0]?.kind).toBe('forbidden-internal-package');
+  });
+
+  it('fails a re-export from the private package', () => {
+    const violations = checkCustomImports({
+      imports: parseCustomImports(`export { styleStore } from 'framework-core/dist/style.store';`),
+      importerDir: resolve(customRoot, 'layout'),
+      customRoot,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-internal-package');
+  });
+
+  it('still allows ordinary bare npm packages', () => {
+    // Guard against over-matching: only the framework-core prefix is banned.
+    expect(checkOne('svelte', 'layout')).toEqual([]);
+    expect(checkOne('svelte/store', 'stages/login')).toEqual([]);
+    expect(checkOne('qrcode', 'callbacks/name')).toEqual([]);
+    expect(checkOne('zod', 'layout')).toEqual([]);
+  });
+
+  it('fails a dynamic import of the private package', () => {
+    const violations = checkCustomImports({
+      imports: parseCustomImports(`const mod = import('framework-core/dist/style.store');`),
+      importerDir: resolve(customRoot, 'stages/login'),
+      customRoot,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-internal-package');
   });
 });
 
