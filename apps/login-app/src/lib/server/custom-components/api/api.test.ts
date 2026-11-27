@@ -34,6 +34,7 @@ import { WriterLive } from '../writer/writer';
 import {
   createComponent,
   deleteComponent,
+  getBundleManifest,
   getComponent,
   listComponents,
   publishComponent,
@@ -116,11 +117,11 @@ const makeGraph = (
   });
 
 /** Runs a handler effect against a freshly built graph, logging spies included. */
-const runWith = <A>(
+const runWith = <A, R>(
   effect: Effect.Effect<
     A,
     never,
-    ComponentStoreApi | AuthService | PublishService | ComponentLogger
+    ComponentStoreApi | AuthService | PublishService | ComponentLogger | R
   >,
   log: ComponentLogger,
   authReader: AmSessionReader = adminReader,
@@ -137,11 +138,11 @@ const runWith = <A>(
  */
 const withGraph =
   (log: ComponentLogger, authReader: AmSessionReader = adminReader) =>
-  <A>(
+  <A, R>(
     body: Effect.Effect<
       A,
       never,
-      ComponentStoreApi | AuthService | PublishService | ComponentLogger
+      ComponentStoreApi | AuthService | PublishService | ComponentLogger | R
     >,
   ) =>
     Effect.flatMap(makeGraph(log, authReader), (layer) =>
@@ -613,6 +614,50 @@ describe('Component Endpoint Handlers', () => {
         );
         expect(response.status).toBe(400);
       }),
+    );
+  });
+
+  describe('getBundleManifest', () => {
+    it.effect('serves the pointer committed by publish, with no-cache', () =>
+      Effect.provide(
+        Effect.gen(function* () {
+          const log = makeLog();
+          const response = yield* withGraph(log)(
+            Effect.gen(function* () {
+              yield* publishComponent(
+                authorizedRequest('http://localhost/api/components/publish', {
+                  method: 'POST',
+                  headers: { 'content-type': 'application/json' },
+                  body: Schema.encodeSync(Schema.parseJson(PublishRequestSchema))({
+                    code: 'export const callbacks = {};',
+                  }),
+                }),
+              );
+              return yield* getBundleManifest();
+            }),
+          );
+          expect(response.status).toBe(200);
+          expect(response.headers.get('cache-control')).toBe('no-cache');
+          const manifest = yield* json(response);
+          expect(manifest).toEqual({
+            componentsBundle: 'http://localhost:3000/bundle.js',
+          });
+        }),
+        Layer.mergeAll(NodeFileSystem.layer, Path.layer),
+      ),
+    );
+
+    it.effect('returns 404 when nothing is published', () =>
+      Effect.provide(
+        Effect.gen(function* () {
+          const log = makeLog();
+          const response = yield* runWith(getBundleManifest(), log);
+          expect(response.status).toBe(404);
+          const body = (yield* json(response)) as { error: string };
+          expect(body.error).toBe('No published component bundle');
+        }),
+        Layer.mergeAll(NodeFileSystem.layer, Path.layer),
+      ),
     );
   });
 });

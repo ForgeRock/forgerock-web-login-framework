@@ -23,12 +23,17 @@
   import Header from '$custom/header/header.svelte';
   import { deriveJourneyName } from '$journey/_utilities/journey-name.utilities';
   import {
+    bundleSettled,
+    runtimeRegistryStore,
+  } from '$journey/_utilities/registry/runtime-registry.store';
+  import {
     autoRestartStore,
     fallbackJourneyStore,
     initialize as initializeJourney,
     stack,
   } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
+  import { configureCustomBundle } from '$lib/custom-bundle/configure-custom-bundle.effects';
   import { loginAppStages } from '$lib/stages';
   import {
     attachLegacyHashListener,
@@ -125,7 +130,23 @@
   // Legacy AM anchors use generic `#/service/<journey>` (for example
   // `#/service/FRForgotUsername`). Resume takes precedence; hash only
   // drives the start path. No window reads outside onMount/onDestroy.
-  onMount(async () => {
+  onMount(() => {
+    configureCustomBundle();
+  });
+
+  let initialEntryStarted = false;
+
+  /**
+   * Runs the initial journey entry once the Custom Component bundle settles
+   * (loaded or failed — a failed load must not block login). The latch keeps
+   * it to exactly one run across store emissions.
+   */
+  $: if ($bundleSettled && !initialEntryStarted) {
+    initialEntryStarted = true;
+    void startInitialEntry();
+  }
+
+  async function startInitialEntry(): Promise<void> {
     if (suspendedIdParam) {
       legacyResumeInProgress = true;
     }
@@ -169,7 +190,7 @@
         query: buildPreservedQuery(),
       });
     });
-  });
+  }
 
   onDestroy(() => {
     destroyed = true;
@@ -218,7 +239,11 @@
 <div bind:this={journeyRootEl} class="tw_h-full tw_flex tw_flex-col">
   {#if wrappersVisible}
     <div class="tw_shrink-0" data-journey-name={journeyName}>
-      <Header {journeyName} />
+      {#if $runtimeRegistryStore.header}
+        <svelte:component this={$runtimeRegistryStore.header.component} {journeyName} />
+      {:else}
+        <Header {journeyName} />
+      {/if}
     </div>
   {/if}
 
@@ -248,7 +273,11 @@
 
   {#if wrappersVisible}
     <div class="tw_shrink-0" data-journey-name={journeyName}>
-      <Footer {journeyName} />
+      {#if $runtimeRegistryStore.footer}
+        <svelte:component this={$runtimeRegistryStore.footer.component} {journeyName} />
+      {:else}
+        <Footer {journeyName} />
+      {/if}
     </div>
   {/if}
 </div>

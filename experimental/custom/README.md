@@ -174,6 +174,14 @@ Journey Client types (callback classes, `JourneyStep`, etc.) are imported direct
 import type { NameCallback, JourneyStep } from '@forgerock/journey-client/types';
 ```
 
+## Runtime bundles
+
+The build-time registry documented above is one of two delivery paths. The
+same components can also be built into an external bundle and loaded at
+runtime by the Login App or Widget — without rebuilding the host. The bundle
+export shape, Svelte-sharing constraint, and loading APIs are specified in
+[`BUNDLE_CONTRACT.md`](../../core/journey/_utilities/registry/BUNDLE_CONTRACT.md).
+
 ## Hot module reloading note
 
 The framework's Vite plugin watches `experimental/custom/{stages,callbacks}/`

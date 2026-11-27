@@ -22,7 +22,9 @@ import { initialize as initializeStyle } from '$core/style.store';
 import { initialize as initializeUser } from '$core/user/user.store';
 import { initialize as initializeJourneys } from '$journey/config.store';
 import { getJourneyClient, initialize as initializeJourney } from '$journey/journey.store';
+import { configureCustomBundle } from './configure-custom-bundle.effects';
 import {
+  customComponentsConfigSchema,
   loggerConfigSchema,
   middlewareSchema,
   serverConfigSchema,
@@ -87,6 +89,12 @@ export function widgetApiFactory(componentApi: ReturnType<typeof _componentApi>)
     const logger = options.logger && loggerConfigSchema.parse(options.logger);
     const middleware = options.middleware && middlewareSchema.parse(options.middleware);
     const storage = options.storage && storageConfigSchema.parse(options.storage);
+    const customComponents =
+      options.customComponents && customComponentsConfigSchema.parse(options.customComponents);
+
+    if (customComponents) {
+      configureCustomBundle(customComponents);
+    }
 
     // initialize journey client
     journeyStore = initializeJourney(

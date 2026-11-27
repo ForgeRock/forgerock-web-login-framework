@@ -201,12 +201,18 @@ admin-only CRUD + publish API for Custom Components source files, served under
 `/api/components/*` with an OpenAPI description at `/api/openapi` and
 interactive docs at `/api-docs`. Disabled unless `COMPONENT_API_ENABLED=true`.
 Auth validates an AM session (cookie or Bearer) and requires an AM admin role.
-Records land as JSON files in `COMPONENT_CONFIG_DIR` (default `/config/config`)
-— one `<id>.json` per component — where the platform config-saver pipeline picks
-them up; publish writes `bundle.js` to the same directory. Writes are durable:
-temp file + fsync + atomic rename (see `writer/`). Internal layout: `api/`
-(HTTP handlers, schemas, OpenAPI), `auth/` (session + role + CSRF checks),
-`publish/`, `store/` (record repository), `writer/` (atomic file writes).
+One route is public (no auth, served regardless of the flag):
+`/api/components/manifest` — the runtime resource manifest whose
+`componentsBundle` URL is the bundle location recorded by the last publish
+(the same-origin app URL today; a GCS bucket once bucket delivery lands).
+Hosts bootstrap through it before any AM session exists. Served no-cache: it
+is the one mutable pointer. Records
+land as JSON files in `COMPONENT_CONFIG_DIR` (default `/config/config`)
+— one `<id>.json` per component — where the platform config-saver pipeline
+picks them up. Writes are durable: temp file + fsync + atomic rename (see
+`writer/`). Internal layout: `api/` (HTTP handlers, schemas, OpenAPI),
+`auth/` (session + role + CSRF checks), `publish/`, `store/` (record
+repository), `writer/` (atomic file writes).
 Config parsing lives in `settings.ts`; the store seam (`store/store.ts`) is the
 swap point if storage ever moves off the filesystem.
 

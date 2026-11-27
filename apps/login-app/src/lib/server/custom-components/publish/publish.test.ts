@@ -11,7 +11,15 @@ import { Path } from '@effect/platform';
 import { NodeFileSystem } from '@effect/platform-node';
 import { it } from '@effect/vitest';
 vi.mock('$app/environment', () => ({ building: false }));
-vi.mock('$env/dynamic/private', () => ({ env: {} }));
+// Importing publish.ts pulls in auth.ts → core/constants.ts, which throws at
+// module load without AM connection details.
+vi.mock('$env/dynamic/private', () => ({
+  env: {
+    FR_AM_URL: 'https://am.example.com/am',
+    FR_AM_COOKIE_NAME: 'iPlanetDirectoryPro',
+    FR_REALM_PATH: 'root',
+  },
+}));
 import { ConfigProvider, Effect, Layer, Schema } from 'effect';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -83,6 +91,20 @@ describe('PublishLive', () => {
 
       const bundle = yield* Effect.promise(() => readUtf8(join(repoDir, 'config', 'bundle.js')));
       expect(bundle).toBe('console.log("e2e bundle");');
+    }),
+  );
+
+  it.scoped('commits the bundle manifest pointer beside the entry file', () =>
+    Effect.gen(function* () {
+      const repoDir = yield* Effect.promise(makeTemporaryDirectory);
+      yield* publishEffect(publishRequest('console.log("e2e bundle");')).pipe(
+        Effect.provide(publishLayer(repoDir)),
+      );
+
+      const pointer = yield* Effect.promise(() =>
+        readUtf8(join(repoDir, 'config', 'manifest.json')),
+      );
+      expect(JSON.parse(pointer)).toEqual({ componentsBundle: '/bundle.js' });
     }),
   );
 

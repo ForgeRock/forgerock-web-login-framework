@@ -11,8 +11,13 @@
   import { buildThemeVarsEntries } from '$core/_utilities/theme.utilities';
 
   import type { ThemeObject } from '$core/style.store';
+  import type { ComponentBundleImportMap } from '$server/component-bundle-import-map.effects';
 
-  export let data: { idmTheme?: ThemeObject; backgroundImageUrl?: string };
+  export let data: {
+    idmTheme?: ThemeObject;
+    backgroundImageUrl?: string;
+    bundleImportMap?: ComponentBundleImportMap | null;
+  };
 
   $: themeStyle = [
     ...(data.idmTheme ? buildThemeVarsEntries(data.idmTheme) : []),
@@ -22,6 +27,12 @@
   ]
     .map(([k, v]) => `${k}:${v}`)
     .join(';');
+
+  // Svelte renders <script> tag contents in markup as literal text, so the
+  // import map element is emitted as a string through {@html} below.
+  $: bundleImportMapElement = data.bundleImportMap
+    ? `<script type="importmap">${JSON.stringify({ imports: data.bundleImportMap })}<${'/'}script>`
+    : '';
 </script>
 
 <svelte:head>
@@ -35,6 +46,15 @@
     href="/open-sans/open-sans-v29-latin-regular.woff2"
     crossorigin="anonymous"
   />
+
+  {#if data.bundleImportMap}
+    <!--
+      Host-generated map resolving the Custom Component bundle's bare
+      `svelte`/`@forgerock` specifiers to this host's single runtime copy
+      (see $server/component-bundle-import-map.effects.ts).
+    -->
+    {@html bundleImportMapElement}
+  {/if}
 
   <meta charset="utf-8" />
   <title>Login Application</title>

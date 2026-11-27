@@ -11,6 +11,7 @@ import * as OpenApiJsonSchema from '@effect/platform/OpenApiJsonSchema';
 
 import {
   ApiErrorBodySchema,
+  BundleManifestSchema,
   ComponentRecordSchema,
   ComponentTypeSchema,
   CreateComponentRequestSchema,
@@ -30,6 +31,10 @@ const updateComponentRequestSchema = OpenApiJsonSchema.makeWithDefs(UpdateCompon
 });
 /** OpenAPI JSON Schema for component-publication requests. */
 const publishRequestSchema = OpenApiJsonSchema.makeWithDefs(PublishRequestSchema, { defs: {} });
+/** OpenAPI JSON Schema for the runtime resource manifest. */
+const bundleManifestSchema = OpenApiJsonSchema.makeWithDefs(BundleManifestSchema, {
+  defs: {},
+});
 /** OpenAPI JSON Schema for standardized API error bodies. */
 const errorSchema = OpenApiJsonSchema.makeWithDefs(ApiErrorBodySchema, { defs: {} });
 
@@ -229,6 +234,20 @@ export const openApiSpec = {
           '415': errorResponse('The request content type must be application/json.'),
           '500': errorResponse('The component source could not be published.'),
           '503': errorResponse('The Component API is misconfigured or AM is unavailable.'),
+        },
+      },
+    },
+    '/api/components/manifest': {
+      get: {
+        tags: ['Components'],
+        summary: 'Retrieve the runtime resource manifest',
+        description:
+          'The one public Component API route: the URL a host imports for the latest bundle, as recorded by the last publish. Served no-cache; the bundle URL it hands out is the cacheable asset.',
+        security: [],
+        responses: {
+          '200': jsonResponse('The runtime resource manifest.', bundleManifestSchema),
+          '404': errorResponse('No component bundle has been published.'),
+          '500': errorResponse('The published bundle manifest is invalid.'),
         },
       },
     },

@@ -10,6 +10,7 @@
 import { error } from '@sveltejs/kit';
 
 import { env } from '$env/dynamic/private';
+import { getComponentBundleImportMap } from '$server/component-bundle-import-map.effects';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
 import { resolveRealmFromUrl } from '$server/redirect/redirect.utilities';
 
@@ -71,5 +72,6 @@ export const load: LayoutServerLoad = async ({ url }) => {
     realmPath,
     wellknown,
     fallbackJourney: env.FR_AM_JOURNEY_LOGIN ?? null,
+    bundleImportMap: getComponentBundleImportMap(),
   };
 };

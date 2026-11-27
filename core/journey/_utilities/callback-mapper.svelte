@@ -43,6 +43,7 @@
   import Name from '$journey/callbacks/username/name.svelte';
   import ValidatedCreateUsername from '$journey/callbacks/username/validated-create-username.svelte';
   import { customCallbackRegistry } from './registry/custom-registry';
+  import { runtimeRegistryStore } from './registry/runtime-registry.store';
 
   import type {
     AttributeInputCallback,
@@ -199,7 +200,13 @@
   }
 </script>
 
-{#if customCallbackRegistry[cbType]}
+{#if $runtimeRegistryStore.callbacks[cbType]}
+  {@const _entry = $runtimeRegistryStore.callbacks[cbType] as CustomRegistryEntry}
+  {@const _filteredProps = Object.fromEntries(
+    Object.entries(props).filter(([k]) => _entry.acceptedProps.includes(k)),
+  )}
+  <svelte:component this={_entry.component} {..._filteredProps} />
+{:else if customCallbackRegistry[cbType]}
   {@const _entry = customCallbackRegistry[cbType] as CustomRegistryEntry}
   {@const _filteredProps = Object.fromEntries(
     Object.entries(props).filter(([k]) => _entry.acceptedProps.includes(k)),

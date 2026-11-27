@@ -69,3 +69,16 @@ export const storageConfigSchema = z.discriminatedUnion('type', [
     }),
   }),
 ]);
+
+export const customComponentsConfigSchema = z
+  .object({
+    url: z.string().url({ message: 'customComponents.url must be a full URL' }).optional(),
+    manifest: z
+      .string()
+      .url({ message: 'customComponents.manifest must be a full URL' })
+      .optional(),
+  })
+  .strict()
+  .refine((config) => config.url !== undefined || config.manifest !== undefined, {
+    message: 'customComponents requires either "url" or "manifest"',
+  });

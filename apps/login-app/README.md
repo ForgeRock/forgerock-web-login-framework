@@ -59,7 +59,7 @@ The app requires environment variables to connect to a ForgeRock AM instance. Se
 | `FR_AM_WELLKNOWN_URL`   | Yes             | ForgeRock AM Wellknown URL used to validate startup configuration (e.g., `https://openam-sdks.forgeblocks.com/am/oauth2/realms/root/realms/alpha/.well-known/openid-configuration`)                                                |
 | `FR_AM_JOURNEY_LOGIN`   | No              | Default login journey name. Used for IDM theme resolution when no `?journey=` query param is present, and used as the fallback journey for restarting failed suspended flows. Defaults to the AM realm's default journey if unset. |
 | `ORIGIN`                | With components | This app's origin (e.g., `http://localhost:3000`). Required when the Custom Components API is enabled (`COMPONENT_API_ENABLED=true`): cookie-carried admin mutations are rejected with 503 until it is set.                        |
-| `COMPONENT_API_ENABLED` | With components | Set to `true` to serve `/api/components/*` at all. Disabled unless opted in; intended for dev tenants only.                                                                                                                        |
+| `COMPONENT_API_ENABLED` | With components | Set to `true` to serve the admin routes under `/api/components/*` (CRUD + publish). Disabled unless opted in; intended for dev tenants only. The public `/api/components/manifest` route is served regardless of this flag.        |
 | `COMPONENT_CONFIG_DIR`  | With components | Absolute path of the tracked config directory the Component API reads and writes. Defaults to `/config/config` — the path the platform's config-saver watches in deployed tenants.                                                 |
 
 ### Component API authentication

@@ -10,6 +10,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  customComponentsConfigSchema,
   loggerConfigSchema,
   middlewareSchema,
   serverConfigSchema,
@@ -140,5 +141,54 @@ describe('widget.config — storageConfigSchema', () => {
 
   it('rejects a missing type discriminant', () => {
     expect(() => storageConfigSchema.parse({ name: 'tokens', prefix: 'myApp' })).toThrow();
+  });
+});
+
+describe('widget.config — customComponentsConfigSchema', () => {
+  it('parses a bundle URL', () => {
+    expect(customComponentsConfigSchema.parse({ url: 'https://host/custom/bundle.js' })).toEqual({
+      url: 'https://host/custom/bundle.js',
+    });
+  });
+
+  it('parses a manifest URL', () => {
+    expect(
+      customComponentsConfigSchema.parse({ manifest: 'https://host/api/components/manifest' }),
+    ).toEqual({
+      manifest: 'https://host/api/components/manifest',
+    });
+  });
+
+  it('parses url and manifest together', () => {
+    expect(
+      customComponentsConfigSchema.parse({
+        url: 'https://host/custom/bundle.js',
+        manifest: 'https://host/api/components/manifest',
+      }),
+    ).toEqual({
+      url: 'https://host/custom/bundle.js',
+      manifest: 'https://host/api/components/manifest',
+    });
+  });
+
+  it('rejects a non-URL', () => {
+    expect(() => customComponentsConfigSchema.parse({ url: 'not-a-url' })).toThrow();
+  });
+
+  it('rejects a non-URL manifest', () => {
+    expect(() => customComponentsConfigSchema.parse({ manifest: 'not-a-url' })).toThrow();
+  });
+
+  it('rejects a config with neither url nor manifest', () => {
+    expect(() => customComponentsConfigSchema.parse({})).toThrow();
+  });
+
+  it('rejects an unknown key (strict)', () => {
+    expect(() =>
+      customComponentsConfigSchema.parse({
+        url: 'https://host/custom/bundle.js',
+        version: '1',
+      }),
+    ).toThrow();
   });
 });

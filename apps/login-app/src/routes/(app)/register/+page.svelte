@@ -13,8 +13,10 @@
   import { goto } from '$app/navigation';
   import Box from '$components/primitives/box/centered.svelte';
   import { initialize as initializeContent } from '$core/locale.store';
+  import { bundleSettled } from '$journey/_utilities/registry/runtime-registry.store';
   import { initialize as initializeJourney } from '$journey/journey.store';
   import Journey from '$journey/journey.svelte';
+  import { configureCustomBundle } from '$lib/custom-bundle/configure-custom-bundle.effects';
   import { loginAppStages } from '$lib/stages';
 
   import type { JourneyStore } from '$journey/journey.interfaces';
@@ -34,9 +36,21 @@
   initializeContent(data.content);
 
   // Use if not initializing journey in a "context module"
-  onMount(async () => {
-    journeyStore.start({ journey: 'Registration' });
+  onMount(() => {
+    configureCustomBundle();
   });
+
+  let registrationStarted = false;
+
+  /**
+   * Starts registration once the Custom Component bundle settles (loaded or
+   * failed — a failed load must not block login). The latch keeps it to
+   * exactly one run across store emissions.
+   */
+  $: if ($bundleSettled && !registrationStarted) {
+    registrationStarted = true;
+    journeyStore.start({ journey: 'Registration' });
+  }
 
   $: {
     if ($journeyStore?.successful) {

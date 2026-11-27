@@ -70,7 +70,7 @@
     "prettier-plugin-svelte": "^3.5.1",
     "qrcode": "1.5.3",
     "storybook": "^10.1.11",
-    "svelte": "^5.53.7",
+    "svelte": "catalog:",
     "svelte-eslint-parser": "^1.5.1",
     "typescript": "^5.2.2",
     "typescript-eslint": "^8.52.0",
@@ -115,7 +115,8 @@
       "effect": "^3.22.1",
       "devalue@5": ">=5.9.3",
       "source-map-js": ">=1.2.2",
-      "zod": ">=4.6.6"
+      "zod": ">=4.6.6",
+      "msgpackr": "^2.1.4"
     }
   }
 }

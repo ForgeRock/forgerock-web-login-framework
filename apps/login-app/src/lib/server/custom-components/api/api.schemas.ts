@@ -116,6 +116,15 @@ export const PublishRequestSchema = Schema.Struct({
 
 export type PublishRequest = typeof PublishRequestSchema.Type;
 
+/** ─── Bundle manifest ───────────────────────────────────────────────────── */
+
+/** The bundle manifest: the URL a host imports for the latest published bundle. */
+export const BundleManifestSchema = Schema.Struct({
+  componentsBundle: Schema.String,
+});
+
+export type BundleManifest = typeof BundleManifestSchema.Type;
+
 /** ─── Responses and errors ───────────────────────────────────────────────── */
 
 /** HTTP statuses representable in Component API error responses. */
