@@ -16,7 +16,7 @@ import { customImportBoundary } from './vite-plugin-custom-imports';
 
 /**
  * Unit tests for the Vite load-hook wrapper around checkCustomImports.
- * The checker logic itself is covered by custom-imports.test.ts — these
+ * The checker logic itself is covered by custom-imports.test.ts: these
  * tests pin the plugin contract: which files it inspects, that it throws
  * a named, actionable error listing violations, and that it passes
  * everything else through to the next plugin in the chain.
@@ -133,7 +133,7 @@ describe('customImportBoundary (load hook)', () => {
     );
 
     expect(() => makePlugin().load(`${filePath}?raw`)).toThrow(/boundary violated/);
-    // Virtual modules (\0-prefixed) never map to a real file — must be skipped.
+    // Virtual modules (\0-prefixed) never map to a real file, so they are skipped.
     expect(makePlugin().load(`\0${filePath}`)).toBeNull();
   });
 
@@ -231,5 +231,24 @@ describe('customImportBoundary (load hook)', () => {
       ].join('\n'),
     );
     expect(() => makePlugin().load(filePath)).toThrow(/forbidden-alias/);
+  });
+
+  it('fails a production file importing an exempt mock file (forbidden-exempt-import)', () => {
+    // The mock file itself is skipped by the load hook, but a production
+    // stage importing it must fail: the exempt target is never scanned, so
+    // anything it re-exports would reach the bundle unchecked.
+    const mockPath = join(fixtureRoot, 'custom/components/stages/canary/internals.mock.ts');
+    writeFileSync(mockPath, `export { styleStore } from '$core/style.store';\n`);
+    const stagePath = join(fixtureRoot, 'custom/components/stages/canary/canary.svelte');
+    writeFileSync(
+      stagePath,
+      `<script lang="ts">\n  import { internals } from './internals.mock';\n</script>\n`,
+    );
+
+    expect(() => makePlugin().load(stagePath)).toThrow(
+      /forbidden-exempt-import[\s\S]*"\.\/internals\.mock"/,
+    );
+    // The mock file itself still loads without a boundary error.
+    expect(makePlugin().load(mockPath)).toBeNull();
   });
 });

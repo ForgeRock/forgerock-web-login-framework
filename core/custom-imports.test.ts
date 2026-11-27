@@ -285,7 +285,7 @@ import { T } from '$login-framework';
 
     // Same text through the Svelte path: the compiler's view treats the
     // embedded pair as a real script block, but the whole-file TS pass still
-    // sees the import outside it — fail-closed union, so nothing the pre-fix
+    // sees the import outside it (fail-closed union), so nothing the pre-fix
     // parser could see is ever missed.
     const asSvelte = parseCustomImports(sourceText, { isSvelte: true });
     expect(asSvelte).toHaveLength(1);
@@ -405,6 +405,179 @@ describe('checkCustomImports (relative escapes)', () => {
   it('fails a type-only relative escape', () => {
     const violations = checkOne('../../core/interfaces', 'layout', true);
     expect(violations[0]?.kind).toBe('relative-escape');
+  });
+});
+
+describe('checkCustomImports (specifier shapes that bypass the alias check)', () => {
+  it.each([
+    ['$custom/../../core/journey/journey.store', 'stages/login'],
+    ['/abs/path/core/x.ts', 'layout'],
+    ['/core/x.ts', 'layout'],
+    ['/@fs/core/x.ts', 'layout'],
+    ['file:///core/x.ts', 'layout'],
+  ])('fails the escape-shaped specifier %s', (specifier, importerDir) => {
+    const violations = checkOne(specifier, importerDir);
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('relative-escape');
+    expect(violations[0]?.specifier).toBe(specifier);
+  });
+
+  it('fails a backslash-leading specifier', () => {
+    // String.raw keeps the doubled backslashes in the generated source so
+    // the string-literal parser collapses them into single ones: the
+    // specifier value the bundler sees is '\core\x.ts'.
+    const violations = checkCustomImports({
+      imports: parseCustomImports(String.raw`import { X } from '\\core\\x.ts';`),
+      importerDir: resolve(customRoot, 'layout'),
+      customRoot,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('relative-escape');
+    expect(violations[0]?.specifier).toBe('\\core\\x.ts');
+  });
+
+  it('fails a Windows-style relative escape with backslash separators', () => {
+    // The backslash form of the existing '../../core/style.store' escape:
+    // same resolution, same violation, only the separators differ.
+    const violations = checkCustomImports({
+      imports: parseCustomImports(String.raw`import { X } from '..\\..\\core\\style.store';`),
+      importerDir: resolve(customRoot, 'layout'),
+      customRoot,
+    });
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('relative-escape');
+  });
+
+  it('fails a $custom specifier whose escape only appears after alias resolution', () => {
+    // $custom/... passes the alias allowlist, so the violation can surface
+    // only when the rest of the specifier resolves against the custom root.
+    const violations = checkOne('$custom/..', 'layout');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('relative-escape');
+  });
+
+  it.each([['C:\\core\\x.ts', 'C:/core/x.ts']])(
+    'fails the Windows drive-letter absolute specifier %s',
+    (specifier, importerDir) => {
+      const violations = checkOne(specifier, importerDir);
+      expect(violations).toHaveLength(1);
+      expect(violations[0]?.kind).toBe('relative-escape');
+    },
+  );
+
+  it('allows absolute and file:// specifiers that resolve inside the custom root', () => {
+    const inside = resolve(customRoot, 'stages/login/login.svelte');
+    expect(checkOne(inside, 'stages/login')).toEqual([]);
+    expect(checkOne(`file://${inside}`, 'stages/login')).toEqual([]);
+  });
+
+  it('allows the documented specifier forms (regression guard for the shape checks)', () => {
+    expect(checkOne('$custom/components/stages/x/x.svelte', 'layout')).toEqual([]);
+    expect(checkOne('$custom/layout/header.svelte', 'stages/login')).toEqual([]);
+    expect(checkOne('./sibling', 'stages/login')).toEqual([]);
+    expect(checkOne('../callbacks/x/x.svelte', 'stages/login')).toEqual([]);
+    expect(checkOne('$login-framework', 'layout')).toEqual([]);
+  });
+});
+
+describe('checkCustomImports (production imports of exempt files)', () => {
+  it('fails a production import of a sibling mock file (extension-resolved)', () => {
+    // A stage reaching "./internals.mock" pulls in a file the boundary never
+    // scans, so the import itself must fail closed.
+    const violations = checkOne('./internals.mock', 'stages/login');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-exempt-import');
+    expect(violations[0]?.specifier).toBe('./internals.mock');
+  });
+
+  it.each([
+    ['./internals.mock.ts', 'stages/login'],
+    ['./custom-login.stories.js', 'stages/custom-login'],
+    ['./custom-login.story.svelte', 'stages/custom-login'],
+    ['./name.test.ts', 'callbacks/name'],
+    ['./name.d.ts', 'callbacks/name'],
+  ])(
+    'fails an import naming an exempt file with its full extension %s',
+    (specifier, importerDir) => {
+      const violations = checkOne(specifier, importerDir);
+      expect(violations).toHaveLength(1);
+      expect(violations[0]?.kind).toBe('forbidden-exempt-import');
+    },
+  );
+
+  it('fails a relative import of the curated surface file', () => {
+    // login-framework.ts re-exports framework internals by design; reaching
+    // it by path bypasses the curated-surface contract.
+    const violations = checkOne('../../login-framework', 'stages/login');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-exempt-import');
+  });
+
+  it('fails a $custom import of an exempt file', () => {
+    const violations = checkOne('$custom/stages/login/internals.mock', 'layout');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-exempt-import');
+  });
+
+  it('fails an absolute path naming an exempt file inside the custom root', () => {
+    // The escape gate allows absolutes that resolve inside the root, but the
+    // exempt-import gate must still inspect the target: an unchecked mock
+    // reached by absolute path is the same F62 bypass.
+    const target = resolve(customRoot, 'stages/login/internals.mock.ts');
+    const violations = checkOne(target, 'stages/login');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-exempt-import');
+  });
+
+  it('fails a file:// specifier naming the curated surface file', () => {
+    const target = `file://${resolve(customRoot, 'login-framework.ts')}`;
+    const violations = checkOne(target, 'stages/login');
+    expect(violations).toHaveLength(1);
+    expect(violations[0]?.kind).toBe('forbidden-exempt-import');
+  });
+
+  it('allows a production import of a normal sibling component', () => {
+    expect(checkOne('./login.svelte', 'stages/login')).toEqual([]);
+    expect(checkOne('./helpers', 'stages/login')).toEqual([]);
+  });
+
+  it('still exempts the exempt file itself from the sweep (its own imports stay unchecked)', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'custom-imports-'));
+    try {
+      mkdirSync(join(fixtureRoot, 'custom/components/stages/login'), { recursive: true });
+      writeFileSync(
+        join(fixtureRoot, 'custom/components/stages/login/internals.mock.ts'),
+        `export { styleStore } from '$core/style.store';\n`,
+      );
+      expect(scanCustomComponents(fixtureRoot)).toEqual([]);
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
+  it('flags a production stage whose only violation is importing the mock (sweep fixture)', () => {
+    const fixtureRoot = mkdtempSync(join(tmpdir(), 'custom-imports-'));
+    try {
+      mkdirSync(join(fixtureRoot, 'custom/components/stages/login'), { recursive: true });
+      writeFileSync(
+        join(fixtureRoot, 'custom/components/stages/login/internals.mock.ts'),
+        [
+          `export { styleStore } from '$core/style.store';`,
+          `export const internals = { styleStore };`,
+          '',
+        ].join('\n'),
+      );
+      writeFileSync(
+        join(fixtureRoot, 'custom/components/stages/login/login.svelte'),
+        `<script lang="ts">\n  import { internals } from './internals.mock';\n</script>\n`,
+      );
+      const files = scanCustomComponents(fixtureRoot);
+      expect(files).toHaveLength(1);
+      expect(files[0]?.violations).toHaveLength(1);
+      expect(files[0]?.violations[0]?.kind).toBe('forbidden-exempt-import');
+    } finally {
+      rmSync(fixtureRoot, { recursive: true, force: true });
+    }
   });
 });
 

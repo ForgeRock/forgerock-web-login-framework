@@ -33,7 +33,7 @@ import type { SourceFile } from 'typescript';
  * Everything else fails: internal `$`-aliases (fail closed, including
  * unknown ones), the Journey Client package at runtime, and relative paths
  * escaping `custom/components/`. Story, mock, and test files are exempt
- * (they compile only inside Storybook / Vitest) — the same exclusion set
+ * (they compile only inside Storybook / Vitest), the same exclusion set
  * `collect-entries.ts` uses for the package build surface.
  *
  * The file is parsed with the TypeScript compiler API, like
@@ -62,6 +62,7 @@ export type CustomImportViolationKind =
   | 'forbidden-alias'
   | 'forbidden-external'
   | 'forbidden-dynamic'
+  | 'forbidden-exempt-import'
   | 'relative-escape';
 
 /** A boundary-check failure, with the offending specifier and source line. */
@@ -134,18 +135,22 @@ const isForbiddenJourneyClient = (specifier: string, isTypeOnly: boolean): boole
 };
 
 /**
- * Resolves a relative specifier against the importer's directory and
- * normalizes `.`/`..` segments. Returns the resolved path or `null` when
- * the specifier is not relative.
+ * Normalizes a path for segment resolution: to `/` separators, no trailing
+ * slash, and no query string (Vite ids like `?raw` / `?inline`).
  */
-const resolveRelative = (specifier: string, importerDir: string): string | null => {
-  if (!specifier.startsWith('./') && !specifier.startsWith('../')) {
-    return null;
-  }
-  const withoutQuery = specifier.split('?')[0] ?? specifier;
+const normalizePath = (path: string): string =>
+  path.split('?')[0].split('\\').join('/').replace(/\/+$/, '');
+
+/**
+ * Joins a base directory and a relative rest into a normalized absolute path
+ * (`/<segments>`), resolving every `.` and `..` segment. A `..` at the top of
+ * the stack stays: the result then starts above the root, which the escape
+ * checks below treat as outside.
+ */
+const joinAndResolve = (baseDir: string, relativeRest: string): string => {
   const segments: string[] = [];
   const pushAll = (path: string): void => {
-    for (const segment of path.split('/')) {
+    for (const segment of normalizePath(path).split('/')) {
       if (segment === '' || segment === '.') {
         continue;
       }
@@ -156,22 +161,85 @@ const resolveRelative = (specifier: string, importerDir: string): string | null 
       segments.push(segment);
     }
   };
-  pushAll(importerDir.split('\\').join('/'));
-  pushAll(withoutQuery.split('\\').join('/'));
+  pushAll(baseDir);
+  pushAll(relativeRest);
   return `/${segments.join('/')}`;
 };
 
 /**
- * True when a relative specifier resolves outside `custom/components/`.
- * Virtual modules (`\0...`) are never relative, so they fall through here.
+ * Resolves a relative specifier against the importer's directory. Returns the
+ * resolved path or `null` when the specifier is not relative.
  */
-const isRelativeEscape = (specifier: string, importerDir: string, customRoot: string): boolean => {
-  const resolved = resolveRelative(specifier, importerDir);
-  if (resolved === null) {
-    return false;
+const resolveRelative = (specifier: string, importerDir: string): string | null => {
+  const normalized = normalizePath(specifier);
+  if (!normalized.startsWith('./') && !normalized.startsWith('../')) {
+    return null;
   }
-  const root = `/${customRoot.split('\\').join('/').replace(/^\/+/, '')}`;
-  return !resolved.startsWith(`${root}/`) && resolved !== root;
+  return joinAndResolve(importerDir, normalized);
+};
+
+/**
+ * The `$custom/...` alias with nothing (or only a query) after it. The bare
+ * alias means the custom root itself, which is inside the custom root.
+ */
+const CUSTOM_ALIAS_ROOT_PATTERN = /^\/?$/;
+
+/**
+ * Resolves a `$custom/<rest>` specifier's path against the custom root.
+ * Returns `null` when the specifier is not a `$custom/...` path.
+ */
+const resolveCustomAlias = (specifier: string, customRoot: string): string | null => {
+  if (!specifier.startsWith(`${CUSTOM_ALIAS}/`)) {
+    return null;
+  }
+  const rest = normalizePath(specifier.slice(CUSTOM_ALIAS.length + 1));
+  return joinAndResolve(customRoot, CUSTOM_ALIAS_ROOT_PATTERN.test(rest) ? '' : rest);
+};
+
+/**
+ * Escape-shaped specifiers the alias and relative checks never see: absolute
+ * project paths (including Vite's `/@fs/` URLs), `file://` URLs, Windows
+ * drive-letter paths, and backslash-leading paths. All resolve outside the
+ * customer sandbox unless they name the custom root itself, so the check is
+ * by shape, not content.
+ */
+const isEscapeShapedSpecifier = (specifier: string): boolean =>
+  specifier.startsWith('/') ||
+  specifier.startsWith('\\') ||
+  specifier.startsWith('file://') ||
+  /^[A-Za-z]:/.test(specifier);
+
+/**
+ * True when a specifier resolves outside `custom/components/`. Covers the
+ * relative forms (`./`, `../`), the customer alias (`$custom/<rest>`, whose
+ * rest is resolved against the custom root so `..` segments cannot climb
+ * out), and the escape shapes (absolute, `/@fs/`, `file://`,
+ * backslash-leading), which are outside unless they name a path inside the
+ * custom root.
+ */
+const isSpecifierEscape = (specifier: string, importerDir: string, customRoot: string): boolean => {
+  const root = normalizePath(customRoot);
+  const insideRoot = (resolved: string): boolean =>
+    resolved === root || resolved.startsWith(`${root}/`);
+
+  if (specifier.startsWith(`${CUSTOM_ALIAS}/`)) {
+    const resolved = resolveCustomAlias(specifier, customRoot);
+    return resolved === null || !insideRoot(resolved);
+  }
+
+  if (isEscapeShapedSpecifier(specifier)) {
+    // The only legitimate absolute specifier is the custom root itself or a
+    // file inside it (used by tooling that pre-resolves aliases); everything
+    // else reaches outside the sandbox.
+    const normalized = normalizePath(specifier);
+    const withoutFileScheme = normalized.startsWith('file://')
+      ? normalized.slice('file://'.length)
+      : normalized;
+    return !insideRoot(withoutFileScheme);
+  }
+
+  const resolved = resolveRelative(specifier, importerDir);
+  return resolved !== null && !insideRoot(resolved);
 };
 
 /**
@@ -228,7 +296,7 @@ const collectImports = (sourceFile: SourceFile): readonly LocatedImport[] => {
           line: lineOf(node, sourceFile),
         });
       } else {
-        // import(x), import(`${base}/secret`), import(someVar) — a computed
+        // import(x), import(`${base}/secret`), import(someVar): a computed
         // specifier can resolve anything at runtime, so fail closed.
         imports.push({
           specifier: DYNAMIC_SPECIFIER_TEXT,
@@ -285,7 +353,7 @@ const collectImports = (sourceFile: SourceFile): readonly LocatedImport[] => {
  * balanced `<script>...</script>` pair inside a string literal, and routing
  * such a file through the Svelte extractor would scan only the code inside
  * the pair while missing a forbidden import outside it (fail-open). A Svelte
- * file the compiler cannot parse falls back to whole-file parsing — the
+ * file the compiler cannot parse falls back to whole-file parsing: the
  * compiler itself will fail the real build later, and the boundary check must
  * not be the thing that hides a syntax error. A UTF-8 BOM is stripped first
  * so the first import of a BOM-prefixed file is never missed.
@@ -300,14 +368,14 @@ export const parseCustomImports = (
   const withoutBom = sourceText.startsWith(bom) ? sourceText.slice(1) : sourceText;
   const scriptBlocks = options.isSvelte ? extractSvelteScriptBlocks(withoutBom) : null;
   if (!scriptBlocks || scriptBlocks.length === 0) {
-    // Not Svelte, or the compiler rejected it (genuine syntax error — the
+    // Not Svelte, or the compiler rejected it (genuine syntax error: the
     // consumer build reports it; the sweep degrades, never crashes).
     return parseAsTypeScript(withoutBom, 1);
   }
   // Two-pass scan for a Svelte file, unioned and deduped:
-  //   1. The compiler's view — script blocks + markup expression ranges, so
+  //   1. The compiler's view: script blocks + markup expression ranges, so
   //      hostile markup cannot desync the TS parser (the original bypass).
-  //   2. The whole file as TypeScript — catches import statements the
+  //   2. The whole file as TypeScript: catches import statements the
   //      extractor does not classify as component code (a bare import outside
   //      every script/expression range is dead markup text to Svelte but a
   //      real import to a bundler that ignores markup). The whole-file pass
@@ -352,7 +420,7 @@ const GLOB_SPECIFIER_TEXT = 'import.meta.glob(...)';
  * Reports one violation per `import.meta.glob` / `import.meta.globEager`
  * occurrence in the checked text. Vite's glob transform rewrites these calls
  * into module maps the TS AST never sees as imports, and the glob argument is
- * dynamic, so the reached modules cannot be verified — fail closed. The scan
+ * dynamic, so the reached modules cannot be verified (fail closed). The scan
  * runs over the whole text with a whitespace-tolerant pattern, so a call
  * wrapped across lines (or carrying a TS generic) still matches.
  */
@@ -396,11 +464,11 @@ interface ScriptBlock {
  * Extracts the import-bearing code from a Svelte file: every `<script>` /
  * `<script ...>` block (module + instance contexts) plus the compiled
  * expression code from the markup fragment (`{#await import('...')}`,
- * `{@const ...}`, attribute expressions — Svelte 5 compiles template
+ * `{@const ...}`, attribute expressions: Svelte 5 compiles template
  * expressions into real runtime imports, so they are part of the boundary).
  * Uses the Svelte compiler's parse, the same reader the build uses. Returns
  * `null` when the text is not parseable Svelte (plain TS/JS, or Svelte with a
- * genuine syntax error — the consumer build reports that itself).
+ * genuine syntax error: the consumer build reports that itself).
  */
 const extractSvelteScriptBlocks = (sourceText: string): ScriptBlock[] | null => {
   try {
@@ -501,7 +569,14 @@ export const checkCustomImports = ({
     if (isForbiddenJourneyClient(importEntry.specifier, importEntry.isTypeOnly)) {
       return [violation('forbidden-external')];
     }
-    if (isRelativeEscape(importEntry.specifier, importerDir, customRoot)) {
+    if (isExemptImport(importEntry.specifier, importerDir, customRoot)) {
+      // Checked before the escape gate on purpose: an absolute (or file://)
+      // specifier that resolves inside the custom root is an allowed import
+      // target, but when that target is an exempt file (mock, story, test,
+      // declaration, the curated surface) the import must still fail closed.
+      return [violation('forbidden-exempt-import')];
+    }
+    if (isSpecifierEscape(importEntry.specifier, importerDir, customRoot)) {
       return [violation('relative-escape')];
     }
     return [];
@@ -528,13 +603,6 @@ export const isExcludedFromCustomImports = (relativePath: string): boolean => {
   );
 };
 
-/** One file's violations, as the sweep and the Vite plugin report them. */
-export interface CustomImportFileViolations {
-  /** Path as reported to the user (project-root-relative, `/`-separated). */
-  readonly file: string;
-  readonly violations: readonly CustomImportViolation[];
-}
-
 /**
  * File extensions the boundary check reads as source. Includes the ESM/JSX
  * variants and CommonJS: `.mjs`/`.mts`/`.jsx`/`.tsx`/`.cjs`/`.cts` compile to
@@ -542,6 +610,76 @@ export interface CustomImportFileViolations {
  * `.ts`-only filter would let the import through on the renamed file).
  */
 const SOURCE_EXTENSION_PATTERN = /\.(ts|js|tsx|jsx|mjs|mts|cjs|cts|svelte)$/;
+
+/**
+ * Extensions tried, in order, when an exempt-import target names no exact
+ * file: the bare specifier, then the common source extensions, then a
+ * directory index. Order is fixed and small on purpose, so the resolution is
+ * deterministic across builds.
+ */
+const EXEMPT_IMPORT_EXTENSIONS = ['', '.ts', '.js', '.mts', '.mjs', '.svelte', '/index.ts'];
+
+/**
+ * Resolves an import specifier (relative, `$custom/...`, or an escape shape
+ * that resolves inside the custom root) to a `custom/components/`-relative
+ * path, trying the same extension order the boundary reads as source.
+ * Returns `null` when no variant names an exempt file. Pure: works on the
+ * specifier text only, no filesystem access.
+ */
+const resolveExemptTarget = (
+  specifier: string,
+  importerDir: string,
+  customRoot: string,
+): string | null => {
+  const root = normalizePath(customRoot);
+  const insideRoot = (resolved: string): boolean =>
+    resolved === root || resolved.startsWith(`${root}/`);
+  // Escape shapes (absolute, /@fs/, file://, drive-letter, backslash-leading)
+  // resolve by shape: strip the file:// scheme and take the path as-is,
+  // matching how the escape gate reads them. Relative and `$custom/` forms
+  // resolve against their base.
+  const escapeShaped = isEscapeShapedSpecifier(specifier);
+  const target = escapeShaped
+    ? (() => {
+        const normalized = normalizePath(specifier);
+        return normalized.startsWith('file://') ? normalized.slice('file://'.length) : normalized;
+      })()
+    : specifier.startsWith(`${CUSTOM_ALIAS}/`)
+    ? joinAndResolve(customRoot, normalizePath(specifier.slice(CUSTOM_ALIAS.length + 1)))
+    : resolveRelative(specifier, importerDir);
+  if (target === null || !insideRoot(target)) {
+    return null;
+  }
+  const relativeTarget = target === root ? '' : target.slice(root.length + 1);
+  const extensionless =
+    SOURCE_EXTENSION_PATTERN.test(relativeTarget) && !relativeTarget.endsWith('/index.ts')
+      ? relativeTarget.replace(SOURCE_EXTENSION_PATTERN, '')
+      : relativeTarget;
+  for (const extension of EXEMPT_IMPORT_EXTENSIONS) {
+    const candidate = `${extensionless}${extension}`;
+    if (candidate !== '' && isExcludedFromCustomImports(candidate)) {
+      return candidate;
+    }
+  }
+  return null;
+};
+
+/**
+ * True when a scanned (non-exempt) production file imports a file the
+ * boundary exempts: stories, mocks, tests, declarations, or the curated
+ * surface itself. Those files are never scanned, so an import of one would
+ * pull unchecked source into the production bundle. Bare specifiers (npm
+ * packages) are not paths and never resolve here.
+ */
+const isExemptImport = (specifier: string, importerDir: string, customRoot: string): boolean =>
+  resolveExemptTarget(specifier, importerDir, customRoot) !== null;
+
+/** One file's violations, as the sweep and the Vite plugin report them. */
+export interface CustomImportFileViolations {
+  /** Path as reported to the user (project-root-relative, `/`-separated). */
+  readonly file: string;
+  readonly violations: readonly CustomImportViolation[];
+}
 
 /**
  * Recursively scans `<projectRoot>/custom/components/` for production files

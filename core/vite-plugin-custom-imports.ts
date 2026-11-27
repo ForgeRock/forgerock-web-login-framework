@@ -22,8 +22,8 @@ import {
  * API contract ("Prohibited imports"). Sibling of `customRegistry` (which
  * validates `@component` headers of the same files) and
  * `loginFrameworkDist` (which resolves the framework aliases): every
- * consumer build that compiles customer source — widget ESM, widget IIFE,
- * login-app, Storybook — installs it next to those plugins, so a forbidden
+ * consumer build that compiles customer source (widget ESM, widget IIFE,
+ * login-app, Storybook) installs it next to those plugins, so a forbidden
  * import fails the build with a named error instead of silently bundling
  * framework internals.
  *
@@ -31,7 +31,7 @@ import {
  * importer's real path is known, so the relative-escape rule works, and
  * every downstream resolution (including the alias resolvers) only sees
  * files that passed the boundary. Exempt files (stories, mocks, tests, the
- * curated surface itself) are skipped — see `isExcludedFromCustomImports`.
+ * curated surface itself) are skipped. See `isExcludedFromCustomImports`.
  *
  * Build tooling, colocated with the other consumer-side plugins and
  * excluded from the package build by `collect-entries.ts`.
@@ -66,7 +66,7 @@ interface BoundaryPlugin {
 
 /** Formats one violation as a compiler-style diagnostic line. */
 const formatViolation = (file: string, kind: string, specifier: string, line: number): string =>
-  `  ${file}:${line}: ${kind} — "${specifier}"`;
+  `  ${file}:${line}: ${kind}: "${specifier}"`;
 
 /** The subset of a violation the error message renders. */
 interface ViolationSummary {
@@ -97,7 +97,10 @@ const boundaryError = (file: string, violations: readonly ViolationSummary[]): E
       'Everything else ($core, $journey, $components, $locales, runtime',
       'journey-client imports, paths escaping custom/components/, computed',
       'or glob dynamic imports) is framework-internal and may change across',
-      'widget upgrades. Import the curated surface instead — to request a',
+      'widget upgrades. forbidden-exempt-import: production code must not',
+      'import test, mock, story, or declaration files, or the curated',
+      'surface file itself, because those are never boundary-checked.',
+      'Import the curated surface instead. To request a',
       'new export, open a PR adding it to',
       'custom/components/login-framework.ts.',
     ].join('\n'),
