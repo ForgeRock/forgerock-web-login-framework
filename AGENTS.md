@@ -90,22 +90,22 @@ awaited at boot before any other API call), `journey`, `user`, `component`, and
 
 Run from the repository root.
 
-| Command                | Description                                                      |
-| ---------------------- | ---------------------------------------------------------------- |
-| `pnpm dev`             | Build widget, then start the SvelteKit dev app + framework watch |
-| `pnpm build:widget`    | Build the framework package, then the widget package             |
-| `pnpm build:app`       | Build widget + SvelteKit app                                     |
-| `pnpm build:framework` | Build the `framework-core` package (dist + dist-server)          |
-| `pnpm build:release`   | Full release build (framework + widget + IIFE + types)           |
-| `pnpm test`            | Run Vitest unit tests (watch mode)                               |
-| `pnpm test -- --run`   | Run unit tests once (CI mode)                                    |
-| `pnpm storybook`       | Launch Storybook on port 6006                                    |
-| `pnpm test:storybook`  | Run Storybook interaction tests (requires running Storybook)     |
-| `pnpm check:lint`      | Prettier + ESLint check                                          |
-| `pnpm check:svelte`    | Run svelte-check on the login-app                                |
-| `pnpm format`          | Auto-format with Prettier                                        |
-| `pnpm ci:e2e`          | Run Playwright E2E tests                                         |
-| `pnpm changeset`       | Create a changeset for release management                        |
+| Command                     | Description                                                      |
+| --------------------------- | ---------------------------------------------------------------- |
+| `pnpm dev`                  | Build widget, then start the SvelteKit dev app + framework watch |
+| `pnpm build:widget`         | Build the framework package, then the widget package             |
+| `pnpm build:app`            | Build widget + SvelteKit app                                     |
+| `pnpm build:framework-core` | Build the `framework-core` package (dist + dist-server)          |
+| `pnpm build:release`        | Full release build (framework + widget + IIFE + types)           |
+| `pnpm test`                 | Run Vitest unit tests (watch mode)                               |
+| `pnpm test -- --run`        | Run unit tests once (CI mode)                                    |
+| `pnpm storybook`            | Launch Storybook on port 6006                                    |
+| `pnpm test:storybook`       | Run Storybook interaction tests (requires running Storybook)     |
+| `pnpm check:lint`           | Prettier + ESLint check                                          |
+| `pnpm check:svelte`         | Run svelte-check on the login-app                                |
+| `pnpm format`               | Auto-format with Prettier                                        |
+| `pnpm ci:e2e`               | Run Playwright E2E tests                                         |
+| `pnpm changeset`            | Create a changeset for release management                        |
 
 ### Running a Single Test
 

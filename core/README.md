@@ -33,16 +33,16 @@ Run from the repository root unless noted.
 
 | Command                                          | Description                                                                     |
 | ------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `pnpm build:framework`                           | Build `dist/` and `dist-server/`                                                |
+| `pnpm build:framework-core`                      | Build `dist/` and `dist-server/`                                                |
 | `pnpm dev:framework`                             | Rebuild both trees on change (`dev:client` and `dev:server` in watch mode)      |
 | `pnpm --filter framework-core run build:types`   | Emit `.d.ts` declarations next to the sources (git-ignored)                     |
 | `pnpm --filter framework-core run check:surface` | Check the custom-component import surface against the package's runtime modules |
 
-`pnpm build:widget`, `pnpm build:app`, and `pnpm build:release` run `build:framework` first. `pnpm dev` runs `dev:framework` alongside the login app. The release chain runs `build:types` through the widget's `build:types` script, and `scripts/copyTypes.mjs` copies the declarations into the published `dist/core/`.
+`pnpm build:widget`, `pnpm build:app`, and `pnpm build:release` run `build:framework-core` first. `pnpm dev` runs `dev:framework` alongside the login app. The release chain runs `build:types` through the widget's `build:types` script, and `scripts/copyTypes.mjs` copies the declarations into the published `dist/core/`.
 
 ## How Consumers Resolve Core
 
-Consumers keep importing through the path aliases below. The `loginFrameworkDist` Vite plugin (`vite-plugin-dist.ts`) maps each alias onto the built output: `dist/` for client resolutions and `dist-server/` for SSR resolutions. If the package has not been built, resolution fails with a hint to run `pnpm build:framework`.
+Consumers keep importing through the path aliases below. The `loginFrameworkDist` Vite plugin (`vite-plugin-dist.ts`) maps each alias onto the built output: `dist/` for client resolutions and `dist-server/` for SSR resolutions. If the package has not been built, resolution fails with a hint to run `pnpm build:framework-core`.
 
 | Alias         | Source path        | Description                                          |
 | ------------- | ------------------ | ---------------------------------------------------- |

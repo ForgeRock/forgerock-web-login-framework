@@ -128,9 +128,11 @@ describe('loginFrameworkDist', () => {
       '$locales/us/en/index.json',
       '$core',
     ])(
-      'tells the user to run pnpm build:framework when %s is imported and dist is absent',
+      'tells the user to run pnpm build:framework-core when %s is imported and dist is absent',
       (source) => {
-        expect(() => unbuiltPlugin.resolveId(source, undefined)).toThrow(/pnpm build:framework/);
+        expect(() => unbuiltPlugin.resolveId(source, undefined)).toThrow(
+          /pnpm build:framework-core/,
+        );
         expect(() => unbuiltPlugin.resolveId(source, undefined)).toThrow(
           new RegExp(source.replace(/[$.]/g, '\\$&')),
         );
@@ -149,7 +151,7 @@ describe('loginFrameworkDist', () => {
       );
       expect(() =>
         clientOnlyPlugin.resolveId('$core/style.store', undefined, { ssr: true }),
-      ).toThrow(/pnpm build:framework/);
+      ).toThrow(/pnpm build:framework-core/);
     });
 
     it('does not throw for the client tree when only dist-server is missing', () => {
@@ -230,7 +232,7 @@ describe('loginFrameworkDist', () => {
       );
       expect(() =>
         registryMissingPlugin.resolveId(registrySpecifier, undefined, options),
-      ).not.toThrow(/pnpm build:framework/);
+      ).not.toThrow(/pnpm build:framework-core/);
     });
 
     it('does not treat a specifier that merely shares the registry prefix as the registry', () => {

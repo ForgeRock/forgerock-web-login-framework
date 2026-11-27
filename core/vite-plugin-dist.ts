@@ -59,7 +59,7 @@ interface DistResolverPlugin {
  * Sources with nothing built inside an existing tree (e.g. `$core/constants`,
  * excluded from the package build) resolve to `null`, so the consumer's own
  * alias or module resolution applies. When the tree itself is missing (the
- * package was never built), resolution throws with a `pnpm build:framework`
+ * package was never built), resolution throws with a `pnpm build:framework-core`
  * hint instead.
  *
  * One specifier is the exception: the custom registry import
@@ -171,7 +171,7 @@ export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): D
       if (!existsSync(treeRoot)) {
         throw new Error(
           `framework-core build output not found at ${treeRoot}, needed to resolve "${source}". ` +
-            'Run "pnpm build:framework" from the repository root.',
+            'Run "pnpm build:framework-core" from the repository root.',
         );
       }
       const treePrefix = resolve(treeRoot, match.subPath);
