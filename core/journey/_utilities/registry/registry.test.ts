@@ -1,7 +1,7 @@
 import { Path } from '@effect/platform';
 import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
-import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,12 +10,22 @@ import {
   buildRegistryContent,
   parseAcceptedProps,
   parseComponentHeader,
+  RegistryScanError,
   runRegistryScript,
   seedMissingWrappers,
   toPascalCase,
 } from './registry.js';
 
 import type { RegistryCollisionError } from './registry.js';
+
+// Transparent spy around runRegistryScript: the real implementation runs, but
+// tests can count invocations. The single-flight test needs to prove that
+// overlapping watch events start ONE scan, and a console-output count is not a
+// reliable discriminator (a failed concurrent run prints no summary).
+vi.mock('./registry.js', async (importOriginal) => {
+  const actual = await importOriginal();
+  return { ...actual, runRegistryScript: vi.fn(actual.runRegistryScript) };
+});
 
 const decode = (filePath: string, content: string) =>
   Effect.runSync(parseComponentHeader(filePath, content));
@@ -140,6 +150,37 @@ describe('parseComponentHeader', () => {
       );
       expect(String(err.cause)).toContain('control characters');
     });
+  });
+});
+
+describe('RegistryScanError', () => {
+  it('renders the directory and the underlying cause in message', () => {
+    // A stage file without a @component header previously rejected with the
+    // opaque Data.TaggedError default ("An error has occurred"): the directory
+    // and cause fields never reached the log output.
+    const error = decodeError(
+      '/repo/custom/components/stages/broken/broken.svelte',
+      '<script>no header</script>',
+    );
+    expect(error).toBeInstanceOf(RegistryScanError);
+    expect(error.message).toContain('/repo/custom/components/stages/broken/broken.svelte');
+    expect(error.message).toContain('Missing @component header');
+  });
+
+  it('renders the directory alone when no cause was attached', () => {
+    const error = new RegistryScanError({ directory: '/repo/custom/components' });
+    expect(error.message).toContain('/repo/custom/components');
+    // Never the opaque Data.TaggedError default.
+    expect(error.message).not.toContain('An error has occurred');
+  });
+
+  it('renders a string cause verbatim', () => {
+    const error = new RegistryScanError({
+      directory: '/repo/custom/components/stages',
+      cause: 'Missing "Name:" field in @component header',
+    });
+    expect(error.message).toContain('/repo/custom/components/stages');
+    expect(error.message).toContain('Missing "Name:" field in @component header');
   });
 });
 
@@ -528,6 +569,76 @@ describe('runRegistryScript', () => {
     // The stray line is silently ignored: the stage bundles regardless.
     expect(output).toContain('StageStray');
   });
+
+  it('succeeds on every concurrent regeneration (unique temp name per write)', async () => {
+    // With a shared `.regen-tmp` name, six overlapping scans raced on one temp
+    // file: each rename stole or deleted the file another writer had just
+    // created, so five of six runs rejected with a rename ENOENT. Each writer
+    // must own a unique temp path so renames never collide.
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    const results = await Promise.all(
+      Array.from({ length: 6 }, () =>
+        runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise),
+      ),
+    );
+    expect(results).toHaveLength(6);
+    // Every run completed and the registry still reflects the scanned stage.
+    const output = await readRegistry();
+    expect(output).toContain('StageLogin');
+  });
+
+  it('leaves no temp files behind after concurrent regenerations', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await Promise.all(
+      Array.from({ length: 6 }, () =>
+        runRegistryScript(tmpDir).pipe(Effect.provide(NodeContext.layer), Effect.runPromise),
+      ),
+    );
+
+    const dir = await readdir(join(tmpDir, 'core', 'journey', '_utilities', 'registry'));
+    expect(dir).toEqual(['custom-registry.ts']);
+  });
+
+  it('skips the write when generated content is unchanged (no mtime churn)', async () => {
+    // The dev watcher fires on every component save; rewriting byte-identical
+    // content bumps the registry mtime and re-triggers module reloads for
+    // nothing. Unchanged content must be a no-op.
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await run();
+
+    const registryFile = join(
+      tmpDir,
+      'core',
+      'journey',
+      '_utilities',
+      'registry',
+      'custom-registry.ts',
+    );
+    const firstWrite = (await stat(registryFile)).mtimeMs;
+    // Give the filesystem a fresh timestamp bucket so a real write would move mtime.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await run();
+    expect((await stat(registryFile)).mtimeMs).toBe(firstWrite);
+  });
+
+  it('rewrites the file when generated content changes', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await run();
+    await writeComponent('stages', 'extra', 'extra.svelte', 'Extra', 'stage');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('StageLogin');
+    expect(output).toContain('StageExtra');
+  });
+
+  it('still writes when the file is absent or unreadable (no existing content)', async () => {
+    await writeComponent('stages', 'login', 'login.svelte', 'Login', 'stage');
+    await run();
+
+    const output = await readRegistry();
+    expect(output).toContain('StageLogin');
+  });
 });
 
 describe('seedMissingWrappers', () => {
@@ -860,6 +971,42 @@ describe('customRegistry vite plugin', () => {
     // auto-deletion): the previously generated content still reads the old set.
     const after = await readFile(registryPath(), 'utf8');
     expect(after).toBe(baseline);
+  });
+
+  it('coalesces overlapping watch events into one regeneration (single flight)', async () => {
+    // Two watch events firing close together used to start two full scans
+    // concurrently: duplicate work, interleaved output, and (before the unique
+    // temp name) rename collisions. Late callers must await the in-flight run.
+    const { customRegistry } = await import('./vite-plugin.js');
+    const { runRegistryScript } = await import('./registry.js');
+    const runSpy = vi.mocked(runRegistryScript);
+    const callsBefore = runSpy.mock.calls.length;
+
+    const plugin = customRegistry({ projectRoot: tmpDir });
+
+    const stageDir = join(tmpDir, 'custom', 'components', 'stages', 'brand');
+    await mkdir(stageDir, { recursive: true });
+    await writeFile(
+      join(stageDir, 'brand.svelte'),
+      '<!--\n   @component\n   Type: stage\n   Name: Brand\n   -->\n<div></div>',
+      'utf8',
+    );
+
+    const { server, listeners } = makeServer();
+    (plugin as { configureServer: (server: unknown) => void }).configureServer(server);
+
+    for (const listener of listeners) {
+      listener('add', join(stageDir, 'brand.svelte'));
+      listener('change', join(stageDir, 'brand.svelte'));
+    }
+
+    await vi.waitFor(async () => {
+      const output = await readFile(registryPath(), 'utf8');
+      expect(output).toContain('StageBrand');
+    });
+    // Both events fired, but the second awaited the in-flight scan instead of
+    // starting its own: exactly one new runRegistryScript call.
+    expect(runSpy.mock.calls.length - callsBefore).toBe(1);
   });
 
   it('buildStart warns once when a legacy experimental/custom tree holds components', async () => {

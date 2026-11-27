@@ -1,6 +1,17 @@
 import { FileSystem, Path } from '@effect/platform';
-import { Console, Data, Effect } from 'effect';
+import { Console, Data, Effect, Option } from 'effect';
 import { parse } from 'svelte/compiler';
+
+/**
+ * Monotonic suffix for per-write temp file names: it guarantees two writers in
+ * the same process (racing through concurrent runs) never share one temp path,
+ * so no rename can consume a sibling writer's temp file.
+ */
+let tempSequence = 0;
+const nextTempSequence = (): number => {
+  tempSequence += 1;
+  return tempSequence;
+};
 
 // --------------------------------------------------------------------------
 // Types
@@ -512,20 +523,41 @@ export const runRegistryScript = (projectDir: string, options: RegistryScanOptio
     yield* fs
       .makeDirectory(registryDir, { recursive: true })
       .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: registryDir, cause })));
-    // Write to a temp sibling then rename: the plugin runs in every consumer
-    // (dev server, widget build, app build, vitest), so two processes can
-    // regenerate concurrently. A direct write would let a reader see a
-    // truncated registry between the truncation and the write; rename is
-    // atomic on the same filesystem, so every reader sees either the whole
-    // old file or the whole new one. Same pattern as seedMissingWrappers.
-    const tempPath = `${registryPath}.regen-tmp`;
-    yield* fs
-      .writeFileString(tempPath, content)
-      .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: tempPath, cause })));
-    yield* fs
-      .rename(tempPath, registryPath)
-      .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: registryPath, cause })));
+    // Skip the write entirely when the generated content is byte-identical to
+    // what is on disk: the dev watcher fires on every component save, and
+    // rewriting identical content would bump the registry mtime and re-trigger
+    // module reloads for nothing. An absent file is treated as changed.
+    const existingContent = yield* fs
+      .readFileString(registryPath)
+      .pipe(Effect.option, Effect.map(Option.getOrElse(() => undefined)));
+    const contentChanged = existingContent !== content;
+    if (contentChanged) {
+      // Write to a temp sibling then rename: the plugin runs in every consumer
+      // (dev server, widget build, app build, vitest), so two processes can
+      // regenerate concurrently. A direct write would let a reader see a
+      // truncated registry between the truncation and the write; rename is
+      // atomic on the same filesystem, so every reader sees either the whole
+      // old file or the whole new one. Same pattern as seedMissingWrappers.
+      // The temp name is unique per write (counter + random suffix): a shared
+      // name let concurrent writers race on one file, and each rename then
+      // removed a temp another writer had just published, failing five of six
+      // runs. The random suffix also separates concurrent OS processes (dev
+      // server and a build running at the same time).
+      const tempPath = `${registryPath}.regen-tmp-${nextTempSequence()}-${Math.random()
+        .toString(36)
+        .slice(2)}`;
+      yield* fs
+        .writeFileString(tempPath, content)
+        .pipe(Effect.mapError((cause) => new RegistryScanError({ directory: tempPath, cause })));
+      yield* fs
+        .rename(tempPath, registryPath)
+        .pipe(
+          Effect.mapError((cause) => new RegistryScanError({ directory: registryPath, cause })),
+        );
+    }
 
+    // Expression-style branch: the empty-registry message differs from the
+    // populated one, so compose the exact output lines first, then write once.
     const summaryLines = [
       stageComponents.length > 0 &&
         `  Stages    (${stageComponents.length}): ${stageComponents
@@ -537,8 +569,6 @@ export const runRegistryScript = (projectDir: string, options: RegistryScanOptio
           .join(', ')}`,
     ].filter((line): line is string => line !== false);
 
-    // Expression-style branch: the empty-registry message differs from the
-    // populated one, so compose the exact output lines first, then write once.
     const outputLines =
       summaryLines.length === 0
         ? [`custom-registry.ts generated (no custom components found — registries are empty)`]
@@ -550,4 +580,13 @@ export const runRegistryScript = (projectDir: string, options: RegistryScanOptio
 export class RegistryScanError extends Data.TaggedError('RegistryScanError')<{
   readonly directory: string;
   readonly cause?: unknown;
-}> {}
+}> {
+  // Data.TaggedError's default message is "An error has occurred", which hides
+  // both fields: build and dev logs named no directory and no underlying
+  // reason. Render them, mirroring RegistryCollisionError's message getter.
+  get message(): string {
+    const causeText =
+      this.cause === undefined ? 'no underlying cause recorded' : String(this.cause);
+    return `Registry scan failed in ${this.directory}: ${causeText}`;
+  }
+}

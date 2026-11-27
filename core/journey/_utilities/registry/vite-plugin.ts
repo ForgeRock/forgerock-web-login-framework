@@ -112,10 +112,25 @@ export function customRegistry({ projectRoot, exclude }: CustomRegistryPluginOpt
     path.join(projectRoot, 'custom', 'components', 'stages'),
   ];
 
-  const regenerate = () =>
-    Effect.runPromise(
+  // Single-flight guard: watch events can fire faster than a full scan (a
+  // scaffolded component emits several events, and a save triggers add plus
+  // change). Starting a second scan while one runs duplicated the whole
+  // directory walk for nothing, so late callers await the in-flight run
+  // instead of starting their own.
+  let inFlightRegeneration: Promise<void> | undefined;
+
+  const regenerate = (): Promise<void> => {
+    if (inFlightRegeneration !== undefined) {
+      return inFlightRegeneration;
+    }
+    const run = Effect.runPromise(
       runRegistryScript(projectRoot, { exclude }).pipe(Effect.provide(NodeContext.layer)),
     );
+    inFlightRegeneration = run.finally(() => {
+      inFlightRegeneration = undefined;
+    });
+    return inFlightRegeneration;
+  };
 
   const seed = () =>
     Effect.runPromise(seedMissingWrappers(projectRoot).pipe(Effect.provide(NodeContext.layer)));
