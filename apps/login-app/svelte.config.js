@@ -28,7 +28,7 @@ const config = {
       // framework-core package build ($app/$env imports; server/ holds
       // SvelteKit-only utilities); resolved from source. All other
       // $core/$components/$journey/$locales imports map onto the package's
-      // built dist via the loginFrameworkDist Vite plugin in vite.config.ts.
+      // built dist via the frameworkCoreDist Vite plugin in vite.config.ts.
       '$core/constants': path.resolve('../../core/constants.ts'),
       '$core/server': path.resolve('../../core/server'),
       '$app-locales': path.resolve('./src/locales'),

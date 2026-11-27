@@ -12,7 +12,7 @@ import { tmpdir } from 'os';
 import { join, resolve } from 'path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import { loginFrameworkDist } from './vite-plugin-dist';
+import { frameworkCoreDist } from './vite-plugin-dist';
 
 /**
  * The plugin only checks file existence on the mapped dist paths, so the
@@ -50,11 +50,11 @@ afterAll(() => {
   rmSync(sandboxRoot, { recursive: true, force: true });
 });
 
-const plugin = loginFrameworkDist({ packageDir: sandboxRoot });
+const plugin = frameworkCoreDist({ packageDir: sandboxRoot });
 const resolveId = (source: string) => plugin.resolveId(source, undefined);
 const resolveIdSsr = (source: string) => plugin.resolveId(source, undefined, { ssr: true });
 
-describe('loginFrameworkDist', () => {
+describe('frameworkCoreDist', () => {
   it('maps an extensionless TS module onto its dist JS file', () => {
     const resolved = resolveId('$core/_utilities/i18n.utilities');
     expect(resolved).toBe(resolve(distDir, '_utilities/i18n.utilities.js'));
@@ -104,11 +104,11 @@ describe('loginFrameworkDist', () => {
 
   describe('missing build output', () => {
     const unbuiltRoot = join(tmpdir(), 'framework-core-dist-unbuilt');
-    const unbuiltPlugin = loginFrameworkDist({ packageDir: unbuiltRoot });
+    const unbuiltPlugin = frameworkCoreDist({ packageDir: unbuiltRoot });
 
     // Only the client tree exists, so SSR resolutions find no server tree.
     const clientOnlyRoot = join(tmpdir(), 'framework-core-dist-client-only');
-    const clientOnlyPlugin = loginFrameworkDist({ packageDir: clientOnlyRoot });
+    const clientOnlyPlugin = frameworkCoreDist({ packageDir: clientOnlyRoot });
 
     beforeAll(() => {
       rmSync(unbuiltRoot, { recursive: true, force: true });
@@ -187,7 +187,7 @@ describe('loginFrameworkDist', () => {
 
     // Neither tree exists and no registry file was generated.
     const registryMissingRoot = join(tmpdir(), 'framework-core-dist-registry-missing');
-    const registryMissingPlugin = loginFrameworkDist({ packageDir: registryMissingRoot });
+    const registryMissingPlugin = frameworkCoreDist({ packageDir: registryMissingRoot });
 
     beforeAll(() => {
       rmSync(registryMissingRoot, { recursive: true, force: true });
@@ -207,7 +207,7 @@ describe('loginFrameworkDist', () => {
       rmSync(sourceOnlyRoot, { recursive: true, force: true });
       mkdirSync(join(registryFile, '..'), { recursive: true });
       writeFileSync(registryFile, '');
-      const sourceOnlyPlugin = loginFrameworkDist({ packageDir: sourceOnlyRoot });
+      const sourceOnlyPlugin = frameworkCoreDist({ packageDir: sourceOnlyRoot });
       try {
         expect(sourceOnlyPlugin.resolveId(registrySpecifier, undefined)).toBe(
           resolve(sourceOnlyRoot, 'journey/_utilities/registry/custom-registry.ts'),

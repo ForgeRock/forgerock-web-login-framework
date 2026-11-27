@@ -42,7 +42,7 @@ Run from the repository root unless noted.
 
 ## How Consumers Resolve Core
 
-Consumers keep importing through the path aliases below. The `loginFrameworkDist` Vite plugin (`vite-plugin-dist.ts`) maps each alias onto the built output: `dist/` for client resolutions and `dist-server/` for SSR resolutions. If the package has not been built, resolution fails with a hint to run `pnpm build:framework-core`.
+Consumers keep importing through the path aliases below. The `frameworkCoreDist` Vite plugin (`vite-plugin-dist.ts`) maps each alias onto the built output: `dist/` for client resolutions and `dist-server/` for SSR resolutions. If the package has not been built, resolution fails with a hint to run `pnpm build:framework-core`.
 
 | Alias         | Source path        | Description                                          |
 | ------------- | ------------------ | ---------------------------------------------------- |

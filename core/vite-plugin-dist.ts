@@ -12,8 +12,8 @@ import { resolve } from 'path';
 
 import { customRegistrySourcePath, customRegistrySpecifier } from './vite-shared';
 
-/** Options for {@link loginFrameworkDist}. */
-interface LoginFrameworkDistOptions {
+/** Options for {@link frameworkCoreDist}. */
+interface FrameworkCoreDistOptions {
   /**
    * Absolute path to the `core/` package directory (consumers pass
    * `resolve('../../core')`). Used to locate the built trees and verify that
@@ -71,7 +71,7 @@ interface DistResolverPlugin {
  * (`svelte`, `@forgerock/*`, ...), which stay external to the package and
  * resolve from the consumer's install.
  */
-export function loginFrameworkDist({ packageDir }: LoginFrameworkDistOptions): DistResolverPlugin {
+export function frameworkCoreDist({ packageDir }: FrameworkCoreDistOptions): DistResolverPlugin {
   const distDir = resolve(packageDir, 'dist');
   const serverDistDir = resolve(packageDir, 'dist-server');
   const registrySource = resolve(packageDir, customRegistrySourcePath);

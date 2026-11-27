@@ -7,7 +7,7 @@ import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
-import { loginFrameworkDist } from '../../core/vite-plugin-dist';
+import { frameworkCoreDist } from '../../core/vite-plugin-dist';
 
 /**
  * IIFE build config — produces a self-contained bundle for <script> tag usage.
@@ -15,7 +15,7 @@ import { loginFrameworkDist } from '../../core/vite-plugin-dist';
  * Key differences from the ESM config (vite.config.ts):
  *   - formats: ['iife'] with global name `ForgeRockLoginWidget`
  *   - external: [] — every dependency is inlined, npm packages and the
- *     framework-core modules the loginFrameworkDist plugin resolves into
+ *     framework-core modules the frameworkCoreDist plugin resolves into
  *     the package's built dist alike (the ESM bundle now also inlines the
  *     framework; this build additionally inlines the npm dependencies)
  *   - emptyOutDir: false — preserves ESM output from the prior build step
@@ -42,7 +42,7 @@ export default defineConfig({
     }),
   },
   plugins: [
-    loginFrameworkDist({ packageDir: resolve('../../core') }),
+    frameworkCoreDist({ packageDir: resolve('../../core') }),
     customRegistry({ projectRoot: resolve('../..') }),
     svelte({
       compilerOptions: {
@@ -72,7 +72,7 @@ export default defineConfig({
       '@forgerock/storage',
     ],
     // $core/$components/$journey/$locales are mapped onto the package's
-    // built dist by the loginFrameworkDist plugin above; only the
+    // built dist by the frameworkCoreDist plugin above; only the
     // curated custom-component surface stays aliased to source. The IIFE
     // bundles the framework (self-contained script tag, `external: []`).
     alias: {
