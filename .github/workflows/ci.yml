@@ -151,6 +151,16 @@ jobs:
       - run: pnpm run check:lint
       # svelte-check gate: without this a contributor who bypasses the husky
       # pre-commit hook can land --threshold=warning failures on main.
+      # svelte-check needs the gitignored generated registry
+      # (core/journey/_utilities/registry/custom-registry.ts) and the seeded
+      # layout wrappers (custom/components/layout/), which exist only after a
+      # build: the customRegistry Vite plugin seeds the wrappers and
+      # regenerates the registry at buildStart, and the published build's
+      # exclude list keeps the e2e canary stage out of the registry.
+      # build:widget = build:framework + the widget build, which also leaves
+      # core/dist and packages/login-widget/dist for the later app tests and
+      # the Storybook build in this job.
+      - run: pnpm run build:widget
       - run: pnpm run check:svelte
       - run: pnpm run test
       # The MCP stdio wire test spawns the compiled CLI (tools/cli/dist, gitignored);
