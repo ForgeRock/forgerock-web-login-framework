@@ -1,7 +1,7 @@
 import { NodeContext } from '@effect/platform-node';
 import { it } from '@effect/vitest';
 import { Effect, Exit } from 'effect';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, beforeEach, describe, expect } from 'vitest';
@@ -159,8 +159,13 @@ describe('copyWithExclusions — sandbox semantics (custom/ is customer-owned)',
         readFile(join(targetDir, 'package.json'), 'utf8'),
       );
       expect(packageJson).toBe('{}');
-      const readme = yield* Effect.promise(() => readFile(join(targetDir, 'README.md'), 'utf8'));
-      expect(readme).toBe('# framework');
+      // The framework's root README is contributor-facing (ship-or-skip
+      // rule, see exclusions.ts): it never ships. init writes the
+      // customer-facing README from templates/readme.md instead.
+      const readmeExit = yield* Effect.exit(
+        Effect.promise(() => readFile(join(targetDir, 'README.md'), 'utf8')),
+      );
+      expect(Exit.isFailure(readmeExit)).toBe(true);
     }),
   );
 
@@ -205,6 +210,50 @@ describe('copyWithExclusions — sandbox semantics (custom/ is customer-owned)',
         ),
       );
       expect(customerCallback).toBe('<!-- customer -->');
+    }),
+  );
+
+  it.effect('symlinked directories are skipped, never followed or written through', () =>
+    Effect.gen(function* () {
+      // A dev checkout (--local source) carries pnpm's symlink farm
+      // (node_modules/...) and other links. The copy must not follow them:
+      // stat() dereferences a link, so a symlinked directory would be walked
+      // as a real directory and file copies would write THROUGH the link
+      // into the link target. The walk skips every symlink entry instead.
+      const outsideDir = join(sourceDir, 'outside');
+      yield* Effect.promise(() => mkdir(outsideDir, { recursive: true }));
+      yield* Effect.promise(() =>
+        writeFile(join(outsideDir, 'outside.txt'), 'outside content', 'utf8'),
+      );
+      // A symlinked directory and a symlinked file, both pointing at the
+      // content outside the copied tree.
+      yield* Effect.promise(() => symlink(outsideDir, join(sourceDir, 'linked-dir')));
+      yield* Effect.promise(() =>
+        symlink(join(outsideDir, 'outside.txt'), join(sourceDir, 'linked-file.txt')),
+      );
+      yield* Effect.promise(() => writeFile(join(sourceDir, 'real.txt'), 'real content', 'utf8'));
+
+      yield* copyWithExclusions(sourceDir, targetDir).pipe(Effect.provide(NodeContext.layer));
+
+      // Real files still copied.
+      const real = yield* Effect.promise(() => readFile(join(targetDir, 'real.txt'), 'utf8'));
+      expect(real).toBe('real content');
+      // The symlinked directory was not walked: nothing behind it landed
+      // under the link's name.
+      const followedExit = yield* Effect.exit(
+        Effect.promise(() => readFile(join(targetDir, 'linked-dir', 'outside.txt'), 'utf8')),
+      );
+      expect(Exit.isFailure(followedExit)).toBe(true);
+      // The symlinked file was not copied.
+      const linkedFileExit = yield* Effect.exit(
+        Effect.promise(() => readFile(join(targetDir, 'linked-file.txt'), 'utf8')),
+      );
+      expect(Exit.isFailure(linkedFileExit)).toBe(true);
+      // And nothing was written through either link into the link target.
+      const untouched = yield* Effect.promise(() =>
+        readFile(join(outsideDir, 'outside.txt'), 'utf8'),
+      );
+      expect(untouched).toBe('outside content');
     }),
   );
 });

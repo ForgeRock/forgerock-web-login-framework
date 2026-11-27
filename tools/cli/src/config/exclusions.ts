@@ -22,11 +22,23 @@ const EXCLUDED_PREFIXES = [
   'docs/',
   'specs/',
   'tools/',
+  // The framework's own experiments (editor PoC and friends) are
+  // contributor-local and never ship to a customer project.
+  'experimental/',
   // Repo-local e2e fixture inside the sandbox: proves the custom-stage
   // pipeline in the framework repo's Playwright suite. Never meaningful in a
   // customer project, and `includeSandbox` (init) would otherwise copy it.
   'custom/components/stages/e2e-canary/',
 ] as const;
+
+/**
+ * Directory (or dotfile) names excluded at ANY depth, compared as whole path
+ * segments. A dev checkout's `--local` copy source carries build noise in
+ * nested workspaces that root-anchored prefixes miss: `core/node_modules`,
+ * `themes/dist`, `core/dist-server`. Whole-segment matching cannot
+ * false-positive on same-name fragments (`dist-utils`, `distributed.ts`).
+ */
+const EXCLUDED_SEGMENT_NAMES = ['node_modules', 'dist', 'dist-server', '.DS_Store'] as const;
 
 const EXCLUDED_FILES = [
   '.env',
@@ -66,6 +78,25 @@ const EXCLUDED_PATTERNS = [
   /\.d\.ts$/,
 ] as const;
 
+/**
+ * Ship-or-skip rule for repo-root docs: everything at the framework
+ * repository's root that describes THIS repository is contributor-facing and
+ * never ships to a customer project. That is the README (init writes a
+ * fresh, customer-facing one from templates/readme.md; update ships no
+ * README at all), the agent guides (CLAUDE.md, AGENTS.md, GEMINI.md), and
+ * the repo-scoped tool configs. Exact root-file names, like the rest of
+ * {@link EXCLUDED_FILES}; a same-basename file under the customer sandbox is
+ * customer-owned and unaffected.
+ */
+const EXCLUDED_ROOT_DOCS = [
+  'README.md',
+  'AGENTS.md',
+  'GEMINI.md',
+  '.stignore',
+  '.whitesource',
+  '.lighthouserc.cjs',
+] as const;
+
 const ALLOW_LIST = ['.env.example', '.env.docker.example'] as const;
 
 import { normalizeSeparators } from '../utils.js';
@@ -100,7 +131,20 @@ export function isExcluded(relativePath: string): boolean {
   if (EXCLUDED_FILES.some((file) => normalized === file)) {
     return true;
   }
+  if (EXCLUDED_ROOT_DOCS.some((doc) => normalized === doc)) {
+    return true;
+  }
   if (EXCLUDED_PREFIXES.some((prefix) => `${normalized}/`.startsWith(prefix))) {
+    return true;
+  }
+  // Whole path segments only: `core/node_modules/x`, `themes/dist/x`, and
+  // `deep/nested/.DS_Store` all match; `dist-utils/` and `distributed.ts`
+  // never do.
+  if (
+    normalized
+      .split('/')
+      .some((segment) => (EXCLUDED_SEGMENT_NAMES as readonly string[]).includes(segment))
+  ) {
     return true;
   }
   if (EXCLUDED_PATTERNS.some((pattern) => pattern.test(normalized))) {

@@ -134,6 +134,16 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     const gitignoreSource = yield* fs.readFileString(gitignoreTemplate);
     yield* fs.writeFileString(path.join(resolvedDir, '.gitignore'), gitignoreSource);
 
+    // ── 3d. Write the customer-facing README.md ───────────────────────────
+    // The framework copy excludes README.md (repo-root docs are
+    // contributor-facing and never ship, see exclusions.ts), so init writes
+    // a fresh customer-facing one from the CLI's template: what the project
+    // is, the custom-components authoring guide, and ping-lf --help.
+    yield* Console.log('Writing README.md...');
+    const readmeTemplate = path.join(getTemplatesDir(), 'readme.md');
+    const readmeSource = yield* fs.readFileString(readmeTemplate);
+    yield* fs.writeFileString(path.join(resolvedDir, 'README.md'), readmeSource);
+
     // ── 4. Scaffold custom/components/ ────────────────────────────────────
     // copyWithExclusions ({ includeSandbox: true }) already copies
     // custom/components/demo/, login-framework.ts, and README.md from the

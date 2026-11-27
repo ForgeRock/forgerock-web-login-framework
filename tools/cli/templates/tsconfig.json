@@ -1,5 +1,5 @@
 {
-  "_comment": "IDE-only tsconfig: resolves the customer authoring aliases for type checking in editors. The build (Vite + SvelteKit) resolves these aliases from each consumer config, so this file must not be used for compilation (noEmit is set).",
+  "_comment": "IDE-only tsconfig: resolves the customer authoring aliases for type checking in editors. The build (Vite + SvelteKit) resolves these aliases from each consumer config, so this file must not be used for compilation (noEmit is set). verbatimModuleSyntax must stay: svelte-preprocess picks the nearest tsconfig from the FILE's directory, and without the flag TypeScript strips template-only value imports inside <script>, which crashes SvelteKit builds with 'X is not defined'.",
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -10,10 +10,19 @@
     "noEmit": true,
     "allowJs": true,
     "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "verbatimModuleSyntax": true,
     "paths": {
       "$login-framework": ["./custom/components/login-framework.ts"],
       "$custom": ["./custom/components"],
-      "$custom/*": ["./custom/components/*"]
+      "$custom/*": ["./custom/components/*"],
+      "$core": ["./core"],
+      "$core/*": ["./core/*"],
+      "$components": ["./core/components"],
+      "$components/*": ["./core/components/*"],
+      "$journey": ["./core/journey"],
+      "$journey/*": ["./core/journey/*"],
+      "$locales": ["./core/locales"],
+      "$locales/*": ["./core/locales/*"]
     }
   },
   "include": ["**/*.ts", "**/*.svelte"],

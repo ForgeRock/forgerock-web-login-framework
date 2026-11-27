@@ -55,6 +55,31 @@ describe('isExcluded', () => {
     expect(isExcluded('release.tar.gz')).toBe(true);
   });
 
+  it('excludes node_modules, dist, dist-server, and .DS_Store at any depth', () => {
+    // Root-anchored prefixes miss a dev checkout's nested build noise: a
+    // --local init or update would otherwise ship core/node_modules (pnpm's
+    // symlink farm), themes/dist, or core/dist-server into a customer
+    // project. Segment matching covers every depth and cannot false-positive
+    // on names like dist-utils or distributed.ts (whole segments compare).
+    expect(isExcluded('core/node_modules/x')).toBe(true);
+    expect(isExcluded('themes/node_modules')).toBe(true);
+    expect(isExcluded('themes/dist/x')).toBe(true);
+    expect(isExcluded('core/dist-server/index.js')).toBe(true);
+    expect(isExcluded('.DS_Store')).toBe(true);
+    expect(isExcluded('deep/nested/.DS_Store')).toBe(true);
+    // Same-name fragments are safe: only whole segments match.
+    expect(isExcluded('dist-utils/helper.ts')).toBe(false);
+    expect(isExcluded('core/distributed.ts')).toBe(false);
+  });
+
+  it('excludes the experimental directory (root-anchored)', () => {
+    // The framework's own experiments (editor PoC and friends) are
+    // contributor-local and never ship.
+    expect(isExcluded('experimental')).toBe(true);
+    expect(isExcluded('experimental/anything')).toBe(true);
+    expect(isExcluded('experimental/editor-poc/index.html')).toBe(true);
+  });
+
   it('excludes the framework root .gitignore from customer copies', () => {
     // The framework .gitignore ignores the custom/ sandbox (developer-local
     // content in the framework repo). Copied verbatim, it would make
@@ -83,6 +108,23 @@ describe('isExcluded', () => {
     expect(isExcluded('deeply/nested/dir/.env')).toBe(true);
   });
 
+  it('excludes repo-root contributor docs from customer projects', () => {
+    // Ship-or-skip rule: repo-root docs are contributor-facing and never
+    // ship. The framework's README, agent guides (CLAUDE.md, AGENTS.md,
+    // GEMINI.md), and repo-scoped tool configs describe THIS repository, so
+    // a customer project must never receive them. init writes a fresh,
+    // customer-facing README from templates/readme.md instead.
+    expect(isExcluded('README.md')).toBe(true);
+    expect(isExcluded('AGENTS.md')).toBe(true);
+    expect(isExcluded('GEMINI.md')).toBe(true);
+    expect(isExcluded('.stignore')).toBe(true);
+    expect(isExcluded('.whitesource')).toBe(true);
+    expect(isExcluded('.lighthouserc.cjs')).toBe(true);
+    // The rule is root-anchored: a sandbox doc with the same basename is
+    // customer-owned and ships (the sandbox allow/deny is decided first).
+    expect(isExcluded('custom/components/README.md')).toBe(false);
+  });
+
   it('excludes the repo-local e2e canary from customer projects', () => {
     expect(isExcluded('custom/components/stages/e2e-canary/e2e-canary.svelte')).toBe(true);
     expect(isSandboxPath('custom/components/stages/e2e-canary/e2e-canary.svelte')).toBe(true);
@@ -109,7 +151,6 @@ describe('isExcluded', () => {
     expect(isExcluded('packages/login-widget/src/lib/index.svelte')).toBe(false);
     expect(isExcluded('core/journey/_utilities/map-stage.utilities.ts')).toBe(false);
     expect(isExcluded('custom/components/README.md')).toBe(false);
-    expect(isExcluded('README.md')).toBe(false);
   });
 });
 

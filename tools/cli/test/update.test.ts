@@ -295,6 +295,20 @@ describe('updateProject — sandbox semantics', () => {
     await runUpdate();
 
     expect(await readFile(projectPath('package.json'), 'utf8')).toBe('{}');
-    expect(await readFile(projectPath('README.md'), 'utf8')).toBe('# framework');
+  });
+
+  it('update never touches the customer root README.md (repo-root docs never ship)', async () => {
+    // The framework's README is contributor-facing (ship-or-skip rule, see
+    // exclusions.ts): update ships no README at all, so the customer's own
+    // README survives every update untouched. This test previously pinned
+    // the overwrite (the framework README landing in the project); it now
+    // pins the opposite, deliberately.
+    await seedFrameworkSource();
+    await seedCustomerProject();
+    await writeFile(join(projectDir, 'README.md'), '# customer readme', 'utf8');
+
+    await runUpdate();
+
+    expect(await readFile(projectPath('README.md'), 'utf8')).toBe('# customer readme');
   });
 });

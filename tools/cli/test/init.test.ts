@@ -171,7 +171,7 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     }
   });
 
-  it('writes the IDE-only tsconfig.json resolving $login-framework and $custom into the sandbox', async () => {
+  it('writes the IDE-only tsconfig.json resolving $login-framework, $custom, and the framework aliases', async () => {
     await seedFrameworkSource();
 
     await provide(
@@ -182,10 +182,21 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     const parsed = JSON.parse(tsconfig) as {
       compilerOptions?: { paths?: Record<string, string[]> };
     };
-    expect(parsed.compilerOptions?.paths?.['$login-framework']).toEqual([
-      './custom/components/login-framework.ts',
-    ]);
-    expect(parsed.compilerOptions?.paths?.['$custom/*']).toEqual(['./custom/components/*']);
+    const paths = parsed.compilerOptions?.paths ?? {};
+    expect(paths['$login-framework']).toEqual(['./custom/components/login-framework.ts']);
+    expect(paths['$custom']).toEqual(['./custom/components']);
+    expect(paths['$custom/*']).toEqual(['./custom/components/*']);
+    // The scaffold copies the full framework, so the customer editor can also
+    // resolve the internal aliases custom components meet through the curated
+    // surface re-exports ($components/... inside login-framework.ts).
+    expect(paths['$core']).toEqual(['./core']);
+    expect(paths['$core/*']).toEqual(['./core/*']);
+    expect(paths['$components']).toEqual(['./core/components']);
+    expect(paths['$components/*']).toEqual(['./core/components/*']);
+    expect(paths['$journey']).toEqual(['./core/journey']);
+    expect(paths['$journey/*']).toEqual(['./core/journey/*']);
+    expect(paths['$locales']).toEqual(['./core/locales']);
+    expect(paths['$locales/*']).toEqual(['./core/locales/*']);
   });
 
   it('writes a customer .gitignore from the CLI template, never the framework one', async () => {
@@ -218,8 +229,26 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     expect(ignoringCustom).toBe(false);
   });
 
-  it('writes a pnpm-workspace.yaml listing core and themes so build:framework resolves', async () => {
-    // `build:framework` in the scaffolded root runs
+  it('writes a customer-facing README.md from the CLI template, never the framework one', async () => {
+    // The framework's own README is contributor-facing (ship-or-skip rule,
+    // see exclusions.ts): the copy excludes it, and init writes a fresh
+    // customer-facing one from templates/readme.md pointing at the sandbox
+    // authoring guide and the project CLI.
+    await seedFrameworkSource();
+    await writeFile(join(sourceDir, 'README.md'), '# framework contributor readme', 'utf8');
+
+    await provide(
+      initProject({ directory: targetDir, local: Option.some(sourceDir), version: Option.none() }),
+    );
+
+    const readme = await readFile(join(targetDir, 'README.md'), 'utf8');
+    expect(readme).not.toContain('# framework contributor readme');
+    expect(readme).toContain('custom/components/README.md');
+    expect(readme).toContain('ping-lf');
+  });
+
+  it('writes a pnpm-workspace.yaml listing core and themes so build:framework-core resolves', async () => {
+    // `build:framework-core` in the scaffolded root runs
     // `pnpm --filter framework-core run build`; with `core` absent from the
     // workspace glob pnpm resolves no target and the project cannot build.
     // `themes` carries the app's compiled theme tokens.

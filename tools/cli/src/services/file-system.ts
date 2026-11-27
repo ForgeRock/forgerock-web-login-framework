@@ -1,5 +1,6 @@
 import { FileSystem, Path } from '@effect/platform';
 import { Effect } from 'effect';
+import { lstat } from 'node:fs/promises';
 import path from 'node:path';
 
 import { isExcluded, isSandboxPath } from '../config/exclusions.js';
@@ -14,6 +15,21 @@ const wrapFsCall =
       Effect.fail(new FileSystemError({ operation, path: fsPath, cause }));
     return effect.pipe(Effect.catchTags({ SystemError: fail, BadArgument: fail }));
   };
+
+/**
+ * True when the entry at `fullPath` is a filesystem symlink, judged with
+ * `lstat` (never dereferencing the link). The Effect FileSystem service only
+ * exposes `stat`, which follows symlinks, so the node lstat is wrapped here:
+ * a dev-checkout copy source carries pnpm's symlink farm, and `stat`-driven
+ * walks dereference those links and write file copies THROUGH them (into the
+ * pnpm store). Failures resolve to `false`: a broken link then skips as a
+ * non-entry instead of failing the whole copy, matching the best-effort
+ * behavior of the surrounding exclusion checks.
+ */
+const isSymbolicLink = (fullPath: string): Effect.Effect<boolean, FileSystemError> =>
+  Effect.promise(() => lstat(fullPath).then((stats) => stats.isSymbolicLink())).pipe(
+    Effect.catchAll(() => Effect.succeed(false)),
+  );
 
 /**
  * Returns true if the given directory looks like an initialized framework
@@ -99,6 +115,13 @@ const walk = (
       (entry) =>
         Effect.gen(function* () {
           const fullPath = path.join(dir, entry);
+          // Never follow symlinks: the walk skips them entirely (directories
+          // are not descended, files are not copied), so a dev-checkout
+          // source cannot leak pnpm-store content through its links and no
+          // copy can write through a link into the link target.
+          if (yield* isSymbolicLink(fullPath)) {
+            return;
+          }
           const relativePath = path.relative(sourceDir, fullPath);
           const stat = yield* fs.stat(fullPath).pipe(wrapFsCall('stat', fullPath));
           const targetPath = path.join(targetDir, relativePath);

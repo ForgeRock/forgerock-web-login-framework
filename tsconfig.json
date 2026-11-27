@@ -16,5 +16,5 @@
     { "path": "packages/login-widget" },
     { "path": "apps/login-app" }
   ],
-  "exclude": ["node_modules", "packages", "apps", "e2e", "core", "experimental", "tools", "themes"]
+  "exclude": ["node_modules", "packages", "apps", "e2e", "core", "custom", "tools", "themes"]
 }
