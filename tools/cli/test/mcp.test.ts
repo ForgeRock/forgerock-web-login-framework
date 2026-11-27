@@ -375,7 +375,21 @@ describe('MCP tool handlers', () => {
     expect(result.isFailure).toBe(false);
     const text = String(result.encodedResult);
     expect(text).toContain('custom/components/stages/');
-    expect(text).toContain('My Login Stage');
+    // F65: the tool result names the sanitized identifier, not the raw name.
+    expect(text).toContain('MyLoginStage');
+  });
+
+  it('generate handler success text carries no raw hostile name (F65)', async () => {
+    const result = await runHandle('generate_stage', {
+      name: "Bad'Name --> <script>",
+      directory: projectDir,
+    });
+    expect(result.isFailure).toBe(false);
+    const text = String(result.encodedResult);
+    expect(text).toContain('BadNameScript');
+    expect(text).not.toContain("Bad'Name");
+    expect(text).not.toContain('-->');
+    expect(text).not.toContain('<script>');
   });
 
   it('generate_callback into an existing component fails with the already-exists message', async () => {

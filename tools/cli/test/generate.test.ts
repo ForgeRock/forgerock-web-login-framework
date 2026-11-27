@@ -1,6 +1,6 @@
 import { NodeContext } from '@effect/platform-node';
 import { it } from '@effect/vitest';
-import { Effect } from 'effect';
+import { Effect, Either } from 'effect';
 import { Schema } from 'effect';
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -106,7 +106,12 @@ describe('scaffoldComponent — template substitution', () => {
 
     expect(content).not.toContain('__COMPONENT_NAME_PASCAL__');
     expect(utilityContent).toContain('formatMyLoginStageLabel');
-    expect(content).toContain('Name: My Login Stage');
+    // F65: the raw stage name never reaches generated file content, so the
+    // @component header carries the sanitized identifier. Customers with
+    // multi-word AM stage names edit this header to match their Page Node
+    // exactly (the registry key must equal the AM stage name at runtime).
+    expect(content).toContain('Name: MyLoginStage');
+    expect(content).not.toContain('My Login Stage');
     expect(content).not.toContain('@forgerock/javascript-sdk');
   });
 
@@ -316,6 +321,110 @@ describe('scaffoldComponent — SDKS-5510 prop rules in generated templates', ()
         expect(content).not.toMatch(/['"]\$core|['"]\$journey|['"]\$components|['"]\$locales/);
       }
     }
+  });
+});
+
+// ── F65: hostile stage names must never reach generated file content ────────
+//
+// The stage name comes from the AM Page Node config (or the MCP model), so it
+// is untrusted input. Every generated file must carry only the sanitized
+// PascalCase identifier; raw quote, comment-terminator, and markup sequences
+// from the raw name must not appear anywhere in the scaffold.
+
+describe('scaffoldComponent — F65 hostile stage-name sanitization', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    const { mkdtemp } = await import('node:fs/promises');
+    tmpDir = await mkdtemp(join(tmpdir(), 'ping-lf-gen-f65-'));
+    await createMinimalProject(tmpDir);
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  /** Reads every generated file for one scaffolded stage. */
+  const readAllGeneratedFiles = async (slug: string): Promise<string[]> => {
+    const componentDir = join(tmpDir, 'custom', 'components', 'stages', slug);
+    const files = await import('node:fs/promises').then((fs) => fs.readdir(componentDir));
+    return Promise.all(files.map((file) => readFile(join(componentDir, file), 'utf8')));
+  };
+
+  it('sanitizes a quote-bearing name to a safe identifier in every generated file', async () => {
+    await runEffect(scaffoldComponent('stage', "Bad'Name", tmpDir));
+
+    const contents = await readAllGeneratedFiles('bad-name');
+    expect(contents.length).toBeGreaterThan(0);
+    for (const content of contents) {
+      expect(content).toContain('BadName');
+      // The raw name (quote included) must never survive into file content.
+      expect(content).not.toContain("Bad'Name");
+    }
+    // Boundary: the scaffold must still pass the import checker.
+    expect(scanCustomComponents(tmpDir)).toEqual([]);
+  });
+
+  it('sanitizes a JSDoc-closing name so no injected code appears', async () => {
+    await runEffect(scaffoldComponent('stage', 'Foo */ evil()', tmpDir));
+
+    const contents = await readAllGeneratedFiles('foo-evil');
+    for (const content of contents) {
+      expect(content).toContain('FooEvil');
+      // Templates legitimately close JSDoc with */, so pin the raw name and
+      // the injected call, not the bare terminator.
+      expect(content).not.toContain('Foo */ evil()');
+      expect(content).not.toContain('evil()');
+    }
+  });
+
+  it('sanitizes an HTML-comment-breaking name so no markup appears', async () => {
+    await runEffect(scaffoldComponent('stage', 'x --> <script>', tmpDir));
+
+    const contents = await readAllGeneratedFiles('x-script');
+    for (const content of contents) {
+      expect(content).toContain('XScript');
+      // Templates legitimately contain <script lang="ts"> and comment
+      // terminators, so pin the raw name and the injected markup pair.
+      expect(content).not.toContain('x --> <script>');
+      expect(content).not.toContain('--> <script>');
+    }
+  });
+
+  it('strips leading digits so the generated import line is a valid identifier', async () => {
+    await runEffect(scaffoldComponent('stage', '2FA Login', tmpDir));
+
+    const contents = await readAllGeneratedFiles('2-fa-login');
+    for (const content of contents) {
+      expect(content).toContain('FALogin');
+      expect(content).not.toMatch(/import 2FA/);
+    }
+    const story = await readFile(
+      join(tmpDir, 'custom', 'components', 'stages', '2-fa-login', '2-fa-login.story.svelte'),
+      'utf8',
+    );
+    expect(story).toContain("import FALogin from './2-fa-login.svelte';");
+  });
+
+  it('rejects a name that sanitizes to nothing with the typed error and no files', async () => {
+    const result = await Effect.runPromise(
+      Effect.either(
+        Effect.provide(
+          scaffoldComponent('stage', '123', tmpDir) as Effect.Effect<
+            void,
+            unknown,
+            FileSystem.FileSystem | Path.Path
+          >,
+          NodeContext.layer,
+        ),
+      ),
+    );
+    expect(Either.isLeft(result)).toBe(true);
+    if (Either.isLeft(result)) {
+      expect((result.left as { _tag: string })._tag).toBe('InvalidComponentNameError');
+    }
+    const stagedDir = join(tmpDir, 'custom', 'components', 'stages', '123');
+    await expect(import('node:fs/promises').then((fs) => fs.readdir(stagedDir))).rejects.toThrow();
   });
 });
 

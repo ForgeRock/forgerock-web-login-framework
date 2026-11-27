@@ -1,7 +1,7 @@
 import { McpServer, Tool, Toolkit } from '@effect/ai';
 import { Command } from '@effect/cli';
 import { NodeContext, NodeSink, NodeStream } from '@effect/platform-node';
-import { Cause, Console, Effect, Layer, Logger, Option, Schema } from 'effect';
+import { Cause, Console, Effect, Either, Layer, Logger, Option, Schema } from 'effect';
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { scaffoldComponent } from './commands/generate.js';
 import { initProject } from './commands/init.js';
 import { updateProject } from './commands/update.js';
+import { parseComponentName, safeNameForTerminal } from './component-name.utilities.js';
 import { GithubReleaseLayer, Release } from './services/release.js';
 
 import type { FileSystem, Path } from '@effect/platform';
@@ -48,7 +49,9 @@ export function formatError(cause: Cause.Cause<unknown>): string {
       case 'DirectoryNotEmptyError':
         return `"${e['path']}" already exists and is not empty.`;
       case 'InvalidComponentNameError':
-        return `"${e['name']}" is not a valid component name. For callbacks, use PascalCase (e.g. MyCallback). For stages, the name must contain at least one letter, be at least 2 characters, and be safe as a directory name (e.g. DefaultLogin or "My Login Stage") — stage names are not constrained to PascalCase.`;
+        return `"${safeNameForTerminal(
+          String(e['name']),
+        )}" is not a valid component name. For callbacks, use PascalCase (e.g. MyCallback). For stages, the name must contain at least one letter, be at least 2 characters, and be safe as a directory name (e.g. DefaultLogin or "My Login Stage") — stage names are not constrained to PascalCase.`;
       case 'ComponentAlreadyExistsError':
         return `Component directory already exists: ${e['path']}`;
       default:
@@ -194,12 +197,12 @@ const GenerateCallbackTool = Tool.make('generate_callback', {
 
 const GenerateStageTool = Tool.make('generate_stage', {
   description:
-    `Scaffold a new custom stage component under custom/components/stages/. Run from an initialized project root. Stage names are not constrained to PascalCase: any non-empty directory-safe string that matches the AM Page Node stage name is accepted (e.g. "DefaultLogin" or "My Login Stage"). In the generated stage, submit through form.submit() — never the journey store — and treat journey.loading as authoritative.` +
+    `Scaffold a new custom stage component under custom/components/stages/. Run from an initialized project root. Stage names are not constrained to PascalCase: any non-empty directory-safe string containing at least one letter is accepted (e.g. "DefaultLogin" or "My Login Stage"). The name is sanitized into a PascalCase identifier (letters and digits only, must start with a letter); edit the generated @component Name header to the exact AM Page Node stage name so the registry matches it at runtime. In the generated stage, submit through form.submit() — never the journey store — and treat journey.loading as authoritative.` +
     AUTHORING_CONTRACT,
   parameters: {
     name: Schema.String.annotations({
       description:
-        'Stage name as configured on the AM journey Page Node (e.g. "DefaultLogin" or "My Login Stage").',
+        'Stage name to scaffold from (e.g. "DefaultLogin" or "My Login Stage"). Sanitized into a PascalCase identifier; adjust the generated @component Name header to the exact AM stage name if they differ.',
     }),
     directory: directoryParam,
   },
@@ -279,20 +282,29 @@ export const handlerLayer = mcpToolkit.toLayer({
   generate_callback: ({ name, directory }) =>
     catchToolErrors(
       scaffoldComponent('callback', name, directory).pipe(
-        Effect.map(
-          () =>
-            `Callback component "${name}" scaffolded successfully under custom/components/callbacks/.`,
-        ),
+        Effect.map(() => {
+          // F65: the raw name is model-controlled, so it reaches the tool
+          // result only through safeNameForTerminal; the identifier named in
+          // the text is the sanitized one the scaffold actually wrote.
+          const identifier = parseComponentName(name);
+          const displayName = Either.isRight(identifier)
+            ? identifier.right
+            : safeNameForTerminal(name);
+          return `Callback component "${displayName}" scaffolded successfully under custom/components/callbacks/.`;
+        }),
       ),
     ),
 
   generate_stage: ({ name, directory }) =>
     catchToolErrors(
       scaffoldComponent('stage', name, directory).pipe(
-        Effect.map(
-          () =>
-            `Stage component "${name}" scaffolded successfully under custom/components/stages/.`,
-        ),
+        Effect.map(() => {
+          const identifier = parseComponentName(name);
+          const displayName = Either.isRight(identifier)
+            ? identifier.right
+            : safeNameForTerminal(name);
+          return `Stage component "${displayName}" scaffolded successfully under custom/components/stages/.`;
+        }),
       ),
     ),
 

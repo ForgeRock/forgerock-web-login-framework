@@ -10,6 +10,7 @@ import { generateCommand } from './commands/generate.js';
 import { initCommand } from './commands/init.js';
 import { releasesCommand } from './commands/releases.js';
 import { updateCommand } from './commands/update.js';
+import { safeNameForTerminal } from './component-name.utilities.js';
 import { mcpCommand, ServerLayer } from './mcp.js';
 import { GithubReleaseLayer } from './services/release.js';
 
@@ -106,7 +107,7 @@ const program = isMcpLaunch
       ),
       Effect.catchTag('InvalidComponentNameError', (err) =>
         Console.error(
-          `\nError: "${err.name}" is not a valid component name.\n` +
+          `\nError: "${safeNameForTerminal(err.name)}" is not a valid component name.\n` +
             `  Callbacks must be PascalCase, start with an uppercase letter, and contain only letters and digits.\n` +
             `  Stage names are not constrained to PascalCase: any string with at least one letter, at least 2 characters,\n` +
             `  and safe as a directory name is accepted.\n` +

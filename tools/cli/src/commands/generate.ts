@@ -5,10 +5,10 @@ import { existsSync } from 'node:fs';
 import nodePath from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { parseComponentName, safeNameForTerminal } from '../component-name.utilities.js';
 import { assertValidProject } from '../config/version.js';
 import { ComponentAlreadyExistsError, InvalidComponentNameError } from '../errors.js';
 import { expandTilde } from '../services/file-system.js';
-import { toPascalCase } from '../utils.js';
 
 const CUSTOM_DIR = 'custom/components';
 
@@ -55,9 +55,12 @@ export const CallbackNameSchema = Schema.String.pipe(
 );
 
 /**
- * Validates a stage component name: accepts any string that is safe for a directory name and
- * HTML comment embedding. Stage names in AM are arbitrary strings set on the Page Node — there
- * is no name constraint, unlike callbacks.
+ * Validates a stage component name: accepts any string that is safe for a directory name.
+ * Stage names in AM are arbitrary strings set on the Page Node, so there is no identifier
+ * constraint, unlike callbacks. F65 defense in depth: the schema conservatively rejects
+ * control characters and NUL (terminal and file-content injection vectors) in addition to
+ * the checks below; the real guarantee is parseComponentName, which sanitizes whatever
+ * survives this schema into a branded identifier before any template interpolation.
  */
 export const StageNameSchema = Schema.String.pipe(
   Schema.filter(
@@ -66,7 +69,9 @@ export const StageNameSchema = Schema.String.pipe(
       /[A-Za-z]/.test(s) &&
       !s.includes('\0') &&
       !/[\n\r]/.test(s) &&
-      !/^\.\.?[/\\]/.test(s),
+      !/^\.\.?[/\\]/.test(s) &&
+      // eslint-disable-next-line no-control-regex -- intentional: rejecting hostile control characters (same pattern as registry.ts)
+      !/[\u0000-\u001f\u007f]/.test(s),
   ),
   Schema.transform(Schema.Struct({ name: Schema.String, slug: Schema.String }), {
     strict: true,
@@ -95,8 +100,18 @@ export function scaffoldComponent(type: ScaffoldType, name: string, directory?: 
     const fs = yield* FileSystem.FileSystem;
     const p = yield* Path.Path;
 
+    // ── Guard: sanitize the component name into a branded identifier ─────
+    // F65: the name is untrusted input (AM Page Node config, MCP model). It
+    // is parsed once into a ComponentIdentifier (alphanumeric PascalCase,
+    // leading letter) and ONLY that identifier is interpolated into generated
+    // file content. The raw name never reaches a generated file; it appears
+    // in terminal output only through safeNameForTerminal.
+    const componentIdentifier = yield* parseComponentName(name).pipe(
+      Effect.mapError((parseError) => new InvalidComponentNameError({ name: parseError.name })),
+    );
+
     // ── Guard: validate component name format ─────────────────────────────
-    // Callbacks must be valid  name (PascalCase, alphanumeric only).
+    // Callbacks must be valid names (PascalCase, alphanumeric only).
     // Stages are arbitrary strings with no naming convention constraint.
     const nameSchema = type === 'callback' ? CallbackNameSchema : StageNameSchema;
     const { slug } = yield* Schema.decode(nameSchema)(name).pipe(
@@ -121,24 +136,25 @@ export function scaffoldComponent(type: ScaffoldType, name: string, directory?: 
       yield* Effect.fail(new ComponentAlreadyExistsError({ path: componentDir }));
     }
 
-    yield* Console.log(`\nGenerating ${type} component: ${name}\n`);
+    yield* Console.log(`\nGenerating ${type} component: ${safeNameForTerminal(name)}\n`);
 
     // ── Create component directory ─────────────────────────────────────────
     yield* fs.makeDirectory(componentDir, { recursive: true });
 
     // ── Copy and process template files ───────────────────────────────────
-    // Each file name contains __COMPONENT_SLUG__; its contents contain both
-    // __COMPONENT_NAME__ (PascalCase) and __COMPONENT_SLUG__ (kebab-case).
+    // Each file name contains __COMPONENT_SLUG__; its contents contain the
+    // sanitized identifier (PascalCase) and __COMPONENT_SLUG__ (kebab-case).
+    // F65: __COMPONENT_NAME__ and __COMPONENT_NAME_PASCAL__ both receive the
+    // sanitized ComponentIdentifier, never the raw name.
     const templateFiles = yield* fs.readDirectory(templatesDir);
     const createdFiles: string[] = [];
 
     for (const templateFile of templateFiles) {
       const targetFileName = templateFile.replaceAll('__COMPONENT_SLUG__', slug);
       const sourceContent = yield* fs.readFileString(p.join(templatesDir, templateFile));
-      const pascalName = toPascalCase(name);
       const processedContent = sourceContent
-        .replaceAll('__COMPONENT_NAME_PASCAL__', pascalName)
-        .replaceAll('__COMPONENT_NAME__', name)
+        .replaceAll('__COMPONENT_NAME_PASCAL__', componentIdentifier)
+        .replaceAll('__COMPONENT_NAME__', componentIdentifier)
         .replaceAll('__COMPONENT_SLUG__', slug);
 
       const targetPath = p.join(componentDir, targetFileName);
@@ -208,7 +224,7 @@ export const generateCommand = Command.make('generate', {}, () =>
       message:
         type === 'callback'
           ? 'Callback name (PascalCase name, e.g. MyCallback)'
-          : 'Stage name (as set on your AM Page Node, e.g. DefaultLogin or My Login Stage)',
+          : 'Stage name (e.g. DefaultLogin or My Login Stage; sanitized to a PascalCase identifier, edit the generated @component Name header to your exact AM stage name)',
     });
     yield* scaffoldComponent(type, name);
   }),

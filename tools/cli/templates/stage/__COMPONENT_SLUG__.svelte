@@ -5,6 +5,11 @@ Name: __COMPONENT_NAME__
 
 Custom stage component. Replace this description with your own.
 
+IMPORTANT: the Name above is the registry key the framework matches against
+your AM Page Node stage name at runtime. It was derived from the name you
+passed to the generator (sanitized to a safe identifier). If your AM stage
+name differs (spaces, special characters), edit this Name to match it exactly.
+
 A stage controls the layout and submission behaviour of an entire authentication
 step (page node). It receives the full JourneyStep, maps each callback to its
 component via CallbackMapper, and renders the form chrome (header, alerts,
