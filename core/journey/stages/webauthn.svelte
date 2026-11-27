@@ -21,7 +21,7 @@
   import Spinner from '$components/primitives/spinner/spinner.svelte';
   // i18n
   import { interpolate } from '$core/_utilities/i18n.utilities';
-  import { convertStringToKey } from '$journey/stages/_utilities/step.utilities';
+  import { convertStringToKey } from '$journey/_utilities/step.utilities';
 
   // Types
   import type { JourneyStep } from '@forgerock/journey-client/types';

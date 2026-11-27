@@ -13,7 +13,7 @@
   import { initialize as initializeLinks } from '$core/links.store';
   import { initialize as initializeStyles } from '$core/style.store';
   import { buildCallbackMetadata, buildStepMetadata } from '$journey/_utilities/metadata.utilities';
-  import { initCheckValidation } from './_utilities/step.utilities';
+  import { initCheckValidation } from '$journey/_utilities/step.utilities';
   import EmailSuspend from './email-suspend.svelte';
   import Generic from './generic.svelte';
   import Login from './login.svelte';

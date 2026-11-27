@@ -12,7 +12,7 @@ import { fireEvent, waitFor, within } from 'storybook/test';
 import { userEvent } from 'storybook/test';
 import { writable } from 'svelte/store';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import { initialize } from '../config.store';
 import {
   emailSuspendStep,

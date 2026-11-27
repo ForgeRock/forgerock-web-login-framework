@@ -10,7 +10,7 @@
 import { fn } from 'storybook/test';
 import { writable } from 'svelte/store';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import { initialize } from '$journey/config.store';
 import { registrationStep } from '$journey/stages/step.mock';
 import Step from './style.story.svelte';

@@ -9,7 +9,7 @@
 
 import { callbackType } from '@forgerock/journey-client';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 
 /**
  * Mock AM response — a minimal step payload containing a single NameCallback.

@@ -27,7 +27,7 @@
   "license": "MIT",
   "scripts": {
     "build": "vite build",
-    "build:types": "svelte-package -o svelte-package",
+    "build:types": "pnpm --filter framework-core run build:types && svelte-package -o svelte-package",
     "build:iife": "vite build --config vite.config.iife.ts",
     "build:release": "pnpm run build && pnpm run build:iife && pnpm run build:types && node scripts/copyTypes.mjs && node scripts/processTypes.mjs",
     "test": "vitest"

@@ -11,7 +11,8 @@ import { describe, expect, it } from 'vitest';
 
 import { createPasskeyAutofillStep } from '$journey/stages/mfa-stages.mock';
 import { buildCallbackMetadata, buildStepMetadata } from './metadata.utilities';
-import { createJourneyStep, step1, step2 } from './step.mock';
+import { step1, step2 } from './step.mock';
+import { createJourneyStep } from './step.utilities';
 
 describe('Test metadata builder function for callbacks', () => {
   it('should have metadata without stage attributes', () => {

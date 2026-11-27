@@ -8,16 +8,59 @@
  **/
 
 import { callbackType } from '@forgerock/journey-client';
+import { createCallback } from '@forgerock/journey-client/types';
 
 import type {
   BaseCallback,
+  CallbackType as JourneyClientCallbackType,
   JourneyLoginFailure,
   JourneyResult,
   JourneyStep,
+  Step,
 } from '@forgerock/journey-client/types';
 
 export const authIdTimeoutErrorCode = '110';
 export const constrainedViolationMessage = 'constraint violation';
+
+/**
+ * Builds a `JourneyStep` from a raw AM `Step` payload, wrapping the payload's
+ * callbacks with the Journey Client's callback objects. Convenience helper for
+ * consumers' own `.mock.ts` and story files; re-exported by the curated
+ * custom-component surface (`experimental/custom/login-framework.ts`).
+ */
+export function createJourneyStep(payload: Step): JourneyStep {
+  const callbacks = (payload.callbacks ?? []).map(createCallback);
+
+  return {
+    payload,
+    callbacks,
+    type: 'Step' as JourneyStep['type'],
+    getCallbackOfType: <T extends BaseCallback>(type: JourneyClientCallbackType) => {
+      const callbacksOfType = callbacks.filter((x) => x.getType() === type);
+      if (callbacksOfType.length !== 1) {
+        throw new Error(
+          `Expected 1 callback of type "${type}", but found ${callbacksOfType.length}`,
+        );
+      }
+      return callbacksOfType[0] as T;
+    },
+    getCallbacksOfType: <T extends BaseCallback>(type: JourneyClientCallbackType) => {
+      return callbacks.filter((x) => x.getType() === type) as T[];
+    },
+    setCallbackValue: (type: JourneyClientCallbackType, value: unknown) => {
+      const callbacksToUpdate = callbacks.filter((x) => x.getType() === type);
+      if (callbacksToUpdate.length !== 1) {
+        throw new Error(
+          `Expected 1 callback of type "${type}", but found ${callbacksToUpdate.length}`,
+        );
+      }
+      callbacksToUpdate[0].setInputValue(value);
+    },
+    getDescription: () => payload.description,
+    getHeader: () => payload.header,
+    getStage: () => payload.stage,
+  };
+}
 
 /**
  * @function convertStringToKey -

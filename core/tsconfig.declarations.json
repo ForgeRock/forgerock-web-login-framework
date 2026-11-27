@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "declarationMap": false,
+    "noEmit": false,
+    "outDir": "."
+  },
+  "include": [
+    "interfaces.ts",
+    "captcha.config.ts",
+    "component.store.ts",
+    "links.store.ts",
+    "locale.store.ts",
+    "style.store.ts",
+    "oidc/oidc.store.ts",
+    "oauth/oauth.store.ts",
+    "user/user.store.ts",
+    "protect/protect.store.ts",
+    "journey/journey.interfaces.ts",
+    "journey/config.store.ts"
+  ]
+}

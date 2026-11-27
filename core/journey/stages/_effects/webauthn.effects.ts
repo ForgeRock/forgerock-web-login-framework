@@ -9,7 +9,7 @@
 
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 
-import { isPasskeyAutofillStep } from '../_utilities/webauthn.utilities';
+import { isPasskeyAutofillStep } from '$journey/_utilities/webauthn.utilities';
 
 import type { JourneyStore, StepTypes } from '$journey/journey.interfaces';
 

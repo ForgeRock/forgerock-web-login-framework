@@ -12,6 +12,7 @@ import { QRCode } from '@forgerock/journey-client/qr-code';
 import { RecoveryCodes } from '@forgerock/journey-client/recovery-codes';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 
+import { customStageRegistry } from '$journey/_utilities/registry/custom-registry';
 import EmailSuspend from '$journey/stages/email-suspend.svelte';
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';
@@ -20,8 +21,7 @@ import QrCode from '$journey/stages/qr-code.svelte';
 import RecoveryCodesStage from '$journey/stages/recovery-codes.svelte';
 import Registration from '$journey/stages/registration.svelte';
 import WebAuthnStage from '$journey/stages/webauthn.svelte';
-import { isMixedLoginWebAuthnStep } from '../stages/_utilities/webauthn.utilities';
-import { customStageRegistry } from './registry/custom-registry';
+import { isMixedLoginWebAuthnStep } from './webauthn.utilities';
 
 import type { SuspendedTextOutputCallback } from '@forgerock/journey-client/types';
 

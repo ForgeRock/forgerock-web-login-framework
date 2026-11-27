@@ -21,7 +21,7 @@ import { callbackType } from '@forgerock/journey-client';
 import { WebAuthn } from '@forgerock/journey-client/webauthn';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import {
   createPasskeyAutofillStep,
   livePasskeyAutofillStep,

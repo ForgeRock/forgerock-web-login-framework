@@ -7,13 +7,18 @@ import tailwindcss from 'tailwindcss';
 import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
+import { frameworkCoreDist } from '../../core/vite-plugin-dist';
+import { packageDedupe } from '../../core/vite-shared';
 
 /**
  * IIFE build config — produces a self-contained bundle for <script> tag usage.
  *
  * Key differences from the ESM config (vite.config.ts):
  *   - formats: ['iife'] with global name `ForgeRockLoginWidget`
- *   - external: [] — all deps are inlined into the bundle
+ *   - external: [] — every dependency is inlined, npm packages and the
+ *     framework-core modules the frameworkCoreDist plugin resolves into
+ *     the package's built dist alike (the ESM bundle now also inlines the
+ *     framework; this build additionally inlines the npm dependencies)
  *   - emptyOutDir: false — preserves ESM output from the prior build step
  *   - define: replaces process.env.NODE_ENV for transitive deps (immer, zod, etc.)
  *
@@ -38,6 +43,7 @@ export default defineConfig({
     }),
   },
   plugins: [
+    frameworkCoreDist({ packageDir: resolve('../../core') }),
     customRegistry({ projectRoot: resolve('../..') }),
     svelte({
       compilerOptions: {
@@ -56,11 +62,14 @@ export default defineConfig({
     }),
   ],
   resolve: {
+    // One Svelte runtime and one copy of each @forgerock runtime dep in the
+    // bundle: the shared list in core/vite-shared.ts is the single source.
+    dedupe: [...packageDedupe],
+    // $core/$components/$journey/$locales are mapped onto the package's
+    // built dist by the frameworkCoreDist plugin above; only the
+    // curated custom-component surface stays aliased to source. The IIFE
+    // bundles the framework (self-contained script tag, `external: []`).
     alias: {
-      $core: resolve('../../core'),
-      $components: resolve('../../core/components'),
-      $journey: resolve('../../core/journey'),
-      $locales: resolve('../../core/locales'),
       '$login-framework': resolve('../../experimental/custom/login-framework.ts'),
     },
   },

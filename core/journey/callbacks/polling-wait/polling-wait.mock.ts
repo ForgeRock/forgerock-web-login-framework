@@ -9,7 +9,7 @@
 
 import { callbackType } from '@forgerock/journey-client';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 
 export default createJourneyStep({
   authId:
@@ -37,7 +37,7 @@ export default createJourneyStep({
 });
 
 export const docsExample = {
-  type: 'PollingWaitCallback',
+  type: callbackType.PollingWaitCallback,
   output: [
     {
       name: 'waitTime',

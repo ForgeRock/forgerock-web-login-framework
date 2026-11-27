@@ -12,7 +12,7 @@ import { Device } from '@forgerock/journey-client/device';
 import { expect } from 'storybook/test';
 import { within } from 'storybook/test';
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import { deviceProfileMockMessage, deviceProfileMockNoMessage } from './device-profile.mock';
 import DeviceProfile from './device-profile.story.svelte';
 

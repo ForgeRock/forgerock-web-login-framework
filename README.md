@@ -84,12 +84,12 @@ forgerock-web-login-framework/
 └── e2e/                     # Playwright end-to-end tests
 ```
 
-| Directory                                         | Description                                                                                                                    | README                                           |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
-| [`packages/login-widget`](packages/login-widget/) | The published npm package. Contains the widget source, Storybook stories, and Vitest unit tests.                               | [Widget README](packages/login-widget/README.md) |
-| [`apps/login-app`](apps/login-app/)               | A SvelteKit application used for development, documentation, E2E test hosting, and the admin-only Custom Components API.       | [App README](apps/login-app/README.md)           |
-| [`core`](core/)                                   | Shared TypeScript modules (stores, journey logic, OAuth, i18n) consumed via path aliases. Not a workspace — imported directly. | [Core README](core/README.md)                    |
-| [`e2e`](e2e/)                                     | Playwright E2E test suite run across macOS and Ubuntu in CI with 4-shard parallelism.                                          | [E2E README](e2e/README.md)                      |
+| Directory                                         | Description                                                                                                                                          | README                                           |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
+| [`packages/login-widget`](packages/login-widget/) | The published npm package. Contains the widget source, Storybook stories, and Vitest unit tests.                                                     | [Widget README](packages/login-widget/README.md) |
+| [`apps/login-app`](apps/login-app/)               | A SvelteKit application used for development, documentation, E2E test hosting, and the admin-only Custom Components API.                             | [App README](apps/login-app/README.md)           |
+| [`core`](core/)                                   | Private workspace package (`framework-core`) with the shared stores, journey logic, components, OAuth and i18n. Built to `dist/` and `dist-server/`. | [Core README](core/README.md)                    |
+| [`e2e`](e2e/)                                     | Playwright E2E test suite run across macOS and Ubuntu in CI with 4-shard parallelism.                                                                | [E2E README](e2e/README.md)                      |
 
 ## Development
 
@@ -160,4 +160,4 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 
 ---
 
-&copy; Copyright 2022-2025 Ping Identity Corporation. All Rights Reserved.
+&copy; Copyright 2022-2026 Ping Identity Corporation. All Rights Reserved.

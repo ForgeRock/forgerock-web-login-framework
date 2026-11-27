@@ -10,17 +10,17 @@
 import { describe, expect, it, vi } from 'vitest';
 
 // Isolate the core mapping logic from any demo overrides in the custom registry.
-vi.mock('./registry/custom-registry', () => ({
+vi.mock('$journey/_utilities/registry/custom-registry', () => ({
   customStageRegistry: {},
   customCallbackRegistry: {},
 }));
 
-import { createJourneyStep } from '$journey/_utilities/step.mock';
 import Generic from '$journey/stages/generic.svelte';
 import Login from '$journey/stages/login.svelte';
 import { createMixedLoginWebAuthnStep } from '$journey/stages/mfa-stages.mock';
 import { mapStepToStage } from './map-stage.utilities';
 import { step1, step3 } from './step.mock';
+import { createJourneyStep } from './step.utilities';
 
 import type { Step } from '@forgerock/journey-client/types';
 
