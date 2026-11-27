@@ -17,7 +17,7 @@ import type { Option } from 'effect';
 
 /**
  * Minimal pnpm-workspace.yaml written to the customer project. `core` and
- * `themes` must stay listed: the scaffolded root's `build:framework` runs
+ * `themes` must stay listed: the scaffolded root's `build:framework-core` runs
  * `pnpm --filter framework-core run build`, which resolves no target when the
  * workspace glob omits the `core` package, and the app's theme tokens live in
  * `themes/`.

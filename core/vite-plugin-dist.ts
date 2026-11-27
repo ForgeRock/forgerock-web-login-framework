@@ -173,7 +173,7 @@ export function frameworkCoreDist({ packageDir }: FrameworkCoreDistOptions): Dis
         if (!existsSync(generated)) {
           throw new Error(
             `Compiled curated surface not found at ${generated}, needed to resolve "${source}". ` +
-              'Run "pnpm build:framework" from the repository root.',
+              'Run "pnpm build:framework-core" from the repository root.',
           );
         }
         return generated;

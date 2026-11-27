@@ -21,7 +21,7 @@ import {
  * (`custom/components/`) at compile time, per the Custom Components public
  * API contract ("Prohibited imports"). Sibling of `customRegistry` (which
  * validates `@component` headers of the same files) and
- * `loginFrameworkDist` (which resolves the framework aliases): every
+ * `frameworkCoreDist` (which resolves the framework aliases): every
  * consumer build that compiles customer source (widget ESM, widget IIFE,
  * login-app, Storybook) installs it next to those plugins, so a forbidden
  * import fails the build with a named error instead of silently bundling
@@ -57,7 +57,7 @@ const SOURCE_EXTENSION_PATTERN = /\.(ts|js|tsx|jsx|mjs|mts|cjs|cts|svelte)$/;
 
 // Subset of vite's Plugin type this plugin fills in. Declared structurally
 // so core/ doesn't import vite's types (same approach as the registry's
-// customRegistry and loginFrameworkDist plugins).
+// customRegistry and frameworkCoreDist plugins).
 interface BoundaryPlugin {
   name: string;
   enforce: 'pre';

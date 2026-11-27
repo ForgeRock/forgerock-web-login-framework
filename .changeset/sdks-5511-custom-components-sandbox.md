@@ -3,8 +3,6 @@
 '@forgerock/login-framework-cli': major
 ---
 
-Add custom page header and footer wrappers to the login app. The app renders two fixed, user-editable files (`custom/components/layout/header.svelte` and `custom/components/layout/footer.svelte`) around the journey container. Each wrapper mounts client-side only (after the first journey step, latched for the session) and receives a single `journeyName` prop — the journey currently driving the page, where `''` means the AM default journey — so wrappers can render per-journey views.
-
 **Breaking: custom components moved from `experimental/custom/` to `custom/components/`.** Projects scaffolded by CLI 0.2.x keep their components under `experimental/custom/{stages,callbacks}/`, and the framework no longer scans or builds that location, so after updating, existing custom components silently drop out of the app. Both the framework Vite plugin (at build start) and `ping-lf update` detect a legacy `experimental/custom/` tree that still contains Svelte files and warn with the steps below. To migrate:
 
 1. Move each component directory from `experimental/custom/stages/<name>` and `experimental/custom/callbacks/<name>` into `custom/components/stages/` and `custom/components/callbacks/`.
@@ -12,8 +10,6 @@ Add custom page header and footer wrappers to the login app. The app renders two
 3. Run `ping-lf update` to refresh the framework-owned files (including the curated surface file), then build: the Vite plugin regenerates the component registry from the new location.
 
 Because the CLI's project layout and update behavior change for existing projects, `@forgerock/login-framework-cli` ships this change as a major release.
-
-The wrappers are generated on the first build: the framework's Vite plugin seeds any missing wrapper at build start (and on every dev-server start) and never overwrites one that exists. In `@forgerock/login-framework-cli`, `init` places the wrapper files in new projects; `update` never writes inside `custom/` at all (a project updated from an older framework version gets any missing wrappers from the same build-time seed on its next build); the `generate header`/`generate footer` commands and their MCP tools are removed (headers/footers are wrapper files you edit directly, not scaffolded components). The header/footer registry types are removed in favor of the wrappers; the CLI no longer generates `custom-registry.ts` from `generate`, `init`, or `update` (or their MCP tool equivalents): the framework's Vite plugin is the single registry generator.
 
 `ping-lf update` now treats `custom/` as a customer-owned sandbox: the update copy skips everything under it (components, wrappers, README, demo), so customer edits survive every upgrade. The one exception is the framework-owned curated surface file `custom/components/login-framework.ts`: it is versioned by the framework even though it lives inside the sandbox, so update explicitly refreshes it from the update source, overwriting the project's copy (a framework source that predates the surface file only warns and keeps the existing copy). Every other path under `custom/` stays customer-owned, and `init` remains the only other flow that writes inside the sandbox. A core build whose project has no curated surface file fails with the restore instructions (`ping-lf update`, or re-copy the file from the framework repository) instead of a raw ENOENT.
 

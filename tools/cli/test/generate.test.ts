@@ -10,7 +10,7 @@ import { afterEach, beforeEach, describe, expect } from 'vitest';
 // Test-only cross-package import: the boundary checker that compiles the
 // customer source is the same checker the scaffolded output must pass.
 // Relative source path (not the workspace package export) so the CLI test run
-// does not depend on build:framework having produced core/dist. Excluded from
+// does not depend on build:framework-core having produced core/dist. Excluded from
 // the published package (files: ["dist"]) and from tsc (tsconfig include: src).
 import { scanCustomComponents } from '../../../core/custom-imports.js';
 import {

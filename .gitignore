@@ -41,8 +41,9 @@ core/journey/_utilities/registry/custom-registry.ts
 
 # Custom component implementations (developer-authored; gitignored so customer forks don't conflict)
 # The stage/ and callback/ folders themselves (with .gitkeep) remain tracked as scaffolding references.
+# The layout/ wrapper files are customer-owned: seeded by the Vite plugin from
+# core/journey/_utilities/registry/wrapper-templates/ when absent, never overwritten.
 custom/components/stages/*/
-!custom/components/stages/e2e-canary/
 custom/components/callbacks/*/
 custom/components/layout/
 
