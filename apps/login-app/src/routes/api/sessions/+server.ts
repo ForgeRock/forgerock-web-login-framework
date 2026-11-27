@@ -8,12 +8,12 @@
  **/
 
 import { AM_DOMAIN_PATH } from '$server/constants';
+import { resolveJsonRealmPath } from '$server/realm/realm.utilities';
 import {
   clearAmCookie,
   fetchAm,
   getAmCookie,
   pickUpstreamHeaders,
-  resolveJsonRealmPath,
   resolveUpstreamQuery,
   upstreamFailureResponse,
 } from '$server/sessions';

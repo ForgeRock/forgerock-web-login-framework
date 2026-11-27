@@ -10,36 +10,9 @@
 import { z } from 'zod';
 
 import { AM_DOMAIN_PATH } from '$server/constants';
+import { isValidRealm } from '$server/realm/realm.utilities';
 import { tokenIdSchema } from '$server/schemas';
 import { type RedirectData, type RedirectFormValue, type Resolver } from './redirect.types';
-
-const VALID_REALM = /^[A-Za-z0-9_-]+$/;
-
-/**
- *   value = '/alpha'     →  returns 'alpha'
- *   value = '/'          →  returns 'root'
- *   value = undefined    →  returns 'root'
- */
-export function normalizeRealm(value?: string | null): string {
-  const normalized = (value ?? '').replace(/^\/+/, '');
-  return normalized || 'root';
-}
-
-export function isValidRealm(realm: string): boolean {
-  return VALID_REALM.test(realm);
-}
-
-/**
- * Resolves the requested realm for a login arrival: the `?realm=` param when
- * present and safe, otherwise the configured realm (undefined → 'root').
- */
-export function resolveRequestedRealm(url: URL, configuredRealm?: string): string {
-  const configured = normalizeRealm(configuredRealm);
-  const realmParam = url.searchParams.get('realm');
-  if (realmParam === null) return configured;
-  const realm = normalizeRealm(realmParam);
-  return isValidRealm(realm) ? realm : configured;
-}
 
 /**
  * @function resolveRedirect - Resolves a final redirect URL from the provided context.

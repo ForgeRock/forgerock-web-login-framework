@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { env } from '$env/dynamic/private';
 import { AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
+import { normalizeRealm, resolveRequestedRealm } from '$server/realm/realm.utilities';
 import {
   amFetchRequest,
   getHttpCookie,
@@ -19,12 +20,7 @@ import {
   removeHttpCookie,
   setHttpCookie,
 } from '$server/sessions';
-import {
-  describeRedirectTarget,
-  normalizeRealm,
-  parseRedirectForm,
-  resolveRequestedRealm,
-} from './redirect.utilities';
+import { describeRedirectTarget, parseRedirectForm } from './redirect.utilities';
 
 import type { RequestEvent } from '@sveltejs/kit';
 

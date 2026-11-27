@@ -13,6 +13,7 @@ import { getLocale } from '$core/_utilities/i18n.utilities';
 import { env } from '$env/dynamic/private';
 import { AM_COOKIE_NAME, AM_DOMAIN_PATH } from '$server/constants';
 import { log } from '$server/logger.effects';
+import { resolveRequestedRealm } from '$server/realm/realm.utilities';
 import {
   createRedirectContext,
   readAndClearRedirectCookie,
@@ -24,7 +25,6 @@ import {
   describeRedirectTarget,
   isOAuthAuthorizePath,
   resolveRedirect,
-  resolveRequestedRealm,
 } from '$server/redirect/redirect.utilities';
 import { tokenIdSchema } from '$server/schemas';
 import { getHttpCookie, getUserRolesFromSession } from '$server/sessions';

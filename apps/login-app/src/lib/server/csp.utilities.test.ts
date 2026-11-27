@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
+import { resolveRequestedRealm } from '$server/realm/realm.utilities';
 import {
   buildLoginCspHeaders,
   DEFAULT_CSP_ENFORCED,
   DEFAULT_CSP_REPORT_ONLY,
   isHtmlResponse,
 } from './csp.utilities';
-import { resolveRequestedRealm } from './redirect/redirect.utilities';
 
 describe('Login CSP utilities', () => {
   it('uses root as the default realm', () => {

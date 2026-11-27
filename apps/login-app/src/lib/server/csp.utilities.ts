@@ -7,7 +7,7 @@
  *
  **/
 
-import { resolveRequestedRealm } from './redirect/redirect.utilities';
+import { resolveRequestedRealm } from '$server/realm/realm.utilities';
 
 type CspEnvironment = {
   enforced?: string;

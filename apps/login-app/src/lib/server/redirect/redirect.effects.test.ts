@@ -9,8 +9,9 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+import { resolveRequestedRealm } from '$server/realm/realm.utilities';
 import { createRedirectContext, validateGoto } from './redirect.effects';
-import { resolveRedirect, resolveRequestedRealm } from './redirect.utilities';
+import { resolveRedirect } from './redirect.utilities';
 
 vi.mock('$app/environment', () => ({ building: false }));
 vi.mock('$env/dynamic/private', () => ({

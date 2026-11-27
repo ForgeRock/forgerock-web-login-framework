@@ -21,17 +21,6 @@ if (!building) {
   }
 }
 
-// FR_REALM_PATH:       'alpha'              '/'        'root'       absent
-// configuredRealm      'alpha'              '/'        'root'       'root' (??)
-// trimmedRealm         'alpha'              ''         'root'       'root'
-// realmName            'alpha'              'root'     'root'       'root' (||)
-// realmSuffix          '/realms/alpha'      ''         ''           ''
-const configuredRealm = env.FR_REALM_PATH ?? 'root';
-const trimmedRealm = configuredRealm.replace(/^\/+/, '').replace(/\/+$/, '');
-const realmName = trimmedRealm || 'root';
-const realmSuffix = realmName === 'root' ? '' : `/realms/${realmName}`;
-
 /** Full AM base URL (e.g. https://host.example.com/am) */
 export const AM_DOMAIN_PATH = env.FR_AM_URL ?? '';
 export const AM_COOKIE_NAME = env.FR_AM_COOKIE_NAME ?? '';
-export const JSON_REALM_PATH = `/json/realms/root${realmSuffix}`;

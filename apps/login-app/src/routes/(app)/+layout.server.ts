@@ -8,20 +8,12 @@
  **/
 
 import { error } from '@sveltejs/kit';
-import { z } from 'zod';
 
 import { env } from '$env/dynamic/private';
 import { fetchIdmTheme } from '$server/idm-theme.effects';
-import { normalizeRealm, resolveRequestedRealm } from '$server/redirect/redirect.utilities';
-import { fetchAm, resolveOAuthRealmPath } from '$server/sessions';
+import { resolveRealm } from '$server/realm/realm.effects';
 
 import type { LayoutServerLoad } from './$types';
-
-// The realm the configured origin serves is deployment-constant (it only
-// changes when the domain is re-registered in AM), so the first successful
-// serverinfo answer is cached for the process lifetime. Failures stay
-// uncached so an outage self-heals.
-let servedRealm: string | null = null;
 
 export const load: LayoutServerLoad = async ({ url }) => {
   const amUrl = env.FR_AM_URL;
@@ -35,68 +27,18 @@ export const load: LayoutServerLoad = async ({ url }) => {
     );
   }
 
-  // Deriving the sibling well-known paths takes the URL's path, so a malformed
-  // FR_AM_URL is a configuration error, not a per-request crash.
-  let amBasePath: string;
   try {
-    amBasePath = new URL(amUrl).pathname.replace(/\/+$/, '');
+    new URL(amUrl);
   } catch {
     throw error(500, 'Login App is not configured: FR_AM_URL must be an absolute URL.');
   }
 
-  // ?realm=/alpha → "alpha", ?realm=/ → "root", absent → configured FR_REALM_PATH (defaults to root).
-  const requestedRealm = resolveRequestedRealm(url, env.FR_REALM_PATH);
-
-  const configuredRealm = normalizeRealm(env.FR_REALM_PATH);
-  const amOrigin = new URL(amUrl).origin;
-
-  // serverinfo: default domain answers '/', custom domain its alias realm.
-  // Realm-qualified discovery is default-domain-only, so anything else falls back to
-  // the configured wellknown. The served realm is process-cached above.
-  if (servedRealm === null) {
-    const serverInfoResponse = await fetchAm(`${amUrl.replace(/\/+$/, '')}/json/serverinfo/*`, {
-      headers: { accept: 'application/json' },
-    });
-    if (serverInfoResponse.kind === 'response' && serverInfoResponse.ok) {
-      try {
-        servedRealm = normalizeRealm(
-          z.object({ realm: z.string() }).parse(JSON.parse(serverInfoResponse.body ?? '')).realm,
-        );
-      } catch {
-        // unparseable body: leave null so the next request retries
-      }
-    }
-  }
-  const originIsDefaultDomain = servedRealm === 'root';
-
-  // A custom domain serves exactly one realm. A different realm cannot be
-  // authenticated on it: the journey would run against the configured realm's
-  // wellknown and the attempt would fail or land in the wrong realm.
-  if (servedRealm !== null && servedRealm !== 'root' && requestedRealm !== servedRealm) {
-    // Recovery is only possible when the arrival URL itself carried a realm
-    // param — dropping it then falls back to the domain's realm. Without the
-    // param the mismatch is a deployment misconfiguration with no client fix.
-    let customDomainUrl: URL | undefined;
-    if (url.searchParams.has('realm')) {
-      customDomainUrl = new URL(url.href);
-      customDomainUrl.searchParams.delete('realm');
-    }
-    throw error(404, {
-      message: `Realm '${requestedRealm}' is not available on this domain. This custom domain is serving the '${servedRealm}' realm.`,
-      customDomainUrl: customDomainUrl?.href,
-      customDomainRealm: servedRealm,
-    });
-  }
-
-  let requestedWellknownUrl: string;
-  if (requestedRealm === configuredRealm || !originIsDefaultDomain) {
-    requestedWellknownUrl = new URL(configuredWellknownUrl, url.origin).toString();
-  } else {
-    requestedWellknownUrl = new URL(
-      `${amBasePath}${resolveOAuthRealmPath(requestedRealm)}/.well-known/openid-configuration`,
-      amOrigin,
-    ).toString();
-  }
+  const realmResolution = await resolveRealm(url, {
+    amUrl,
+    configuredRealmPath: env.FR_REALM_PATH,
+    configuredWellknownUrl,
+  });
+  if (realmResolution.kind === 'conflict') throw error(404, realmResolution.conflict);
 
   const journeyName = url.searchParams.get('journey') ?? env.FR_AM_JOURNEY_LOGIN ?? null;
   const {
@@ -104,7 +46,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     themeCatalog,
     backgroundImageUrl,
   } = idmBaseUrl
-    ? await fetchIdmTheme(idmBaseUrl, requestedRealm, journeyName)
+    ? await fetchIdmTheme(idmBaseUrl, realmResolution.requestedRealm, journeyName)
     : { theme: undefined, themeCatalog: {}, backgroundImageUrl: undefined };
 
   return {
@@ -112,7 +54,7 @@ export const load: LayoutServerLoad = async ({ url }) => {
     backgroundImageUrl,
     idmTheme,
     themeCatalog,
-    wellknown: requestedWellknownUrl,
+    wellknown: realmResolution.wellknown,
     fallbackJourney: env.FR_AM_JOURNEY_LOGIN ?? null,
   };
 };

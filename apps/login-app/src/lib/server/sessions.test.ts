@@ -24,8 +24,6 @@ import {
   amFetchRequest,
   fetchAm,
   getAmCookie,
-  resolveJsonRealmPath,
-  resolveOAuthRealmPath,
   setAmCookie,
   upstreamFailureResponse,
 } from './sessions';
@@ -201,28 +199,6 @@ describe('Login2 session cookie forwarding', () => {
 
     expect(target.set).not.toHaveBeenCalled();
     expect(target.delete).not.toHaveBeenCalled();
-  });
-});
-
-describe('Login2 realm paths', () => {
-  it('uses the configured realm when no override is provided', () => {
-    expect(resolveJsonRealmPath()).toBe('/json/realms/root/realms/alpha');
-  });
-
-  it('supports root and named realm overrides', () => {
-    expect(resolveJsonRealmPath('/')).toBe('/json/realms/root');
-    expect(resolveJsonRealmPath('/bravo')).toBe('/json/realms/root/realms/bravo');
-    expect(resolveOAuthRealmPath('/bravo')).toBe('/oauth2/realms/root/realms/bravo');
-  });
-
-  it('uses the root realm for explicit root overrides', () => {
-    expect(resolveJsonRealmPath('/')).toBe('/json/realms/root');
-    expect(resolveJsonRealmPath('/root')).toBe('/json/realms/root');
-  });
-
-  it('rejects path traversal and falls back for malformed overrides', () => {
-    expect(resolveJsonRealmPath('../../global-config')).toBe('/json/realms/root');
-    expect(resolveJsonRealmPath('alpha/../bravo')).toBe('/json/realms/root');
   });
 });
 
