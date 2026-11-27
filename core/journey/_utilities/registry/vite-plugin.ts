@@ -1,5 +1,6 @@
 import { NodeContext } from '@effect/platform-node';
 import { Effect } from 'effect';
+import { readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 
 import { runRegistryScript, seedMissingWrappers } from './registry';
@@ -36,6 +37,68 @@ const STALE_REGISTRY_NOTE =
   'regenerates on the next successful scan.';
 
 /**
+ * Sandbox locations scaffolded by CLI 0.2.x, which placed custom components
+ * under `experimental/custom/`. Components now live under
+ * `custom/components/{stages,callbacks}/`, and only those directories are
+ * scanned, so components left in the legacy location silently drop out of
+ * the build after an update. The plugin warns once per build when the legacy
+ * tree still holds Svelte files.
+ */
+const LEGACY_SANDBOX_DIRS = [
+  'experimental/custom/stages',
+  'experimental/custom/callbacks',
+] as const;
+
+/** Name of the current components directory, for the warning's migration hint. */
+const CURRENT_COMPONENTS_DIR = 'custom/components';
+
+const countSvelteFilesRecursively = (dir: string): number => {
+  let entries: string[];
+  try {
+    entries = readdirSync(dir);
+  } catch {
+    // Missing or unreadable directory: nothing legacy to report there.
+    return 0;
+  }
+  return entries.reduce((sum, entry) => {
+    const fullPath = path.join(dir, entry);
+    let isDirectory = false;
+    try {
+      isDirectory = statSync(fullPath).isDirectory();
+    } catch {
+      isDirectory = false;
+    }
+    if (isDirectory) {
+      return sum + countSvelteFilesRecursively(fullPath);
+    }
+    return entry.endsWith('.svelte') ? sum + 1 : sum;
+  }, 0);
+};
+
+/**
+ * Prints a one-time-per-build warning when the legacy `experimental/custom/`
+ * sandbox still holds Svelte components. Read-only and best-effort: it never
+ * fails the build (a readdir on an absent path resolves to zero files).
+ */
+const warnAboutLegacySandbox = (projectRoot: string): void => {
+  const foundDirs = LEGACY_SANDBOX_DIRS.filter(
+    (relativeDir) => countSvelteFilesRecursively(path.join(projectRoot, relativeDir)) > 0,
+  );
+  if (foundDirs.length === 0) {
+    return;
+  }
+  console.warn(
+    `[custom-registry] Found custom components under the legacy ${foundDirs.join(' and ')} ` +
+      'directory. Custom components moved from "experimental/custom/" to ' +
+      `"${CURRENT_COMPONENTS_DIR}/"; the legacy location is NOT scanned or built, so those ` +
+      'components drop out of the app. Migrate each component directory into ' +
+      `${CURRENT_COMPONENTS_DIR}/stages/ or ${CURRENT_COMPONENTS_DIR}/callbacks/, update its ` +
+      'imports to the "$login-framework" surface module, and run "ping-lf update" to refresh ' +
+      'the framework-owned files.',
+  );
+};
+
+/**
  * Regenerates `core/journey/_utilities/registry/custom-registry.ts` by scanning
  * `custom/components/{stages,callbacks}/` for `@component`-annotated
  * Svelte files, and seeds the page header/footer wrapper files into
@@ -57,7 +120,10 @@ export function customRegistry({ projectRoot, exclude }: CustomRegistryPluginOpt
   const seed = () =>
     Effect.runPromise(seedMissingWrappers(projectRoot).pipe(Effect.provide(NodeContext.layer)));
 
-  const buildStart = () => seed().then(regenerate);
+  const buildStart = () => {
+    warnAboutLegacySandbox(projectRoot);
+    return seed().then(regenerate);
+  };
 
   return {
     name: 'framework-core:custom-registry',

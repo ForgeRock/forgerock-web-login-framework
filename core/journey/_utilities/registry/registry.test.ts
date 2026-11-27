@@ -861,4 +861,70 @@ describe('customRegistry vite plugin', () => {
     const after = await readFile(registryPath(), 'utf8');
     expect(after).toBe(baseline);
   });
+
+  it('buildStart warns once when a legacy experimental/custom tree holds components', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    await writePluginTemplates();
+
+    // A pre-migration project: components still under experimental/custom/.
+    const legacyDir = join(tmpDir, 'experimental', 'custom', 'stages', 'old-login');
+    await mkdir(legacyDir, { recursive: true });
+    await writeFile(join(legacyDir, 'old-login.svelte'), '<div></div>', 'utf8');
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const plugin = customRegistry({ projectRoot: tmpDir });
+      await (plugin as { buildStart: () => Promise<void> }).buildStart();
+
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      const warning = warnSpy.mock.calls.map((call) => call.map(String).join(' ')).join('\n');
+      expect(warning).toContain('experimental/custom');
+      expect(warning).toContain('custom/components');
+      expect(warning.toLowerCase()).toContain('not scanned');
+    } finally {
+      warnSpy.mockRestore();
+    }
+
+    // The warning must not block the registry work: the build still generates it.
+    const output = await readFile(registryPath(), 'utf8');
+    expect(output).toContain('customStageRegistry');
+  });
+
+  it('buildStart warns once across both legacy subtrees (stages and callbacks)', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    await writePluginTemplates();
+
+    const legacyStages = join(tmpDir, 'experimental', 'custom', 'stages', 'old-login');
+    await mkdir(legacyStages, { recursive: true });
+    await writeFile(join(legacyStages, 'old-login.svelte'), '<div></div>', 'utf8');
+    const legacyCallbacks = join(tmpDir, 'experimental', 'custom', 'callbacks', 'old-cb');
+    await mkdir(legacyCallbacks, { recursive: true });
+    await writeFile(join(legacyCallbacks, 'old-cb.svelte'), '<div></div>', 'utf8');
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const plugin = customRegistry({ projectRoot: tmpDir });
+      await (plugin as { buildStart: () => Promise<void> }).buildStart();
+
+      // Once per build, not once per file or per subtree.
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('buildStart does not warn when no legacy experimental/custom directory exists', async () => {
+    const { customRegistry } = await import('./vite-plugin.js');
+    await writePluginTemplates();
+
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const plugin = customRegistry({ projectRoot: tmpDir });
+      await (plugin as { buildStart: () => Promise<void> }).buildStart();
+
+      expect(warnSpy).not.toHaveBeenCalled();
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
 });
