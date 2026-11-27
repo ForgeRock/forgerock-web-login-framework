@@ -55,6 +55,19 @@ describe('isExcluded', () => {
     expect(isExcluded('release.tar.gz')).toBe(true);
   });
 
+  it('excludes the framework root .gitignore from customer copies', () => {
+    // The framework .gitignore ignores the custom/ sandbox (developer-local
+    // content in the framework repo). Copied verbatim, it would make
+    // `git add -A` in a scaffolded project silently drop generated customer
+    // components, stages, callbacks, and wrapper files. init writes the
+    // customer .gitignore from templates/gitignore instead, and update must
+    // never overwrite the customer's file.
+    expect(isExcluded('.gitignore')).toBe(true);
+    // Nested .gitignore files (only .husky/ has one in this repo) are covered
+    // by their excluded parent prefixes, not by this exact-file rule.
+    expect(isExcluded('.husky/.gitignore')).toBe(true);
+  });
+
   it('excludes paths matching patterns', () => {
     expect(isExcluded('.env.production')).toBe(true);
     expect(isExcluded('.env.local')).toBe(true);

@@ -1,0 +1,33 @@
+# Customer project .gitignore, written by `ping-lf init`.
+# custom/ is customer-owned source and should be committed: no rule below may
+# ignore anything under custom/.
+
+# Dependencies
+node_modules
+
+# Build output
+apps/login-app/build/
+.svelte-kit/
+packages/login-widget/dist/
+packages/login-widget/svelte-package/
+core/dist/
+core/dist-server/
+tools/cli/dist/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Test results
+test-results/
+playwright-report/
+blob-report/
+
+# Misc
+.DS_Store
+.eslintcache
+
+# Lockfiles (pnpm only, prevent accidental npm/yarn lockfiles)
+package-lock.json
+yarn.lock

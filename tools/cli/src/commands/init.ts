@@ -123,6 +123,17 @@ export const initProject = ({ directory, local, version }: InitProjectOptions) =
     const tsconfigSource = yield* fs.readFileString(tsconfigTemplate);
     yield* fs.writeFileString(path.join(resolvedDir, 'tsconfig.json'), tsconfigSource);
 
+    // ── 3c. Write the customer .gitignore ─────────────────────────────────
+    // The framework copy excludes .gitignore (the framework repo's own rules
+    // ignore the custom/ sandbox and would hide generated customer components
+    // and wrappers from `git add -A`), so init writes the customer one
+    // explicitly from the CLI's template: build outputs, env files, test
+    // artifacts, lockfile guards, and nothing under custom/.
+    yield* Console.log('Writing .gitignore...');
+    const gitignoreTemplate = path.join(getTemplatesDir(), 'gitignore');
+    const gitignoreSource = yield* fs.readFileString(gitignoreTemplate);
+    yield* fs.writeFileString(path.join(resolvedDir, '.gitignore'), gitignoreSource);
+
     // ── 4. Scaffold custom/components/ ────────────────────────────────────
     // copyWithExclusions ({ includeSandbox: true }) already copies
     // custom/components/demo/, login-framework.ts, and README.md from the

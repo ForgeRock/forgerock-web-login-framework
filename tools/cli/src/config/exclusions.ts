@@ -34,6 +34,13 @@ const EXCLUDED_FILES = [
   'pnpm-lock.yaml',
   'package-lock.json',
   'yarn.lock',
+  // The framework .gitignore ignores the customer sandbox (custom/ component
+  // trees are developer-local in the framework repo). Shipped into a
+  // scaffolded project, those rules would hide generated customer components
+  // and wrapper files from `git add -A` and CI. init writes the customer
+  // .gitignore from templates/gitignore instead; update must never overwrite
+  // the customer's own file.
+  '.gitignore',
   'CLAUDE.md',
   '.generator-version',
   'pnpm-workspace.yaml',

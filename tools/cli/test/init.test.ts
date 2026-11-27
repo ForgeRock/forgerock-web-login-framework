@@ -188,6 +188,36 @@ describe('initProject — wrapper files + scaffold dirs', () => {
     expect(parsed.compilerOptions?.paths?.['$custom/*']).toEqual(['./custom/components/*']);
   });
 
+  it('writes a customer .gitignore from the CLI template, never the framework one', async () => {
+    // The framework .gitignore ignores custom/components/stages/*/,
+    // custom/components/callbacks/*/, and custom/components/layout/ (they are
+    // developer-local in the framework repo). Shipped into a customer project,
+    // it would make `git add -A` silently omit every generated component and
+    // wrapper, so CI builds without them. The copy therefore excludes the
+    // framework .gitignore (see exclusions.test.ts) and init writes the
+    // customer one from templates/gitignore.
+    await seedFrameworkSource();
+    // A framework-side .gitignore with sandbox-ignoring rules must not reach
+    // the scaffolded project.
+    await writeFile(
+      join(sourceDir, '.gitignore'),
+      'custom/components/stages/*/\ncustom/components/callbacks/*/\ncustom/components/layout/\n',
+      'utf8',
+    );
+
+    await provide(
+      initProject({ directory: targetDir, local: Option.some(sourceDir), version: Option.none() }),
+    );
+
+    const gitignore = await readFile(join(targetDir, '.gitignore'), 'utf8');
+    expect(gitignore).toContain('node_modules');
+    // No line may ignore any part of the customer sandbox.
+    const ignoringCustom = gitignore
+      .split('\n')
+      .some((line) => line.trim().startsWith('custom/') && !line.trim().startsWith('#'));
+    expect(ignoringCustom).toBe(false);
+  });
+
   it('writes a pnpm-workspace.yaml listing core and themes so build:framework resolves', async () => {
     // `build:framework` in the scaffolded root runs
     // `pnpm --filter framework-core run build`; with `core` absent from the
