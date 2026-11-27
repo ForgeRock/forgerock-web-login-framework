@@ -274,9 +274,11 @@ custom/                        # Customer-owned sandbox — framework and CLI up
 ```
 
 **The `custom/` sandbox:** everything under `custom/` is customer-owned code.
-`ping-lf init` creates the initial tree; `ping-lf update` never writes inside
-it, so customer components, wrapper edits, and README changes survive every
-framework upgrade. Customer source may import only:
+`ping-lf init` creates the initial tree; `ping-lf update` writes inside it only
+to refresh the framework-owned curated surface
+(`custom/components/login-framework.ts`), so customer components, wrapper
+edits, and README changes survive every framework upgrade. Customer source may
+import only:
 
 - the curated surface module (`$login-framework`),
 - relative paths that stay inside `custom/components/` (or `$custom/<path>`),

@@ -7,7 +7,7 @@
  *
  **/
 
-import { mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'fs';
 import { join, resolve } from 'path';
 
 import { surfaceDistModule } from './login-framework-dist-surface';
@@ -66,6 +66,21 @@ export function surfaceDist({
     name: 'framework-core:surface-dist',
     apply: 'build',
     closeBundle() {
+      // The curated surface is framework-owned and lives inside the customer
+      // sandbox, so a project can lose it: it was initialized before the
+      // sandbox existed, or a copy predating the surface file ran. Fail with
+      // the restore instructions instead of a raw ENOENT; the generated
+      // module is the only thing `$login-framework` resolves to in dist, so
+      // the build cannot proceed without it.
+      if (!existsSync(surfaceFile)) {
+        throw new Error(
+          `The curated surface file is missing: ${surfaceFile}. ` +
+            'Custom components import the framework through it, and this build cannot ' +
+            'generate the compiled surface module without it. ' +
+            'Restore it by running "ping-lf update" in the project root, ' +
+            'or re-copy custom/components/login-framework.ts from the framework repository.',
+        );
+      }
       const surfaceText = readFileSync(surfaceFile, 'utf8');
       const generated = surfaceDistModule(surfaceText, tree);
       mkdirSync(outDir, { recursive: true });

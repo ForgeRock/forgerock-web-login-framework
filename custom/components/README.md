@@ -1,6 +1,6 @@
 # Custom Components (`/custom/components`)
 
-This directory is the entry point for your custom journey components. Files you create here are **never overwritten by upstream framework updates** — this is where your customizations live.
+This directory is the entry point for your custom journey components. Files you create here are **never overwritten by upstream framework updates**, because this is where your customizations live. The one exception is `login-framework.ts`, the curated import surface: it is framework-owned, so `ping-lf update` refreshes it to match the framework version you update to. Everything else you add is yours, and no update ever touches it.
 
 ## Directory structure
 
@@ -81,13 +81,16 @@ registry lookup, `@component` header, or selection step.
 The wrapper files are **generated on the first build**: the framework's Vite
 plugin seeds any missing wrapper at build start and never overwrites one that
 exists. `ping-lf init` places them in a new project, and `ping-lf update`
-never writes inside `custom/` at all — a project updated from an older
+never writes inside `custom/` at all (a project updated from an older
 framework version gets any missing wrappers from the same build-time seed on
-its next build. They are yours to edit — changes
+its next build). They are yours to edit, changes
 survive framework upgrades, and a deleted wrapper regenerates with the default
-content on the next build or dev-server start. (The framework-shipped files
-around them — this README, `login-framework.ts`, and the `demo/` examples —
-are updated with the framework and may be replaced by an update.)
+content on the next build or dev-server start. (Of the framework-shipped
+files around them, only `login-framework.ts` is refreshed by an update: it is
+framework-owned even though it lives in the sandbox, so `ping-lf update`
+overwrites your copy to keep the `$login-framework` surface current. This
+README and the `demo/` examples are copied once by `ping-lf init` and are
+yours afterwards; update never touches them.)
 
 Each wrapper receives a single prop:
 
