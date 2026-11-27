@@ -9,7 +9,7 @@
 
 import { callbackType } from '@forgerock/journey-client';
 
-import { createJourneyStep } from '../_utilities/step.utilities';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 import { usernamePasswordStep } from './step.mock';
 
 import type { JourneyStep, Step } from '@forgerock/journey-client/types';

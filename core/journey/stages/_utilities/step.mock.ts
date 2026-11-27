@@ -9,7 +9,7 @@
 
 import { callbackType } from '@forgerock/journey-client';
 
-import { createJourneyStep } from '../../_utilities/step.utilities';
+import { createJourneyStep } from '$journey/_utilities/step.utilities';
 
 export const previousRegistrationStep = createJourneyStep({
   authId: 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9',
