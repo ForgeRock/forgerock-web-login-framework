@@ -9,6 +9,7 @@ import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
 import { frameworkCoreDist } from '../../core/vite-plugin-dist';
+import { packageDedupe } from '../../core/vite-shared';
 
 export default defineConfig({
   // Isolated tsconfig for esbuild — avoids dependency on .svelte-kit/tsconfig.json.
@@ -53,15 +54,8 @@ export default defineConfig({
   ],
   resolve: {
     // One Svelte runtime and one copy of each @forgerock runtime dep in the
-    // bundle: core/dist imports `svelte/*` and `@forgerock/*`, which must
-    // not resolve a second copy from core/node_modules.
-    dedupe: [
-      'svelte',
-      '@forgerock/journey-client',
-      '@forgerock/oidc-client',
-      '@forgerock/protect',
-      '@forgerock/storage',
-    ],
+    // bundle: the shared list in core/vite-shared.ts is the single source.
+    dedupe: [...packageDedupe],
     // $core/$components/$journey/$locales are mapped onto the package's
     // built dist by the frameworkCoreDist plugin above; only the
     // curated custom-component surface stays aliased to source.

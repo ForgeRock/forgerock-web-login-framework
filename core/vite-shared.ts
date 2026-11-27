@@ -51,6 +51,24 @@ export const packageSveltePluginOptions = (): SveltePluginOptions => ({
 export const packageCssConfig: CSSOptions = { postcss: { plugins: [] } };
 
 /**
+ * Runtime dependencies every consumer of the built dist must dedupe: one
+ * Svelte runtime and one copy of each `@forgerock/*` runtime dep per bundle.
+ * The built dist imports them, and the consumers inline that dist, so any
+ * second resolution (e.g. from `core/node_modules`) would bundle a second
+ * copy — for `svelte` two runtimes, for the `@forgerock/*` clients two
+ * module-state singletons (e.g. `callbackType` enum identity). The three
+ * consumer configs (widget ESM, widget IIFE, login-app) spread this list
+ * into their `resolve.dedupe`.
+ */
+export const packageDedupe: readonly string[] = [
+  'svelte',
+  '@forgerock/journey-client',
+  '@forgerock/oidc-client',
+  '@forgerock/protect',
+  '@forgerock/storage',
+];
+
+/**
  * Specifier core code uses to import the generated custom-component registry.
  * Both builds leave it external and the consumer-side resolver
  * (`vite-plugin-dist.ts`) maps it to the source file, so the registry the

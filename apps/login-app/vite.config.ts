@@ -5,6 +5,7 @@ import { defineConfig } from 'vite';
 
 import { customRegistry } from '../../core/journey/_utilities/registry/vite-plugin';
 import { frameworkCoreDist } from '../../core/vite-plugin-dist';
+import { packageDedupe } from '../../core/vite-shared';
 
 import type { UserConfig } from 'vite';
 
@@ -20,15 +21,8 @@ export default defineConfig(
     ],
     resolve: {
       // One Svelte runtime and one copy of each @forgerock runtime dep:
-      // core/dist imports `svelte/*` and `@forgerock/*`, which must not
-      // resolve a second copy from core/node_modules.
-      dedupe: [
-        'svelte',
-        '@forgerock/journey-client',
-        '@forgerock/oidc-client',
-        '@forgerock/protect',
-        '@forgerock/storage',
-      ],
+      // the shared list in core/vite-shared.ts is the single source.
+      dedupe: [...packageDedupe],
       alias: {
         '$app-locales': resolve('./src/locales'),
         // Server-only SvelteKit modules, deliberately excluded from the

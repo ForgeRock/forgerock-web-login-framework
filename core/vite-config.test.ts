@@ -15,7 +15,7 @@ import { describe, expect, it } from 'vitest';
 import { isRuntimeModule, packageRoot, runtimeEntries } from './collect-entries';
 import clientConfig from './vite.config';
 import serverConfig from './vite.config.server';
-import { packageCssConfig, packageSveltePluginOptions } from './vite-shared';
+import { packageCssConfig, packageDedupe, packageSveltePluginOptions } from './vite-shared';
 
 import type { UserConfig } from 'vite';
 
@@ -66,6 +66,26 @@ describe('package Vite build options', () => {
 
   it('CSS config runs an empty PostCSS pipeline (no Tailwind autodetect)', () => {
     expect(packageCssConfig).toEqual({ postcss: { plugins: [] } });
+  });
+
+  it('the dedupe list holds exactly the runtime deps core dist imports', () => {
+    // One Svelte runtime and one copy of each @forgerock runtime dep in every
+    // consumer bundle: the shared list is the single source the three consumer
+    // configs (widget ESM, widget IIFE, login-app) spread into `resolve.dedupe`.
+    expect(packageDedupe).toEqual([
+      'svelte',
+      '@forgerock/journey-client',
+      '@forgerock/oidc-client',
+      '@forgerock/protect',
+      '@forgerock/storage',
+    ]);
+  });
+
+  it('both package builds never carry a dedupe list of their own (consumers only)', () => {
+    // The package's own builds externalize these deps instead; dedupe only
+    // matters for configs that inline the built dist.
+    expect(clientConfig.resolve?.dedupe).toBeUndefined();
+    expect(serverConfig.resolve?.dedupe).toBeUndefined();
   });
 
   it.each([

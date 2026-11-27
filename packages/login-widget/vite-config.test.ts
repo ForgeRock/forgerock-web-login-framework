@@ -12,6 +12,7 @@ import { resolve } from 'path';
 import { describe, expect, it, vi } from 'vitest';
 
 import appConfig from '../../apps/login-app/vite.config';
+import { packageDedupe } from '../../core/vite-shared';
 import esmConfig from './vite.config';
 import iifeConfig from './vite.config.iife';
 
@@ -80,24 +81,11 @@ describe('widget runtime dependencies', () => {
 });
 
 /**
- * Dependencies shared between the `framework-core` package (core/) and the
- * widget (and, for the first five, the login-app). Core's built dist imports
- * them, and both consumers inline that dist, so any version split between
- * the importers bundles two copies — for `svelte` two runtimes, for the
- * `@forgerock/*` clients two module-state singletons (e.g. `callbackType`
- * enum identity). The dedupe arrays in the three consumer configs and the
- * lockfile tests below guard all of these.
+ * Specifiers in the consumer manifests for the shared deps. The dep list
+ * itself is `packageDedupe` in `core/vite-shared.ts` — the single source the
+ * three consumer configs spread into `resolve.dedupe` and this file iterates.
  */
-const SHARED_DEPS = [
-  'svelte',
-  '@forgerock/journey-client',
-  '@forgerock/oidc-client',
-  '@forgerock/protect',
-  '@forgerock/storage',
-] as const;
-
-/** Specifiers in the consumer manifests for the shared deps. */
-const SHARED_SPECIFIERS: Readonly<Record<(typeof SHARED_DEPS)[number], string>> = {
+const SHARED_SPECIFIERS: Readonly<Record<string, string>> = {
   svelte: '^5.55.7',
   '@forgerock/journey-client': '^2.3.1',
   '@forgerock/oidc-client': '^2.3.1',
@@ -131,26 +119,26 @@ describe('single runtime, one copy per shared dependency', () => {
       'g',
     );
 
-  it.each(SHARED_DEPS)(`dedupes %s in the widget ESM config`, (dep) => {
+  it.each(packageDedupe)(`dedupes %s in the widget ESM config`, (dep) => {
     expect(esmConfig.resolve?.dedupe).toContain(dep);
   });
 
-  it.each(SHARED_DEPS)(`dedupes %s in the widget IIFE config`, (dep) => {
+  it.each(packageDedupe)(`dedupes %s in the widget IIFE config`, (dep) => {
     expect(iifeConfig.resolve?.dedupe).toContain(dep);
   });
 
-  it.each(SHARED_DEPS)(`dedupes %s in the login-app config`, async (dep) => {
+  it.each(packageDedupe)(`dedupes %s in the login-app config`, async (dep) => {
     const appResolved = await resolveConfig(appConfig);
     expect(appResolved.resolve?.dedupe).toContain(dep);
   });
 
-  it.each(SHARED_DEPS)('locks one %s specifier and version across every importer', (dep) => {
+  it.each(packageDedupe)('locks one %s specifier and version across every importer', (dep) => {
     const importers = lockfileSection('\nimporters:', '\npackages:');
     const pairs = Array.from(importers.matchAll(importerPattern(dep)), (m) => `${m[1]} -> ${m[2]}`);
     expect(Array.from(new Set(pairs))).toHaveLength(1);
   });
 
-  it.each(SHARED_DEPS)('locks a single %s package version', (dep) => {
+  it.each(packageDedupe)('locks a single %s package version', (dep) => {
     const packages = lockfileSection('\npackages:', '\nsnapshots:');
     // Scoped keys are quoted in the YAML with the quote before the closing
     // colon (`'@forgerock/x@1.2.3':`), so the capture spans the version plus
@@ -169,7 +157,7 @@ describe('single runtime, one copy per shared dependency', () => {
 
   it('declares the shared specifier in every workspace manifest', () => {
     const importers = lockfileSection('\nimporters:', '\npackages:');
-    for (const dep of SHARED_DEPS) {
+    for (const dep of packageDedupe) {
       expect(uniqueMatches(importers, importerPattern(dep))).toEqual([SHARED_SPECIFIERS[dep]]);
     }
   });
