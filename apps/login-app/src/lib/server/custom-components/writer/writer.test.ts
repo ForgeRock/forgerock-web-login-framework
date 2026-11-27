@@ -50,6 +50,59 @@ const writerLayer = (repoDir: string) =>
 const saveEffect = (relPath: string, content: string) =>
   Effect.flatMap(Writer, (writer) => writer.write([{ relPath, content }]));
 
+/** Plants a symlink to /etc/hosts at the target, replacing whatever is there. */
+const plantHostsSymlink = async (target: string): Promise<void> => {
+  await rm(target, { force: true, recursive: true });
+  await symlink('/etc/hosts', target);
+};
+
+/**
+ * The writer over a temporary config directory whose FileSystem plants a
+ * symlink at `sabotageTarget` the first time the writer stages a temp file, a
+ * deterministic stand-in for an attacker racing the write. Only writeFileString
+ * is overridden; every other method stays real.
+ */
+const sabotagedWriterLayer = (repoDir: string, sabotageTarget: string) => {
+  let sabotaged = false;
+  const sabotagingFileSystem = Layer.effect(
+    FileSystem.FileSystem,
+    Effect.gen(function* () {
+      // Resolve the real service through the tag (Layer.build returns the
+      // raw Context wrapper, not the service itself).
+      const realFs = yield* FileSystem.FileSystem.pipe(
+        Effect.provide(NodeFileSystem.layer),
+        Effect.scoped,
+      );
+      // Preserve every real method: only writeFileString is overridden.
+      return {
+        ...realFs,
+        writeFileString: (path: string, data: string) => {
+          if (!sabotaged && path.includes('.tmp')) {
+            sabotaged = true;
+            return Effect.flatMap(realFs.writeFileString(path, data), () =>
+              Effect.promise(() => plantHostsSymlink(sabotageTarget)),
+            );
+          }
+          return realFs.writeFileString(path, data);
+        },
+      } as FileSystem.FileSystem;
+    }),
+  );
+  // Same as writerLayer, but the sabotaging FileSystem replaces the real
+  // one (Layer.provideMerge would keep the innermost real layer and the
+  // sabotage would never run).
+  return WriterLive.pipe(
+    Layer.provide(fileSyncNoop),
+    Layer.provide(sabotagingFileSystem),
+    Layer.provide(Path.layer),
+    Layer.provide(
+      Layer.setConfigProvider(
+        ConfigProvider.fromMap(new Map([['COMPONENT_CONFIG_DIR', join(repoDir, 'config')]])),
+      ),
+    ),
+  );
+};
+
 const readUtf8 = (path: string) => readFile(path, 'utf8');
 
 const readDirectory = (path: string) => readdir(path);
@@ -187,69 +240,52 @@ describe('WriterLive', () => {
       const repoDir = yield* Effect.promise(makeTemporaryDirectory);
       yield* Effect.promise(() => mkdir(join(repoDir, 'config', 'journeys'), { recursive: true }));
       const planted = join(repoDir, 'config', 'journeys', 'planted');
-      // Start clean: prior runs may have created a real directory at the
-      // sabotage target through a successful save.
-      yield* Effect.promise(() => rm(planted, { force: true, recursive: true }));
 
       // Deterministic race: a sabotaging FileSystem wraps the real one and
       // re-plants a symlink into the artifact's directory the first time the
       // writer stages a temp file (between the pre-write probe and the
       // rename). The writer's post-stage re-check must catch it and fail the
       // write before the rename.
-      let sabotaged = false;
-
-      const writerLayerWithSabotage = Layer.effect(
-        FileSystem.FileSystem,
-        Effect.gen(function* () {
-          // Resolve the real service through the tag (Layer.build returns the
-          // raw Context wrapper, not the service itself).
-          const realFs = yield* FileSystem.FileSystem.pipe(
-            Effect.provide(NodeFileSystem.layer),
-            Effect.scoped,
-          );
-          // Preserve every real method: only writeFileString is overridden.
-          return {
-            ...realFs,
-            writeFileString: (path: string, data: string) => {
-              if (!sabotaged && path.includes('.tmp')) {
-                sabotaged = true;
-                return Effect.flatMap(realFs.writeFileString(path, data), () =>
-                  Effect.promise(async () => {
-                    await rm(planted, { force: true, recursive: true });
-                    await symlink('/etc/hosts', planted);
-                  }),
-                );
-              }
-              return realFs.writeFileString(path, data);
-            },
-          } as FileSystem.FileSystem;
-        }),
-      );
-
-      // Same as writerLayer, but the sabotaging FileSystem replaces the real
-      // one (Layer.provideMerge would keep the innermost real layer and the
-      // sabotage would never run).
-      const sabotagedWriterLayer = (dir: string) =>
-        WriterLive.pipe(
-          Layer.provide(fileSyncNoop),
-          Layer.provide(writerLayerWithSabotage),
-          Layer.provide(Path.layer),
-          Layer.provide(
-            Layer.setConfigProvider(
-              ConfigProvider.fromMap(new Map([['COMPONENT_CONFIG_DIR', join(dir, 'config')]])),
-            ),
-          ),
-        );
-
       const exit = yield* Effect.either(
         saveEffect('journeys/planted/login.json', '{}').pipe(
-          Effect.provide(sabotagedWriterLayer(repoDir)),
+          Effect.provide(sabotagedWriterLayer(repoDir, planted)),
         ),
       );
       if (exit._tag === 'Right') {
         throw new Error('Expected the save to fail when a symlink is planted mid-write');
       }
       expect((exit.left as Error).message).toMatch(/symlink/i);
+      // /etc/hosts must be untouched.
+      const escaped = yield* Effect.either(Effect.promise(() => readFile('/etc/hosts', 'utf8')));
+      expect(escaped._tag).toBe('Right');
+    }),
+  );
+
+  it.scoped('removes the staged temp file when the post-stage re-check fails', () =>
+    Effect.gen(function* () {
+      const repoDir = yield* Effect.promise(makeTemporaryDirectory);
+      yield* Effect.promise(() => mkdir(join(repoDir, 'config', 'journeys'), { recursive: true }));
+      // Sabotage the destination file path, not the directory: the temp file
+      // is a sibling of the destination, so planting here leaves it on disk
+      // when the re-check fails (planting on the directory would let the
+      // sabotage's own rm delete the temp file and hide the leak).
+      const planted = join(repoDir, 'config', 'journeys', 'planted', 'login.json');
+
+      // The symlink is planted only after staging (see sabotagedWriterLayer),
+      // so the pre-stage check passes, the temp file is written, and the
+      // post-stage re-check fails: the staged temp file must not outlive that
+      // failure, or a dotfile is left for config-saver to commit.
+      const exit = yield* Effect.either(
+        saveEffect('journeys/planted/login.json', '{}').pipe(
+          Effect.provide(sabotagedWriterLayer(repoDir, planted)),
+        ),
+      );
+      expect(exit._tag).toBe('Left');
+
+      const entries = yield* Effect.promise(() =>
+        readDirectory(join(repoDir, 'config', 'journeys', 'planted')),
+      );
+      expect(entries.every((entry) => !entry.includes('.tmp'))).toBe(true);
       // /etc/hosts must be untouched.
       const escaped = yield* Effect.either(Effect.promise(() => readFile('/etc/hosts', 'utf8')));
       expect(escaped._tag).toBe('Right');

@@ -67,10 +67,20 @@ const DEFAULT_IDM_FETCH_TIMEOUT_MS = 1500;
 /**
  * The cache is keyed on unauthenticated request input (`?journey=` reaches
  * here verbatim), so an attacker can grow it arbitrarily by varying the
- * parameter unless it is bounded. Entries expire after an idle TTL and the
- * map holds at most MAX_CACHE_ENTRIES keys, evicting the least-recently-used
- * (Map iteration order is insertion order; re-setting a key moves it to the
- * end, giving the LRU behavior for free).
+ * parameter unless it is bounded. Entries expire after an idle TTL, refreshed
+ * on every hit, and the map holds at most MAX_CACHE_ENTRIES keys, evicting the
+ * least-recently-used entry only when a NEW key is inserted (Map iteration
+ * order is insertion order; a delete + set moves the key to the end, giving
+ * the LRU behavior for free). Refreshing an already-cached key never evicts.
+ *
+ * When IDM answers 200 but holds no usable theme for the realm, the previously
+ * cached value keeps serving: each such fallback hit refreshes the idle TTL,
+ * so the stale value is replaced the moment IDM returns a matched theme again
+ * and is dropped once the key goes without a request for CACHE_TTL_MS.
+ * Availability is preferred over freshness here, so a delete-everything blip
+ * on the IDM side cannot blank the login page while requests keep coming.
+ * Keys are `realm::journey`, so each unknown journey name holds its own slot,
+ * bounded by the cap.
  */
 const CACHE_TTL_MS = 10 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 64;
@@ -82,6 +92,12 @@ interface CacheEntry {
 
 const themeCache = new Map<string, CacheEntry>();
 
+/** Re-inserts a key at the end of the Map, the LRU "most recently used" slot. */
+const touchEntry = (key: string, entry: CacheEntry): void => {
+  themeCache.delete(key);
+  themeCache.set(key, entry);
+};
+
 function cacheGet(key: string): IdmThemeResult | undefined {
   const entry = themeCache.get(key);
   if (entry === undefined) {
@@ -91,21 +107,30 @@ function cacheGet(key: string): IdmThemeResult | undefined {
     themeCache.delete(key);
     return undefined;
   }
-  // Refresh recency: delete + set moves the key to the end of the Map.
-  themeCache.delete(key);
-  themeCache.set(key, entry);
-  return entry.result;
+  // Idle TTL refreshed on a hit: delete + set renews cachedAt and moves the
+  // key to the end of the Map.
+  const refreshed: CacheEntry = { result: entry.result, cachedAt: Date.now() };
+  touchEntry(key, refreshed);
+  return refreshed.result;
 }
 
 function cacheSet(key: string, result: IdmThemeResult): void {
-  while (themeCache.size >= MAX_CACHE_ENTRIES) {
-    const oldest = themeCache.keys().next().value;
-    if (oldest === undefined) {
-      break;
+  const exists = themeCache.has(key);
+  if (!exists) {
+    while (themeCache.size >= MAX_CACHE_ENTRIES) {
+      const oldest = themeCache.keys().next().value;
+      if (oldest === undefined) {
+        break;
+      }
+      themeCache.delete(oldest);
     }
-    themeCache.delete(oldest);
   }
-  themeCache.set(key, { result, cachedAt: Date.now() });
+  const entry: CacheEntry = { result, cachedAt: Date.now() };
+  if (exists) {
+    touchEntry(key, entry);
+    return;
+  }
+  themeCache.set(key, entry);
 }
 
 function resolveTimeoutMs(): number {

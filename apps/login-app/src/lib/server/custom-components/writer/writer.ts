@@ -135,9 +135,10 @@ export const WriterLive: Layer.Layer<
     /**
      * Rejects symlink path segments to prevent cloned repositories from escaping the tracked subtree.
      * A symlink can also be planted between this check and the write (TOCTOU), so the check runs
-     * again after staging; the OS-level rename then only ever replaces a file that was verified
-     * moments before. A symlink cycle surfaces as ELOOP (the platform's `BadResource` reason) on
-     * one of the probes, which maps to the same typed failure instead of a raw error.
+     * again after staging. The re-check narrows the TOCTOU window but cannot close it completely;
+     * the atomic rename bounds whatever slips through to the checked path. A symlink cycle
+     * surfaces as ELOOP (the platform's `BadResource` reason) on one of the probes, which maps
+     * to the same typed failure instead of a raw error.
      */
     const ensureNoSymlink = (relPath: string): Effect.Effect<void, ArtifactWriterError> => {
       const probes = relPath
@@ -226,8 +227,8 @@ export const WriterLive: Layer.Layer<
      * Files are staged before any rename, then renamed in artifact order. Each individual
      * replacement is atomic, but this is not a directory-swap transaction: a later rename
      * failure can leave earlier files replaced. Staged temporary files are removed when
-     * staging or renaming fails, so no dotfiles are left for config-saver to commit.
-     * Callers receive one bundle-level error.
+     * staging, the post-stage re-check or renaming fails, so no dotfiles are left for
+     * config-saver to commit. Callers receive one bundle-level error.
      */
     const renameIntoPlace = (
       prepared: ReadonlyArray<PreparedArtifact>,
@@ -271,23 +272,21 @@ export const WriterLive: Layer.Layer<
           yield* Effect.forEach(prepared, ({ normalizedPath }) => ensureNoSymlink(normalizedPath), {
             discard: true,
           });
-          yield* stageTempFiles(prepared).pipe(
-            Effect.onError(() =>
-              Effect.forEach(
-                prepared,
-                ({ tempPath }) => Effect.ignore(fileSystem.remove(tempPath, { force: true })),
-                { discard: true },
-              ),
-            ),
-          );
-          // Re-check after staging: a symlink planted into the directory
-          // between the pre-write check and the temp write (TOCTOU) would let
-          // the temp content or the rename follow it out of the tracked
-          // subtree. Failing here leaves only dot-tmp files, removed below.
-          yield* Effect.forEach(prepared, ({ normalizedPath }) => ensureNoSymlink(normalizedPath), {
-            discard: true,
-          });
-          yield* renameIntoPlace(prepared).pipe(
+          // One cleanup scope around staging, the post-stage re-check and the
+          // renames: every failure after a temp file exists removes them, so
+          // no dotfile is left for config-saver to commit. Re-check after
+          // staging: a symlink planted into the directory between the
+          // pre-write check and the temp write (TOCTOU) would let the temp
+          // content or the rename follow it out of the tracked subtree.
+          yield* Effect.gen(function* () {
+            yield* stageTempFiles(prepared);
+            yield* Effect.forEach(
+              prepared,
+              ({ normalizedPath }) => ensureNoSymlink(normalizedPath),
+              { discard: true },
+            );
+            yield* renameIntoPlace(prepared);
+          }).pipe(
             Effect.onError(() =>
               Effect.forEach(
                 prepared,

@@ -368,4 +368,95 @@ describe('fetchIdmTheme', () => {
       expect(cachedHit.theme?.primaryColor).toBe('#cc0000');
     });
   });
+
+  describe('cache behavior', () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
+
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it('expires a cache entry after the idle TTL passes without a hit', async () => {
+      const cacheRealm = 'realm-ttl-expiry';
+
+      vi.mocked(fetch).mockResolvedValue(
+        makeResponse({ realm: { [cacheRealm]: [makeThemeEntry({ primaryColor: '#101010' })] } }),
+      );
+      await fetchIdmTheme(IDM_URL, cacheRealm, null);
+
+      vi.advanceTimersByTime(10 * 60 * 1000 + 1);
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const afterExpiry = await fetchIdmTheme(IDM_URL, cacheRealm, null);
+
+      expect(afterExpiry.theme).toBeUndefined();
+    });
+
+    it('refreshes the idle TTL on a cache hit', async () => {
+      const cacheRealm = 'realm-ttl-refresh';
+
+      vi.mocked(fetch).mockResolvedValue(
+        makeResponse({ realm: { [cacheRealm]: [makeThemeEntry({ primaryColor: '#202020' })] } }),
+      );
+      await fetchIdmTheme(IDM_URL, cacheRealm, null);
+
+      // Two hits, each just inside the TTL, must keep restarting the idle
+      // clock so the entry never ages out while it stays in use.
+      vi.advanceTimersByTime(9 * 60 * 1000);
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const firstHit = await fetchIdmTheme(IDM_URL, cacheRealm, null);
+      expect(firstHit.theme?.primaryColor).toBe('#202020');
+
+      vi.advanceTimersByTime(9 * 60 * 1000);
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const secondHit = await fetchIdmTheme(IDM_URL, cacheRealm, null);
+      expect(secondHit.theme?.primaryColor).toBe('#202020');
+
+      // Once the hits stop, the entry expires after one idle TTL.
+      vi.advanceTimersByTime(10 * 60 * 1000 + 1);
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const afterIdleExpiry = await fetchIdmTheme(IDM_URL, cacheRealm, null);
+      expect(afterIdleExpiry.theme).toBeUndefined();
+    });
+
+    it('never evicts another entry when refreshing an existing key at the cache cap', async () => {
+      const cacheRealm = 'realm-lru-refresh';
+
+      vi.mocked(fetch).mockImplementation(async () =>
+        makeResponse({ realm: { [cacheRealm]: [makeThemeEntry()] } }),
+      );
+      const journeys = Array.from({ length: 64 }, (_, index) => `Journey${index}`);
+      for (const journey of journeys) {
+        await fetchIdmTheme(IDM_URL, cacheRealm, journey);
+      }
+
+      // Refresh the newest key while the cache sits exactly at the cap: no
+      // entry may be evicted, and the refreshed key must stay cached.
+      await fetchIdmTheme(IDM_URL, cacheRealm, 'Journey63');
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const refreshed = await fetchIdmTheme(IDM_URL, cacheRealm, 'Journey63');
+      expect(refreshed.theme?.primaryColor).toBe('#cc0000');
+
+      // The oldest key must have survived the refresh untouched.
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const oldest = await fetchIdmTheme(IDM_URL, cacheRealm, 'Journey0');
+      expect(oldest.theme?.primaryColor).toBe('#cc0000');
+
+      // Inserting one more key is the only thing that may evict, and it must
+      // evict the true least-recently-used tail, not a refreshed neighbor.
+      vi.mocked(fetch).mockResolvedValue(
+        makeResponse({ realm: { [cacheRealm]: [makeThemeEntry()] } }),
+      );
+      await fetchIdmTheme(IDM_URL, cacheRealm, 'Journey64');
+
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const evictedTail = await fetchIdmTheme(IDM_URL, cacheRealm, 'Journey1');
+      expect(evictedTail.theme).toBeUndefined();
+
+      vi.mocked(fetch).mockRejectedValueOnce(new Error('network failure'));
+      const touchedTail = await fetchIdmTheme(IDM_URL, cacheRealm, 'Journey0');
+      expect(touchedTail.theme?.primaryColor).toBe('#cc0000');
+    });
+  });
 });
